@@ -40,12 +40,12 @@ data class TxHistoryItem(
         data object UnknownOperation : TransactionType
         data class Operation(val name: String) : TransactionType
 
-        sealed interface TronStakingTransactionType : TransactionType {
-            data class Vote(val validatorAddress: String) : TronStakingTransactionType
-            data object ClaimRewards : TronStakingTransactionType
-            data object Stake : TronStakingTransactionType
-            data object Unstake : TronStakingTransactionType
-            data object Withdraw : TronStakingTransactionType
+        sealed interface StakingTransactionType : TransactionType {
+            data class Vote(val validatorAddress: String) : StakingTransactionType
+            data object ClaimRewards : StakingTransactionType
+            data object Stake : StakingTransactionType
+            data object Unstake : StakingTransactionType
+            data object Withdraw : StakingTransactionType
         }
     }
 
