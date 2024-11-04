@@ -21,19 +21,19 @@ internal class SdkTransactionTypeConverter(
                 TxHistoryItem.TransactionType.Transfer
             }
             is TransactionType.TronStakingTransactionType.FreezeBalanceV2Contract -> {
-                TxHistoryItem.TransactionType.StakingTransactionType.Stake
+                TxHistoryItem.TransactionType.Staking.Stake
             }
             is TransactionType.TronStakingTransactionType.UnfreezeBalanceV2Contract -> {
-                TxHistoryItem.TransactionType.StakingTransactionType.Unstake
+                TxHistoryItem.TransactionType.Staking.Unstake
             }
             is TransactionType.TronStakingTransactionType.VoteWitnessContract -> {
-                TxHistoryItem.TransactionType.StakingTransactionType.Vote(value.validatorAddress)
+                TxHistoryItem.TransactionType.Staking.Vote(value.validatorAddress)
             }
             is TransactionType.TronStakingTransactionType.WithdrawBalanceContract -> {
-                TxHistoryItem.TransactionType.StakingTransactionType.ClaimRewards
+                TxHistoryItem.TransactionType.Staking.ClaimRewards
             }
             is TransactionType.TronStakingTransactionType.WithdrawExpireUnfreezeContract -> {
-                TxHistoryItem.TransactionType.StakingTransactionType.Withdraw
+                TxHistoryItem.TransactionType.Staking.Withdraw
             }
         }
     }
@@ -46,19 +46,19 @@ internal class SdkTransactionTypeConverter(
             "buyVoucher",
             "buyVoucherPOL",
             "delegate",
-            -> TxHistoryItem.TransactionType.StakingTransactionType.Stake
+            -> TxHistoryItem.TransactionType.Staking.Stake
             "sellVoucher_new",
             "sellVoucher_newPOL",
             "undelegate",
-            -> TxHistoryItem.TransactionType.StakingTransactionType.Unstake
+            -> TxHistoryItem.TransactionType.Staking.Unstake
             "unstakeClaimTokens_new",
             "unstakeClaimTokens_newPOL",
             "claim",
-            -> TxHistoryItem.TransactionType.StakingTransactionType.Withdraw
+            -> TxHistoryItem.TransactionType.Staking.Withdraw
             "withdrawRewards",
             "withdrawRewardsPOL",
-            -> TxHistoryItem.TransactionType.StakingTransactionType.ClaimRewards
-            "redelegate" -> TxHistoryItem.TransactionType.StakingTransactionType.Restake
+            -> TxHistoryItem.TransactionType.Staking.ClaimRewards
+            "redelegate" -> TxHistoryItem.TransactionType.Staking.Restake
             null -> TxHistoryItem.TransactionType.UnknownOperation
             else -> TxHistoryItem.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         }
