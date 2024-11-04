@@ -45,16 +45,20 @@ internal class SdkTransactionTypeConverter(
             "swap" -> TxHistoryItem.TransactionType.Swap
             "buyVoucher",
             "buyVoucherPOL",
+            "delegate",
             -> TxHistoryItem.TransactionType.StakingTransactionType.Stake
             "sellVoucher_new",
             "sellVoucher_newPOL",
+            "undelegate",
             -> TxHistoryItem.TransactionType.StakingTransactionType.Unstake
             "unstakeClaimTokens_new",
             "unstakeClaimTokens_newPOL",
+            "claim",
             -> TxHistoryItem.TransactionType.StakingTransactionType.Withdraw
             "withdrawRewards",
             "withdrawRewardsPOL",
             -> TxHistoryItem.TransactionType.StakingTransactionType.ClaimRewards
+            "redelegate" -> TxHistoryItem.TransactionType.StakingTransactionType.Restake
             null -> TxHistoryItem.TransactionType.UnknownOperation
             else -> TxHistoryItem.TransactionType.Operation(name = methodName.replaceFirstChar { it.titlecase() })
         }
