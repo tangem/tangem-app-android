@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.amount
 
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.StateRouter
@@ -16,6 +17,7 @@ internal class AmountStateFactory(
     private val stateRouterProvider: Provider<StateRouter>,
     private val currentStateProvider: Provider<SendUiState>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val minimumTransactionAmountProvider: Provider<EnterAmountBoundary?>,
 ) {
 
     private val amountFieldChangeConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -23,6 +25,7 @@ internal class AmountStateFactory(
             stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            minimumTransactionAmountProvider = minimumTransactionAmountProvider,
         )
     }
     private val amountFieldMaxAmountConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -30,6 +33,7 @@ internal class AmountStateFactory(
             stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            minimumTransactionAmountProvider = minimumTransactionAmountProvider,
         )
     }
 
@@ -51,6 +55,7 @@ internal class AmountStateFactory(
             stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            minimumTransactionAmountProvider = minimumTransactionAmountProvider,
         )
     }
     private val amountReduceToConverter by lazy {
@@ -58,6 +63,7 @@ internal class AmountStateFactory(
             stateRouterProvider = stateRouterProvider,
             currentStateProvider = currentStateProvider,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            minimumTransactionAmountProvider = minimumTransactionAmountProvider,
         )
     }
 
