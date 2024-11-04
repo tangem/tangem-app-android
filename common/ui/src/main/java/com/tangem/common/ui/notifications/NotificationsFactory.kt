@@ -75,6 +75,20 @@ object NotificationsFactory {
         }
     }
 
+    fun MutableList<NotificationUM>.addMinimumAmountErrorNotification(
+        minimumSendAmount: BigDecimal?,
+        sendingAmount: BigDecimal,
+        cryptoCurrency: CryptoCurrency,
+    ) {
+        if (minimumSendAmount != null && minimumSendAmount > sendingAmount) {
+            add(
+                NotificationUM.Error.MinimumSendAmountError(
+                    amount = minimumSendAmount.format { crypto(cryptoCurrency) },
+                ),
+            )
+        }
+    }
+
     fun MutableList<NotificationUM>.addTransactionLimitErrorNotification(
         utxoLimit: UtxoAmountLimit?,
         cryptoCurrency: CryptoCurrency,
