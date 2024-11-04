@@ -2,7 +2,7 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
-import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -37,7 +37,7 @@ internal class SetAmountDataTransformer(
         } else {
             cryptoBalanceValue.amount to cryptoBalanceValue.fiatAmount
         }
-        val maxEnterAmount = MaxEnterAmount(
+        val maxEnterAmount = EnterAmountBoundary(
             amount = amount,
             fiatAmount = fiatAmount,
             fiatRate = cryptoBalanceValue.fiatRate,
