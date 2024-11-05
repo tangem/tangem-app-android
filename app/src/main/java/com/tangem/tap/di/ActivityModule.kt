@@ -11,6 +11,7 @@ import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
 import com.tangem.tap.network.exchangeServices.DefaultRampManager
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.utils.Provider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,6 +47,8 @@ internal object ActivityModule {
     ): RampStateManager {
         return DefaultRampManager(
             exchangeService = appStateHolder.exchangeService,
+            buyService = Provider { requireNotNull(appStateHolder.buyService) },
+            sellService = Provider { requireNotNull(appStateHolder.sellService) },
             marketsCryptoCurrencyRepository = marketCryptoCurrencyRepository,
         )
     }
