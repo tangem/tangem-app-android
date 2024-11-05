@@ -827,7 +827,9 @@
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
+  <string name="swapping_alert_cex_description_with_slippage">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %1$s от биржи обратно на адрес пользователя \n\nПроскальзывание провайдера составляет до %2$s</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
+  <string name="swapping_alert_dex_description_with_slippage">В сумму включена комиссия провайдера сервиса. \n\nПроскальзывание провайдера составляет до %s</string>
   <string name="swapping_alert_slippage_description">Проскальзывание провайдера составляет до %s.</string>
   <string name="swapping_alert_title">Информация</string>
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
@@ -876,6 +878,7 @@
   <string name="transaction_history_transaction_from_address">от: %s</string>
   <string name="transaction_history_transaction_to_address">на: %s</string>
   <string name="transaction_history_transaction_validator">валидатор: %s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">Минимальная сумма транзакции равна %1$s.</string>
   <string name="try_to_load_data_again_button_title">Попробовать снова</string>
   <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
   <string name="twin_error_wrong_twin">Вы отсканировали не ту twin-карту. Пожалуйста, попробуйте отсканировать другую</string>
