@@ -8,10 +8,6 @@
         "version": "5.18.0"
     },
     {
-        "name": "STAKING_ENABLED",
-        "version": "5.15.0"
-    },
-    {
         "name": "IS_ETHEREUM_EIP_1559_ENABLED",
         "version": "5.17.0"
     },
