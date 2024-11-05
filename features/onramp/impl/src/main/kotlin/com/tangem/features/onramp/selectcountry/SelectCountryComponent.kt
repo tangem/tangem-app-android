@@ -3,7 +3,7 @@ package com.tangem.features.onramp.selectcountry
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 
-interface SelectCountryComponent : ComposableBottomSheetComponent {
+internal interface SelectCountryComponent : ComposableBottomSheetComponent {
 
     data class Params(val onDismiss: () -> Unit)
 
