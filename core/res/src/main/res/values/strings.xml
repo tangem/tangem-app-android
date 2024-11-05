@@ -551,10 +551,16 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="onramp_country_search">Search by country</string>
+  <string name="onramp_country_unavailable">Unavailable</string>
+  <string name="onramp_currency_search">Search by currency</string>
   <string name="onramp_pay_with">Pay with</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Our services are not available in this country</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Change or confirm it</string>
   <string name="onramp_residency_bottomsheet_title">Your residence has been identified as</string>
+  <string name="onramp_settings_residence">Residence</string>
+  <string name="onramp_settings_residence_description">Please select the correct country to ensure accurate payment options and services.</string>
+  <string name="onramp_settings_title">Settings</string>
   <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
@@ -741,6 +747,8 @@
   <string name="staking_notification_earn_rewards_text_period_week">Staking allows you to earn %1$s. Your staking rewards arrive every week.</string>
   <string name="staking_notification_earn_rewards_text_weekly">Stake securely and start earning weekly rewards</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
+  <string name="staking_notification_low_staked_balance_text">Your remaining staked balance will be too low to unstake. You’ll need to stake more to meet the minimum unstake amount.</string>
+  <string name="staking_notification_low_staked_balance_title">Low staked balance</string>
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
@@ -861,6 +869,7 @@
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">The minimum transaction amount is %1$s.</string>
   <string name="try_to_load_data_again_button_title">Try again</string>
   <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
   <string name="twin_error_wrong_twin">You\'ve scanned wrong twin card. Please try another one</string>
