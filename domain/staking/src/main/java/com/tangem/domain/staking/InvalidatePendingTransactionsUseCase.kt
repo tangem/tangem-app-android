@@ -8,7 +8,6 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.utils.extensions.isEqualTo
-import java.math.BigDecimal
 import java.util.UUID
 
 class InvalidatePendingTransactionsUseCase(
