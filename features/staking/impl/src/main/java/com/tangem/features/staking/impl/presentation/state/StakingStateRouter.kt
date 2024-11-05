@@ -26,7 +26,7 @@ internal class StakingStateRouter(
             StakingStep.InitialInfo -> when (stateController.value.actionType) {
                 StakingActionCommonType.Enter -> showAmount()
                 // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
-                StakingActionCommonType.Exit -> if (isSolana(stateController.value.cryptoCurrencyNetworkId)) {
+                StakingActionCommonType.Exit -> if (isSolana(stateController.value.cryptoCurrencyBlockchainId)) {
                     showConfirmation()
                 } else {
                     showAmount()
@@ -54,10 +54,15 @@ internal class StakingStateRouter(
             StakingStep.Amount,
             -> showInitial()
             StakingStep.Confirmation -> {
-                if (uiState.actionType != StakingActionCommonType.Enter) {
-                    showInitial()
-                } else {
+                val isEnter = uiState.actionType == StakingActionCommonType.Enter
+                val isExit = uiState.actionType == StakingActionCommonType.Exit
+
+                // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
+                val isSolana = isSolana(uiState.cryptoCurrencyBlockchainId)
+                if (isEnter || isExit && !isSolana) {
                     showAmount()
+                } else {
+                    showInitial()
                 }
             }
             StakingStep.Validators -> showConfirmation()
