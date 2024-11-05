@@ -57,11 +57,13 @@ fun MultiWalletBackup(state: MultiWalletBackupUM, modifier: Modifier = Modifier)
                 title = dialog.confirmText.resolveReference(),
                 onClick = dialog.onConfirm,
             ),
-            dismissButton = DialogButtonUM(
-                title = dialog.cancelText.resolveReference(),
-                warning = dialog.warningCancelColor,
-                onClick = dialog.onCancel,
-            ),
+            dismissButton = if (dialog.cancelText != null && dialog.onCancel != null) {
+                DialogButtonUM(
+                    title = dialog.cancelText.resolveReference(),
+                    warning = dialog.warningCancelColor,
+                    onClick = dialog.onCancel,
+                )
+            } else null,
             onDismissDialog = dialog.onDismiss,
         )
     }
