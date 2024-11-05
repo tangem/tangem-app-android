@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.tokenlist.entity.transformer
+package com.tangem.features.onramp.utils
 
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 
