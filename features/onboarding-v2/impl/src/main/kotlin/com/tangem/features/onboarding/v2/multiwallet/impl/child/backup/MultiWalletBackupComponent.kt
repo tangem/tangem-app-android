@@ -12,6 +12,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.MultiWalletBackupModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.MultiWalletBackup
+import kotlinx.coroutines.launch
 
 @Suppress("UnusedPrivateMember")
 class MultiWalletBackupComponent(
@@ -26,6 +27,10 @@ class MultiWalletBackupComponent(
         params.parentParams.titleProvider.changeTitle(
             text = resourceReference(R.string.onboarding_navbar_title_creating_backup),
         )
+
+        componentScope.launch {
+            model.onDoneFlow.collect { onDone() }
+        }
     }
 
     @Composable

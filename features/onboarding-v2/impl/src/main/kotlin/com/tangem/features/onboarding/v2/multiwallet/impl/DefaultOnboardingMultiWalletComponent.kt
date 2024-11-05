@@ -32,12 +32,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 ) : OnboardingMultiWalletComponent, AppComponentContext by context {
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)
-
     private val stackNavigation = StackNavigation<OnboardingMultiWalletState.Step>()
 
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = MutableStateFlow(
-            Wallet12InnerNavigationState(1, 5),
+            Wallet12InnerNavigationState(1, 3),
         )
 
         override fun pop(onComplete: (Boolean) -> Unit) {
@@ -83,8 +82,10 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     private fun onStepDone() {
         when (model.state.value.currentStep) {
-            OnboardingMultiWalletState.Step.CreateWallet ->
+            OnboardingMultiWalletState.Step.CreateWallet -> {
                 stackNavigation.push(OnboardingMultiWalletState.Step.AddBackupDevice)
+                // innerNavigation.state.value TODO
+            }
             OnboardingMultiWalletState.Step.AddBackupDevice -> TODO()
             OnboardingMultiWalletState.Step.FinishBackup -> TODO()
             OnboardingMultiWalletState.Step.Done -> TODO()

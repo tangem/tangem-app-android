@@ -300,5 +300,8 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/sell_crypto/${userWalletId.stringValue}")
 
     // Onboarding V2
-    data class Onboarding(val scanResponse: ScanResponse) : AppRoute(path = "/onboarding_v2")
+    data class Onboarding(
+        val scanResponse: ScanResponse,
+        val startFromBackup: Boolean,
+    ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}")
 }
