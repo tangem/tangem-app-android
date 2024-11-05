@@ -13,6 +13,7 @@ dependencies {
     api(projects.domain.staking.models)
     api(projects.domain.core)
     api(projects.core.analytics)
+    api(projects.core.utils)
 
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
