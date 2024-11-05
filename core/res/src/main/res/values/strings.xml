@@ -551,10 +551,16 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="onramp_country_search">Search by country</string>
+  <string name="onramp_country_unavailable">Unavailable</string>
+  <string name="onramp_currency_search">Search by currency</string>
   <string name="onramp_pay_with">Pay with</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Our services are not available in this country</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Change or confirm it</string>
   <string name="onramp_residency_bottomsheet_title">Your residence has been identified as</string>
+  <string name="onramp_settings_residence">Residence</string>
+  <string name="onramp_settings_residence_description">Please select the correct country to ensure accurate payment options and services.</string>
+  <string name="onramp_settings_title">Settings</string>
   <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
@@ -814,7 +820,9 @@
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
+  <string name="swapping_alert_cex_description_with_slippage">The amount includes:\n• service provider\'s fee\n• network fee for sending %1$s from the exchange back to the user\'s address. \n\nProvider slippage is up to %2$s</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
+  <string name="swapping_alert_dex_description_with_slippage">The amount includes the service provider\'s fee. \n\nProvider slippage is up to %s</string>
   <string name="swapping_alert_slippage_description">Provider slippage is up to %s.</string>
   <string name="swapping_alert_title">Information</string>
   <string name="swapping_approve_information_text">All decentralized exchanges require approvals to prevent smart contracts from accessing your wallet without your permission. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the 1-inch smart contract to spend them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can swap your token after giving approval.</string>
