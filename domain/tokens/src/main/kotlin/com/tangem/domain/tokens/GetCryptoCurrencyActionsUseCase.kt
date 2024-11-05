@@ -12,7 +12,6 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -32,7 +31,6 @@ class GetCryptoCurrencyActionsUseCase(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
-    private val stakingFeatureToggles: StakingFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -134,28 +132,26 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // staking
-        if (stakingFeatureToggles.isStakingEnabled) {
-            if (isStakingAvailable(userWallet, cryptoCurrency)) {
-                val yield = kotlin.runCatching {
-                    stakingRepository.getYield(
-                        cryptoCurrencyId = cryptoCurrency.id,
-                        symbol = cryptoCurrency.symbol,
-                    )
-                }.getOrNull()
-                activeList.add(
-                    TokenActionsState.ActionState.Stake(
-                        unavailabilityReason = ScenarioUnavailabilityReason.None,
-                        yield = yield,
-                    ),
+        if (isStakingAvailable(userWallet, cryptoCurrency)) {
+            val yield = kotlin.runCatching {
+                stakingRepository.getYield(
+                    cryptoCurrencyId = cryptoCurrency.id,
+                    symbol = cryptoCurrency.symbol,
                 )
-            } else {
-                disabledList.add(
-                    TokenActionsState.ActionState.Stake(
-                        unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
-                        yield = null,
-                    ),
-                )
-            }
+            }.getOrNull()
+            activeList.add(
+                TokenActionsState.ActionState.Stake(
+                    unavailabilityReason = ScenarioUnavailabilityReason.None,
+                    yield = yield,
+                ),
+            )
+        } else {
+            disabledList.add(
+                TokenActionsState.ActionState.Stake(
+                    unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
+                    yield = null,
+                ),
+            )
         }
 
         // send
@@ -271,9 +267,7 @@ class GetCryptoCurrencyActionsUseCase(
             }
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
-        if (stakingFeatureToggles.isStakingEnabled) {
-            actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable, null))
-        }
+        actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable, null))
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
 
         return actionsList
