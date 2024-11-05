@@ -11,7 +11,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
@@ -154,14 +153,6 @@ internal class StakingViewModel @Inject constructor(
             ).getOrElse { emptyList() }
         }
 
-    private val maxEnterAmount: MaxEnterAmount
-        get() =
-            MaxEnterAmount(
-                amount = uiState.value.balanceState?.cryptoAmount,
-                fiatAmount = uiState.value.balanceState?.fiatAmount,
-                fiatRate = cryptoCurrencyStatus.value.fiatRate,
-            )
-
     private var isInitialInfoAnalyticSent: Boolean = false
 
     private val balanceUpdater by lazy(LazyThreadSafetyMode.NONE) {
@@ -233,18 +224,6 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onNextClick(balanceState: BalanceState?) {
-        if (value.currentStep == StakingStep.InitialInfo && balanceState == null) {
-            stateController.update(
-                SetConfirmationStateInitTransformer(
-                    isEnter = true,
-                    isExplicitExit = false,
-                    balanceState = null,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    stakingApproval = stakingApproval,
-                    stakingAllowance = stakingAllowance,
-                ),
-            )
-        }
         stakingStateRouter.onNextClick()
     }
 
@@ -913,7 +892,6 @@ internal class StakingViewModel @Inject constructor(
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
                 balancesToShowProvider = Provider { balancesToShow },
-                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             SetConfirmationStateEmptyTransformer,
         )
@@ -947,7 +925,6 @@ internal class StakingViewModel @Inject constructor(
                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
-                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             AmountChangeStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
