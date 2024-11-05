@@ -774,6 +774,7 @@
   <string name="staking_rewards">Belohnungen</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
+  <string name="staking_staked_amount">Gestakeder Betrag</string>
   <string name="staking_summary_description_text">Du setzt %1$s ein und ethältst Deine Belohnung %2$s</string>
   <string name="staking_tap_to_unlock">Zum Entsperren antippen</string>
   <string name="staking_tap_to_unlock_or_vote">Tippe zum Entsperren oder Abstimmen</string>
