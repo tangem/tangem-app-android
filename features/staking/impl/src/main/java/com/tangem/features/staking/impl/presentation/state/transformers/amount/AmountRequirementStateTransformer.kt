@@ -5,7 +5,6 @@ import androidx.compose.ui.text.input.ImeAction
 import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -57,26 +56,22 @@ internal class AmountRequirementStateTransformer(
                     R.string.staking_amount_tron_integer_error_unstaking,
                     wrappedList(value),
                 )
-                else -> TextReference.EMPTY
+                else -> null
             }
-            else -> TextReference.EMPTY
+            else -> null
         }
         val isError = amountState.amountTextField.isError || requirementError != null
-        return if (!errorText.isNullOrEmpty()) {
-            amountState.copy(
-                isPrimaryButtonEnabled = !isError,
-                amountTextField = amountState.amountTextField.copy(
-                    isError = isError,
-                    isWarning = isIntegerOnlyError,
-                    error = errorText,
-                    keyboardOptions = amountState.amountTextField.keyboardOptions.copy(
-                        imeAction = ImeAction.None,
-                    ),
+        return amountState.copy(
+            isPrimaryButtonEnabled = !isError,
+            amountTextField = amountState.amountTextField.copy(
+                isError = isError,
+                isWarning = isIntegerOnlyError,
+                error = errorText ?: amountState.amountTextField.error,
+                keyboardOptions = amountState.amountTextField.keyboardOptions.copy(
+                    imeAction = ImeAction.None,
                 ),
-            )
-        } else {
-            amountState
-        }
+            ),
+        )
     }
 
     private fun getRequirementError(prevState: AmountState.Data): TextReference? {
