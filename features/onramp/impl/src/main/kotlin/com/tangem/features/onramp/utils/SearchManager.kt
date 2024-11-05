@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.tokenlist.utils
+package com.tangem.features.onramp.utils
 
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.withDebounce
@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
  * @author Andrew Khokhlov on 23/10/2024
  */
-internal class SearchTokensManager @Inject constructor() {
+internal class SearchManager @Inject constructor() {
 
     val query: Flow<String>
         get() = _query
