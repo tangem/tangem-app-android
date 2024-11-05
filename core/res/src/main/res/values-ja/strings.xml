@@ -764,6 +764,7 @@
   <string name="staking_rewards">報酬</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
+  <string name="staking_staked_amount">ステーキング中の金額</string>
   <string name="staking_summary_description_text">%1$sをステーキングし、報酬%2$sを受け取ります</string>
   <string name="staking_tap_to_unlock">タップしてロック解除</string>
   <string name="staking_tap_to_unlock_or_vote">タップしてロック解除もしくは投票</string>
