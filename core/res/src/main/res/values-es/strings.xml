@@ -856,6 +856,7 @@
   <string name="transaction_history_transaction_from_address">desde: %s</string>
   <string name="transaction_history_transaction_to_address">a: %s</string>
   <string name="transaction_history_transaction_validator">validador: %s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">El monto mínimo para realizar esta transacción es %1$s.</string>
   <string name="try_to_load_data_again_button_title">Inténtelo de nuevo</string>
   <string name="twin_error_same_card">Ha escaneado la misma tarjeta. Para crear una billetera gemela, necesite escanear la tarjeta con no. %d</string>
   <string name="twin_error_wrong_twin">Ha escaneado la tarjeta gemela incorrecta. Por favor, intente con otra</string>
