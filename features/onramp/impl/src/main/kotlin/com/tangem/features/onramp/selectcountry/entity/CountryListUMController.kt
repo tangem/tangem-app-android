@@ -1,37 +1,27 @@
-package com.tangem.features.onramp.tokenlist.entity
+package com.tangem.features.onramp.selectcountry.entity
 
-import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsTransformer
+import com.tangem.features.onramp.selectcountry.model.MockedCountriesData
 import com.tangem.features.onramp.utils.SearchBarUMTransformer
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import timber.log.Timber
 import javax.inject.Inject
 
-/**
- * [TokenListUM] controller
- *
-[REDACTED_AUTHOR]
- */
-internal class TokenListUMController @Inject constructor() {
+internal class CountryListUMController @Inject constructor() {
 
-    val state: StateFlow<TokenListUM> get() = _state
-
-    private val _state: MutableStateFlow<TokenListUM> = MutableStateFlow(
-        value = TokenListUM(
-            availableItems = persistentListOf(),
-            unavailableItems = persistentListOf(),
-            isBalanceHidden = false,
+    val state: StateFlow<CountryListUM> get() = _state.asStateFlow()
+    private val _state: MutableStateFlow<CountryListUM> = MutableStateFlow(
+        value = CountryListUM(
+            items = MockedCountriesData.getLoadingItems().map(CountriesListItemUM::Country).toImmutableList(),
         ),
     )
 
-    fun update(transform: (TokenListUM) -> TokenListUM) {
-        Timber.d("Applying non-name transformation")
-        _state.update(transform)
-    }
-
-    fun update(transformer: TokenListUMTransformer) {
+    fun update(transformer: UpdateCountryItemsTransformer) {
         Timber.d("Applying ${transformer::class.simpleName}")
         _state.update(transformer::transform)
     }
@@ -42,12 +32,11 @@ internal class TokenListUMController @Inject constructor() {
             val searchBarItem = prevState.getSearchBar()
 
             if (searchBarItem != null) {
-                val updatedSearchBar = searchBarItem.copy(
-                    searchBarUM = transformer.transform(searchBarItem.searchBarUM),
-                )
+                val updatedSearchBar =
+                    searchBarItem.copy(searchBarUM = transformer.transform(searchBarItem.searchBarUM))
 
                 prevState.copy(
-                    availableItems = persistentListOf(
+                    items = persistentListOf(
                         updatedSearchBar,
                         *prevState.getTokens().toTypedArray(),
                     ),
@@ -59,7 +48,7 @@ internal class TokenListUMController @Inject constructor() {
     }
 
     /** Get search bar if it exists */
-    fun getSearchBar(): TokensListItemUM.SearchBar? {
+    fun getSearchBar(): CountriesListItemUM.SearchBar? {
         return _state.value.getSearchBar()
     }
 }
