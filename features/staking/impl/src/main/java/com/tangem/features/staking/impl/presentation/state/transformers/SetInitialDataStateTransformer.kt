@@ -41,20 +41,9 @@ internal class SetInitialDataStateTransformer(
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<BalanceItem>>,
-    private val maxEnterAmountProvider: Provider<MaxEnterAmount>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-
-    private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
-        AmountStateConverter(
-            clickIntents = clickIntents,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-            appCurrencyProvider = appCurrencyProvider,
-            iconStateConverter = iconStateConverter,
-            maxEnterAmountProvider = maxEnterAmountProvider,
-        )
-    }
 
     private val rewardsValidatorStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         RewardsValidatorStateConverter(cryptoCurrencyStatusProvider, appCurrencyProvider, yield)
@@ -211,7 +200,19 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialAmountState(): AmountState {
-        return amountStateConverter.convert(
+        val cryptoBalanceValue = cryptoCurrencyStatusProvider().value
+        val maxEnterAmount = MaxEnterAmount(
+            amount = cryptoBalanceValue.amount,
+            fiatAmount = cryptoBalanceValue.fiatAmount,
+            fiatRate = cryptoBalanceValue.fiatRate,
+        )
+        return AmountStateConverter(
+            clickIntents = clickIntents,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            iconStateConverter = iconStateConverter,
+            maxEnterAmount = maxEnterAmount,
+        ).convert(
             AmountParameters(
                 title = stringReference(userWalletProvider().name),
                 value = "",
