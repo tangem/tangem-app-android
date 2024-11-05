@@ -808,7 +808,9 @@
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
   <string name="swap_promo_title">Nouveau fournisseur d\'échange disponible !</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
+  <string name="swapping_alert_cex_description_with_slippage">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %1$s depuis l\'échange vers l\'adresse de l\'utilisateur. \n\nLe slippage du fournisseur peut atteindre %2$s</string>
   <string name="swapping_alert_dex_description">Le montant comprend les frais du fournisseur de services.</string>
+  <string name="swapping_alert_dex_description_with_slippage">Le montant comprend les frais du fournisseur de services. \n\nLe slippage du fournisseur peut atteindre %s</string>
   <string name="swapping_alert_title">Frais</string>
   <string name="swapping_approve_information_text">Tous les échanges décentralisés nécessitent des approbations pour empêcher les smart contracts d\'accéder à votre portefeuille sans votre permission. Par conception, les smart contracts ne peuvent pas accéder à vos jetons sans votre approbation. En « déverrouillant » vos jetons, vous autorisez le smart contract 1-inch à les dépenser. Les mineurs du réseau reçoivent des frais de gaz (payés par vous) pour enregistrer cette action sur la blockchain. Vous pouvez échanger votre jeton après avoir donné votre approbation.</string>
   <string name="swapping_approve_information_title">Approuver</string>
@@ -856,6 +858,7 @@
   <string name="transaction_history_transaction_from_address">de : %s</string>
   <string name="transaction_history_transaction_to_address">à : %s</string>
   <string name="transaction_history_transaction_validator">validateur : %s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">Le montant minimum pour effectuer cette transaction est %1$s.</string>
   <string name="try_to_load_data_again_button_title">Réessayez</string>
   <string name="twin_error_same_card">Vous avez scanné la même carte. Pour créer un portefeuille jumeau, vous devez scanner la carte portant le numéro %d</string>
   <string name="twin_error_wrong_twin">Vous avez scanné une mauvaise carte jumelle. S\'il vous plaît, essayez-en un autre</string>
