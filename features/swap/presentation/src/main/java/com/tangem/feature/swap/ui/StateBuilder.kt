@@ -1094,10 +1094,20 @@ internal class StateBuilder(
         provider: SwapProvider,
         onDismiss: () -> Unit,
     ): SwapStateHolder {
+        val slippage = provider.slippage?.let { "${it.parseBigDecimal(1)}$PERCENT" }
         val combinedMessage = buildList {
             when (provider.type) {
                 ExchangeProviderType.CEX -> {
-                    add(resourceReference(R.string.swapping_alert_cex_description, wrappedList(token)))
+                    if (slippage != null) {
+                        add(
+                            resourceReference(
+                                id = R.string.swapping_alert_cex_description_with_slippage,
+                                formatArgs = wrappedList(token, slippage),
+                            ),
+                        )
+                    } else {
+                        add(resourceReference(R.string.swapping_alert_cex_description, wrappedList(token)))
+                    }
                 }
                 ExchangeProviderType.DEX,
                 ExchangeProviderType.DEX_BRIDGE,
@@ -1106,17 +1116,17 @@ internal class StateBuilder(
                         add(resourceReference(R.string.swapping_high_price_impact_description))
                         add(stringReference("\n\n"))
                     }
-                    add(resourceReference(R.string.swapping_alert_dex_description))
+                    if (slippage != null) {
+                        add(
+                            resourceReference(
+                                id = R.string.swapping_alert_dex_description_with_slippage,
+                                formatArgs = wrappedList(token, slippage),
+                            ),
+                        )
+                    } else {
+                        add(resourceReference(R.string.swapping_alert_dex_description, wrappedList(token)))
+                    }
                 }
-            }
-            provider.slippage?.let { slippage ->
-                add(stringReference("\n\n"))
-                add(
-                    resourceReference(
-                        R.string.swapping_alert_slippage_description,
-                        wrappedList("${slippage.parseBigDecimal(1)}$PERCENT"),
-                    ),
-                )
             }
         }
         return uiState.copy(
