@@ -12,8 +12,8 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.Provider
@@ -26,7 +26,7 @@ import kotlinx.collections.immutable.persistentListOf
  *
  * @property clickIntents amount screen clicks
  * @property appCurrencyProvider selected app currency provider
- * @property maxEnterAmountProvider max enter amount data provider
+ * @property maxEnterAmount max enter amount data
  * @property cryptoCurrencyStatusProvider current cryptocurrency status provider
  * @property iconStateConverter currency icon converter
  */
@@ -34,7 +34,7 @@ class AmountStateConverter(
     private val clickIntents: AmountScreenClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
-    private val maxEnterAmountProvider: Provider<MaxEnterAmount>,
+    private val maxEnterAmount: MaxEnterAmount,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
 ) : Converter<AmountParameters, AmountState> {
 
@@ -47,10 +47,9 @@ class AmountStateConverter(
     }
 
     override fun convert(value: AmountParameters): AmountState {
-        val maxEnterAmount = maxEnterAmountProvider()
         val appCurrency = appCurrencyProvider()
         val status = cryptoCurrencyStatusProvider()
-        val fiat = formatFiatAmount(maxEnterAmount.fiatAmount, appCurrency.code, appCurrency.symbol)
+        val fiat = maxEnterAmount.fiatAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
         val crypto = maxEnterAmount.amount.format { crypto(status.currency) }
         val noFeeRate = status.value.fiatRate.isNullOrZero()
 
