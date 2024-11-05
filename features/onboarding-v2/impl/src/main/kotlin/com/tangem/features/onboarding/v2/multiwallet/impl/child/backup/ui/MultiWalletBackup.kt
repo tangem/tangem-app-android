@@ -63,7 +63,9 @@ fun MultiWalletBackup(state: MultiWalletBackupUM, modifier: Modifier = Modifier)
                     warning = dialog.warningCancelColor,
                     onClick = dialog.onCancel,
                 )
-            } else null,
+            } else {
+                null
+            },
             onDismissDialog = dialog.onDismiss,
         )
     }
