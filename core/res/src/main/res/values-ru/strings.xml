@@ -714,6 +714,7 @@
   <string name="settings_wallet_name_title">Имя</string>
   <string name="staking_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
   <string name="staking_amount_tron_integer_error">Согласно правилам сети, сумма стейкинга будет округлена до %1$sTRX.</string>
+  <string name="staking_amount_tron_integer_error_unstaking">Сумма для вывода из стейкинга будет округлена до %1$s TRX ввиду особенностей сети.</string>
   <string name="staking_claim_unstaked">Забрать средства</string>
   <string name="staking_details_account_fee">Комиссия за стейкинг аккаунт</string>
   <string name="staking_details_account_fee_info">Стейкинг аккаунт — это специальный счет, на котором хранятся застейканные токены SOL. Он создается при делегировании ваших токенов валидатору для участия в подтверждении транзакций и получении наград. За создание стейкинг аккаунта взимается небольшая комиссия, которая возвращается после завершения стейкинга.</string>
@@ -756,6 +757,7 @@
   <string name="staking_notification_earn_rewards_text_period_week">Стейкинг дает возможность вам получать %1$s. Награда будет зачисляться каждую неделю.</string>
   <string name="staking_notification_earn_rewards_text_weekly">Стейкайте безопасно и начинайте получать еженедельные награды.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
+  <string name="staking_notification_low_staked_balance_text">Оставшийся застейканный баланс будет слишком мал для вывода. Вам потребуется застейкать больше средств, чтобы достичь минимальной суммы для вывода.</string>
   <string name="staking_notification_network_error_text">Стейкинг временно недоступен из-за проблем в сети. Пожалуйста, попробуйте позже.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкинг в сети %1$s с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
@@ -798,7 +800,7 @@
   <string name="staking_unbonding">Отзыв</string>
   <string name="staking_unlocked_locked">Разблокировать</string>
   <string name="staking_unlocking">Разблокировка</string>
-  <string name="staking_unstake_amount_requirement_error">Сумма для стейкинга должна быть не менее %s</string>
+  <string name="staking_unstake_amount_requirement_error">Сумма для вывода из стейкинга должна быть не менее %s</string>
   <string name="staking_unstake_amount_validation_error">Сумма превышает застейканный баланс</string>
   <string name="staking_unstaked">Вывод из стейкинга</string>
   <string name="staking_unstaking">Завершение стейкинга</string>
@@ -874,6 +876,7 @@
   <string name="transaction_history_transaction_from_address">от: %s</string>
   <string name="transaction_history_transaction_to_address">на: %s</string>
   <string name="transaction_history_transaction_validator">валидатор: %s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">Минимальная сумма транзакции равна %1$s.</string>
   <string name="try_to_load_data_again_button_title">Попробовать снова</string>
   <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
   <string name="twin_error_wrong_twin">Вы отсканировали не ту twin-карту. Пожалуйста, попробуйте отсканировать другую</string>
