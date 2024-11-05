@@ -72,7 +72,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -110,7 +109,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
-    private val stakingFeatureToggles: StakingFeatureToggles,
     private val getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     private val getYieldUseCase: GetYieldUseCase,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
@@ -167,7 +165,6 @@ internal class TokenDetailsViewModel @Inject constructor(
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
-        stakingFeatureToggles = stakingFeatureToggles,
         getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
         getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
         symbol = cryptoCurrency.symbol,
@@ -240,9 +237,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         subscribeOnExchangeTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
 
-        if (stakingFeatureToggles.isStakingEnabled) {
-            updateStakingInfo()
-        }
+        updateStakingInfo()
     }
 
     private fun handleBalanceHiding(owner: LifecycleOwner) {
