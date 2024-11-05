@@ -8,6 +8,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,8 +55,10 @@ internal fun OnrampSettingsContent(state: OnrampSettingsUM, modifier: Modifier =
 private fun Content(items: ImmutableList<OnrampSettingsItemUM>, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         items.fastForEach { model ->
-            when (model) {
-                is OnrampSettingsItemUM.Residence -> ResidenceSection(model)
+            key(model) {
+                when (model) {
+                    is OnrampSettingsItemUM.Residence -> ResidenceSection(model)
+                }
             }
         }
     }
