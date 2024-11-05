@@ -11,7 +11,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
@@ -21,20 +21,9 @@ internal class SetAmountDataTransformer(
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val maxEnterAmountProvider: Provider<MaxEnterAmount>,
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-
-    private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
-        AmountStateConverter(
-            clickIntents = clickIntents,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-            appCurrencyProvider = appCurrencyProvider,
-            iconStateConverter = iconStateConverter,
-            maxEnterAmountProvider = maxEnterAmountProvider,
-        )
-    }
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val title = if (prevState.actionType == StakingActionCommonType.Exit) {
@@ -42,9 +31,26 @@ internal class SetAmountDataTransformer(
         } else {
             stringReference(userWalletProvider().name)
         }
+        val cryptoBalanceValue = cryptoCurrencyStatusProvider().value
+        val (amount, fiatAmount) = if (prevState.actionType != StakingActionCommonType.Enter) {
+            prevState.balanceState?.cryptoAmount to prevState.balanceState?.fiatAmount
+        } else {
+            cryptoBalanceValue.amount to cryptoBalanceValue.fiatAmount
+        }
+        val maxEnterAmount = MaxEnterAmount(
+            amount = amount,
+            fiatAmount = fiatAmount,
+            fiatRate = cryptoBalanceValue.fiatRate,
+        )
 
         return prevState.copy(
-            amountState = amountStateConverter.convert(
+            amountState = AmountStateConverter(
+                clickIntents = clickIntents,
+                cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+                appCurrencyProvider = appCurrencyProvider,
+                iconStateConverter = iconStateConverter,
+                maxEnterAmount = maxEnterAmount,
+            ).convert(
                 AmountParameters(
                     title = title,
                     value = "",
