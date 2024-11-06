@@ -24,6 +24,7 @@ internal class SearchManager @Inject constructor() {
     suspend fun update(value: String) {
         coroutineScope {
             if (value.isEmpty()) {
+                jobHolder.cancel()
                 _query.value = value
             } else {
                 withDebounce(jobHolder) { _query.value = value }
