@@ -171,7 +171,7 @@ internal class StakingInfoNotificationsFactory(
         val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT) ?: return
 
         val amountLeft = maxAmount - actionAmount
-        val isNotEnoughLeft = !amountLeft.isZero() && amountLeft < exitRequirements.minimum
+        val isNotEnoughLeft = !amountLeft.isZero() && amountLeft < exitRequirements.minimum.orZero()
 
         if (exitRequirements.required && isNotEnoughLeft) {
             add(StakingNotification.Warning.LowStakedBalance)
