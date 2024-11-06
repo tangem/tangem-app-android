@@ -228,6 +228,18 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onNextClick(balanceState: BalanceState?) {
+        if (value.currentStep == StakingStep.InitialInfo && balanceState == null) {
+            stateController.update(
+                SetConfirmationStateInitTransformer(
+                    isEnter = true,
+                    isExplicitExit = false,
+                    balanceState = null,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    stakingApproval = stakingApproval,
+                    stakingAllowance = stakingAllowance,
+                ),
+            )
+        }
         stakingStateRouter.onNextClick()
     }
 
