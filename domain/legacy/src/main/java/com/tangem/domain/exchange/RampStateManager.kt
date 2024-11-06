@@ -17,7 +17,13 @@ interface RampStateManager {
 
     suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean
 
+    suspend fun fetchBuyServiceData()
+
     fun getBuyInitializationStatus(): Flow<Lce<Throwable, Any>>
 
+    suspend fun fetchSellServiceData()
+
     fun getSellInitializationStatus(): Flow<Lce<Throwable, Any>>
+
+    fun getSwapInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, Any>>
 }
