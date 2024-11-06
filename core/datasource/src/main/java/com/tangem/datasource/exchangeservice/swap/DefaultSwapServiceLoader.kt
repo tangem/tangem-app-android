@@ -13,8 +13,10 @@ import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -31,35 +33,38 @@ typealias InitializationStatusFlow = MutableStateFlow<Lce<Throwable, List<Asset>
 internal class DefaultSwapServiceLoader @Inject constructor(
     private val tangemExpressApi: TangemExpressApi,
     private val expressAssetsStore: ExpressAssetsStore,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : SwapServiceLoader {
 
     private val initializationStatuses: Map<UserWalletId, InitializationStatusFlow> = mapOf()
 
     override suspend fun update(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
-        val initializationStatus = getInitializationStatusInternal(userWalletId)
+        withContext(dispatchers.io) {
+            val initializationStatus = getInitializationStatusInternal(userWalletId)
 
-        initializationStatus.update { lceLoading() }
+            initializationStatus.update { lceLoading() }
 
-        try {
-            val tokensList = userTokens.tokens.map {
-                LeastTokenInfo(
-                    contractAddress = it.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
-                    network = it.networkId,
-                )
+            try {
+                val tokensList = userTokens.tokens.map {
+                    LeastTokenInfo(
+                        contractAddress = it.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
+                        network = it.networkId,
+                    )
+                }
+
+                if (tokensList.isNotEmpty()) {
+                    val response = tangemExpressApi.getAssets(
+                        body = AssetsRequestBody(tokensList = tokensList),
+                    ).getOrThrow()
+
+                    expressAssetsStore.store(userWalletId, response)
+
+                    initializationStatus.update { response.lceContent() }
+                }
+            } catch (e: Throwable) {
+                initializationStatus.update { e.lceError() }
+                Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
             }
-
-            if (tokensList.isNotEmpty()) {
-                val response = tangemExpressApi.getAssets(
-                    body = AssetsRequestBody(tokensList = tokensList),
-                ).getOrThrow()
-
-                expressAssetsStore.store(userWalletId, response)
-
-                initializationStatus.update { response.lceContent() }
-            }
-        } catch (e: Throwable) {
-            initializationStatus.update { e.lceError() }
-            Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
         }
     }
 
