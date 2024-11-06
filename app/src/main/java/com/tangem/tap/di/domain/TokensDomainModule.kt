@@ -118,26 +118,26 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         swapRepository: SwapRepository,
         currencyChecksRepository: CurrencyChecksRepository,
         showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
         promoRepository: PromoRepository,
         stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
+        rampStateManager: RampStateManager,
     ): GetCurrencyWarningsUseCase {
         return GetCurrencyWarningsUseCase(
             walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
             currencyChecksRepository = currencyChecksRepository,
             swapRepository = swapRepository,
             showSwapPromoTokenUseCase = showSwapPromoTokenUseCase,
             promoRepository = promoRepository,
             stakingRepository = stakingRepository,
             dispatchers = dispatchers,
+            rampStateManager = rampStateManager,
         )
     }
 
@@ -215,7 +215,6 @@ internal object TokensDomainModule {
     fun provideGetCryptoCurrencyActionsUseCase(
         rampStateManager: RampStateManager,
         walletManagersFacade: WalletManagersFacade,
-        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
@@ -225,7 +224,6 @@ internal object TokensDomainModule {
         return GetCryptoCurrencyActionsUseCase(
             rampManager = rampStateManager,
             walletManagersFacade = walletManagersFacade,
-            marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
