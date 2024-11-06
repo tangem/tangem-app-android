@@ -4,6 +4,7 @@ import com.tangem.data.onramp.converters.CountryConverter
 import com.tangem.data.onramp.converters.CurrencyConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -25,7 +26,7 @@ internal class DefaultOnrampRepository(
 ) : OnrampRepository {
 
     private val currencyConverter = CurrencyConverter()
-    private val countryConverter = CountryConverter()
+    private val countryConverter = CountryConverter(currencyConverter)
 
     override suspend fun getCurrencies(): List<OnrampCurrency> = withContext(dispatchers.io) {
         onrampApi.getCurrencies()
@@ -39,15 +40,21 @@ internal class DefaultOnrampRepository(
             .map(countryConverter::convert)
     }
 
-    override suspend fun saveDefaultCurrency(currency: OnrampCurrency) {
+    override suspend fun getCountryByIp(): OnrampCountry = withContext(dispatchers.io) {
+        onrampApi.getCountryByIp()
+            .getOrThrow()
+            .let(countryConverter::convert)
+    }
+
+    override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
         appPreferencesStore.storeObject<OnrampCurrencyDTO>(
             key = PreferencesKeys.ONRAMP_DEFAULT_CURRENCY,
             value = currencyConverter.convertBack(currency),
         )
     }
 
-    override suspend fun getDefaultCurrencySync(): OnrampCurrency? {
-        return appPreferencesStore
+    override suspend fun getDefaultCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {
+        appPreferencesStore
             .getObjectSyncOrNull<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
             ?.let(currencyConverter::convert)
     }
@@ -56,5 +63,24 @@ internal class DefaultOnrampRepository(
         return appPreferencesStore
             .getObject<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
             .map { it?.let(currencyConverter::convert) }
+    }
+
+    override suspend fun saveDefaultCountry(country: OnrampCountry) = withContext(dispatchers.io) {
+        appPreferencesStore.storeObject<OnrampCountryDTO>(
+            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            value = countryConverter.convertBack(country),
+        )
+    }
+
+    override suspend fun getDefaultCountrySync(): OnrampCountry? = withContext(dispatchers.io) {
+        appPreferencesStore
+            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            ?.let(countryConverter::convert)
+    }
+
+    override fun getDefaultCountry(): Flow<OnrampCountry?> {
+        return appPreferencesStore
+            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .map { it?.let(countryConverter::convert) }
     }
 }
