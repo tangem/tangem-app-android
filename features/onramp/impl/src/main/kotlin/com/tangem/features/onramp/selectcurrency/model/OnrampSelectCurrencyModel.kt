@@ -55,7 +55,6 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
             )
         }
             .onEach(controller::update)
-            .flowOn(dispatchers.main)
             .launchIn(modelScope)
     }
 
