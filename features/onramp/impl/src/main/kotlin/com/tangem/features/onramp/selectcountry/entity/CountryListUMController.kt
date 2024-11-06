@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import timber.log.Timber
 import javax.inject.Inject
 
 internal class CountryListUMController @Inject constructor() {
@@ -22,12 +21,10 @@ internal class CountryListUMController @Inject constructor() {
     )
 
     fun update(transformer: UpdateCountryItemsTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName}")
         _state.update(transformer::transform)
     }
 
     fun update(transformer: SearchBarUMTransformer) {
-        Timber.d("Applying ${transformer::class.simpleName}")
         _state.update { prevState ->
             val searchBarItem = prevState.getSearchBar()
 
