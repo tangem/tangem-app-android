@@ -103,6 +103,8 @@ object PreferencesKeys {
 
     val SHOULD_SHOW_RING_PROMO_KEY by lazy { booleanPreferencesKey(name = "shouldShowRingPromo") }
 
+    val ONRAMP_DEFAULT_CURRENCY by lazy { stringPreferencesKey(name = "onrampDefaultCurrency") }
+
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 

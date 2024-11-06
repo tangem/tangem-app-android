@@ -31,7 +31,7 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
     @Composable
     override fun BottomSheet() {
         val state by model.state.collectAsStateWithLifecycle()
-        val bottomSheetConfig = remember {
+        val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
                 isShow = true,
                 onDismissRequest = ::dismiss,
