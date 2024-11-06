@@ -36,7 +36,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = MutableStateFlow(
-            Wallet12InnerNavigationState(1, 3),
+            MultiWalletInnerNavigationState(1, 5),
         )
 
         override fun pop(onComplete: (Boolean) -> Unit) {
@@ -113,7 +113,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     }
 }
 
-data class Wallet12InnerNavigationState(
+data class MultiWalletInnerNavigationState(
     override val stackSize: Int,
     override val stackMaxSize: Int?,
 ) : InnerNavigationState

@@ -10,7 +10,7 @@ internal class OnboardingChildFactory @Inject constructor(
 
     fun createChild(route: OnboardingRoute, childContext: AppComponentContext): Any {
         return when (route) {
-            is OnboardingRoute.Wallet12 -> wallet12ComponentFactory.create(
+            is OnboardingRoute.MultiWallet -> wallet12ComponentFactory.create(
                 context = childContext,
                 params = OnboardingMultiWalletComponent.Params(
                     scanResponse = route.scanResponse,
