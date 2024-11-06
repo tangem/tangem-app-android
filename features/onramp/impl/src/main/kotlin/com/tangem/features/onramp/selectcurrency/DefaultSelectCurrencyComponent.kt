@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.selectcountry
+package com.tangem.features.onramp.selectcurrency
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -10,22 +10,22 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.features.onramp.selectcountry.model.OnrampSelectCountryModel
-import com.tangem.features.onramp.selectcountry.ui.OnrampCountryList
-import com.tangem.features.onramp.selectcountry.ui.SelectCountryBottomSheet
+import com.tangem.features.onramp.selectcurrency.model.OnrampSelectCurrencyModel
+import com.tangem.features.onramp.selectcurrency.ui.OnrampCurrencyList
+import com.tangem.features.onramp.selectcurrency.ui.SelectCurrencyBottomSheet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class DefaultSelectCountryComponent @AssistedInject constructor(
-    @Assisted appComponentContext: AppComponentContext,
-    @Assisted private val params: SelectCountryComponent.Params,
-) : SelectCountryComponent, AppComponentContext by appComponentContext {
+internal class DefaultSelectCurrencyComponent @AssistedInject constructor(
+    @Assisted context: AppComponentContext,
+    @Assisted params: SelectCurrencyComponent.Params,
+) : SelectCurrencyComponent, AppComponentContext by context {
 
-    private val model: OnrampSelectCountryModel = getOrCreateModel(params)
+    private val model: OnrampSelectCurrencyModel = getOrCreateModel(params)
 
     override fun dismiss() {
-        params.onDismiss()
+        model.dismiss()
     }
 
     @Composable
@@ -38,17 +38,19 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
                 content = TangemBottomSheetConfigContent.Empty,
             )
         }
-        SelectCountryBottomSheet(
+        SelectCurrencyBottomSheet(
             config = bottomSheetConfig,
-            content = { OnrampCountryList(state = state, modifier = Modifier.fillMaxSize()) },
+            content = {
+                OnrampCurrencyList(modifier = Modifier.fillMaxSize(), state = state)
+            },
         )
     }
 
     @AssistedFactory
-    interface Factory : SelectCountryComponent.Factory {
+    interface Factory : SelectCurrencyComponent.Factory {
         override fun create(
             context: AppComponentContext,
-            params: SelectCountryComponent.Params,
-        ): DefaultSelectCountryComponent
+            params: SelectCurrencyComponent.Params,
+        ): DefaultSelectCurrencyComponent
     }
 }
