@@ -2,12 +2,11 @@ package com.tangem.data.tokens.di
 
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.repository.*
-import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.quote.QuotesStore
-import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -26,23 +25,21 @@ internal object TokensDataModule {
     @Singleton
     fun provideCurrenciesRepository(
         tangemTechApi: TangemTechApi,
-        tangemExpressApi: TangemExpressApi,
         appPreferencesStore: AppPreferencesStore,
         userWalletsStore: UserWalletsStore,
         walletManagersFacade: WalletManagersFacade,
-        expressAssetsStore: ExpressAssetsStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
+        swapServiceLoader: SwapServiceLoader,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
-            tangemExpressApi = tangemExpressApi,
-            appPreferencesStore = appPreferencesStore,
-            walletManagersFacade = walletManagersFacade,
             userWalletsStore = userWalletsStore,
-            expressAssetsStore = expressAssetsStore,
+            walletManagersFacade = walletManagersFacade,
             cacheRegistry = cacheRegistry,
+            appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
+            swapServiceLoader = swapServiceLoader,
         )
     }
 
@@ -82,15 +79,6 @@ internal object TokensDataModule {
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun provideDefaultMarketCoinsRepository(
-        expressAssetsStore: ExpressAssetsStore,
-        coroutineDispatcherProvider: CoroutineDispatcherProvider,
-    ): MarketCryptoCurrencyRepository {
-        return DefaultMarketCryptoCurrencyRepository(expressAssetsStore, coroutineDispatcherProvider)
     }
 
     @Provides
