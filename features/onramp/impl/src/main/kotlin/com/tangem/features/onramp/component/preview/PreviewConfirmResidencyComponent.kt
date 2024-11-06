@@ -2,6 +2,7 @@ package com.tangem.features.onramp.component.preview
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -31,11 +32,13 @@ internal class PreviewConfirmResidencyComponent(
     @Composable
     override fun BottomSheet() {
         val state by previewState.collectAsStateWithLifecycle()
-        val bottomSheetConfig = TangemBottomSheetConfig(
-            isShow = true,
-            onDismissRequest = ::dismiss,
-            content = TangemBottomSheetConfigContent.Empty,
-        )
+        val bottomSheetConfig = remember(key1 = this) {
+            TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = ::dismiss,
+                content = TangemBottomSheetConfigContent.Empty,
+            )
+        }
         ConfirmResidencyBottomSheet(
             config = bottomSheetConfig,
             content = { modifier ->

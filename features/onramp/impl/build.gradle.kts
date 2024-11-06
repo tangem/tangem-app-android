@@ -30,6 +30,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.onramp)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
