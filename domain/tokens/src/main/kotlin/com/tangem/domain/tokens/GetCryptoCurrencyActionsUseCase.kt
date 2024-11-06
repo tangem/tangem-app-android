@@ -7,7 +7,6 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -26,7 +25,6 @@ import kotlinx.coroutines.flow.*
 class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
     private val walletManagersFacade: WalletManagersFacade,
-    private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
@@ -168,7 +166,7 @@ class GetCryptoCurrencyActionsUseCase(
         // swap
         if (userWallet.isMultiCurrency) {
             if (
-                marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency) &&
+                rampManager.availableForSwap(userWallet.walletId, cryptoCurrency) &&
                 cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote
             ) {
                 activeList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
@@ -300,7 +298,7 @@ class GetCryptoCurrencyActionsUseCase(
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
     }
 
-    private suspend fun isStakingAvailable(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
+    private fun isStakingAvailable(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
         return stakingRepository.getStakingAvailability(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
