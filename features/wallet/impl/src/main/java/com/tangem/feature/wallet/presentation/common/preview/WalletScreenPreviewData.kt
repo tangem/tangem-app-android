@@ -119,6 +119,7 @@ internal object WalletScreenPreviewData {
                 onRefresh = {},
             ),
             walletCardState = miltiUnreachableCard,
+            buttons = persistentListOf(buyButton),
             warnings = persistentListOf(
                 WalletNotification.Warning.SomeNetworksUnreachable,
             ),
