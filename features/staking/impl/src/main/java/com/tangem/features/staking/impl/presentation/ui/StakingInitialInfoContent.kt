@@ -128,7 +128,7 @@ private fun LazyListScope.activeStakingBlock(
     clickIntents: StakingClickIntents,
     isBalanceHidden: Boolean,
 ) {
-    val innerYieldBalanceState = (state.yieldBalance as? InnerYieldBalanceState.Data) ?: return
+    val innerYieldBalanceState = state.yieldBalance as? InnerYieldBalanceState.Data ?: return
 
     item(key = STAKING_REWARD_BLOCK_KEY) {
         Column(modifier = Modifier.animateItem()) {
