@@ -46,7 +46,7 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
     override fun BottomSheet() {
         val state by model.state.collectAsStateWithLifecycle()
         val bottomSheet by bottomSheetSlot.subscribeAsState()
-        val bottomSheetConfig = remember {
+        val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
                 isShow = true,
                 onDismissRequest = ::dismiss,
