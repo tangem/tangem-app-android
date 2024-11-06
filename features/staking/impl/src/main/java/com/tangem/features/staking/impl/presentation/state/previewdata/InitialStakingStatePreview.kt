@@ -68,7 +68,7 @@ internal object InitialStakingStatePreview {
             rewardsCrypto = "100 SOL",
             rewardBlockType = RewardBlockType.RewardUnavailable,
             isActionable = true,
-            balance = persistentListOf(
+            balances = persistentListOf(
                 BalanceState(
                     groupId = "groupId",
                     title = stringReference("Binance"),

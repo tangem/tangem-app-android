@@ -14,7 +14,6 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -41,7 +40,6 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
-    private val pendingBalancesProvider: Provider<List<BalanceItem>>,
     private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val symbol: String,
     private val decimals: Int,
@@ -149,7 +147,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         val stakingEntryInfo = stakingEntryInfoProvider.invoke()
         val stakingAvailability = stakingAvailabilityProvider.invoke()
         val iconState = state.tokenInfoBlockState.iconState
-        val pendingBalances = pendingBalancesProvider.invoke()
+        val pendingBalances = yieldBalance?.balance?.items ?: emptyList()
         val fiatRate = status.value.fiatRate
 
         return when {
