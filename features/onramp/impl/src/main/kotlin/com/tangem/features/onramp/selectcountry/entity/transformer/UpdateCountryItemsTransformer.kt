@@ -6,15 +6,16 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.CountriesListItemUM
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
+import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
 
 internal class UpdateCountryItemsTransformer(
     private val countries: List<CountryItemState>,
     private val onQueryChange: (String) -> Unit,
     private val onActiveChange: (Boolean) -> Unit,
-) {
+) : Transformer<CountryListUM> {
 
-    fun transform(prevState: CountryListUM): CountryListUM {
+    override fun transform(prevState: CountryListUM): CountryListUM {
         val searchBarItem = prevState.getSearchBar() ?: createSearchBarItem()
 
         return prevState.copy(
