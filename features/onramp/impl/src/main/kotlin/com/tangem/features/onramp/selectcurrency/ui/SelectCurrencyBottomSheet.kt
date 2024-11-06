@@ -14,7 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -116,7 +116,7 @@ private fun CurrencyContent(currency: CurrencyItemState.Content, modifier: Modif
             )
             Text(
                 text = currency.onrampCurrency.name,
-                style = TangemTheme.typography.subtitle2,
+                style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
         }
@@ -132,17 +132,13 @@ private fun CurrencyLoading(modifier: Modifier = Modifier) {
     ) {
         CircleShimmer(modifier = Modifier.size(TangemTheme.dimens.size36))
         Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing6)) {
-            RectangleShimmer(
-                modifier = Modifier.size(
-                    width = TangemTheme.dimens.size70,
-                    height = TangemTheme.dimens.size12,
-                ),
+            TextShimmer(
+                modifier = Modifier.width(width = TangemTheme.dimens.size70),
+                style = TangemTheme.typography.subtitle2,
             )
-            RectangleShimmer(
-                modifier = Modifier.size(
-                    width = TangemTheme.dimens.size52,
-                    height = TangemTheme.dimens.size12,
-                ),
+            TextShimmer(
+                modifier = Modifier.width(width = TangemTheme.dimens.size52),
+                style = TangemTheme.typography.caption2,
             )
         }
     }
