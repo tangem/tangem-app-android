@@ -19,13 +19,13 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultSelectCountryComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted private val params: SelectCountryComponent.Params,
+    @Assisted params: SelectCountryComponent.Params,
 ) : SelectCountryComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampSelectCountryModel = getOrCreateModel(params)
 
     override fun dismiss() {
-        params.onDismiss()
+        model.dismiss()
     }
 
     @Composable
