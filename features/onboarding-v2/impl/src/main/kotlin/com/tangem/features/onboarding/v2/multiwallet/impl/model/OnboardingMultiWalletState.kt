@@ -6,7 +6,6 @@ data class OnboardingMultiWalletState(
     val currentStep: Step,
     val currentScanResponse: ScanResponse,
 ) {
-
     enum class Step {
         CreateWallet, AddBackupDevice, FinishBackup, Done
     }
