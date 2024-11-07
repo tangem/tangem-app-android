@@ -193,7 +193,7 @@ object NotificationsFactory {
         if (isExceedsLimit) {
             add(
                 NotificationUM.Error.MinimumAmountError(
-                    amount = dustValue.parseBigDecimal(cryptoCurrencyStatus.currency.decimals),
+                    amount = dustValue.format { crypto(cryptoCurrencyStatus.currency) },
                 ),
             )
         }
@@ -301,7 +301,7 @@ object NotificationsFactory {
                 dustValue?.let {
                     add(
                         NotificationUM.Error.MinimumAmountError(
-                            amount = it.parseBigDecimal(sendingCurrency.decimals),
+                            amount = it.format { crypto(sendingCurrency) },
                         ),
                     )
                 }
