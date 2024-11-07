@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -36,8 +37,9 @@ internal class DefaultOnrampSettingsComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        val state by model.state.collectAsStateWithLifecycle()
         BackHandler(onBack = params.onBack)
-        OnrampSettingsContent(modifier = modifier, state = model.state)
+        OnrampSettingsContent(modifier = modifier, state = state)
 
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         bottomSheet.child?.instance?.BottomSheet()
