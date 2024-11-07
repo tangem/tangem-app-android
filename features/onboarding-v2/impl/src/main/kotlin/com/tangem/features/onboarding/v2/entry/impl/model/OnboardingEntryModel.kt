@@ -40,12 +40,12 @@ internal class OnboardingEntryModel @Inject constructor(
         return when (scanResponse.productType) {
             ProductType.Note -> TODO()
             ProductType.Twins -> TODO()
-            ProductType.Wallet -> OnboardingRoute.Wallet12(
+            ProductType.Wallet -> OnboardingRoute.MultiWallet(
                 scanResponse = scanResponse,
                 withSeedPhraseFlow = false,
                 titleProvider = titleProvider,
             )
-            ProductType.Wallet2 -> OnboardingRoute.Wallet12(
+            ProductType.Wallet2 -> OnboardingRoute.MultiWallet(
                 scanResponse = scanResponse,
                 withSeedPhraseFlow = true,
                 titleProvider = titleProvider,
