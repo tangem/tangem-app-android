@@ -2,9 +2,14 @@ package com.tangem.features.onramp.selectcountry.model
 
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.onramp.GetOnrampCountriesUseCase
+import com.tangem.domain.onramp.GetOnrampCountryUseCase
+import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
+import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.selectcountry.entity.CountryItemState
+import com.tangem.features.onramp.selectcountry.SelectCountryComponent
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
 import com.tangem.features.onramp.selectcountry.entity.CountryListUMController
 import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsTransformer
@@ -17,34 +22,52 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ComponentScoped
+@Suppress("LongParameterList")
 internal class OnrampSelectCountryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val searchManager: SearchManager,
     private val countryListUMController: CountryListUMController,
+    private val getOnrampCountriesUseCase: GetOnrampCountriesUseCase,
+    private val saveDefaultCountryUseCase: OnrampSaveDefaultCountryUseCase,
+    private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
+    paramsContainer: ParamsContainer,
 ) : Model() {
 
     val state: StateFlow<CountryListUM> = countryListUMController.state
+    private val params: SelectCountryComponent.Params = paramsContainer.require()
 
     init {
-        subscribeOnUpdateState()
+        modelScope.launch { subscribeOnUpdateState() }
     }
 
-    private fun subscribeOnUpdateState() {
-        combine(
-            flow = MockedCountriesData.getCountryItems(),
-            flow2 = searchManager.query,
-        ) { countryItems, query ->
-            val filteredCountryItems = countryItems.filterByQuery(query = query)
+    fun dismiss() {
+        params.onDismiss()
+    }
 
+    private suspend fun subscribeOnUpdateState() {
+        combine(
+            flow = flowOf(getOnrampCountriesUseCase.invoke()),
+            flow2 = getOnrampCountryUseCase.invoke(),
+            flow3 = searchManager.query,
+        ) { maybeCountries, maybeCountry, query ->
             UpdateCountryItemsTransformer(
-                countries = filteredCountryItems,
+                maybeCountries = maybeCountries,
+                defaultCountry = maybeCountry.getOrNull(),
+                query = query,
                 onQueryChange = ::onSearchQueryChange,
                 onActiveChange = ::onSearchBarActiveChange,
+                onCountryClick = ::saveCountry,
             )
         }
             .onEach(countryListUMController::update)
-            .flowOn(dispatchers.main)
             .launchIn(modelScope)
+    }
+
+    private fun saveCountry(country: OnrampCountry) {
+        modelScope.launch {
+            saveDefaultCountryUseCase.invoke(country)
+            dismiss()
+        }
     }
 
     private fun onSearchQueryChange(newQuery: String) {
@@ -65,13 +88,5 @@ internal class OnrampSelectCountryModel @Inject constructor(
                 placeHolder = resourceReference(id = R.string.common_search),
             ),
         )
-    }
-
-    // TODO: Temporarily. Will be refactored after implement domain
-    private fun List<CountryItemState>.filterByQuery(query: String): List<CountryItemState> {
-        return filter {
-            (it as? CountryItemState.Content)?.countryName?.contains(query) == true ||
-                (it as? CountryItemState.Unavailable)?.countryName?.contains(query) == true
-        }
     }
 }
