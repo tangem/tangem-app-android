@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.selectcountry.entity
 
 import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsTransformer
-import com.tangem.features.onramp.selectcountry.model.MockedCountriesData
 import com.tangem.features.onramp.utils.SearchBarUMTransformer
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -11,12 +10,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
+private const val LOADING_ITEMS_COUNT = 5
+
 internal class CountryListUMController @Inject constructor() {
 
     val state: StateFlow<CountryListUM> get() = _state.asStateFlow()
     private val _state: MutableStateFlow<CountryListUM> = MutableStateFlow(
         value = CountryListUM(
-            items = MockedCountriesData.getLoadingItems().map(CountriesListItemUM::Country).toImmutableList(),
+            items = getLoadingItems().map(CountriesListItemUM::Country).toImmutableList(),
         ),
     )
 
@@ -35,7 +36,7 @@ internal class CountryListUMController @Inject constructor() {
                 prevState.copy(
                     items = persistentListOf(
                         updatedSearchBar,
-                        *prevState.getTokens().toTypedArray(),
+                        *prevState.getCountries().toTypedArray(),
                     ),
                 )
             } else {
@@ -48,4 +49,7 @@ internal class CountryListUMController @Inject constructor() {
     fun getSearchBar(): CountriesListItemUM.SearchBar? {
         return _state.value.getSearchBar()
     }
+
+    private fun getLoadingItems(): List<CountryItemState> =
+        MutableList(LOADING_ITEMS_COUNT) { CountryItemState.Loading("Loading #$it") }
 }
