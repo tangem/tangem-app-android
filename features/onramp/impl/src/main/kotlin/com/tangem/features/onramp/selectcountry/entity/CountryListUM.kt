@@ -11,7 +11,7 @@ internal data class CountryListUM(val items: ImmutableList<CountriesListItemUM>)
     }
 
     /** Get tokens */
-    fun getTokens(): ImmutableList<CountriesListItemUM> {
+    fun getCountries(): ImmutableList<CountriesListItemUM> {
         if (getSearchBar() == null) return items
 
         return if (items.size > 1) {
