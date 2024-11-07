@@ -14,7 +14,6 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -41,7 +40,6 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
-    private val pendingBalancesProvider: Provider<List<BalanceItem>>,
     private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val symbol: String,
     private val decimals: Int,
@@ -143,51 +141,49 @@ internal class TokenDetailsLoadedBalanceConverter(
     }
 
     private fun getYieldBalance(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
+        return when (stakingAvailabilityProvider.invoke()) {
+            StakingAvailability.TemporaryUnavailable -> StakingBlockUM.TemporaryUnavailable
+            StakingAvailability.Unavailable -> null
+            is StakingAvailability.Available -> getStakingInfoBlock(status, state)
+        }
+    }
+
+    private fun getStakingInfoBlock(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
+
         val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
+        val pendingBalances = yieldBalance?.balance?.items ?: emptyList()
 
         val stakingEntryInfo = stakingEntryInfoProvider.invoke()
-        val stakingAvailability = stakingAvailabilityProvider.invoke()
         val iconState = state.tokenInfoBlockState.iconState
-        val pendingBalances = pendingBalancesProvider.invoke()
-        val fiatRate = status.value.fiatRate
 
         return when {
-            stakingAvailability == StakingAvailability.TemporaryUnavailable -> {
-                StakingBlockUM.TemporaryUnavailable
-            }
-            stakingAvailability == StakingAvailability.Unavailable -> {
-                null
-            }
-            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null && pendingBalances.isEmpty() -> {
-                getStakeAvailableState(stakingEntryInfo, iconState)
-            }
-            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null && pendingBalances.isNotEmpty() -> {
-                val pendingBalancesCryptoAmount = pendingBalances.sumOf { it.amount }
-
-                val stakingFiatAmount = fiatRate?.multiply(pendingBalancesCryptoAmount)
-                getStakedState(
-                    status = status,
-                    stakingCryptoAmount = pendingBalancesCryptoAmount,
-                    stakingFiatAmount = stakingFiatAmount,
-                    stakingRewardAmount = null,
-                )
+            stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
+                if (pendingBalances.isEmpty()) {
+                    getStakeAvailableState(stakingEntryInfo, iconState)
+                } else {
+                    getStakedBlockWithFiatAmount(status, pendingBalances.sumOf { it.amount }, null)
+                }
             }
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo == null -> {
                 null
             }
-            else -> {
-                val stakingRewardAmount = yieldBalance?.getRewardStakingBalance()?.let { fiatRate?.multiply(it) }
-                val stakingFiatAmount = stakingCryptoAmount?.let { fiatRate?.multiply(it) }
-
-                getStakedState(
-                    status = status,
-                    stakingCryptoAmount = stakingCryptoAmount,
-                    stakingFiatAmount = stakingFiatAmount,
-                    stakingRewardAmount = stakingRewardAmount,
-                )
-            }
+            else -> getStakedBlockWithFiatAmount(status, stakingCryptoAmount, yieldBalance?.getRewardStakingBalance())
         }
+    }
+
+    private fun getStakedBlockWithFiatAmount(
+        status: CryptoCurrencyStatus,
+        stakingAmount: BigDecimal?,
+        rewardAmount: BigDecimal?,
+    ): StakingBlockUM.Staked {
+        val fiatRate = status.value.fiatRate
+        return getStakedState(
+            status = status,
+            stakingCryptoAmount = stakingAmount,
+            stakingFiatAmount = stakingAmount?.let { fiatRate?.multiply(it) },
+            stakingRewardAmount = rewardAmount?.let { fiatRate?.multiply(it) },
+        )
     }
 
     private fun getMarketPriceState(
