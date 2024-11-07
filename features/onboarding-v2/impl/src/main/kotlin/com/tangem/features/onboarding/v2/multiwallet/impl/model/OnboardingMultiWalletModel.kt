@@ -28,6 +28,10 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     )
 
     init {
+        // TODO add analytics
+        // if (!manager.isActivationStarted(notNullCard.cardId)) {
+        //     Analytics.send(Onboarding.Started())
+        // }
         initScreenTitleSub()
     }
 
@@ -49,11 +53,10 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         params.titleProvider.changeTitle(title)
 
         modelScope.launch {
-            state
-                .map { it.currentStep }
+            state.map { it.currentStep }
                 .collectLatest { step ->
-                    val title = screenTitleByStep(step)
-                    params.titleProvider.changeTitle(title)
+                    val stepTitle = screenTitleByStep(step)
+                    params.titleProvider.changeTitle(stepTitle)
                 }
         }
     }
