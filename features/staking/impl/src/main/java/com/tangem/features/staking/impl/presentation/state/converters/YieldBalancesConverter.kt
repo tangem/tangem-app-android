@@ -53,7 +53,7 @@ internal class YieldBalancesConverter(
                 },
                 rewardBlockType = type,
                 isActionable = isActionable,
-                balance = balanceToShowItems.mapBalances(),
+                balances = balanceToShowItems.mapBalances(),
             )
         } else {
             InnerYieldBalanceState.Empty
