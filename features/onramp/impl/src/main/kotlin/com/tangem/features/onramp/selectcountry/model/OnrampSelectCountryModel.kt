@@ -60,7 +60,6 @@ internal class OnrampSelectCountryModel @Inject constructor(
             )
         }
             .onEach(countryListUMController::update)
-            .flowOn(dispatchers.main)
             .launchIn(modelScope)
     }
 
