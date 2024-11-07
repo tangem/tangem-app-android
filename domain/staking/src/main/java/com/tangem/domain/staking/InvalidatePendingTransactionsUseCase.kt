@@ -37,8 +37,12 @@ class InvalidatePendingTransactionsUseCase(
 
         processingActions.forEach { action ->
             when (action.type) {
-                StakingActionType.STAKE, StakingActionType.VOTE, StakingActionType.VOTE_LOCKED -> {
-                    processEnterAction(balances, action)
+                StakingActionType.STAKE, StakingActionType.VOTE -> {
+                    addStubStakedPendingTransaction(balances, action)
+                }
+                StakingActionType.VOTE_LOCKED -> {
+                    addStubStakedPendingTransaction(balances, action)
+                    removeLockedBalance(balances, action)
                 }
                 StakingActionType.WITHDRAW -> {
                     modifyBalancesByStatus(balances, action, BalanceType.UNSTAKED)
@@ -58,7 +62,15 @@ class InvalidatePendingTransactionsUseCase(
         return balances
     }
 
-    private fun processEnterAction(balances: MutableList<BalanceItem>, action: StakingAction) {
+    private fun removeLockedBalance(balances: MutableList<BalanceItem>, action: StakingAction) {
+        val index = findBalanceIndex(balances, action, BalanceType.LOCKED)
+
+        if (index != -1) {
+            balances.removeAt(index)
+        }
+    }
+
+    private fun addStubStakedPendingTransaction(balances: MutableList<BalanceItem>, action: StakingAction) {
         balances.add(
             BalanceItem(
                 groupId = UUID.randomUUID().toString(),
@@ -75,12 +87,16 @@ class InvalidatePendingTransactionsUseCase(
     }
 
     private fun modifyBalancesByStatus(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType) {
-        val index = balances.indexOfFirst {
-            !it.isPending && it.amount isEqualTo action.amount && it.type == type
-        }
+        val index = findBalanceIndex(balances, action, type)
 
         if (index != -1) {
             balances[index] = balances[index].copy(isPending = true)
+        }
+    }
+
+    private fun findBalanceIndex(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType): Int {
+        return balances.indexOfFirst {
+            !it.isPending && it.amount isEqualTo action.amount && it.type == type
         }
     }
 }
