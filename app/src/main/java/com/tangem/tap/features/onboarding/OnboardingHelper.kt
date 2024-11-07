@@ -67,7 +67,10 @@ object OnboardingHelper {
 
     fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
         if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled) {
-            return AppRoute.Onboarding(scanResponse)
+            return AppRoute.Onboarding(
+                scanResponse = scanResponse,
+                startFromBackup = false,
+            )
         }
 
         return when (val type = scanResponse.productType) {
