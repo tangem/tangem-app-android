@@ -8,6 +8,7 @@ interface OnboardingEntryComponent : ComposableContentComponent {
 
     data class Params(
         val scanResponse: ScanResponse,
+        val startBackupFlow: Boolean,
     )
 
     interface Factory : ComponentFactory<Params, OnboardingEntryComponent>
