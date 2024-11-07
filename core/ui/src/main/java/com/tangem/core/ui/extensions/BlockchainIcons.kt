@@ -82,6 +82,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "casper", "casper/test" -> R.drawable.img_casper_22
         "xodex" -> R.drawable.img_xodex_22
         "canxium" -> R.drawable.img_canxium_22
+        "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -162,6 +163,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "casper-network" -> R.drawable.img_casper_22
         "xodex" -> R.drawable.img_xodex_22
         "canxium" -> R.drawable.img_canxium_22
+        "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -245,6 +247,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "casper", "casper/test" -> R.drawable.ic_casper_22
         "xodex" -> R.drawable.ic_xodex_22
         "canxium" -> R.drawable.ic_canxium_22
+        "chiliz", "chiliz/test" -> R.drawable.ic_chiliz_22
         else -> R.drawable.ic_alert_24
     }
 }
