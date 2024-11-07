@@ -38,6 +38,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         override val enabled: Boolean,
         override val dimContent: Boolean,
         override val onClick: () -> Unit,
+        val isInProgress: Boolean = false,
     ) :
         WalletManageButton(
             config = ActionButtonConfig(
@@ -46,6 +47,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
                 onClick = onClick,
                 enabled = enabled,
                 dimContent = dimContent,
+                isInProgress = isInProgress,
             ),
         )
 
@@ -85,10 +87,10 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_receive),
             iconResId = R.drawable.ic_arrow_down_24,
-            onClick = onClick,
-            onLongClick = onLongClick,
             enabled = enabled,
             dimContent = dimContent,
+            onClick = onClick,
+            onLongClick = onLongClick,
         ),
     )
 
@@ -117,6 +119,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         override val enabled: Boolean,
         override val dimContent: Boolean,
         override val onClick: () -> Unit,
+        val isInProgress: Boolean = false,
     ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.common_sell),
@@ -124,6 +127,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             onClick = onClick,
             enabled = enabled,
             dimContent = dimContent,
+            isInProgress = isInProgress,
         ),
     )
 
@@ -138,6 +142,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         override val enabled: Boolean,
         override val dimContent: Boolean,
         override val onClick: () -> Unit,
+        val isInProgress: Boolean = false,
     ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.swapping_swap_action),
@@ -145,6 +150,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             onClick = onClick,
             enabled = enabled,
             dimContent = dimContent,
+            isInProgress = isInProgress,
         ),
     )
 }
