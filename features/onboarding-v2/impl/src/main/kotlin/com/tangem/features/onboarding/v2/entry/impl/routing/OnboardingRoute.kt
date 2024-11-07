@@ -8,7 +8,7 @@ sealed class OnboardingRoute : Route {
 
     data object None : OnboardingRoute()
 
-    data class Wallet12(
+    data class MultiWallet(
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
         val withSeedPhraseFlow: Boolean,
