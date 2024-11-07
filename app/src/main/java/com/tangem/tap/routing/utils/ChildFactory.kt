@@ -218,7 +218,10 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Onboarding -> {
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
-                    params = OnboardingEntryComponent.Params(route.scanResponse),
+                    params = OnboardingEntryComponent.Params(
+                        scanResponse = route.scanResponse,
+                        startBackupFlow = route.startFromBackup,
+                    ),
                     componentFactory = onboardingEntryComponentFactory,
                 )
             }
