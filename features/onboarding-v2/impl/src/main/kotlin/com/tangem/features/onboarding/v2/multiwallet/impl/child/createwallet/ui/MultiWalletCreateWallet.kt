@@ -32,6 +32,7 @@ fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier: Modifier
             ),
             dismissButton = DialogButtonUM(
                 title = state.dialog.dismissButtonText.resolveReference(),
+                warning = state.dialog.dismissWarningColor,
                 onClick = state.dialog.onDismissButtonClick,
             ),
             onDismissDialog = state.dialog.onDismiss,
