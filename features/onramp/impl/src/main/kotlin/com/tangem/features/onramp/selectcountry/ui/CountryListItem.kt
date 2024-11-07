@@ -29,7 +29,9 @@ internal fun CountryListItem(state: CountriesListItemUM, modifier: Modifier = Mo
     when (state) {
         is CountriesListItemUM.Country -> CountryItem(
             state = state.state,
-            modifier = modifier.countryClickable(state.state).padding(all = TangemTheme.dimens.spacing16),
+            modifier = modifier
+                .countryClickable(state.state)
+                .padding(all = TangemTheme.dimens.spacing16),
         )
         is CountriesListItemUM.SearchBar -> SearchBar(
             state = state.searchBarUM,
