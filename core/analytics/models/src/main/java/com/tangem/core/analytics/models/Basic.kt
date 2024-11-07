@@ -78,8 +78,6 @@ sealed class Basic(
         error = error,
     )
 
-    class WalletOpened : Basic(event = "Wallet Opened")
-
     class ButtonSupport(source: AnalyticsParam.ScreensSources) : Basic(
         event = "Request Support",
         params = mapOf(
