@@ -5,6 +5,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -26,6 +27,7 @@ class MultiWalletCreateWalletModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val cardRepository: CardRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -63,6 +65,7 @@ class MultiWalletCreateWalletModel @Inject constructor(
                         )
                     }
 
+                    cardRepository.startCardActivation(cardId = result.data.card.cardId)
                     onDone.emit(Unit)
                     // TODO
                     // Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
@@ -82,14 +85,9 @@ class MultiWalletCreateWalletModel @Inject constructor(
         _uiState.update { state ->
             state.copy(
                 dialog = resetCardDialog(
-                    onConfirm = {
-                        _uiState.update { it.copy(dialog = null) }
-                        resetCard()
-                    },
-                    onDismiss = {
-                        _uiState.update { it.copy(dialog = null) }
-                    },
-                    onDismissButtonClick = ::navigateToSupportScreen,
+                    onConfirm = ::navigateToSupportScreen,
+                    dismiss = { _uiState.update { it.copy(dialog = null) } },
+                    onDismissButtonClick = ::resetCard,
                 ),
             )
         }
