@@ -6,7 +6,6 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.Basic
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
@@ -103,7 +102,6 @@ internal class MainViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { userWallet ->
                 Analytics.setContext(userWallet.scanResponse)
-                Analytics.send(Basic.WalletOpened())
             }
             .flowOn(dispatchers.io)
             .launchIn(viewModelScope)
