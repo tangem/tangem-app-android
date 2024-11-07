@@ -18,7 +18,7 @@ internal class StakingAnalyticSender(
     fun initialInfoScreen(value: StakingUiState) {
         val initialInfoState = value.initialInfoState as? StakingStates.InitialInfoState.Data
         val validatorState = initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data
-        val validatorCount = validatorState?.balance
+        val validatorCount = validatorState?.balances
             ?.filterNot { it.validator?.address.isNullOrBlank() }
             ?.distinctBy { it.validator?.address }
             ?.size ?: 0
