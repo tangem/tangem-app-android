@@ -138,7 +138,7 @@ private fun AmountFieldError(
         exit = fadeOut(),
         modifier = modifier,
     ) {
-        val errorText = remember(this) { error }
+        val errorText = remember(this, error) { error }
         val color = if (isError) TangemTheme.colors.text.warning else TangemTheme.colors.text.attention
         Text(
             text = errorText.resolveReference(),
