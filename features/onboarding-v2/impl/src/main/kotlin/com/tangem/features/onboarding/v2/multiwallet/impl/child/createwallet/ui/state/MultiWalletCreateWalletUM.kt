@@ -13,6 +13,7 @@ data class MultiWalletCreateWalletUM(
         val description: TextReference,
         val dismissButtonText: TextReference,
         val confirmButtonText: TextReference,
+        val dismissWarningColor: Boolean = false,
         val onConfirm: () -> Unit,
         val onDismissButtonClick: () -> Unit,
         val onDismiss: () -> Unit,
