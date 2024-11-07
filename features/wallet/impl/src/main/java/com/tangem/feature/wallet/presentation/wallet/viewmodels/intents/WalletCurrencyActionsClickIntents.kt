@@ -81,6 +81,12 @@ interface WalletCurrencyActionsClickIntents {
     fun onExploreClick()
 
     fun onAnalyticsClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onMultiWalletBuyClick(userWalletId: UserWalletId)
+
+    fun onMultiWalletSellClick(userWalletId: UserWalletId)
+
+    fun onMultiWalletSwapClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LongParameterList", "LargeClass")
@@ -430,6 +436,21 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 ),
             )
         }
+    }
+
+    override fun onMultiWalletSellClick(userWalletId: UserWalletId) {
+        // TODO https://tangem.atlassian.net/browse/AND-9016
+        appRouter.push(route = AppRoute.SellCrypto(userWalletId = userWalletId))
+    }
+
+    override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
+        // TODO https://tangem.atlassian.net/browse/AND-9016
+        // appRouter.push(route = AppRoute.SwapCrypto(userWalletId = userWalletId))
+    }
+
+    override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {
+        // TODO https://tangem.atlassian.net/browse/AND-9016
+        appRouter.push(route = AppRoute.BuyCrypto(userWalletId = userWalletId))
     }
 
     private fun openExplorer() {
