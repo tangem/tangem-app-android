@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.selectcountry.entity
+package com.tangem.features.onramp.entity
 
 import kotlinx.serialization.Serializable
 
