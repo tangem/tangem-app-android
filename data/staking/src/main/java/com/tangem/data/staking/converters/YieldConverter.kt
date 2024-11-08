@@ -118,16 +118,16 @@ class YieldConverter(
         val address = validatorDTO.address.asMandatory("address")
         return Yield.Validator(
             address = address,
-            status = convertValidatorStatus(validatorDTO.status),
-            name = validatorDTO.name,
+            status = convertValidatorStatus(validatorDTO.status.asMandatory("status")),
+            name = validatorDTO.name.asMandatory("name"),
             image = validatorDTO.image,
             website = validatorDTO.website,
             apr = validatorDTO.apr,
             commission = validatorDTO.commission,
             stakedBalance = validatorDTO.stakedBalance,
             votingPower = validatorDTO.votingPower,
-            preferred = validatorDTO.preferred,
-            isStrategicPartner = isStrategicPartner(validatorDTO.address, validatorDTO.name),
+            preferred = validatorDTO.preferred.asMandatory("preferred"),
+            isStrategicPartner = isStrategicPartner(validatorDTO.address, validatorDTO.name.asMandatory("name")),
         )
     }
 
