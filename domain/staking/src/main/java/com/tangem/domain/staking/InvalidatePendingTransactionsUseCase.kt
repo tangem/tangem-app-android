@@ -50,7 +50,7 @@ class InvalidatePendingTransactionsUseCase(
                 StakingActionType.UNLOCK_LOCKED -> {
                     modifyBalancesByStatus(balances, action, BalanceType.LOCKED)
                 }
-                StakingActionType.UNSTAKE -> {
+                StakingActionType.UNSTAKE, StakingActionType.RESTAKE -> {
                     modifyBalancesByStatus(balances, action, BalanceType.STAKED)
                 }
                 else -> {
