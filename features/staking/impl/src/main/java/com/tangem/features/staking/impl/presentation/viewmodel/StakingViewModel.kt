@@ -50,6 +50,7 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -941,7 +942,7 @@ internal class StakingViewModel @Inject constructor(
         stateController.updateAll(
             SetConfirmationStateInitTransformer(
                 isEnter = false,
-                isExplicitExit = balanceType == BalanceType.STAKED,
+                isExplicitExit = isExplicitExit(balanceType, pendingAction),
                 balanceState = balanceState,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 stakingApproval = stakingApproval,
@@ -966,6 +967,10 @@ internal class StakingViewModel @Inject constructor(
                 yield = yield,
             ),
         )
+    }
+
+    private fun isExplicitExit(balanceType: BalanceType, pendingAction: PendingAction?): Boolean {
+        return balanceType == BalanceType.STAKED && pendingAction?.type != StakingActionType.RESTAKE
     }
 
     private fun isAssentState(): Boolean {
