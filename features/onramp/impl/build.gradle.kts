@@ -14,6 +14,9 @@ android {
 dependencies {
     /** Project - API */
     implementation(projects.features.onramp.api)
+    implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
 
     /** Project - Core */
     implementation(projects.core.decompose)
