@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
@@ -21,6 +22,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWall
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.MultiWalletCreateWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.features.onboarding.v2.multiwallet.impl.ui.OnboardingMultiWallet
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -95,13 +97,20 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     @Composable
     override fun Content(modifier: Modifier) {
         val stackState by childStack.subscribeAsState()
+        val state by model.uiState.collectAsStateWithLifecycle()
 
-        Children(
-            stack = stackState,
-            animation = stackAnimation(slide()),
-        ) {
-            it.instance.Content(Modifier)
-        }
+        OnboardingMultiWallet(
+            state = state,
+            modifier = modifier,
+            childContent = { mdfr ->
+                Children(
+                    stack = stackState,
+                    animation = stackAnimation(slide()),
+                ) {
+                    it.instance.Content(mdfr)
+                }
+            },
+        )
     }
 
     @AssistedFactory

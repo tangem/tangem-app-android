@@ -1,14 +1,10 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -26,22 +22,8 @@ fun MultiWalletBackup(state: MultiWalletBackupUM, modifier: Modifier = Modifier)
     Column(
         modifier = modifier
             .fillMaxSize()
-            .navigationBarsPadding()
-            .verticalScroll(rememberScrollState()),
+            .navigationBarsPadding(),
     ) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f),
-        ) {
-            Box(
-                Modifier
-                    .align(Alignment.Center)
-                    .size(100.dp)
-                    .background(Color.Black),
-            )
-        }
-
         when (state) {
             is MultiWalletBackupUM.Wallet1 -> Wallet1Content(state)
             is MultiWalletBackupUM.Wallet2 -> TODO()
