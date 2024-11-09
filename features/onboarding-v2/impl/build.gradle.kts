@@ -29,6 +29,7 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.core)
     implementation(projects.domain.card)
+    implementation(projects.domain.wallets)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
