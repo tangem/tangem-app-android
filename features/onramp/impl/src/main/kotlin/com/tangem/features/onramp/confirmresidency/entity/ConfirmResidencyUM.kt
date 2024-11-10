@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.entity
+package com.tangem.features.onramp.confirmresidency.entity
 
 import com.tangem.core.ui.extensions.TextReference
 
