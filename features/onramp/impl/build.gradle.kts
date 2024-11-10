@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.core.featuretoggles)
 
     /** Project - Common */
+    implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /** Project - Domain */
