@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.component
+package com.tangem.features.onramp.confirmresidency
 
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent

@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.component.impl
+package com.tangem.features.onramp.confirmresidency
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -14,12 +14,11 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
-import com.tangem.features.onramp.component.ConfirmResidencyComponent
-import com.tangem.features.onramp.model.ConfirmResidencyModel
+import com.tangem.features.onramp.confirmresidency.model.ConfirmResidencyModel
 import com.tangem.features.onramp.selectcountry.SelectCountryComponent
 import com.tangem.features.onramp.selectcountry.entity.ConfirmResidencyBottomSheetConfig
-import com.tangem.features.onramp.ui.ConfirmResidencyBottomSheet
-import com.tangem.features.onramp.ui.ConfirmResidencyBottomSheetContent
+import com.tangem.features.onramp.confirmresidency.ui.ConfirmResidencyBottomSheet
+import com.tangem.features.onramp.confirmresidency.ui.ConfirmResidencyBottomSheetContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
