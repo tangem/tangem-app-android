@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
 import com.tangem.features.onramp.swap.entity.ExchangeCardUM
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
@@ -34,7 +35,7 @@ import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 internal fun SwapSelectTokens(
     state: SwapSelectTokensUM,
     selectFromTokenListComponent: OnrampTokenListComponent,
-    selectToTokenListComponent: OnrampTokenListComponent,
+    selectToTokenListComponent: AvailableSwapPairsComponent,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = state.onBackClick)
