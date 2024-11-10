@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_swap_choose_token">トークンを選択</string>
+  <string name="action_buttons_you_want_to_receive">受け取りたい</string>
+  <string name="action_buttons_you_want_to_swap">交換したい</string>
   <string name="add_custom_token_choose_network">ネットワークを選択</string>
   <string name="add_custom_token_title">カスタムトークンの追加</string>
   <string name="add_tokens_title">トークンの管理</string>
@@ -842,6 +845,9 @@
   <string name="token_swap_changelly_promotion_message">このトークンは、2月%2$s-%3$s の間、%1$s のサービス手数料で別のトークンと交換できます。</string>
   <string name="token_swap_changelly_promotion_title">Changellyでスワップ、手数料%s</string>
   <string name="token_swap_promotion_button">今すぐスワップ</string>
+  <string name="tokens_list_unavailable_to_purchase_header">買付できません</string>
+  <string name="tokens_list_unavailable_to_sell_header">売却できません</string>
+  <string name="tokens_list_unavailable_to_swap_header">%sからのスワップは利用できません</string>
   <string name="transaction_history_contract_address">コントラクト: %s</string>
   <string name="transaction_history_empty_transactions">まだ取引はありません</string>
   <string name="transaction_history_error_failed_to_load">取引履歴の読み込みに失敗しました。\n情報を更新するには、リロードボタンをクリックしてください。</string>
