@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
@@ -126,7 +127,7 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
                 -> {
-                    TokenItemState.TitleState.Content(text = currencyStatus.currency.name)
+                    TokenItemState.TitleState.Content(text = stringReference(currencyStatus.currency.name))
                 }
                 is CryptoCurrencyStatus.Loaded,
                 is CryptoCurrencyStatus.Custom,
@@ -134,7 +135,7 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.TitleState.Content(
-                        text = currencyStatus.currency.name,
+                        text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
                     )
                 }
