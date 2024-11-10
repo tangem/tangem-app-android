@@ -445,7 +445,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
         // TODO https://tangem.atlassian.net/browse/AND-9016
-        // appRouter.push(route = AppRoute.SwapCrypto(userWalletId = userWalletId))
+        appRouter.push(route = AppRoute.SwapCrypto(userWalletId = userWalletId))
     }
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {

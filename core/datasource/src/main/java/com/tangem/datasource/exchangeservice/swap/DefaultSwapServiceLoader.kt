@@ -36,7 +36,8 @@ internal class DefaultSwapServiceLoader @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : SwapServiceLoader {
 
-    private val initializationStatuses: Map<UserWalletId, InitializationStatusFlow> = mapOf()
+    private val initializationStatuses =
+        MutableStateFlow<Map<UserWalletId, InitializationStatusFlow>>(value = emptyMap())
 
     override suspend fun update(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
         withContext(dispatchers.io) {
@@ -73,9 +74,18 @@ internal class DefaultSwapServiceLoader @Inject constructor(
     }
 
     private fun getInitializationStatusInternal(userWalletId: UserWalletId): InitializationStatusFlow {
-        return initializationStatuses.getOrDefault(
-            key = userWalletId,
-            defaultValue = MutableStateFlow(value = lceLoading()),
-        )
+        val initializationStatus = initializationStatuses.value.get(key = userWalletId)
+
+        if (initializationStatus != null) return initializationStatus
+
+        val default: InitializationStatusFlow = MutableStateFlow(value = lceLoading())
+
+        initializationStatuses.update {
+            it.toMutableMap().apply {
+                put(key = userWalletId, value = default)
+            }
+        }
+
+        return default
     }
 }

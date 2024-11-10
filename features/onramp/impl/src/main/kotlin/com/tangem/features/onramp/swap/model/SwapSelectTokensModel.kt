@@ -9,6 +9,7 @@ import com.tangem.features.onramp.swap.entity.transformer.RemoveSelectedFromToke
 import com.tangem.features.onramp.swap.entity.transformer.SelectFromTokenTransformer
 import com.tangem.features.onramp.swap.entity.transformer.SelectToTokenTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
@@ -20,8 +21,10 @@ internal class SwapSelectTokensModel @Inject constructor(
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
 
-    private var fromCurrencyStatus: CryptoCurrencyStatus? = null
-    private var toCurrencyStatus: CryptoCurrencyStatus? = null
+    val fromCurrencyStatus: StateFlow<CryptoCurrencyStatus?> get() = _fromCurrencyStatus
+
+    private val _fromCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
+    private val _toCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
 
     /**
      * Select "from" token
@@ -30,7 +33,7 @@ internal class SwapSelectTokensModel @Inject constructor(
      * @param status                 crypto currency status
      */
     fun selectFromToken(selectedTokenItemState: TokenItemState, status: CryptoCurrencyStatus) {
-        fromCurrencyStatus = status
+        _fromCurrencyStatus.value = status
 
         controller.update(
             transformer = SelectFromTokenTransformer(
@@ -47,7 +50,7 @@ internal class SwapSelectTokensModel @Inject constructor(
      * @param status                 crypto currency status
      */
     fun selectToToken(selectedTokenItemState: TokenItemState, status: CryptoCurrencyStatus) {
-        toCurrencyStatus = status
+        _toCurrencyStatus.value = status
 
         controller.update(transformer = SelectToTokenTransformer(selectedTokenItemState))
 
@@ -55,7 +58,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     }
 
     private fun onRemoveClick() {
-        fromCurrencyStatus = null
+        _fromCurrencyStatus.value = null
 
         controller.update(transformer = RemoveSelectedFromTokenTransformer)
     }

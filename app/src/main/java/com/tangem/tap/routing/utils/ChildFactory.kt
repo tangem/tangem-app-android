@@ -11,10 +11,11 @@ import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.features.onramp.component.BuyCryptoComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
+import com.tangem.features.onramp.component.BuyCryptoComponent
 import com.tangem.features.onramp.component.OnrampComponent
 import com.tangem.features.onramp.component.SellCryptoComponent
+import com.tangem.features.onramp.component.SwapSelectTokensComponent
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
@@ -53,6 +54,7 @@ internal class ChildFactory @Inject constructor(
     private val onrampComponentFactory: OnrampComponent.Factory,
     private val buyCryptoComponentFactory: BuyCryptoComponent.Factory,
     private val sellCryptoComponentFactory: SellCryptoComponent.Factory,
+    private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
@@ -213,6 +215,13 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = SellCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = sellCryptoComponentFactory,
+                )
+            }
+            is AppRoute.SwapCrypto -> {
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = SwapSelectTokensComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = swapSelectTokensComponentFactory,
                 )
             }
             is AppRoute.Onboarding -> {
