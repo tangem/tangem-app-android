@@ -11,7 +11,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.onramp.entity.OnrampOperation
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.ui.OnrampSelectToken
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
