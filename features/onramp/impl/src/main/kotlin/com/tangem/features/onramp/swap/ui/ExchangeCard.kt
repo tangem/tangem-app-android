@@ -26,6 +26,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onramp.impl.R
@@ -112,7 +113,10 @@ private fun Preview_ExchangeCard(@PreviewParameter(ExchangeCardUMProvider::class
 private class ExchangeCardUMProvider : PreviewParameterProvider<ExchangeCardUM> {
 
     override val values: Sequence<ExchangeCardUM> = sequenceOf(
-        ExchangeCardUM.Empty(titleReference = resourceReference(id = R.string.swapping_from_title)),
+        ExchangeCardUM.Empty(
+            titleReference = resourceReference(id = R.string.swapping_from_title),
+            subtitleReference = resourceReference(id = R.string.action_buttons_you_want_to_swap),
+        ),
         createFilled(removeButtonUM = null),
         createFilled(removeButtonUM = ExchangeCardUM.RemoveButtonUM { }),
     )
@@ -124,7 +128,7 @@ private class ExchangeCardUMProvider : PreviewParameterProvider<ExchangeCardUM> 
             tokenItemState = TokenItemState.Content(
                 id = "1",
                 iconState = CurrencyIconState.Locked,
-                titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Bitcoin")),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
                 subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
