@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
 
 /** TokenItem component state */
 @Immutable
@@ -161,7 +162,7 @@ sealed class TokenItemState {
     sealed class TitleState {
 
         data class Content(
-            val text: String,
+            val text: TextReference,
             val hasPending: Boolean = false,
             val isAvailable: Boolean = true,
         ) : TitleState()
@@ -180,7 +181,7 @@ sealed class TokenItemState {
             val type: PriceChangeType,
         ) : SubtitleState()
 
-        data class TextContent(val value: String, val isAvailable: Boolean = true) : SubtitleState()
+        data class TextContent(val value: TextReference, val isAvailable: Boolean = true) : SubtitleState()
 
         data object Unknown : SubtitleState()
 
