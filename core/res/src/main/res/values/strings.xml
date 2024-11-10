@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_swap_choose_token">Choose the Token</string>
+  <string name="action_buttons_you_want_to_receive">You want to Receive</string>
+  <string name="action_buttons_you_want_to_swap">You want to Swap</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
@@ -860,6 +863,9 @@
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="token_swap_promotion_button">Swap now</string>
+  <string name="tokens_list_unavailable_to_purchase_header">Unavailable to purchase</string>
+  <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
+  <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
   <string name="transaction_history_contract_address">contract: %s</string>
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
   <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>

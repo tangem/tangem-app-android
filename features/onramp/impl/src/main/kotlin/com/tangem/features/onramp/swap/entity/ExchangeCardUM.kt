@@ -3,6 +3,7 @@ package com.tangem.features.onramp.swap.entity
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onramp.impl.R
 
 /**
@@ -24,18 +25,23 @@ internal sealed interface ExchangeCardUM {
     /**
      * Empty state
      *
-     * @property titleReference title reference
+     * @property titleReference    title reference
+     * @property subtitleReference empty token subtitle reference
      */
-    data class Empty(override val titleReference: TextReference) : ExchangeCardUM {
+    data class Empty(
+        override val titleReference: TextReference,
+        val subtitleReference: TextReference,
+    ) : ExchangeCardUM {
 
         override val removeButtonUM: RemoveButtonUM? = null
 
-        // TODO: https://tangem.atlassian.net/browse/AND-8936
         override val tokenItemState: TokenItemState = TokenItemState.Content(
             id = "empty",
             iconState = CurrencyIconState.Empty(R.drawable.ic_empty_64),
-            titleState = TokenItemState.TitleState.Content(text = "Choose the Token"),
-            subtitleState = TokenItemState.SubtitleState.TextContent(value = "You want to Swap"),
+            titleState = TokenItemState.TitleState.Content(
+                text = resourceReference(id = R.string.action_buttons_swap_choose_token),
+            ),
+            subtitleState = TokenItemState.SubtitleState.TextContent(value = subtitleReference),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = ""),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = ""),
             onItemClick = null,

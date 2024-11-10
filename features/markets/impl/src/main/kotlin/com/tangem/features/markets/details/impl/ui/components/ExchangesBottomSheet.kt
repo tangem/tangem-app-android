@@ -176,9 +176,9 @@ private class ExchangesBottomSheetContentProvider : CollectionPreviewParameterPr
                         isGrayscale = false,
                         showCustomBadge = false,
                     ),
-                    titleState = TokenItemState.TitleState.Content(text = "OKX"),
+                    titleState = TokenItemState.TitleState.Content(text = stringReference(value = "OKX")),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "$67.52M"),
-                    subtitleState = TokenItemState.SubtitleState.TextContent(value = "CEX"),
+                    subtitleState = TokenItemState.SubtitleState.TextContent(value = stringReference(value = "CEX")),
                     subtitle2State = TokenItemState.Subtitle2State.LabelContent(
                         auditLabelUM = AuditLabelUM(
                             text = stringReference("Caution"),

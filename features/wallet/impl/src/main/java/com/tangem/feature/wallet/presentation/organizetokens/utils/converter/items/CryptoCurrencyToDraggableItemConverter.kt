@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.it
 
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -46,7 +47,7 @@ internal class CryptoCurrencyToDraggableItemConverter(
         return TokenItemState.Draggable(
             id = getTokenItemId(currency.id),
             iconState = iconStateConverter.convert(currencyStatus),
-            titleState = TokenItemState.TitleState.Content(text = currency.name),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(currency.name)),
             subtitle2State = if (currencyStatus.value.isError) {
                 TokenItemState.Subtitle2State.Unreachable
             } else {

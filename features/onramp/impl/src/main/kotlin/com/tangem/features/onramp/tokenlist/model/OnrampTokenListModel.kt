@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -12,9 +13,9 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.features.onramp.impl.R
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.entity.OnrampOperation
+import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
@@ -74,6 +75,17 @@ internal class OnrampTokenListModel @Inject constructor(
                 statuses = filterTokenList,
                 isBalanceHidden = isBalanceHidden,
                 hasSearchBar = params.hasSearchBar && currencies.isNotEmpty(),
+                unavailableTokensHeaderReference = when (params.filterOperation) {
+                    OnrampOperation.BUY -> resourceReference(id = R.string.tokens_list_unavailable_to_purchase_header)
+                    OnrampOperation.SELL -> resourceReference(id = R.string.tokens_list_unavailable_to_sell_header)
+                    OnrampOperation.SWAP -> {
+                        // TODO: https://tangem.atlassian.net/browse/AND-9016
+                        resourceReference(
+                            id = R.string.tokens_list_unavailable_to_swap_header,
+                            wrappedList(""),
+                        )
+                    }
+                },
                 onQueryChange = ::onSearchQueryChange,
                 onActiveChange = ::onSearchBarActiveChange,
             )

@@ -23,6 +23,7 @@ internal class UpdateTokenItemsTransformer(
     private val statuses: Map<Boolean, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
     private val hasSearchBar: Boolean,
+    private val unavailableTokensHeaderReference: TextReference,
     private val onQueryChange: (String) -> Unit,
     private val onActiveChange: (Boolean) -> Unit,
 ) : TokenListUMTransformer {
@@ -62,11 +63,7 @@ internal class UpdateTokenItemsTransformer(
                 .toImmutableList(),
             unavailableItems = buildList {
                 if (unavailableItems.isNotEmpty()) {
-                    // TODO: https://tangem.atlassian.net/browse/AND-8936
-                    createGroupTitle(
-                        textReference = stringReference(value = "Unavailable tokens"),
-                    )
-                        .let(::add)
+                    createGroupTitle(textReference = unavailableTokensHeaderReference).let(::add)
                 }
 
                 addAll(unavailableItems)
@@ -91,11 +88,21 @@ internal class UpdateTokenItemsTransformer(
         return TokenItemStateConverter(
             appCurrency = appCurrency,
             iconStateProvider = { CryptoCurrencyToIconStateConverter(isAvailable = false).convert(it) },
-            titleStateProvider = { TokenItemState.TitleState.Content(text = it.currency.name, isAvailable = false) },
+            titleStateProvider = {
+                TokenItemState.TitleState.Content(
+                    text = stringReference(value = it.currency.name),
+                    isAvailable = false,
+                )
+            },
             subtitleStateProvider = {
                 when (it.value) {
                     CryptoCurrencyStatus.Loading -> TokenItemState.SubtitleState.Loading
-                    else -> TokenItemState.SubtitleState.TextContent(value = it.currency.symbol, isAvailable = false)
+                    else -> {
+                        TokenItemState.SubtitleState.TextContent(
+                            value = stringReference(value = it.currency.symbol),
+                            isAvailable = false,
+                        )
+                    }
                 }
             },
             fiatAmountStateProvider = {
