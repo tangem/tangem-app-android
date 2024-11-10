@@ -14,8 +14,8 @@ import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.onramp.entity.OnrampOperation
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
