@@ -3,7 +3,9 @@ package com.tangem.features.onramp.swap.availablepairs.model
 import arrow.core.getOrElse
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -27,7 +29,6 @@ import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -67,21 +68,21 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private fun subscribeOnUpdateState() {
         combine(
             flow = tokenListFlow,
-            flow2 = getSelectedAppCurrencyUseCase().map { it.getOrElse { AppCurrency.Default } }.distinctUntilChanged(),
-            flow3 = getBalanceHidingSettingsUseCase().map { it.isBalanceHidden }.distinctUntilChanged(),
+            flow2 = getAppCurrencyAndBalanceHidingFlow(),
+            flow3 = params.selectedStatus,
             flow4 = searchManager.query,
             flow5 = availablePairsByNetworkFlow
                 .map { it[params.selectedStatus.value?.toLeastTokenInfo()].orEmpty() }
                 .distinctUntilChanged(),
-        ) { currencies, appCurrency, isBalanceHidden, query, availablePairs ->
+        ) { currencies, appCurrencyAndBalanceHiding, selectedStatus, query, availablePairs ->
             if (availablePairs.isEmpty()) {
                 SetLoadingTokenItemsTransformer(currencies)
             } else {
+                val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
+
                 val filterTokenList = currencies
                     .filterByQuery(query = query)
                     .filterByAvailability(availablePairs = availablePairs)
-
-                Timber.e("${filterTokenList[true].orEmpty().size}")
 
                 UpdateTokenItemsTransformer(
                     appCurrency = appCurrency,
@@ -89,6 +90,10 @@ internal class AvailableSwapPairsModel @Inject constructor(
                     statuses = filterTokenList,
                     isBalanceHidden = isBalanceHidden,
                     hasSearchBar = currencies.isNotEmpty(),
+                    unavailableTokensHeaderReference = resourceReference(
+                        id = R.string.tokens_list_unavailable_to_swap_header,
+                        wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
+                    ),
                     onQueryChange = ::onSearchQueryChange,
                     onActiveChange = ::onSearchBarActiveChange,
                 )
@@ -115,8 +120,6 @@ internal class AvailableSwapPairsModel @Inject constructor(
                         currencies = tokenList.map(CryptoCurrencyStatus::currency),
                     )
 
-                    Timber.e("$initialCurrency = ${pairs.size}")
-
                     availablePairsByNetworkFlow.update {
                         it.toMutableMap().apply {
                             put(initialCurrency, pairs)
@@ -124,6 +127,14 @@ internal class AvailableSwapPairsModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private fun getAppCurrencyAndBalanceHidingFlow(): Flow<Pair<AppCurrency, Boolean>> {
+        return combine(
+            flow = getSelectedAppCurrencyUseCase().map { it.getOrElse { AppCurrency.Default } }.distinctUntilChanged(),
+            flow2 = getBalanceHidingSettingsUseCase().map { it.isBalanceHidden }.distinctUntilChanged(),
+            transform = ::Pair,
+        )
     }
 
     private fun onSearchQueryChange(newQuery: String) {

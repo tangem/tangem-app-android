@@ -1,8 +1,9 @@
 package com.tangem.features.onramp.swap.entity.transformer
 
-import com.tangem.features.onramp.swap.entity.ExchangeCardUM
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUM
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUMTransformer
+import com.tangem.features.onramp.swap.entity.utils.createEmptyExchangeFrom
+import com.tangem.features.onramp.swap.entity.utils.createEmptyExchangeTo
 
 /**
  * Transformer for removing selected "from" token
@@ -13,8 +14,8 @@ internal object RemoveSelectedFromTokenTransformer : SwapSelectTokensUMTransform
 
     override fun transform(prevState: SwapSelectTokensUM): SwapSelectTokensUM {
         return prevState.copy(
-            exchangeFrom = ExchangeCardUM.Empty(titleReference = prevState.exchangeFrom.titleReference),
-            exchangeTo = ExchangeCardUM.Empty(titleReference = prevState.exchangeTo.titleReference),
+            exchangeFrom = createEmptyExchangeFrom(),
+            exchangeTo = createEmptyExchangeTo(),
         )
     }
 }
