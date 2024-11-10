@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_swap_choose_token">Elige el token</string>
+  <string name="action_buttons_you_want_to_receive">Desea recibir</string>
+  <string name="action_buttons_you_want_to_swap">Quiere intercambiar</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
@@ -847,6 +850,9 @@
   <string name="token_swap_changelly_promotion_message">Cambie este token por otro por una tarifa de servicio de %1$s del %2$s al %3$s de febrero.</string>
   <string name="token_swap_changelly_promotion_title">Intercambio con Changelly, %s tarifa</string>
   <string name="token_swap_promotion_button">Intercambie ahora</string>
+  <string name="tokens_list_unavailable_to_purchase_header">No disponible para compra</string>
+  <string name="tokens_list_unavailable_to_sell_header">No disponible para vender</string>
+  <string name="tokens_list_unavailable_to_swap_header">No disponible para cambio desde %s</string>
   <string name="transaction_history_contract_address">contacto: %s</string>
   <string name="transaction_history_empty_transactions">Aún no tiene ninguna transacción</string>
   <string name="transaction_history_error_failed_to_load">Error al cargar el historial de transacciones.\nHaga clic en el botón de recarga para actualizar la información.</string>
