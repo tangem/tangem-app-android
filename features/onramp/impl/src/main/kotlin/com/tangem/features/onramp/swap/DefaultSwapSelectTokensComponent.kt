@@ -8,10 +8,11 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.onramp.component.SwapSelectTokensComponent
-import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
+import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
 import com.tangem.features.onramp.swap.model.SwapSelectTokensModel
 import com.tangem.features.onramp.swap.ui.SwapSelectTokens
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -19,11 +20,12 @@ import dagger.assisted.AssistedInject
 @Stable
 internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
     tokenListComponentFactory: OnrampTokenListComponent.Factory,
+    availableSwapPairsComponentFactory: AvailableSwapPairsComponent.Factory,
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: SwapSelectTokensComponent.Params,
 ) : AppComponentContext by appComponentContext, SwapSelectTokensComponent {
 
-    private val model: SwapSelectTokensModel = getOrCreateModel()
+    private val model: SwapSelectTokensModel = getOrCreateModel(params)
 
     private val selectFromTokenListComponent: OnrampTokenListComponent = tokenListComponentFactory.create(
         context = child(key = "select_from_token_list"),
@@ -35,15 +37,15 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         ),
     )
 
-    private val selectToTokenListComponent: OnrampTokenListComponent = tokenListComponentFactory.create(
-        context = child(key = "select_to_token_list"),
-        params = OnrampTokenListComponent.Params(
-            filterOperation = OnrampOperation.SWAP,
-            hasSearchBar = true,
-            userWalletId = params.userWalletId,
-            onTokenClick = model::selectToToken,
-        ),
-    )
+    private val selectToTokenListComponent: AvailableSwapPairsComponent =
+        availableSwapPairsComponentFactory.create(
+            context = child(key = "select_to_token_list"),
+            params = AvailableSwapPairsComponent.Params(
+                userWalletId = params.userWalletId,
+                selectedStatus = model.fromCurrencyStatus,
+                onTokenClick = model::selectToToken,
+            ),
+        )
 
     @Composable
     override fun Content(modifier: Modifier) {
