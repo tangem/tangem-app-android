@@ -8,7 +8,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.features.onramp.component.SwapSelectTokensComponent
-import com.tangem.features.onramp.entity.OnrampOperation
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.swap.model.SwapSelectTokensModel
 import com.tangem.features.onramp.swap.ui.SwapSelectTokens
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent

@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.model
+package com.tangem.features.onramp.confirmresidency.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -6,8 +6,8 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.features.onramp.component.ConfirmResidencyComponent
-import com.tangem.features.onramp.entity.ConfirmResidencyUM
+import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
+import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
