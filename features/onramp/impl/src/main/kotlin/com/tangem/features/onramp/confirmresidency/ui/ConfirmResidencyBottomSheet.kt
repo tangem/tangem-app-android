@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.ui
+package com.tangem.features.onramp.confirmresidency.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
@@ -27,9 +27,9 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.onramp.component.ConfirmResidencyComponent
-import com.tangem.features.onramp.component.preview.PreviewConfirmResidencyComponent
-import com.tangem.features.onramp.entity.ConfirmResidencyUM
+import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
+import com.tangem.features.onramp.confirmresidency.PreviewConfirmResidencyComponent
+import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
 
 @Composable
