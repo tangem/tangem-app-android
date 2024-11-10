@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_swap_choose_token">Choisissez le jeton</string>
+  <string name="action_buttons_you_want_to_receive">Vous souhaitez recevoir</string>
+  <string name="action_buttons_you_want_to_swap">Vous souhaitez échanger</string>
   <string name="add_custom_token_choose_network">Choisissez le réseau</string>
   <string name="add_custom_token_title">Ajouter un jeton personnalisé</string>
   <string name="add_tokens_title">Gérer les jetons</string>
@@ -847,6 +850,9 @@
   <string name="token_swap_changelly_promotion_message">Échangez ce jeton contre un autre moyennant des frais de service de %1$s du %2$s au %3$s février.</string>
   <string name="token_swap_changelly_promotion_title">Échangez avec Changelly, %s frais</string>
   <string name="token_swap_promotion_button">Échangez maintenant</string>
+  <string name="tokens_list_unavailable_to_purchase_header">Non disponible à l\'achat</string>
+  <string name="tokens_list_unavailable_to_sell_header">Indisponible à la vente</string>
+  <string name="tokens_list_unavailable_to_swap_header">Non disponible pour l\'échange de %s</string>
   <string name="transaction_history_contract_address">contrat : %s</string>
   <string name="transaction_history_empty_transactions">Vous n\'avez pas encore de transactions</string>
   <string name="transaction_history_error_failed_to_load">Échec du chargement de l\'historique des transactions.\nCliquez sur le bouton de rechargement pour mettre à jour les informations.</string>
