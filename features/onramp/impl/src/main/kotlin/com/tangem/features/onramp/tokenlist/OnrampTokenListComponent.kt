@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.features.onramp.entity.OnrampOperation
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 
 /** Token list component that present list of token for multi-currency wallet */
 @Stable
