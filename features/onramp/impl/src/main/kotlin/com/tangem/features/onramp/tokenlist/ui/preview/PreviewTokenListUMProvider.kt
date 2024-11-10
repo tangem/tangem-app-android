@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import kotlinx.collections.immutable.persistentListOf
@@ -69,7 +70,7 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
             state = TokenItemState.Content(
                 id = "1",
                 iconState = CurrencyIconState.Locked,
-                titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Bitcoin")),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
                 subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
@@ -88,13 +89,19 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
             state = TokenItemState.Content(
                 id = "2",
                 iconState = CurrencyIconState.Locked,
-                titleState = TokenItemState.TitleState.Content(text = "Bitcoin", isAvailable = false),
+                titleState = TokenItemState.TitleState.Content(
+                    text = stringReference(value = "Bitcoin"),
+                    isAvailable = false,
+                ),
                 fiatAmountState = TokenItemState.FiatAmountState.TextContent(
                     text = "12 368,14 \$",
                     isAvailable = false,
                 ),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
-                subtitleState = TokenItemState.SubtitleState.TextContent(value = "BTC", isAvailable = false),
+                subtitleState = TokenItemState.SubtitleState.TextContent(
+                    value = stringReference(value = "BTC"),
+                    isAvailable = false,
+                ),
                 onItemClick = {},
                 onItemLongClick = {},
             ),
