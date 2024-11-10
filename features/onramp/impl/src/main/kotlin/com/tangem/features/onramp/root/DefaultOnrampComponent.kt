@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.component.impl
+package com.tangem.features.onramp.root
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -13,7 +13,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onramp.component.OnrampComponent
-import com.tangem.features.onramp.entity.OnrampChild
+import com.tangem.features.onramp.root.entity.OnrampChild
 import com.tangem.features.onramp.settings.OnrampSettingsComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
