@@ -21,6 +21,8 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -38,7 +40,7 @@ internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) 
             )
         }
         is TokenPriceState.TextContent -> {
-            PriceText(text = state.value, modifier = modifier, isAvailable = state.isAvailable)
+            PriceText(text = state.value.resolveReference(), modifier = modifier, isAvailable = state.isAvailable)
         }
         is TokenPriceState.Unknown -> {
             PriceText(text = DASH_SIGN, modifier = modifier)
@@ -158,7 +160,7 @@ private class TokenPriceChangeStateProvider : CollectionPreviewParameterProvider
             priceChangePercent = "2.5%",
             type = PriceChangeType.NEUTRAL,
         ),
-        TokenPriceState.TextContent(value = "Subtitle", isAvailable = true),
+        TokenPriceState.TextContent(value = stringReference(value = "Subtitle"), isAvailable = true),
         TokenPriceState.Unknown,
         TokenPriceState.Loading,
         TokenPriceState.Locked,
