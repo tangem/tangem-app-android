@@ -172,10 +172,15 @@ internal class StateBuilder(
         val canSelectReceiveToken = mainTokenId != toToken.id.value
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
-        val sendInput = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable).copy(
-            isError = false,
-            header = TextReference.Res(R.string.swapping_from_title),
-        )
+        val sendInputType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
+        val sendInput = if (sendInputType.isError) {
+            sendInputType
+        } else {
+            sendInputType.copy(
+                isError = false,
+                header = TextReference.Res(R.string.swapping_from_title),
+            )
+        }
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
                 type = sendInput,
@@ -252,10 +257,16 @@ internal class StateBuilder(
         } else {
             TextReference.Res(R.string.swapping_from_title)
         }
-        val sendInput = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable).copy(
-            isError = isInsufficientFunds,
-            header = insufficientFundsHeader,
-        )
+        val sendCardType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
+        val sendInput = if (sendCardType.isError && !isInsufficientFunds) {
+            // if any error in inputField and funds enough -> show that error else show fund is not enough error
+            sendCardType
+        } else {
+            sendCardType.copy(
+                isError = isInsufficientFunds,
+                header = insufficientFundsHeader,
+            )
+        }
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
                 type = sendInput,
@@ -863,14 +874,36 @@ internal class StateBuilder(
         )
     }
 
-    fun updateSwapAmount(uiState: SwapStateHolder, amount: String): SwapStateHolder {
+    fun updateSwapAmount(
+        uiState: SwapStateHolder,
+        amountFormatted: String,
+        amountRaw: String,
+        fromToken: CryptoCurrency,
+        minTxAmount: BigDecimal?,
+    ): SwapStateHolder {
         if (uiState.sendCardData !is SwapCardState.SwapCardData) return uiState
+        val amountToSend = amountRaw.toBigDecimalOrNull()
+        val sendInput = if (minTxAmount != null && amountToSend != null && amountToSend < minTxAmount) {
+            val minAmountFormatted = minTxAmount.format {
+                crypto(cryptoCurrency = fromToken, ignoreSymbolPosition = true)
+            }
+            (uiState.sendCardData.type as? TransactionCardType.Inputtable)?.copy(
+                isError = true,
+                header = resourceReference(R.string.transfer_min_amount_error, wrappedList(minAmountFormatted)),
+            ) ?: uiState.sendCardData.type
+        } else {
+            (uiState.sendCardData.type as? TransactionCardType.Inputtable)?.copy(
+                isError = false,
+                header = TextReference.Res(R.string.swapping_from_title),
+            ) ?: uiState.sendCardData.type
+        }
         return uiState.copy(
             sendCardData = uiState.sendCardData.copy(
                 amountTextFieldValue = TextFieldValue(
-                    text = amount,
-                    selection = TextRange(amount.length),
+                    text = amountFormatted,
+                    selection = TextRange(amountFormatted.length),
                 ),
+                type = sendInput,
             ),
         )
     }
