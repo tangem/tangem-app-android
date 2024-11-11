@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.CircleShimmer
@@ -18,9 +19,13 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.components.buttons.SecondarySmallButton
+import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyItemState
 
@@ -46,8 +51,33 @@ internal fun OnrampCurrencyList(state: CurrenciesListUM, modifier: Modifier = Mo
         }
         when (state) {
             is CurrenciesListUM.Content -> currencyListContent(state = state)
-            is CurrenciesListUM.Error -> TODO()
+            is CurrenciesListUM.Error -> currencyListError(state = state)
             is CurrenciesListUM.Loading -> currencyListLoading(state = state)
+        }
+    }
+}
+
+private fun LazyListScope.currencyListError(state: CurrenciesListUM.Error) {
+    item(key = "error_content") {
+        Column(
+            modifier = Modifier
+                .fillParentMaxHeight()
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = stringResource(id = R.string.markets_loading_error_title),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.tertiary,
+            )
+            SecondarySmallButton(
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+                config = SmallButtonConfig(
+                    text = resourceReference(id = R.string.try_to_load_data_again_button_title),
+                    onClick = state.onRetry,
+                ),
+            )
         }
     }
 }
