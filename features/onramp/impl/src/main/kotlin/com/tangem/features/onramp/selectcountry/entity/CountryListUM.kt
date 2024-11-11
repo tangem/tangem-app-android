@@ -1,23 +1,31 @@
 package com.tangem.features.onramp.selectcountry.entity
 
+import androidx.compose.runtime.Immutable
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 
-internal data class CountryListUM(val items: ImmutableList<CountriesListItemUM>) {
+@Immutable
+internal sealed interface CountryListUM {
 
-    /** Get search bar if it exists */
-    fun getSearchBar(): CountriesListItemUM.SearchBar? {
-        return items.firstOrNull() as? CountriesListItemUM.SearchBar
-    }
+    val searchBarUM: SearchBarUM
 
-    /** Get tokens */
-    fun getCountries(): ImmutableList<CountriesListItemUM> {
-        if (getSearchBar() == null) return items
+    data class Loading(
+        override val searchBarUM: SearchBarUM,
+        val items: ImmutableList<CountryItemState.Loading>,
+    ) : CountryListUM
 
-        return if (items.size > 1) {
-            items.subList(fromIndex = 1, toIndex = items.size)
-        } else {
-            persistentListOf()
+    data class Error(override val searchBarUM: SearchBarUM, val onRetry: () -> Unit) : CountryListUM
+
+    data class Content(
+        override val searchBarUM: SearchBarUM,
+        val items: ImmutableList<CountryItemState.WithContent>,
+    ) : CountryListUM
+
+    fun copySealed(searchBarUM: SearchBarUM = this.searchBarUM): CountryListUM {
+        return when (this) {
+            is Loading -> this.copy(searchBarUM = searchBarUM)
+            is Error -> this.copy(searchBarUM = searchBarUM)
+            is Content -> this.copy(searchBarUM = searchBarUM)
         }
     }
 }
