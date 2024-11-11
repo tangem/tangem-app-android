@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_swap_choose_token">Выберите токен</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных токенов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
+  <string name="action_buttons_swap_no_available_pair_notification_title">Нет доступных пар</string>
   <string name="add_custom_token_choose_network">Выберите сеть</string>
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
@@ -566,7 +569,14 @@
   <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
   <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
   <string name="onboarding_wallet_info_title_third">Код доступа</string>
+  <string name="onramp_country_search">Поиск по стране</string>
+  <string name="onramp_country_unavailable">Недоступно</string>
+  <string name="onramp_currency_search">Поиск по валюте</string>
+  <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
+  <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_pay_with">Оплата с</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">Наши сервисы недоступны в данной стране</string>
+  <string name="onramp_settings_title">Настройки</string>
   <string name="onramp_via">Через</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
@@ -830,7 +840,6 @@
   <string name="swapping_alert_cex_description_with_slippage">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %1$s от биржи обратно на адрес пользователя \n\nПроскальзывание провайдера составляет до %2$s</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
   <string name="swapping_alert_dex_description_with_slippage">В сумму включена комиссия провайдера сервиса. \n\nПроскальзывание провайдера составляет до %s</string>
-  <string name="swapping_alert_slippage_description">Проскальзывание провайдера составляет до %s.</string>
   <string name="swapping_alert_title">Информация</string>
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
   <string name="swapping_approve_information_title">Подтвердить</string>
@@ -869,6 +878,8 @@
   <string name="token_swap_changelly_promotion_message">Обменивайте этот токен на другие с %1$s комиссии за обслуживание с %2$s по %3$s февраля.</string>
   <string name="token_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="token_swap_promotion_button">Обменять</string>
+  <string name="tokens_list_unavailable_to_purchase_header">Недоступно для покупки</string>
+  <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажи</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
   <string name="transaction_history_empty_transactions">У вас еще нет транзакций</string>
   <string name="transaction_history_error_failed_to_load">Не удалось загрузить историю транзакций.\nНажмите на кнопку перезагрузки, чтобы обновить информацию.</string>
@@ -1016,7 +1027,7 @@
   <string name="warning_solana_fee_message">Сеть Солана испытывает высокую нагрузку. Если Ваша транзакция не прошла в течение 2 минут, повторите её отправку.</string>
   <string name="warning_solana_fee_title">Оповещение сети Солана</string>
   <string name="warning_solana_rent_fee_message">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
-  <string name="warning_some_networks_unreachable_message">Некоторые сети в настоящее время недоступны. Пожалуйста, повторите попытку позже.</string>
+  <string name="warning_some_networks_unreachable_message">Свайпните вниз для обновления или попробуйте позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
   <string name="warning_testnet_card_message">Это Testnet карта. Он не может обрабатывать транзакции и используется только в целях тестирования и разработки.</string>
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
