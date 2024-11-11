@@ -380,7 +380,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         appRouter.push(
             AppRoute.Swap(
-                currency = cryptoCurrencyStatus.currency,
+                currencyFrom = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
             ),
         )
