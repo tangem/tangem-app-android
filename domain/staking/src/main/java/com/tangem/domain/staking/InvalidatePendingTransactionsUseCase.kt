@@ -8,6 +8,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.utils.extensions.isEqualTo
+import java.math.BigDecimal
 import java.util.UUID
 
 class InvalidatePendingTransactionsUseCase(
@@ -50,8 +51,14 @@ class InvalidatePendingTransactionsUseCase(
                 StakingActionType.UNLOCK_LOCKED -> {
                     modifyBalancesByStatus(balances, action, BalanceType.LOCKED)
                 }
-                StakingActionType.UNSTAKE, StakingActionType.RESTAKE -> {
+                StakingActionType.RESTAKE -> {
                     modifyBalancesByStatus(balances, action, BalanceType.STAKED)
+                }
+                StakingActionType.UNSTAKE -> {
+                    val isFullUnstake = modifyBalancesByStatus(balances, action, BalanceType.STAKED)
+                    if (!isFullUnstake) {
+                        processPartialUnstake(balances, action)
+                    }
                 }
                 else -> {
                     // intentionally do nothing
@@ -86,17 +93,51 @@ class InvalidatePendingTransactionsUseCase(
         )
     }
 
-    private fun modifyBalancesByStatus(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType) {
+    private fun modifyBalancesByStatus(
+        balances: MutableList<BalanceItem>,
+        action: StakingAction,
+        type: BalanceType,
+    ): Boolean {
         val index = findBalanceIndex(balances, action, type)
 
         if (index != -1) {
             balances[index] = balances[index].copy(isPending = true)
+            return true
         }
+
+        return false
     }
 
     private fun findBalanceIndex(balances: MutableList<BalanceItem>, action: StakingAction, type: BalanceType): Int {
         return balances.indexOfFirst {
             !it.isPending && it.amount isEqualTo action.amount && it.type == type
         }
+    }
+
+    private fun processPartialUnstake(balances: MutableList<BalanceItem>, action: StakingAction) {
+        val (index, pendingActionAmount) = findPartialUnstake(balances, action)
+
+        if (index != -1) {
+            val amount = balances[index].amount
+            balances[index] = balances[index].copy(
+                amount = amount - pendingActionAmount,
+            ) // remnants of real one
+
+            balances.add(
+                balances[index].copy(
+                    amount = pendingActionAmount,
+                    isPending = true,
+                ),
+            ) // pending with amount from action
+        }
+    }
+
+    private fun findPartialUnstake(balances: MutableList<BalanceItem>, action: StakingAction): Pair<Int, BigDecimal> {
+        val index = balances.indexOfFirst {
+            !it.isPending && action.amount < it.amount &&
+                it.type == BalanceType.STAKED &&
+                it.validatorAddress == action.validatorAddress
+        }
+        return index to action.amount
     }
 }
