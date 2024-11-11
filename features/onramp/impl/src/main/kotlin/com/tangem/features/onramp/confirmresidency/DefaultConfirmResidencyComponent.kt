@@ -15,10 +15,10 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.onramp.confirmresidency.model.ConfirmResidencyModel
-import com.tangem.features.onramp.selectcountry.SelectCountryComponent
-import com.tangem.features.onramp.selectcountry.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.confirmresidency.ui.ConfirmResidencyBottomSheet
 import com.tangem.features.onramp.confirmresidency.ui.ConfirmResidencyBottomSheetContent
+import com.tangem.features.onramp.entity.ConfirmResidencyBottomSheetConfig
+import com.tangem.features.onramp.selectcountry.SelectCountryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
