@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_buy_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à l\'achat</string>
+  <string name="action_buttons_sell_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à la vente</string>
+  <string name="action_buttons_swap_choose_token">Choisissez le jeton</string>
+  <string name="action_buttons_swap_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à l\'échange</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">Il n\'y a pas de token disponible pour échanger avec le token sélectionné. Veuillez en choisir un autre.</string>
+  <string name="action_buttons_swap_no_available_pair_notification_title">Aucune paire disponible</string>
   <string name="add_custom_token_choose_network">Choisissez le réseau</string>
   <string name="add_custom_token_title">Ajouter un jeton personnalisé</string>
   <string name="add_tokens_title">Gérer les jetons</string>
@@ -551,9 +557,20 @@
   <string name="onboarding_wallet_info_title_fourth">Restauration du code d\'accès</string>
   <string name="onboarding_wallet_info_title_second">Cartes identiques</string>
   <string name="onboarding_wallet_info_title_third">Code d\'accès</string>
+  <string name="onramp_country_search">Recherche par pays</string>
+  <string name="onramp_country_unavailable">Indisponible</string>
+  <string name="onramp_currency_search">Recherche par devise</string>
+  <string name="onramp_max_amount_restriction">Le montant de l\'achat ne doit pas dépasser %s</string>
+  <string name="onramp_min_amount_restriction">Le montant à acheter doit être au moins %s</string>
+  <string name="onramp_no_available_providers">Aucun fournisseur disponible pour cette devise</string>
+  <string name="onramp_pay_with">Payer avec</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Nos services ne sont pas disponibles dans ce pays</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Modifiez-le ou confirmez-le</string>
   <string name="onramp_residency_bottomsheet_title">Votre résidence a été identifiée comme</string>
+  <string name="onramp_settings_residence">Résidence</string>
+  <string name="onramp_settings_residence_description">Veuillez sélectionner le bon pays pour garantir des options de paiement et des services précis.</string>
+  <string name="onramp_settings_title">Paramètres</string>
+  <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Grouper</string>
   <string name="organize_tokens_sort_by_balance">Par solde</string>
   <string name="organize_tokens_title">Organiser les jetons</string>
@@ -696,6 +713,7 @@
   <string name="settings_wallet_name_title">Nom</string>
   <string name="staking_amount_requirement_error">Le montant à staker doit être au moins %s</string>
   <string name="staking_amount_tron_integer_error">Le montant du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
+  <string name="staking_amount_tron_integer_error_unstaking">Le montant d\'annulation du staking sera arrondi à %1$s TRX en raison des règles du réseau.</string>
   <string name="staking_claim_unstaked">Réclamation déstakée</string>
   <string name="staking_details_account_fee">Frais de staking du compte</string>
   <string name="staking_details_account_fee_info">Un compte de staking est un compte spécial où sont stockés les jetons SOL stakés. Il est créé lorsque vous déléguez vos jetons à un validateur pour participer à la validation des transactions et gagner des récompenses. Des frais minimes sont facturés pour la création du compte de staking, qui sont restitués une fois le staking terminé.</string>
@@ -738,6 +756,8 @@
   <string name="staking_notification_earn_rewards_text_period_week">Le staking vous permet de gagner %1$s. Vos récompenses de staking arrivent toutes les semaines.</string>
   <string name="staking_notification_earn_rewards_text_weekly">Stakez en toute sécurité et commencez à gagner des récompenses hebdomadaires</string>
   <string name="staking_notification_earn_rewards_title">Gagnez des récompenses de staking</string>
+  <string name="staking_notification_low_staked_balance_text">Votre solde stakée sera trop faible pour annuler votre staking. Vous devrez staker davantage pour atteindre le montant minimum pour annuler le staking.</string>
+  <string name="staking_notification_low_staked_balance_title">Solde de staking faible</string>
   <string name="staking_notification_network_error_text">L\'option de staking n\'est actuellement pas disponible en raison des conditions du réseau. Veuillez réessayer plus tard.</string>
   <string name="staking_notification_new_validator_funds_transfer">Le staking dans le réseau %1$s avec un nouveau validateur transférera automatiquement tous les fonds précédemment stakés vers ce validateur</string>
   <string name="staking_notification_restake_rewards_text">Réinvestissez vos récompenses gagnées dans le montant que vous avez staké, augmentant ainsi vos gains potentiels.</string>
@@ -771,6 +791,7 @@
   <string name="staking_rewards">Récompenses</string>
   <string name="staking_stake_locked">Stake verrouillé</string>
   <string name="staking_stake_more">Staker plus</string>
+  <string name="staking_staked_amount">Montant staké</string>
   <string name="staking_summary_description_text">Vous stakez %1$s et recevrez %2$s</string>
   <string name="staking_tap_to_unlock">Appuyez pour déverrouiller</string>
   <string name="staking_tap_to_unlock_or_vote">Appuyez pour déverrouiller ou voter</string>
@@ -849,6 +870,9 @@
   <string name="token_swap_changelly_promotion_message">Échangez ce jeton contre un autre moyennant des frais de service de %1$s du %2$s au %3$s février.</string>
   <string name="token_swap_changelly_promotion_title">Échangez avec Changelly, %s frais</string>
   <string name="token_swap_promotion_button">Échangez maintenant</string>
+  <string name="tokens_list_unavailable_to_purchase_header">Non disponible à l\'achat</string>
+  <string name="tokens_list_unavailable_to_sell_header">Indisponible à la vente</string>
+  <string name="tokens_list_unavailable_to_swap_header">Non disponible pour l\'échange de %s</string>
   <string name="transaction_history_contract_address">contrat : %s</string>
   <string name="transaction_history_empty_transactions">Vous n\'avez pas encore de transactions</string>
   <string name="transaction_history_error_failed_to_load">Échec du chargement de l\'historique des transactions.\nCliquez sur le bouton de rechargement pour mettre à jour les informations.</string>
