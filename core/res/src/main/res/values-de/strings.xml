@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_buy_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Kauf hinzuzufügen</string>
+  <string name="action_buttons_sell_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Verkauf hinzuzufügen</string>
+  <string name="action_buttons_swap_choose_token">Wähle den Token</string>
+  <string name="action_buttons_swap_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es für Swaps zu finden und hinzuzufügen</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">Es gibt keine verfügbaren Token, die mit dem ausgewählten Token getauscht werden können. Bitte wähle einen anderen.</string>
+  <string name="action_buttons_swap_no_available_pair_notification_title">Kein verfügbares Paar</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
@@ -551,10 +557,21 @@
   <string name="onboarding_wallet_info_title_fourth">Zugangscode wiederherstellen</string>
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
+  <string name="onramp_country_search">Suche nach Land</string>
+  <string name="onramp_country_unavailable">Nicht verfügbar</string>
+  <string name="onramp_currency_search">Suche nach Währung</string>
+  <string name="onramp_max_amount_restriction">Der Kaufbetrag sollte nicht höher sein als %s</string>
+  <string name="onramp_min_amount_restriction">Der zu kaufende Betrag muss mindestens %s betragen</string>
+  <string name="onramp_no_available_providers">Keine verfügbaren Anbieter für diese Währung</string>
   <string name="onramp_pay_with">Bezahlen mit</string>
+  <string name="onramp_redirecting_to_provider_subtitle">Du kannst Deine Transaktion beim Drittanbieter %s abschließen.</string>
+  <string name="onramp_redirecting_to_provider_title">Umleitung auf %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Unsere Dienstleistungen sind in diesem Land nicht verfügbar</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Änder oder bestätige bitte</string>
   <string name="onramp_residency_bottomsheet_title">Dein Wohnsitz wurde identifiziert als</string>
+  <string name="onramp_settings_residence">Residenz</string>
+  <string name="onramp_settings_residence_description">Bitte wähle das richtige Land aus, um korrekte Zahlungsoptionen und Dienstleistungen zu gewährleisten.</string>
+  <string name="onramp_settings_title">Einstellungen</string>
   <string name="onramp_via">Über</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
@@ -741,6 +758,8 @@
   <string name="staking_notification_earn_rewards_text_period_week">Mit dem Staking kannst Du %1$s verdienen. Deine Staking-Belohnungen erhältst Du jede Woche.</string>
   <string name="staking_notification_earn_rewards_text_weekly">Sicher staken und wöchentliche Belohnungen verdienen.</string>
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
+  <string name="staking_notification_low_staked_balance_text">Dein verbleibender Stakingbetrag ist zu niedrig, um den Einsatz aufzuheben. Du musst mehr Staken, um den Mindestbetrag zum Aufheben des Einsatzes zu erreichen.</string>
+  <string name="staking_notification_low_staked_balance_title">Niedriges Stakingguthaben</string>
   <string name="staking_notification_network_error_text">Aufgrund von Netzwerkproblemen ist Staking derzeit nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="staking_notification_new_validator_funds_transfer">Beim Staking im %1$s -Netzwerk mit einem neuen Validator werden alle zuvor eingesetzten Kryptos automatisch an diesen Validator übertragen</string>
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
@@ -785,7 +804,7 @@
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unlocking">Entsperren</string>
-  <string name="staking_unstake_amount_requirement_error">Die Anzahl der zu stakenden Krypros muss mindesten %s betragen</string>
+  <string name="staking_unstake_amount_requirement_error">Der unstaking-Betrag muss mindestens %s betragen.</string>
   <string name="staking_unstake_amount_validation_error">Der Betrag übersteigt das eingesetzte Guthaben</string>
   <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaking">Staking beenden</string>
@@ -815,8 +834,7 @@
   <string name="swapping_alert_cex_description_with_slippage">Der Betrag beinhaltet:\n• Honorar des Dienstleisters\n• Netzwerkgebühr für das Senden %1$s von der Börse zurück an die Adresse des Benutzers. \n\n Provider-Slippage kann bis zu %2$s</string>
   <string name="swapping_alert_dex_description">Der Betrag enthält die Gebühren des Dienstleisters.</string>
   <string name="swapping_alert_dex_description_with_slippage">Der Betrag beinhaltet die Gebühr des Dienstleisters. \n\nProvider-Slippage kann bis zu %s</string>
-  <string name="swapping_alert_slippage_description">Anbieter-Slippage kann bis zu %s ausfallen.</string>
-  <string name="swapping_alert_title">Gebühren</string>
+  <string name="swapping_alert_title">Information</string>
   <string name="swapping_approve_information_text">Alle dezentralen Börsen benötigen Genehmigungen, um zu verhindern, dass intelligente Verträge ohne Ihre Erlaubnis auf Ihre Geldbörse zugreifen. Smart Contracts können nicht auf Ihre Token zugreifen, wenn Sie nicht zustimmen. Indem Sie Ihre Token \"freischalten\", ermächtigen Sie den 1-Zoll-Smart-Contract, sie auszugeben. Die Miner des Netzwerks erhalten eine (von Ihnen bezahlte) Gasgebühr, um diese Aktion in der Blockchain aufzuzeichnen. Sie können Ihre Token tauschen, nachdem Sie Ihre Zustimmung gegeben haben.</string>
   <string name="swapping_approve_information_title">Genehmigen</string>
   <string name="swapping_fee_estimation_error_text">Fehler bei der Gebührenschätzung. Bitte sende dein Feedback an den Support.</string>
@@ -854,6 +872,9 @@
   <string name="token_swap_changelly_promotion_message">Tausche diesen Token gegen einen anderen zu %1$s Servicegebühren von Februar %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Tausche mit Changelly, %s Gebühren</string>
   <string name="token_swap_promotion_button">Jetzt tauschen</string>
+  <string name="tokens_list_unavailable_to_purchase_header">Nicht verfügbar zum Kauf</string>
+  <string name="tokens_list_unavailable_to_sell_header">Nicht zum Verkauf verfügbar</string>
+  <string name="tokens_list_unavailable_to_swap_header">Nicht verfügbar für Tausch von %s</string>
   <string name="transaction_history_contract_address">Vertrag: %s</string>
   <string name="transaction_history_empty_transactions">Du hast noch keine Transaktionen</string>
   <string name="transaction_history_error_failed_to_load">Der Transaktionsverlauf konnte nicht geladen werden.\nKlicke auf die Schaltfläche Neu laden, um die Informationen zu aktualisieren.</string>
@@ -863,6 +884,7 @@
   <string name="transaction_history_transaction_from_address">von: %s</string>
   <string name="transaction_history_transaction_to_address">zu: %s</string>
   <string name="transaction_history_transaction_validator">Validierer: %s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">Der Mindesttransaktionsbetrag beträgt %1$s.</string>
   <string name="try_to_load_data_again_button_title">Versuche es erneut</string>
   <string name="twin_error_same_card">Du hast dieselbe Karte oder Ring gescannt. Um ein Zwillings-Wallet zu erstellen, musst du die Karte oder Ring mit der Nummer %d scannen.</string>
   <string name="twin_error_wrong_twin">Du hast die falsche Doppelkarte oder Ring gescannt. Bitte versuche eine andere Karte oder Ring</string>
@@ -998,7 +1020,7 @@
   <string name="warning_solana_fee_message">Das Solana-Netz ist überlastet. Wenn deine Transaktion nicht innerhalb von 2 Minuten bearbeitet wird, wiederhole bitte die Transaktion.</string>
   <string name="warning_solana_fee_title">Solana Netzwerkalarm</string>
   <string name="warning_solana_rent_fee_message">Das Solana-Netzwerk erhebt alle 2 Tage eine Miete von %1$s. Konten, die sich die Miete nicht leisten können, werden aus dem Netzwerk gelöscht. Hinterlege deinem Konto mit mehr als %2$s, um es kostenlos zu nutzen.</string>
-  <string name="warning_some_networks_unreachable_message">Einige Netzwerke sind derzeit nicht erreichbar. Bitte versuche es später erneut.</string>
+  <string name="warning_some_networks_unreachable_message">Wischen Sie nach unten, um zu aktualisieren, oder versuchen Sie es später erneut.</string>
   <string name="warning_some_networks_unreachable_title">Einige Netzwerke sind nicht erreichbar</string>
   <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
