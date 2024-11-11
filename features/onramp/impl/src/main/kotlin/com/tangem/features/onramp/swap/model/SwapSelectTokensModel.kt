@@ -1,8 +1,12 @@
 package com.tangem.features.onramp.swap.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.features.onramp.component.SwapSelectTokensComponent
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensController
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUM
 import com.tangem.features.onramp.swap.entity.transformer.RemoveSelectedFromTokenTransformer
@@ -15,8 +19,10 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 internal class SwapSelectTokensModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val controller: SwapSelectTokensController,
+    private val router: Router,
 ) : Model() {
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
@@ -25,6 +31,8 @@ internal class SwapSelectTokensModel @Inject constructor(
 
     private val _fromCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
     private val _toCurrencyStatus = MutableStateFlow<CryptoCurrencyStatus?>(value = null)
+
+    private val params = paramsContainer.require<SwapSelectTokensComponent.Params>()
 
     /**
      * Select "from" token
@@ -54,7 +62,13 @@ internal class SwapSelectTokensModel @Inject constructor(
 
         controller.update(transformer = SelectToTokenTransformer(selectedTokenItemState))
 
-        // TODO: https://tangem.atlassian.net/browse/AND-8989
+        router.push(
+            route = AppRoute.Swap(
+                currencyFrom = requireNotNull(fromCurrencyStatus.value).currency,
+                currencyTo = status.currency,
+                userWalletId = params.userWalletId,
+            ),
+        )
     }
 
     private fun onRemoveClick() {
