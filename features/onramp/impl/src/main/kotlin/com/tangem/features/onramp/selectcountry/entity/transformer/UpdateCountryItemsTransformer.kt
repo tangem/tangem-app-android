@@ -1,11 +1,7 @@
 package com.tangem.features.onramp.selectcountry.entity.transformer
 
 import arrow.core.Either
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.onramp.model.OnrampCountry
-import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.selectcountry.entity.CountriesListItemUM
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
 import com.tangem.utils.transformer.Transformer
@@ -15,26 +11,27 @@ internal class UpdateCountryItemsTransformer(
     private val maybeCountries: Either<Throwable, List<OnrampCountry>>,
     private val defaultCountry: OnrampCountry?,
     private val query: String,
-    private val onQueryChange: (String) -> Unit,
-    private val onActiveChange: (Boolean) -> Unit,
+    private val onRetry: () -> Unit,
     private val onCountryClick: (OnrampCountry) -> Unit,
 ) : Transformer<CountryListUM> {
 
     override fun transform(prevState: CountryListUM): CountryListUM {
-        val searchBarItem = prevState.getSearchBar() ?: createSearchBarItem()
         return maybeCountries.fold(
-            ifLeft = { prevState }, // TODO: [REDACTED_JIRA]
+            ifLeft = { CountryListUM.Error(searchBarUM = prevState.searchBarUM, onRetry = onRetry) },
             ifRight = { countries ->
                 val countriesListItems = countries.filterByQuery().toUiModels()
-                prevState.copy(items = (listOf(searchBarItem) + countriesListItems).toImmutableList())
+                CountryListUM.Content(
+                    searchBarUM = prevState.searchBarUM,
+                    items = countriesListItems.toImmutableList(),
+                )
             },
         )
     }
 
-    private fun List<OnrampCountry>.toUiModels(): List<CountriesListItemUM.Country> {
+    private fun List<OnrampCountry>.toUiModels(): List<CountryItemState.WithContent> {
         return map { country ->
-            val countryItemState = if (country.onrampAvailable) {
-                CountryItemState.Content(
+            if (country.onrampAvailable) {
+                CountryItemState.WithContent.Content(
                     id = country.id,
                     flagUrl = country.image,
                     countryName = country.name,
@@ -42,9 +39,12 @@ internal class UpdateCountryItemsTransformer(
                     onClick = { onCountryClick(country) },
                 )
             } else {
-                CountryItemState.Unavailable(id = country.id, flagUrl = country.image, countryName = country.name)
+                CountryItemState.WithContent.Unavailable(
+                    id = country.id,
+                    flagUrl = country.image,
+                    countryName = country.name,
+                )
             }
-            CountriesListItemUM.Country(countryItemState)
         }
     }
 
@@ -53,17 +53,5 @@ internal class UpdateCountryItemsTransformer(
             country.alpha3.lowercase().contains(query.lowercase()) ||
                 country.name.lowercase().contains(query.lowercase())
         }
-    }
-
-    private fun createSearchBarItem(): CountriesListItemUM.SearchBar {
-        return CountriesListItemUM.SearchBar(
-            searchBarUM = SearchBarUM(
-                placeholderText = resourceReference(id = R.string.common_search),
-                query = "",
-                onQueryChange = onQueryChange,
-                isActive = false,
-                onActiveChange = onActiveChange,
-            ),
-        )
     }
 }
