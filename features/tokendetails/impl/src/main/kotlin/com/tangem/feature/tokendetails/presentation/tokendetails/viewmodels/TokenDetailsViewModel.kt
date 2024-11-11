@@ -621,7 +621,7 @@ internal class TokenDetailsViewModel @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        appRouter.push(AppRoute.Swap(currency = cryptoCurrency, userWalletId = userWalletId))
+        appRouter.push(AppRoute.Swap(currencyFrom = cryptoCurrency, userWalletId = userWalletId))
     }
 
     override fun onDismissDialog() {
