@@ -165,9 +165,13 @@ private fun LazyListScope.activeStakingBlock(
         }
         itemsIndexed(
             items = state.yieldBalance.balances,
-            key = { _, balance ->
+            key = { index, balance ->
                 // Staked balance does not have unique identifier.
-                balance.toString()
+                buildString {
+                    append(balance.hashCode())
+                    append("_")
+                    append(index)
+                }
             },
         ) { index, balance ->
             ActiveStakingBlock(
