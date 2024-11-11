@@ -9,17 +9,19 @@ internal sealed interface CountryItemState {
 
     data class Loading(override val id: String) : CountryItemState
 
-    data class Unavailable(
-        override val id: String,
-        val flagUrl: String,
-        val countryName: String,
-    ) : CountryItemState
+    sealed interface WithContent : CountryItemState {
+        data class Unavailable(
+            override val id: String,
+            val flagUrl: String,
+            val countryName: String,
+        ) : WithContent
 
-    data class Content(
-        override val id: String,
-        val flagUrl: String,
-        val countryName: String,
-        val isSelected: Boolean,
-        val onClick: () -> Unit,
-    ) : CountryItemState
+        data class Content(
+            override val id: String,
+            val flagUrl: String,
+            val countryName: String,
+            val isSelected: Boolean,
+            val onClick: () -> Unit,
+        ) : WithContent
+    }
 }
