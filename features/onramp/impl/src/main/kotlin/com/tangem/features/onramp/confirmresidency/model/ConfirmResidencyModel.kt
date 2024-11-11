@@ -9,7 +9,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.selectcountry.entity.ConfirmResidencyBottomSheetConfig
+import com.tangem.features.onramp.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
