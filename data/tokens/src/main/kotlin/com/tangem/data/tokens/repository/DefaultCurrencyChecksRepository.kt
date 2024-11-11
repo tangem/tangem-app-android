@@ -12,10 +12,13 @@ import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
+    private val coroutineDispatchers: CoroutineDispatcherProvider,
 ) : CurrencyChecksRepository {
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
         val manager = walletManagersFacade.getOrCreateWalletManager(
@@ -45,12 +48,14 @@ internal class DefaultCurrencyChecksRepository(
     }
 
     override suspend fun getMinimumSendAmount(userWalletId: UserWalletId, network: Network): BigDecimal? {
-        val manager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            network = network,
-        )
+        return withContext(coroutineDispatchers.io) {
+            val manager = walletManagersFacade.getOrCreateWalletManager(
+                userWalletId = userWalletId,
+                network = network,
+            )
 
-        return if (manager is MinimumSendAmountProvider) manager.getMinimumSendAmount() else null
+            if (manager is MinimumSendAmountProvider) manager.getMinimumSendAmount() else null
+        }
     }
 
     override suspend fun getFeeResourceAmount(userWalletId: UserWalletId, network: Network): CurrencyAmount? {
