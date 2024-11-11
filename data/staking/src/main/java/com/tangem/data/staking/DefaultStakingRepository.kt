@@ -589,7 +589,7 @@ internal class DefaultStakingRepository(
     private fun getEnabledYields(): List<Yield> {
         return yieldConverter.convertListIgnoreErrors(
             input = stakingYieldsStore.get(),
-            onError = { Timber.e("Error converting enabled yields list: $it") },
+            onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
         )
     }
 
