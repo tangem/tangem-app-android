@@ -277,11 +277,9 @@ internal object TokensDomainModule {
     @Singleton
     fun provideGetMinimumTransactionAmountSyncUseCase(
         currencyChecksRepository: CurrencyChecksRepository,
-        dispatchers: CoroutineDispatcherProvider,
     ): GetMinimumTransactionAmountSyncUseCase {
         return GetMinimumTransactionAmountSyncUseCase(
             currencyChecksRepository = currencyChecksRepository,
-            dispatchers = dispatchers,
         )
     }
 
