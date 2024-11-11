@@ -5,18 +5,24 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.onramp.GetOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCurrencyUseCase
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcurrency.SelectCurrencyComponent
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
+import com.tangem.features.onramp.selectcurrency.entity.CurrenciesSection
+import com.tangem.features.onramp.selectcurrency.entity.CurrencyItemState
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyListController
+import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsLoadingTransformer
 import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsTransformer
 import com.tangem.features.onramp.utils.SearchManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -34,7 +40,10 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     val state: StateFlow<CurrenciesListUM> get() = controller.state
 
     private val params: SelectCurrencyComponent.Params = paramsContainer.require()
-    private val controller = CurrencyListController(currencySearchBarUM = createSearchBarUM())
+    private val controller = CurrencyListController(
+        currencySearchBarUM = createSearchBarUM(),
+        loadingSections = loadingSections,
+    )
     private val refreshTrigger = MutableSharedFlow<Unit>()
 
     init {
@@ -70,9 +79,8 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     }
 
     private fun onRetry() {
-        modelScope.launch {
-            refreshTrigger.emit(Unit)
-        }
+        modelScope.launch { refreshTrigger.emit(Unit) }
+        controller.update(UpdateCurrencyItemsLoadingTransformer(loadingSections))
     }
 
     private fun onSearchQueryChange(newQuery: String) {
@@ -103,5 +111,15 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
             isActive = false,
             onActiveChange = ::onSearchBarActiveChange,
         )
+    }
+
+    private companion object {
+        val loadingSections = listOf(
+            CurrenciesSection(stringReference("Popular fiats"), items = createLoadingItems("popular")),
+            CurrenciesSection(stringReference("Other currencies"), items = createLoadingItems("other")),
+        ).toImmutableList()
+
+        private fun createLoadingItems(prefix: String, size: Int = 5): ImmutableList<CurrencyItemState.Loading> =
+            MutableList(size) { index -> CurrencyItemState.Loading("$prefix#$index") }.toImmutableList()
     }
 }
