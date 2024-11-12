@@ -14,6 +14,4 @@ internal data class CurrencyNetworkUM(
 ) : SelectableItemUM {
 
     override val id: String = network.id.value
-
-    data class LongTapConfig(val contractAddress: String, val onLongTap: () -> Unit)
 }
