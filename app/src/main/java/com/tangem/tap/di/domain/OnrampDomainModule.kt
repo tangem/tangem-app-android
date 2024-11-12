@@ -41,4 +41,10 @@ internal object OnrampDomainModule {
     fun provideOnrampSaveDefaultCountryUseCase(onrampRepository: OnrampRepository): OnrampSaveDefaultCountryUseCase {
         return OnrampSaveDefaultCountryUseCase(onrampRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideCheckOnrampAvailabilityUseCase(onrampRepository: OnrampRepository): CheckOnrampAvailabilityUseCase {
+        return CheckOnrampAvailabilityUseCase(onrampRepository)
+    }
 }

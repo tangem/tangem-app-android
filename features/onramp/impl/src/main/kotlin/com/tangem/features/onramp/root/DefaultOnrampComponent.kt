@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.root
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -9,10 +10,13 @@ import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackA
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.push
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onramp.component.OnrampComponent
+import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.root.entity.OnrampChild
 import com.tangem.features.onramp.settings.OnrampSettingsComponent
 import dagger.assisted.Assisted
@@ -22,8 +26,9 @@ import dagger.assisted.AssistedInject
 @Suppress("UnusedPrivateMember")
 internal class DefaultOnrampComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted params: OnrampComponent.Params,
+    @Assisted private val params: OnrampComponent.Params,
     private val settingsComponentFactory: OnrampSettingsComponent.Factory,
+    private val onrampMainComponentFactory: OnrampMainComponent.Factory,
 ) : OnrampComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<OnrampChild>()
@@ -31,7 +36,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
         key = "onramp_content_stack",
         source = navigation,
         serializer = OnrampChild.serializer(),
-        initialConfiguration = OnrampChild.Settings,
+        initialConfiguration = OnrampChild.Main,
         handleBackButton = false,
         childFactory = ::screenChild,
     )
@@ -40,6 +45,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val childStack by contentStack.subscribeAsState()
 
+        BackHandler(onBack = router::pop)
         Children(
             stack = childStack,
             animation = stackAnimation(),
@@ -52,10 +58,15 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
         when (config) {
             OnrampChild.Settings -> settingsComponentFactory.create(
                 context = childByContext(componentContext),
-                // params = OnrampSettingsComponent.Params(navigation::pop) // todo uncomment after https://tangem.atlassian.net/browse/AND-8407
-                params = OnrampSettingsComponent.Params(router::pop),
+                params = OnrampSettingsComponent.Params(navigation::pop),
             )
-            OnrampChild.Main -> TODO("https://tangem.atlassian.net/browse/AND-8407")
+            OnrampChild.Main -> onrampMainComponentFactory.create(
+                context = childByContext(componentContext),
+                params = OnrampMainComponent.Params(
+                    currency = params.currency,
+                    openSettings = { navigation.push(OnrampChild.Settings) },
+                ),
+            )
         }
 
     @AssistedFactory
