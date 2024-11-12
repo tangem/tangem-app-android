@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.core.navigation.url.UrlOpener
@@ -9,6 +10,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.getPendingActionTitle
+import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -109,28 +111,30 @@ internal class SetButtonsStateTransformer(
             StakingStep.Confirmation -> getConfirmationButtonText()
             StakingStep.Validators -> resourceReference(R.string.common_continue)
             StakingStep.Amount,
+            StakingStep.RestakeValidator,
             StakingStep.RewardsValidators,
             -> resourceReference(R.string.common_next)
         }
     }
 
     private fun StakingUiState.getConfirmationButtonText(): TextReference {
-        return if (confirmationState is StakingStates.ConfirmationState.Data) {
+        val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
+        val amountState = amountState as? AmountState.Data
+        return if (confirmationState != null && amountState != null) {
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                 resourceReference(R.string.common_close)
             } else {
                 when (actionType) {
-                    StakingActionCommonType.ENTER -> {
-                        if (confirmationState.isApprovalNeeded) {
+                    StakingActionCommonType.Enter -> {
+                        val amount = amountState.amountTextField.cryptoAmount.value.orZero()
+                        if (confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
                             resourceReference(R.string.give_permission_title)
                         } else {
                             resourceReference(R.string.common_stake)
                         }
                     }
-                    StakingActionCommonType.EXIT -> resourceReference(R.string.common_unstake)
-                    StakingActionCommonType.PENDING_OTHER,
-                    StakingActionCommonType.PENDING_REWARDS,
-                    -> confirmationState.pendingAction?.type.getPendingActionTitle()
+                    StakingActionCommonType.Exit -> resourceReference(R.string.common_unstake)
+                    is StakingActionCommonType.Pending -> confirmationState.pendingAction?.type.getPendingActionTitle()
                 }
             }
         } else {
@@ -140,32 +144,26 @@ internal class SetButtonsStateTransformer(
 
     private fun StakingUiState.onPrimaryClick() {
         when (currentStep) {
-            StakingStep.InitialInfo -> clickIntents.onEnterClick()
-            StakingStep.Validators -> {
-                if (confirmationState is StakingStates.ConfirmationState.Data) {
-                    clickIntents.onNextClick(
-                        pendingActions = confirmationState.pendingActions,
-                        pendingAction = confirmationState.pendingAction,
-                    )
-                } else {
-                    clickIntents.onNextClick()
-                }
-            }
-            StakingStep.Amount -> clickIntents.onNextClick()
+            StakingStep.InitialInfo -> clickIntents.onNextClick()
+            StakingStep.Validators,
+            StakingStep.RestakeValidator,
+            -> clickIntents.onNextClick()
+            StakingStep.Amount -> clickIntents.onAmountEnterClick()
             StakingStep.Confirmation -> onConfirmationClick()
             StakingStep.RewardsValidators -> Unit
         }
     }
 
     private fun StakingUiState.onConfirmationClick() {
-        if (confirmationState is StakingStates.ConfirmationState.Data) {
+        val confirmationState = confirmationState as? StakingStates.ConfirmationState.Data
+        val amountState = amountState as? AmountState.Data
+        if (confirmationState != null && amountState != null) {
             if (confirmationState.innerState == InnerConfirmationStakingState.COMPLETED) {
                 clickIntents.onNextClick()
             } else {
-                val isEnterAction = actionType == StakingActionCommonType.ENTER
-                val isApproveNeeded = confirmationState.isApprovalNeeded
-
-                if (isEnterAction && isApproveNeeded) {
+                val amount = amountState.amountTextField.cryptoAmount.value.orZero()
+                val isEnterAction = actionType == StakingActionCommonType.Enter
+                if (isEnterAction && confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
                     clickIntents.showApprovalBottomSheet()
                 } else {
                     clickIntents.onActionClick()
@@ -179,6 +177,7 @@ internal class SetButtonsStateTransformer(
     private fun StakingStep.isPrevButtonVisible(): Boolean = when (this) {
         StakingStep.InitialInfo,
         StakingStep.RewardsValidators,
+        StakingStep.RestakeValidator,
         StakingStep.Confirmation,
         StakingStep.Validators,
         -> false
@@ -192,7 +191,9 @@ internal class SetButtonsStateTransformer(
             StakingStep.Amount -> amountState.isPrimaryButtonEnabled
             StakingStep.Confirmation -> confirmationState.isPrimaryButtonEnabled
             StakingStep.RewardsValidators -> rewardsValidatorsState.isPrimaryButtonEnabled
-            StakingStep.Validators -> true
+            StakingStep.RestakeValidator,
+            StakingStep.Validators,
+            -> true
         }
     }
 }

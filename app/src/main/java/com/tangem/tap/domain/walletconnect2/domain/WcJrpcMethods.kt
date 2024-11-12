@@ -223,14 +223,14 @@ internal class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private 
                 WcRequest.AddChain(data = deserializedParams)
             }
             WcJrpcMethods.SOLANA_SIGN_TX -> {
-                val tx = moshi.adapter<SolanaTransactionRequest>(SolanaTransactionRequest::class.java)
+                val tx = moshi.adapter(SolanaTransactionRequest::class.java)
                     .fromJsonOrNull(params)
                     ?: return customRequest
 
                 WcRequest.SolanaSignRequest(data = tx)
             }
             WcJrpcMethods.SOLANA_SIGN_MESSAGE -> {
-                val signMessage = moshi.adapter<SolanaSignMessage>(SolanaSignMessage::class.java)
+                val signMessage = moshi.adapter(SolanaSignMessage::class.java)
                     .fromJsonOrNull(params)
                     ?: return customRequest
                 val data = WcSignMessage(
