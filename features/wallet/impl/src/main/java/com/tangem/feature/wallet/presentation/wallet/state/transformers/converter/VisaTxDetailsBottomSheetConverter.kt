@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.core.ui.extensions.capitalize
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.VisaCurrency
@@ -66,11 +68,7 @@ internal class VisaTxDetailsBottomSheetConverter(
     }
 
     private fun formatNetworkAmount(amount: BigDecimal): String {
-        return BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = amount,
-            cryptoCurrency = visaCurrency.symbol,
-            decimals = visaCurrency.decimals,
-        )
+        return amount.format { crypto(visaCurrency.symbol, visaCurrency.decimals) }
     }
 
     private fun formatFiatAmount(amount: BigDecimal, fiatCurrency: Currency): String {
