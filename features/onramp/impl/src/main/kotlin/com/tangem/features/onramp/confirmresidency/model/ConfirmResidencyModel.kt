@@ -5,18 +5,24 @@ import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import javax.inject.Inject
 
 @ComponentScoped
 internal class ConfirmResidencyModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    private val router: Router,
+    getOnrampCountryUseCase: GetOnrampCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -24,9 +30,9 @@ internal class ConfirmResidencyModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<ConfirmResidencyBottomSheetConfig> = SlotNavigation()
     val state: MutableStateFlow<ConfirmResidencyUM> = MutableStateFlow(
         ConfirmResidencyUM(
-            country = params.countryName,
-            countryFlagUrl = params.countryFlagUrl,
-            isCountrySupported = params.isOnrampSupported,
+            country = params.country.name,
+            countryFlagUrl = params.country.image,
+            isCountrySupported = params.country.onrampAvailable,
             primaryButtonConfig = getPrimaryButtonConfig(),
             secondaryButtonConfig = ConfirmResidencyUM.ActionButtonConfig(
                 onClick = ::onChangeClick,
@@ -35,20 +41,27 @@ internal class ConfirmResidencyModel @Inject constructor(
         ),
     )
 
-    private fun getPrimaryButtonConfig() = if (params.isOnrampSupported) {
+    init {
+        getOnrampCountryUseCase.invoke()
+            .onEach { maybeCountry ->
+                val country = maybeCountry.getOrNull()
+                if (country != null) {
+                    params.onDismiss(country)
+                }
+            }
+            .launchIn(modelScope)
+    }
+
+    private fun getPrimaryButtonConfig() = if (params.country.onrampAvailable) {
         ConfirmResidencyUM.ActionButtonConfig(
-            onClick = params.onDismiss,
+            onClick = { params.onDismiss(params.country) },
             text = resourceReference(R.string.common_confirm),
         )
     } else {
         ConfirmResidencyUM.ActionButtonConfig(
-            onClick = ::onCloseClick,
+            onClick = router::pop,
             text = resourceReference(R.string.common_close),
         )
-    }
-
-    @Suppress("EmptyFunctionBlock")
-    private fun onCloseClick() {
     }
 
     private fun onChangeClick() {
