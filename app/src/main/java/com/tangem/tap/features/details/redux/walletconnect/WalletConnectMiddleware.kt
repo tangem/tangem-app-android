@@ -13,7 +13,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.domain.walletconnect2.domain.WcPreparedRequest
-import com.tangem.tap.domain.walletconnect2.domain.models.Account
 import com.tangem.tap.domain.walletconnect2.domain.models.WalletConnectError
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -86,19 +85,21 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.ApproveProposal -> {
                 scope.launch {
+                    val proposalChainIds = action.proposal.requiredChainIds + action.proposal.optionalChainIds
+                    val proposalBlockchains =
+                        walletConnectInteractor.blockchainHelper.chainIdsToBlockchains(proposalChainIds)
                     val accounts = getWalletManagers()
-                        .mapNotNull {
+                        .filter { walletManager -> proposalBlockchains.contains(walletManager.wallet.blockchain) }
+                        .flatMap {
                             val wallet = it.wallet
-                            val chainId = walletConnectInteractor.blockchainHelper.networkIdToChainIdOrNull(
+                            val chainIds = walletConnectInteractor.blockchainHelper.networkIdToChainIdOrNull(
                                 wallet.blockchain.toNetworkId(),
                             )
-                            chainId?.let {
-                                Account(
-                                    chainId,
-                                    wallet.address,
-                                    wallet.publicKey.derivationPath?.rawPath,
-                                )
-                            }
+                            walletConnectInteractor.blockchainHelper.chainIdsToAccounts(
+                                walletAddress = wallet.address,
+                                chainIds = chainIds,
+                                derivationPath = wallet.publicKey.derivationPath?.rawPath,
+                            )
                         }
                     walletConnectInteractor.approveSessionProposal(accounts)
                 }

@@ -13,8 +13,8 @@ import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.sdk.mocks.MockContent
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import java.util.Date
 
 object WalletMockContent : MockContent {
