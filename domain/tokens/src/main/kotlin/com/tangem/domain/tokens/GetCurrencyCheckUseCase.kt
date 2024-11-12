@@ -24,6 +24,7 @@ class GetCurrencyCheckUseCase(
             val network = currencyStatus.currency.network
             val dustValue = currencyChecksRepository.getDustValue(userWalletId, network)
             val reserveAmount = currencyChecksRepository.getReserveAmount(userWalletId, network)
+            val minimumSendAmount = currencyChecksRepository.getMinimumSendAmount(userWalletId, network)
             val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, network)
             val isAccountFunded = recipientAddress?.let {
                 currencyChecksRepository.checkIfAccountFunded(
@@ -46,6 +47,7 @@ class GetCurrencyCheckUseCase(
             CryptoCurrencyCheck(
                 dustValue = dustValue,
                 reserveAmount = reserveAmount,
+                minimumSendAmount = minimumSendAmount,
                 existentialDeposit = existentialDeposit,
                 utxoAmountLimit = utxoAmountLimit,
                 isAccountFunded = isAccountFunded,
