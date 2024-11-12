@@ -28,13 +28,13 @@ import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSo
 import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.backup.BackupService
+import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingDialog

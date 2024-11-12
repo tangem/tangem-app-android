@@ -3,6 +3,7 @@ package com.tangem.data.transaction
 import androidx.core.text.isDigitsOnly
 import com.tangem.blockchain.blockchains.algorand.AlgorandTransactionExtras
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.casper.CasperTransactionExtras
 import com.tangem.blockchain.blockchains.cosmos.CosmosTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.hedera.HederaTransactionExtras
@@ -274,6 +275,7 @@ internal class DefaultTransactionRepository(
             Blockchain.Hedera -> HederaTransactionExtras(memo)
             Blockchain.Algorand -> AlgorandTransactionExtras(memo)
             Blockchain.InternetComputer -> memo.toLongOrNull()?.let { ICPTransactionExtras(it) }
+            Blockchain.Casper -> memo.toLongOrNull()?.let { CasperTransactionExtras(it) }
             else -> null
         }
     }
