@@ -3,17 +3,19 @@ package com.tangem.common.ui.amountScreen.converters
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
-import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
+import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.BigDecimalFormatter.formatCryptoAmount
-import com.tangem.core.ui.utils.BigDecimalFormatter.formatFiatAmount
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
@@ -24,17 +26,17 @@ import kotlinx.collections.immutable.persistentListOf
  *
  * @property clickIntents amount screen clicks
  * @property appCurrencyProvider selected app currency provider
- * @property userWalletProvider selected user wallet provider
+ * @property maxEnterAmount max enter amount data
  * @property cryptoCurrencyStatusProvider current cryptocurrency status provider
  * @property iconStateConverter currency icon converter
  */
 class AmountStateConverter(
     private val clickIntents: AmountScreenClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val userWalletProvider: Provider<UserWallet>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val maxEnterAmount: EnterAmountBoundary,
     private val iconStateConverter: CryptoCurrencyToIconStateConverter,
-) : Converter<String, AmountState> {
+) : Converter<AmountParameters, AmountState> {
 
     private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
         AmountFieldConverter(
@@ -44,19 +46,18 @@ class AmountStateConverter(
         )
     }
 
-    override fun convert(value: String): AmountState {
-        val userWallet = userWalletProvider()
+    override fun convert(value: AmountParameters): AmountState {
         val appCurrency = appCurrencyProvider()
         val status = cryptoCurrencyStatusProvider()
-        val fiat = formatFiatAmount(status.value.fiatAmount, appCurrency.code, appCurrency.symbol)
-        val crypto = formatCryptoAmount(status.value.amount, status.currency.symbol, status.currency.decimals)
+        val fiat = maxEnterAmount.fiatAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val crypto = maxEnterAmount.amount.format { crypto(status.currency) }
         val noFeeRate = status.value.fiatRate.isNullOrZero()
 
         return AmountState.Data(
-            walletName = userWallet.name,
-            walletBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
+            title = value.title,
+            availableBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
             tokenIconState = iconStateConverter.convert(status),
-            amountTextField = amountFieldConverter.convert(value),
+            amountTextField = amountFieldConverter.convert(value.value),
             isPrimaryButtonEnabled = false,
             appCurrencyCode = appCurrency.code,
             segmentedButtonConfig = persistentListOf(
