@@ -38,7 +38,7 @@ internal class AddressInfoBottomSheetDialog(
 
     override fun show() {
         super.show()
-        Analytics.send(Token.Receive.ScreenOpened())
+        Analytics.send(Token.Receive.ScreenOpened(stateDialog.currency.currencySymbol))
         showData(data = stateDialog.addressData)
     }
 

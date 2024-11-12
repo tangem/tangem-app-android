@@ -4,7 +4,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.plus
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.wallets.models.UserWallet
@@ -97,13 +98,7 @@ internal object WalletAdditionalInfoFactory {
             WalletAdditionalInfo(hideable = false, content = TextReference.Res(R.string.common_locked))
         } else {
             val blockchain = scanResponse.cardTypesResolver.getBlockchain()
-            val amount = currencyAmount?.let {
-                BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = it,
-                    cryptoCurrency = blockchain.currency,
-                    decimals = blockchain.decimals(),
-                )
-            }
+            val amount = currencyAmount?.format { crypto(blockchain.currency, blockchain.decimals()) }
 
             WalletAdditionalInfo(hideable = true, content = TextReference.Str(value = amount.orEmpty()))
         }

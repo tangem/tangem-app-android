@@ -44,6 +44,13 @@ internal class MarketDetailsAnalyticsEvent(
                 "Link" to linkTitle,
             ),
         )
+
+        fun exchangesScreenOpened() = MarketDetailsAnalyticsEvent(
+            event = "Exchanges Screen Opened",
+            params = mapOf(
+                "Token" to token.symbol,
+            ),
+        )
     }
 
     enum class IntervalType(val source: String) {
