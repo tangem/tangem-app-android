@@ -8,7 +8,6 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.staking.EstimateGasUseCase
-import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -17,13 +16,11 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.presentation.state.StakingStateController
 import com.tangem.features.staking.impl.presentation.state.StakingStates
-import com.tangem.features.staking.impl.presentation.state.ValidatorState
-import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
+import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -38,18 +35,14 @@ import java.math.BigDecimal
 @Suppress("LongParameterList")
 internal class StakingFeeTransactionLoader @AssistedInject constructor(
     private val stateController: StakingStateController,
-    private val getAllowanceUseCase: GetAllowanceUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val estimateGasUseCase: EstimateGasUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val yield: Yield,
-    @Assisted private val stakingApproval: StakingApproval,
 ) {
 
     suspend fun getFee(
-        pendingAction: PendingAction?,
-        pendingActions: ImmutableList<PendingAction>?,
         onStakingFee: (Fee) -> Unit,
         onStakingFeeError: (StakingError) -> Unit,
         onApprovalFee: (TransactionFee) -> Unit,
@@ -57,40 +50,28 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
     ) {
         val state = stateController.value
         val confirmationState = state.confirmationState as? StakingStates.ConfirmationState.Data
-            ?: error("No confirmation state")
-        val validatorState = confirmationState.validatorState as? ValidatorState.Content
+            ?: error("Illegal state")
+        val validatorState = state.validatorState as? StakingStates.ValidatorState.Data
             ?: error("No validator provided")
 
         val amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
             ?: error("No amount provided")
 
+        val pendingAction = confirmationState.pendingAction
+        val pendingActions = confirmationState.pendingActions
+
         val validatorAddress = validatorState.chosenValidator.address
 
-        val approval = stakingApproval as? StakingApproval.Needed
-        if (approval != null && state.actionType == StakingActionCommonType.ENTER) {
-            val allowance = getAllowanceUseCase(
-                userWalletId = userWallet.walletId,
-                cryptoCurrency = cryptoCurrencyStatus.currency,
-                spenderAddress = approval.spenderAddress,
-            ).getOrElse { BigDecimal.ZERO }
-
-            if (allowance < amount) {
-                getApproveFee(
-                    amount = amount,
-                    validatorAddress = validatorAddress,
-                    onApprovalFee = onApprovalFee,
-                    onApprovalFeeError = onFeeError,
-                )
-            } else {
-                estimateGas(
-                    pendingAction = pendingAction,
-                    pendingActions = pendingActions,
-                    amount = amount,
-                    validatorAddress = validatorAddress,
-                    onStakingFeeError = onStakingFeeError,
-                    onStakingFee = onStakingFee,
-                )
-            }
+        val isEnter = state.actionType == StakingActionCommonType.Enter
+        val isApprovalNeeded = confirmationState.isApprovalNeeded
+        val isAllowanceNotEnough = confirmationState.allowance < amount
+        if (isEnter && isApprovalNeeded && isAllowanceNotEnough) {
+            getApproveFee(
+                amount = amount,
+                validatorAddress = validatorAddress,
+                onApprovalFee = onApprovalFee,
+                onApprovalFeeError = onFeeError,
+            )
         } else {
             estimateGas(
                 pendingAction = pendingAction,
@@ -114,7 +95,11 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         val sourceAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
             ?: error("No available address")
 
-        val gasEstimate = if (isSolanaWithdraw(cryptoCurrencyStatus.currency.network.id.value, pendingActions)) {
+        val gasEstimate = if (isCompositePendingActions(
+                networkId = cryptoCurrencyStatus.currency.network.id.value,
+                pendingActions = pendingActions,
+            )
+        ) {
             val result = coroutineScope {
                 pendingActions?.map { action ->
                     async {
@@ -234,7 +219,6 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             cryptoCurrencyStatus: CryptoCurrencyStatus,
             userWallet: UserWallet,
             yield: Yield,
-            stakingApproval: StakingApproval,
         ): StakingFeeTransactionLoader
     }
 }

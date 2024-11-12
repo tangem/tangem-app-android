@@ -43,8 +43,8 @@ fun Store<*>.dispatchNotification(resId: Int) {
     dispatchOnMain(GlobalAction.ShowNotification(resId))
 }
 
-suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet, sendAnalyticsEvent: Boolean = false) {
-    state.globalState.tapWalletManager.onWalletSelected(userWallet, sendAnalyticsEvent)
+suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet) {
+    state.globalState.tapWalletManager.onWalletSelected(userWallet)
 }
 
 fun Store<*>.dispatchErrorNotification(error: TapError) {
