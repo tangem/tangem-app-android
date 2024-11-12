@@ -56,10 +56,10 @@ import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRou
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
-import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.operations.backup.BackupService
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
@@ -69,7 +69,6 @@ import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
 import com.tangem.tap.common.redux.NotificationsHandler
-import com.tangem.tap.domain.sdk.TangemSdkManager
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
@@ -113,9 +112,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var appStateHolder: AppStateHolder
 
     /** Router for opening tester menu */
-    @Inject
-    lateinit var testerRouter: TesterRouter
-
     @Inject
     lateinit var cardSdkOwner: CardSdkOwner
 
@@ -309,17 +305,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         store.dispatch(
             DaggerGraphAction.SetActivityDependencies(
-                testerRouter = testerRouter,
                 scanCardUseCase = scanCardUseCase,
-                walletRouter = walletRouter,
                 walletConnectInteractor = walletConnectInteractor,
-                tokenDetailsRouter = tokenDetailsRouter,
                 cardSdkConfigRepository = cardSdkConfigRepository,
-                sendRouter = sendRouter,
-                qrScanningRouter = qrScanningRouter,
-                emailSender = emailSender,
-                stakingRouter = stakingRouter,
-                pushNotificationsRouter = pushNotificationsRouter,
             ),
         )
     }

@@ -147,10 +147,13 @@ include(":libs:auth")
 include(":libs:blockchain-sdk")
 include(":libs:crypto")
 include(":libs:visa")
+include(":libs:tangem-sdk-api")
 // endregion Libs modules
 
 // region Feature modules
 include(":features:onboarding")
+include(":features:onboarding-v2:api")
+include(":features:onboarding-v2:impl")
 
 include(":features:referral:data")
 include(":features:referral:domain")
@@ -198,6 +201,9 @@ include(":features:wallet-settings:impl")
 
 include(":features:markets:api")
 include(":features:markets:impl")
+
+include(":features:onramp:api")
+include(":features:onramp:impl")
 // endregion Feature modules
 
 // region Domain modules
