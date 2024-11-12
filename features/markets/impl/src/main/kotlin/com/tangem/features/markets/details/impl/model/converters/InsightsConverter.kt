@@ -3,7 +3,10 @@ package com.tangem.features.markets.details.impl.model.converters
 import androidx.compose.runtime.Stable
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.compact
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.rawCompact
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
@@ -142,14 +145,17 @@ internal class InsightsConverter(
 
     private fun BigDecimal.convertChange(isFiatValue: Boolean = false): String {
         val value = if (isFiatValue) {
-            val currency = appCurrency()
-            BigDecimalFormatter.formatCompactFiatAmount(
-                amount = this.abs(),
-                fiatCurrencyCode = currency.code,
-                fiatCurrencySymbol = currency.symbol,
-            )
+            this.abs().format {
+                val currency = appCurrency()
+                fiat(
+                    fiatCurrencyCode = currency.code,
+                    fiatCurrencySymbol = currency.symbol,
+                ).compact()
+            }
         } else {
-            BigDecimalFormatter.formatCompactAmount(amount = this.abs())
+            this.abs().format {
+                rawCompact()
+            }
         }
 
         return when {
