@@ -52,4 +52,9 @@ dependencies {
     api(deps.jodatime)
     implementation(deps.timber)
     implementation(deps.markdown)
+
+    /** Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }
