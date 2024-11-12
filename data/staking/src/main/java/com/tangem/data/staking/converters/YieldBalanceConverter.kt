@@ -31,10 +31,12 @@ internal class YieldBalanceConverter : Converter<YieldBalanceWrapperDTO, YieldBa
                             validatorAddress = item.validatorAddress ?: item.validatorAddresses?.get(0),
                             date = item.date?.toDateTime(),
                             pendingActions = pendingActionConverter
-                                .convertList(item.pendingActions),
+                                .convertList(item.pendingActions)
+                                .sortedBy { it.passthrough },
                             isPending = false,
                         )
-                    },
+                    }
+                        .sortedWith(compareBy({ it.type }, { it.amount })),
                     integrationId = value.integrationId,
                 ),
             )
