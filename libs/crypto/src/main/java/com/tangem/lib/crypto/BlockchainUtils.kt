@@ -21,8 +21,8 @@ object BlockchainUtils {
     private const val XRP_X_ADDRESS = 'X'
 
     /** Decodes XRP Blockchain address */
-    fun decodeRippleXAddress(xAddress: String, networkId: String): XrpTaggedAddress? {
-        return if (networkId == Blockchain.XRP.id && xAddress.firstOrNull() == XRP_X_ADDRESS) {
+    fun decodeRippleXAddress(xAddress: String, blockchainId: String): XrpTaggedAddress? {
+        return if (blockchainId == Blockchain.XRP.id && xAddress.firstOrNull() == XRP_X_ADDRESS) {
             val decodedAddress = XrpAddressService.decodeXAddress(xAddress)
             return decodedAddress?.let(XrpTaggedAddressConverter()::convert)
         } else {
@@ -31,61 +31,66 @@ object BlockchainUtils {
     }
 
     /** If current [networkId] is Bitcoin */
-    fun isBitcoin(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    fun isBitcoin(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
     }
 
-    /** If current [networkId] is Tezos */
-    fun isTezos(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    /** If current [blockchainId] is Tezos */
+    fun isTezos(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Tezos
     }
 
-    fun isCardano(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    fun isCardano(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Cardano
     }
 
-    /** If current [networkId] is BeaconChain */
-    fun isBeaconChain(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    /** If current [blockchainId] is BeaconChain */
+    fun isBeaconChain(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Binance || blockchain == Blockchain.BinanceTestnet
     }
 
-    /** If current [networkId] is Polygon */
-    fun isPolygonChain(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    /** If current [blockchainId] is Polygon */
+    fun isPolygonChain(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Polygon || blockchain == Blockchain.PolygonTestnet
     }
 
-    fun isTron(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    fun isTron(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
     }
 
-    fun isSupportedNetworkId(networkId: String): Boolean {
-        return Blockchain.fromNetworkId(networkId)?.isSupportedInApp() ?: false
+    fun isSupportedNetworkId(blockchainId: String): Boolean {
+        return Blockchain.fromNetworkId(blockchainId)?.isSupportedInApp() ?: false
     }
 
-    fun isArbitrum(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    fun isArbitrum(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Arbitrum
     }
 
-    fun isSolana(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    fun isSolana(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Solana
     }
 
-    fun isPolkadot(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    fun isPolkadot(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Polkadot || blockchain == Blockchain.PolkadotTestnet
     }
 
-    fun isCosmos(networkId: String): Boolean {
-        val blockchain = Blockchain.fromId(networkId)
+    fun isCosmos(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
         return blockchain == Blockchain.Cosmos || blockchain == Blockchain.CosmosTestnet
+    }
+
+    fun isBSC(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return blockchain == Blockchain.BSC || blockchain == Blockchain.BSCTestnet
     }
 
     data class BlockchainInfo(
