@@ -185,7 +185,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrencyStatus.currency.symbol),
         )
 
-        analyticsEventHandler.send(event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened)
+        analyticsEventHandler.send(
+            event = TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrencyStatus.currency.symbol),
+        )
 
         stateHolder.showBottomSheet(
             createReceiveBottomSheetContent(
