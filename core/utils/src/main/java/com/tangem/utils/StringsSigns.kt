@@ -10,4 +10,5 @@ object StringsSigns {
     const val TILDE_SIGN = "~"
     const val INFINITY_SIGN = "∞"
     const val NON_BREAKING_SPACE = '\u00A0'
+    const val PERCENT = "%"
 }

@@ -14,7 +14,7 @@ import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.card.models.ResetCardError
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.sdk.api.TangemSdkManager
 
 internal class DefaultResetCardUseCase(
     private val tangemSdkManager: TangemSdkManager,
