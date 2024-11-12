@@ -2,7 +2,10 @@ package com.tangem.features.markets.details.impl.model.converters
 
 import androidx.compose.runtime.Stable
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.compact
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
@@ -129,18 +132,21 @@ internal class MetricsConverter(
         if (this == null) return StringsSigns.DASH_SIGN
 
         return if (crypto) {
-            BigDecimalFormatter.formatCompactCryptoAmount(
-                amount = this,
-                cryptoCurrencySymbol = tokenSymbol,
-            )
+            format {
+                crypto(
+                    symbol = tokenSymbol,
+                    decimals = 2,
+                ).compact()
+            }
         } else {
             val currency = appCurrency()
 
-            BigDecimalFormatter.formatCompactFiatAmount(
-                amount = this,
-                fiatCurrencyCode = currency.code,
-                fiatCurrencySymbol = currency.symbol,
-            )
+            format {
+                fiat(
+                    fiatCurrencyCode = currency.code,
+                    fiatCurrencySymbol = currency.symbol,
+                ).compact()
+            }
         }
     }
 }

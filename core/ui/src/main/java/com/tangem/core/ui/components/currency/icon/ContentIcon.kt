@@ -53,6 +53,7 @@ internal fun ContentIcon(
         )
         CurrencyIconState.Loading,
         CurrencyIconState.Locked,
+        is CurrencyIconState.Empty,
         -> Unit
     }
 }
