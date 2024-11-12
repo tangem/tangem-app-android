@@ -26,6 +26,7 @@ import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -40,7 +41,6 @@ import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.ExpressException
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.*
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.SwapWarning
@@ -49,6 +49,7 @@ import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
+import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
@@ -83,6 +84,7 @@ internal class SwapViewModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
@@ -842,60 +844,78 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun onChangeCardsClicked() {
-        val newFromToken = dataState.toCryptoCurrency
-        val newToToken = dataState.fromCryptoCurrency
+        viewModelScope.launch {
+            val newFromToken = dataState.toCryptoCurrency
+            val newToToken = dataState.fromCryptoCurrency
 
-        if (newFromToken != null && newToToken != null) {
-            isAmountChangedByUser = true
+            if (newFromToken != null && newToToken != null) {
+                isAmountChangedByUser = true
 
-            dataState = dataState.copy(
-                fromCryptoCurrency = newFromToken,
-                toCryptoCurrency = newToToken,
-            )
-            isOrderReversed = !isOrderReversed
-            dataState.tokensDataState?.let {
-                updateTokensState(it)
+                dataState = dataState.copy(
+                    fromCryptoCurrency = newFromToken,
+                    toCryptoCurrency = newToToken,
+                )
+                isOrderReversed = !isOrderReversed
+                dataState.tokensDataState?.let {
+                    updateTokensState(it)
+                }
+
+                val minTxAmount = getMinimumTransactionAmountSyncUseCase(
+                    userWalletId,
+                    newFromToken,
+                ).getOrNull()
+                val decimals = newFromToken.currency.decimals
+                lastAmount.value = cutAmountWithDecimals(decimals, lastAmount.value)
+                uiState = stateBuilder.updateSwapAmount(
+                    uiState = uiState,
+                    amountFormatted = inputNumberFormatter.formatWithThousands(lastAmount.value, decimals),
+                    amountRaw = lastAmount.value,
+                    fromToken = newFromToken.currency,
+                    minTxAmount = minTxAmount,
+                )
+                startLoadingQuotes(
+                    fromToken = newFromToken,
+                    toToken = newToToken,
+                    amount = lastAmount.value,
+                    toProvidersList = findSwapProviders(newFromToken, newToToken),
+                )
             }
-
-            val decimals = newFromToken.currency.decimals
-            lastAmount.value = cutAmountWithDecimals(decimals, lastAmount.value)
-            uiState = stateBuilder.updateSwapAmount(
-                uiState,
-                inputNumberFormatter.formatWithThousands(lastAmount.value, decimals),
-            )
-            startLoadingQuotes(
-                fromToken = newFromToken,
-                toToken = newToToken,
-                amount = lastAmount.value,
-                toProvidersList = findSwapProviders(newFromToken, newToToken),
-            )
         }
     }
 
     private fun onAmountChanged(value: String) {
-        val fromToken = dataState.fromCryptoCurrency
-        val toToken = dataState.toCryptoCurrency
-        if (fromToken != null) {
-            val decimals = fromToken.currency.decimals
-            val cutValue = cutAmountWithDecimals(decimals, value)
-            lastAmount.value = cutValue
-            uiState = stateBuilder.updateSwapAmount(
-                uiState = uiState,
-                amount = inputNumberFormatter.formatWithThousands(cutValue, decimals),
-            )
+        viewModelScope.launch {
+            val fromToken = dataState.fromCryptoCurrency
+            val toToken = dataState.toCryptoCurrency
+            if (fromToken != null) {
+                val decimals = fromToken.currency.decimals
+                val cutValue = cutAmountWithDecimals(decimals, value)
+                val minTxAmount = getMinimumTransactionAmountSyncUseCase(
+                    userWalletId,
+                    fromToken,
+                ).getOrNull()
+                lastAmount.value = cutValue
+                uiState = stateBuilder.updateSwapAmount(
+                    uiState = uiState,
+                    amountFormatted = inputNumberFormatter.formatWithThousands(cutValue, decimals),
+                    amountRaw = lastAmount.value,
+                    fromToken = fromToken.currency,
+                    minTxAmount = minTxAmount,
+                )
 
-            if (toToken != null) {
-                if (toToken.value.amount != null) {
-                    isAmountChangedByUser = true
-                }
+                if (toToken != null) {
+                    if (toToken.value.amount != null) {
+                        isAmountChangedByUser = true
+                    }
 
-                amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
-                    startLoadingQuotes(
-                        fromToken = fromToken,
-                        toToken = toToken,
-                        amount = lastAmount.value,
-                        toProvidersList = findSwapProviders(fromToken, toToken),
-                    )
+                    amountDebouncer.debounce(viewModelScope, DEBOUNCE_AMOUNT_DELAY) {
+                        startLoadingQuotes(
+                            fromToken = fromToken,
+                            toToken = toToken,
+                            amount = lastAmount.value,
+                            toProvidersList = findSwapProviders(fromToken, toToken),
+                        )
+                    }
                 }
             }
         }
@@ -1067,7 +1087,7 @@ internal class SwapViewModel @Inject constructor(
                     uiState = uiState,
                     isPriceImpact = isPriceImpact,
                     token = currencySymbol,
-                    providerType = selectedProvider.type,
+                    provider = selectedProvider,
                 ) {
                     uiState = stateBuilder.clearAlert(uiState)
                 }

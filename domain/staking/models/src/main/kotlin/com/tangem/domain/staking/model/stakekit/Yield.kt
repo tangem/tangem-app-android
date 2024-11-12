@@ -18,6 +18,11 @@ data class Yield(
     val isAvailable: Boolean,
 ) {
 
+    val preferredValidators: List<Validator>
+        get() = validators.filter { it.preferred }
+
+    fun getCurrentToken(rawCurrencyId: String?) = tokens.firstOrNull { rawCurrencyId == it.coinGeckoId } ?: token
+
     @Serializable
     data class Status(
         val enter: Boolean,
@@ -130,8 +135,6 @@ data class Yield(
         APR, // simple rate
         UNKNOWN,
     }
-
-    fun getCurrentToken(rawCurrencyId: String?) = tokens.firstOrNull { rawCurrencyId == it.coinGeckoId } ?: token
 }
 
 @Serializable
