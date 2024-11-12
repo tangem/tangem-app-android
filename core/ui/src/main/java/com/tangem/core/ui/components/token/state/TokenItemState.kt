@@ -160,7 +160,11 @@ sealed class TokenItemState {
     @Immutable
     sealed class TitleState {
 
-        data class Content(val text: String, val hasPending: Boolean = false) : TitleState()
+        data class Content(
+            val text: String,
+            val hasPending: Boolean = false,
+            val isAvailable: Boolean = true,
+        ) : TitleState()
 
         data object Loading : TitleState()
 
@@ -176,7 +180,7 @@ sealed class TokenItemState {
             val type: PriceChangeType,
         ) : SubtitleState()
 
-        data class TextContent(val value: String) : SubtitleState()
+        data class TextContent(val value: String, val isAvailable: Boolean = true) : SubtitleState()
 
         data object Unknown : SubtitleState()
 
@@ -191,6 +195,8 @@ sealed class TokenItemState {
             val text: String,
             val hasStaked: Boolean = false,
         ) : FiatAmountState()
+
+        data class TextContent(val text: String, val isAvailable: Boolean = true) : FiatAmountState()
 
         data object Loading : FiatAmountState()
 
