@@ -15,8 +15,6 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.error.mapToFeeError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import java.math.BigDecimal
 
 /**
@@ -30,28 +28,25 @@ class EstimateFeeUseCase(
         amount: BigDecimal,
         userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
-    ): Flow<Either<GetFeeError, TransactionFee>> {
-        return flow {
-            val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
-            val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
-                demoTransactionSender(userWallet, cryptoCurrency).estimateFee(
-                    amount = amountData,
-                    destination = "",
-                )
-            } else {
-                walletManagersFacade.estimateFee(
-                    amount = amountData,
-                    userWalletId = userWallet.walletId,
-                    network = cryptoCurrency.network,
-                )
-            }
+    ): Either<GetFeeError, TransactionFee> {
+        val amountData = convertCryptoCurrencyToAmount(cryptoCurrency, amount)
+        val result = if (demoConfig.isDemoCardId(userWallet.scanResponse.card.cardId)) {
+            demoTransactionSender(userWallet, cryptoCurrency).estimateFee(
+                amount = amountData,
+                destination = "",
+            )
+        } else {
+            walletManagersFacade.estimateFee(
+                amount = amountData,
+                userWalletId = userWallet.walletId,
+                network = cryptoCurrency.network,
+            )
+        }
 
-            val maybeFee = when (result) {
-                is Result.Success -> result.data.right()
-                is Result.Failure -> result.mapToFeeError().left()
-                null -> GetFeeError.UnknownError.left()
-            }
-            emit(maybeFee)
+        return when (result) {
+            is Result.Success -> result.data.right()
+            is Result.Failure -> result.mapToFeeError().left()
+            null -> GetFeeError.UnknownError.left()
         }
     }
 
