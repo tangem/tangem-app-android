@@ -6,6 +6,8 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryItem.*
@@ -15,7 +17,6 @@ import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.toBriefAddressFormat
-import com.tangem.utils.toFormattedCurrencyString
 
 internal class TxHistoryItemStateConverter(
     private val symbol: String,
@@ -48,13 +49,14 @@ internal class TxHistoryItemStateConverter(
     } else {
         when (type) {
             is TransactionType.Approve -> R.drawable.ic_doc_24
-            is TransactionType.TronStakingTransactionType.Stake,
-            is TransactionType.TronStakingTransactionType.Vote,
+            is TransactionType.Staking.Stake,
+            is TransactionType.Staking.Vote,
+            is TransactionType.Staking.Restake,
             -> R.drawable.ic_transaction_history_staking_24
-            is TransactionType.TronStakingTransactionType.ClaimRewards,
+            is TransactionType.Staking.ClaimRewards,
             -> R.drawable.ic_transaction_history_claim_rewards_24
-            is TransactionType.TronStakingTransactionType.Unstake,
-            is TransactionType.TronStakingTransactionType.Withdraw,
+            is TransactionType.Staking.Unstake,
+            is TransactionType.Staking.Withdraw,
             -> R.drawable.ic_transaction_history_unstaking_24
             is TransactionType.Operation,
             is TransactionType.Swap,
@@ -69,11 +71,12 @@ internal class TxHistoryItemStateConverter(
         is TransactionType.Operation -> stringReference(type.name)
         is TransactionType.Swap -> resourceReference(R.string.common_swap)
         is TransactionType.Transfer -> resourceReference(R.string.common_transfer)
-        is TransactionType.TronStakingTransactionType.Stake -> resourceReference(R.string.common_stake)
-        is TransactionType.TronStakingTransactionType.Unstake -> resourceReference(R.string.common_unstake)
-        is TransactionType.TronStakingTransactionType.Vote -> resourceReference(R.string.staking_vote)
-        is TransactionType.TronStakingTransactionType.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
-        is TransactionType.TronStakingTransactionType.Withdraw -> { resourceReference(R.string.staking_withdraw) }
+        is TransactionType.Staking.Stake -> resourceReference(R.string.common_stake)
+        is TransactionType.Staking.Unstake -> resourceReference(R.string.common_unstake)
+        is TransactionType.Staking.Vote -> resourceReference(R.string.staking_vote)
+        is TransactionType.Staking.ClaimRewards -> resourceReference(R.string.common_claim_rewards)
+        is TransactionType.Staking.Withdraw -> resourceReference(R.string.staking_withdraw)
+        is TransactionType.Staking.Restake -> resourceReference(R.string.staking_restake)
         is TransactionType.UnknownOperation -> resourceReference(R.string.transaction_history_operation)
     }
 
@@ -118,9 +121,9 @@ internal class TxHistoryItemStateConverter(
     }
 
     private fun TxHistoryItem.getAmount(): String {
-        if (type is TransactionType.TronStakingTransactionType.Vote ||
-            type == TransactionType.TronStakingTransactionType.ClaimRewards ||
-            type == TransactionType.TronStakingTransactionType.Withdraw
+        if (type is TransactionType.Staking.Vote ||
+            type == TransactionType.Staking.ClaimRewards ||
+            type == TransactionType.Staking.Withdraw
         ) {
             return ""
         }
@@ -129,6 +132,6 @@ internal class TxHistoryItemStateConverter(
             this.amount.isZero() -> ""
             else -> if (isOutgoing) MINUS else PLUS
         }
-        return prefix + amount.toFormattedCurrencyString(currency = symbol, decimals = decimals)
+        return prefix + amount.format { crypto(symbol = symbol, decimals = decimals) }
     }
 }

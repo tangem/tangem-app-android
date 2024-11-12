@@ -37,8 +37,12 @@ internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) 
                 priceChangePercent = state.priceChangePercent,
             )
         }
-        is TokenPriceState.TextContent -> PriceText(text = state.value, modifier = modifier)
-        is TokenPriceState.Unknown -> PriceText(text = DASH_SIGN, modifier = modifier)
+        is TokenPriceState.TextContent -> {
+            PriceText(text = state.value, modifier = modifier, isAvailable = state.isAvailable)
+        }
+        is TokenPriceState.Unknown -> {
+            PriceText(text = DASH_SIGN, modifier = modifier)
+        }
         is TokenPriceState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
         }
@@ -71,11 +75,11 @@ private fun PriceBlock(
 }
 
 @Composable
-private fun PriceText(text: String, modifier: Modifier = Modifier) {
+private fun PriceText(text: String, modifier: Modifier = Modifier, isAvailable: Boolean = true) {
     AnimatedContent(targetState = text, label = "Update the price text", modifier = modifier) { animatedText ->
         Text(
             text = animatedText,
-            color = TangemTheme.colors.text.tertiary,
+            color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = TangemTheme.typography.caption2,
@@ -154,7 +158,7 @@ private class TokenPriceChangeStateProvider : CollectionPreviewParameterProvider
             priceChangePercent = "2.5%",
             type = PriceChangeType.NEUTRAL,
         ),
-        TokenPriceState.TextContent(value = "Subtitle"),
+        TokenPriceState.TextContent(value = "Subtitle", isAvailable = true),
         TokenPriceState.Unknown,
         TokenPriceState.Loading,
         TokenPriceState.Locked,

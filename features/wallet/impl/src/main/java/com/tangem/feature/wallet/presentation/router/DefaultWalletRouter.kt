@@ -42,7 +42,7 @@ internal class DefaultWalletRouter(
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(onFinish: () -> Unit, marketsEntryComponent: MarketsEntryComponent?) {
+    override fun Initialize(onFinish: () -> Unit, marketsEntryComponent: MarketsEntryComponent) {
         this.onFinish = onFinish
 
         NavHost(

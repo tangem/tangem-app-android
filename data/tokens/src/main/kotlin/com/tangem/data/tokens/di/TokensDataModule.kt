@@ -95,8 +95,14 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun provideCurrencyChecksRepository(walletManagersFacade: WalletManagersFacade): CurrencyChecksRepository {
-        return DefaultCurrencyChecksRepository(walletManagersFacade = walletManagersFacade)
+    fun provideCurrencyChecksRepository(
+        walletManagersFacade: WalletManagersFacade,
+        coroutineDispatcherProvider: CoroutineDispatcherProvider,
+    ): CurrencyChecksRepository {
+        return DefaultCurrencyChecksRepository(
+            walletManagersFacade = walletManagersFacade,
+            coroutineDispatchers = coroutineDispatcherProvider,
+        )
     }
 
     @Provides

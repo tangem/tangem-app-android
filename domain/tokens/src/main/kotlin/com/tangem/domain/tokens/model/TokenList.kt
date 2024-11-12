@@ -42,7 +42,7 @@ sealed class TokenList {
     ) : TokenList()
 
     /** Represents a state where the token list is empty. */
-    object Empty : TokenList() {
+    data object Empty : TokenList() {
 
         override val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Loaded(
             amount = BigDecimal.ZERO,
@@ -53,5 +53,14 @@ sealed class TokenList {
     /** Defines the possible sorting criteria for the tokens. */
     enum class SortType {
         NONE, BALANCE,
+    }
+
+    /** Get flatten list of cryptocurrency status [CryptoCurrencyStatus] */
+    fun flattenCurrencies(): List<CryptoCurrencyStatus> {
+        return when (this) {
+            is GroupedByNetwork -> groups.flatMap(NetworkGroup::currencies)
+            is Ungrouped -> currencies
+            is Empty -> emptyList()
+        }
     }
 }
