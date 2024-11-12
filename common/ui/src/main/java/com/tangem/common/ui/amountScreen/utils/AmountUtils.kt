@@ -2,10 +2,10 @@ package com.tangem.common.ui.amountScreen.utils
 
 import androidx.compose.ui.text.input.ImeAction
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.core.ui.utils.parseToBigDecimal
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.utils.isNullOrZero
+import com.tangem.utils.extensions.isZero
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -37,11 +37,11 @@ internal fun String.getFiatValue(
 }
 
 internal fun String.checkExceedBalance(
-    cryptoCurrencyStatus: CryptoCurrencyStatus,
+    maxEnterAmount: EnterAmountBoundary,
     amountTextField: AmountFieldModel,
 ): Boolean {
-    val currencyCryptoAmount = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-    val currencyFiatAmount = cryptoCurrencyStatus.value.fiatAmount ?: BigDecimal.ZERO
+    val currencyCryptoAmount = maxEnterAmount.amount ?: BigDecimal.ZERO
+    val currencyFiatAmount = maxEnterAmount.fiatAmount ?: BigDecimal.ZERO
     val fiatDecimal = parseToBigDecimal(amountTextField.fiatAmount.decimals)
     val cryptoDecimal = parseToBigDecimal(amountTextField.cryptoAmount.decimals)
     return if (amountTextField.isFiatValue) {
@@ -51,8 +51,8 @@ internal fun String.checkExceedBalance(
     }
 }
 
-internal fun getKeyboardAction(isExceedBalance: Boolean, decimalCryptoValue: BigDecimal) =
-    if (!isExceedBalance && !decimalCryptoValue.isNullOrZero()) {
+internal fun getKeyboardAction(isCheckFailed: Boolean, decimalCryptoValue: BigDecimal) =
+    if (!isCheckFailed && !decimalCryptoValue.isZero()) {
         ImeAction.Done
     } else {
         ImeAction.None

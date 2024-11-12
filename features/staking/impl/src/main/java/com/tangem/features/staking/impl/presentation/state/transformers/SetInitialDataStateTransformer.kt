@@ -2,12 +2,16 @@ package com.tangem.features.staking.impl.presentation.state.transformers
 
 import com.tangem.common.extensions.remove
 import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
+import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -25,7 +29,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
@@ -33,7 +36,6 @@ import java.math.BigDecimal
 internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
-    private val isApprovalNeeded: Boolean,
     private val isAnyTokenStaked: Boolean,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
     private val userWalletProvider: Provider<UserWallet>,
@@ -42,16 +44,6 @@ internal class SetInitialDataStateTransformer(
 ) : Transformer<StakingUiState> {
 
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
-
-    private val amountStateConverter by lazy(LazyThreadSafetyMode.NONE) {
-        AmountStateConverter(
-            clickIntents = clickIntents,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-            appCurrencyProvider = appCurrencyProvider,
-            userWalletProvider = userWalletProvider,
-            iconStateConverter = iconStateConverter,
-        )
-    }
 
     private val rewardsValidatorStateConverter by lazy(LazyThreadSafetyMode.NONE) {
         RewardsValidatorStateConverter(cryptoCurrencyStatusProvider, appCurrencyProvider, yield)
@@ -72,11 +64,12 @@ internal class SetInitialDataStateTransformer(
             title = TextReference.EMPTY,
             cryptoCurrencyName = cryptoCurrency.name,
             cryptoCurrencySymbol = cryptoCurrency.symbol,
+            cryptoCurrencyBlockchainId = cryptoCurrency.network.id.value,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
             amountState = createInitialAmountState(),
-            confirmationState = createInitialConfirmationState(),
+            confirmationState = StakingStates.ConfirmationState.Empty(),
             rewardsValidatorsState = rewardsValidatorStateConverter.convert(Unit),
             bottomSheetConfig = null,
         )
@@ -87,7 +80,7 @@ internal class SetInitialDataStateTransformer(
         return StakingStates.InitialInfoState.Data(
             isPrimaryButtonEnabled = !cryptoCurrencyStatusProvider().value.amount.isNullOrZero(),
             showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
-            aprRange = getAprRange(yield.validators),
+            aprRange = getAprRange(yield.preferredValidators),
             infoItems = getInfoItems(),
             onInfoClick = clickIntents::onInfoClick,
             yieldBalance = yieldBalance,
@@ -113,7 +106,7 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createAnnualPercentageRateItem(): RoundedListWithDividersItemData {
-        val validators = yield.validators
+        val validators = yield.preferredValidators
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_annual_percentage_rate,
             startText = TextReference.Res(R.string.staking_details_annual_percentage_rate),
@@ -128,11 +121,7 @@ internal class SetInitialDataStateTransformer(
             id = R.string.staking_details_available,
             startText = TextReference.Res(R.string.staking_details_available),
             endText = TextReference.Str(
-                value = BigDecimalFormatter.formatCryptoAmount(
-                    cryptoAmount = cryptoCurrencyStatus.value.amount,
-                    cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-                    decimals = cryptoCurrencyStatus.currency.decimals,
-                ),
+                value = cryptoCurrencyStatus.value.amount.format { crypto(cryptoCurrencyStatus.currency) },
             ),
             isEndTextHideable = true,
         )
@@ -158,11 +147,7 @@ internal class SetInitialDataStateTransformer(
         val minimumCryptoAmount = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]?.minimum ?: return null
         if (!isPolkadot(cryptoCurrencyStatus.currency.network.id.value)) return null
 
-        val formattedAmount = BigDecimalFormatter.formatCryptoAmount(
-            cryptoAmount = minimumCryptoAmount,
-            cryptoCurrency = cryptoCurrencyStatus.currency.symbol,
-            decimals = cryptoCurrencyStatus.currency.decimals,
-        )
+        val formattedAmount = minimumCryptoAmount.format { crypto(cryptoCurrencyStatus.currency) }
 
         return RoundedListWithDividersItemData(
             id = R.string.staking_details_minimum_requirement,
@@ -215,23 +200,23 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialAmountState(): AmountState {
-        return amountStateConverter.convert("")
-    }
-
-    private fun createInitialConfirmationState(): StakingStates.ConfirmationState {
-        return StakingStates.ConfirmationState.Data(
-            isPrimaryButtonEnabled = false,
-            innerState = InnerConfirmationStakingState.ASSENT,
-            feeState = FeeState.Loading,
-            validatorState = ValidatorState.Loading,
-            notifications = persistentListOf(),
-            footerText = TextReference.EMPTY,
-            transactionDoneState = TransactionDoneState.Empty,
-            pendingAction = null,
-            pendingActions = null,
-            isApprovalNeeded = isApprovalNeeded,
-            reduceAmountBy = null,
-            possiblePendingTransaction = null,
+        val cryptoBalanceValue = cryptoCurrencyStatusProvider().value
+        val maxEnterAmount = EnterAmountBoundary(
+            amount = cryptoBalanceValue.amount,
+            fiatAmount = cryptoBalanceValue.fiatAmount,
+            fiatRate = cryptoBalanceValue.fiatRate,
+        )
+        return AmountStateConverter(
+            clickIntents = clickIntents,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            appCurrencyProvider = appCurrencyProvider,
+            iconStateConverter = iconStateConverter,
+            maxEnterAmount = maxEnterAmount,
+        ).convert(
+            AmountParameters(
+                title = stringReference(userWalletProvider().name),
+                value = "",
+            ),
         )
     }
 
@@ -243,14 +228,8 @@ internal class SetInitialDataStateTransformer(
         val minApr = aprValues.min()
         val maxApr = aprValues.max()
 
-        val formattedMinApr = BigDecimalFormatter.formatPercent(
-            percent = minApr,
-            useAbsoluteValue = true,
-        ).remove("%")
-        val formattedMaxApr = BigDecimalFormatter.formatPercent(
-            percent = maxApr,
-            useAbsoluteValue = true,
-        )
+        val formattedMinApr = minApr.format { percent() }.remove("%")
+        val formattedMaxApr = maxApr.format { percent() }
 
         if (maxApr - minApr < EQUALITY_THRESHOLD) {
             return stringReference("$formattedMinApr%")
