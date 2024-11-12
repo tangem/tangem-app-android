@@ -9,8 +9,8 @@ import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
-import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.stakekit.PendingAction
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.events.StakingEvent
@@ -29,26 +29,31 @@ internal data class StakingUiState(
     val walletName: String,
     val cryptoCurrencyName: String,
     val cryptoCurrencySymbol: String,
+    val cryptoCurrencyBlockchainId: String,
     val currentStep: StakingStep,
     val initialInfoState: StakingStates.InitialInfoState,
     val amountState: AmountState,
     val rewardsValidatorsState: StakingStates.RewardsValidatorsState,
     val confirmationState: StakingStates.ConfirmationState,
+    val validatorState: StakingStates.ValidatorState,
     val isBalanceHidden: Boolean,
     val bottomSheetConfig: TangemBottomSheetConfig?,
     val actionType: StakingActionCommonType,
     val buttonsState: NavigationButtonsState,
     val event: StateEvent<StakingEvent>,
+    val balanceState: BalanceState?,
 ) {
 
     fun copyWrapped(
         initialInfoState: StakingStates.InitialInfoState = this.initialInfoState,
         amountState: AmountState = this.amountState,
         confirmationState: StakingStates.ConfirmationState = this.confirmationState,
+        validatorState: StakingStates.ValidatorState = this.validatorState,
     ): StakingUiState = copy(
         initialInfoState = initialInfoState,
         amountState = amountState,
         confirmationState = confirmationState,
+        validatorState = validatorState,
     )
 }
 
@@ -85,21 +90,38 @@ internal sealed class StakingStates {
         ) : RewardsValidatorsState()
     }
 
+    sealed class ValidatorState : StakingStates() {
+        abstract val isClickable: Boolean
+
+        data class Data(
+            override val isPrimaryButtonEnabled: Boolean,
+            override val isClickable: Boolean,
+            val isVisibleOnConfirmation: Boolean,
+            val chosenValidator: Yield.Validator,
+            val activeValidator: Yield.Validator?,
+            val availableValidators: List<Yield.Validator>,
+        ) : ValidatorState()
+
+        data class Empty(
+            override val isClickable: Boolean = false,
+            override val isPrimaryButtonEnabled: Boolean = false,
+        ) : ValidatorState()
+    }
+
     /** Confirmation state */
     sealed class ConfirmationState : StakingStates() {
         data class Data(
             override val isPrimaryButtonEnabled: Boolean,
             val innerState: InnerConfirmationStakingState,
             val feeState: FeeState,
-            val validatorState: ValidatorState,
             val pendingAction: PendingAction?,
             val pendingActions: ImmutableList<PendingAction>?,
             val notifications: ImmutableList<NotificationUM>,
             val footerText: TextReference,
             val transactionDoneState: TransactionDoneState,
             val isApprovalNeeded: Boolean,
+            val allowance: BigDecimal,
             val reduceAmountBy: BigDecimal?,
-            val possiblePendingTransaction: PendingTransaction?,
         ) : ConfirmationState()
 
         data class Empty(
@@ -112,6 +134,7 @@ enum class StakingStep {
     InitialInfo,
     RewardsValidators,
     Amount,
+    RestakeValidator,
     Confirmation,
     Validators,
 }
