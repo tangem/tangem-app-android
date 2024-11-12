@@ -86,7 +86,9 @@ internal class StakingInfoNotificationsFactory(
                 resourceReference(R.string.staking_restake) to
                     resourceReference(R.string.staking_notification_restake_rewards_text)
             }
-            StakingActionType.WITHDRAW -> {
+            StakingActionType.CLAIM_UNSTAKED,
+            StakingActionType.WITHDRAW,
+            -> {
                 resourceReference(R.string.staking_withdraw) to
                     resourceReference(R.string.staking_notification_withdraw_text)
             }
