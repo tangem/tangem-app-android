@@ -295,7 +295,9 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object Onramp : AppRoute(path = "/onramp")
+    data class Onramp(val currency: CryptoCurrency) : AppRoute(path = "/onramp/${currency.symbol}"), RouteBundleParams {
+        override fun getBundle(): Bundle = bundle(serializer())
+    }
 
     @Serializable
     data class BuyCrypto(
