@@ -25,9 +25,10 @@ enum class StakingActionType {
             UNSTAKE -> "Unstake"
             CLAIM_REWARDS -> "Claim Rewards"
             RESTAKE_REWARDS -> "Restake Rewards"
-            WITHDRAW -> "Withdraw"
+            CLAIM_UNSTAKED,
+            WITHDRAW,
+            -> "Withdraw"
             RESTAKE -> "Restake"
-            CLAIM_UNSTAKED -> "Claim Unstaked"
             UNLOCK_LOCKED -> "Unlock Locked"
             STAKE_LOCKED -> "Stake Locked"
             VOTE -> "Vote"
