@@ -66,6 +66,10 @@ object OnboardingHelper {
     }
 
     fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
+        if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled) {
+            return AppRoute.Onboarding(scanResponse)
+        }
+
         return when (val type = scanResponse.productType) {
             ProductType.Note -> AppRoute.OnboardingNote
             ProductType.Wallet,
