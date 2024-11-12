@@ -38,7 +38,7 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
     )
 
     override fun dismiss() {
-        params.onDismiss()
+        router.pop()
     }
 
     @Composable

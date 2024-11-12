@@ -5,7 +5,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 
 interface OnrampComponent : ComposableContentComponent {
 
-    class Params
+    data class Params(val currency: String)
 
     interface Factory : ComponentFactory<Params, OnrampComponent>
 }
