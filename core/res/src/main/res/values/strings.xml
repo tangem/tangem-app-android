@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_buy_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for purchase</string>
+  <string name="action_buttons_sell_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for sell</string>
+  <string name="action_buttons_swap_choose_token">Choose the Token</string>
+  <string name="action_buttons_swap_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for swap</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">There are no available tokens to swap with the selected token. Please choose another one.</string>
+  <string name="action_buttons_swap_no_available_pair_notification_title">No available pair</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
@@ -551,9 +557,22 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="onramp_country_search">Search by country</string>
+  <string name="onramp_country_unavailable">Unavailable</string>
+  <string name="onramp_currency_search">Search by currency</string>
+  <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
+  <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
+  <string name="onramp_no_available_providers">No available providers for this currency</string>
+  <string name="onramp_pay_with">Pay with</string>
+  <string name="onramp_redirecting_to_provider_subtitle">You will be able to complete your transaction on the third-party provider, %s</string>
+  <string name="onramp_redirecting_to_provider_title">Redirecting to %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Our services are not available in this country</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Change or confirm it</string>
   <string name="onramp_residency_bottomsheet_title">Your residence has been identified as</string>
+  <string name="onramp_settings_residence">Residence</string>
+  <string name="onramp_settings_residence_description">Please select the correct country to ensure accurate payment options and services.</string>
+  <string name="onramp_settings_title">Settings</string>
+  <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Group</string>
   <string name="organize_tokens_sort_by_balance">By balance</string>
   <string name="organize_tokens_title">Organize tokens</string>
@@ -696,6 +715,7 @@
   <string name="settings_wallet_name_title">Name</string>
   <string name="staking_amount_requirement_error">The amount to stake must be at least %s</string>
   <string name="staking_amount_tron_integer_error">Staking amount will be rounded to %1$s TRX due to network rules.</string>
+  <string name="staking_amount_tron_integer_error_unstaking">Unstaking amount will be rounded to %1$s TRX due to network rules.</string>
   <string name="staking_claim_unstaked">Claim unstaked</string>
   <string name="staking_details_account_fee">Stake account fee</string>
   <string name="staking_details_account_fee_info">A staking account is a special account where staked SOL tokens are stored. It is created when you delegate your tokens to a validator to participate in transaction validation and earn rewards. A small fee is charged for creating the staking account, which is returned after the staking is completed.</string>
@@ -738,10 +758,13 @@
   <string name="staking_notification_earn_rewards_text_period_week">Staking allows you to earn %1$s. Your staking rewards arrive every week.</string>
   <string name="staking_notification_earn_rewards_text_weekly">Stake securely and start earning weekly rewards</string>
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
+  <string name="staking_notification_low_staked_balance_text">Your remaining staked balance will be too low to unstake. You’ll need to stake more to meet the minimum unstake amount.</string>
+  <string name="staking_notification_low_staked_balance_title">Low staked balance</string>
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
+  <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
   <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Your funds will be available for use after the 21-day unbonding period. Reward will be withdrawn along with your unstaking funds.</string>
   <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
@@ -770,6 +793,7 @@
   <string name="staking_rewards">Rewards</string>
   <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
+  <string name="staking_staked_amount">Staked amount</string>
   <string name="staking_summary_description_text">You stake %1$s and will be receiving your reward %2$s</string>
   <string name="staking_tap_to_unlock">Tap to unlock</string>
   <string name="staking_tap_to_unlock_or_vote">Tap to unlock or vote</string>
@@ -780,6 +804,7 @@
   <string name="staking_unbonding">Unbonding</string>
   <string name="staking_unlocked_locked">Unlock</string>
   <string name="staking_unlocking">Unlocking</string>
+  <string name="staking_unstake_amount_requirement_error">The amount to unstake must be at least %s</string>
   <string name="staking_unstake_amount_validation_error">Amount exceeds staked balance</string>
   <string name="staking_unstaked">Unstaked</string>
   <string name="staking_unstaking">Unstaking</string>
@@ -806,8 +831,10 @@
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
+  <string name="swapping_alert_cex_description_with_slippage">The amount includes:\n• service provider\'s fee\n• network fee for sending %1$s from the exchange back to the user\'s address. \n\nProvider slippage is up to %2$s</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
-  <string name="swapping_alert_title">Fees</string>
+  <string name="swapping_alert_dex_description_with_slippage">The amount includes the service provider\'s fee. \n\nProvider slippage is up to %s</string>
+  <string name="swapping_alert_title">Information</string>
   <string name="swapping_approve_information_text">All decentralized exchanges require approvals to prevent smart contracts from accessing your wallet without your permission. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the 1-inch smart contract to spend them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can swap your token after giving approval.</string>
   <string name="swapping_approve_information_title">Approve</string>
   <string name="swapping_fee_estimation_error_text">Fee estimation error. Please send feedback to support.</string>
@@ -845,6 +872,9 @@
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="token_swap_promotion_button">Swap now</string>
+  <string name="tokens_list_unavailable_to_purchase_header">Unavailable to purchase</string>
+  <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
+  <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
   <string name="transaction_history_contract_address">contract: %s</string>
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
   <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
@@ -854,6 +884,8 @@
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
+  <string name="transfer_min_amount_error">Minimum %s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">The minimum transaction amount is %1$s.</string>
   <string name="try_to_load_data_again_button_title">Try again</string>
   <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
   <string name="twin_error_wrong_twin">You\'ve scanned wrong twin card. Please try another one</string>
@@ -989,7 +1021,7 @@
   <string name="warning_solana_fee_message">The Solana network is congested. If your transaction is not processed within 2 minutes, please repeat the transaction.</string>
   <string name="warning_solana_fee_title">Solana Network Alert</string>
   <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
-  <string name="warning_some_networks_unreachable_message">Some networks currently are unreachable. Please try again later.</string>
+  <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
