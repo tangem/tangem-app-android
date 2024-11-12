@@ -61,9 +61,11 @@ internal class OnboardingManageTokensModel @Inject constructor(
             .onEach { status -> updatePaginationStatus(status) }
             .launchIn(modelScope)
 
-        manageTokensListManager.currenciesToAdd
-            .onEach(::handleNewAddedCurrencies)
-            .launchIn(modelScope)
+        combine(
+            manageTokensListManager.currenciesToAdd,
+            manageTokensListManager.currenciesToRemove,
+            ::handleChangedCurrencies,
+        ).launchIn(modelScope)
 
         observeSearchQueryChanges()
 
@@ -192,8 +194,11 @@ internal class OnboardingManageTokensModel @Inject constructor(
         state.update { state -> state.copy(scrollToTop = consumedEvent()) }
     }
 
-    private suspend fun handleNewAddedCurrencies(currenciesToAdd: ChangedCurrencies) {
-        if (currenciesToAdd.isEmpty()) {
+    private suspend fun handleChangedCurrencies(
+        currenciesToAdd: ChangedCurrencies,
+        currenciesToRemove: ChangedCurrencies,
+    ) {
+        if (currenciesToAdd.isEmpty() && currenciesToRemove.isEmpty()) {
             state.update { state ->
                 state.copy(
                     actionButtonConfig = OnboardingManageTokensUM.ActionButtonConfig.Later(onClick = ::onLaterClick),

@@ -22,6 +22,9 @@ android {
         resources.excludes.add("META-INF/LICENSE.md")
         resources.excludes.add("META-INF/NOTICE.md")
     }
+    androidResources {
+        generateLocaleConfig = true
+    }
 }
 
 configurations.all {
@@ -87,6 +90,7 @@ dependencies {
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.tangemSdkApi)
 
     implementation(projects.data.appCurrency)
     implementation(projects.data.appTheme)
@@ -143,6 +147,10 @@ dependencies {
     implementation(projects.features.walletSettings.impl)
     implementation(projects.features.markets.api)
     implementation(projects.features.markets.impl)
+    implementation(projects.features.onramp.api)
+    implementation(projects.features.onramp.impl)
+    implementation(projects.features.onboardingV2.api)
+    implementation(projects.features.onboardingV2.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)

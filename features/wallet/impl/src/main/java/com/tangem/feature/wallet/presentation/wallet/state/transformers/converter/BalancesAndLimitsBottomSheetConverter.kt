@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBottomSheetConfig
@@ -15,11 +16,7 @@ internal class BalancesAndLimitsBottomSheetConverter(
 ) : Converter<VisaCurrency, BalancesAndLimitsBottomSheetConfig> {
 
     override fun convert(value: VisaCurrency): BalancesAndLimitsBottomSheetConfig {
-        fun formatAmount(amount: BigDecimal): String = BigDecimalFormatter.formatCryptoAmount(
-            amount,
-            cryptoCurrency = value.symbol,
-            decimals = value.decimals,
-        )
+        fun formatAmount(amount: BigDecimal): String = amount.format { crypto(value.symbol, value.decimals) }
 
         val otpLimit = value.limits.remainingOtp.let(::formatAmount)
         val noOtpLimit = value.limits.remainingNoOtp.let(::formatAmount)

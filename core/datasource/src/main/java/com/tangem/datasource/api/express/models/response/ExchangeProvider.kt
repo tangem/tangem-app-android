@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
+import java.math.BigDecimal
 
 data class ExchangeProvider(
     @Json(name = "id")
@@ -26,6 +27,9 @@ data class ExchangeProvider(
 
     @Json(name = "recommended")
     val isRecommended: Boolean = false,
+
+    @Json(name = "slippage")
+    val slippage: BigDecimal?,
 )
 
 enum class ExchangeProviderType {
