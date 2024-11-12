@@ -16,6 +16,7 @@ import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
@@ -28,7 +29,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
-import com.tangem.features.markets.MarketsFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
@@ -67,8 +67,8 @@ internal class WalletViewModel @Inject constructor(
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
     private val refreshMultiCurrencyWalletQuotesUseCase: RefreshMultiCurrencyWalletQuotesUseCase,
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
-    private val marketsFeatureToggles: MarketsFeatureToggles,
     private val walletImageResolver: WalletImageResolver,
+    private val tokenListStore: MultiWalletTokenListStore,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -110,6 +110,8 @@ internal class WalletViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
+
+        tokenListStore.clear()
         stateHolder.clear()
         walletScreenContentLoader.cancelAll()
     }
@@ -126,7 +128,7 @@ internal class WalletViewModel @Inject constructor(
         viewModelScope.launch {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
-            if (marketsFeatureToggles.isFeatureEnabled && shouldShowMarketsTooltipUseCase()) {
+            if (shouldShowMarketsTooltipUseCase()) {
                 stateHolder.update {
                     it.copy(showMarketsOnboarding = true)
                 }
@@ -280,7 +282,7 @@ internal class WalletViewModel @Inject constructor(
                 stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
             }
             is WalletsUpdateActionResolver.Action.Unknown -> {
-                Timber.w("Unable to perfom action: $action")
+                Timber.w("Unable to perform action: $action")
             }
         }
     }
@@ -318,6 +320,7 @@ internal class WalletViewModel @Inject constructor(
 
     private fun reinitializeWallet(action: WalletsUpdateActionResolver.Action.ReinitializeWallet) {
         walletScreenContentLoader.cancel(action.prevWalletId)
+        tokenListStore.remove(action.prevWalletId)
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
@@ -357,6 +360,7 @@ internal class WalletViewModel @Inject constructor(
 
     private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
         walletScreenContentLoader.cancel(action.deletedWalletId)
+        tokenListStore.remove(action.deletedWalletId)
 
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
