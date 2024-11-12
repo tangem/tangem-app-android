@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
@@ -10,7 +11,6 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState.TokensListItemState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.PersistentList
@@ -47,20 +47,20 @@ internal class TokenListStateConverter(
         }
     }
 
-    private fun TokenList.GroupedByNetwork.toGroupedItems(): PersistentList<TokensListItemState> {
+    private fun TokenList.GroupedByNetwork.toGroupedItems(): PersistentList<TokensListItemUM> {
         return groups.fold(initial = persistentListOf()) { acc, group ->
             acc.mutate { it.addGroup(group) }
         }
     }
 
-    private fun TokenList.Ungrouped.toUngroupedItems(): PersistentList<TokensListItemState> {
+    private fun TokenList.Ungrouped.toUngroupedItems(): PersistentList<TokensListItemUM> {
         return currencies.fold(initial = persistentListOf()) { acc, token ->
             acc.mutate { it.addToken(token) }
         }
     }
 
-    private fun MutableList<TokensListItemState>.addGroup(group: NetworkGroup): List<TokensListItemState> {
-        val groupTitle = TokensListItemState.NetworkGroupTitle(
+    private fun MutableList<TokensListItemUM>.addGroup(group: NetworkGroup): List<TokensListItemUM> {
+        val groupTitle = TokensListItemUM.NetworkGroupTitle(
             id = group.network.hashCode(),
             name = stringReference(group.network.name),
         )
@@ -71,9 +71,9 @@ internal class TokenListStateConverter(
         return this
     }
 
-    private fun MutableList<TokensListItemState>.addToken(token: CryptoCurrencyStatus): List<TokensListItemState> {
+    private fun MutableList<TokensListItemUM>.addToken(token: CryptoCurrencyStatus): List<TokensListItemUM> {
         val tokenItemState = tokenStatusConverter.convert(token)
-        add(TokensListItemState.Token(tokenItemState))
+        add(TokensListItemUM.Token(tokenItemState))
 
         return this
     }
