@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.staking.*
-import com.tangem.domain.staking.model.PendingTransaction
 import com.tangem.domain.staking.model.SubmitHashData
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -21,7 +20,7 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
-import com.tangem.features.staking.impl.presentation.state.utils.isSolanaWithdraw
+import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.utils.extensions.orZero
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -31,7 +30,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import java.math.BigDecimal
-import java.util.UUID
 
 @Suppress("LongParameterList")
 internal class StakingTransactionSender @AssistedInject constructor(
@@ -43,7 +41,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
-    private val savePendingTransactionUseCase: SavePendingTransactionUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val yield: Yield,
@@ -51,7 +48,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
 ) {
 
     private val balanceUpdater: StakingBalanceUpdater
-        get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet)
+        get() = stakingBalanceUpdater.create(cryptoCurrencyStatus, userWallet, yield)
 
     suspend fun constructAndSendTransactions(
         onConstructSuccess: (List<StakingTransaction>) -> Unit,
@@ -89,14 +86,9 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
         sendStakingTransaction(
             fullTransactionsData = fullTransactionsData,
-            possiblePendingTransaction = composePendingTransaction(confirmationState),
             onSendSuccess = onSendSuccess,
             onSendError = onSendError,
         )
-    }
-
-    private fun composePendingTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
-        return confirmationState.possiblePendingTransaction ?: composeStakeTransaction(confirmationState)
     }
 
     private suspend fun getStakingTransactions(
@@ -104,11 +96,11 @@ internal class StakingTransactionSender @AssistedInject constructor(
         confirmationState: StakingStates.ConfirmationState.Data,
         onConstructError: (StakingError) -> Unit,
     ) = coroutineScope {
-        val isAllWithdrawAction = isSolanaWithdraw(
+        val isComposePendingActions = isCompositePendingActions(
             cryptoCurrencyStatus.currency.network.id.value,
             confirmationState.pendingActions,
         )
-        if (isAllWithdrawAction) {
+        if (isComposePendingActions) {
             confirmationState.pendingActions?.map { action ->
                 async {
                     getStakingTransaction(
@@ -169,7 +161,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         action: PendingAction? = confirmationState.pendingAction,
         onConstructError: (StakingError) -> Unit,
     ): List<StakingTransaction> {
-        val validatorState = confirmationState.validatorState as? ValidatorState.Content
+        val validatorState = state.validatorState as? StakingStates.ValidatorState.Data
             ?: error("No validator provided")
         val fee = (confirmationState.feeState as? FeeState.Content)?.fee
             ?: error("No fee provided")
@@ -202,7 +194,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
 
     private suspend fun sendStakingTransaction(
         fullTransactionsData: List<FullTransactionData>,
-        possiblePendingTransaction: PendingTransaction,
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
@@ -218,24 +209,19 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 submitHash(
                     transactions = fullTransactionsData.map { it.stakeKitTransaction },
                     transactionHashes = transactionHashes,
-                    pendingTransaction = possiblePendingTransaction,
                 )
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
                     networkId = cryptoCurrencyStatus.currency.network.id,
                 ).getOrElse { "" }
 
-                balanceUpdater.scheduleUpdates()
+                balanceUpdater.fullUpdate()
                 onSendSuccess(txUrl)
             },
         )
     }
 
-    private suspend fun submitHash(
-        transactions: List<StakingTransaction>,
-        transactionHashes: List<String>,
-        pendingTransaction: PendingTransaction,
-    ) {
+    private suspend fun submitHash(transactions: List<StakingTransaction>, transactionHashes: List<String>) {
         transactions
             .zip(transactionHashes)
             .forEach { (transaction, transactionHash) ->
@@ -243,7 +229,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
                     SubmitHashData(
                         transactionId = transaction.id,
                         transactionHash = transactionHash,
-                        pendingTransaction = pendingTransaction,
                     ),
                 )
                     .onLeft {
@@ -253,9 +238,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
                         )
                     }.onRight {
                         Timber.d("Successful hash submission")
-                        if (transaction.type != StakingTransactionType.FREEZE_ENERGY) {
-                            savePendingTransactionUseCase.invoke(userWallet.walletId, pendingTransaction)
-                        }
                     }
             }
     }
@@ -263,7 +245,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private fun getAmount(amountState: AmountState.Data, fee: Fee, reduceAmountBy: BigDecimal?): BigDecimal {
         val amountValue = amountState.amountTextField.cryptoAmount.value ?: error("No amount value")
         val feeValue = fee.amount.value ?: error("No fee value")
-        val isEnterAction = stateController.value.actionType == StakingActionCommonType.ENTER
+        val isEnterAction = stateController.value.actionType == StakingActionCommonType.Enter
 
         return checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable && isEnterAction,
@@ -271,23 +253,6 @@ internal class StakingTransactionSender @AssistedInject constructor(
             amountValue = amountValue,
             feeValue = feeValue,
             reduceAmountBy = reduceAmountBy.orZero(),
-        )
-    }
-
-    private fun composeStakeTransaction(confirmationState: StakingStates.ConfirmationState.Data): PendingTransaction {
-        val state = stateController.value
-
-        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
-        val token = yield.getCurrentToken(cryptoCurrencyStatus.currency.id.rawCurrencyId)
-
-        return PendingTransaction(
-            groupId = UUID.randomUUID().toString(),
-            token = token,
-            type = BalanceType.STAKED,
-            amount = (state.amountState as? AmountState.Data)?.amountTextField?.cryptoAmount?.value ?: BigDecimal.ZERO,
-            rawCurrencyId = cryptoCurrencyStatus.currency.id.rawCurrencyId,
-            validator = (confirmationState.validatorState as? ValidatorState.Content)?.chosenValidator,
-            balancesId = yieldBalance?.getBalancesUniqueId() ?: 0,
         )
     }
 
