@@ -136,6 +136,10 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "add_later_test" -> Blockchain.CasperTestnet
         "core" -> Blockchain.Core
         "core/test" -> Blockchain.CoreTestnet
+        "casper-network" -> Blockchain.Casper
+        "casper-network/test" -> Blockchain.CasperTestnet
+        "xodex" -> Blockchain.Xodex
+        "canxium" -> Blockchain.Canxium
         else -> null
     }
 }
@@ -269,10 +273,12 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.EnergyWebChainTestnet -> "energy-web-chain/test"
         Blockchain.EnergyWebX -> "energy-web-x"
         Blockchain.EnergyWebXTestnet -> "energy-web-x/test"
-        Blockchain.Casper -> "add_later"
-        Blockchain.CasperTestnet -> "add_later_test"
+        Blockchain.Casper -> "casper-network"
+        Blockchain.CasperTestnet -> "casper-network/test"
         Blockchain.Core -> "core"
         Blockchain.CoreTestnet -> "core/test"
+        Blockchain.Xodex -> "xodex"
+        Blockchain.Canxium -> "canxium"
     }
 }
 
@@ -289,7 +295,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> "ethereum-classic"
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano -> "cardano"
-        Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
+        Blockchain.Polygon, Blockchain.PolygonTestnet -> "polygon-ecosystem-token"
         Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "arbitrum-one"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
@@ -360,9 +366,10 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Sui, Blockchain.SuiTestnet -> "sui"
         Blockchain.EnergyWebChain, Blockchain.EnergyWebChainTestnet -> "energy-web-token"
         Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-token"
-        Blockchain.Casper -> "add_later"
-        Blockchain.CasperTestnet -> "add_later_test"
+        Blockchain.Casper, Blockchain.CasperTestnet -> "casper-network"
         Blockchain.Core, Blockchain.CoreTestnet -> "coredaoorg"
+        Blockchain.Xodex -> "xodex"
+        Blockchain.Canxium -> "canxium"
     }
 }
 
@@ -386,6 +393,7 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
         Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
         Blockchain.Aptos, Blockchain.AptosTestnet,
         Blockchain.Filecoin,
+        Blockchain.Casper, Blockchain.CasperTestnet,
         -> BigDecimal.ZERO
         else -> null
     }
@@ -403,6 +411,4 @@ private val excludedBlockchains = listOf(
     Blockchain.Unknown,
     Blockchain.Nexa,
     Blockchain.NexaTestnet,
-    Blockchain.Casper,
-    Blockchain.CasperTestnet,
 )
