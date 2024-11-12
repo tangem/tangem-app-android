@@ -11,4 +11,6 @@ interface NetworksStatusesStore {
     suspend fun getSyncOrNull(key: UserWalletId): Set<NetworkStatus>?
 
     suspend fun store(key: UserWalletId, value: NetworkStatus)
+
+    suspend fun storeAll(key: UserWalletId, values: Collection<NetworkStatus>)
 }

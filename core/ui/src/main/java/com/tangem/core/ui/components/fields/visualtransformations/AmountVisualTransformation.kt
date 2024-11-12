@@ -4,10 +4,15 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
+import com.tangem.core.ui.format.bigdecimal.getJavaCurrencyByCode
 import com.tangem.core.ui.utils.defaultFormat
 import com.tangem.core.ui.utils.formatWithThousands
+import timber.log.Timber
 import java.text.DecimalFormat
+import java.text.NumberFormat
+import java.util.Locale
 
 class AmountVisualTransformation(
     private val decimals: Int,
@@ -25,13 +30,13 @@ class AmountVisualTransformation(
         val formattedText = if (formattedAmount.isNotEmpty() && symbol != null) {
             AnnotatedString(
                 if (currencyCode != null) {
-                    BigDecimalFormatter.formatFiatEditableAmount(
+                    formatFiatEditableAmount(
                         fiatAmount = formattedAmount,
                         fiatCurrencyCode = currencyCode,
                         fiatCurrencySymbol = symbol,
                     )
                 } else {
-                    BigDecimalFormatter.formatWithSymbol(formattedAmount, symbol)
+                    formatWithSymbol(formattedAmount, symbol)
                 },
             )
         } else {
@@ -44,6 +49,28 @@ class AmountVisualTransformation(
             offsetMapping = OffsetMappingImpl(text.text, formattedText, symbol, groupingSymbol),
         )
     }
+
+    private fun formatFiatEditableAmount(
+        fiatAmount: String?,
+        fiatCurrencyCode: String,
+        fiatCurrencySymbol: String,
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        if (fiatAmount == null) return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
+
+        val formatterCurrency = getJavaCurrencyByCode(fiatCurrencyCode)
+        val numberFormatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = formatterCurrency
+        }
+        val formatter = requireNotNull(numberFormatter as? DecimalFormat) {
+            Timber.e("NumberFormat is null")
+            return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
+        }
+        return "${formatter.positivePrefix}$fiatAmount${formatter.positiveSuffix}"
+            .replace(formatterCurrency.getSymbol(locale), fiatCurrencySymbol)
+    }
+
+    private fun formatWithSymbol(amount: String, symbol: String) = "$amount$CURRENCY_SPACE$symbol"
 
     private class OffsetMappingImpl(
         private val text: String,

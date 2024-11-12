@@ -11,6 +11,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -91,10 +93,7 @@ internal class TokenMarketBlockModel @Inject constructor(
 // [REDACTED_TODO_COMMENT]
                             fiatCurrencySymbol = currentAppCurrency.value.symbol,
                         ),
-                        h24Percent = BigDecimalFormatter.formatPercent(
-                            percent = res.priceChange,
-                            useAbsoluteValue = true,
-                        ),
+                        h24Percent = res.priceChange.format { percent() },
                         priceChangeType = PriceChangeType.fromBigDecimal(res.priceChange),
                     )
                 }

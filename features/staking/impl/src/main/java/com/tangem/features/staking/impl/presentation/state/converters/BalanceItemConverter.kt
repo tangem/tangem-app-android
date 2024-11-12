@@ -1,6 +1,8 @@
 package com.tangem.features.staking.impl.presentation.state.converters
 
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -45,14 +47,12 @@ internal class BalanceItemConverter(
                 subtitle = getSubtitle(value),
                 type = value.type,
                 cryptoValue = cryptoAmount.parseBigDecimal(cryptoCurrency.decimals),
-                cryptoDecimal = cryptoAmount,
-                cryptoAmount = stringReference(
-                    BigDecimalFormatter.formatCryptoAmount(
-                        cryptoAmount = cryptoAmount,
-                        cryptoCurrency = cryptoCurrency,
-                    ),
+                cryptoAmount = cryptoAmount,
+                formattedCryptoAmount = stringReference(
+                    cryptoAmount.format { crypto(cryptoCurrency) },
                 ),
-                fiatAmount = stringReference(
+                fiatAmount = fiatAmount,
+                formattedFiatAmount = stringReference(
                     BigDecimalFormatter.formatFiatAmount(
                         fiatAmount = fiatAmount,
                         fiatCurrencyCode = appCurrency.code,

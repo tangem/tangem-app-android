@@ -19,29 +19,31 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.TransactionDoneState
 import com.tangem.features.staking.impl.presentation.state.previewdata.ConfirmationStatePreviewData
+import com.tangem.features.staking.impl.presentation.state.previewdata.ValidatorStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
 import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
 import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
 import com.tangem.features.staking.impl.presentation.ui.block.ValidatorBlock
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 
+@Suppress("LongParameterList")
 @Composable
 internal fun StakingConfirmationContent(
     amountState: AmountState,
     state: StakingStates.ConfirmationState,
+    validatorState: StakingStates.ValidatorState,
     clickIntents: StakingClickIntents,
     type: StakingActionCommonType,
+    isSolana: Boolean, // TODO staking AND-8199 support solana multisize hashes signing
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
-    val isEnterAction = type == StakingActionCommonType.ENTER
-    val showValidatorBlock = isEnterAction || state.pendingAction?.type == StakingActionType.VOTE_LOCKED
+    val isAmountEditable = type == StakingActionCommonType.Enter || type == StakingActionCommonType.Exit && !isSolana
     val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     val isTransactionInProgress = state.notifications.any { it is StakingNotification.Warning.TransactionInProgress }
     Column(
@@ -63,17 +65,15 @@ internal fun StakingConfirmationContent(
         }
         AmountBlock(
             amountState = amountState,
-            isClickDisabled = !isEnterAction || isTransactionSent || isTransactionInProgress,
-            isEditingDisabled = !isEnterAction && state.innerState != InnerConfirmationStakingState.COMPLETED,
+            isClickDisabled = !isAmountEditable || isTransactionSent || isTransactionInProgress,
+            isEditingDisabled = !isAmountEditable && state.innerState != InnerConfirmationStakingState.COMPLETED,
             onClick = clickIntents::onPrevClick,
         )
-        if (showValidatorBlock) {
-            ValidatorBlock(
-                validatorState = state.validatorState,
-                isClickable = !isTransactionInProgress,
-                onClick = clickIntents::openValidators,
-            )
-        }
+        ValidatorBlock(
+            validatorState = validatorState,
+            isClickable = !isTransactionInProgress,
+            onClick = clickIntents::openValidators,
+        )
         StakingFeeBlock(feeState = state.feeState, isTransactionSent = isTransactionSent)
         NotificationsBlock(notifications = state.notifications)
     }
@@ -88,8 +88,10 @@ private fun Preview_StakingConfirmationContent() {
             StakingConfirmationContent(
                 amountState = AmountStatePreviewData.amountState,
                 state = ConfirmationStatePreviewData.assentStakingState,
+                validatorState = ValidatorStatePreviewData.validatorState,
                 clickIntents = StakingClickIntentsStub,
-                type = StakingActionCommonType.ENTER,
+                type = StakingActionCommonType.Enter,
+                isSolana = false,
             )
         }
     }

@@ -16,7 +16,7 @@ internal sealed class InnerYieldBalanceState {
         val rewardsFiat: String,
         val rewardBlockType: RewardBlockType,
         val isActionable: Boolean,
-        val balance: ImmutableList<BalanceState>,
+        val balances: ImmutableList<BalanceState>,
     ) : InnerYieldBalanceState()
 
     data object Empty : InnerYieldBalanceState()
@@ -30,9 +30,10 @@ internal data class BalanceState(
     val subtitle: TextReference?,
     val isClickable: Boolean,
     val cryptoValue: String,
-    val cryptoDecimal: BigDecimal,
-    val cryptoAmount: TextReference,
-    val fiatAmount: TextReference,
+    val cryptoAmount: BigDecimal,
+    val formattedCryptoAmount: TextReference,
+    val fiatAmount: BigDecimal?,
+    val formattedFiatAmount: TextReference,
     val rawCurrencyId: String?,
     val validator: Yield.Validator?,
     val pendingActions: ImmutableList<PendingAction>,

@@ -5,6 +5,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
+import com.tangem.lib.crypto.BlockchainUtils.isSolana
 
 internal class StakingStateRouter(
     private val appRouter: AppRouter,
@@ -23,12 +24,19 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (stateController.value.actionType) {
-                StakingActionCommonType.ENTER -> showAmount()
-                StakingActionCommonType.PENDING_OTHER,
-                StakingActionCommonType.EXIT,
+                StakingActionCommonType.Enter -> showAmount()
+// [REDACTED_TODO_COMMENT]
+                StakingActionCommonType.Exit -> if (isSolana(stateController.value.cryptoCurrencyBlockchainId)) {
+                    showConfirmation()
+                } else {
+                    showAmount()
+                }
+                StakingActionCommonType.Pending.Other,
+                StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
-                StakingActionCommonType.PENDING_REWARDS -> showRewardsValidators()
+                StakingActionCommonType.Pending.Restake -> showRestakeValidators()
             }
+            StakingStep.RestakeValidator,
             StakingStep.RewardsValidators,
             StakingStep.Validators,
             StakingStep.Amount,
@@ -41,17 +49,27 @@ internal class StakingStateRouter(
         val uiState = stateController.uiState.value
         when (uiState.currentStep) {
             StakingStep.InitialInfo -> onBackClick()
-            StakingStep.Amount -> showInitial()
+            StakingStep.RestakeValidator,
+            StakingStep.RewardsValidators,
+            StakingStep.Amount,
+            -> showInitial()
             StakingStep.Confirmation -> {
-                if (uiState.actionType != StakingActionCommonType.ENTER) {
-                    showInitial()
-                } else {
+                val isEnter = uiState.actionType == StakingActionCommonType.Enter
+                val isExit = uiState.actionType == StakingActionCommonType.Exit
+// [REDACTED_TODO_COMMENT]
+                val isSolana = isSolana(uiState.cryptoCurrencyBlockchainId)
+                if (isEnter || isExit && !isSolana) {
                     showAmount()
+                } else {
+                    showInitial()
                 }
             }
             StakingStep.Validators -> showConfirmation()
-            StakingStep.RewardsValidators -> showInitial()
         }
+    }
+
+    fun showValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.Validators) }
     }
 
     private fun showInitial() {
@@ -59,7 +77,7 @@ internal class StakingStateRouter(
         stateController.update { it.copy(currentStep = StakingStep.InitialInfo) }
     }
 
-    private fun showRewardsValidators() {
+    fun showRewardsValidators() {
         analyticsEventsHandler.send(StakingAnalyticsEvent.RewardScreenOpened)
         stateController.update { it.copy(currentStep = StakingStep.RewardsValidators) }
     }
@@ -69,8 +87,8 @@ internal class StakingStateRouter(
         stateController.update { it.copy(currentStep = StakingStep.Amount) }
     }
 
-    fun showValidators() {
-        stateController.update { it.copy(currentStep = StakingStep.Validators) }
+    private fun showRestakeValidators() {
+        stateController.update { it.copy(currentStep = StakingStep.RestakeValidator) }
     }
 
     private fun showConfirmation() {

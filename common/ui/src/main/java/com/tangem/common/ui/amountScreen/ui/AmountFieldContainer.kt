@@ -34,14 +34,14 @@ internal fun LazyListScope.amountField(
                 .background(TangemTheme.colors.background.action),
         ) {
             Text(
-                text = amountState.walletName,
+                text = amountState.title.resolveReference(),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
                     .padding(top = TangemTheme.dimens.spacing14),
             )
 
-            val balance = amountState.walletBalance.orMaskWithStars(isBalanceHidden).resolveReference()
+            val balance = amountState.availableBalance.orMaskWithStars(isBalanceHidden).resolveReference()
             AnimatedContent(
                 targetState = balance,
                 label = "Hide Balance Animation",

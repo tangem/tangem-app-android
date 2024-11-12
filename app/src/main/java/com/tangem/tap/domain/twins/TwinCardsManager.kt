@@ -13,16 +13,18 @@ import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import kotlinx.coroutines.flow.MutableStateFlow
 
 class TwinCardsManager(card: CardDTO) {
+
+    private val issuersConfigStorage by lazy(mode = LazyThreadSafetyMode.NONE) {
+        store.inject(DaggerGraphState::issuersConfigStorage)
+    }
+
     private val firstCardId: String = card.cardId
     private val publicKey: String = card.issuer.publicKey.toHexString()
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
-
-    private val issuerKeyPairFlow = MutableStateFlow<KeyPair?>(value = null)
 
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
         val response = tangemSdkManager.createFirstTwinWallet(cardId = firstCardId, initialMessage = message)
@@ -70,23 +72,11 @@ class TwinCardsManager(card: CardDTO) {
     }
 
     private suspend fun getIssuerKeys(): KeyPair {
-        issuerKeyPairFlow.value?.let { return it }
-
-        val assetLoader = store.inject(DaggerGraphState::assetLoader)
-        val issuer = assetLoader.loadList<Issuer>(fileName = ISSUERS_FILE_NAME)
-            .first { it.publicKey == publicKey }
+        val issuer = issuersConfigStorage.getConfig().first { it.publicKey == publicKey }
 
         return KeyPair(
             publicKey = issuer.publicKey.hexToBytes(),
             privateKey = issuer.privateKey.hexToBytes(),
-        ).also {
-            issuerKeyPairFlow.value = it
-        }
-    }
-
-    private companion object {
-        const val ISSUERS_FILE_NAME = "tangem-app-config/issuers"
+        )
     }
 }
-
-private class Issuer(val privateKey: String, val publicKey: String)
