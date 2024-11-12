@@ -12,6 +12,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.*
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
+import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
@@ -37,6 +38,7 @@ internal interface WalletCardClickIntents {
 @Suppress("LongParameterList")
 internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
+    private val tokenListStore: MultiWalletTokenListStore,
     private val walletEventSender: WalletEventSender,
     private val walletScreenContentLoader: WalletScreenContentLoader,
     private val renameWalletUseCase: RenameWalletUseCase,
@@ -99,6 +101,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     override fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId) {
         viewModelScope.launch(dispatchers.main) {
             walletScreenContentLoader.cancel(userWalletId)
+            tokenListStore.remove(userWalletId)
 
             val walletToDelete = getUserWalletUseCase(userWalletId).getOrNull() ?: return@launch
             val hasUserWallets = deleteWalletUseCase(userWalletId).getOrElse {
@@ -117,6 +120,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
 
                 reduxStateHolder.onUserWalletSelected(selectedWallet)
             } else {
+                tokenListStore.clear()
                 stateHolder.clear()
                 appRouter.replaceAll(AppRoute.Home)
             }
