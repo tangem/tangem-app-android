@@ -41,11 +41,12 @@ import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.features.staking.impl.R
@@ -127,18 +128,20 @@ private fun LazyListScope.activeStakingBlock(
     clickIntents: StakingClickIntents,
     isBalanceHidden: Boolean,
 ) {
-    val balances = (state.yieldBalance as? InnerYieldBalanceState.Data)?.balance
-    if (!balances.isNullOrEmpty()) {
-        item(key = STAKING_REWARD_BLOCK_KEY) {
-            Column(modifier = Modifier.animateItem()) {
-                StakingRewardBlock(
-                    yieldBalanceState = state.yieldBalance,
-                    onRewardsClick = clickIntents::openRewardsValidators,
-                    isBalanceHidden = isBalanceHidden,
-                )
-                SpacerH12()
-            }
+    val innerYieldBalanceState = state.yieldBalance as? InnerYieldBalanceState.Data ?: return
+
+    item(key = STAKING_REWARD_BLOCK_KEY) {
+        Column(modifier = Modifier.animateItem()) {
+            StakingRewardBlock(
+                yieldBalanceState = state.yieldBalance,
+                onRewardsClick = clickIntents::openRewardsValidators,
+                isBalanceHidden = isBalanceHidden,
+            )
+            SpacerH12()
         }
+    }
+
+    if (innerYieldBalanceState.balances.isNotEmpty()) {
         item(ACTIVE_STAKING_BLOCK_KEY) {
             Text(
                 text = stringResource(id = R.string.staking_your_stakes),
@@ -147,7 +150,7 @@ private fun LazyListScope.activeStakingBlock(
                 modifier = Modifier
                     .roundedShapeItemDecoration(
                         currentIndex = 0,
-                        lastIndex = 1 + state.yieldBalance.balance.lastIndex,
+                        lastIndex = 1 + state.yieldBalance.balances.lastIndex,
                         addDefaultPadding = false,
                     )
                     .fillMaxWidth()
@@ -161,10 +164,14 @@ private fun LazyListScope.activeStakingBlock(
             )
         }
         itemsIndexed(
-            items = state.yieldBalance.balance,
-            key = { _, balance ->
+            items = state.yieldBalance.balances,
+            key = { index, balance ->
                 // Staked balance does not have unique identifier.
-                balance.toString()
+                buildString {
+                    append(balance.hashCode())
+                    append("_")
+                    append(index)
+                }
             },
         ) { index, balance ->
             ActiveStakingBlock(
@@ -176,7 +183,7 @@ private fun LazyListScope.activeStakingBlock(
                     .animateItem()
                     .roundedShapeItemDecoration(
                         currentIndex = index + 1,
-                        lastIndex = state.yieldBalance.balance.lastIndex + 1,
+                        lastIndex = state.yieldBalance.balances.lastIndex + 1,
                         addDefaultPadding = false,
                     ),
             )
@@ -269,8 +276,8 @@ private fun ActiveStakingBlock(
     InputRowImageInfo(
         subtitle = balance.title,
         caption = balance.subtitle ?: balance.getAprText(),
-        infoTitle = balance.fiatAmount.orMaskWithStars(isBalanceHidden),
-        infoSubtitle = balance.cryptoAmount.orMaskWithStars(isBalanceHidden),
+        infoTitle = balance.formattedFiatAmount.orMaskWithStars(isBalanceHidden),
+        infoSubtitle = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden),
         imageUrl = balance.getImage(),
         iconRes = icon,
         iconTint = iconTint,
@@ -311,10 +318,7 @@ private fun BalanceState.getAprText() = combinedReference(
     annotatedReference {
         appendSpace()
         appendColored(
-            text = BigDecimalFormatter.formatPercent(
-                percent = validator?.apr.orZero(),
-                useAbsoluteValue = true,
-            ),
+            text = validator?.apr.orZero().format { percent() },
             color = TangemTheme.colors.text.accent,
         )
     },

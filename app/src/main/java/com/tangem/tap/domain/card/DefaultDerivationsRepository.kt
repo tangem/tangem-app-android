@@ -20,7 +20,7 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.domain.sdk.TangemSdkManager
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.tasks.UserWalletIdPreflightReadFilter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext

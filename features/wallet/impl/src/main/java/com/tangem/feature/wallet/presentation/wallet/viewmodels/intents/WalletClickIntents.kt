@@ -1,6 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
@@ -8,10 +7,10 @@ import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
+import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.feature.wallet.presentation.wallet.analytics.PortfolioEvent
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -42,7 +41,6 @@ internal class WalletClickIntents @Inject constructor(
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val neverToShowWalletsScrollPreview: NeverToShowWalletsScrollPreview,
-    private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
@@ -86,13 +84,11 @@ internal class WalletClickIntents @Inject constructor(
     fun onRefreshSwipe(showRefreshState: Boolean) {
         when (stateHolder.getSelectedWallet()) {
             is WalletState.MultiCurrency.Content -> {
-                analyticsEventHandler.send(PortfolioEvent.Refreshed)
                 refreshMultiCurrencyContent(showRefreshState)
             }
             is WalletState.SingleCurrency.Content,
             is WalletState.Visa.Content,
             -> {
-                analyticsEventHandler.send(PortfolioEvent.Refreshed)
                 refreshSingleCurrencyContent(showRefreshState)
             }
             is WalletState.MultiCurrency.Locked,
@@ -117,7 +113,7 @@ internal class WalletClickIntents @Inject constructor(
             val maybeFetchResult = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 fetchCardTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
             } else {
-                fetchTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
+                fetchTokenListUseCase(userWalletId = userWallet.walletId, mode = RefreshMode.FULL)
             }
 
             maybeFetchResult.onLeft {

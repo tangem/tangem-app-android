@@ -5,6 +5,7 @@ import com.tangem.datasource.local.datastore.core.StringKeyDataStoreDecorator
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
+import com.tangem.utils.extensions.replaceBy
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -25,6 +26,25 @@ internal class DefaultNetworksStatusesStore(
                 ?: setOf(value)
 
             store(key, newValues)
+        }
+    }
+
+    override suspend fun storeAll(key: UserWalletId, values: Collection<NetworkStatus>) {
+        mutex.withLock {
+            val currentValues = getSyncOrNull(key) ?: emptySet()
+            val updatedValues = currentValues.toMutableSet()
+
+            values.forEach { newValue ->
+                val isReplaced = updatedValues.replaceBy(newValue) {
+                    it.network == newValue.network
+                }
+
+                if (!isReplaced) {
+                    updatedValues.add(newValue)
+                }
+            }
+
+            store(key, updatedValues)
         }
     }
 }

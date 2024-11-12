@@ -2,7 +2,6 @@ package com.tangem.tap.domain.tasks.product
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
@@ -19,32 +18,14 @@ import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
-import com.tangem.domain.models.scan.KeyWalletPublicKey
-import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingCommand
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
-import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.read.ReadWalletsListCommand
 import com.tangem.operations.wallet.CreateWalletTask
+import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.operations.wallet.CreateWalletResponse as SdkCreateWalletResponse
-
-data class CreateProductWalletTaskResponse(
-    val card: CardDTO,
-    val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
-    val primaryCard: PrimaryCard? = null,
-) : CommandResponse {
-    constructor(
-        card: Card,
-        derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
-        primaryCard: PrimaryCard? = null,
-    ) : this(
-        card = CardDTO(card),
-        derivedKeys = derivedKeys,
-        primaryCard = primaryCard,
-    )
-}
 
 private data class CreateWalletResponse(
     val cardId: String,
