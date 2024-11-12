@@ -19,16 +19,20 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.preview.AmountStatePreviewData
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.format.bigdecimal.anyDecimals
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
+import java.math.BigDecimal
 
 @Composable
 fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDisabled: Boolean, onClick: () -> Unit) {
     if (amountState !is AmountState.Data) return
     val amount = amountState.amountTextField
 
-    val cryptoAmount = BigDecimalFormatter.formatWithSymbol(amount.value, amount.cryptoAmount.currencySymbol)
+    val cryptoAmount = formatWithSymbol(amount.value, amount.cryptoAmount.currencySymbol)
     val fiatAmount = BigDecimalFormatter.formatFiatAmount(
         fiatAmount = amount.fiatAmount.value,
         fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
@@ -76,6 +80,9 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
         )
     }
 }
+
+fun formatWithSymbol(amount: String, symbol: String) =
+    BigDecimal.ZERO.format { crypto(symbol, 0).anyDecimals() }.replace("0", amount)
 
 // region Preview
 @Preview

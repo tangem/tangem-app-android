@@ -39,7 +39,7 @@ internal object StakingNotification {
     ) : NotificationUM.Warning(
         title = title,
         subtitle = subtitle,
-        iconResId = R.drawable.ic_alert_circle_24,
+        iconResId = R.drawable.img_attention_20,
         buttonsState = buttonsState,
         onCloseClick = onCloseClick,
     ) {
@@ -47,6 +47,11 @@ internal object StakingNotification {
             val title: TextReference,
             val description: TextReference,
         ) : StakingNotification.Warning(title = title, subtitle = description)
+
+        data object LowStakedBalance : StakingNotification.Warning(
+            title = resourceReference(R.string.staking_notification_low_staked_balance_title),
+            subtitle = resourceReference(R.string.staking_notification_low_staked_balance_text),
+        )
     }
 
     sealed class Info(
@@ -59,13 +64,17 @@ internal object StakingNotification {
         subtitle = subtitle,
         buttonsState = buttonsState,
         onCloseClick = onCloseClick,
-
     ) {
         data class EarnRewards(
             val subtitleText: TextReference,
         ) : StakingNotification.Info(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = subtitleText,
+        )
+
+        data object StakeEntireBalance : StakingNotification.Info(
+            title = resourceReference(R.string.common_network_fee_title),
+            subtitle = resourceReference(R.string.staking_notification_stake_entire_balance_text),
         )
 
         data class Unstake(
