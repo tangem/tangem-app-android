@@ -16,9 +16,10 @@ import kotlinx.collections.immutable.toPersistentList
 internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (this) {
     StakingActionType.CLAIM_REWARDS -> resourceReference(R.string.common_claim_rewards)
     StakingActionType.RESTAKE_REWARDS -> resourceReference(R.string.staking_restake_rewards)
-    StakingActionType.WITHDRAW -> resourceReference(R.string.staking_withdraw)
+    StakingActionType.CLAIM_UNSTAKED,
+    StakingActionType.WITHDRAW,
+    -> resourceReference(R.string.staking_withdraw)
     StakingActionType.RESTAKE -> resourceReference(R.string.staking_restake)
-    StakingActionType.CLAIM_UNSTAKED -> resourceReference(R.string.staking_claim_unstaked)
     StakingActionType.UNLOCK_LOCKED -> resourceReference(R.string.staking_unlocked_locked)
     StakingActionType.STAKE_LOCKED -> resourceReference(R.string.staking_stake_locked)
     StakingActionType.VOTE -> resourceReference(R.string.staking_vote)
