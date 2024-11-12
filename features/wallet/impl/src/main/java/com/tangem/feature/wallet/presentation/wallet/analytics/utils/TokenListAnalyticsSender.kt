@@ -9,7 +9,6 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
@@ -38,18 +37,12 @@ internal class TokenListAnalyticsSender @Inject constructor(
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
         if (tokenList.totalFiatBalance is TotalFiatBalance.Loading) return
 
-        val currenciesStatuses = getCurrenciesStatuses(tokenList)
+        val currenciesStatuses = tokenList.flattenCurrencies()
 
         sendBalanceLoadedEventIfNeeded(tokenList.totalFiatBalance, currenciesStatuses)
         sendToppedUpEventIfNeeded(userWallet, tokenList.totalFiatBalance, currenciesStatuses)
         sendUnreachableNetworksEventIfNeeded(currenciesStatuses)
         sendTokenBalancesIfNeeded(currenciesStatuses)
-    }
-
-    private fun getCurrenciesStatuses(tokenList: TokenList): List<CryptoCurrencyStatus> = when (tokenList) {
-        is TokenList.Empty -> emptyList()
-        is TokenList.GroupedByNetwork -> tokenList.groups.flatMap(NetworkGroup::currencies)
-        is TokenList.Ungrouped -> tokenList.currencies
     }
 
     private fun sendBalanceLoadedEventIfNeeded(
@@ -173,12 +166,12 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     private fun sendUnreachableNetworksEventIfNeeded(currenciesStatuses: List<CryptoCurrencyStatus>) {
-        val hasUnreachableCurrencies = currenciesStatuses.any {
-            it.value is CryptoCurrencyStatus.Unreachable
-        }
+        val unreachableCurrencies = currenciesStatuses
+            .filter { it.value is CryptoCurrencyStatus.Unreachable }
+            .map { it.currency.symbol }
 
-        if (hasUnreachableCurrencies) {
-            analyticsEventHandler.send(MainScreen.NetworksUnreachable)
+        if (unreachableCurrencies.isNotEmpty()) {
+            analyticsEventHandler.send(MainScreen.NetworksUnreachable(unreachableCurrencies))
         }
     }
 }
