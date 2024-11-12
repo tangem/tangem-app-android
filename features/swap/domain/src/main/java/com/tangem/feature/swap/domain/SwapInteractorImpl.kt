@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -45,7 +46,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.firstOrNull
 import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -865,8 +865,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         } else {
             when (blockchain) {
                 // region Blockchains with their own fees
-                Blockchain.VeChain,
-                Blockchain.VeChainTestnet,
+                VeChain,
+                VeChainTestnet,
                 -> {
                     Fee.VeChain(
                         amount = feeAmount,
@@ -874,28 +874,28 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         gasLimit = fee.gasLimit.toLong(),
                     )
                 }
-                Blockchain.Aptos,
-                Blockchain.AptosTestnet,
+                Aptos,
+                AptosTestnet,
                 -> {
                     val gasUnitPrice = fee.feeValue.divide(
                         fee.gasLimit.toBigDecimal(),
-                        Blockchain.Aptos.decimals(),
+                        Aptos.decimals(),
                         RoundingMode.HALF_UP,
                     )
 
                     Fee.Aptos(
                         amount = feeAmount,
                         gasUnitPrice = gasUnitPrice
-                            .movePointRight(Blockchain.Aptos.decimals())
+                            .movePointRight(Aptos.decimals())
                             .toLong(),
                         gasLimit = fee.gasLimit.toLong(),
                     )
                 }
-                Blockchain.Filecoin,
+                Filecoin,
                 -> {
                     val gasUnitPrice = fee.feeValue.divide(
                         BigDecimal(fee.gasLimit),
-                        Blockchain.Filecoin.decimals(),
+                        Filecoin.decimals(),
                         RoundingMode.HALF_UP,
                     )
                     val feeParams = requireNotNull(fee.params as? TxFee.Params.Filecoin)
@@ -903,14 +903,14 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     Fee.Filecoin(
                         amount = feeAmount,
                         gasUnitPrice = gasUnitPrice
-                            .movePointRight(Blockchain.Filecoin.decimals())
+                            .movePointRight(Filecoin.decimals())
                             .toLong(),
                         gasLimit = fee.gasLimit.toLong(),
                         gasPremium = feeParams.gasPremium,
                     )
                 }
-                Blockchain.Sui,
-                Blockchain.SuiTestnet,
+                Sui,
+                SuiTestnet,
                 -> {
                     val feeParams = requireNotNull(fee.params as? TxFee.Params.Sui)
 
@@ -922,131 +922,131 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 }
                 // endregion
                 // region Blockchains with common fees or EVM-like fees
-                Blockchain.Unknown,
-                Blockchain.Arbitrum,
-                Blockchain.ArbitrumTestnet,
-                Blockchain.Avalanche,
-                Blockchain.AvalancheTestnet,
-                Blockchain.Binance,
-                Blockchain.BinanceTestnet,
-                Blockchain.BSC,
-                Blockchain.BSCTestnet,
-                Blockchain.Bitcoin,
-                Blockchain.BitcoinTestnet,
-                Blockchain.BitcoinCash,
-                Blockchain.BitcoinCashTestnet,
-                Blockchain.Cardano,
-                Blockchain.Cosmos,
-                Blockchain.CosmosTestnet,
-                Blockchain.Dogecoin,
-                Blockchain.Ducatus,
-                Blockchain.Ethereum,
-                Blockchain.EthereumTestnet,
-                Blockchain.EthereumClassic,
-                Blockchain.EthereumClassicTestnet,
-                Blockchain.Fantom,
-                Blockchain.FantomTestnet,
-                Blockchain.Litecoin,
-                Blockchain.Near,
-                Blockchain.NearTestnet,
-                Blockchain.Polkadot,
-                Blockchain.PolkadotTestnet,
-                Blockchain.Kava,
-                Blockchain.KavaTestnet,
-                Blockchain.Kusama,
-                Blockchain.Polygon,
-                Blockchain.PolygonTestnet,
-                Blockchain.RSK,
-                Blockchain.Sei,
-                Blockchain.SeiTestnet,
-                Blockchain.Stellar,
-                Blockchain.StellarTestnet,
-                Blockchain.Solana,
-                Blockchain.SolanaTestnet,
-                Blockchain.Tezos,
-                Blockchain.Tron,
-                Blockchain.TronTestnet,
-                Blockchain.XRP,
-                Blockchain.Gnosis,
-                Blockchain.Dash,
-                Blockchain.Optimism,
-                Blockchain.OptimismTestnet,
-                Blockchain.Dischain,
-                Blockchain.EthereumPow,
-                Blockchain.EthereumPowTestnet,
-                Blockchain.Kaspa,
-                Blockchain.Telos,
-                Blockchain.TelosTestnet,
-                Blockchain.TON,
-                Blockchain.TONTestnet,
-                Blockchain.Ravencoin,
-                Blockchain.RavencoinTestnet,
-                Blockchain.TerraV1,
-                Blockchain.TerraV2,
-                Blockchain.Cronos,
-                Blockchain.AlephZero,
-                Blockchain.AlephZeroTestnet,
-                Blockchain.OctaSpace,
-                Blockchain.OctaSpaceTestnet,
-                Blockchain.Chia,
-                Blockchain.ChiaTestnet,
-                Blockchain.Decimal,
-                Blockchain.DecimalTestnet,
-                Blockchain.XDC,
-                Blockchain.XDCTestnet,
-                Blockchain.Playa3ull,
-                Blockchain.Shibarium,
-                Blockchain.ShibariumTestnet,
-                Blockchain.Algorand,
-                Blockchain.AlgorandTestnet,
-                Blockchain.Hedera,
-                Blockchain.HederaTestnet,
-                Blockchain.Aurora,
-                Blockchain.AuroraTestnet,
-                Blockchain.Areon,
-                Blockchain.AreonTestnet,
-                Blockchain.PulseChain,
-                Blockchain.PulseChainTestnet,
-                Blockchain.ZkSyncEra,
-                Blockchain.ZkSyncEraTestnet,
-                Blockchain.Nexa,
-                Blockchain.NexaTestnet,
-                Blockchain.Moonbeam,
-                Blockchain.MoonbeamTestnet,
-                Blockchain.Manta,
-                Blockchain.MantaTestnet,
-                Blockchain.PolygonZkEVM,
-                Blockchain.PolygonZkEVMTestnet,
-                Blockchain.Radiant,
-                Blockchain.Base,
-                Blockchain.BaseTestnet,
-                Blockchain.Moonriver,
-                Blockchain.MoonriverTestnet,
-                Blockchain.Mantle,
-                Blockchain.MantleTestnet,
-                Blockchain.Flare,
-                Blockchain.FlareTestnet,
-                Blockchain.Taraxa,
-                Blockchain.TaraxaTestnet,
-                Blockchain.Koinos,
-                Blockchain.KoinosTestnet,
-                Blockchain.Joystream,
-                Blockchain.Bittensor,
-                Blockchain.Blast,
-                Blockchain.BlastTestnet,
-                Blockchain.Cyber,
-                Blockchain.CyberTestnet,
-                Blockchain.InternetComputer,
-                Blockchain.EnergyWebChain,
-                Blockchain.EnergyWebChainTestnet,
-                Blockchain.EnergyWebX,
-                Blockchain.EnergyWebXTestnet,
-                Blockchain.Casper,
-                Blockchain.CasperTestnet,
-                Blockchain.Core,
-                Blockchain.CoreTestnet,
-                Blockchain.Xodex,
-                Blockchain.Canxium,
+                Unknown,
+                Arbitrum,
+                ArbitrumTestnet,
+                Avalanche,
+                AvalancheTestnet,
+                Binance,
+                BinanceTestnet,
+                BSC,
+                BSCTestnet,
+                Bitcoin,
+                BitcoinTestnet,
+                BitcoinCash,
+                BitcoinCashTestnet,
+                Cardano,
+                Cosmos,
+                CosmosTestnet,
+                Dogecoin,
+                Ducatus,
+                Ethereum,
+                EthereumTestnet,
+                EthereumClassic,
+                EthereumClassicTestnet,
+                Fantom,
+                FantomTestnet,
+                Litecoin,
+                Near,
+                NearTestnet,
+                Polkadot,
+                PolkadotTestnet,
+                Kava,
+                KavaTestnet,
+                Kusama,
+                Polygon,
+                PolygonTestnet,
+                RSK,
+                Sei,
+                SeiTestnet,
+                Stellar,
+                StellarTestnet,
+                Solana,
+                SolanaTestnet,
+                Tezos,
+                Tron,
+                TronTestnet,
+                XRP,
+                Gnosis,
+                Dash,
+                Optimism,
+                OptimismTestnet,
+                Dischain,
+                EthereumPow,
+                EthereumPowTestnet,
+                Kaspa,
+                Telos,
+                TelosTestnet,
+                TON,
+                TONTestnet,
+                Ravencoin,
+                RavencoinTestnet,
+                TerraV1,
+                TerraV2,
+                Cronos,
+                AlephZero,
+                AlephZeroTestnet,
+                OctaSpace,
+                OctaSpaceTestnet,
+                Chia,
+                ChiaTestnet,
+                Decimal,
+                DecimalTestnet,
+                XDC,
+                XDCTestnet,
+                Playa3ull,
+                Shibarium,
+                ShibariumTestnet,
+                Algorand,
+                AlgorandTestnet,
+                Hedera,
+                HederaTestnet,
+                Aurora,
+                AuroraTestnet,
+                Areon,
+                AreonTestnet,
+                PulseChain,
+                PulseChainTestnet,
+                ZkSyncEra,
+                ZkSyncEraTestnet,
+                Nexa,
+                NexaTestnet,
+                Moonbeam,
+                MoonbeamTestnet,
+                Manta,
+                MantaTestnet,
+                PolygonZkEVM,
+                PolygonZkEVMTestnet,
+                Radiant,
+                Base,
+                BaseTestnet,
+                Moonriver,
+                MoonriverTestnet,
+                Mantle,
+                MantleTestnet,
+                Flare,
+                FlareTestnet,
+                Taraxa,
+                TaraxaTestnet,
+                Koinos,
+                KoinosTestnet,
+                Joystream,
+                Bittensor,
+                Blast,
+                BlastTestnet,
+                Cyber,
+                CyberTestnet,
+                InternetComputer,
+                EnergyWebChain,
+                EnergyWebChainTestnet,
+                EnergyWebX,
+                EnergyWebXTestnet,
+                Casper,
+                CasperTestnet,
+                Core,
+                CoreTestnet,
+                Xodex,
+                Canxium,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
@@ -1592,12 +1592,25 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         amount: BigDecimal,
         userWallet: UserWallet,
         cryptoCurrency: CryptoCurrency,
-    ): Either<GetFeeError, TransactionFee>? {
+    ): Either<GetFeeError, TransactionFee> {
         return estimateFeeUseCase(
             amount = amount,
             userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
-        ).firstOrNull()
+        ).mapFeeToForceSingleFeeIfNeeded(cryptoCurrency)
+    }
+
+    private fun Either<GetFeeError, TransactionFee>.mapFeeToForceSingleFeeIfNeeded(
+        cryptoCurrency: CryptoCurrency,
+    ): Either<GetFeeError, TransactionFee> {
+        return this.map {
+            val blockchain = Blockchain.fromNetworkId(cryptoCurrency.network.backendId)
+            if (it is TransactionFee.Choosable && forceSingleFeeBlockchains.contains(blockchain)) {
+                TransactionFee.Single(normal = it.normal)
+            } else {
+                it
+            }
+        }
     }
 
     @Suppress("LongParameterList", "LongMethod")
@@ -2211,6 +2224,17 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         private val minDemoFee = "0.0001".toBigDecimal()
         private val normalDemoFee = "0.0002".toBigDecimal()
         private val priorityDemoFee = "0.0003".toBigDecimal()
+
+        private val forceSingleFeeBlockchains = listOf(
+            Bitcoin, BitcoinTestnet,
+            BitcoinCash, BitcoinCashTestnet,
+            Litecoin,
+            Dogecoin,
+            Dash,
+            Kaspa,
+            Ravencoin, RavencoinTestnet,
+            Ducatus,
+        )
     }
 
     @AssistedFactory
