@@ -17,7 +17,7 @@ internal object StakingStoreModule {
     @Provides
     @Singleton
     fun provideStakingTokensStore(): StakingYieldsStore {
-        return DefaultStakingYieldsStore()
+        return DefaultStakingYieldsStore(dataStore = RuntimeDataStore())
     }
 
     @Provides
