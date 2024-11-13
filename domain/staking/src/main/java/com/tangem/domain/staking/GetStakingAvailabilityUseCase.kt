@@ -16,7 +16,7 @@ class GetStakingAvailabilityUseCase(
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
 
-    operator fun invoke(
+    suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Either<StakingError, StakingAvailability> {
