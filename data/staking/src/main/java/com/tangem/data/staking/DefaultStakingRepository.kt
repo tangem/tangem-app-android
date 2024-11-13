@@ -647,7 +647,7 @@ internal class DefaultStakingRepository(
 
         const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
 
-        val YIELDS_WATITING_TIMEOUT = 7.seconds
+        val YIELDS_WATITING_TIMEOUT = 15.seconds
 
         val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
 
