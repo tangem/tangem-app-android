@@ -23,6 +23,7 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
                 fullDescription = fullDescription,
                 insights = insights?.convert(),
                 metrics = metrics?.convert(),
+                securityData = securityData?.convert(),
                 links = links?.convert(),
                 pricePerformance = pricePerformance?.convert(),
                 exchangesAmount = exchangesAmount,
@@ -102,6 +103,23 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
             volume24h = volume24h,
             maxSupply = maxSupply,
             fullyDilutedValuation = fullyDilutedValuation,
+        )
+    }
+
+    private fun TokenMarketInfoResponse.SecurityData.convert(): TokenMarketInfo.SecurityData {
+        return TokenMarketInfo.SecurityData(
+            totalSecurityScore = totalSecurityScore,
+            providerData = providerData.map { it.convert() },
+        )
+    }
+
+    private fun TokenMarketInfoResponse.ProviderData.convert(): TokenMarketInfo.ProviderData {
+        return TokenMarketInfo.ProviderData(
+            providerId = providerId,
+            providerName = providerName,
+            link = link,
+            securityScore = securityScore,
+            lastAuditDate = lastAuditDate,
         )
     }
 

@@ -23,7 +23,9 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.text.TooltipText
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
@@ -51,7 +53,7 @@ internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Mod
                 )
 
                 Text(
-                    text = state.description,
+                    text = state.description.resolveReference(),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                     maxLines = 1,
@@ -92,7 +94,7 @@ private fun Stars(@FloatRange(0.0, 1.0) fraction: Float = 0f) {
             ) {
                 Icon(
                     modifier = Modifier
-                        .requiredSize(13.dp)
+                        .requiredSize(16.dp)
                         .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                         .drawWithCache {
                             onDrawWithContent {
@@ -177,7 +179,7 @@ private fun ContentPreview() {
         SecurityScoreBlock(
             state = SecurityScoreUM(
                 score = 3.5f,
-                description = "Based on 3 ratings",
+                description = stringReference("Based on 3 ratings"),
                 onInfoClick = {},
             ),
         )

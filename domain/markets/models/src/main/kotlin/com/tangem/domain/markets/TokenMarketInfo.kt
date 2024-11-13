@@ -12,6 +12,7 @@ data class TokenMarketInfo(
     val fullDescription: String?,
     val insights: Insights?,
     val metrics: Metrics?,
+    val securityData: SecurityData?,
     val links: Links?,
     val pricePerformance: PricePerformance?,
     val exchangesAmount: Int?,
@@ -49,6 +50,19 @@ data class TokenMarketInfo(
         val volume24h: BigDecimal?,
         val maxSupply: BigDecimal?,
         val fullyDilutedValuation: BigDecimal?,
+    )
+
+    data class SecurityData(
+        val totalSecurityScore: Float,
+        val providerData: List<ProviderData>,
+    )
+
+    data class ProviderData(
+        val providerId: String,
+        val providerName: String,
+        val link: String?,
+        val securityScore: Float?,
+        val lastAuditDate: String?,
     )
 
     data class Links(

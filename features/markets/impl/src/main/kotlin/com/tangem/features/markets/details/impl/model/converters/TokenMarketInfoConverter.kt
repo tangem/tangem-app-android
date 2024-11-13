@@ -46,7 +46,7 @@ internal class TokenMarketInfoConverter(
         val exchangesAmount = value.exchangesAmount
         return MarketsTokenDetailsUM.InformationBlocks(
             insights = value.insights?.let { insightsConverter.convert(it) },
-            securityScore = null,
+            securityScore = value.securityData?.let { securityScoreConverter.convert(it) },
             metrics = value.metrics?.let { metricsConverter.convert(it) },
             pricePerformance = value.pricePerformance?.let {
                 pricePerformanceConverter.convert(
