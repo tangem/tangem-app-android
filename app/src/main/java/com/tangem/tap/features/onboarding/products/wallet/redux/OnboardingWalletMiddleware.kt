@@ -196,11 +196,11 @@ private fun handleWalletAction(action: Action) {
     }
 }
 
-private fun handleFinishBackup(scanResponse: ScanResponse) {
+private fun handleFinishBackup(scanResponse: ScanResponse, userWallet: UserWallet? = null) {
     val backupState = store.state.onboardingWalletState.backupState
     val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
 
-    val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+    val userWalletId = userWallet?.walletId ?: UserWalletIdBuilder.scanResponse(scanResponse).build()
     if (backupState.hasRing && userWalletId != null) {
         scope.launch {
             store.inject(DaggerGraphState::walletsRepository).setHasWalletsWithRing(userWalletId = userWalletId)
@@ -208,6 +208,7 @@ private fun handleFinishBackup(scanResponse: ScanResponse) {
     }
 
     OnboardingHelper.saveWallet(
+        alreadyCreatedWallet = userWallet,
         scanResponse = updatedScanResponse,
         accessCode = backupState.accessCode,
         backupCardsIds = backupState.backupCardIds,
@@ -667,7 +668,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 Analytics.send(Onboarding.Finished())
 
                 store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
-                handleFinishBackup(requireNotNull(scanResponse))
+                handleFinishBackup(requireNotNull(scanResponse), userWallet)
                 delay(1000)
                 store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
             }
@@ -728,6 +729,7 @@ private suspend fun createUserWallet(scanResponse: ScanResponse, backupState: Ba
     return requireNotNull(
         value = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
             .backupCardsIds(backupState.backupCardIds.toSet())
+            .hasBackupError(backupState.hasBackupError)
             .build(),
         lazyMessage = { "User wallet not created" },
     )
