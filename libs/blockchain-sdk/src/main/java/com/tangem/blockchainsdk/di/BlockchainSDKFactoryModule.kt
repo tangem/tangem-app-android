@@ -10,7 +10,6 @@ import com.tangem.blockchainsdk.featuretoggles.DefaultBlockchainSDKFeatureToggle
 import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
 import com.tangem.blockchainsdk.store.DefaultRuntimeStore
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
-import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -45,14 +44,13 @@ internal object BlockchainSDKFactoryModule {
     @Provides
     @Singleton
     fun provideWalletManagerFactoryCreator(
-        authProvider: AuthProvider,
         tangemTechApi: TangemTechApi,
         appPreferencesStore: AppPreferencesStore,
         blockchainSDKLogger: BlockchainSDKLogger,
         featureTogglesManager: FeatureTogglesManager,
     ): WalletManagerFactoryCreator {
         return WalletManagerFactoryCreator(
-            accountCreator = DefaultAccountCreator(authProvider, tangemTechApi),
+            accountCreator = DefaultAccountCreator(tangemTechApi),
             blockchainDataStorage = DefaultBlockchainDataStorage(appPreferencesStore),
             blockchainSDKLogger = blockchainSDKLogger,
             blockchainSDKFeatureToggles = DefaultBlockchainSDKFeatureToggles(featureTogglesManager),
