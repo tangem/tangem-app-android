@@ -7,7 +7,7 @@ import java.math.BigDecimal
 @JsonClass(generateAdapter = true)
 data class YieldDTO(
     @Json(name = "id")
-    val id: String,
+    val id: String?,
     @Json(name = "token")
     val token: TokenDTO?,
     @Json(name = "tokens")
@@ -67,9 +67,9 @@ data class YieldDTO(
         @Json(name = "address")
         val address: String?,
         @Json(name = "status")
-        val status: ValidatorStatusDTO,
+        val status: ValidatorStatusDTO?,
         @Json(name = "name")
-        val name: String,
+        val name: String?,
         @Json(name = "image")
         val image: String?,
         @Json(name = "website")
@@ -83,7 +83,7 @@ data class YieldDTO(
         @Json(name = "votingPower")
         val votingPower: Double?,
         @Json(name = "preferred")
-        val preferred: Boolean,
+        val preferred: Boolean?,
     ) {
         @JsonClass(generateAdapter = true)
         enum class ValidatorStatusDTO {

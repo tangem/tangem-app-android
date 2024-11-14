@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных токенов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
+  <string name="action_buttons_swap_no_available_pair_notification_title">Нет доступных пар</string>
   <string name="action_buttons_you_want_to_receive">Вы хотите получить</string>
   <string name="action_buttons_you_want_to_swap">Вы хотите обменять</string>
   <string name="add_custom_token_choose_network">Выберите сеть</string>
@@ -311,7 +313,7 @@
   <string name="give_permission_current_transaction">Транзакция</string>
   <string name="give_permission_policy_type_footer">Укажите лимит доступа к выбранному токену</string>
   <string name="give_permission_rows_amount">Количество %s</string>
-  <string name="give_permission_staking_footer">Функция подтверждения необходима для предоставления другому адресу разрешения на использование определенного количества ваших токенов.По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту StakeKit разрешение использовать ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете осуществить стейкинг токена.</string>
+  <string name="give_permission_staking_footer">Функция подтверждения необходима для предоставления другому адресу разрешения на использование определенного количества ваших токенов. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту StakeKit разрешение использовать ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете осуществить стейкинг токена.</string>
   <string name="give_permission_staking_subtitle">Чтобы продолжить, вам необходимо разрешить смарт контракту Polygon использовать ваш %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">Чтобы продолжить, вам нужно разрешить смарт-контракту %1s использовать ваш %2s</string>
   <string name="give_permission_title">Дать разрешение</string>
@@ -569,7 +571,14 @@
   <string name="onboarding_wallet_info_title_fourth">Восстановление кода доступа</string>
   <string name="onboarding_wallet_info_title_second">Идентичные карты</string>
   <string name="onboarding_wallet_info_title_third">Код доступа</string>
+  <string name="onramp_country_search">Поиск по стране</string>
+  <string name="onramp_country_unavailable">Недоступно</string>
+  <string name="onramp_currency_search">Поиск по валюте</string>
+  <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
+  <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_pay_with">Оплата с</string>
+  <string name="onramp_residency_bottomsheet_country_not_supported">Наши сервисы недоступны в данной стране</string>
+  <string name="onramp_settings_title">Настройки</string>
   <string name="onramp_via">Через</string>
   <string name="organize_tokens_group">Группы</string>
   <string name="organize_tokens_sort_by_balance">По балансу</string>
@@ -761,6 +770,7 @@
   <string name="staking_notification_earn_rewards_text_weekly">Стейкайте безопасно и начинайте получать еженедельные награды.</string>
   <string name="staking_notification_earn_rewards_title">Получите награду за стейкинг</string>
   <string name="staking_notification_low_staked_balance_text">Оставшийся застейканный баланс будет слишком мал для вывода. Вам потребуется застейкать больше средств, чтобы достичь минимальной суммы для вывода.</string>
+  <string name="staking_notification_low_staked_balance_title">Низкий баланс стейкинга</string>
   <string name="staking_notification_network_error_text">Стейкинг временно недоступен из-за проблем в сети. Пожалуйста, попробуйте позже.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкинг в сети %1$s с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
@@ -793,6 +803,7 @@
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
+  <string name="staking_staked_amount">Застейканная сумма</string>
   <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать награду %2$s</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
   <string name="staking_tap_to_unlock_or_vote">Нажмите для разблокировки</string>
@@ -830,8 +841,9 @@
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
+  <string name="swapping_alert_cex_description_with_slippage">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %1$s от биржи обратно на адрес пользователя \n\nПроскальзывание провайдера составляет до %2$s</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
-  <string name="swapping_alert_slippage_description">Проскальзывание провайдера составляет до %s.</string>
+  <string name="swapping_alert_dex_description_with_slippage">В сумму включена комиссия провайдера сервиса. \n\nПроскальзывание провайдера составляет до %s</string>
   <string name="swapping_alert_title">Информация</string>
   <string name="swapping_approve_information_text">Подтверждения считаются отраслевым стандартом для всех децентрализованных бирж и защищают ваш кошелек от доступа со стороны смарт-контракта без вашего разрешения. По замыслу смарт-контракты не могут получить доступ к вашим токенам, если вы не одобрите доступ со своей стороны. «Разблокируя» свои токены, вы даете смарт-контракту 1inch разрешение тратить ваши активы. Майнеры сети получают компенсацию за газ (оплачиваемый вами) за запись этого действия в блокчейне. Как только разрешение будет предоставлено, вы сможете обменять свой токен.</string>
   <string name="swapping_approve_information_title">Подтвердить</string>
@@ -925,7 +937,7 @@
   <string name="wallet_connect_error_with_framework_message">Произошла непредвиденная ошибка. Сообщение ошибки: %s Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
   <string name="wallet_connect_error_wrong_card_selected">Неверная карта или кольцо выбрана в приложении Tangem</string>
   <string name="wallet_connect_failed_to_build_tx">Не удалось создать транзакцию из данных Dapp. Код: %s</string>
-  <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d. Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать - обратитесь в службу поддержки.</string>
+  <string name="wallet_connect_generic_error_with_code">Произошла непредвиденная ошибка. Код ошибки: %d. Попробуйте, пожалуйста, позже. Если проблема будет продолжать возникать — обратитесь в службу поддержки.</string>
   <string name="wallet_connect_no_sessions_message">Нет открытых сессий WalletConnect</string>
   <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
   <string name="wallet_connect_pairing_error">Не удалось создать пару WalletConnect: %1$s</string>
@@ -980,7 +992,7 @@
   <string name="warning_express_notification_invalid_reserve_amount_title">Сумма получения не может быть менее %s</string>
   <string name="warning_express_pair_unavailable_message">Это может произойти из-за того, что провайдер временно не предоставляет обмен выбранной вами пары. Пожалуйста, подождите некоторое время и попробуйте снова. (Код %s)</string>
   <string name="warning_express_pair_unavailable_title">Выбранная пара временно недоступна</string>
-  <string name="warning_express_refresh_required_title">Cервис временно недоступен</string>
+  <string name="warning_express_refresh_required_title">Сервис временно недоступен</string>
   <string name="warning_express_too_maximum_amount_title">Сумма для обмена должна быть не более %s</string>
   <string name="warning_express_too_minimal_amount_title">Сумма для обмена должна быть не менее %s</string>
   <string name="warning_express_wrong_amount_description">Пожалуйста, измените сумму для обмена</string>
@@ -1019,7 +1031,7 @@
   <string name="warning_solana_fee_message">Сеть Солана испытывает высокую нагрузку. Если Ваша транзакция не прошла в течение 2 минут, повторите её отправку.</string>
   <string name="warning_solana_fee_title">Оповещение сети Солана</string>
   <string name="warning_solana_rent_fee_message">Сеть Solana взимает арендную плату в размере %1$s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %2$s, чтобы не платить арендную плату.</string>
-  <string name="warning_some_networks_unreachable_message">Некоторые сети в настоящее время недоступны. Пожалуйста, повторите попытку позже.</string>
+  <string name="warning_some_networks_unreachable_message">Свайпните вниз для обновления или попробуйте позже.</string>
   <string name="warning_some_networks_unreachable_title">Некоторые сети недоступны</string>
   <string name="warning_testnet_card_message">Это Testnet карта. Он не может обрабатывать транзакции и используется только в целях тестирования и разработки.</string>
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
