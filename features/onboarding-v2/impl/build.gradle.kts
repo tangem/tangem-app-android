@@ -28,6 +28,8 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.core)
+    implementation(projects.domain.card)
+    implementation(projects.domain.wallets)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
@@ -54,6 +56,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
+    implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)
