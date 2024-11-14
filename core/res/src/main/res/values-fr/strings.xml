@@ -6,6 +6,8 @@
   <string name="action_buttons_swap_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à l\'échange</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Il n\'y a pas de token disponible pour échanger avec le token sélectionné. Veuillez en choisir un autre.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Aucune paire disponible</string>
+  <string name="action_buttons_you_want_to_receive">Vous souhaitez recevoir</string>
+  <string name="action_buttons_you_want_to_swap">Vous souhaitez échanger</string>
   <string name="add_custom_token_choose_network">Choisissez le réseau</string>
   <string name="add_custom_token_title">Ajouter un jeton personnalisé</string>
   <string name="add_tokens_title">Gérer les jetons</string>
@@ -740,7 +742,7 @@
   <string name="staking_details_warmup_period">Période d\'échauffement</string>
   <string name="staking_details_warmup_period_info">Le temps imparti pour activer la participation au staking.</string>
   <string name="staking_give_permission_fee_footer">Le réseau facturera des frais d’approbation de jeton pour vérifier que vous autorisez l’utilisation de votre jeton pour le jalonnement.</string>
-  <string name="staking_legal">En utilisant la fonctionnalité de staking, vous acceptez les  %1$s et %2$s du fournisseur</string>
+  <string name="staking_legal">En utilisant la fonctionnalité de staking, vous acceptez les %1$s et %2$s du fournisseur</string>
   <string name="staking_locked">Bloqué</string>
   <string name="staking_migrate">Migrer</string>
   <string name="staking_native">Native staking</string>
@@ -802,7 +804,7 @@
   <string name="staking_unbonding">Dissociation</string>
   <string name="staking_unlocked_locked">Débloquer</string>
   <string name="staking_unlocking">Déverrouillage</string>
-  <string name="staking_unstake_amount_requirement_error">Le montant à staker doit être au moins %s</string>
+  <string name="staking_unstake_amount_requirement_error">Le montant à destaker doit être au moins %s</string>
   <string name="staking_unstake_amount_validation_error">Le montant dépasse le solde misé</string>
   <string name="staking_unstaked">Non-staké</string>
   <string name="staking_unstaking">Unstaking</string>
@@ -882,6 +884,7 @@
   <string name="transaction_history_transaction_from_address">de : %s</string>
   <string name="transaction_history_transaction_to_address">à : %s</string>
   <string name="transaction_history_transaction_validator">validateur : %s</string>
+  <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Le montant minimum pour effectuer cette transaction est %1$s.</string>
   <string name="try_to_load_data_again_button_title">Réessayez</string>
   <string name="twin_error_same_card">Vous avez scanné la même carte. Pour créer un portefeuille jumeau, vous devez scanner la carte portant le numéro %d</string>
