@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
 /**
 [REDACTED_AUTHOR]
@@ -77,4 +78,43 @@ sealed class TokenScreenAnalyticsEvent(
         event = "Staking Clicked",
         params = mapOf("Token" to token),
     )
+
+    class NoticeActionInactive(token: String, tokenAction: TokenAction, reason: String) : TokenScreenAnalyticsEvent(
+        "Notice - Action Inactive",
+        params = buildMap {
+            put("Token", token)
+            put("Action", tokenAction.action)
+            if (reason.isNotEmpty()) {
+                put("Reason", reason)
+            }
+        },
+    ) {
+        sealed class TokenAction(val action: String) {
+            data object BuyAction : TokenAction("Buy")
+            data object SellAction : TokenAction("Sell")
+            data object SwapAction : TokenAction("Swap")
+            data object SendAction : TokenAction("Send")
+            data object ReceiveAction : TokenAction("Receive")
+        }
+    }
+
+    companion object {
+        private const val UNAVAILABLE = "Unavailable"
+        private const val EMPTY = "Empty"
+        private const val PENDING = "Pending"
+
+        fun ScenarioUnavailabilityReason.toReasonAnalyticsText(): String {
+            return when (this) {
+                is ScenarioUnavailabilityReason.BuyUnavailable -> UNAVAILABLE
+                is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
+                ScenarioUnavailabilityReason.None -> ""
+                is ScenarioUnavailabilityReason.NotExchangeable -> UNAVAILABLE
+                is ScenarioUnavailabilityReason.NotSupportedBySellService -> UNAVAILABLE
+                is ScenarioUnavailabilityReason.PendingTransaction -> PENDING
+                is ScenarioUnavailabilityReason.StakingUnavailable -> UNAVAILABLE
+                ScenarioUnavailabilityReason.UnassociatedAsset -> UNAVAILABLE
+                ScenarioUnavailabilityReason.Unreachable -> ""
+            }
+        }
+    }
 }
