@@ -17,7 +17,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -59,7 +58,6 @@ internal class TokenDetailsStateFactory(
     private val userWalletId: UserWalletId,
     stakingFeatureToggles: StakingFeatureToggles,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
-    getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     symbol: String,
     decimals: Int,
 ) {
@@ -69,7 +67,6 @@ internal class TokenDetailsStateFactory(
             clickIntents = clickIntents,
             networkHasDerivationUseCase = networkHasDerivationUseCase,
             getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
-            getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
         )
