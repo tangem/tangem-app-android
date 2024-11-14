@@ -6,6 +6,8 @@
   <string name="action_buttons_swap_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、スワップのために追加してください</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">選択したトークンと交換できるトークンがありません。別のトークンを選択してください。</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">利用可能なペアがありません</string>
+  <string name="action_buttons_you_want_to_receive">受け取りたい</string>
+  <string name="action_buttons_you_want_to_swap">交換したい</string>
   <string name="add_custom_token_choose_network">ネットワークを選択</string>
   <string name="add_custom_token_title">カスタムトークンの追加</string>
   <string name="add_tokens_title">トークンの管理</string>
@@ -445,6 +447,7 @@
   <string name="markets_token_details_price_performance">値動き</string>
   <string name="markets_token_details_repository">リポジトリ</string>
   <string name="markets_token_details_security_score">セキュリティ・スコア</string>
+  <string name="markets_token_details_security_score_description">トークンのセキュリティ・スコアとは、ブロックチェーンやトークンのセキュリティ・レベルを様々な要因に基づいて評価する指標で、以下の情報源から集計されます。</string>
   <string name="markets_token_details_social">ソーシャル</string>
   <string name="markets_token_details_total_supply">総供給量</string>
   <string name="markets_token_details_total_supply_description">特定の暗号資産に存在しうるコインまたはトークンの最大数</string>
@@ -794,7 +797,7 @@
   <string name="staking_unbonding">ステーキング解約中</string>
   <string name="staking_unlocked_locked">ロック解除</string>
   <string name="staking_unlocking">ロック解除中</string>
-  <string name="staking_unstake_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
+  <string name="staking_unstake_amount_requirement_error">ステーキング解除する金額は少なくとも%sである必要があります</string>
   <string name="staking_unstake_amount_validation_error">金額がステーキング残高を超えています</string>
   <string name="staking_unstaked">ステーキングされていない</string>
   <string name="staking_unstaking">ステーキング解除</string>
