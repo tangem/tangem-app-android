@@ -138,6 +138,8 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.CasperTestnet -> null
             Blockchain.Core -> null
             Blockchain.CoreTestnet -> null
+            Blockchain.Chiliz -> null
+            Blockchain.ChilizTestnet -> null
             Blockchain.Unknown -> null
             Blockchain.Xodex -> null
             Blockchain.Canxium -> null
