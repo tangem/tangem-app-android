@@ -112,7 +112,7 @@ class MockStakingRepository : StakingRepository {
         isAvailable = false,
     )
 
-    override fun getStakingAvailability(
+    override suspend fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability = StakingAvailability.Unavailable
