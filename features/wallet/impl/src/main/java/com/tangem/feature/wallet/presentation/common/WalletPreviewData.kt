@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
@@ -76,7 +77,7 @@ internal object WalletPreviewData {
                 isGrayscale = false,
                 showCustomBadge = false,
             ),
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "3 172,14 $"),
         )
     }
@@ -108,7 +109,7 @@ internal object WalletPreviewData {
                             tokenItemState = tokenItemDragState.copy(
                                 id = "${group.id}_token_$tokenNumber",
                                 titleState = TokenItemState.TitleState.Content(
-                                    text = "Token $tokenNumber from $networkNumber network",
+                                    text = stringReference(value = "Token $tokenNumber from $networkNumber network"),
                                 ),
                             ),
                             groupId = group.id,

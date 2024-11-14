@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.libs.auth)
     implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.core)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding.models)
