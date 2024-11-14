@@ -127,9 +127,11 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         "refcode" to Provider { EXPRESS_REF_CODE },
                         "version" to Provider { VERSION_NAME },
                         "platform" to Provider { "android" },
-                        "language" to Provider { Locale.getDefault().language },
-                        "timezone" to Provider { TimeZone.getDefault().displayName },
-                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}" },
+                        "language" to Provider { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                        "timezone" to Provider {
+                            TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+                        },
+                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
                     ),
                 ),
             )
@@ -146,9 +148,11 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         "card_public_key" to Provider { APP_CARD_PUBLIC_KEY },
                         "version" to Provider { VERSION_NAME },
                         "platform" to Provider { "android" },
-                        "language" to Provider { Locale.getDefault().language },
-                        "timezone" to Provider { TimeZone.getDefault().displayName },
-                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}" },
+                        "language" to Provider { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                        "timezone" to Provider {
+                            TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+                        },
+                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
                     ),
                 ),
             )
@@ -166,6 +170,17 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                     ),
                 ),
             )
+        }
+
+        private fun String.checkHeaderValueOrEmpty(): String {
+            for (i in this.indices) {
+                val c = this[i]
+                val charCondition = c == '\t' || c in '\u0020'..'\u007e'
+                if (!charCondition) {
+                    return ""
+                }
+            }
+            return this
         }
     }
 }
