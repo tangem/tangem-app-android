@@ -5,6 +5,7 @@ import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CRYPTO_FEE
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.CURRENCY_SPACE
 import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants.FORMAT_THRESHOLD
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 import com.tangem.utils.extensions.isNotWhitespace
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -16,6 +17,7 @@ open class BigDecimalCryptoFormat(
     val symbol: String,
     val decimals: Int,
     val locale: Locale = Locale.getDefault(),
+    val ignoreSymbolPosition: Boolean = false,
 ) : BigDecimalFormat {
 
     override fun invoke(value: BigDecimal): String = defaultAmount()(value)
@@ -48,11 +50,13 @@ fun BigDecimalFormatScope.crypto(
 
 fun BigDecimalFormatScope.crypto(
     cryptoCurrency: CryptoCurrency,
+    ignoreSymbolPosition: Boolean = false,
     locale: Locale = Locale.getDefault(),
 ): BigDecimalCryptoFormat {
     return BigDecimalCryptoFormat(
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
+        ignoreSymbolPosition = ignoreSymbolPosition,
         locale = locale,
     )
 }
@@ -60,19 +64,28 @@ fun BigDecimalFormatScope.crypto(
 // == Formatters ==
 
 fun BigDecimalCryptoFormat.defaultAmount() = BigDecimalFormat { value ->
-    val formatter = NumberFormat.getCurrencyInstance(locale).apply {
-        currency = usdCurrency
-        maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
-        minimumFractionDigits = 2
-        isGroupingUsed = true
-        roundingMode = RoundingMode.HALF_UP
+    if (ignoreSymbolPosition) {
+        val formatter = NumberFormat.getInstance(locale).apply {
+            maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
+            minimumFractionDigits = 2
+            isGroupingUsed = true
+            roundingMode = RoundingMode.HALF_UP
+        }
+        formatter.format(value) + NON_BREAKING_SPACE + symbol
+    } else {
+        val formatter = NumberFormat.getCurrencyInstance(locale).apply {
+            currency = usdCurrency
+            maximumFractionDigits = decimals.coerceAtMost(maximumValue = 8)
+            minimumFractionDigits = 2
+            isGroupingUsed = true
+            roundingMode = RoundingMode.HALF_UP
+        }
+        formatter.format(value)
+            .replaceFiatSymbolWithCrypto(
+                fiatCurrencySymbol = usdCurrency.getSymbol(locale),
+                cryptoCurrencySymbol = symbol,
+            )
     }
-
-    formatter.format(value)
-        .replaceFiatSymbolWithCrypto(
-            fiatCurrencySymbol = usdCurrency.getSymbol(locale),
-            cryptoCurrencySymbol = symbol,
-        )
 }
 
 fun BigDecimalCryptoFormat.shorted() = BigDecimalFormat { value ->
