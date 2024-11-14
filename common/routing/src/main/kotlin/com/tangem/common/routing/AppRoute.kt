@@ -219,16 +219,24 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Swap(
-        val currency: CryptoCurrency,
+        val currencyFrom: CryptoCurrency,
+        val currencyTo: CryptoCurrency? = null,
         val userWalletId: UserWalletId,
         val isInitialReverseOrder: Boolean = false,
-    ) : AppRoute(path = "/swap/${currency.id.value}/${userWalletId.stringValue}/$isInitialReverseOrder"),
+    ) : AppRoute(
+        path = "/swap" +
+            "/${currencyFrom.id.value}" +
+            "/${currencyTo?.id?.value}" +
+            "/${userWalletId.stringValue}" +
+            "/$isInitialReverseOrder",
+    ),
         RouteBundleParams {
 
         override fun getBundle(): Bundle = bundle(serializer())
 
         companion object {
-            const val CURRENCY_BUNDLE_KEY = "currency"
+            const val CURRENCY_FROM_KEY = "currencyFrom"
+            const val CURRENCY_TO_KEY = "currencyTo"
             const val USER_WALLET_ID_KEY = "userWalletId"
             const val IS_INITIAL_REVERSE_ORDER = "isInitialReverseOrder"
         }
@@ -287,7 +295,9 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data object Onramp : AppRoute(path = "/onramp")
+    data class Onramp(val currency: CryptoCurrency) : AppRoute(path = "/onramp/${currency.symbol}"), RouteBundleParams {
+        override fun getBundle(): Bundle = bundle(serializer())
+    }
 
     @Serializable
     data class BuyCrypto(
@@ -299,6 +309,14 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/sell_crypto/${userWalletId.stringValue}")
 
+    @Serializable
+    data class SwapCrypto(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/swap_crypto/${userWalletId.stringValue}")
+
     // Onboarding V2
-    data class Onboarding(val scanResponse: ScanResponse) : AppRoute(path = "/onboarding_v2")
+    data class Onboarding(
+        val scanResponse: ScanResponse,
+        val startFromBackup: Boolean,
+    ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}")
 }
