@@ -8,10 +8,6 @@
         "version": "5.18.0"
     },
     {
-        "name": "STAKING_ENABLED",
-        "version": "5.15.0"
-    },
-    {
         "name": "IS_ETHEREUM_EIP_1559_ENABLED",
         "version": "5.17.0"
     },
@@ -25,7 +21,7 @@
     },
     {
         "name": "MAIN_ACTION_BUTTONS_ENABLED",
-        "version": "undefined"
+        "version": "5.19.0"
     },
     {
         "name": "ONBOARDING_CODE_REFACTORING_ENABLED",
