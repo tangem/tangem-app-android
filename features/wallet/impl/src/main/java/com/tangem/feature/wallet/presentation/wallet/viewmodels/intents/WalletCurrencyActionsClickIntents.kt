@@ -81,6 +81,12 @@ interface WalletCurrencyActionsClickIntents {
     fun onExploreClick()
 
     fun onAnalyticsClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onMultiWalletBuyClick(userWalletId: UserWalletId)
+
+    fun onMultiWalletSellClick(userWalletId: UserWalletId)
+
+    fun onMultiWalletSwapClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LongParameterList", "LargeClass")
@@ -374,7 +380,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         appRouter.push(
             AppRoute.Swap(
-                currency = cryptoCurrencyStatus.currency,
+                currencyFrom = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
             ),
         )
@@ -430,6 +436,21 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 ),
             )
         }
+    }
+
+    override fun onMultiWalletSellClick(userWalletId: UserWalletId) {
+        // TODO [REDACTED_JIRA]
+        appRouter.push(route = AppRoute.SellCrypto(userWalletId = userWalletId))
+    }
+
+    override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
+        // TODO [REDACTED_JIRA]
+        appRouter.push(route = AppRoute.SwapCrypto(userWalletId = userWalletId))
+    }
+
+    override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {
+        // TODO [REDACTED_JIRA]
+        appRouter.push(route = AppRoute.BuyCrypto(userWalletId = userWalletId))
     }
 
     private fun openExplorer() {
