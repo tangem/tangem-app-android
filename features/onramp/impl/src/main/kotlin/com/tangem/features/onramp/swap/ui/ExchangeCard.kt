@@ -1,13 +1,12 @@
 package com.tangem.features.onramp.swap.ui
 
+import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -24,8 +23,10 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.rows.NetworkTitle
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onramp.impl.R
@@ -51,34 +52,41 @@ internal fun ExchangeCard(state: ExchangeCardUM, modifier: Modifier = Modifier) 
             ),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        NetworkTitle(
-            title = {
-                Text(
-                    text = state.titleReference.resolveReference(),
-                    color = TangemTheme.colors.text.tertiary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = TangemTheme.typography.subtitle2,
-                )
-            },
-            action = {
-                RemoveButton(hasRemoveButton = state.hasRemoveButton, onClick = {})
-            },
-        )
+        Title(titleReference = state.titleReference, removeButtonUM = state.removeButtonUM)
 
-        TokenItem(state = state.tokenItemState, isBalanceHidden = false)
+        AnimatedContent(targetState = state.tokenItemState, label = "TokenItem's changing ") {
+            TokenItem(state = it, isBalanceHidden = false)
+        }
     }
 }
 
 @Composable
-private fun RemoveButton(hasRemoveButton: Boolean, onClick: () -> Unit) {
-    AnimatedVisibility(visible = hasRemoveButton) {
+private fun Title(titleReference: TextReference, removeButtonUM: ExchangeCardUM.RemoveButtonUM?) {
+    NetworkTitle(
+        title = {
+            Text(
+                text = titleReference.resolveReference(),
+                color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = TangemTheme.typography.subtitle2,
+            )
+        },
+        action = { RemoveButton(state = removeButtonUM) },
+    )
+}
+
+@Composable
+private fun RemoveButton(state: ExchangeCardUM.RemoveButtonUM?) {
+    AnimatedVisibility(visible = state != null) {
+        state ?: return@AnimatedVisibility
+
         Text(
             text = stringResource(id = R.string.manage_tokens_remove),
             modifier = Modifier.clickable(
                 indication = ripple(bounded = false),
                 interactionSource = remember { MutableInteractionSource() },
-                onClick = onClick,
+                onClick = state.onClick,
             ),
             color = TangemTheme.colors.text.accent,
             maxLines = 1,
@@ -88,11 +96,17 @@ private fun RemoveButton(hasRemoveButton: Boolean, onClick: () -> Unit) {
     }
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_ExchangeCard(@PreviewParameter(ExchangeCardUMProvider::class) state: ExchangeCardUM) {
     TangemThemePreview {
-        ExchangeCard(state = state)
+        ExchangeCard(
+            state = state,
+            modifier = Modifier
+                .background(TangemTheme.colors.background.secondary)
+                .padding(16.dp),
+        )
     }
 }
 
@@ -101,14 +115,20 @@ private class ExchangeCardUMProvider : PreviewParameterProvider<ExchangeCardUM> 
     override val values: Sequence<ExchangeCardUM> = sequenceOf(
         ExchangeCardUM.Empty(
             titleReference = resourceReference(id = R.string.swapping_from_title),
-            onItemClick = {},
+            subtitleReference = resourceReference(id = R.string.action_buttons_you_want_to_swap),
         ),
-        ExchangeCardUM.Filled(
+        createFilled(removeButtonUM = null),
+        createFilled(removeButtonUM = ExchangeCardUM.RemoveButtonUM { }),
+    )
+
+    private fun createFilled(removeButtonUM: ExchangeCardUM.RemoveButtonUM?): ExchangeCardUM.Filled {
+        return ExchangeCardUM.Filled(
             titleReference = resourceReference(id = R.string.swapping_from_title),
+            removeButtonUM = removeButtonUM,
             tokenItemState = TokenItemState.Content(
                 id = "1",
                 iconState = CurrencyIconState.Locked,
-                titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Bitcoin")),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
                 subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
@@ -119,6 +139,6 @@ private class ExchangeCardUMProvider : PreviewParameterProvider<ExchangeCardUM> 
                 onItemClick = {},
                 onItemLongClick = {},
             ),
-        ),
-    )
+        )
+    }
 }
