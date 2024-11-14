@@ -16,7 +16,7 @@ internal sealed class InnerYieldBalanceState {
         val rewardsFiat: String,
         val rewardBlockType: RewardBlockType,
         val isActionable: Boolean,
-        val balance: ImmutableList<BalanceState>,
+        val balances: ImmutableList<BalanceState>,
     ) : InnerYieldBalanceState()
 
     data object Empty : InnerYieldBalanceState()

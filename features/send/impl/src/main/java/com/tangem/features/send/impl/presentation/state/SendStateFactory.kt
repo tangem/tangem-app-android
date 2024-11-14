@@ -44,7 +44,7 @@ internal class SendStateFactory(
             appCurrencyProvider = appCurrencyProvider,
             iconStateConverter = iconStateConverter,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
-            maxEnterAmountProvider = Provider { maxEnterAmountConverter.convert(cryptoCurrencyStatusProvider()) },
+            maxEnterAmount = maxEnterAmountConverter.convert(cryptoCurrencyStatusProvider()),
         )
     }
     private val recipientStateConverter by lazy(LazyThreadSafetyMode.NONE) {
