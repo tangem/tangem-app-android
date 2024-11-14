@@ -1,8 +1,11 @@
 package com.tangem.datasource.utils
 
+import android.os.Build
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.utils.Provider
 import com.tangem.utils.version.AppVersionProvider
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Presentation of request header
@@ -24,5 +27,8 @@ sealed class RequestHeader(vararg pairs: Pair<String, Provider<String>>) {
     class AppVersionPlatformHeaders(appVersionProvider: AppVersionProvider) : RequestHeader(
         "version" to Provider(appVersionProvider::versionName),
         "platform" to Provider { "android" },
+        "language" to Provider { Locale.getDefault().language },
+        "timezone" to Provider { TimeZone.getDefault().displayName },
+        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}" },
     )
 }
