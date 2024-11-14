@@ -43,6 +43,7 @@ dependencies {
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
+    implementation(projects.features.wallet.api)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)

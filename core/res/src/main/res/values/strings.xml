@@ -6,6 +6,8 @@
   <string name="action_buttons_swap_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for swap</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">There are no available tokens to swap with the selected token. Please choose another one.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No available pair</string>
+  <string name="action_buttons_you_want_to_receive">You want to Receive</string>
+  <string name="action_buttons_you_want_to_swap">You want to Swap</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
@@ -451,6 +453,7 @@
   <string name="markets_token_details_price_performance">Price performance</string>
   <string name="markets_token_details_repository">Repository</string>
   <string name="markets_token_details_security_score">Security score</string>
+  <string name="markets_token_details_security_score_description">Security score of a token is a metric that assesses the security level of a blockchain or token based on various factors and is compiled from the sources listed below.</string>
   <string name="markets_token_details_social">Social</string>
   <string name="markets_token_details_total_supply">Total supply</string>
   <string name="markets_token_details_total_supply_description">The maximum number of coins or tokens that can ever exist for a particular cryptocurrency</string>
