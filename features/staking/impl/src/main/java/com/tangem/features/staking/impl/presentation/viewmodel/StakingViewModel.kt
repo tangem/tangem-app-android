@@ -11,7 +11,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.common.ui.amountScreen.models.MaxEnterAmount
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.common.ui.notifications.NotificationUM
@@ -37,6 +37,7 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -73,6 +74,7 @@ import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstake
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
+import com.tangem.utils.extensions.orZero
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -93,6 +95,7 @@ internal class StakingViewModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
@@ -140,6 +143,7 @@ internal class StakingViewModel @Inject constructor(
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var processingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
+    private var minimumTransactionAmount: EnterAmountBoundary? = null
 
     private var innerRouter: InnerStakingRouter by Delegates.notNull()
     private var userWallet: UserWallet by Delegates.notNull()
@@ -153,14 +157,6 @@ internal class StakingViewModel @Inject constructor(
                 processingActions = processingActions,
             ).getOrElse { emptyList() }
         }
-
-    private val maxEnterAmount: MaxEnterAmount
-        get() =
-            MaxEnterAmount(
-                amount = uiState.value.balanceState?.cryptoAmount,
-                fiatAmount = uiState.value.balanceState?.fiatAmount,
-                fiatRate = cryptoCurrencyStatus.value.fiatRate,
-            )
 
     private var isInitialInfoAnalyticSent: Boolean = false
 
@@ -403,7 +399,14 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onAmountValueChange(value: String) {
-        stateController.update(AmountChangeStateTransformer(cryptoCurrencyStatus, value, yield))
+        stateController.update(
+            AmountChangeStateTransformer(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                minimumTransactionAmount = minimumTransactionAmount,
+                value = value,
+                yield = yield,
+            ),
+        )
     }
 
     override fun onAmountPasteTriggerDismiss() {
@@ -415,6 +418,7 @@ internal class StakingViewModel @Inject constructor(
         stateController.update(
             AmountMaxValueStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
+                minimumTransactionAmount = minimumTransactionAmount,
                 actionType = uiState.value.actionType,
                 yield = yield,
             ),
@@ -658,6 +662,7 @@ internal class StakingViewModel @Inject constructor(
     ) {
         AmountReduceByStateTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
+            minimumTransactionAmount = minimumTransactionAmount,
             value = AmountReduceByTransformer.ReduceByData(
                 reduceAmountBy = reduceAmountBy,
                 reduceAmountByDiff = reduceAmountByDiff,
@@ -670,6 +675,7 @@ internal class StakingViewModel @Inject constructor(
         stateController.update(
             AmountReduceToStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
+                minimumTransactionAmount = minimumTransactionAmount,
                 value = reduceAmountTo,
             ),
         )
@@ -833,6 +839,13 @@ internal class StakingViewModel @Inject constructor(
 
                         feeCryptoCurrencyStatus =
                             getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
+                        minimumTransactionAmount =
+                            getMinimumTransactionAmountSyncUseCase(userWalletId, status).getOrNull()?.let {
+                                EnterAmountBoundary(
+                                    amount = it,
+                                    fiatRate = status.value.fiatRate.orZero(),
+                                )
+                            }
                         cryptoCurrencyStatus = status
 
                         setupApprovalNeeded()
@@ -929,7 +942,6 @@ internal class StakingViewModel @Inject constructor(
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
                 balancesToShowProvider = Provider { balancesToShow },
-                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             SetConfirmationStateEmptyTransformer,
         )
@@ -946,7 +958,7 @@ internal class StakingViewModel @Inject constructor(
         stateController.updateAll(
             SetConfirmationStateInitTransformer(
                 isEnter = false,
-                isExplicitExit = balanceType == BalanceType.STAKED,
+                isExplicitExit = isExplicitExit(balanceType, pendingAction),
                 balanceState = balanceState,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 stakingApproval = stakingApproval,
@@ -963,14 +975,18 @@ internal class StakingViewModel @Inject constructor(
                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
-                maxEnterAmountProvider = Provider { maxEnterAmount },
             ),
             AmountChangeStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 value = amountValue,
+                minimumTransactionAmount = minimumTransactionAmount,
                 yield = yield,
             ),
         )
+    }
+
+    private fun isExplicitExit(balanceType: BalanceType, pendingAction: PendingAction?): Boolean {
+        return balanceType == BalanceType.STAKED && pendingAction?.type != StakingActionType.RESTAKE
     }
 
     private fun isAssentState(): Boolean {

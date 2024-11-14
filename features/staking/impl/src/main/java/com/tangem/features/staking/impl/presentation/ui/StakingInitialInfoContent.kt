@@ -128,18 +128,20 @@ private fun LazyListScope.activeStakingBlock(
     clickIntents: StakingClickIntents,
     isBalanceHidden: Boolean,
 ) {
-    val balances = (state.yieldBalance as? InnerYieldBalanceState.Data)?.balance
-    if (!balances.isNullOrEmpty()) {
-        item(key = STAKING_REWARD_BLOCK_KEY) {
-            Column(modifier = Modifier.animateItem()) {
-                StakingRewardBlock(
-                    yieldBalanceState = state.yieldBalance,
-                    onRewardsClick = clickIntents::openRewardsValidators,
-                    isBalanceHidden = isBalanceHidden,
-                )
-                SpacerH12()
-            }
+    val innerYieldBalanceState = state.yieldBalance as? InnerYieldBalanceState.Data ?: return
+
+    item(key = STAKING_REWARD_BLOCK_KEY) {
+        Column(modifier = Modifier.animateItem()) {
+            StakingRewardBlock(
+                yieldBalanceState = state.yieldBalance,
+                onRewardsClick = clickIntents::openRewardsValidators,
+                isBalanceHidden = isBalanceHidden,
+            )
+            SpacerH12()
         }
+    }
+
+    if (innerYieldBalanceState.balances.isNotEmpty()) {
         item(ACTIVE_STAKING_BLOCK_KEY) {
             Text(
                 text = stringResource(id = R.string.staking_your_stakes),
@@ -148,7 +150,7 @@ private fun LazyListScope.activeStakingBlock(
                 modifier = Modifier
                     .roundedShapeItemDecoration(
                         currentIndex = 0,
-                        lastIndex = 1 + state.yieldBalance.balance.lastIndex,
+                        lastIndex = 1 + state.yieldBalance.balances.lastIndex,
                         addDefaultPadding = false,
                     )
                     .fillMaxWidth()
@@ -162,10 +164,14 @@ private fun LazyListScope.activeStakingBlock(
             )
         }
         itemsIndexed(
-            items = state.yieldBalance.balance,
-            key = { _, balance ->
+            items = state.yieldBalance.balances,
+            key = { index, balance ->
                 // Staked balance does not have unique identifier.
-                balance.toString()
+                buildString {
+                    append(balance.hashCode())
+                    append("_")
+                    append(index)
+                }
             },
         ) { index, balance ->
             ActiveStakingBlock(
@@ -177,7 +183,7 @@ private fun LazyListScope.activeStakingBlock(
                     .animateItem()
                     .roundedShapeItemDecoration(
                         currentIndex = index + 1,
-                        lastIndex = state.yieldBalance.balance.lastIndex + 1,
+                        lastIndex = state.yieldBalance.balances.lastIndex + 1,
                         addDefaultPadding = false,
                     ),
             )
