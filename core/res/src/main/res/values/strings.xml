@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_buy_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for purchase</string>
+  <string name="action_buttons_sell_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for sell</string>
   <string name="action_buttons_swap_choose_token">Choose the Token</string>
+  <string name="action_buttons_swap_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for swap</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">There are no available tokens to swap with the selected token. Please choose another one.</string>
+  <string name="action_buttons_swap_no_available_pair_notification_title">No available pair</string>
   <string name="action_buttons_you_want_to_receive">You want to Receive</string>
   <string name="action_buttons_you_want_to_swap">You want to Swap</string>
   <string name="add_custom_token_choose_network">Choose network</string>
@@ -448,6 +453,7 @@
   <string name="markets_token_details_price_performance">Price performance</string>
   <string name="markets_token_details_repository">Repository</string>
   <string name="markets_token_details_security_score">Security score</string>
+  <string name="markets_token_details_security_score_description">Security score of a token is a metric that assesses the security level of a blockchain or token based on various factors and is compiled from the sources listed below.</string>
   <string name="markets_token_details_social">Social</string>
   <string name="markets_token_details_total_supply">Total supply</string>
   <string name="markets_token_details_total_supply_description">The maximum number of coins or tokens that can ever exist for a particular cryptocurrency</string>
@@ -557,7 +563,12 @@
   <string name="onramp_country_search">Search by country</string>
   <string name="onramp_country_unavailable">Unavailable</string>
   <string name="onramp_currency_search">Search by currency</string>
+  <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
+  <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
+  <string name="onramp_no_available_providers">No available providers for this currency</string>
   <string name="onramp_pay_with">Pay with</string>
+  <string name="onramp_redirecting_to_provider_subtitle">You will be able to complete your transaction on the third-party provider, %s</string>
+  <string name="onramp_redirecting_to_provider_title">Redirecting to %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Our services are not available in this country</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Change or confirm it</string>
   <string name="onramp_residency_bottomsheet_title">Your residence has been identified as</string>
@@ -823,8 +834,9 @@
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
+  <string name="swapping_alert_cex_description_with_slippage">The amount includes:\n• service provider\'s fee\n• network fee for sending %1$s from the exchange back to the user\'s address. \n\nProvider slippage is up to %2$s</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
-  <string name="swapping_alert_slippage_description">Provider slippage is up to %s.</string>
+  <string name="swapping_alert_dex_description_with_slippage">The amount includes the service provider\'s fee. \n\nProvider slippage is up to %s</string>
   <string name="swapping_alert_title">Information</string>
   <string name="swapping_approve_information_text">All decentralized exchanges require approvals to prevent smart contracts from accessing your wallet without your permission. By design, smart contracts can\'t access your tokens unless you approve. By \"unlocking\" your tokens, you authorize the 1-inch smart contract to spend them. The network\'s miners receive a gas fee (paid by you) to record this action on the blockchain. You can swap your token after giving approval.</string>
   <string name="swapping_approve_information_title">Approve</string>
@@ -875,6 +887,7 @@
   <string name="transaction_history_transaction_from_address">from: %s</string>
   <string name="transaction_history_transaction_to_address">to: %s</string>
   <string name="transaction_history_transaction_validator">validator: %s</string>
+  <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">The minimum transaction amount is %1$s.</string>
   <string name="try_to_load_data_again_button_title">Try again</string>
   <string name="twin_error_same_card">You\'ve scanned the same card. To create a twin wallet you need to scan the card with number %d</string>
@@ -1011,7 +1024,7 @@
   <string name="warning_solana_fee_message">The Solana network is congested. If your transaction is not processed within 2 minutes, please repeat the transaction.</string>
   <string name="warning_solana_fee_title">Solana Network Alert</string>
   <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
-  <string name="warning_some_networks_unreachable_message">Some networks currently are unreachable. Please try again later.</string>
+  <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
