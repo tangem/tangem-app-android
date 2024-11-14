@@ -38,7 +38,6 @@ import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
@@ -147,7 +146,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val warningsJobHolder = JobHolder()
     private val swapTxJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
-    private val stakingPendingBalances: List<BalanceItem> = emptyList() // TODO staking
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
@@ -160,13 +158,11 @@ internal class TokenDetailsViewModel @Inject constructor(
         stakingEntryInfoProvider = Provider { stakingEntryInfo },
         stakingAvailabilityProvider = Provider { stakingAvailability },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-        pendingBalancesProvider = Provider { stakingPendingBalances },
         clickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
         getUserWalletUseCase = getUserWalletUseCase,
         userWalletId = userWalletId,
         getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
-        getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )

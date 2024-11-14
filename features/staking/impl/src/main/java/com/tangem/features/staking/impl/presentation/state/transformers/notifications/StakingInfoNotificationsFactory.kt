@@ -17,6 +17,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
@@ -26,12 +27,22 @@ internal class StakingInfoNotificationsFactory(
     private val isSubtractAvailable: Boolean,
 ) {
 
+    /**
+     * @param notifications current notification to display
+     * @param prevState     current screen state to update
+     * @param sendingAmount amount being transferred from user account
+     * @param actionAmount  any amount being transferred or used action
+     * @param feeValue      fee amount payed from user account
+     */
     fun addInfoNotifications(
         notifications: MutableList<NotificationUM>,
         prevState: StakingUiState,
         sendingAmount: BigDecimal,
+        actionAmount: BigDecimal,
         feeValue: BigDecimal,
     ) = with(notifications) {
+        addStakingLowBalanceNotification(prevState, actionAmount)
+
         when (prevState.actionType) {
             StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
             StakingActionCommonType.Exit -> addExitInfoNotifications()
@@ -75,7 +86,9 @@ internal class StakingInfoNotificationsFactory(
                 resourceReference(R.string.staking_restake) to
                     resourceReference(R.string.staking_notification_restake_rewards_text)
             }
-            StakingActionType.WITHDRAW -> {
+            StakingActionType.CLAIM_UNSTAKED,
+            StakingActionType.WITHDRAW,
+            -> {
                 resourceReference(R.string.staking_withdraw) to
                     resourceReference(R.string.staking_notification_withdraw_text)
             }
@@ -147,6 +160,23 @@ internal class StakingInfoNotificationsFactory(
 
         if (isEntireBalance && isSubtractAvailable) {
             add(StakingNotification.Info.StakeEntireBalance)
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addStakingLowBalanceNotification(
+        prevState: StakingUiState,
+        actionAmount: BigDecimal,
+    ) {
+        if (prevState.actionType != StakingActionCommonType.Exit) return
+
+        val maxAmount = prevState.balanceState?.cryptoAmount ?: return
+        val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT) ?: return
+
+        val amountLeft = maxAmount - actionAmount
+        val isNotEnoughLeft = !amountLeft.isZero() && amountLeft < exitRequirements.minimum.orZero()
+
+        if (exitRequirements.required && isNotEnoughLeft) {
+            add(StakingNotification.Warning.LowStakedBalance)
         }
     }
 }
