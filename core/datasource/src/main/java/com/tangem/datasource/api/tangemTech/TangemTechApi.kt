@@ -51,19 +51,11 @@ interface TangemTechApi {
 
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
-    suspend fun getReferralStatus(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
-        @Path("walletId") walletId: String,
-    ): ReferralResponse
+    suspend fun getReferralStatus(@Path("walletId") walletId: String): ReferralResponse
 
     /** Make user referral, requires [StartReferralBody] */
     @POST("referral")
-    suspend fun startReferral(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
-        @Body startReferralBody: StartReferralBody,
-    ): ReferralResponse
+    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ReferralResponse
 
     @GET("quotes")
     suspend fun getQuotes(
@@ -79,55 +71,35 @@ interface TangemTechApi {
     ): ApiResponse<PromotionInfoResponse>
 
     @GET("settings/{wallet_id}")
-    suspend fun getUserTokensSettings(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
-        @Path("wallet_id") walletId: String,
-    ): ApiResponse<UserTokensSettingsResponse>
+    suspend fun getUserTokensSettings(@Path("wallet_id") walletId: String): ApiResponse<UserTokensSettingsResponse>
 
     @PUT("settings/{wallet_id}")
     suspend fun saveUserTokensSettings(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
         @Path("wallet_id") walletId: String,
         @Body userTokensSettings: UserTokensSettingsResponse,
     ): ApiResponse<Unit>
 
     @POST("user-network-account")
     suspend fun createUserNetworkAccount(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
         @Body body: CreateUserNetworkAccountBody,
     ): ApiResponse<CreateUserNetworkAccountResponse>
 
     @POST("account")
     suspend fun createUserTokensAccount(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
         @Body body: CreateUserTokensAccountBody,
     ): ApiResponse<UserTokensAccountResponse>
 
     @PUT("account/{account_id}")
     suspend fun updateUserTokensAccount(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
         @Path("account_id") accountId: Int,
         @Body body: UpdateUserTokensAccountBody,
     ): ApiResponse<UserTokensAccountResponse>
 
     @PUT("account/{account_id}/archive")
-    suspend fun archiveUserTokensAccount(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
-        @Path("account_id") accountId: Int,
-    ): ApiResponse<UserTokensAccountResponse>
+    suspend fun archiveUserTokensAccount(@Path("account_id") accountId: Int): ApiResponse<UserTokensAccountResponse>
 
     @PUT("account/{account_id}/unarchive")
-    suspend fun restoreUserTokensAccount(
-        @Header("card_public_key") cardPublicKey: String,
-        @Header("card_id") cardId: String,
-        @Path("account_id") accountId: Int,
-    ): ApiResponse<UserTokensAccountResponse>
+    suspend fun restoreUserTokensAccount(@Path("account_id") accountId: Int): ApiResponse<UserTokensAccountResponse>
 
     @GET("features")
     suspend fun getFeatures(): ApiResponse<FeaturesResponse>
