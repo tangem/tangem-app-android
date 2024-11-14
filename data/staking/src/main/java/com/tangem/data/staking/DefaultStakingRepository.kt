@@ -55,7 +55,9 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
+import kotlin.time.Duration.Companion.seconds
 
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultStakingRepository(
@@ -131,7 +133,7 @@ internal class DefaultStakingRepository(
             val rawCurrencyId = cryptoCurrencyId.rawCurrencyId ?: error("Staking custom tokens is not available")
 
             val prefetchedYield = findPrefetchedYield(
-                yields = getEnabledYields(),
+                yields = getEnabledYieldsSync(),
                 currencyId = rawCurrencyId,
                 symbol = symbol,
             )
@@ -186,7 +188,7 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override fun getStakingAvailability(
+    override suspend fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
@@ -197,7 +199,7 @@ internal class DefaultStakingRepository(
         val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
 
         val prefetchedYield = findPrefetchedYield(
-            yields = getEnabledYields(),
+            yields = getEnabledYieldsSync(),
             currencyId = rawCurrencyId,
             symbol = cryptoCurrency.symbol,
         )
@@ -406,12 +408,22 @@ internal class DefaultStakingRepository(
             key = getYieldBalancesKey(userWalletId),
             skipCache = refresh,
             block = {
-                val yields = getEnabledYields().ifEmpty {
+                val yieldDTOs = withTimeoutOrNull(YIELDS_WATITING_TIMEOUT) {
+                    runCatching { stakingYieldsStore.get().firstOrNull() }.getOrNull()
+                }
+
+                if (yieldDTOs == null) {
                     Timber.i("No enabled yields for $userWalletId")
                     stakingBalanceStore.store(userWalletId, emptySet())
 
                     return@invokeOnExpire
                 }
+
+                val yields = yieldConverter.convertListIgnoreErrors(
+                    input = yieldDTOs,
+                    onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
+                )
+
                 val availableCurrencies = cryptoCurrencies
                     .mapNotNull { currency ->
                         val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
@@ -428,7 +440,6 @@ internal class DefaultStakingRepository(
                     }
                     .map { getBalanceRequestData(it.first.value, it.second) }
                     .ifEmpty {
-                        Timber.i("No yield balances available for $userWalletId")
                         stakingBalanceStore.store(userWalletId, emptySet())
 
                         cacheRegistry.invalidate(getYieldBalancesKey(userWalletId))
@@ -564,10 +575,10 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private fun getEnabledYields(): List<Yield> {
+    private suspend fun getEnabledYieldsSync(): List<Yield> {
         return yieldConverter.convertListIgnoreErrors(
-            input = stakingYieldsStore.get(),
-            onError = { Timber.e("Error converting enabled yields list: $it") },
+            input = stakingYieldsStore.getSync(),
+            onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
         )
     }
 
@@ -613,6 +624,8 @@ internal class DefaultStakingRepository(
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
 
         const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
+
+        val YIELDS_WATITING_TIMEOUT = 15.seconds
 
         val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
 
