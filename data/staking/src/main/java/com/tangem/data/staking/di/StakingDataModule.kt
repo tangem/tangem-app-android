@@ -18,7 +18,6 @@ import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.repositories.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -38,7 +37,6 @@ internal object StakingDataModule {
         stakingBalanceStore: StakingBalanceStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
-        stakingFeatureToggle: StakingFeatureToggles,
         walletManagersFacade: WalletManagersFacade,
         getUserWalletUseCase: GetUserWalletUseCase,
         @NetworkMoshi moshi: Moshi,
@@ -49,7 +47,6 @@ internal object StakingDataModule {
             stakingBalanceStore = stakingBalanceStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
-            stakingFeatureToggle = stakingFeatureToggle,
             walletManagersFacade = walletManagersFacade,
             getUserWalletUseCase = getUserWalletUseCase,
             moshi = moshi,
