@@ -6,6 +6,8 @@
   <string name="action_buttons_swap_empty_search_message">¿No encuentras el token en tu billetera? Consulte los mercados para encontrarlo y agregarlo al intercambio</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">No hay tokens disponibles para intercambiar con el token seleccionado. Por favor elige otro.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No hay par disponible</string>
+  <string name="action_buttons_you_want_to_receive">Desea recibir</string>
+  <string name="action_buttons_you_want_to_swap">Quiere intercambiar</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
@@ -740,7 +742,7 @@
   <string name="staking_details_warmup_period">Periodo de calentamiento</string>
   <string name="staking_details_warmup_period_info">El tiempo permitido para activar la participación en la apuesta.</string>
   <string name="staking_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que usted está autorizando el uso de su token para el staking.</string>
-  <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y  %2$s del proveedor</string>
+  <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y %2$s del proveedor</string>
   <string name="staking_locked">Bloqueado</string>
   <string name="staking_migrate">Migrar</string>
   <string name="staking_native">Native staking</string>
@@ -802,7 +804,7 @@
   <string name="staking_unbonding">Desunión</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unlocking">Desbloqueando</string>
-  <string name="staking_unstake_amount_requirement_error">El monto del staking debe ser al menos %s</string>
+  <string name="staking_unstake_amount_requirement_error">La cantidad para el unstaking debe ser al menos %s</string>
   <string name="staking_unstake_amount_validation_error">El monto excede el saldo apostado</string>
   <string name="staking_unstaked">Sin staking</string>
   <string name="staking_unstaking">Unstaking</string>
@@ -882,6 +884,7 @@
   <string name="transaction_history_transaction_from_address">desde: %s</string>
   <string name="transaction_history_transaction_to_address">a: %s</string>
   <string name="transaction_history_transaction_validator">validador: %s</string>
+  <string name="transfer_min_amount_error">Mínimo %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">El monto mínimo para realizar esta transacción es %1$s.</string>
   <string name="try_to_load_data_again_button_title">Inténtelo de nuevo</string>
   <string name="twin_error_same_card">Ha escaneado la misma tarjeta. Para crear una billetera gemela, necesite escanear la tarjeta con no. %d</string>
