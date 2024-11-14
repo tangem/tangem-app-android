@@ -6,6 +6,8 @@
   <string name="action_buttons_swap_empty_search_message">Токен не знайдено у вашому портфелі? Перевірте ринки, щоб знайти та додати його для обміну</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Немає доступних токенів для обміну з обраним токеном. Будь ласка, оберіть інший.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Немає вільної пари</string>
+  <string name="action_buttons_you_want_to_receive">Ви хочете отримати</string>
+  <string name="action_buttons_you_want_to_swap">Ви хочете обміняти</string>
   <string name="add_custom_token_choose_network">Оберіть мережу</string>
   <string name="add_custom_token_title">Додати токен</string>
   <string name="add_tokens_title">Токени</string>
@@ -184,6 +186,7 @@
   <string name="common_terms_of_use">Умовами використання</string>
   <string name="common_today">Сьогодні</string>
   <string name="common_transaction_failed">Помилка транзакції</string>
+  <string name="common_transaction_status">Статус транзакції</string>
   <string name="common_transactions">Транзакції</string>
   <string name="common_transfer">Переказ</string>
   <string name="common_understand">Я зрозумів</string>
@@ -191,6 +194,7 @@
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Скасувати стейкінг</string>
   <string name="common_week">тиждень</string>
+  <string name="common_with">з</string>
   <string name="common_yes">Так</string>
   <string name="contract_address_copied_message">Адреса контракту скопійована!</string>
   <string name="currency_subtitle_expanded">Доступні мережі</string>
@@ -463,6 +467,7 @@
   <string name="markets_token_details_price_performance">Цінова ефективність</string>
   <string name="markets_token_details_repository">Репозиторій</string>
   <string name="markets_token_details_security_score">Оцінка безпеки</string>
+  <string name="markets_token_details_security_score_description">Оцінка безпеки токена – це метрика, яка оцінює рівень безпеки блокчейну або токена на основі різних факторів і складається з джерел, перелічених нижче.</string>
   <string name="markets_token_details_social">Соцмережі</string>
   <string name="markets_token_details_total_supply">Загальна проп.</string>
   <string name="markets_token_details_total_supply_description">Максимальна кількість монет або токенів, яка може коли-небудь існувати для певної криптовалюти</string>
@@ -576,12 +581,18 @@
   <string name="onramp_country_search">Пошук за країною</string>
   <string name="onramp_country_unavailable">Недоступно</string>
   <string name="onramp_currency_search">Пошук по валюті</string>
+  <string name="onramp_max_amount_restriction">Сума покупки не може бути більше ніж %s</string>
+  <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
+  <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>
   <string name="onramp_pay_with">Оплата з</string>
+  <string name="onramp_redirecting_to_provider_subtitle">Ви зможете завершити транзакцію у стороннього постачальника, %s</string>
+  <string name="onramp_redirecting_to_provider_title">Перенаправлення на %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Наші сервіси недоступні в цій країні</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Змінити або підтвердити</string>
   <string name="onramp_residency_bottomsheet_title">Ваше місце проживання визначено як</string>
   <string name="onramp_settings_residence_description">Будь ласка, виберіть правильну країну, щоб забезпечити точні способи оплати та послуги.</string>
   <string name="onramp_settings_title">Параметри</string>
+  <string name="onramp_transaction_status_footer_text">Ви можете перевірити статус транзакції на сторінці токена</string>
   <string name="onramp_via">Через</string>
   <string name="organize_tokens_group">Групами</string>
   <string name="organize_tokens_sort_by_balance">За балансом</string>
@@ -732,7 +743,7 @@
   <string name="staking_amount_tron_integer_error_unstaking">Сума зняття зі стейкінгу буде округлена до %1$s TRX через мережеві правила.</string>
   <string name="staking_claim_unstaked">Зняти кошти</string>
   <string name="staking_details_account_fee">Комісія за стейкінг-акаунт</string>
-  <string name="staking_details_account_fee_info">Стейкінг-акаунт - це спеціальний рахунок, на якому зберігаються застейкані SOL токени. Він створюється, коли ви делегуєте свої токени валідатору для участі у перевірці транзакцій та отримання винагород. За створення стейкінг-акаунту стягується невелика комісія, яка повертається після завершення стейкінгу.</string>
+  <string name="staking_details_account_fee_info">Стейкінг-акаунт — це спеціальний рахунок, на якому зберігаються застейкані SOL токени. Він створюється, коли ви делегуєте свої токени валідатору для участі у перевірці транзакцій та отримання винагород. За створення стейкінг-акаунту стягується невелика комісія, яка повертається після завершення стейкінгу.</string>
   <string name="staking_details_annual_percentage_rate">Процентна ставка</string>
   <string name="staking_details_annual_percentage_rate_info">Річний відсоток, який ви можете отримати, беручи участь у стейкінгу.</string>
   <string name="staking_details_apr">APR</string>
@@ -818,7 +829,7 @@
   <string name="staking_unbonding">Розблокування</string>
   <string name="staking_unlocked_locked">Розблокувати</string>
   <string name="staking_unlocking">Розблокування</string>
-  <string name="staking_unstake_amount_requirement_error">Сума для стейкінгу має бути не менше %s</string>
+  <string name="staking_unstake_amount_requirement_error">Сума для виведення зі стейкінгу повинна бути не менше %s</string>
   <string name="staking_unstake_amount_validation_error">Сума перевищує баланс стейкінгу</string>
   <string name="staking_unstaked">Вивід зі стейкінгу</string>
   <string name="staking_unstaking">Зняти зі стейкінгу</string>
@@ -848,7 +859,7 @@
   <string name="swapping_alert_cex_description_with_slippage">У суму входить:\n- комісія провайдера\n- мережева комісія за відправку %1$s з біржі назад на адресу користувача. \n\nПроскакування провайдера становить до %2$s</string>
   <string name="swapping_alert_dex_description">Сума включає комісію постачальника послуг.</string>
   <string name="swapping_alert_dex_description_with_slippage">Сума включає комісію провайдера послуг. \n\nПроскакування провайдера до %s</string>
-  <string name="swapping_alert_title">Комісії</string>
+  <string name="swapping_alert_title">Інформація</string>
   <string name="swapping_approve_information_text">Всі децентралізовані біржі вимагають схвалення, щоб запобігти доступу смарт-контрактів до вашого гаманця без вашого дозволу. За задумом смарт-контракти не можуть отримати доступ до ваших токенів без вашого схвалення. \"Розблоковуючи\" свої токени, ви дозволяєте смарт-контракту 1inch витрачати ваші активи. Майнери мережі отримують плату за газ (сплачену вами), щоб зафіксувати цю дію в блокчейні. Ви можете обміняти свій токен після того, як дасте дозвіл.</string>
   <string name="swapping_approve_information_title">Підтвердити</string>
   <string name="swapping_fee_estimation_error_text">Помилка при розрахунку комісії. Будь ласка, надішліть відгук до служби підтримки.</string>
@@ -898,6 +909,7 @@
   <string name="transaction_history_transaction_from_address">від: %s</string>
   <string name="transaction_history_transaction_to_address">до: %s</string>
   <string name="transaction_history_transaction_validator">валідатор: %s</string>
+  <string name="transfer_min_amount_error">Мінімум %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Мінімальна сума транзакції становить %1$s.</string>
   <string name="try_to_load_data_again_button_title">Спробуйте знову</string>
   <string name="twin_error_same_card">Ви відсканували одну й ту саму картку. Для створення twin-гаманця вам потрібно відсканувати картку з номером %d</string>
