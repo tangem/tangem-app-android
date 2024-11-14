@@ -207,6 +207,10 @@ internal class DefaultLegacyWalletConnectRepository(
                 Timber.i("onSessionDelete: $sessionDelete")
             }
 
+            override fun onSessionExtend(session: Wallet.Model.Session) {
+                Timber.i("onSessionExtend: $session")
+            }
+
             override fun onSessionSettleResponse(settleSessionResponse: Wallet.Model.SettledSessionResponse) {
                 // Triggered when wallet receives the session settlement response from Dapp
                 Timber.i("onSessionSettleResponse: $settleSessionResponse")
@@ -264,8 +268,6 @@ internal class DefaultLegacyWalletConnectRepository(
     }
 
     override fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>) {
-        this.userNamespaces = userNamespaces
-
         val sessionProposal: Wallet.Model.SessionProposal = requireNotNull(this.sessionProposal)
 
         val userChains = userNamespaces.flatMap { namespace ->
