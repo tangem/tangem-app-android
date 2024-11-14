@@ -6,6 +6,8 @@
   <string name="action_buttons_swap_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es für Swaps zu finden und hinzuzufügen</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Es gibt keine verfügbaren Token, die mit dem ausgewählten Token getauscht werden können. Bitte wähle einen anderen.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Kein verfügbares Paar</string>
+  <string name="action_buttons_you_want_to_receive">Du möchtest erhalten</string>
+  <string name="action_buttons_you_want_to_swap">Du möchtest tauschen</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
@@ -260,7 +262,7 @@
   <string name="express_exchange_status_canceled">Abgebrochen</string>
   <string name="express_exchange_status_confirmed">Bestätigt</string>
   <string name="express_exchange_status_confirming">Bestätigen</string>
-  <string name="express_exchange_status_confirming_active">wird bestätigt...</string>
+  <string name="express_exchange_status_confirming_active">Wird bestätigt...</string>
   <string name="express_exchange_status_exchanged">Getauscht</string>
   <string name="express_exchange_status_exchanging">Tauschen läuft</string>
   <string name="express_exchange_status_exchanging_active">Austauschen...</string>
@@ -451,6 +453,7 @@
   <string name="markets_token_details_price_performance">Preisleistung</string>
   <string name="markets_token_details_repository">Aufbewahrungsort</string>
   <string name="markets_token_details_security_score">Sicherheitsbewertung</string>
+  <string name="markets_token_details_security_score_description">Der Security Score eines Tokens ist eine Metrik, die das Sicherheitsniveau einer Blockchain oder eines Tokens anhand verschiedener Faktoren bewertet und aus den unten aufgeführten Quellen zusammengestellt wird.</string>
   <string name="markets_token_details_social">Soziales</string>
   <string name="markets_token_details_total_supply">Gesamtangebot</string>
   <string name="markets_token_details_total_supply_description">Die maximale Anzahl von Coins oder Tokens, die jemals für eine bestimmte Kryptowährung existieren können</string>
@@ -565,7 +568,7 @@
   <string name="onramp_no_available_providers">Keine verfügbaren Anbieter für diese Währung</string>
   <string name="onramp_pay_with">Bezahlen mit</string>
   <string name="onramp_redirecting_to_provider_subtitle">Du kannst Deine Transaktion beim Drittanbieter %s abschließen.</string>
-  <string name="onramp_redirecting_to_provider_title">Umleitung auf %s...</string>
+  <string name="onramp_redirecting_to_provider_title">Umleitung auf %s …</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Unsere Dienstleistungen sind in diesem Land nicht verfügbar</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Änder oder bestätige bitte</string>
   <string name="onramp_residency_bottomsheet_title">Dein Wohnsitz wurde identifiziert als</string>
@@ -675,7 +678,7 @@
   <string name="send_notification_high_fee_text">Aufgrund der Besonderheiten des Netzes %1$s ist die Gebühr für die Überweisung des gesamten Guthabens höher. Um die Kommission zu reduzieren, Kannst du %2$s verlassen.</string>
   <string name="send_notification_high_fee_title">Die Gebühr ist höher</string>
   <string name="send_notification_invalid_amount_text">Die enthaltene Kommission übersteigt den Überweisungsbetrag, was zu einem negativen Wert führt</string>
-  <string name="send_notification_invalid_amount_title">ungültige Menge</string>
+  <string name="send_notification_invalid_amount_title">Ungültige Menge</string>
   <string name="send_notification_invalid_minimum_amount_text">Der Mindestbetrag für den Versand beträgt %1$s. Bitte stell sicher, dass der Restbetrag nach dem Versand nicht unter %2$s liegt.</string>
   <string name="send_notification_invalid_reserve_amount_text">Das Zielkonto wurde nicht erstellt. Bitte änder den zu sendenden Betrag.</string>
   <string name="send_notification_invalid_reserve_amount_title">Der zu sendende Betrag muss mindestens %s betragen</string>
@@ -804,7 +807,7 @@
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
   <string name="staking_unlocking">Entsperren</string>
-  <string name="staking_unstake_amount_requirement_error">Der unstaking-Betrag muss mindestens %s betragen.</string>
+  <string name="staking_unstake_amount_requirement_error">Der unstaking-Betrag muss mindestens %s betragen</string>
   <string name="staking_unstake_amount_validation_error">Der Betrag übersteigt das eingesetzte Guthaben</string>
   <string name="staking_unstaked">Unstaken</string>
   <string name="staking_unstaking">Staking beenden</string>
@@ -884,6 +887,7 @@
   <string name="transaction_history_transaction_from_address">von: %s</string>
   <string name="transaction_history_transaction_to_address">zu: %s</string>
   <string name="transaction_history_transaction_validator">Validierer: %s</string>
+  <string name="transfer_min_amount_error">Minimum %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Der Mindesttransaktionsbetrag beträgt %1$s.</string>
   <string name="try_to_load_data_again_button_title">Versuche es erneut</string>
   <string name="twin_error_same_card">Du hast dieselbe Karte oder Ring gescannt. Um ein Zwillings-Wallet zu erstellen, musst du die Karte oder Ring mit der Nummer %d scannen.</string>
