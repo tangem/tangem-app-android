@@ -1,10 +1,10 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.amount
 
+import androidx.annotation.StringRes
 import androidx.compose.ui.text.input.ImeAction
 import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -26,25 +26,18 @@ internal class AmountRequirementStateTransformer(
     private val actionType: StakingActionCommonType,
 ) : Transformer<AmountState> {
     override fun transform(prevState: AmountState): AmountState {
-        val amountRequirements = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]
-
-        return if (prevState is AmountState.Data && amountRequirements != null) {
+        return if (prevState is AmountState.Data) {
             updateWithError(
                 prevState,
                 actionType,
-                amountRequirements,
             )
         } else {
             prevState
         }
     }
 
-    private fun updateWithError(
-        amountState: AmountState.Data,
-        actionType: StakingActionCommonType,
-        amountRequirements: AddressArgument,
-    ): AmountState {
-        val isRequirementError = isRequirementError(amountState, amountRequirements)
+    private fun updateWithError(amountState: AmountState.Data, actionType: StakingActionCommonType): AmountState {
+        val requirementError = getRequirementError(amountState)
         val isIntegerOnlyError = isIntegerOnlyError(amountState, actionType)
 
         val cryptoAmount = amountState.amountTextField.cryptoAmount
@@ -53,14 +46,7 @@ internal class AmountRequirementStateTransformer(
 
         val errorText = when {
             amountState.amountTextField.isError -> amountState.amountTextField.error
-            isRequirementError -> resourceReference(
-                R.string.staking_amount_requirement_error,
-                wrappedList(
-                    amountRequirements.minimum.format {
-                        crypto(cryptoCurrencyStatus.currency)
-                    },
-                ),
-            )
+            requirementError != null -> requirementError
             isIntegerOnlyError -> when (actionType) {
                 StakingActionCommonType.Enter -> resourceReference(
                     R.string.staking_amount_tron_integer_error,
@@ -70,39 +56,43 @@ internal class AmountRequirementStateTransformer(
                     R.string.staking_amount_tron_integer_error_unstaking,
                     wrappedList(value),
                 )
-                else -> TODO()
+                else -> null
             }
-            else -> TextReference.EMPTY
+            else -> null
         }
-        val isError = amountState.amountTextField.isError || isRequirementError
-        return if (!errorText.isNullOrEmpty()) {
-            amountState.copy(
-                isPrimaryButtonEnabled = !isError,
-                amountTextField = amountState.amountTextField.copy(
-                    isError = isError,
-                    isWarning = isIntegerOnlyError,
-                    error = errorText,
-                    keyboardOptions = amountState.amountTextField.keyboardOptions.copy(
-                        imeAction = ImeAction.None,
-                    ),
+        val isError = amountState.amountTextField.isError || requirementError != null
+        return amountState.copy(
+            isPrimaryButtonEnabled = !isError,
+            amountTextField = amountState.amountTextField.copy(
+                isError = isError,
+                isWarning = isIntegerOnlyError,
+                error = errorText ?: amountState.amountTextField.error,
+                keyboardOptions = amountState.amountTextField.keyboardOptions.copy(
+                    imeAction = ImeAction.None,
                 ),
-            )
-        } else {
-            amountState
-        }
+            ),
+        )
     }
 
-    private fun isRequirementError(prevState: AmountState.Data, amountRequirements: AddressArgument): Boolean {
-        val amountDecimal = prevState.amountTextField.cryptoAmount.value ?: return false
+    private fun getRequirementError(prevState: AmountState.Data): TextReference? {
+        val amountDecimal = prevState.amountTextField.cryptoAmount.value ?: return null
 
         val isAlreadyErrorState = prevState.amountTextField.isError
-        val isAmountRequired = amountRequirements.required
         val isAmountZero = amountDecimal.isZero()
-        val isExceedsRequirements =
-            amountRequirements.maximum?.compareTo(amountDecimal) == -1 ||
-                amountRequirements.minimum?.compareTo(amountDecimal) == 1
 
-        return !isAmountZero && isAmountRequired && isExceedsRequirements && !isAlreadyErrorState
+        if (isAlreadyErrorState || isAmountZero) return null
+
+        return when (actionType) {
+            StakingActionCommonType.Enter -> {
+                val enterRequirements = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]
+                enterRequirements?.getError(amountDecimal, R.string.staking_amount_requirement_error)
+            }
+            StakingActionCommonType.Exit -> {
+                val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT)
+                exitRequirements?.getError(amountDecimal, R.string.staking_unstake_amount_requirement_error)
+            }
+            else -> null
+        }
     }
 
     private fun isIntegerOnlyError(amountState: AmountState.Data, actionType: StakingActionCommonType): Boolean {
@@ -114,6 +104,20 @@ internal class AmountRequirementStateTransformer(
         val isIntegerOnly = cryptoAmountValue.isZero() || cryptoAmountValue.remainder(BigDecimal.ONE).isZero()
 
         return isEnterOrExit && isTron && !isIntegerOnly
+    }
+
+    private fun AddressArgument.getError(amount: BigDecimal, @StringRes errorTextRes: Int): TextReference? {
+        val isExceedsRequirements = maximum?.compareTo(amount) == -1 ||
+            minimum?.compareTo(amount) == 1
+
+        return resourceReference(
+            errorTextRes,
+            wrappedList(
+                minimum.format {
+                    crypto(cryptoCurrencyStatus.currency)
+                },
+            ),
+        ).takeIf { required && isExceedsRequirements }
     }
 
     data class Data(
