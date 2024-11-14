@@ -105,6 +105,14 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                 }.saveIn(innerNavigationLinkJobHolder)
             }
         }
+
+        componentScope.launch {
+            model.titleProvider.currentTitle.collect { title ->
+                stepperComponent.state.update {
+                    it.copy(title = title)
+                }
+            }
+        }
     }
 
     @Composable
