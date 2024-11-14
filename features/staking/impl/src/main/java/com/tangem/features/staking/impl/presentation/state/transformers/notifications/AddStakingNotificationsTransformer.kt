@@ -107,6 +107,7 @@ internal class AddStakingNotificationsTransformer(
                 notifications = this,
                 prevState = prevState,
                 sendingAmount = sendingAmount,
+                actionAmount = amountValue,
                 feeValue = feeValue,
             )
         }.toImmutableList()
