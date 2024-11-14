@@ -166,7 +166,6 @@ internal class TokenDetailsViewModel @Inject constructor(
         userWalletId = userWalletId,
         stakingFeatureToggles = stakingFeatureToggles,
         getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
-        getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
         symbol = cryptoCurrency.symbol,
         decimals = cryptoCurrency.decimals,
     )
