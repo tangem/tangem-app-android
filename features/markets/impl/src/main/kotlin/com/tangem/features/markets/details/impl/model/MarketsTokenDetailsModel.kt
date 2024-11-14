@@ -531,10 +531,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
             showBottomSheet(content = ExchangesBottomSheetContent.Loading(exchangesCount))
 
-            // Delay to show the bottom sheet
-            delay(timeMillis = 800L)
-
             val maybeExchanges = getTokenExchangesUseCase(tokenId = params.token.id)
+
+            // Delay to show the bottom sheet
+            delay(timeMillis = 400L)
 
             updateExchangeBSContent(maybeExchanges = maybeExchanges, exchangesCount = exchangesCount)
         }
