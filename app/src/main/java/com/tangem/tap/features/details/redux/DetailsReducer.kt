@@ -109,8 +109,16 @@ private fun handlePrivacyAction(action: DetailsAction.AppSettings, state: Detail
                 isHidingEnabled = action.hideBalance,
             ),
         )
+        // state should be copied to avoid concurrent modifications from different sources
         is DetailsAction.AppSettings.Prepare -> state.copy(
-            appSettingsState = action.state,
+            appSettingsState = state.appSettingsState.copy(
+                saveWallets = action.state.saveWallets,
+                saveAccessCodes = action.state.saveAccessCodes,
+                isBiometricsAvailable = action.state.isBiometricsAvailable,
+                isHidingEnabled = action.state.isHidingEnabled,
+                selectedAppCurrency = action.state.selectedAppCurrency,
+                selectedThemeMode = action.state.selectedThemeMode,
+            ),
         )
         is DetailsAction.AppSettings.EnrollBiometrics,
         is DetailsAction.AppSettings.CheckBiometricsStatus,
