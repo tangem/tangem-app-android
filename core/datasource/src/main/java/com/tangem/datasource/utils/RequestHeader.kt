@@ -2,6 +2,7 @@ package com.tangem.datasource.utils
 
 import android.os.Build
 import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.utils.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
 import com.tangem.utils.Provider
 import com.tangem.utils.version.AppVersionProvider
 import java.util.Locale
@@ -27,8 +28,24 @@ sealed class RequestHeader(vararg pairs: Pair<String, Provider<String>>) {
     class AppVersionPlatformHeaders(appVersionProvider: AppVersionProvider) : RequestHeader(
         "version" to Provider(appVersionProvider::versionName),
         "platform" to Provider { "android" },
-        "language" to Provider { Locale.getDefault().language },
-        "timezone" to Provider { TimeZone.getDefault().displayName },
-        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}" },
+        "language" to Provider { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+        "timezone" to Provider {
+            TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+        },
+        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
     )
+
+    /**
+     * Use it to avoid crash in okhttp headers
+     */
+    fun String.checkHeaderValueOrEmpty(): String {
+        for (i in this.indices) {
+            val c = this[i]
+            val charCondition = c == '\t' || c in '\u0020'..'\u007e'
+            if (!charCondition) {
+                return ""
+            }
+        }
+        return this
+    }
 }
