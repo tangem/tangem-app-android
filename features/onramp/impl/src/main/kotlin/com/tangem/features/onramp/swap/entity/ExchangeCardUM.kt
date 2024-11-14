@@ -3,6 +3,7 @@ package com.tangem.features.onramp.swap.entity
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onramp.impl.R
 
 /**
@@ -15,8 +16,8 @@ internal sealed interface ExchangeCardUM {
     /** Title reference */
     val titleReference: TextReference
 
-    /** Flag that indicates if remove button should be shown  */
-    val hasRemoveButton: Boolean
+    /** Remove button UI model */
+    val removeButtonUM: RemoveButtonUM?
 
     /** Token item state */
     val tokenItemState: TokenItemState
@@ -24,25 +25,26 @@ internal sealed interface ExchangeCardUM {
     /**
      * Empty state
      *
-     * @property titleReference title reference
-     * @property onItemClick    callback which will be called when an item is clicked
+     * @property titleReference    title reference
+     * @property subtitleReference empty token subtitle reference
      */
     data class Empty(
         override val titleReference: TextReference,
-        val onItemClick: () -> Unit,
+        val subtitleReference: TextReference,
     ) : ExchangeCardUM {
 
-        override val hasRemoveButton: Boolean = false
+        override val removeButtonUM: RemoveButtonUM? = null
 
-        // TODO: [REDACTED_JIRA]
         override val tokenItemState: TokenItemState = TokenItemState.Content(
             id = "empty",
             iconState = CurrencyIconState.Empty(R.drawable.ic_empty_64),
-            titleState = TokenItemState.TitleState.Content(text = "Choose the Token"),
-            subtitleState = TokenItemState.SubtitleState.TextContent(value = "You want to Swap"),
+            titleState = TokenItemState.TitleState.Content(
+                text = resourceReference(id = R.string.action_buttons_swap_choose_token),
+            ),
+            subtitleState = TokenItemState.SubtitleState.TextContent(value = subtitleReference),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = ""),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = ""),
-            onItemClick = onItemClick,
+            onItemClick = null,
             onItemLongClick = null,
         )
     }
@@ -51,13 +53,14 @@ internal sealed interface ExchangeCardUM {
      * Filled
      *
      * @property titleReference title reference
+     * @property removeButtonUM remove button UI model
      * @property tokenItemState token item state
      */
     data class Filled(
         override val titleReference: TextReference,
+        override val removeButtonUM: RemoveButtonUM?,
         override val tokenItemState: TokenItemState,
-    ) : ExchangeCardUM {
+    ) : ExchangeCardUM
 
-        override val hasRemoveButton: Boolean = true
-    }
+    data class RemoveButtonUM(val onClick: () -> Unit)
 }

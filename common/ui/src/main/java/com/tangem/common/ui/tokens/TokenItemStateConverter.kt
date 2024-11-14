@@ -5,6 +5,7 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.marketprice.utils.PriceChangeConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
@@ -39,8 +40,8 @@ class TokenItemStateConverter(
     private val fiatAmountStateProvider: (CryptoCurrencyStatus) -> TokenItemState.FiatAmountState? = {
         createFiatAmountState(it, appCurrency)
     },
-    private val onItemClick: (CryptoCurrencyStatus) -> Unit,
-    private val onItemLongClick: ((CryptoCurrencyStatus) -> Unit)? = null,
+    private val onItemClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
+    private val onItemLongClick: ((TokenItemState, CryptoCurrencyStatus) -> Unit)? = null,
 ) : Converter<CryptoCurrencyStatus, TokenItemState> {
 
     override fun convert(value: CryptoCurrencyStatus): TokenItemState {
@@ -75,9 +76,11 @@ class TokenItemStateConverter(
             subtitleState = requireNotNull(subtitleStateProvider(this)),
             fiatAmountState = requireNotNull(fiatAmountStateProvider(this)),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = getFormattedAmount()),
-            onItemClick = { onItemClick(this) },
-            onItemLongClick = onItemLongClick?.let {
-                { it(this) }
+            onItemClick = onItemClick?.let { onItemClick ->
+                { onItemClick(it, this) }
+            },
+            onItemLongClick = onItemLongClick?.let { onItemLongClick ->
+                { onItemLongClick(it, this) }
             },
         )
     }
@@ -94,9 +97,11 @@ class TokenItemStateConverter(
             iconState = iconStateProvider(this),
             titleState = titleStateProvider(this),
             subtitleState = subtitleStateProvider(this),
-            onItemClick = { onItemClick(this) },
-            onItemLongClick = onItemLongClick?.let {
-                { it(this) }
+            onItemClick = onItemClick?.let { onItemClick ->
+                { onItemClick(it, this) }
+            },
+            onItemLongClick = onItemLongClick?.let { onItemLongClick ->
+                { onItemLongClick(it, this) }
             },
         )
     }
@@ -107,8 +112,8 @@ class TokenItemStateConverter(
             iconState = iconStateProvider(this),
             titleState = titleStateProvider(this),
             subtitleState = subtitleStateProvider(this),
-            onItemLongClick = onItemLongClick?.let {
-                { it(this) }
+            onItemLongClick = onItemLongClick?.let { onItemLongClick ->
+                { onItemLongClick(it, this) }
             },
         )
     }
@@ -122,7 +127,7 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
                 -> {
-                    TokenItemState.TitleState.Content(text = currencyStatus.currency.name)
+                    TokenItemState.TitleState.Content(text = stringReference(currencyStatus.currency.name))
                 }
                 is CryptoCurrencyStatus.Loaded,
                 is CryptoCurrencyStatus.Custom,
@@ -130,7 +135,7 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.TitleState.Content(
-                        text = currencyStatus.currency.name,
+                        text = stringReference(currencyStatus.currency.name),
                         hasPending = value.hasCurrentNetworkTransactions,
                     )
                 }
