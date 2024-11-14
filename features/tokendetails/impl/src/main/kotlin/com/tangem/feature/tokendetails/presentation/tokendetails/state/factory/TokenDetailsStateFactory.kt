@@ -17,11 +17,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.CardTypesResolver
-import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
@@ -53,13 +51,11 @@ internal class TokenDetailsStateFactory(
     private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
     private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
-    private val pendingBalancesProvider: Provider<List<BalanceItem>>,
     private val clickIntents: TokenDetailsClickIntents,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
-    getStakingAvailabilityUseCase: GetStakingAvailabilityUseCase,
     symbol: String,
     decimals: Int,
 ) {
@@ -69,7 +65,6 @@ internal class TokenDetailsStateFactory(
             clickIntents = clickIntents,
             networkHasDerivationUseCase = networkHasDerivationUseCase,
             getStakingIntegrationIdUseCase = getStakingIntegrationIdUseCase,
-            getStakingAvailabilityUseCase = getStakingAvailabilityUseCase,
             getUserWalletUseCase = getUserWalletUseCase,
             userWalletId = userWalletId,
         )
@@ -85,7 +80,6 @@ internal class TokenDetailsStateFactory(
             appCurrencyProvider = appCurrencyProvider,
             stakingEntryInfoProvider = stakingEntryInfoProvider,
             stakingAvailabilityProvider = stakingAvailabilityProvider,
-            pendingBalancesProvider = pendingBalancesProvider,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
