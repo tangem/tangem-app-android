@@ -4,6 +4,8 @@ import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.DefaultOnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.MultiWalletBackupModel
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model.MultiWalletCreateWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import dagger.Binds
 import dagger.Module
@@ -30,4 +32,14 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(OnboardingMultiWalletModel::class)
     fun provideModel(model: OnboardingMultiWalletModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(MultiWalletBackupModel::class)
+    fun provideModel2(model: MultiWalletBackupModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(MultiWalletCreateWalletModel::class)
+    fun provideModel3(model: MultiWalletCreateWalletModel): Model
 }
