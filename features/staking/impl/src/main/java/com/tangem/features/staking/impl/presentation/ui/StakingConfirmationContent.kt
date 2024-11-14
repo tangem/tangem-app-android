@@ -32,6 +32,7 @@ import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
 import com.tangem.features.staking.impl.presentation.ui.block.ValidatorBlock
 import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
 
+@Suppress("LongParameterList")
 @Composable
 internal fun StakingConfirmationContent(
     amountState: AmountState,
@@ -39,9 +40,10 @@ internal fun StakingConfirmationContent(
     validatorState: StakingStates.ValidatorState,
     clickIntents: StakingClickIntents,
     type: StakingActionCommonType,
+    isSolana: Boolean, // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
-    val isEnterAction = type == StakingActionCommonType.Enter
+    val isAmountEditable = type == StakingActionCommonType.Enter || type == StakingActionCommonType.Exit && !isSolana
     val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     val isTransactionInProgress = state.notifications.any { it is StakingNotification.Warning.TransactionInProgress }
     Column(
@@ -63,8 +65,8 @@ internal fun StakingConfirmationContent(
         }
         AmountBlock(
             amountState = amountState,
-            isClickDisabled = !isEnterAction || isTransactionSent || isTransactionInProgress,
-            isEditingDisabled = !isEnterAction && state.innerState != InnerConfirmationStakingState.COMPLETED,
+            isClickDisabled = !isAmountEditable || isTransactionSent || isTransactionInProgress,
+            isEditingDisabled = !isAmountEditable && state.innerState != InnerConfirmationStakingState.COMPLETED,
             onClick = clickIntents::onPrevClick,
         )
         ValidatorBlock(
@@ -89,6 +91,7 @@ private fun Preview_StakingConfirmationContent() {
                 validatorState = ValidatorStatePreviewData.validatorState,
                 clickIntents = StakingClickIntentsStub,
                 type = StakingActionCommonType.Enter,
+                isSolana = false,
             )
         }
     }
