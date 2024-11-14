@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
-import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.demo.DemoModeDatasource
@@ -24,7 +23,6 @@ internal class ReferralRepositoryImpl @Inject constructor(
     private val referralConverter: ReferralConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val demoModeDatasource: DemoModeDatasource,
-    private val authProvider: AuthProvider,
     private val userWalletsStore: UserWalletsStore,
 ) : ReferralRepository {
 
@@ -35,8 +33,6 @@ internal class ReferralRepositoryImpl @Inject constructor(
         return withContext(coroutineDispatcher.io) {
             referralConverter.convert(
                 referralApi.getReferralStatus(
-                    cardPublicKey = authProvider.getCardPublicKey(),
-                    cardId = authProvider.getCardId(),
                     walletId = walletId,
                 ),
             )
@@ -52,8 +48,6 @@ internal class ReferralRepositoryImpl @Inject constructor(
         return withContext(coroutineDispatcher.io) {
             referralConverter.convert(
                 referralApi.startReferral(
-                    cardPublicKey = authProvider.getCardPublicKey(),
-                    cardId = authProvider.getCardId(),
                     startReferralBody = StartReferralBody(
                         walletId = walletId,
                         networkId = networkId,
