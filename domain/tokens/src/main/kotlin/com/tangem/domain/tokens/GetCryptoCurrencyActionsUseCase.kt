@@ -298,7 +298,7 @@ class GetCryptoCurrencyActionsUseCase(
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
     }
 
-    private fun isStakingAvailable(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
+    private suspend fun isStakingAvailable(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
         return stakingRepository.getStakingAvailability(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
