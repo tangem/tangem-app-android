@@ -1,7 +1,9 @@
 package com.tangem.datasource.api.common.config.managers
 
+import android.os.Build
 import com.google.common.truth.Truth
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
@@ -18,16 +20,19 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
+import java.util.Locale
+import java.util.TimeZone
 
 private val configManager = MockEnvironmentConfigStorage()
 private val appVersionProvider = mockk<AppVersionProvider>()
 private val expressAuthProvider = mockk<ExpressAuthProvider>()
 private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
+private val appAuthProvider = mockk<AuthProvider>()
 
 // Don't forget to add new config !!!
 private val API_CONFIGS = setOf(
     Express(configManager, expressAuthProvider, appVersionProvider),
-    TangemTech(appVersionProvider),
+    TangemTech(appVersionProvider, appAuthProvider),
     StakeKit(stakeKitAuthProvider),
 )
 
@@ -46,6 +51,8 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
         every { expressAuthProvider.getRefCode() } returns EXPRESS_REF_CODE
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
+        every { appAuthProvider.getCardId() } returns APP_CARD_ID
+        every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
     }
 
     @Test
@@ -68,6 +75,8 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         const val EXPRESS_SESSION_ID = "express_session_id"
         const val EXPRESS_REF_CODE = "express_ref_code"
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
+        const val APP_CARD_ID = "app_card_id"
+        const val APP_CARD_PUBLIC_KEY = "app_public_key"
 
         @JvmStatic
         @Parameterized.Parameters
@@ -118,6 +127,9 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         "refcode" to Provider { EXPRESS_REF_CODE },
                         "version" to Provider { VERSION_NAME },
                         "platform" to Provider { "android" },
+                        "language" to Provider { Locale.getDefault().language },
+                        "timezone" to Provider { TimeZone.getDefault().displayName },
+                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}" },
                     ),
                 ),
             )
@@ -130,8 +142,13 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://api.tangem-tech.com/v1/",
                     headers = mapOf(
+                        "card_id" to Provider { APP_CARD_ID },
+                        "card_public_key" to Provider { APP_CARD_PUBLIC_KEY },
                         "version" to Provider { VERSION_NAME },
                         "platform" to Provider { "android" },
+                        "language" to Provider { Locale.getDefault().language },
+                        "timezone" to Provider { TimeZone.getDefault().displayName },
+                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}" },
                     ),
                 ),
             )
