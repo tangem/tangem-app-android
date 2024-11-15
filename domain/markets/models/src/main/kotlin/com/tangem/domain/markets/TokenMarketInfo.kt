@@ -61,7 +61,7 @@ data class TokenMarketInfo(
         val providerId: String,
         val providerName: String,
         val link: String?,
-        val securityScore: Float?,
+        val securityScore: Float,
         val lastAuditDate: String?,
     )
 

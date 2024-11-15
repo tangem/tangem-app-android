@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_buy_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、買付のために追加してください</string>
+  <string name="action_buttons_sell_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、売却のために追加してください</string>
   <string name="action_buttons_swap_choose_token">トークンを選択</string>
+  <string name="action_buttons_swap_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、スワップのために追加してください</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">選択したトークンと交換できるトークンがありません。別のトークンを選択してください。</string>
+  <string name="action_buttons_swap_no_available_pair_notification_title">利用可能なペアがありません</string>
   <string name="action_buttons_you_want_to_receive">受け取りたい</string>
   <string name="action_buttons_you_want_to_swap">交換したい</string>
   <string name="add_custom_token_choose_network">ネットワークを選択</string>
@@ -442,6 +447,7 @@
   <string name="markets_token_details_price_performance">値動き</string>
   <string name="markets_token_details_repository">リポジトリ</string>
   <string name="markets_token_details_security_score">セキュリティ・スコア</string>
+  <string name="markets_token_details_security_score_description">トークンのセキュリティ・スコアとは、ブロックチェーンやトークンのセキュリティ・レベルを様々な要因に基づいて評価する指標で、以下の情報源から集計されます。</string>
   <string name="markets_token_details_social">ソーシャル</string>
   <string name="markets_token_details_total_supply">総供給量</string>
   <string name="markets_token_details_total_supply_description">特定の暗号資産に存在しうるコインまたはトークンの最大数</string>
@@ -546,10 +552,21 @@
   <string name="onboarding_wallet_info_title_fourth">アクセスコードの復元</string>
   <string name="onboarding_wallet_info_title_second">同一のカード</string>
   <string name="onboarding_wallet_info_title_third">アクセスコード</string>
+  <string name="onramp_country_search">国で検索</string>
+  <string name="onramp_country_unavailable">利用不可</string>
+  <string name="onramp_currency_search">通貨で検索</string>
+  <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>
+  <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
+  <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
   <string name="onramp_pay_with">支払う</string>
+  <string name="onramp_redirecting_to_provider_subtitle">サードパーティプロバイダー%sで取引を完了できます。</string>
+  <string name="onramp_redirecting_to_provider_title">%sにリダイレクトしています...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">この国では当社のサービスはご利用いただけません</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">変更または確認</string>
   <string name="onramp_residency_bottomsheet_title">あなたの住居は次のように識別されています</string>
+  <string name="onramp_settings_residence">住居</string>
+  <string name="onramp_settings_residence_description">正確なお支払い方法とサービスを確保するため、正しい国を選択してください。</string>
+  <string name="onramp_settings_title">設定</string>
   <string name="onramp_via">経由</string>
   <string name="organize_tokens_group">グループ</string>
   <string name="organize_tokens_sort_by_balance">残高順</string>
@@ -734,6 +751,8 @@
   <string name="staking_notification_earn_rewards_text_period_week">ステーキングにより%1$sを獲得できます。ステーキング報酬は毎週受け取れます。</string>
   <string name="staking_notification_earn_rewards_text_weekly">安全にステーキングして、報酬を毎週獲得しましょう</string>
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
+  <string name="staking_notification_low_staked_balance_text">残りのステーキング残高が少なすぎてステーキングを解除できません。最小のステーキング解除残高を満たすには、さらにステーキングする必要があります。</string>
+  <string name="staking_notification_low_staked_balance_title">ステーキング残高が低いです</string>
   <string name="staking_notification_network_error_text">ネットワークの状態により、現在ステーキングはご利用いただけません。しばらくしてからもう一度お試しください。</string>
   <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターで%1$sネットワークにステーキングすると、以前にステーキングされた資金はすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
@@ -778,7 +797,7 @@
   <string name="staking_unbonding">ステーキング解約中</string>
   <string name="staking_unlocked_locked">ロック解除</string>
   <string name="staking_unlocking">ロック解除中</string>
-  <string name="staking_unstake_amount_requirement_error">ステーキング金額は %s 以上である必要があります</string>
+  <string name="staking_unstake_amount_requirement_error">ステーキング解除する金額は少なくとも%sである必要があります</string>
   <string name="staking_unstake_amount_validation_error">金額がステーキング残高を超えています</string>
   <string name="staking_unstaked">ステーキングされていない</string>
   <string name="staking_unstaking">ステーキング解除</string>
@@ -805,8 +824,9 @@
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
   <string name="swap_promo_title">新しいスワッププロバイダーが利用可能になりました！</string>
   <string name="swapping_alert_cex_description">この金額には以下が含まれます：\n- サービスプロバイダーの手数料\n- 取引所からユーザーのアドレスに%s を送り返すためのネットワーク手数料。</string>
+  <string name="swapping_alert_cex_description_with_slippage">金額には以下が含まれます: \n • サービス プロバイダーの手数料\n • 取引所からユーザーのアドレスに%1$sを送金するためのネットワーク手数料。 \n\nプロバイダーのスリッページは最大%2$sです</string>
   <string name="swapping_alert_dex_description">この金額には、サービスプロバイダーの手数料が含まれています。</string>
-  <string name="swapping_alert_slippage_description">プロバイダーのスリッページは最大%sです。</string>
+  <string name="swapping_alert_dex_description_with_slippage">金額にはサービスプロバイダーの手数料が含まれます。 \n\nプロバイダーのスリッページは最大%s です</string>
   <string name="swapping_alert_title">手数料</string>
   <string name="swapping_approve_information_text">すべての分散型取引所は、スマートコントラクトがあなたの許可なくウォレットにアクセスするのを防ぐために承認を必要とします。設計上、スマートコントラクトは承認なしでトークンにアクセスできません。トークンを「ロック解除」することで、あなたは1-inchのスマートコントラクトがトークンを使うことを承認します。ネットワークのマイナーは、このアクションをブロックチェーンに記録するためのガス料金（あなたが支払う）を受け取ります。承認後、トークンを交換することができます。</string>
   <string name="swapping_approve_information_title">承認</string>
@@ -857,6 +877,8 @@
   <string name="transaction_history_transaction_from_address">送金元: %s</string>
   <string name="transaction_history_transaction_to_address">送金先: %s</string>
   <string name="transaction_history_transaction_validator">バリデーター: %s</string>
+  <string name="transfer_min_amount_error">最小%s</string>
+  <string name="transfer_notification_invalid_minimum_transaction_amount_text">最小取引金額は%1$sです。</string>
   <string name="try_to_load_data_again_button_title">もう一度やり直してください</string>
   <string name="twin_error_same_card">同じカードをスキャンしました。ツインウォレットを作成するには、番号%dのカードをスキャンする必要があります。</string>
   <string name="twin_error_wrong_twin">間違ったツインカードをスキャンしました。別のカードをお試しください。</string>

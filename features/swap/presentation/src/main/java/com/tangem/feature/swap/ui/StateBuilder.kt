@@ -1117,7 +1117,8 @@ internal class StateBuilder(
                 add(stringReference("\n\n"))
                 add(
                     resourceReference(
-                        R.string.swapping_alert_slippage_description,
+                        // R.string.swapping_alert_slippage_description,
+                        error("swapping_alert_slippage_description resource is removed"),
                         wrappedList("${slippage.parseBigDecimal(1)}$PERCENT"),
                     ),
                 )

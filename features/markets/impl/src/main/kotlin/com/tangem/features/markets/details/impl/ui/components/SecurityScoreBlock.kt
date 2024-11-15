@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
@@ -37,8 +38,6 @@ private const val STARS_COUNT = 5
 
 @Composable
 internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Modifier) {
-    val rounded = state.score.roundTo1decimal()
-    val percentage = rounded / STARS_COUNT
     InformationBlock(
         modifier = modifier,
         title = {
@@ -62,20 +61,31 @@ internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Mod
             }
         },
         action = {
-            Row(
+            ScoreStarsBlock(
                 modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing6),
-                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = rounded.toString(),
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.primary1,
-                )
-                Stars(fraction = percentage)
-            }
+                score = state.score,
+                horizontalSpacing = TangemTheme.dimens.spacing8,
+            )
         },
     )
+}
+
+@Composable
+fun ScoreStarsBlock(score: Float, horizontalSpacing: Dp, modifier: Modifier = Modifier) {
+    val rounded = score.roundTo1decimal()
+    val percentage = rounded / STARS_COUNT
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = rounded.toString(),
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.primary1,
+        )
+        Stars(fraction = percentage)
+    }
 }
 
 @Suppress("MagicNumber")

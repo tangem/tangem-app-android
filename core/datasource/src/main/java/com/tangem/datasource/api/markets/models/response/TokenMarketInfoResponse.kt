@@ -163,7 +163,7 @@ data class TokenMarketInfoResponse(
         @Json(name = "link")
         val link: String?,
         @Json(name = "security_score")
-        val securityScore: Float?,
+        val securityScore: Float,
         @Json(name = "last_audit_date")
         val lastAuditDate: String?,
     )

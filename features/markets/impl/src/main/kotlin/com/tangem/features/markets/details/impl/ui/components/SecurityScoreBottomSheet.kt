@@ -1,0 +1,192 @@
+package com.tangem.features.markets.details.impl.ui.components
+
+import android.content.res.Configuration
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.util.fastForEachIndexed
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
+import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
+import com.tangem.core.ui.components.inputrow.inner.DividerContainer
+import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomSheetContent
+
+@Composable
+internal fun SecurityScoreBottomSheet(config: TangemBottomSheetConfig) {
+    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
+
+    TangemBottomSheet<SecurityScoreBottomSheetContent>(
+        config = config,
+        containerColor = TangemTheme.colors.background.secondary,
+        addBottomInsets = false,
+        title = { TangemBottomSheetTitle(title = it.title) },
+        content = { content ->
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = TangemTheme.dimens.spacing16),
+            ) {
+                Text(
+                    text = content.description.resolveReference(),
+                    style = TangemTheme.typography.body2.copy(
+                        color = TangemTheme.colors.text.secondary,
+                    ),
+                )
+
+                SpacerH12()
+                content.providers.fastForEachIndexed { index, provider ->
+                    DividerContainer(
+                        modifier = Modifier
+                            .roundedShapeItemDecoration(
+                                currentIndex = index,
+                                lastIndex = content.providers.lastIndex,
+                                addDefaultPadding = false,
+                            )
+                            .background(TangemTheme.colors.background.action),
+                        // .clickable { content.onOptionClicked(type) },
+                        showDivider = index != content.providers.lastIndex,
+                    ) {
+                        SecurityScoreProviderRow(
+                            providerUM = provider,
+                            onLinkClick = {},
+                        )
+                    }
+                }
+
+                SpacerH12()
+                SpacerH(bottomBarHeight)
+            }
+        },
+    )
+}
+
+@Composable
+private fun SecurityScoreProviderRow(
+    providerUM: SecurityScoreBottomSheetContent.SecurityScoreProviderUM,
+    onLinkClick: (String) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = TangemTheme.dimens.spacing12)
+            .heightIn(min = TangemTheme.dimens.size68),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SubcomposeAsyncImage(
+            modifier = Modifier
+                .size(size = TangemTheme.dimens.size40)
+                .clip(TangemTheme.shapes.roundedCorners8),
+            model = ImageRequest.Builder(context = LocalContext.current)
+                .data(providerUM.iconUrl)
+                .crossfade(enable = true)
+                .allowHardware(false)
+                .build(),
+            loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+            error = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
+            contentDescription = null,
+        )
+
+        Column(
+            modifier = Modifier
+                .padding(start = TangemTheme.dimens.spacing12),
+            horizontalAlignment = Alignment.Start,
+        ) {
+            Text(
+                text = providerUM.name,
+                style = TangemTheme.typography.subtitle2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            providerUM.lastAuditDate?.let {
+                Text(
+                    text = providerUM.lastAuditDate,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                )
+            }
+        }
+
+        SpacerWMax()
+
+        Column(horizontalAlignment = Alignment.End) {
+            ScoreStarsBlock(score = providerUM.score, horizontalSpacing = TangemTheme.dimens.spacing0)
+            providerUM.hostProviderUrl?.let {
+                Text(
+                    text = it,
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier.clickable { onLinkClick(providerUM.fullProviderUrl!!) },
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SecurityScoreBottomSheetPreview() {
+    TangemThemePreview {
+        SecurityScoreBottomSheet(
+            config = TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = {},
+                content = SecurityScoreBottomSheetContent(
+                    title = stringReference("Security score"),
+                    description = stringReference(
+                        "Security score of a token is a metric that assesses the " +
+                            "security level of a blockchain or token based on various factors and is compiled from " +
+                            "the sources listed below.",
+                    ),
+                    providers = listOf(
+                        SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
+                            name = "Moralis",
+                            lastAuditDate = "21.10.2024",
+                            score = 4.9F,
+                            fullProviderUrl = "https://moralis.com/",
+                            hostProviderUrl = "moralis.com",
+                            iconUrl = "",
+                        ),
+                        SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
+                            name = "Certik",
+                            lastAuditDate = "10.07.2024",
+                            score = 4.6F,
+                            fullProviderUrl = "https://certik.com/",
+                            hostProviderUrl = "certik.com",
+                            iconUrl = "",
+                        ),
+                        SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
+                            name = "Cyberscope",
+                            lastAuditDate = "25.06.2024",
+                            score = 4.5F,
+                            fullProviderUrl = "https://cyberscope.com/",
+                            hostProviderUrl = "moralis.com",
+                            iconUrl = "",
+                        ),
+                    ),
+                    onProviderLinkClick = {},
+                ),
+            ),
+        )
+    }
+}
