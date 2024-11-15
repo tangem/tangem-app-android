@@ -9,7 +9,6 @@ import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomShee
 import com.tangem.features.markets.details.impl.ui.state.SecurityScoreUM
 import com.tangem.features.markets.impl.R
 import com.tangem.utils.converter.Converter
-import java.net.URL
 
 @Stable
 internal class SecurityScoreConverter(
@@ -36,9 +35,13 @@ internal class SecurityScoreConverter(
                                 name = it.providerName,
                                 lastAuditDate = it.lastAuditDate,
                                 score = it.securityScore,
-                                fullProviderUrl = it.link,
-                                hostProviderUrl = it.link?.let { URL(it).host },
-                                iconUrl = "",
+                                urlData = it.urlData?.let {
+                                    SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                                        fullUrl = it.fullUrl,
+                                        rootHost = it.rootHost,
+                                    )
+                                },
+                                iconUrl = it.iconUrl,
                             )
                         },
                         onProviderLinkClick = onSecurityScoreProviderLinkClick,

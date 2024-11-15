@@ -1,15 +1,20 @@
 package com.tangem.data.markets.converters
 
+import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
+import com.tangem.domain.markets.BuildConfig
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenQuotes
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
 internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
+
+    private const val PROD_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/security_provider/"
+    private const val DEV_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api.dev/security_provider/"
 
     override fun convert(value: TokenMarketInfoResponse): TokenMarketInfo {
         return with(value) {
@@ -117,9 +122,17 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
         return TokenMarketInfo.ProviderData(
             providerId = providerId,
             providerName = providerName,
-            link = link,
+            urlData = link?.convertToUrlData(),
             securityScore = securityScore,
             lastAuditDate = lastAuditDate,
+            iconUrl = "${getImageHost()}large/$providerId.png",
+        )
+    }
+
+    private fun String.convertToUrlData(): TokenMarketInfo.ProviderUrlData {
+        return TokenMarketInfo.ProviderUrlData(
+            fullUrl = this,
+            rootHost = this.extractMainDomainOrNull(),
         )
     }
 
@@ -156,5 +169,28 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
             low = low,
             high = high,
         )
+    }
+
+    private fun String.extractMainDomainOrNull(): String? {
+        return runCatching {
+            val uri = Uri.parse(this)
+            val host = uri.host ?: return null
+
+            val parts = host.split(".")
+
+            if (parts.size >= 2) {
+                parts.takeLast(2).joinToString(".")
+            } else {
+                host
+            }
+        }.getOrNull()
+    }
+
+    private fun getImageHost(): String {
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
+            DEV_IMAGE_HOST
+        } else {
+            PROD_IMAGE_HOST
+        }
     }
 }

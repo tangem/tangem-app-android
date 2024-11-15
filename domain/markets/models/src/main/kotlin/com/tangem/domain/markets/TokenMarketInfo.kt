@@ -60,9 +60,15 @@ data class TokenMarketInfo(
     data class ProviderData(
         val providerId: String,
         val providerName: String,
-        val link: String?,
+        val urlData: ProviderUrlData?,
+        val iconUrl: String,
         val securityScore: Float,
         val lastAuditDate: String?,
+    )
+
+    data class ProviderUrlData(
+        val fullUrl: String,
+        val rootHost: String?,
     )
 
     data class Links(

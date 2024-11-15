@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEachIndexed
 import coil.compose.SubcomposeAsyncImage
@@ -30,6 +32,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomSheetContent
 
 @Composable
@@ -130,13 +133,26 @@ private fun SecurityScoreProviderRow(
 
         Column(horizontalAlignment = Alignment.End) {
             ScoreStarsBlock(score = providerUM.score, horizontalSpacing = TangemTheme.dimens.spacing0)
-            providerUM.hostProviderUrl?.let {
-                Text(
-                    text = it,
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.tertiary,
-                    modifier = Modifier.clickable { onLinkClick(providerUM.fullProviderUrl!!) },
-                )
+
+            val urlData = providerUM.urlData
+            val rootHost = urlData?.rootHost
+            if (urlData != null && rootHost != null) {
+                Row {
+                    Text(
+                        text = urlData.rootHost,
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.tertiary,
+                        modifier = Modifier.clickable { onLinkClick(urlData.fullUrl) },
+                    )
+                    Icon(
+                        modifier = Modifier
+                            .size(TangemTheme.dimens.size16)
+                            .padding(start = TangemTheme.dimens.spacing4),
+                        painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
+                        contentDescription = null,
+                        tint = TangemTheme.colors.icon.informative,
+                    )
+                }
             }
         }
     }
@@ -163,24 +179,30 @@ private fun SecurityScoreBottomSheetPreview() {
                             name = "Moralis",
                             lastAuditDate = "21.10.2024",
                             score = 4.9F,
-                            fullProviderUrl = "https://moralis.com/",
-                            hostProviderUrl = "moralis.com",
+                            urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                                fullUrl = "https://moralis.com/",
+                                rootHost = "moralis.com",
+                            ),
                             iconUrl = "",
                         ),
                         SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
                             name = "Certik",
                             lastAuditDate = "10.07.2024",
                             score = 4.6F,
-                            fullProviderUrl = "https://certik.com/",
-                            hostProviderUrl = "certik.com",
+                            urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                                fullUrl = "https://certik.com/",
+                                rootHost = "certik.com",
+                            ),
                             iconUrl = "",
                         ),
                         SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
                             name = "Cyberscope",
                             lastAuditDate = "25.06.2024",
                             score = 4.5F,
-                            fullProviderUrl = "https://cyberscope.com/",
-                            hostProviderUrl = "moralis.com",
+                            urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                                fullUrl = "https://cyberscope.com/",
+                                rootHost = "cyberscope.com",
+                            ),
                             iconUrl = "",
                         ),
                     ),

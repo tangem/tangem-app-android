@@ -14,8 +14,12 @@ internal data class SecurityScoreBottomSheetContent(
         val name: String,
         val lastAuditDate: String?,
         val score: Float,
-        val fullProviderUrl: String?,
-        val hostProviderUrl: String?,
+        val urlData: SecurityScoreProviderUrlData?,
         val iconUrl: String?,
+    )
+
+    data class SecurityScoreProviderUrlData(
+        val fullUrl: String,
+        val rootHost: String?,
     )
 }
