@@ -73,7 +73,7 @@ internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Mod
 }
 
 @Composable
-fun ScoreStarsBlock(score: Float, horizontalSpacing: Dp, scoreTextStyle: TextStyle, modifier: Modifier = Modifier,) {
+fun ScoreStarsBlock(score: Float, horizontalSpacing: Dp, scoreTextStyle: TextStyle, modifier: Modifier = Modifier) {
     val rounded = score.roundTo1decimal()
     val percentage = rounded / STARS_COUNT
     Row(

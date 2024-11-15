@@ -111,9 +111,9 @@ private fun SecurityScoreProviderRow(
         )
 
         Column(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing12),
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
             horizontalAlignment = Alignment.Start,
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
         ) {
             Text(
                 text = providerUM.name,
@@ -133,40 +133,49 @@ private fun SecurityScoreProviderRow(
 
         Column(
             horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
             modifier = Modifier.clickable(
                 enabled = providerUM.urlData != null,
                 indication = ripple(bounded = false),
                 interactionSource = remember { MutableInteractionSource() },
                 onClick = { providerUM.urlData?.let { onLinkClick(it.fullUrl) } },
             ),
-
         ) {
             ScoreStarsBlock(
                 score = providerUM.score,
                 scoreTextStyle = TangemTheme.typography.body2,
-                horizontalSpacing = TangemTheme.dimens.spacing2,
+                horizontalSpacing = TangemTheme.dimens.spacing3,
             )
 
-            val urlData = providerUM.urlData
-            val rootHost = urlData?.rootHost
-            if (urlData != null && rootHost != null) {
-                Row {
-                    Text(
-                        text = urlData.rootHost,
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
-                        modifier = Modifier.clickable { onLinkClick(urlData.fullUrl) },
-                    )
-                    Icon(
-                        modifier = Modifier
-                            .size(TangemTheme.dimens.size16)
-                            .padding(start = TangemTheme.dimens.spacing4),
-                        painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
-                        contentDescription = null,
-                        tint = TangemTheme.colors.icon.informative,
-                    )
-                }
-            }
+            UrlBlock(providerUM, onLinkClick)
+        }
+    }
+}
+
+@Composable
+private fun UrlBlock(
+    providerUM: SecurityScoreBottomSheetContent.SecurityScoreProviderUM,
+    onLinkClick: (String) -> Unit,
+) {
+    val urlData = providerUM.urlData
+    val rootHost = urlData?.rootHost
+    if (urlData != null && rootHost != null) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        ) {
+            Text(
+                text = urlData.rootHost,
+                style = TangemTheme.typography.caption2,
+                color = TangemTheme.colors.text.tertiary,
+                modifier = Modifier.clickable { onLinkClick(urlData.fullUrl) },
+            )
+            Icon(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size16),
+                painter = painterResource(id = R.drawable.ic_arrow_top_right_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.informative,
+            )
         }
     }
 }
@@ -208,16 +217,27 @@ private fun SecurityScoreBottomSheetPreview() {
                             ),
                             iconUrl = "",
                         ),
-                        // SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
-                        //     name = "Cyberscope",
-                        //     lastAuditDate = "25.06.2024",
-                        //     score = 4.5F,
-                        //     urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
-                        //         fullUrl = "https://cyberscope.com/",
-                        //         rootHost = "cyberscope.com",
-                        //     ),
-                        //     iconUrl = "",
-                        // ),
+                        SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
+                            name = "Cyberscope",
+                            lastAuditDate = "25.06.2023",
+                            score = 4.5F,
+                            urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                                fullUrl = "https://cyberscope.com/",
+                                rootHost = "cyberscope.com",
+                            ),
+                            iconUrl = "",
+                        ),
+                        SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
+                            name = "TokenInsight",
+                            lastAuditDate = "17.01.2022",
+                            score = 4.0F,
+                            urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                                fullUrl = "https://tokeninsight.com/",
+                                rootHost = "tokeninsight.com",
+                            ),
+                            iconUrl = "",
+                        ),
+
                     ),
                     onProviderLinkClick = {},
                 ),
