@@ -524,7 +524,7 @@
   <string name="onboarding_navbar_title_creating_backup">Резервна копія</string>
   <string name="onboarding_seed_button_read_more">Дізнатися більше про seed-фразу</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one">Запишіть це %d слово у порядку, вказаному нижче, та збережіть його у надійному місці.</item>
+    <item quantity="one"></item>
     <item quantity="few">Запишіть ці %d слова у порядку, вказаному нижче, та збережіть їх у надійному місці.</item>
     <item quantity="many">Запишіть ці %d слів у порядку, вказаному нижче, та збережіть їх у надійному місці.</item>
     <item quantity="other">Запишіть ці %d слів у порядку, вказаному нижче, та збережіть їх у надійному місці.</item>
