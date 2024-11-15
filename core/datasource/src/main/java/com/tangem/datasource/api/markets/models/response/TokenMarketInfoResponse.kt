@@ -2,6 +2,7 @@ package com.tangem.datasource.api.markets.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
@@ -165,7 +166,7 @@ data class TokenMarketInfoResponse(
         @Json(name = "security_score")
         val securityScore: Float,
         @Json(name = "last_audit_date")
-        val lastAuditDate: String?,
+        val lastAuditDate: DateTime?,
     )
 
     @JsonClass(generateAdapter = true)

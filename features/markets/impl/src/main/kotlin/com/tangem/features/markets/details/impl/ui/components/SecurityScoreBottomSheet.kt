@@ -67,12 +67,11 @@ internal fun SecurityScoreBottomSheet(config: TangemBottomSheetConfig) {
                                 addDefaultPadding = false,
                             )
                             .background(TangemTheme.colors.background.action),
-                        // .clickable { content.onOptionClicked(type) },
                         showDivider = index != content.providers.lastIndex,
                     ) {
                         SecurityScoreProviderRow(
                             providerUM = provider,
-                            onLinkClick = {},
+                            onLinkClick = content.onProviderLinkClick,
                         )
                     }
                 }
@@ -147,16 +146,13 @@ private fun SecurityScoreProviderRow(
                 horizontalSpacing = TangemTheme.dimens.spacing3,
             )
 
-            UrlBlock(providerUM, onLinkClick)
+            UrlBlock(providerUM)
         }
     }
 }
 
 @Composable
-private fun UrlBlock(
-    providerUM: SecurityScoreBottomSheetContent.SecurityScoreProviderUM,
-    onLinkClick: (String) -> Unit,
-) {
+private fun UrlBlock(providerUM: SecurityScoreBottomSheetContent.SecurityScoreProviderUM) {
     val urlData = providerUM.urlData
     val rootHost = urlData?.rootHost
     if (urlData != null && rootHost != null) {
@@ -167,7 +163,6 @@ private fun UrlBlock(
                 text = urlData.rootHost,
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.clickable { onLinkClick(urlData.fullUrl) },
             )
             Icon(
                 modifier = Modifier

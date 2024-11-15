@@ -5,6 +5,7 @@ import com.tangem.core.ui.extensions.pluralReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.markets.TokenMarketInfo
+import com.tangem.features.markets.details.impl.model.formatter.MarketsDateTimeFormatters
 import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.SecurityScoreUM
 import com.tangem.features.markets.impl.R
@@ -33,12 +34,15 @@ internal class SecurityScoreConverter(
                         providers = value.providerData.map {
                             SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
                                 name = it.providerName,
-                                lastAuditDate = it.lastAuditDate,
+                                lastAuditDate = it.lastAuditDate?.let { date ->
+                                    MarketsDateTimeFormatters.formatAsDate(date.millis)
+                                },
                                 score = it.securityScore,
                                 urlData = it.urlData?.let {
+                                        urlData ->
                                     SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
-                                        fullUrl = it.fullUrl,
-                                        rootHost = it.rootHost,
+                                        fullUrl = urlData.fullUrl,
+                                        rootHost = urlData.rootHost,
                                     )
                                 },
                                 iconUrl = it.iconUrl,

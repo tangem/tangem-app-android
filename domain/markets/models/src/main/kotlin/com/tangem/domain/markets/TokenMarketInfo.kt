@@ -1,5 +1,6 @@
 package com.tangem.domain.markets
 
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 data class TokenMarketInfo(
@@ -63,7 +64,7 @@ data class TokenMarketInfo(
         val urlData: ProviderUrlData?,
         val iconUrl: String,
         val securityScore: Float,
-        val lastAuditDate: String?,
+        val lastAuditDate: DateTime?,
     )
 
     data class ProviderUrlData(
