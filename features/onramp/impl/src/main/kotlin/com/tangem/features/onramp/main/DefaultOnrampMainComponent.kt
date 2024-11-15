@@ -16,6 +16,7 @@ import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
 import com.tangem.features.onramp.main.model.OnrampMainComponentModel
 import com.tangem.features.onramp.main.ui.OnrampMainComponentContent
+import com.tangem.features.onramp.selectcurrency.SelectCurrencyComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -24,6 +25,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: OnrampMainComponent.Params,
     private val confirmResidencyComponentFactory: ConfirmResidencyComponent.Factory,
+    private val selectCurrencyComponentFactory: SelectCurrencyComponent.Factory,
 ) : OnrampMainComponent, AppComponentContext by appComponentContext {
 
     private val model: OnrampMainComponentModel = getOrCreateModel(params)
@@ -53,6 +55,10 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 country = config.country,
                 onDismiss = { model.bottomSheetNavigation.dismiss() },
             ),
+        )
+        is OnrampMainBottomSheetConfig.CurrenciesList -> selectCurrencyComponentFactory.create(
+            context = childByContext(componentContext),
+            params = SelectCurrencyComponent.Params(model.bottomSheetNavigation::dismiss),
         )
     }
 
