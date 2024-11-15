@@ -2,7 +2,9 @@ package com.tangem.features.onramp.main.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -23,7 +25,7 @@ import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 @Composable
 internal fun OnrampMainComponentContent(state: OnrampMainComponentUM, modifier: Modifier = Modifier) {
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.imePadding(),
         contentWindowInsets = WindowInsetsZero,
         containerColor = TangemTheme.colors.background.secondary,
         topBar = {
@@ -42,7 +44,7 @@ internal fun OnrampMainComponentContent(state: OnrampMainComponentUM, modifier: 
                 .wrapContentHeight()
             when (state) {
                 is OnrampMainComponentUM.InitialLoading -> InitialLoading(modifier = contentModifier)
-                is OnrampMainComponentUM.Content -> Content(modifier = contentModifier)
+                is OnrampMainComponentUM.Content -> Content(modifier = contentModifier, state = state)
             }
         },
         floatingActionButton = {
@@ -85,8 +87,15 @@ private fun InitialLoading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Content(modifier: Modifier = Modifier) {
-    Box(modifier = modifier)
+private fun Content(state: OnrampMainComponentUM.Content, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .verticalScroll(rememberScrollState())
+            .navigationBarsPadding()
+            .padding(bottom = TangemTheme.dimens.spacing76),
+    ) {
+        OnrampAmountContent(state = state.amountBlockState)
+    }
 }
 
 @Composable

@@ -13,3 +13,6 @@ fun BigDecimal.isPositive(): Boolean = this.signum() == 1
 
 /** Removes trailing zeros and returns plain [String] */
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
+
+/** Compares two [BigDecimal] numbers */
+infix fun BigDecimal.isEqualTo(other: BigDecimal): Boolean = this.compareTo(other) == 0

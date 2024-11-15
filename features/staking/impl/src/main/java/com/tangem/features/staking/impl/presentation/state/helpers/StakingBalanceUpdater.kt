@@ -60,9 +60,6 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         coroutineScope {
             listOf(
                 async {
-                    updateStakeBalance()
-                },
-                async {
                     updateNetworkStatuses(delay = 0)
                 },
                 async {
@@ -77,6 +74,9 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
             listOf(
                 async {
                     updateStakeBalance()
+                },
+                async {
+                    updateProcessingActions()
                 },
             ).awaitAll()
         }

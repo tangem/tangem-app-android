@@ -47,6 +47,14 @@ sealed class NotificationUM(val config: NotificationConfig) {
             ),
         )
 
+        data class MinimumSendAmountError(val amount: String) : Error(
+            title = resourceReference(R.string.send_notification_invalid_amount_title),
+            subtitle = resourceReference(
+                R.string.transfer_notification_invalid_minimum_transaction_amount_text,
+                wrappedList(amount, amount),
+            ),
+        )
+
         data class TransactionLimitError(
             val cryptoCurrency: String,
             val utxoLimit: String,
