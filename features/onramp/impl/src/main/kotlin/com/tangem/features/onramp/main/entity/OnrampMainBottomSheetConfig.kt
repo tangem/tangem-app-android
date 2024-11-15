@@ -7,4 +7,7 @@ import kotlinx.serialization.Serializable
 internal sealed interface OnrampMainBottomSheetConfig {
     @Serializable
     data class ConfirmResidency(val country: OnrampCountry) : OnrampMainBottomSheetConfig
+
+    @Serializable
+    data object CurrenciesList : OnrampMainBottomSheetConfig
 }
