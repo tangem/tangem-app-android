@@ -107,6 +107,8 @@ object PreferencesKeys {
 
     val ONRAMP_DEFAULT_COUNTRY by lazy { stringPreferencesKey(name = "onrampDefaultCountry") }
 
+    val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
+
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
