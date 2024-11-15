@@ -63,7 +63,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
             OnrampChild.Main -> onrampMainComponentFactory.create(
                 context = childByContext(componentContext),
                 params = OnrampMainComponent.Params(
-                    currency = params.currency,
+                    cryptoCurrency = params.cryptoCurrency,
                     openSettings = { navigation.push(OnrampChild.Settings) },
                 ),
             )
