@@ -11,7 +11,7 @@ import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.entity.ConfirmResidencyBottomSheetConfig
+import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
