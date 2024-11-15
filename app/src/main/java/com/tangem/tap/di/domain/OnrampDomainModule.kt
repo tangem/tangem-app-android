@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.onramp.*
+import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import dagger.Module
 import dagger.Provides
@@ -46,6 +47,15 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideCheckOnrampAvailabilityUseCase(onrampRepository: OnrampRepository): CheckOnrampAvailabilityUseCase {
         return CheckOnrampAvailabilityUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampStatusUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampStatusUseCase {
+        return GetOnrampStatusUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
