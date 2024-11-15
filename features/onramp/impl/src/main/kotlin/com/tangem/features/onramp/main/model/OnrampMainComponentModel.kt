@@ -6,33 +6,42 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
+import com.tangem.domain.onramp.GetOnrampCurrencyUseCase
+import com.tangem.domain.onramp.model.OnrampAvailability
+import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.features.onramp.main.OnrampMainComponent
+import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
-import com.tangem.features.onramp.main.entity.transformer.OnrampAvailabilityTransformer
+import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
+import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
+import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.transformer.Transformer
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 internal class OnrampMainComponentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
+    private val getOnrampCurrencyUseCase: GetOnrampCurrencyUseCase,
     paramsContainer: ParamsContainer,
-) : Model() {
+) : Model(), OnrampIntents {
 
     private val params: OnrampMainComponent.Params = paramsContainer.require()
+    private val stateFactory = OnrampStateFactory(
+        currentStateProvider = Provider { _state.value },
+        cryptoCurrency = params.cryptoCurrency,
+        onrampIntents = this,
+    )
+    private val amountStateFactory = OnrampAmountStateFactory(currentStateProvider = Provider { _state.value })
+
     private val _state: MutableStateFlow<OnrampMainComponentUM> = MutableStateFlow(
-        value = OnrampMainComponentUM.InitialLoading(
-            currency = params.currency,
+        value = stateFactory.getInitialState(
+            currency = params.cryptoCurrency.name,
             onClose = router::pop,
-            openSettings = params.openSettings,
-            onBuyClick = ::onBuyClick,
         ),
     )
     val state: StateFlow<OnrampMainComponentUM> get() = _state.asStateFlow()
@@ -44,22 +53,50 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun checkResidenceCountry() {
         modelScope.launch {
-            OnrampAvailabilityTransformer(
-                maybeAvailabilityStatus = checkOnrampAvailabilityUseCase.invoke(),
-                openBottomSheet = ::openBottomSheet,
-            ).let(::updateState)
+            checkOnrampAvailabilityUseCase.invoke()
+                .onRight(::handleOnrampAvailability)
+                .onLeft { Timber.e(it) }
         }
     }
 
-    @Suppress("EmptyFunctionBlock")
-    private fun onBuyClick() {
+    private fun handleOnrampAvailability(availability: OnrampAvailability) {
+        when (availability) {
+            is OnrampAvailability.Available -> handleOnrampAvailable(availability.currency)
+            is OnrampAvailability.ConfirmResidency,
+            is OnrampAvailability.NotSupported,
+            -> bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.ConfirmResidency(availability.country))
+        }
     }
 
-    private fun openBottomSheet(config: OnrampMainBottomSheetConfig) {
-        bottomSheetNavigation.activate(config)
+    private fun handleOnrampAvailable(currency: OnrampCurrency) {
+        _state.update { stateFactory.getReadyState(currency) }
+        subscribeToCurrencyUpdates()
     }
 
-    private fun updateState(transformer: Transformer<OnrampMainComponentUM>) {
-        _state.update(transformer::transform)
+    private fun subscribeToCurrencyUpdates() {
+        getOnrampCurrencyUseCase.invoke()
+            .onEach { maybeCurrency ->
+                val currency = maybeCurrency.getOrNull()
+                if (currency != null) {
+                    _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
+                }
+            }
+            .launchIn(modelScope)
+    }
+
+    override fun onAmountValueChanged(value: String) {
+        _state.update { amountStateFactory.getOnAmountValueChange(value) }
+    }
+
+    override fun openSettings() {
+        params.openSettings()
+    }
+
+    override fun onBuyClick() {
+        TODO("Not yet implemented")
+    }
+
+    override fun openCurrenciesList() {
+        bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.CurrenciesList)
     }
 }
