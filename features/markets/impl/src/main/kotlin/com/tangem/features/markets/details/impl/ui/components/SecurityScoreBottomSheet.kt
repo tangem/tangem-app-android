@@ -3,12 +3,15 @@ package com.tangem.features.markets.details.impl.ui.components
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,10 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.util.fastForEachIndexed
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.components.SpacerH12
-import com.tangem.core.ui.components.SpacerWMax
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
@@ -77,7 +77,7 @@ internal fun SecurityScoreBottomSheet(config: TangemBottomSheetConfig) {
                     }
                 }
 
-                SpacerH12()
+                SpacerH16()
                 SpacerH(bottomBarHeight)
             }
         },
@@ -131,8 +131,21 @@ private fun SecurityScoreProviderRow(
 
         SpacerWMax()
 
-        Column(horizontalAlignment = Alignment.End) {
-            ScoreStarsBlock(score = providerUM.score, horizontalSpacing = TangemTheme.dimens.spacing0)
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.clickable(
+                enabled = providerUM.urlData != null,
+                indication = ripple(bounded = false),
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = { providerUM.urlData?.let { onLinkClick(it.fullUrl) } },
+            ),
+
+        ) {
+            ScoreStarsBlock(
+                score = providerUM.score,
+                scoreTextStyle = TangemTheme.typography.body2,
+                horizontalSpacing = TangemTheme.dimens.spacing2,
+            )
 
             val urlData = providerUM.urlData
             val rootHost = urlData?.rootHost
@@ -195,16 +208,16 @@ private fun SecurityScoreBottomSheetPreview() {
                             ),
                             iconUrl = "",
                         ),
-                        SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
-                            name = "Cyberscope",
-                            lastAuditDate = "25.06.2024",
-                            score = 4.5F,
-                            urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
-                                fullUrl = "https://cyberscope.com/",
-                                rootHost = "cyberscope.com",
-                            ),
-                            iconUrl = "",
-                        ),
+                        // SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
+                        //     name = "Cyberscope",
+                        //     lastAuditDate = "25.06.2024",
+                        //     score = 4.5F,
+                        //     urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                        //         fullUrl = "https://cyberscope.com/",
+                        //         rootHost = "cyberscope.com",
+                        //     ),
+                        //     iconUrl = "",
+                        // ),
                     ),
                     onProviderLinkClick = {},
                 ),

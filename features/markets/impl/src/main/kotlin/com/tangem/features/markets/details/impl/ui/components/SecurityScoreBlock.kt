@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -64,6 +65,7 @@ internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Mod
             ScoreStarsBlock(
                 modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing6),
                 score = state.score,
+                scoreTextStyle = TangemTheme.typography.body1,
                 horizontalSpacing = TangemTheme.dimens.spacing8,
             )
         },
@@ -71,7 +73,7 @@ internal fun SecurityScoreBlock(state: SecurityScoreUM, modifier: Modifier = Mod
 }
 
 @Composable
-fun ScoreStarsBlock(score: Float, horizontalSpacing: Dp, modifier: Modifier = Modifier) {
+fun ScoreStarsBlock(score: Float, horizontalSpacing: Dp, scoreTextStyle: TextStyle, modifier: Modifier = Modifier,) {
     val rounded = score.roundTo1decimal()
     val percentage = rounded / STARS_COUNT
     Row(
@@ -81,7 +83,7 @@ fun ScoreStarsBlock(score: Float, horizontalSpacing: Dp, modifier: Modifier = Mo
     ) {
         Text(
             text = rounded.toString(),
-            style = TangemTheme.typography.body1,
+            style = scoreTextStyle,
             color = TangemTheme.colors.text.primary1,
         )
         Stars(fraction = percentage)
