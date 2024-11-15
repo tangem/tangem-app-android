@@ -190,6 +190,7 @@
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
   <string name="common_week">неделю</string>
+  <string name="common_with">с</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -962,6 +963,9 @@
   <string name="wallet_network_group_title">Сеть %s</string>
   <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
   <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
+  <string name="wallet_promo_banner_button_title">Получить с 10%% скидкой</string>
+  <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменяйте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
+  <string name="wallet_promo_banner_title">Откройте Tangem Wallet </string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту/кольцо, чтобы разблокировать доступ к вашему кошельку</string>
