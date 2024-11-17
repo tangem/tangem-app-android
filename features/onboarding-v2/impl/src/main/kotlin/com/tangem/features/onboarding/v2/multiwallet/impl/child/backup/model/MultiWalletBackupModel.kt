@@ -49,7 +49,7 @@ class MultiWalletBackupModel @Inject constructor(
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,
-            -> getWallet1State()
+            -> getInitState()
             else -> error("Type: ${scanResponse.productType.name} is not supported!")
         },
     )
@@ -57,7 +57,7 @@ class MultiWalletBackupModel @Inject constructor(
     val uiState: StateFlow<MultiWalletBackupUM> = _uiState
     val eventFlow = MutableSharedFlow<MultiWalletBackupComponent.Event>()
 
-    private fun getWallet1State(): MultiWalletBackupUM {
+    private fun getInitState(): MultiWalletBackupUM {
         return when (backupService.currentState) {
             BackupService.State.Preparing -> {
                 MultiWalletBackupUM(
@@ -66,7 +66,7 @@ class MultiWalletBackupModel @Inject constructor(
                     finalizeButtonEnabled = false,
                     addBackupButtonEnabled = true,
                     addBackupButtonLoading = false,
-                    onAddBackupClick = ::startBackupWallet1,
+                    onAddBackupClick = ::startBackupWallet,
                     onFinalizeButtonClick = {},
                     onSkipButtonClick = {
                         // eventFlow.tryEmit(Unit)
@@ -79,7 +79,7 @@ class MultiWalletBackupModel @Inject constructor(
         }
     }
 
-    private fun startBackupWallet1() {
+    private fun startBackupWallet() {
         backupService.discardSavedBackup()
         val primaryCard = scanResponse.primaryCard
 
@@ -93,7 +93,7 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun setNumberOfBackupCards(number: Int) {
-        // set state for Wallet1 for adding backup cards and disable button if there is more than 2 backup cards
+        // set state for adding backup cards and disable button if there is more than 2 backup cards
         _uiState.update { st ->
             when (number) {
                 0 -> {
@@ -145,7 +145,6 @@ class MultiWalletBackupModel @Inject constructor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    // TODO change artwork
                     state.update {
                         it.copy(
                             backupCards = it.backupCards + result.data,
