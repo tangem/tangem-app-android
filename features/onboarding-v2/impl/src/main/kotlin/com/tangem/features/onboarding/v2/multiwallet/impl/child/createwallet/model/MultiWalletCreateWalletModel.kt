@@ -5,12 +5,15 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.state.MultiWalletCreateWalletUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -36,15 +39,29 @@ class MultiWalletCreateWalletModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         MultiWalletCreateWalletUM(
+            title = if (params.parentParams.withSeedPhraseFlow) {
+                resourceReference(R.string.onboarding_create_wallet_options_title)
+            } else {
+                resourceReference(R.string.onboarding_create_wallet_header)
+            },
+            bodyText = if (params.parentParams.withSeedPhraseFlow) {
+                resourceReference(R.string.onboarding_create_wallet_options_message)
+            } else {
+                resourceReference(R.string.onboarding_create_wallet_body)
+            },
             onCreateWalletClick = { createWallet(false) },
-            showSeedPhraseOption = params.parentParams.withSeedPhraseFlow,
-            onOtherOptionsClick = { /* navigate */ },
+            showOtherOptionsButton = params.parentParams.withSeedPhraseFlow,
+            onOtherOptionsClick = {
+                modelScope.launch {
+                    onDone.emit(OnboardingMultiWalletState.Step.SeedPhrase)
+                }
+            },
             dialog = null,
         ),
     )
 
     val uiState: StateFlow<MultiWalletCreateWalletUM> = _uiState
-    val onDone = MutableSharedFlow<Unit>()
+    val onDone = MutableSharedFlow<OnboardingMultiWalletState.Step>()
 
     private fun createWallet(shouldReset: Boolean) {
         modelScope.launch {
@@ -66,7 +83,13 @@ class MultiWalletCreateWalletModel @Inject constructor(
                     }
 
                     cardRepository.startCardActivation(cardId = result.data.card.cardId)
-                    onDone.emit(Unit)
+
+                    if (params.parentParams.withSeedPhraseFlow) {
+                        onDone.emit(OnboardingMultiWalletState.Step.AddBackupDevice)
+                    } else {
+                        onDone.emit(OnboardingMultiWalletState.Step.ChooseBackupOption)
+                    }
+
                     // TODO
                     // Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                 }

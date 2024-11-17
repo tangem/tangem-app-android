@@ -24,10 +24,7 @@ fun MultiWalletBackup(state: MultiWalletBackupUM, modifier: Modifier = Modifier)
             .fillMaxSize()
             .navigationBarsPadding(),
     ) {
-        when (state) {
-            is MultiWalletBackupUM.Wallet1 -> Wallet1Content(state)
-            is MultiWalletBackupUM.Wallet2 -> TODO()
-        }
+        Content(state)
     }
 
     val dialog = state.dialog
@@ -54,7 +51,7 @@ fun MultiWalletBackup(state: MultiWalletBackupUM, modifier: Modifier = Modifier)
 }
 
 @Composable
-private fun ColumnScope.Wallet1Content(state: MultiWalletBackupUM.Wallet1) {
+private fun ColumnScope.Content(state: MultiWalletBackupUM) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -62,8 +59,6 @@ private fun ColumnScope.Wallet1Content(state: MultiWalletBackupUM.Wallet1) {
             .weight(1f),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // artwork
-
         Text(
             text = state.title.resolveReference(),
             style = TangemTheme.typography.h2,
@@ -81,45 +76,25 @@ private fun ColumnScope.Wallet1Content(state: MultiWalletBackupUM.Wallet1) {
         )
     }
 
-    if (state.showFinalizeButton) {
-        SecondaryButtonIconEnd(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-                .fillMaxWidth(),
-            iconResId = R.drawable.ic_tangem_24,
-            enabled = state.addBackupButtonEnabled,
-            showProgress = state.addBackupButtonLoading,
-            text = stringResource(R.string.onboarding_button_add_backup_card),
-            onClick = state.onAddBackupClick,
-        )
+    SecondaryButtonIconEnd(
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
+            .fillMaxWidth(),
+        iconResId = R.drawable.ic_tangem_24,
+        enabled = state.addBackupButtonEnabled,
+        showProgress = state.addBackupButtonLoading,
+        text = stringResource(R.string.onboarding_button_add_backup_card),
+        onClick = state.onAddBackupClick,
+    )
 
-        PrimaryButton(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                .fillMaxWidth(),
-            text = stringResource(R.string.onboarding_button_finalize_backup),
-            onClick = state.onFinalizeButtonClick,
-        )
-    } else {
-        PrimaryButtonIconEnd(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
-                .fillMaxWidth(),
-            iconResId = R.drawable.ic_tangem_24,
-            enabled = state.addBackupButtonEnabled,
-            showProgress = state.addBackupButtonLoading,
-            text = stringResource(R.string.onboarding_button_add_backup_card),
-            onClick = state.onAddBackupClick,
-        )
-
-        SecondaryButton(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                .fillMaxWidth(),
-            text = stringResource(R.string.onboarding_button_skip_backup),
-            onClick = state.onSkipButtonClick,
-        )
-    }
+    PrimaryButton(
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+            .fillMaxWidth(),
+        text = stringResource(R.string.onboarding_button_finalize_backup),
+        enabled = state.finalizeButtonEnabled,
+        onClick = state.onFinalizeButtonClick,
+    )
 }
 
 @Preview
@@ -127,24 +102,9 @@ private fun ColumnScope.Wallet1Content(state: MultiWalletBackupUM.Wallet1) {
 private fun PreviewWallet1() {
     TangemThemePreview {
         MultiWalletBackup(
-            state = MultiWalletBackupUM.Wallet1(
+            state = MultiWalletBackupUM(
                 title = stringReference("Title"),
                 bodyText = stringReference("Body body body"),
-            ),
-        )
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewWallet2() {
-    TangemThemePreview {
-        MultiWalletBackup(
-            state = MultiWalletBackupUM.Wallet2(
-                isRing = false,
-                backupAdded = true,
-                onAddBackupClick = {},
-                onFinalizeButtonClick = {},
             ),
         )
     }
