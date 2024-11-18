@@ -17,7 +17,7 @@ internal object SecurityScorePreviewData {
                 name = "Moralis",
                 lastAuditDate = "21.10.2024",
                 score = 4.9F,
-                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUM.UrlData(
                     fullUrl = "https://moralis.com/",
                     rootHost = "moralis.com",
                 ),
@@ -27,7 +27,7 @@ internal object SecurityScorePreviewData {
                 name = "Certik",
                 lastAuditDate = "10.07.2024",
                 score = 4.6F,
-                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUM.UrlData(
                     fullUrl = "https://certik.com/",
                     rootHost = "certik.com",
                 ),
@@ -37,7 +37,7 @@ internal object SecurityScorePreviewData {
                 name = "Cyberscope",
                 lastAuditDate = "25.06.2023",
                 score = 4.5F,
-                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUM.UrlData(
                     fullUrl = "https://cyberscope.com/",
                     rootHost = "cyberscope.com",
                 ),
@@ -47,7 +47,7 @@ internal object SecurityScorePreviewData {
                 name = "TokenInsight",
                 lastAuditDate = "17.01.2022",
                 score = 4.0F,
-                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                urlData = SecurityScoreBottomSheetContent.SecurityScoreProviderUM.UrlData(
                     fullUrl = "https://tokeninsight.com/",
                     rootHost = "tokeninsight.com",
                 ),
