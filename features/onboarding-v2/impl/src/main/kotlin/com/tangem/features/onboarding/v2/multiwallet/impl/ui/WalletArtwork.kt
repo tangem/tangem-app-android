@@ -1,9 +1,11 @@
 @file:Suppress("MagicNumber", "UnnecessaryParentheses", "CyclomaticComplexMethod", "LongMethod")
+
 package com.tangem.features.onboarding.v2.multiwallet.impl.ui
 
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -20,12 +22,15 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
 import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
 sealed class WalletArtworksState {
+    data object Hidden : WalletArtworksState()
+
     data object Folded : WalletArtworksState()
 
     data object Fan : WalletArtworksState()
@@ -54,6 +59,8 @@ sealed class WalletArtworksState {
 
 @Composable
 fun WalletArtworks(url: String?, state: WalletArtworksState, modifier: Modifier = Modifier) {
+    if (state is WalletArtworksState.Hidden) return
+
     BoxWithConstraints(
         modifier
             .heightIn(min = 180.dp)
@@ -91,6 +98,21 @@ fun WalletArtworks(url: String?, state: WalletArtworksState, modifier: Modifier 
                 )
                 delay(TimeUnit.NANOSECONDS.toMillis(maxTime))
             }
+        }
+
+        val circleColor = TangemTheme.colors.background.secondary
+
+        Canvas(
+            modifier = Modifier
+                .align(Alignment.Center)
+                .size(254.dp)
+                .fillMaxSize(),
+        ) {
+            drawCircle(
+                color = circleColor,
+                radius = size.width / 2,
+                center = center,
+            )
         }
 
         AnimatedWalletCards(
@@ -225,6 +247,7 @@ private fun WalletCard(url: String?, modifier: Modifier = Modifier) {
 
 private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeightDp: Float, density: Float) =
     when (this) {
+        WalletArtworksState.Hidden -> listOf()
         is WalletArtworksState.Folded -> listOf(
             CardsTransitionState(
                 WalletCardTransitionState(),
