@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 class MultiWalletBackupComponent(
     context: AppComponentContext,
     params: MultiWalletChildParams,
-    onDone: () -> Unit,
+    onEvent: (event: Event) -> Unit,
 ) : AppComponentContext by context, MultiWalletChildComponent {
 
     private val model: MultiWalletBackupModel = getOrCreateModel(params)
@@ -29,7 +29,7 @@ class MultiWalletBackupComponent(
         )
 
         componentScope.launch {
-            model.onDoneFlow.collect { onDone() }
+            model.eventFlow.collect(onEvent)
         }
     }
 
@@ -41,5 +41,9 @@ class MultiWalletBackupComponent(
             modifier = modifier,
             state = state,
         )
+    }
+
+    enum class Event {
+        Done, OneDeviceAdded, TwoDeviceAdded
     }
 }
