@@ -177,6 +177,7 @@
   <string name="common_terms_of_use">利用規約</string>
   <string name="common_today">今日</string>
   <string name="common_transaction_failed">取引が失敗しました</string>
+  <string name="common_transaction_status">取引状況</string>
   <string name="common_transactions">取引</string>
   <string name="common_transfer">送金</string>
   <string name="common_understand">わかりました</string>
@@ -184,6 +185,7 @@
   <string name="common_unreachable">アクセスできません</string>
   <string name="common_unstake">ステーキング解除</string>
   <string name="common_week">週</string>
+  <string name="common_with">で</string>
   <string name="common_yes">はい</string>
   <string name="contract_address_copied_message">コントラクトアドレスをコピーしました!</string>
   <string name="currency_subtitle_expanded">利用可能なネットワーク</string>
@@ -567,6 +569,7 @@
   <string name="onramp_settings_residence">住居</string>
   <string name="onramp_settings_residence_description">正確なお支払い方法とサービスを確保するため、正しい国を選択してください。</string>
   <string name="onramp_settings_title">設定</string>
+  <string name="onramp_transaction_status_footer_text">トークンページから取引状況を確認できます</string>
   <string name="onramp_via">経由</string>
   <string name="organize_tokens_group">グループ</string>
   <string name="organize_tokens_sort_by_balance">残高順</string>
@@ -943,6 +946,9 @@
   <string name="wallet_network_group_title">%sネットワーク</string>
   <string name="wallet_notification_address_copied">アドレスがクリップボードにコピーされました</string>
   <string name="wallet_notification_no_internet">インターネット接続がありません</string>
+  <string name="wallet_promo_banner_button_title">今すぐ10 %オフで購入</string>
+  <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
+  <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_title">ウォレット設定</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
