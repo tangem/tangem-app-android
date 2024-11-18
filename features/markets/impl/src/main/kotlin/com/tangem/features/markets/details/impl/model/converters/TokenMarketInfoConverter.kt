@@ -8,6 +8,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.LinksUM
 import com.tangem.features.markets.details.impl.ui.state.ListedOnUM
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
+import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomSheetContent
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
@@ -17,8 +18,9 @@ internal class TokenMarketInfoConverter(
     private val appCurrency: Provider<AppCurrency>,
     private val onInfoClick: (TangemBottomSheetConfigContent) -> Unit,
     private val onListedOnClick: (Int) -> Unit,
+    onSecurityScoreInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
     onLinkClick: (LinksUM.Link) -> Unit,
-    onSecurityScoreProviderLinkClick: (String) -> Unit,
+    onSecurityScoreProviderLinkClick: (SecurityScoreBottomSheetContent.SecurityScoreProviderUM) -> Unit,
     onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
     onInsightsIntervalChanged: (PriceChangeInterval) -> Unit,
 ) : Converter<TokenMarketInfo, MarketsTokenDetailsUM.InformationBlocks> {
@@ -30,7 +32,7 @@ internal class TokenMarketInfoConverter(
     )
 
     private val securityScoreConverter = SecurityScoreConverter(
-        onInfoClick = onInfoClick,
+        onSecurityScoreInfoClick = onSecurityScoreInfoClick,
         onSecurityScoreProviderLinkClick = onSecurityScoreProviderLinkClick,
     )
     private val pricePerformanceConverter = PricePerformanceConverter(
