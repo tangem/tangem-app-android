@@ -13,12 +13,12 @@ import com.tangem.utils.converter.Converter
 
 @Stable
 internal class SecurityScoreConverter(
-    private val onInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
-    private val onSecurityScoreProviderLinkClick: (String) -> Unit,
+    private val onSecurityScoreInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
+    private val onSecurityScoreProviderLinkClick: (SecurityScoreBottomSheetContent.SecurityScoreProviderUM) -> Unit,
 ) : Converter<TokenMarketInfo.SecurityData, SecurityScoreUM> {
 
     override fun convert(value: TokenMarketInfo.SecurityData): SecurityScoreUM {
-        val ratingsCount = value.providerData.size
+        val ratingsCount = value.securityScoreProviderData.size
         return SecurityScoreUM(
             score = value.totalSecurityScore,
             description = pluralReference(
@@ -27,11 +27,11 @@ internal class SecurityScoreConverter(
                 formatArgs = wrappedList(ratingsCount),
             ),
             onInfoClick = {
-                onInfoClick(
+                onSecurityScoreInfoClick(
                     SecurityScoreBottomSheetContent(
                         title = resourceReference(R.string.markets_token_details_security_score),
                         description = resourceReference(R.string.markets_token_details_security_score_description),
-                        providers = value.providerData.map {
+                        providers = value.securityScoreProviderData.map {
                             SecurityScoreBottomSheetContent.SecurityScoreProviderUM(
                                 name = it.providerName,
                                 lastAuditDate = it.lastAuditDate?.let { date ->
@@ -40,7 +40,7 @@ internal class SecurityScoreConverter(
                                 score = it.securityScore,
                                 urlData = it.urlData?.let {
                                         urlData ->
-                                    SecurityScoreBottomSheetContent.SecurityScoreProviderUrlData(
+                                    SecurityScoreBottomSheetContent.SecurityScoreProviderUM.UrlData(
                                         fullUrl = urlData.fullUrl,
                                         rootHost = urlData.rootHost,
                                     )
