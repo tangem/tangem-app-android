@@ -12,12 +12,13 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model.MultiWalletCreateWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.MultiWalletCreateWallet
+import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import kotlinx.coroutines.launch
 
 class MultiWalletCreateWalletComponent(
     context: AppComponentContext,
     params: MultiWalletChildParams,
-    onDone: () -> Unit,
+    onNextStep: (OnboardingMultiWalletState.Step) -> Unit,
 ) : AppComponentContext by context, MultiWalletChildComponent {
 
     private val model: MultiWalletCreateWalletModel = getOrCreateModel(params)
@@ -28,7 +29,7 @@ class MultiWalletCreateWalletComponent(
         )
 
         componentScope.launch {
-            model.onDone.collect { onDone() }
+            model.onDone.collect(onNextStep)
         }
     }
 
