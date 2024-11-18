@@ -969,8 +969,12 @@ internal class StateBuilder(
 
     fun updateApproveType(uiState: SwapStateHolder, approveType: ApproveType): SwapStateHolder {
         val config = uiState.bottomSheetConfig?.content as? GiveTxPermissionBottomSheetConfig
+        val permissionState = (uiState.permissionState as? GiveTxPermissionState.ReadyForRequest)?.copy(
+            approveType = approveType,
+        ) ?: uiState.permissionState
         return if (config != null) {
             uiState.copy(
+                permissionState = permissionState,
                 bottomSheetConfig = uiState.bottomSheetConfig.copy(
                     content = config.copy(
                         data = config.data.copy(approveType = approveType),
