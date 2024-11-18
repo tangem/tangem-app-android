@@ -55,7 +55,7 @@ internal object MarketsDateTimeFormatters {
                     R.string.common_range_with_space,
                     wrappedList(
                         stringReference(
-                            startTimestamp.formatAsDateTime(MarketsDateTimeFormatters.dateTimeMMMFormatter),
+                            startTimestamp.formatAsDateTime(dateTimeMMMFormatter),
                         ),
                         resourceReference(R.string.common_now),
                     ),
@@ -68,7 +68,7 @@ internal object MarketsDateTimeFormatters {
                     R.string.common_range_with_space,
                     wrappedList(
                         stringReference(
-                            startTimestamp.formatAsDateTime(MarketsDateTimeFormatters.dateFormatter),
+                            startTimestamp.formatAsDateTime(dateFormatter),
                         ),
                         resourceReference(R.string.common_now),
                     ),
@@ -89,7 +89,7 @@ internal object MarketsDateTimeFormatters {
                     R.string.common_range_with_space,
                     wrappedList(
                         stringReference(
-                            markerTimestamp.toLong().formatAsDateTime(MarketsDateTimeFormatters.dateTimeMMMFormatter),
+                            markerTimestamp.toLong().formatAsDateTime(dateTimeMMMFormatter),
                         ),
                         resourceReference(R.string.common_now),
                     ),
@@ -103,7 +103,7 @@ internal object MarketsDateTimeFormatters {
                     R.string.common_range_with_space,
                     wrappedList(
                         stringReference(
-                            markerTimestamp.toLong().formatAsDateTime(MarketsDateTimeFormatters.dateFormatter),
+                            markerTimestamp.toLong().formatAsDateTime(dateFormatter),
                         ),
                         resourceReference(R.string.common_now),
                     ),
@@ -128,10 +128,14 @@ internal object MarketsDateTimeFormatters {
     fun getDefaultDateTimeString(interval: PriceChangeInterval, currentTimestamp: Long): TextReference {
         return formatDateByInterval(
             interval = interval,
-            startTimestamp = MarketsDateTimeFormatters.getStartTimestampByInterval(
+            startTimestamp = getStartTimestampByInterval(
                 interval = interval,
                 currentTimestamp = currentTimestamp,
             ),
         )
+    }
+
+    fun formatAsDate(timestamp: Long): String {
+        return timestamp.formatAsDateTime(dateFormatter)
     }
 }
