@@ -2,7 +2,6 @@ package com.tangem.domain.onramp.model.cache
 
 import com.tangem.domain.core.serialization.SerializedBigDecimal
 import com.tangem.domain.onramp.model.OnrampCurrency
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
 
@@ -13,8 +12,7 @@ data class OnrampTransaction(
     val fromAmount: SerializedBigDecimal,
     val fromCurrency: OnrampCurrency,
     val toAmount: SerializedBigDecimal,
-    val toCurrency: CryptoCurrency,
-    val timestamp: Long,
+    val toCurrencyId: String,
     val providerName: String,
     val providerImageUrl: String,
 )
