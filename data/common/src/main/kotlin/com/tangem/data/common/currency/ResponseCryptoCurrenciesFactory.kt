@@ -14,15 +14,11 @@ import com.tangem.blockchain.common.Token as SdkToken
 
 class ResponseCryptoCurrenciesFactory {
 
-    fun createCurrency(
-        currencyId: CryptoCurrency.ID,
-        response: UserTokensResponse,
-        scanResponse: ScanResponse,
-    ): CryptoCurrency {
+    fun createCurrency(currencyId: String, response: UserTokensResponse, scanResponse: ScanResponse): CryptoCurrency {
         return response.tokens
             .asSequence()
             .mapNotNull { createCurrency(it, scanResponse) }
-            .first { it.id == currencyId }
+            .first { it.id.value == currencyId }
     }
 
     fun createCurrencies(response: UserTokensResponse, scanResponse: ScanResponse): List<CryptoCurrency> {
