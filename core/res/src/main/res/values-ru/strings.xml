@@ -183,6 +183,7 @@
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_today">Сегодня</string>
   <string name="common_transaction_failed">Ошибка транзакции</string>
+  <string name="common_transaction_status">Статус транзакции</string>
   <string name="common_transactions">Транзакции</string>
   <string name="common_transfer">Перевод</string>
   <string name="common_understand">Я понял</string>
@@ -190,6 +191,7 @@
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Завершить стейкинг</string>
   <string name="common_week">неделю</string>
+  <string name="common_with">с</string>
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
@@ -576,7 +578,10 @@
   <string name="onramp_currency_search">Поиск по валюте</string>
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
+  <string name="onramp_no_available_providers">Для данной валюты нет доступных провайдеров</string>
   <string name="onramp_pay_with">Оплата с</string>
+  <string name="onramp_redirecting_to_provider_subtitle">Вы сможете завершить транзакцию через сервис стороннего провайдера, %s</string>
+  <string name="onramp_redirecting_to_provider_title">Переход к %s ...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Наши сервисы недоступны в данной стране</string>
   <string name="onramp_settings_title">Настройки</string>
   <string name="onramp_via">Через</string>
@@ -860,14 +865,14 @@
   <string name="toast_balances_shown">Балансы показаны</string>
   <string name="toast_undo">Отменить</string>
   <string name="token_button_unavailability_generic_description">Выбранная операция в данный момент недоступна. Попробуйте позже.</string>
-  <string name="token_button_unavailability_reason_buy_unavailable">В данный момент покупка монеты %s недоступна. Следите за нашими обновлениями.</string>
+  <string name="token_button_unavailability_reason_buy_unavailable">Покупка %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">У вас нет средств для продажи. Пополните счет, чтобы иметь возможность продать с него средства.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">У вас нет средств для отправки. Пополните счет, чтобы иметь возможность отправить с него средства.</string>
-  <string name="token_button_unavailability_reason_not_exchangeable">В данный момент обмен монеты %s недоступен. Следите за нашими обновлениями.</string>
+  <string name="token_button_unavailability_reason_not_exchangeable">Обмен %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
-  <string name="token_button_unavailability_reason_sell_unavailable">В данный момент продажа %s недоступна. Следите за нашими обновлениями.</string>
-  <string name="token_button_unavailability_reason_staking_unavailable">В данный момент стейкинг монеты %s недоступен. Следите за нашими обновлениями.</string>
+  <string name="token_button_unavailability_reason_sell_unavailable">Продажа %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
+  <string name="token_button_unavailability_reason_staking_unavailable">Стейкинг %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
   <string name="token_details_generate_xpub">Сгенерировать XPUB</string>
   <string name="token_details_hide_alert_hide">Скрыть</string>
   <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
@@ -893,6 +898,7 @@
   <string name="transaction_history_transaction_from_address">от: %s</string>
   <string name="transaction_history_transaction_to_address">на: %s</string>
   <string name="transaction_history_transaction_validator">валидатор: %s</string>
+  <string name="transfer_min_amount_error">Минимум %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">Минимальная сумма транзакции равна %1$s.</string>
   <string name="try_to_load_data_again_button_title">Попробовать снова</string>
   <string name="twin_error_same_card">Вы отсканировали ту же карту. Для создания twin-кошелька вам необходимо отсканировать карту с номером %d</string>
@@ -958,6 +964,9 @@
   <string name="wallet_network_group_title">Сеть %s</string>
   <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
   <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
+  <string name="wallet_promo_banner_button_title">Получить с 10%% скидкой</string>
+  <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменяйте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
+  <string name="wallet_promo_banner_title">Откройте Tangem Wallet </string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту/кольцо, чтобы разблокировать доступ к вашему кошельку</string>
