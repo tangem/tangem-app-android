@@ -23,16 +23,32 @@ data class OnrampStatus(
     val paymentMethod: String,
     val countryCode: String,
 ) {
-    enum class Status {
-        Created,
-        Expired,
-        Paused,
-        WaitingForPayment,
-        PaymentProcessing,
-        Verifying,
-        Failed,
-        Paid,
-        Sending,
-        Finished,
+    enum class Status(val order: Int) {
+        Created(order = 1),
+        Expired(order = 2),
+        Paused(order = 3),
+        WaitingForPayment(order = 4),
+        PaymentProcessing(order = 5),
+        Verifying(order = 6),
+        Failed(order = 7),
+        Paid(order = 8),
+        Sending(order = 9),
+        Finished(order = 10),
+        ;
+
+        fun isTerminal(): Boolean = when (this) {
+            Expired,
+            Failed,
+            Paused,
+            Finished,
+            -> true
+            Created,
+            WaitingForPayment,
+            PaymentProcessing,
+            Verifying,
+            Paid,
+            Sending,
+            -> false
+        }
     }
 }
