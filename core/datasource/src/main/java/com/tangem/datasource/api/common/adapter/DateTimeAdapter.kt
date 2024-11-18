@@ -7,9 +7,12 @@ internal class DateTimeAdapter : JsonAdapter<DateTime>() {
 
     @FromJson
     override fun fromJson(reader: JsonReader): DateTime? {
-        val dateString = reader.nextString() ?: return null
-
-        return DateTime.parse(dateString)
+        return if (reader.peek() == JsonReader.Token.NULL) {
+            reader.nextNull<DateTime>()
+        } else {
+            val dateString = reader.nextString()
+            DateTime.parse(dateString)
+        }
     }
 
     @ToJson
