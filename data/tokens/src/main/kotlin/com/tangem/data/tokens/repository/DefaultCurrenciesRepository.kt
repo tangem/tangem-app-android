@@ -293,22 +293,27 @@ internal class DefaultCurrenciesRepository(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
     ): CryptoCurrency = withContext(dispatchers.io) {
-        val userWallet = getUserWallet(userWalletId)
-        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
-
-        val response = requireNotNull(
-            value = getSavedUserTokensResponseSync(key = userWalletId),
-            lazyMessage = {
-                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-            },
-        )
-
-        responseCurrenciesFactory.createCurrency(
-            currencyId = id,
-            response = response,
-            scanResponse = userWallet.scanResponse,
-        )
+        getMultiCurrencyWalletCurrency(userWalletId, id.value)
     }
+
+    override suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency =
+        withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+            val response = requireNotNull(
+                value = getSavedUserTokensResponseSync(key = userWalletId),
+                lazyMessage = {
+                    "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+                },
+            )
+
+            responseCurrenciesFactory.createCurrency(
+                currencyId = id,
+                response = response,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
 
     override suspend fun getNetworkCoin(
         userWalletId: UserWalletId,
