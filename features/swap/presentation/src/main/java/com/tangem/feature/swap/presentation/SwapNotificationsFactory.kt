@@ -4,6 +4,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -26,6 +27,7 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
@@ -189,7 +191,15 @@ internal class SwapNotificationsFactory(
         addReduceAmountNotification(
             cryptoCurrencyStatus = fromCurrencyStatus,
             fromAmount = amountToRequest,
+            feeValue = fee?.feeValue.orZero(),
             onReduceAmount = actions.onReduceAmount,
+        )
+        addTransactionLimitErrorNotification(
+            utxoLimit = quoteModel.currencyCheck?.utxoAmountLimit,
+            cryptoCurrency = fromCurrencyStatus.currency,
+            onReduceClick = { reduceTo, _ ->
+                actions.onReduceAmount(amountToRequest.copy(value = reduceTo))
+            },
         )
     }
 
@@ -285,17 +295,21 @@ internal class SwapNotificationsFactory(
     private fun MutableList<NotificationUM>.addReduceAmountNotification(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         fromAmount: SwapAmount,
+        feeValue: BigDecimal,
         onReduceAmount: (SwapAmount) -> Unit,
     ) {
         val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
-        if (isTezos && fromAmount.value == cryptoCurrencyStatus.value.amount) {
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val threshold = getTezosThreshold()
+        val isTotalBalance = fromAmount.value + feeValue >= balance && balance > threshold
+        if (isTezos && isTotalBalance) {
             add(
                 SwapNotificationUM.Warning.ReduceAmount(
                     currencyName = cryptoCurrencyStatus.currency.name,
-                    amount = getTezosThreshold().toPlainString(),
+                    amount = threshold.toPlainString(),
                     onConfirmClick = {
                         val patchedAmount = fromAmount.copy(
-                            value = fromAmount.value - getTezosThreshold(),
+                            value = fromAmount.value - threshold,
                         )
                         onReduceAmount(patchedAmount)
                     },
