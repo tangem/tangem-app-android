@@ -86,7 +86,7 @@ internal fun SecurityScoreBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun SecurityScoreProviderRow(
     providerUM: SecurityScoreBottomSheetContent.SecurityScoreProviderUM,
-    onLinkClick: (String) -> Unit,
+    onLinkClick: (SecurityScoreBottomSheetContent.SecurityScoreProviderUM) -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -137,7 +137,7 @@ private fun SecurityScoreProviderRow(
                 enabled = providerUM.urlData != null,
                 indication = ripple(bounded = false),
                 interactionSource = remember { MutableInteractionSource() },
-                onClick = { providerUM.urlData?.let { onLinkClick(it.fullUrl) } },
+                onClick = { onLinkClick(providerUM) },
             ),
         ) {
             ScoreStarsBlock(
