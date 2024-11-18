@@ -11,6 +11,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.backupCardAttestationFailedDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetBackupCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
@@ -45,35 +46,31 @@ class MultiWalletBackupModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(
         when (scanResponse.productType) {
-            ProductType.Wallet -> getWallet1State()
+            ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,
-            -> MultiWalletBackupUM.Wallet2(
-                isRing = scanResponse.productType == ProductType.Ring,
-                backupAdded = false, // backupService.hasIncompletedBackup,
-                onAddBackupClick = {},
-                onFinalizeButtonClick = {},
-            )
+            -> getInitState()
             else -> error("Type: ${scanResponse.productType.name} is not supported!")
         },
     )
 
     val uiState: StateFlow<MultiWalletBackupUM> = _uiState
-    val onDoneFlow = MutableSharedFlow<Unit>()
+    val eventFlow = MutableSharedFlow<MultiWalletBackupComponent.Event>()
 
-    private fun getWallet1State(): MultiWalletBackupUM.Wallet1 {
+    private fun getInitState(): MultiWalletBackupUM {
         return when (backupService.currentState) {
             BackupService.State.Preparing -> {
-                MultiWalletBackupUM.Wallet1(
+                MultiWalletBackupUM(
                     title = resourceReference(R.string.onboarding_title_no_backup_cards),
                     bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-                    showFinalizeButton = false,
+                    finalizeButtonEnabled = false,
                     addBackupButtonEnabled = true,
                     addBackupButtonLoading = false,
-                    artworkNumberOfBackupCards = 0,
-                    onAddBackupClick = ::startBackupWallet1,
+                    onAddBackupClick = ::startBackupWallet,
                     onFinalizeButtonClick = {},
-                    onSkipButtonClick = { onDoneFlow.tryEmit(Unit) },
+                    onSkipButtonClick = {
+                        // eventFlow.tryEmit(Unit)
+                    },
                 )
             }
             is BackupService.State.FinalizingBackupCard -> TODO()
@@ -82,7 +79,7 @@ class MultiWalletBackupModel @Inject constructor(
         }
     }
 
-    private fun startBackupWallet1() {
+    private fun startBackupWallet() {
         backupService.discardSavedBackup()
         val primaryCard = scanResponse.primaryCard
 
@@ -95,35 +92,37 @@ class MultiWalletBackupModel @Inject constructor(
         }
     }
 
-    private fun setNumberOfBackupCardsWallet1(number: Int) {
-        // set state for Wallet1 for adding backup cards and disable button if there is more than 2 backup cards
+    private fun setNumberOfBackupCards(number: Int) {
+        // set state for adding backup cards and disable button if there is more than 2 backup cards
         _uiState.update { st ->
-            if (st !is MultiWalletBackupUM.Wallet1) return@update st
-
             when (number) {
                 0 -> {
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_no_backup_cards),
                         bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-                        artworkNumberOfBackupCards = 0,
                         addBackupButtonEnabled = true,
                     )
                 }
                 1 -> {
+                    modelScope.launch {
+                        eventFlow.emit(MultiWalletBackupComponent.Event.OneDeviceAdded)
+                    }
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_one_backup_card),
                         bodyText = resourceReference(R.string.onboarding_subtitle_one_backup_card),
-                        artworkNumberOfBackupCards = 1,
                         addBackupButtonEnabled = true,
-                        showFinalizeButton = true,
+                        finalizeButtonEnabled = true,
                     )
                 }
                 2 -> {
+                    modelScope.launch {
+                        eventFlow.emit(MultiWalletBackupComponent.Event.TwoDeviceAdded)
+                    }
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_two_backup_cards),
                         bodyText = resourceReference(R.string.onboarding_subtitle_two_backup_cards),
-                        artworkNumberOfBackupCards = 2,
                         addBackupButtonEnabled = false,
+                        finalizeButtonEnabled = true,
                     )
                 }
                 else -> st.copy(addBackupButtonEnabled = false)
@@ -132,7 +131,7 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun addBackupCardWithService() {
-        updateWallet1State { st ->
+        _uiState.update { st ->
             st.copy(addBackupButtonLoading = true)
         }
 
@@ -140,38 +139,37 @@ class MultiWalletBackupModel @Inject constructor(
             backupService.skipCompatibilityChecks = false
             cardSdkConfigRepository.sdk.config.filter.cardIdFilter = null
 
-            updateWallet1State { st ->
+            _uiState.update { st ->
                 st.copy(addBackupButtonLoading = false)
             }
 
             when (result) {
                 is CompletionResult.Success -> {
-                    // TODO change artwork
                     state.update {
                         it.copy(
                             backupCards = it.backupCards + result.data,
                             backupCardsNumber = it.backupCardsNumber + 1,
                         )
                     }
-                    setNumberOfBackupCardsWallet1(state.value.backupCardsNumber)
+                    setNumberOfBackupCards(state.value.backupCardsNumber)
                 }
                 is CompletionResult.Failure -> {
                     when (val error = result.error) {
                         is TangemSdkError.BackupFailedNotEmptyWallets -> {
-                            updateWallet1State { st ->
+                            _uiState.update { st ->
                                 st.copy(
                                     dialog = resetBackupCardDialog(
                                         onReset = { resetBackupCard(cardId = error.cardId) },
-                                        onDismiss = { updateWallet1State { it.copy(dialog = null) } },
+                                        onDismiss = { _uiState.update { it.copy(dialog = null) } },
                                     ),
                                 )
                             }
                         }
                         is TangemSdkError.IssuerSignatureLoadingFailed -> {
-                            updateWallet1State { st ->
+                            _uiState.update { st ->
                                 st.copy(
                                     dialog = backupCardAttestationFailedDialog(
-                                        onDismiss = { updateWallet1State { it.copy(dialog = null) } },
+                                        onDismiss = { _uiState.update { it.copy(dialog = null) } },
                                     ),
                                 )
                             }
@@ -189,13 +187,6 @@ class MultiWalletBackupModel @Inject constructor(
                 cardId = cardId,
                 allowsRequestAccessCodeFromRepository = false,
             )
-        }
-    }
-
-    private fun updateWallet1State(block: (MultiWalletBackupUM.Wallet1) -> MultiWalletBackupUM.Wallet1) {
-        _uiState.update { state ->
-            if (state !is MultiWalletBackupUM.Wallet1) return@update state
-            block(state)
         }
     }
 }
