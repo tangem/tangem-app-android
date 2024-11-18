@@ -14,7 +14,7 @@ import com.tangem.utils.converter.Converter
 @Stable
 internal class SecurityScoreConverter(
     private val onInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
-    private val onSecurityScoreProviderLinkClick: (String) -> Unit,
+    private val onSecurityScoreProviderLinkClick: (SecurityScoreBottomSheetContent.SecurityScoreProviderUM) -> Unit,
 ) : Converter<TokenMarketInfo.SecurityData, SecurityScoreUM> {
 
     override fun convert(value: TokenMarketInfo.SecurityData): SecurityScoreUM {

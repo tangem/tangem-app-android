@@ -7,7 +7,7 @@ internal data class SecurityScoreBottomSheetContent(
     val title: TextReference,
     val description: TextReference,
     val providers: List<SecurityScoreProviderUM>,
-    val onProviderLinkClick: (String) -> Unit,
+    val onProviderLinkClick: (SecurityScoreProviderUM) -> Unit,
 ) : TangemBottomSheetConfigContent {
 
     data class SecurityScoreProviderUM(

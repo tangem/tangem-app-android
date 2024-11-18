@@ -8,6 +8,7 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.LinksUM
 import com.tangem.features.markets.details.impl.ui.state.ListedOnUM
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
+import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomSheetContent
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
@@ -18,7 +19,7 @@ internal class TokenMarketInfoConverter(
     private val onInfoClick: (TangemBottomSheetConfigContent) -> Unit,
     private val onListedOnClick: (Int) -> Unit,
     onLinkClick: (LinksUM.Link) -> Unit,
-    onSecurityScoreProviderLinkClick: (String) -> Unit,
+    onSecurityScoreProviderLinkClick: (SecurityScoreBottomSheetContent.SecurityScoreProviderUM) -> Unit,
     onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
     onInsightsIntervalChanged: (PriceChangeInterval) -> Unit,
 ) : Converter<TokenMarketInfo, MarketsTokenDetailsUM.InformationBlocks> {

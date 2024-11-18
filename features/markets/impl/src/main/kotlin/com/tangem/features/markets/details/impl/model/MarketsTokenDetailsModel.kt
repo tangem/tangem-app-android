@@ -89,7 +89,12 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             analyticsEventHandler.send(analyticsEventBuilder.linkClicked(linkTitle = link.title))
         },
         onSecurityScoreProviderLinkClick = {
-            urlOpener.openUrl(it)
+            it.urlData?.fullUrl?.let { url ->
+                urlOpener.openUrl(url)
+            }
+
+            // === Analytics ===
+            analyticsEventHandler.send(analyticsEventBuilder.securityScoreProviderClicked(it.name))
         },
         // === Analytics ===
         onPricePerformanceIntervalChanged = {
