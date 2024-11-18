@@ -3,8 +3,10 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui
 import com.tangem.core.ui.extensions.TextReference
 
 data class MultiWalletCreateWalletUM(
+    val title: TextReference,
+    val bodyText: TextReference,
+    val showOtherOptionsButton: Boolean,
     val onCreateWalletClick: () -> Unit,
-    val showSeedPhraseOption: Boolean,
     val onOtherOptionsClick: () -> Unit,
     val dialog: Dialog?,
 ) {
