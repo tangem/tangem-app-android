@@ -30,6 +30,7 @@ import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 
+@Deprecated("Use ExpressStatusBlock from common")
 @Composable
 internal fun ExchangeStatusBlock(
     statuses: ImmutableList<ExchangeStatusState>,
