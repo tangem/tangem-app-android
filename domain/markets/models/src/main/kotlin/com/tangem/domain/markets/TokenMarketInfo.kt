@@ -55,22 +55,22 @@ data class TokenMarketInfo(
 
     data class SecurityData(
         val totalSecurityScore: Float,
-        val providerData: List<ProviderData>,
+        val securityScoreProviderData: List<SecurityScoreProvider>,
     )
 
-    data class ProviderData(
+    data class SecurityScoreProvider(
         val providerId: String,
         val providerName: String,
-        val urlData: ProviderUrlData?,
+        val urlData: UrlData?,
         val iconUrl: String,
         val securityScore: Float,
         val lastAuditDate: DateTime?,
-    )
-
-    data class ProviderUrlData(
-        val fullUrl: String,
-        val rootHost: String?,
-    )
+    ) {
+        data class UrlData(
+            val fullUrl: String,
+            val rootHost: String?,
+        )
+    }
 
     data class Links(
         val officialLinks: List<Link>?,
