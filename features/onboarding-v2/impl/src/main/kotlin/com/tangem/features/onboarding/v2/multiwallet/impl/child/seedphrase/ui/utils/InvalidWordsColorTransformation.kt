@@ -7,9 +7,10 @@ import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
 import com.tangem.utils.extensions.isSingleItem
+import kotlinx.collections.immutable.ImmutableList
 
 class InvalidWordsColorTransformation(
-    private val wordsToBrush: Set<String>,
+    private val wordsToBrush: ImmutableList<String>,
     private val style: SpanStyle,
 ) : VisualTransformation {
 

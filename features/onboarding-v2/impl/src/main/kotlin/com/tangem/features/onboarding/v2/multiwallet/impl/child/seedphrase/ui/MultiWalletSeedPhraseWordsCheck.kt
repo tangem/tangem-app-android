@@ -98,7 +98,7 @@ private fun Preview() {
             state = MultiWalletSeedPhraseUM.GeneratedWordsCheck(
                 wordFields = persistentListOf(
                     MultiWalletSeedPhraseUM.GeneratedWordsCheck.WordField(
-                        index = 3,
+                        index = 2,
                         word = TextFieldValue(text = "word"),
                         onChange = {},
                         error = false,

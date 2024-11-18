@@ -2,6 +2,8 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.s
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
@@ -47,8 +49,14 @@ sealed class MultiWalletSeedPhraseUM(
         val wordsChange: (TextFieldValue) -> Unit = {},
         val passPhrase: TextFieldValue = TextFieldValue(""),
         val passPhraseChange: (TextFieldValue) -> Unit = {},
-        val wordsError: Boolean = false,
+        val onPassphraseInfoClick: () -> Unit = {},
+        val wordsErrorText: TextReference? = null,
+        val invalidWords: ImmutableList<String> = persistentListOf(),
         val createWalletEnabled: Boolean = false,
+        val createWalletProgress: Boolean = false,
         val createWalletClick: () -> Unit = {},
+        val suggestionsList: ImmutableList<String> = persistentListOf(),
+        val onSuggestionClick: (String) -> Unit = {},
+        val infoBottomSheetConfig: TangemBottomSheetConfig = TangemBottomSheetConfig.Empty,
     ) : MultiWalletSeedPhraseUM(order = 1)
 }
