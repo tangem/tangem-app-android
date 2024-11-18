@@ -114,12 +114,12 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
     private fun TokenMarketInfoResponse.SecurityData.convert(): TokenMarketInfo.SecurityData {
         return TokenMarketInfo.SecurityData(
             totalSecurityScore = totalSecurityScore,
-            providerData = providerData.map { it.convert() },
+            securityScoreProviderData = providerData.map { it.convert() },
         )
     }
 
-    private fun TokenMarketInfoResponse.ProviderData.convert(): TokenMarketInfo.ProviderData {
-        return TokenMarketInfo.ProviderData(
+    private fun TokenMarketInfoResponse.ProviderData.convert(): TokenMarketInfo.SecurityScoreProvider {
+        return TokenMarketInfo.SecurityScoreProvider(
             providerId = providerId,
             providerName = providerName,
             urlData = link?.convertToUrlData(),
@@ -129,8 +129,8 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
         )
     }
 
-    private fun String.convertToUrlData(): TokenMarketInfo.ProviderUrlData {
-        return TokenMarketInfo.ProviderUrlData(
+    private fun String.convertToUrlData(): TokenMarketInfo.SecurityScoreProvider.UrlData {
+        return TokenMarketInfo.SecurityScoreProvider.UrlData(
             fullUrl = this,
             rootHost = this.extractMainDomainOrNull(),
         )
