@@ -13,6 +13,7 @@ import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toMigratedCointId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
+import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.staking.converters.*
 import com.tangem.data.staking.converters.action.ActionStatusConverter
@@ -461,11 +462,20 @@ internal class DefaultStakingRepository(
                         return@invokeOnExpire
                     }
 
-                val result = stakeKitApi
-                    .getMultipleYieldBalances(availableCurrencies)
-                    .getOrThrow()
+                val yieldBalances = safeApiCall(
+                    call = {
+                        stakeKitApi
+                            .getMultipleYieldBalances(availableCurrencies)
+                            .bind()
+                    },
+                    onError = {
+                        Timber.e(it, "Unable to fetch yield balances")
+                        cacheRegistry.invalidate(getYieldBalancesKey(userWalletId))
+                        emptySet()
+                    },
+                )
 
-                stakingBalanceStore.store(userWalletId, result)
+                stakingBalanceStore.store(userWalletId, yieldBalances)
             },
         )
     }
