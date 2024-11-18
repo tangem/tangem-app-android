@@ -47,12 +47,12 @@ internal class DefaultOnrampTransactionRepository(
 
     override fun getTransactions(
         userWalletId: UserWalletId,
-        toCryptoCurrency: CryptoCurrency.ID,
+        cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<OnrampTransaction>> = appPreferencesStore
         .getObjectSet<OnrampTransaction>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
         .map { transactions ->
             transactions.filter {
-                it.userWalletId == userWalletId && it.toCurrency.id == toCryptoCurrency
+                it.userWalletId == userWalletId && it.toCurrencyId == cryptoCurrencyId.value
             }
         }
 
