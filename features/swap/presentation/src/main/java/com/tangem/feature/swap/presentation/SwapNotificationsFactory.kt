@@ -190,8 +190,7 @@ internal class SwapNotificationsFactory(
         )
         addReduceAmountNotification(
             cryptoCurrencyStatus = fromCurrencyStatus,
-            fromAmount = amountToRequest,
-            feeValue = fee?.feeValue.orZero(),
+            fromAmount = quoteModel.fromTokenInfo.tokenAmount,
             onReduceAmount = actions.onReduceAmount,
         )
         addTransactionLimitErrorNotification(
@@ -295,13 +294,12 @@ internal class SwapNotificationsFactory(
     private fun MutableList<NotificationUM>.addReduceAmountNotification(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         fromAmount: SwapAmount,
-        feeValue: BigDecimal,
         onReduceAmount: (SwapAmount) -> Unit,
     ) {
         val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val threshold = getTezosThreshold()
-        val isTotalBalance = fromAmount.value + feeValue >= balance && balance > threshold
+        val isTotalBalance = fromAmount.value >= balance && balance > threshold
         if (isTezos && isTotalBalance) {
             add(
                 SwapNotificationUM.Warning.ReduceAmount(
