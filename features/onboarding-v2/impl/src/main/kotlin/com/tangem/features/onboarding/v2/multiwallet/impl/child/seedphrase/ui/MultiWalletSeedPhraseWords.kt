@@ -45,7 +45,7 @@ fun MultiWalletSeedPhraseWords(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
                 text = stringResource(id = R.string.common_continue),
                 onClick = state.onContinueClick,
             )
