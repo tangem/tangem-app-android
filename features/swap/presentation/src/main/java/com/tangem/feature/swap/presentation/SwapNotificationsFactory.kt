@@ -4,6 +4,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -190,6 +191,13 @@ internal class SwapNotificationsFactory(
             cryptoCurrencyStatus = fromCurrencyStatus,
             fromAmount = amountToRequest,
             onReduceAmount = actions.onReduceAmount,
+        )
+        addTransactionLimitErrorNotification(
+            utxoLimit = quoteModel.currencyCheck?.utxoAmountLimit,
+            cryptoCurrency = fromCurrencyStatus.currency,
+            onReduceClick = { reduceTo, _ ->
+                actions.onReduceAmount(amountToRequest.copy(value = reduceTo))
+            },
         )
     }
 
