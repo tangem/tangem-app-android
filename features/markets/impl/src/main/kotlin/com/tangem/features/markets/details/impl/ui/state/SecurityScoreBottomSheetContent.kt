@@ -22,6 +22,4 @@ internal data class SecurityScoreBottomSheetContent(
             val rootHost: String?,
         )
     }
-
-
 }

@@ -18,6 +18,7 @@ internal class TokenMarketInfoConverter(
     private val appCurrency: Provider<AppCurrency>,
     private val onInfoClick: (TangemBottomSheetConfigContent) -> Unit,
     private val onListedOnClick: (Int) -> Unit,
+    onSecurityScoreInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
     onLinkClick: (LinksUM.Link) -> Unit,
     onSecurityScoreProviderLinkClick: (SecurityScoreBottomSheetContent.SecurityScoreProviderUM) -> Unit,
     onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
@@ -31,7 +32,7 @@ internal class TokenMarketInfoConverter(
     )
 
     private val securityScoreConverter = SecurityScoreConverter(
-        onInfoClick = onInfoClick,
+        onSecurityScoreInfoClick = onSecurityScoreInfoClick,
         onSecurityScoreProviderLinkClick = onSecurityScoreProviderLinkClick,
     )
     private val pricePerformanceConverter = PricePerformanceConverter(

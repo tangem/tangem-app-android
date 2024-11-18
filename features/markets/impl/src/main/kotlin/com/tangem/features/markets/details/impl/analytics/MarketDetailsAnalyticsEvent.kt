@@ -54,18 +54,16 @@ internal class MarketDetailsAnalyticsEvent(
 
         fun securityScoreOpened() = MarketDetailsAnalyticsEvent(
             event = "Security Score Info",
-            params = mapOf("Token" to token.symbol)
+            params = mapOf("Token" to token.symbol),
         )
 
         fun securityScoreProviderClicked(provider: String) = MarketDetailsAnalyticsEvent(
             event = "Security Score Provider Clicked",
             params = mapOf(
                 "Token" to token.symbol,
-                "Provider" to provider
-            )
+                "Provider" to provider,
+            ),
         )
-
-
     }
 
     enum class IntervalType(val source: String) {

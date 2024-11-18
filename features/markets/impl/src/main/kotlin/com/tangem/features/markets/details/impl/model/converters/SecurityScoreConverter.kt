@@ -13,7 +13,7 @@ import com.tangem.utils.converter.Converter
 
 @Stable
 internal class SecurityScoreConverter(
-    private val onInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
+    private val onSecurityScoreInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
     private val onSecurityScoreProviderLinkClick: (SecurityScoreBottomSheetContent.SecurityScoreProviderUM) -> Unit,
 ) : Converter<TokenMarketInfo.SecurityData, SecurityScoreUM> {
 
@@ -27,7 +27,7 @@ internal class SecurityScoreConverter(
                 formatArgs = wrappedList(ratingsCount),
             ),
             onInfoClick = {
-                onInfoClick(
+                onSecurityScoreInfoClick(
                     SecurityScoreBottomSheetContent(
                         title = resourceReference(R.string.markets_token_details_security_score),
                         description = resourceReference(R.string.markets_token_details_security_score_description),
