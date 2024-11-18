@@ -180,6 +180,7 @@
   <string name="common_terms_of_use">Condiciones de uso</string>
   <string name="common_today">Hoy</string>
   <string name="common_transaction_failed">Transacción fallida</string>
+  <string name="common_transaction_status">Estado de la transacción</string>
   <string name="common_transactions">Transacciones</string>
   <string name="common_transfer">Transferencia</string>
   <string name="common_understand">Entiendo</string>
@@ -187,6 +188,7 @@
   <string name="common_unreachable">Inaccesible</string>
   <string name="common_unstake">Termine el staking</string>
   <string name="common_week">semana</string>
+  <string name="common_with">con</string>
   <string name="common_yes">Sí</string>
   <string name="contract_address_copied_message">Dirección del contract copiada</string>
   <string name="currency_subtitle_expanded">Redes disponibles</string>
@@ -427,6 +429,7 @@
   <string name="markets_token_details_fully_diluted_valuation_description">El valor teórico total de una criptomoneda si todas las monedas que podrían existir estuvieran en circulación, incluidas las que actualmente no circulan.</string>
   <string name="markets_token_details_fully_diluted_valuation_full">Valoración totalmente diluida</string>
   <string name="markets_token_details_genesis_date">Dato de Genesis</string>
+  <string name="markets_token_details_genesis_date_description">Vacío</string>
   <string name="markets_token_details_high">Alto</string>
   <string name="markets_token_details_holders">Titulares</string>
   <string name="markets_token_details_holders_description">El cambio en el número de poseedores de tokens dentro de un período de tiempo específico</string>
@@ -437,6 +440,7 @@
   <string name="markets_token_details_liquidity_description">El cambio en la cantidad de liquidez disponible para el token durante el período de tiempo especificado</string>
   <string name="markets_token_details_liquidity_full">Liquidez</string>
   <string name="markets_token_details_liquidity_index">Índice de liquidez</string>
+  <string name="markets_token_details_liquidity_index_description">Vacío</string>
   <string name="markets_token_details_listed_on">Listado en</string>
   <string name="markets_token_details_low">Bajo</string>
   <string name="markets_token_details_market_capitalization">Capital. de mercado</string>
@@ -453,6 +457,7 @@
   <string name="markets_token_details_price_performance">Rendimiento de precios</string>
   <string name="markets_token_details_repository">Repositorio</string>
   <string name="markets_token_details_security_score">Puntuación de seguridad</string>
+  <string name="markets_token_details_security_score_description">La puntuación de seguridad de un token es una métrica que evalúa el nivel de seguridad de una blockchain o token en función de varios factores y se genera a partir de las fuentes que se enumeran a continuación.</string>
   <string name="markets_token_details_social">Social</string>
   <string name="markets_token_details_total_supply">Suministro total</string>
   <string name="markets_token_details_total_supply_description">La cantidad máxima de monedas o tokens que pueden existir para una criptomoneda en particular</string>
@@ -509,12 +514,12 @@
   <string name="onboarding_navbar_title_creating_backup">Creando un backup</string>
   <string name="onboarding_seed_button_read_more">Leer más sobre seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">Vacío</item>
     <item quantity="other">Escriba estas %d palabras en el orden que se indica a continuación y guárdelas en un lugar seguro y secreto.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Su seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one"></item>
+    <item quantity="one">Vacío</item>
     <item quantity="other">%d palabras</item>
   </plurals>
   <string name="onboarding_seed_import_message">Para importar su billetera, ingrese su seed phrase en el campo de abajo</string>
@@ -566,12 +571,15 @@
   <string name="onramp_min_amount_restriction">La cantidad a comprar debe ser como mínimo %s</string>
   <string name="onramp_no_available_providers">No hay proveedores disponibles para esta moneda</string>
   <string name="onramp_pay_with">Pagar con</string>
+  <string name="onramp_redirecting_to_provider_subtitle">Podrá completar su transacción en el proveedor externo, %s</string>
+  <string name="onramp_redirecting_to_provider_title">Redirigiendo a %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Nuestros servicios no están disponibles en este país</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Cámbielo o confírmelo</string>
   <string name="onramp_residency_bottomsheet_title">Su residencia ha sido identificada como</string>
   <string name="onramp_settings_residence">Residencia</string>
   <string name="onramp_settings_residence_description">Seleccione el país correcto para garantizar opciones de pago y servicios precisos.</string>
   <string name="onramp_settings_title">Ajustes</string>
+  <string name="onramp_transaction_status_footer_text">Puede comprobar el estado de la transacción desde la página del token</string>
   <string name="onramp_via">Vía</string>
   <string name="organize_tokens_group">Agrupar</string>
   <string name="organize_tokens_sort_by_balance">Por saldo</string>
@@ -804,7 +812,7 @@
   <string name="staking_unbonding">Desunión</string>
   <string name="staking_unlocked_locked">Desbloquear</string>
   <string name="staking_unlocking">Desbloqueando</string>
-  <string name="staking_unstake_amount_requirement_error">La cantidad para el staking debe ser al menos %s</string>
+  <string name="staking_unstake_amount_requirement_error">La cantidad para el unstaking debe ser al menos %s</string>
   <string name="staking_unstake_amount_validation_error">El monto excede el saldo apostado</string>
   <string name="staking_unstaked">Sin staking</string>
   <string name="staking_unstaking">Unstaking</string>
@@ -884,6 +892,7 @@
   <string name="transaction_history_transaction_from_address">desde: %s</string>
   <string name="transaction_history_transaction_to_address">a: %s</string>
   <string name="transaction_history_transaction_validator">validador: %s</string>
+  <string name="transfer_min_amount_error">Mínimo %s</string>
   <string name="transfer_notification_invalid_minimum_transaction_amount_text">El monto mínimo para realizar esta transacción es %1$s.</string>
   <string name="try_to_load_data_again_button_title">Inténtelo de nuevo</string>
   <string name="twin_error_same_card">Ha escaneado la misma tarjeta. Para crear una billetera gemela, necesite escanear la tarjeta con no. %d</string>
@@ -949,6 +958,9 @@
   <string name="wallet_network_group_title">%s red</string>
   <string name="wallet_notification_address_copied">La dirección se copió correctamente</string>
   <string name="wallet_notification_no_internet">Sin conexión a internet</string>
+  <string name="wallet_promo_banner_button_title">Consíguelo ahora con un 10 %% de descuento</string>
+  <string name="wallet_promo_banner_description">Accede a más de 13 000 criptomonedas. Compra, vende, intercambia y realiza staking con un solo toque.\nVincula hasta tres tarjetas para hacer copias de seguridad.</string>
+  <string name="wallet_promo_banner_title">Descubre Tangem Wallet</string>
   <string name="wallet_settings_title">Ajusta de la wallet</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Use %s o escanee una tarjeta/anillo para desbloquear el acceso a su billetera</string>
