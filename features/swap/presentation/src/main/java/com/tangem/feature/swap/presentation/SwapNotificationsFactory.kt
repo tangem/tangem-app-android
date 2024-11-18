@@ -27,6 +27,7 @@ import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
+import java.math.BigDecimal
 
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
@@ -190,6 +191,7 @@ internal class SwapNotificationsFactory(
         addReduceAmountNotification(
             cryptoCurrencyStatus = fromCurrencyStatus,
             fromAmount = amountToRequest,
+            feeValue = fee?.feeValue.orZero(),
             onReduceAmount = actions.onReduceAmount,
         )
         addTransactionLimitErrorNotification(
@@ -293,17 +295,21 @@ internal class SwapNotificationsFactory(
     private fun MutableList<NotificationUM>.addReduceAmountNotification(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         fromAmount: SwapAmount,
+        feeValue: BigDecimal,
         onReduceAmount: (SwapAmount) -> Unit,
     ) {
         val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
-        if (isTezos && fromAmount.value == cryptoCurrencyStatus.value.amount) {
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val threshold = getTezosThreshold()
+        val isTotalBalance = fromAmount.value + feeValue >= balance && balance > threshold
+        if (isTezos && isTotalBalance) {
             add(
                 SwapNotificationUM.Warning.ReduceAmount(
                     currencyName = cryptoCurrencyStatus.currency.name,
-                    amount = getTezosThreshold().toPlainString(),
+                    amount = threshold.toPlainString(),
                     onConfirmClick = {
                         val patchedAmount = fromAmount.copy(
-                            value = fromAmount.value - getTezosThreshold(),
+                            value = fromAmount.value - threshold,
                         )
                         onReduceAmount(patchedAmount)
                     },
