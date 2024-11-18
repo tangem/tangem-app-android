@@ -10,6 +10,7 @@ import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackA
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -19,10 +20,13 @@ import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletCo
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.Wallet1ChooseOptionComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.MultiWalletCreateWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step.*
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.OnboardingMultiWallet
+import com.tangem.features.onboarding.v2.multiwallet.impl.ui.WalletArtworksState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -35,6 +39,18 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)
     private val stackNavigation = StackNavigation<OnboardingMultiWalletState.Step>()
+    private val artworksState = instanceKeeper.getOrCreateSimple {
+        MutableStateFlow(
+            when (model.state.value.currentStep) {
+                CreateWallet -> WalletArtworksState.Folded
+                ChooseBackupOption -> WalletArtworksState.Fan
+                SeedPhrase -> WalletArtworksState.Hidden
+                AddBackupDevice -> WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
+                FinishBackup -> WalletArtworksState.Stack()
+                Done -> error("Done state should not be used as starting state")
+            },
+        )
+    }
 
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = MutableStateFlow(
@@ -47,50 +63,84 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         }
     }
 
-    private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, MultiWalletChildComponent>> = childStack(
-        key = "innerStack",
-        source = stackNavigation,
-        serializer = null,
-        initialConfiguration = model.state.value.currentStep,
-        handleBackButton = true,
-        childFactory = { configuration, factoryContext -> createChild(configuration, childByContext(factoryContext)) },
-    )
+    private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, MultiWalletChildComponent>> =
+        childStack(
+            key = "innerStack",
+            source = stackNavigation,
+            serializer = null,
+            initialConfiguration = model.state.value.currentStep,
+            handleBackButton = true,
+            childFactory = { configuration, factoryContext ->
+                createChild(
+                    configuration,
+                    childByContext(factoryContext),
+                )
+            },
+        )
 
     private fun createChild(
         step: OnboardingMultiWalletState.Step,
         childContext: AppComponentContext,
     ): MultiWalletChildComponent {
         return when (step) {
-            OnboardingMultiWalletState.Step.CreateWallet -> MultiWalletCreateWalletComponent(
+            CreateWallet -> MultiWalletCreateWalletComponent(
                 context = childContext,
                 params = MultiWalletChildParams(
                     multiWalletState = model.state,
                     parentParams = params,
                 ),
-                onDone = ::onStepDone,
+                onNextStep = ::handleNavigationEvent,
             )
-            OnboardingMultiWalletState.Step.AddBackupDevice -> MultiWalletBackupComponent(
+            ChooseBackupOption -> Wallet1ChooseOptionComponent(
+                context = childContext,
+                onNextStep = ::handleNavigationEvent,
+            )
+            SeedPhrase -> TODO()
+            AddBackupDevice -> MultiWalletBackupComponent(
                 context = childContext,
                 params = MultiWalletChildParams(
                     multiWalletState = model.state,
                     parentParams = params,
                 ),
-                onDone = ::onStepDone,
+                onEvent = ::handleBackupComponentEvent,
             )
-            OnboardingMultiWalletState.Step.FinishBackup -> TODO()
-            OnboardingMultiWalletState.Step.Done -> TODO()
+            FinishBackup -> TODO()
+            Done -> TODO()
         }
     }
 
-    private fun onStepDone() {
-        when (model.state.value.currentStep) {
-            OnboardingMultiWalletState.Step.CreateWallet -> {
-                stackNavigation.push(OnboardingMultiWalletState.Step.AddBackupDevice)
-                // innerNavigation.state.value TODO
+    fun handleNavigationEvent(nextStep: OnboardingMultiWalletState.Step) {
+        when (nextStep) {
+            ChooseBackupOption -> {
+                artworksState.value = WalletArtworksState.Fan
             }
-            OnboardingMultiWalletState.Step.AddBackupDevice -> TODO()
-            OnboardingMultiWalletState.Step.FinishBackup -> TODO()
-            OnboardingMultiWalletState.Step.Done -> TODO()
+            SeedPhrase -> {
+                artworksState.value = WalletArtworksState.Hidden
+            }
+            AddBackupDevice -> {
+                artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
+            }
+            FinishBackup -> {
+            }
+            Done -> {
+                // TODO
+            }
+            else -> return
+        }
+        stackNavigation.push(nextStep)
+    }
+
+    fun handleBackupComponentEvent(event: MultiWalletBackupComponent.Event) {
+        when (event) {
+            MultiWalletBackupComponent.Event.Done -> {
+                // TODO navigate to finalize
+            }
+            MultiWalletBackupComponent.Event.OneDeviceAdded -> {
+                artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.Second)
+            }
+            MultiWalletBackupComponent.Event.TwoDeviceAdded -> {
+                artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.Third)
+            }
         }
     }
 
@@ -98,10 +148,12 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     override fun Content(modifier: Modifier) {
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
+        val artworksState by artworksState.collectAsStateWithLifecycle()
 
         OnboardingMultiWallet(
             state = state,
             modifier = modifier,
+            artworksState = artworksState,
             childContent = { mdfr ->
                 Children(
                     stack = stackState,
