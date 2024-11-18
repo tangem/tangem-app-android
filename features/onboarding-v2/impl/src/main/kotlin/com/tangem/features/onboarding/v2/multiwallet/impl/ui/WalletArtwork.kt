@@ -29,6 +29,8 @@ import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
 sealed class WalletArtworksState {
+    data object Hidden : WalletArtworksState()
+
     data object Folded : WalletArtworksState()
 
     data object Fan : WalletArtworksState()
@@ -57,6 +59,8 @@ sealed class WalletArtworksState {
 
 @Composable
 fun WalletArtworks(url: String?, state: WalletArtworksState, modifier: Modifier = Modifier) {
+    if (state is WalletArtworksState.Hidden) return
+
     BoxWithConstraints(
         modifier
             .heightIn(min = 180.dp)
@@ -243,6 +247,7 @@ private fun WalletCard(url: String?, modifier: Modifier = Modifier) {
 
 private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeightDp: Float, density: Float) =
     when (this) {
+        WalletArtworksState.Hidden -> listOf()
         is WalletArtworksState.Folded -> listOf(
             CardsTransitionState(
                 WalletCardTransitionState(),
