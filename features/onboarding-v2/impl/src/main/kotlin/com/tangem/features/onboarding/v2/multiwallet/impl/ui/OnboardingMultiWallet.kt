@@ -17,6 +17,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMul
 @Suppress("MagicNumber")
 internal fun OnboardingMultiWallet(
     state: OnboardingMultiWalletUM,
+    artworksState: WalletArtworksState,
     modifier: Modifier = Modifier,
     childContent: @Composable (Modifier) -> Unit = {},
 ) {
@@ -32,11 +33,15 @@ internal fun OnboardingMultiWallet(
                 .padding(horizontal = 34.dp)
                 .padding(top = 20.dp)
                 .fillMaxWidth(),
-            state = WalletArtworksState.Folded,
+            state = artworksState,
         )
 
         Box(
-            modifier = Modifier.weight(.44f),
+            modifier = if (artworksState == WalletArtworksState.Hidden) {
+                Modifier.fillMaxSize()
+            } else {
+                Modifier.weight(.44f)
+            },
             contentAlignment = Alignment.BottomStart,
         ) {
             childContent(Modifier)
@@ -50,6 +55,7 @@ private fun Preview() {
     TangemThemePreview {
         OnboardingMultiWallet(
             state = OnboardingMultiWalletUM(artworkUrl = null),
+            artworksState = WalletArtworksState.Folded,
             childContent = { md ->
                 Box(
                     modifier = md
