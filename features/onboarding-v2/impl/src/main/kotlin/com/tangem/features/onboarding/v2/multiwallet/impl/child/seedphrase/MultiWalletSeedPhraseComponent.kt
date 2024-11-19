@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -35,6 +36,10 @@ class MultiWalletSeedPhraseComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+
+        BackHandler(enabled = true) {
+            model.onBack()
+        }
 
         MultiWalletSeedPhrase(
             modifier = modifier,
