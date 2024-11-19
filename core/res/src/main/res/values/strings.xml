@@ -294,6 +294,9 @@
   <string name="express_provider_not_available">Unavailable for this pair</string>
   <string name="express_provider_permission_needed">Permission Required</string>
   <string name="express_provider_recommended">Recommended</string>
+  <string name="express_status_bought">Bought %s</string>
+  <string name="express_status_buying">Buying %s</string>
+  <string name="express_status_buying_active">Buying %s...</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>

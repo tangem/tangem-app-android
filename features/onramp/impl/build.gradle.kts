@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.featuretoggles)
+    implementation(projects.core.navigation)
 
     /** Project - Common */
     implementation(projects.common.routing)
@@ -42,7 +43,6 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation(project(":common:ui"))
     kapt(deps.hilt.kapt)
 
     /** AndroidX */
