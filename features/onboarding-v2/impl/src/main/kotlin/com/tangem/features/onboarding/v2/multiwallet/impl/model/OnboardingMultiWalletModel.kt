@@ -42,6 +42,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     private fun getInitialStep(): OnboardingMultiWalletState.Step {
         val card = params.scanResponse.card
 
+        // todo check local storage for scan response
         return when {
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup ->
                 OnboardingMultiWalletState.Step.AddBackupDevice
