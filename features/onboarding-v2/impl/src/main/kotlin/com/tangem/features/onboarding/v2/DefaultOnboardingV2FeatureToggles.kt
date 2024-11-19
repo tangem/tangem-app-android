@@ -6,7 +6,6 @@ import javax.inject.Inject
 internal class DefaultOnboardingV2FeatureToggles @Inject constructor(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : OnboardingV2FeatureToggles {
-    override val isOnboardingV2Enabled: Boolean =
-        true
-    // get() = featureTogglesManager.isFeatureEnabled("ONBOARDING_CODE_REFACTORING_ENABLED")
+    override val isOnboardingV2Enabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("ONBOARDING_CODE_REFACTORING_ENABLED")
 }
