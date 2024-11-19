@@ -2,8 +2,6 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,33 +16,32 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMul
 internal fun OnboardingMultiWallet(
     state: OnboardingMultiWalletUM,
     artworksState: WalletArtworksState,
+    isSeedPhraseState: Boolean,
     modifier: Modifier = Modifier,
     childContent: @Composable (Modifier) -> Unit = {},
 ) {
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier.fillMaxSize(),
     ) {
-        WalletArtworks(
-            url = state.artworkUrl,
-            modifier = Modifier
-                .weight(.56f)
-                .padding(horizontal = 34.dp)
-                .padding(top = 20.dp)
-                .fillMaxWidth(),
-            state = artworksState,
-        )
+        if (isSeedPhraseState.not()) {
+            WalletArtworks(
+                url = state.artworkUrl,
+                modifier = Modifier
+                    .weight(.56f)
+                    .padding(horizontal = 34.dp)
+                    .padding(top = 20.dp)
+                    .fillMaxWidth(),
+                state = artworksState,
+            )
 
-        Box(
-            modifier = if (artworksState == WalletArtworksState.Hidden) {
-                Modifier.fillMaxSize()
-            } else {
-                Modifier.weight(.44f)
-            },
-            contentAlignment = Alignment.BottomStart,
-        ) {
-            childContent(Modifier)
+            Box(
+                modifier = Modifier.weight(.44f),
+                contentAlignment = Alignment.BottomStart,
+            ) {
+                childContent(Modifier)
+            }
+        } else {
+            childContent(Modifier.fillMaxSize())
         }
     }
 }
@@ -56,12 +53,32 @@ private fun Preview() {
         OnboardingMultiWallet(
             state = OnboardingMultiWalletUM(artworkUrl = null),
             artworksState = WalletArtworksState.Folded,
+            isSeedPhraseState = false,
             childContent = { md ->
                 Box(
                     modifier = md
                         .fillMaxWidth()
                         .height(200.dp)
                         .background(Color.DarkGray),
+                )
+            },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Composable
+private fun Preview2() {
+    TangemThemePreview {
+        OnboardingMultiWallet(
+            state = OnboardingMultiWalletUM(artworkUrl = null),
+            artworksState = WalletArtworksState.Folded,
+            isSeedPhraseState = true,
+            childContent = { md ->
+                Box(
+                    modifier = md
+                        .background(Color.DarkGray)
+                        .fillMaxSize(),
                 )
             },
         )
