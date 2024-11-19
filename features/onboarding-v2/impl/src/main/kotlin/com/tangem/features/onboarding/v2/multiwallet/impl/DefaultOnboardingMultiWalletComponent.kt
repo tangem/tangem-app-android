@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.decompose.FaultyDecomposeApi
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
@@ -22,6 +24,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.Wallet1ChooseOptionComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.MultiWalletCreateWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.MultiWalletSeedPhraseComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step.*
@@ -30,6 +33,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.ui.WalletArtworksState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor(
@@ -44,7 +48,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             when (model.state.value.currentStep) {
                 CreateWallet -> WalletArtworksState.Folded
                 ChooseBackupOption -> WalletArtworksState.Fan
-                SeedPhrase -> WalletArtworksState.Hidden
+                SeedPhrase -> WalletArtworksState.Folded
                 AddBackupDevice -> WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
                 FinishBackup -> WalletArtworksState.Stack()
                 Done -> error("Done state should not be used as starting state")
@@ -95,7 +99,15 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 context = childContext,
                 onNextStep = ::handleNavigationEvent,
             )
-            SeedPhrase -> TODO()
+            SeedPhrase -> MultiWalletSeedPhraseComponent(
+                context = childContext,
+                params = MultiWalletChildParams(
+                    multiWalletState = model.state,
+                    parentParams = params,
+                ),
+                onNextStep = ::handleNavigationEvent,
+                backButtonClickFlow = MutableSharedFlow(),
+            )
             AddBackupDevice -> MultiWalletBackupComponent(
                 context = childContext,
                 params = MultiWalletChildParams(
@@ -115,7 +127,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 artworksState.value = WalletArtworksState.Fan
             }
             SeedPhrase -> {
-                artworksState.value = WalletArtworksState.Hidden
             }
             AddBackupDevice -> {
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
@@ -144,6 +155,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         }
     }
 
+    @OptIn(FaultyDecomposeApi::class)
     @Composable
     override fun Content(modifier: Modifier) {
         val stackState by childStack.subscribeAsState()
@@ -154,10 +166,19 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             state = state,
             modifier = modifier,
             artworksState = artworksState,
+            isSeedPhraseState = stackState.active.configuration == SeedPhrase,
             childContent = { mdfr ->
                 Children(
                     stack = stackState,
-                    animation = stackAnimation(slide()),
+                    animation = stackAnimation(
+                        selector = { one, two, direction ->
+                            if (one.configuration == SeedPhrase || two.configuration == SeedPhrase) {
+                                fade()
+                            } else {
+                                slide()
+                            }
+                        },
+                    ),
                 ) {
                     it.instance.Content(mdfr)
                 }
