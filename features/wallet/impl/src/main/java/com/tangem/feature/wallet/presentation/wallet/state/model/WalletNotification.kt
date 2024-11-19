@@ -2,10 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.pluralReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.feature.wallet.impl.R
 import org.joda.time.DateTime
 
@@ -143,7 +140,7 @@ sealed class WalletNotification(val config: NotificationConfig) {
             ),
         )
 
-        object DemoCard : Informational(
+        data object DemoCard : Informational(
             title = resourceReference(id = R.string.warning_demo_mode_title),
             subtitle = resourceReference(id = R.string.warning_demo_mode_message),
         )
@@ -202,6 +199,22 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconResId = R.drawable.img_card_with_ring,
             backgroundResId = R.drawable.img_ring_promo_background,
             onCloseClick = onCloseClick,
+        ),
+    )
+
+    data class NoteMigration(val onClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            title = stringReference("Discover Tangem Wallet"),
+            subtitle = stringReference(
+                "Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap. Link up to three " +
+                    "cards for a backup.",
+            ),
+            iconResId = R.drawable.img_card_with_ring,
+            backgroundResId = R.drawable.img_ring_promo_background,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = stringReference("Get now"),
+                onClick = onClick,
+            ),
         ),
     )
 }
