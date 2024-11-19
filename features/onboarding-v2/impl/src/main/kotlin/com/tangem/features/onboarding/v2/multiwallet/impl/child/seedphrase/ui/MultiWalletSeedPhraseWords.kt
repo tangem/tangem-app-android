@@ -23,6 +23,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.st
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 @Composable
 fun MultiWalletSeedPhraseWords(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifier: Modifier = Modifier) {
@@ -37,19 +38,18 @@ fun MultiWalletSeedPhraseWords(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase
         SeedPhraseGridBlock(
             mnemonicGridItems = state.words,
             modifier = Modifier
-                .padding(top = 20.dp, bottom = 92.dp),
+                .weight(1f)
+                .fillMaxWidth()
+                .padding(top = 20.dp, bottom = 32.dp),
         )
 
-        Box(Modifier.weight(1f)) {
-            PrimaryButton(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                text = stringResource(id = R.string.common_continue),
-                onClick = state.onContinueClick,
-            )
-        }
+        PrimaryButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+            text = stringResource(id = R.string.common_continue),
+            onClick = state.onContinueClick,
+        )
     }
 }
 
@@ -61,7 +61,7 @@ private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, 
         config = persistentListOf(0, 1),
         initialSelectedItem = if (state.words24OptionSelected.not()) 0 else 1,
         onClick = {
-            if (state.words24OptionSelected && it == 1 || state.words24OptionSelected.not() && it == 0) {
+            if (state.words24OptionSelected && it == 0 || state.words24OptionSelected.not() && it == 1) {
                 state.onWords24OptionSwitch()
             }
         },
@@ -160,10 +160,10 @@ private inline fun <T> VerticalGrid(
 ) {
     val columnLength = items.size / 2
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
-        for (index in 0 until 2) {
+        repeat(2) { index ->
             Column {
                 for (i in 0 until columnLength) {
                     val item = items[index * columnLength + i]
@@ -174,34 +174,18 @@ private inline fun <T> VerticalGrid(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 640)
 @Composable
 private fun Preview() {
     TangemThemePreview {
         MultiWalletSeedPhraseWords(
             state = MultiWalletSeedPhraseUM.GenerateSeedPhrase(
-                words = persistentListOf(
+                words = List(24) {
                     MnemonicGridItem(
-                        index = 0,
+                        index = it + 1,
                         mnemonic = "word1",
-                    ),
-                    MnemonicGridItem(
-                        index = 1,
-                        mnemonic = "word1",
-                    ),
-                    MnemonicGridItem(
-                        index = 2,
-                        mnemonic = "word1",
-                    ),
-                    MnemonicGridItem(
-                        index = 3,
-                        mnemonic = "word1",
-                    ),
-                    MnemonicGridItem(
-                        index = 4,
-                        mnemonic = "word1",
-                    ),
-                ),
+                    )
+                }.toImmutableList(),
             ),
         )
     }
