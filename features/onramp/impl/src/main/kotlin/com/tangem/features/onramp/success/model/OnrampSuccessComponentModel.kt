@@ -1,25 +1,97 @@
 package com.tangem.features.onramp.success.model
 
+import arrow.core.getOrElse
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.onramp.GetOnrampStatusUseCase
+import com.tangem.domain.onramp.GetOnrampTransactionUseCase
+import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
+import com.tangem.domain.onramp.model.OnrampStatus
+import com.tangem.domain.onramp.model.cache.OnrampTransaction
+import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.features.onramp.component.OnrampSuccessComponent
+import com.tangem.features.onramp.success.entity.OnrampSuccessClickIntents
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
+import com.tangem.features.onramp.success.entity.conterter.SetOnrampSuccessContentConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class OnrampSuccessComponentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    private val urlOpener: UrlOpener,
+    private val getOnrampTransactionUseCase: GetOnrampTransactionUseCase,
+    private val getOnrampStatusUseCase: GetOnrampStatusUseCase,
+    private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
+    private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
     paramsContainer: ParamsContainer,
-) : Model() {
+) : Model(), OnrampSuccessClickIntents {
 
-    // todo onramp remove in [REDACTED_JIRA]
-    @Suppress("UnusedPrivateMember")
     private val params: OnrampSuccessComponent.Params = paramsContainer.require()
     private val _state: MutableStateFlow<OnrampSuccessComponentUM> = MutableStateFlow(
         value = OnrampSuccessComponentUM.Loading,
     )
+
     val state: StateFlow<OnrampSuccessComponentUM> get() = _state.asStateFlow()
+
+    init {
+        loadData()
+    }
+
+    override fun goToProviderClick(providerLink: String) {
+        urlOpener.openUrl(providerLink)
+    }
+
+    private fun loadData() {
+        modelScope.launch {
+            getOnrampTransactionUseCase(txId = params.txId)
+                .fold(
+                    ifLeft = {
+                        Timber.e(it.toString())
+                    },
+                    ifRight = { transaction ->
+                        loadTransactionStatus(transaction)
+                    },
+                )
+        }
+    }
+
+    private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
+        val cryptoCurrencies = getCryptoCurrencyUseCase(
+            transaction.userWalletId,
+            transaction.toCurrencyId,
+        ).getOrElse { error("Crypto currency not found") }
+
+        getOnrampStatusUseCase(txId = params.txId)
+            .fold(
+                ifLeft = {
+                    Timber.e(it.toString())
+                },
+                ifRight = { status ->
+                    _state.update {
+                        SetOnrampSuccessContentConverter(
+                            cryptoCurrency = cryptoCurrencies,
+                            transaction = transaction,
+                            goToProviderClick = ::goToProviderClick,
+                        ).convert(status)
+                    }
+                    removeTransactionIfTerminalStatus(status)
+                },
+            )
+    }
+
+    private fun removeTransactionIfTerminalStatus(status: OnrampStatus) {
+        modelScope.launch {
+            if (status.status.isTerminal()) {
+                onrampRemoveTransactionUseCase(status.txId)
+            }
+        }
+    }
 }
