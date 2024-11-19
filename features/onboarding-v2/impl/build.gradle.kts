@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.res)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
 
     /** Domain */
     implementation(projects.domain.models)
@@ -51,6 +52,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.androidx.activity.compose)
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
