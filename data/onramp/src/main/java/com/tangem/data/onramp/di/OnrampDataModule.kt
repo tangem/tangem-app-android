@@ -4,6 +4,7 @@ import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.local.onramp.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
@@ -25,11 +26,13 @@ internal object OnrampDataModule {
         onrampApi: OnrampApi,
         dispatchers: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
+        paymentMethodsStore: OnrampPaymentMethodsStore,
     ): OnrampRepository {
         return DefaultOnrampRepository(
             onrampApi = onrampApi,
             dispatchers = dispatchers,
             appPreferencesStore = appPreferencesStore,
+            paymentMethodsStore = paymentMethodsStore,
         )
     }
 
