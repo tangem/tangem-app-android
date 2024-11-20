@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 
 @Composable
-fun MultiWalletSeedPhrase(state: MultiWalletSeedPhraseUM, modifier: Modifier = Modifier) {
+internal fun MultiWalletSeedPhrase(state: MultiWalletSeedPhraseUM, modifier: Modifier = Modifier) {
     AnimatedContent(
         modifier = modifier.navigationBarsPadding(),
         targetState = state,

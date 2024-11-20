@@ -21,7 +21,7 @@ import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.state.MultiWalletCreateWalletUM
 
 @Composable
-fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier: Modifier = Modifier) {
+internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier: Modifier = Modifier) {
     if (state.dialog != null) {
         BasicDialog(
             title = state.dialog.title.resolveReference(),
