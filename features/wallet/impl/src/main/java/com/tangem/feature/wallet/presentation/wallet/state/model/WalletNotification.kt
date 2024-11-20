@@ -204,15 +204,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
 
     data class NoteMigration(val onClick: () -> Unit) : WalletNotification(
         config = NotificationConfig(
-            title = stringReference("Discover Tangem Wallet"),
-            subtitle = stringReference(
-                "Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap. Link up to three " +
-                    "cards for a backup.",
-            ),
-            iconResId = R.drawable.img_card_with_ring,
-            backgroundResId = R.drawable.img_ring_promo_background,
+            title = resourceReference(R.string.wallet_promo_banner_title),
+            subtitle = resourceReference(R.string.wallet_promo_banner_description),
+            iconResId = R.drawable.banner_note_migration,
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-                text = stringReference("Get now"),
+                text = resourceReference(R.string.wallet_promo_banner_button_title),
                 onClick = onClick,
             ),
         ),
