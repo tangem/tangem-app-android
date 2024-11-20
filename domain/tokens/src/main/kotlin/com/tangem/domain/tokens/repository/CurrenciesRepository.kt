@@ -168,6 +168,17 @@ interface CurrenciesRepository {
     suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
 
     /**
+     * Retrieves the cryptocurrency for a specific multi-currency user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param id The unique identifier of the cryptocurrency to be retrieved.
+     * @return The cryptocurrency associated with the user wallet and ID.
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency
+
+    /**
      * Get the coin for a specific network.
      *
      * @param userWalletId The unique identifier of the user wallet.
