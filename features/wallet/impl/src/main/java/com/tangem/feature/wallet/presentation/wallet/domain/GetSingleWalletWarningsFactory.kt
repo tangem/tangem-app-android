@@ -170,7 +170,10 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
         if (condition) {
             add(element = element)
-            if (element is WalletNotification.Critical || element is WalletNotification.Warning) {
+            if (element is WalletNotification.Critical ||
+                element is WalletNotification.Warning ||
+                element is WalletNotification.NoteMigration
+            ) {
                 readyForRateAppNotification = false
             }
         }
