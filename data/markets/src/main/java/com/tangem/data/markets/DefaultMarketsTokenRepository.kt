@@ -64,14 +64,10 @@ internal class DefaultMarketsTokenRepository(
 
                 // we shouldn't infinitely retry on the first batch request
                 val res = if (isFirstBatchFetching) {
-                    catchApiErrorAndSendEvent(errorEvent = MarketsDataAnalyticsEvent.List.Error) {
-                        requestCall()
-                    }
+                    catchListErrorAndSendEvent { requestCall() }
                 } else {
                     retryOnError(priority = true) {
-                        catchApiErrorAndSendEvent(errorEvent = MarketsDataAnalyticsEvent.List.Error) {
-                            requestCall()
-                        }
+                        catchListErrorAndSendEvent { requestCall() }
                     }
                 }
 
@@ -100,7 +96,7 @@ internal class DefaultMarketsTokenRepository(
             marketsApi = marketsApi,
             analyticsEventHandler = analyticsEventHandler,
             onApiError = {
-                analyticsEventHandler.send(MarketsDataAnalyticsEvent.List.Error.toEvent())
+                analyticsEventHandler.send(createListErrorEvent(it).toEvent())
             },
         )
 
@@ -128,11 +124,9 @@ internal class DefaultMarketsTokenRepository(
             interval = interval.toRequestParam(),
         )
 
-        val result = catchApiErrorAndSendEvent(
-            errorEvent = MarketsDataAnalyticsEvent.Details.Error(
-                request = MarketsDataAnalyticsEvent.Details.Error.Request.Chart,
-                tokenSymbol = tokenSymbol,
-            ),
+        val result = catchDetailsErrorAndSendEvent(
+            request = MarketsDataAnalyticsEvent.Details.Error.Request.Chart,
+            tokenSymbol = tokenSymbol,
         ) {
             response.getOrThrow()
         }
@@ -146,6 +140,7 @@ internal class DefaultMarketsTokenRepository(
                 analyticsEventHandler.send(
                     MarketsDataAnalyticsEvent.ChartNullValuesError(
                         requestPath = "coins/history",
+                        errorType = MarketsDataAnalyticsEvent.Type.Custom,
                     ),
                 )
             },
@@ -159,18 +154,16 @@ internal class DefaultMarketsTokenRepository(
         tokenSymbol: String,
     ) = withContext(dispatcherProvider.io) {
         val mappedTokenId = getTokenIdIfL2Network(tokenId)
-        val response = marketsApi.getCoinsListCharts(
-            coinIds = mappedTokenId,
-            currency = fiatCurrencyCode,
-            interval = interval.toRequestParam(),
-        )
 
-        val chart = catchApiErrorAndSendEvent(errorEvent = MarketsDataAnalyticsEvent.List.Error) {
-            response.getOrThrow()[mappedTokenId] ?: error(
+        val chart = catchListErrorAndSendEvent {
+            marketsApi.getCoinsListCharts(
+                coinIds = mappedTokenId,
+                currency = fiatCurrencyCode,
+                interval = interval.toRequestParam(),
+            ).getOrThrow()[mappedTokenId] ?: error(
                 "No chart preview data for the token $mappedTokenId",
             )
         }
-
         return@withContext TokenChartConverter.convert(
             interval = interval,
             value = chart,
@@ -180,6 +173,7 @@ internal class DefaultMarketsTokenRepository(
                 analyticsEventHandler.send(
                     MarketsDataAnalyticsEvent.ChartNullValuesError(
                         requestPath = "coins/history_preview",
+                        errorType = MarketsDataAnalyticsEvent.Type.Custom,
                     ),
                 )
             },
@@ -192,19 +186,15 @@ internal class DefaultMarketsTokenRepository(
         tokenSymbol: String,
         languageCode: String,
     ) = withContext(dispatcherProvider.io) {
-        val response = marketsApi.getCoinMarketData(
-            currency = fiatCurrencyCode,
-            coinId = tokenId,
-            language = languageCode,
-        )
-
-        val result = catchApiErrorAndSendEvent(
-            errorEvent = MarketsDataAnalyticsEvent.Details.Error(
-                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
-                tokenSymbol = tokenSymbol,
-            ),
+        val result = catchDetailsErrorAndSendEvent(
+            request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
+            tokenSymbol = tokenSymbol,
         ) {
-            response.getOrThrow()
+            marketsApi.getCoinMarketData(
+                currency = fiatCurrencyCode,
+                coinId = tokenId,
+                language = languageCode,
+            ).getOrThrow()
         }
 
         val resultResponse = result.applyL2Compatibility(tokenId)
@@ -214,19 +204,16 @@ internal class DefaultMarketsTokenRepository(
     override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String) =
         withContext(dispatcherProvider.io) {
             // for second markets iteration we should use extended api method with all required fields
-            val response = tangemTechApi.getQuotes(
-                currencyId = fiatCurrencyCode,
-                coinIds = tokenId,
-                fields = marketsQuoteFields.joinToString(separator = ","),
-            )
 
-            val result = catchApiErrorAndSendEvent(
-                errorEvent = MarketsDataAnalyticsEvent.Details.Error(
-                    request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
-                    tokenSymbol = tokenSymbol,
-                ),
+            val result = catchDetailsErrorAndSendEvent(
+                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
+                tokenSymbol = tokenSymbol,
             ) {
-                response.getOrThrow()
+                tangemTechApi.getQuotes(
+                    currencyId = fiatCurrencyCode,
+                    coinIds = tokenId,
+                    fields = marketsQuoteFields.joinToString(separator = ","),
+                ).getOrThrow()
             }
 
             return@withContext TokenQuotesShortConverter.convert(tokenId, result).toFull()
@@ -272,15 +259,75 @@ internal class DefaultMarketsTokenRepository(
         }
     }
 
-    private inline fun <T> catchApiErrorAndSendEvent(errorEvent: MarketsDataAnalyticsEvent, block: () -> T): T {
+    inline fun <T> catchListErrorAndSendEvent(block: () -> T): T {
+        return catchErrorAndSendEvent(block, ::createListErrorEvent)
+    }
+
+    private inline fun <T> catchDetailsErrorAndSendEvent(
+        request: MarketsDataAnalyticsEvent.Details.Error.Request,
+        tokenSymbol: String,
+        block: () -> T,
+    ): T {
+        return catchErrorAndSendEvent(block) { error ->
+            createDetailsErrorEvent(error, request, tokenSymbol)
+        }
+    }
+
+    private inline fun <T> catchErrorAndSendEvent(
+        block: () -> T,
+        createErrorEvent: (ApiResponseError) -> MarketsDataAnalyticsEvent,
+    ): T {
         return try {
             block()
-        } catch (e: ApiResponseError.HttpException) {
+        } catch (e: ApiResponseError) {
+            val errorEvent = createErrorEvent(e)
+
             analyticsEventHandler.send(errorEvent.toEvent())
             throw e
-        } catch (e: ApiResponseError.TimeoutException) {
-            analyticsEventHandler.send(errorEvent.toEvent())
-            throw e
+        }
+    }
+
+    private fun createListErrorEvent(error: ApiResponseError): MarketsDataAnalyticsEvent.List.Error {
+        return createErrorEvent(error) { errorType, errorCode ->
+            MarketsDataAnalyticsEvent.List.Error(
+                errorType = errorType,
+                errorCode = errorCode,
+            )
+        }
+    }
+
+    private fun createDetailsErrorEvent(
+        error: ApiResponseError,
+        request: MarketsDataAnalyticsEvent.Details.Error.Request,
+        tokenSymbol: String,
+    ): MarketsDataAnalyticsEvent.Details.Error {
+        return createErrorEvent(error) { errorType, errorCode ->
+            MarketsDataAnalyticsEvent.Details.Error(
+                errorType = errorType,
+                errorCode = errorCode,
+                request = request,
+                tokenSymbol = tokenSymbol,
+            )
+        }
+    }
+
+    private inline fun <T> createErrorEvent(
+        error: ApiResponseError,
+        createEvent: (MarketsDataAnalyticsEvent.Type, Int?) -> T,
+    ): T {
+        return when (error) {
+            is ApiResponseError.HttpException -> {
+                createEvent(MarketsDataAnalyticsEvent.Type.Http, error.code.code)
+            }
+            is ApiResponseError.TimeoutException -> {
+                createEvent(MarketsDataAnalyticsEvent.Type.Timeout, null)
+            }
+            is ApiResponseError.NetworkException -> {
+                createEvent(MarketsDataAnalyticsEvent.Type.Network, null)
+            }
+            is ApiResponseError.UnknownException -> {
+                createEvent(MarketsDataAnalyticsEvent.Type.Unknown, null)
+            }
         }
     }
 }
