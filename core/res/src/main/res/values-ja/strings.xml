@@ -830,7 +830,7 @@
   <string name="swapping_alert_cex_description_with_slippage">金額には以下が含まれます: \n • サービス プロバイダーの手数料\n • 取引所からユーザーのアドレスに%1$sを送金するためのネットワーク手数料。 \n\nプロバイダーのスリッページは最大%2$sです</string>
   <string name="swapping_alert_dex_description">この金額には、サービスプロバイダーの手数料が含まれています。</string>
   <string name="swapping_alert_dex_description_with_slippage">金額にはサービスプロバイダーの手数料が含まれます。 \n\nプロバイダーのスリッページは最大%s です</string>
-  <string name="swapping_alert_title">手数料</string>
+  <string name="swapping_alert_title">情報</string>
   <string name="swapping_approve_information_text">すべての分散型取引所は、スマートコントラクトがあなたの許可なくウォレットにアクセスするのを防ぐために承認を必要とします。設計上、スマートコントラクトは承認なしでトークンにアクセスできません。トークンを「ロック解除」することで、あなたは1-inchのスマートコントラクトがトークンを使うことを承認します。ネットワークのマイナーは、このアクションをブロックチェーンに記録するためのガス料金（あなたが支払う）を受け取ります。承認後、トークンを交換することができます。</string>
   <string name="swapping_approve_information_title">承認</string>
   <string name="swapping_fee_estimation_error_text">手数料見積りエラーです。サポートにフィードバックをお送りください。</string>
@@ -846,14 +846,14 @@
   <string name="toast_balances_shown">残高表示</string>
   <string name="toast_undo">元に戻す</string>
   <string name="token_button_unavailability_generic_description">この操作は現在利用できません。しばらくしてからもう一度お試しください。</string>
-  <string name="token_button_unavailability_reason_buy_unavailable">現在、 %sの買付はご利用いただけません。アップデート情報をご確認ください。</string>
+  <string name="token_button_unavailability_reason_buy_unavailable">%sの買付は、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">売却できる資金がありません。アカウントに入金して、売却できるようにしてください。</string>
   <string name="token_button_unavailability_reason_empty_balance_send">送金する資金がありません。アカウントに入金して、送金できるようにしてください。</string>
-  <string name="token_button_unavailability_reason_not_exchangeable">現在、 %sの交換はご利用いただけません。アップデート情報を確認してください。</string>
+  <string name="token_button_unavailability_reason_not_exchangeable">%sのスワップは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">ネットワーク%s内の保留中の取引が完了すると、資金の売却が可能になります。</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">ネットワーク%s内の保留中の取引が完了すると、送金が可能になります。</string>
-  <string name="token_button_unavailability_reason_sell_unavailable">現在、 %sの売却はご利用いただけません。アップデート情報をご確認ください。</string>
-  <string name="token_button_unavailability_reason_staking_unavailable">%s のステーキングは現在ご利用いただけません。最新情報をご確認ください。</string>
+  <string name="token_button_unavailability_reason_sell_unavailable">%sの売却は、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
+  <string name="token_button_unavailability_reason_staking_unavailable">%sのステーキングは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_details_generate_xpub">XPUBを生成する</string>
   <string name="token_details_hide_alert_hide">非表示</string>
   <string name="token_details_hide_alert_message">このトークンをメイン画面から非表示にします。トークンの管理ページからいつでも再度追加できます。</string>
@@ -946,7 +946,7 @@
   <string name="wallet_network_group_title">%sネットワーク</string>
   <string name="wallet_notification_address_copied">アドレスがクリップボードにコピーされました</string>
   <string name="wallet_notification_no_internet">インターネット接続がありません</string>
-  <string name="wallet_promo_banner_button_title">今すぐ10 %オフで購入</string>
+  <string name="wallet_promo_banner_button_title">今すぐ10 %%オフで購入</string>
   <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_title">ウォレット設定</string>
@@ -1019,7 +1019,7 @@
   <string name="warning_solana_fee_message">Solanaネットワークが混雑しています。2分以内に取引が完了しない場合は、再度取引を繰り返してください。</string>
   <string name="warning_solana_fee_title">Solanaネットワークアラート</string>
   <string name="warning_solana_rent_fee_message">Solana ネットワークは 2 日ごとに%1$sのレンタル料を請求します。レンタル料を支払えないアカウントはネットワークから削除されます。アカウントに%2$s以上入金すると、無料で使用できます。</string>
-  <string name="warning_some_networks_unreachable_message">現在、一部のネットワークにアクセスできません。しばらくしてからもう一度お試しください。</string>
+  <string name="warning_some_networks_unreachable_message">下にスワイプして更新するか、後でもう一度お試しください。</string>
   <string name="warning_some_networks_unreachable_title">一部のネットワークにアクセスできません</string>
   <string name="warning_testnet_card_message">これはテストネットカードです。取引処理はできませんので、テストおよび開発目的でのみご利用ください。</string>
   <string name="warning_testnet_card_title">テスト目的のみ</string>
