@@ -25,10 +25,10 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
     if (state.dialog != null) {
         BasicDialog(
             title = state.dialog.title.resolveReference(),
-            message = state.dialog.description.resolveReference(),
+            message = state.dialog.message.resolveReference(),
             confirmButton = DialogButtonUM(
                 title = state.dialog.confirmButtonText.resolveReference(),
-                onClick = state.dialog.onConfirm,
+                onClick = state.dialog.onConfirmClick,
             ),
             dismissButton = DialogButtonUM(
                 title = state.dialog.dismissButtonText.resolveReference(),

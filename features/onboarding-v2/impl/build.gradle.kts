@@ -25,6 +25,9 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
 
+    /** Common */
+    implementation(projects.common.ui)
+
     /** Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.feedback)

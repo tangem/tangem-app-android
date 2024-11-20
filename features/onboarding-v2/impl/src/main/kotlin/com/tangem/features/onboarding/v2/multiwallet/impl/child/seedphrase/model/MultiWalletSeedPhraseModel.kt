@@ -15,7 +15,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.ImportSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.SeedPhraseCheckUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
-import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.OnboardingDialog
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -195,7 +195,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         }
     }
 
-    private fun updateDialog(dialog: OnboardingDialog?) {
+    private fun updateDialog(dialog: OnboardingDialogUM?) {
         _uiState.update { st ->
             when (st) {
                 is MultiWalletSeedPhraseUM.GeneratedWordsCheck -> st.copy(dialog = dialog)

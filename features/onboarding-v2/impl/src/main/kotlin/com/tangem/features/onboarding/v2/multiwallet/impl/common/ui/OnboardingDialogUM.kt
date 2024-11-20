@@ -1,14 +1,15 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.common.ui
 
+import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.extensions.TextReference
 
-internal data class OnboardingDialog(
-    val title: TextReference,
-    val description: TextReference,
+internal data class OnboardingDialogUM(
+    override val title: TextReference,
+    override val message: TextReference,
     val dismissButtonText: TextReference,
-    val confirmButtonText: TextReference,
+    override val confirmButtonText: TextReference,
     val dismissWarningColor: Boolean = false,
-    val onConfirm: () -> Unit,
+    override val onConfirmClick: () -> Unit,
     val onDismissButtonClick: () -> Unit,
     val onDismiss: () -> Unit,
-)
+) : AlertUM
