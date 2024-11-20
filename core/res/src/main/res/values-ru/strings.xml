@@ -913,6 +913,7 @@
   <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
   <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту/кольцо, чтобы получить доступ к своему кошельку</string>
+  <string name="unsupported_wc_version">Соединение не удалось: это dApp использует Wallet Connect версии 1.0, которая не поддерживается. Убедитесь, что dApp поддерживает Wallet Connect версии 2.0 для успешного подключения.</string>
   <string name="user_push_notification_agreement_argument_one">Будьте в курсе новых функций и новостей</string>
   <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
@@ -1012,6 +1013,9 @@
   <string name="warning_hedera_missing_token_association_message_brief">Этот токен должен быть ассоциирован с вашей учетной записью Hedera, прежде чем вы сможете его принять</string>
   <string name="warning_hedera_missing_token_association_title">Ассоциируете свой токен</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Недостаточно %s. Пополните ваш аккаунт Hedera для ассоциации этого токена</string>
+  <string name="warning_kaspa_unfinished_token_transaction_discard_message">Вы уверены что хотите отменить эту транзакцию? Вы не сможете отправить ее еще раз</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакция %1$s %2$s не была завершена. Вы можете попробовать отправить ее еще раз.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_title">У вас есть незавершенная транзакция</string>
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>
