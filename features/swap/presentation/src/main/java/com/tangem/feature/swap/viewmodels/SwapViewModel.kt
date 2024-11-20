@@ -102,7 +102,6 @@ internal class SwapViewModel @Inject constructor(
         get() = if (walletFeatureToggles.isMainActionButtonsEnabled) {
             savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_TO_KEY)
                 ?.unbundle(CryptoCurrency.serializer())
-                ?: error("no expected parameter CryptoCurrency (to) found")
         } else {
             null
         }
@@ -172,8 +171,7 @@ internal class SwapViewModel @Inject constructor(
             val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
             val toStatus = initialCurrencyTo?.let { getCryptoCurrencyStatusUseCase(userWalletId, it.id).getOrNull() }
             val wallet = getUserWalletUseCase(userWalletId).getOrNull()
-            val isStatusToNull = walletFeatureToggles.isMainActionButtonsEnabled && toStatus == null
-            if (fromStatus == null || wallet == null || isStatusToNull) {
+            if (fromStatus == null || wallet == null) {
                 uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
             } else {
                 userWallet = wallet
@@ -228,15 +226,11 @@ internal class SwapViewModel @Inject constructor(
                 swapInteractor.getTokensDataState(initialCurrencyFrom)
             }.onSuccess { state ->
                 updateTokensState(state)
-                val selectedCurrency = if (walletFeatureToggles.isMainActionButtonsEnabled) {
-                    initialToStatus
-                } else {
-                    swapInteractor.getInitialCurrencyToSwap(
-                        initialCryptoCurrency = initialCurrencyFrom,
-                        state = state,
-                        isReverseFromTo = isReverseFromTo,
-                    )
-                }
+                val selectedCurrency = initialToStatus ?: swapInteractor.getInitialCurrencyToSwap(
+                    initialCryptoCurrency = initialCurrencyFrom,
+                    state = state,
+                    isReverseFromTo = isReverseFromTo,
+                )
 
                 applyInitialTokenChoice(
                     state = state,
