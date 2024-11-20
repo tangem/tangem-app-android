@@ -8,20 +8,23 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
+import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
+import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ComponentScoped
 internal class ConfirmResidencyModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val saveDefaultCountryUseCase: OnrampSaveDefaultCountryUseCase,
     getOnrampCountryUseCase: GetOnrampCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -54,7 +57,9 @@ internal class ConfirmResidencyModel @Inject constructor(
 
     private fun getPrimaryButtonConfig() = if (params.country.onrampAvailable) {
         ConfirmResidencyUM.ActionButtonConfig(
-            onClick = { params.onDismiss(params.country) },
+            onClick = {
+                modelScope.launch { saveDefaultCountryUseCase.invoke(params.country) }
+            },
             text = resourceReference(R.string.common_confirm),
         )
     } else {
