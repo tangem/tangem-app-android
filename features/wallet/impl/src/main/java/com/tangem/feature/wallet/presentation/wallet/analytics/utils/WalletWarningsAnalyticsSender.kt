@@ -35,6 +35,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
         return warnings.mapNotNullTo(mutableSetOf(), ::getEvent)
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun getEvent(warning: WalletNotification): AnalyticsEvent? {
         return when (warning) {
             is WalletNotification.Critical.DevCard -> MainScreen.DevelopmentCard
