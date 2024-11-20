@@ -68,7 +68,11 @@ internal fun checkIfFeeTooHigh(feeSelectorState: FeeSelectorState.Content, onSho
     val highValue = multipleFees.priority.amount.value ?: return false
     val customAmount = feeSelectorState.customValues.firstOrNull() ?: return false
     val customValue = customAmount.value.parseToBigDecimal(customAmount.decimals)
-    val diff = customValue / highValue
+    val diff = if (highValue > BigDecimal.ZERO) {
+        customValue / highValue
+    } else {
+        BigDecimal.ZERO
+    }
     val isShow = feeSelectorState.selectedFee == FeeType.Custom && diff > FEE_MAX_DIFF
     if (isShow) onShow(diff.parseBigDecimal(ZERO_DECIMALS, RoundingMode.HALF_UP))
     return isShow
