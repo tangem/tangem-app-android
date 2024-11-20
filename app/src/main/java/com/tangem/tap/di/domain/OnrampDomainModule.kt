@@ -1,7 +1,9 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.onramp.*
+import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
+import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -50,7 +52,48 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetOnrampStatusUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampStatusUseCase {
+        return GetOnrampStatusUseCase(onrampRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetOnrampCurrencyUseCase(onrampRepository: OnrampRepository): GetOnrampCurrencyUseCase {
         return GetOnrampCurrencyUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampTransactionsUseCase(
+        onrampTransactionRepository: OnrampTransactionRepository,
+    ): GetOnrampTransactionsUseCase {
+        return GetOnrampTransactionsUseCase(onrampTransactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampTransactionUseCase(
+        onrampTransactionRepository: OnrampTransactionRepository,
+    ): GetOnrampTransactionUseCase {
+        return GetOnrampTransactionUseCase(onrampTransactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampRemoveTransactionUseCase(
+        onrampTransactionRepository: OnrampTransactionRepository,
+    ): OnrampRemoveTransactionUseCase {
+        return OnrampRemoveTransactionUseCase(onrampTransactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampSaveTransactionUseCase(
+        onrampTransactionRepository: OnrampTransactionRepository,
+    ): OnrampSaveTransactionUseCase {
+        return OnrampSaveTransactionUseCase(onrampTransactionRepository)
     }
 }
