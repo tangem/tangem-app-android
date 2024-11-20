@@ -568,7 +568,7 @@
   <string name="onramp_no_available_providers">Keine verfügbaren Anbieter für diese Währung</string>
   <string name="onramp_pay_with">Bezahlen mit</string>
   <string name="onramp_redirecting_to_provider_subtitle">Du kannst Deine Transaktion beim Drittanbieter %s abschließen.</string>
-  <string name="onramp_redirecting_to_provider_title">Umleitung auf %s …</string>
+  <string name="onramp_redirecting_to_provider_title">Umleitung auf %s…</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Unsere Dienstleistungen sind in diesem Land nicht verfügbar</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Änder oder bestätige bitte</string>
   <string name="onramp_residency_bottomsheet_title">Dein Wohnsitz wurde identifiziert als</string>

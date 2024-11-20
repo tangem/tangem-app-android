@@ -8,6 +8,7 @@ class CheckOnrampAvailabilityUseCase(private val repository: OnrampRepository) {
 
     suspend operator fun invoke(): Either<Throwable, OnrampAvailability> {
         return Either.catch {
+            repository.fetchPaymentMethodsIfAbsent()
             repository.getDefaultCountrySync()?.let { savedCountry ->
                 return@catch if (savedCountry.onrampAvailable) {
                     val currency = repository.getDefaultCurrencySync() ?: run {
