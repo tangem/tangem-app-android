@@ -908,6 +908,7 @@
   <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
+  <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>
   <string name="user_push_notification_agreement_argument_two">Be the first to know about new promotions</string>
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
@@ -1007,6 +1008,9 @@
   <string name="warning_hedera_missing_token_association_message_brief">This token must be associated with your Hedera account before you can receive it</string>
   <string name="warning_hedera_missing_token_association_title">Associate your token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Not enough %s. Top up your Hedera account to associate this token</string>
+  <string name="warning_kaspa_unfinished_token_transaction_discard_message">Are you sure you want to cancel the transaction? You will not be able to retry the transaction again</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_title">You have unfinished transaction</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
