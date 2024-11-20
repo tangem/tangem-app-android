@@ -8,6 +8,6 @@ internal class PaymentMethodConverter : Converter<PaymentMethodDTO, OnrampPaymen
     override fun convert(value: PaymentMethodDTO): OnrampPaymentMethod = OnrampPaymentMethod(
         id = value.id,
         name = value.name,
-        image = value.image,
+        imageUrl = value.image,
     )
 }

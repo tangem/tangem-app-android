@@ -106,7 +106,7 @@ private fun PaymentMethodItem(paymentMethod: PaymentMethodUM, isSelected: Boolea
         AsyncImage(
             modifier = Modifier
                 .size(TangemTheme.dimens.size40),
-            model = paymentMethod.image,
+            model = paymentMethod.imageUrl,
             contentDescription = null,
         )
         Text(

@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 data class OnrampPaymentMethod(
     val id: String,
     val name: String,
-    val image: String,
+    val imageUrl: String,
 )
