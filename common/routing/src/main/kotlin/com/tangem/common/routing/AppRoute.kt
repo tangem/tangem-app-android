@@ -300,6 +300,13 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
+    data class OnrampSuccess(
+        val txId: String,
+    ) : AppRoute(path = "/onramp/success/$txId"), RouteBundleParams {
+        override fun getBundle(): Bundle = bundle(serializer())
+    }
+
+    @Serializable
     data class BuyCrypto(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/buy_crypto/${userWalletId.stringValue}")
