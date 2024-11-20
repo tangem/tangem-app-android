@@ -2,6 +2,7 @@ package com.tangem.data.onramp
 
 import com.tangem.data.onramp.converters.CountryConverter
 import com.tangem.data.onramp.converters.CurrencyConverter
+import com.tangem.data.onramp.converters.StatusConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
@@ -13,6 +14,7 @@ import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.OnrampCurrency
+import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
@@ -27,6 +29,7 @@ internal class DefaultOnrampRepository(
 
     private val currencyConverter = CurrencyConverter()
     private val countryConverter = CountryConverter(currencyConverter)
+    private val statusConverter = StatusConverter()
 
     override suspend fun getCurrencies(): List<OnrampCurrency> = withContext(dispatchers.io) {
         onrampApi.getCurrencies()
@@ -44,6 +47,12 @@ internal class DefaultOnrampRepository(
         onrampApi.getCountryByIp()
             .getOrThrow()
             .let(countryConverter::convert)
+    }
+
+    override suspend fun getStatus(txId: String): OnrampStatus = withContext(dispatchers.io) {
+        onrampApi.getStatus(txId)
+            .getOrThrow()
+            .let(statusConverter::convert)
     }
 
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
