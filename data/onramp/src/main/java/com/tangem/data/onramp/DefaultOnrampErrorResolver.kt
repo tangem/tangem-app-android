@@ -5,9 +5,9 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.domain.onramp.model.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 
-internal class DefaultOnrampErrorResolver(
-    private val onrampErrorConverter: OnrampErrorConverter,
-) : OnrampErrorResolver {
+internal class DefaultOnrampErrorResolver : OnrampErrorResolver {
+
+    private val onrampErrorConverter = OnrampErrorConverter()
 
     override fun resolve(throwable: Throwable): OnrampError {
         return if (throwable is ApiResponseError.HttpException) {
