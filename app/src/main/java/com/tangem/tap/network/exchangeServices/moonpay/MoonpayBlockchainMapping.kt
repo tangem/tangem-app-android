@@ -45,6 +45,8 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Core -> MoonPaySupportedCurrency(networkCode = "core", currencyCode = "core")
         Chiliz -> MoonPaySupportedCurrency(networkCode = "ethereum", currencyCode = "chz")
         ArbitrumTestnet -> null
+        Alephium -> null
+        AlephiumTestnet -> null
         AvalancheTestnet -> null
         BinanceTestnet -> null
         BSCTestnet -> null
