@@ -15,7 +15,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import kotlinx.coroutines.launch
 
-class MultiWalletCreateWalletComponent(
+internal class MultiWalletCreateWalletComponent(
     context: AppComponentContext,
     params: MultiWalletChildParams,
     onNextStep: (OnboardingMultiWalletState.Step) -> Unit,

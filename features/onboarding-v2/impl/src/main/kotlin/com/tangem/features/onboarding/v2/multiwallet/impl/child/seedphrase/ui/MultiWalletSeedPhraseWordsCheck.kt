@@ -13,18 +13,38 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun MultiWalletSeedPhraseWordsCheck(
+internal fun MultiWalletSeedPhraseWordsCheck(
     state: MultiWalletSeedPhraseUM.GeneratedWordsCheck,
     modifier: Modifier = Modifier,
 ) {
+    if (state.dialog != null) {
+        BasicDialog(
+            title = state.dialog.title.resolveReference(),
+            message = state.dialog.message.resolveReference(),
+            confirmButton = DialogButtonUM(
+                title = state.dialog.confirmButtonText.resolveReference(),
+                onClick = state.dialog.onConfirmClick,
+            ),
+            dismissButton = DialogButtonUM(
+                title = state.dialog.dismissButtonText.resolveReference(),
+                warning = state.dialog.dismissWarningColor,
+                onClick = state.dialog.onDismissButtonClick,
+            ),
+            onDismissDialog = state.dialog.onDismiss,
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
