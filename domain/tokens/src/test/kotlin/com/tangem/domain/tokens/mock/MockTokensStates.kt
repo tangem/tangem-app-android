@@ -1,10 +1,7 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
-import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -140,20 +137,29 @@ internal object MockTokensStates {
                 as? CryptoCurrencyAmountStatus.Loaded
             )?.value ?: BigDecimal.ZERO
         val quote = MockQuotes.quotes.first { it.rawCurrencyId == status.currency.id.rawCurrencyId }
-        val fiatAmount = amount * quote.fiatRate
 
-        status.copy(
-            value = CryptoCurrencyStatus.Loaded(
+        val value = when (quote) {
+            is Quote.Empty -> CryptoCurrencyStatus.NoQuote(
+                amount = status.value.amount!!,
+                pendingTransactions = emptySet(),
+                hasCurrentNetworkTransactions = false,
+                networkAddress = requireNotNull(
+                    value = MockNetworks.verifiedNetworksStatuses.first { it.network == status.currency.network }.value as? NetworkStatus.Verified,
+                ).address,
+                yieldBalance = null,
+            )
+            is Quote.Value -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
-                fiatAmount = fiatAmount,
+                fiatAmount = amount * quote.fiatRate,
                 fiatRate = quote.fiatRate,
                 priceChange = quote.priceChange,
                 pendingTransactions = emptySet(),
                 hasCurrentNetworkTransactions = false,
                 networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
                 yieldBalance = null,
-            ),
-        )
+            )
+        }
+        status.copy(value = value)
     }
 
     val noQuotesTokensStatuses = loadedTokensStates.map { status ->
