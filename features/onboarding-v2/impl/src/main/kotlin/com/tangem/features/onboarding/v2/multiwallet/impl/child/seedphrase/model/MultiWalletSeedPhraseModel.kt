@@ -134,7 +134,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     }
 
     private fun importWallet(shouldReset: Boolean = false) {
-        //TODO make stateless AND-9167
+        // TODO make stateless AND-9167
         val currentState = state.value
         val mnemonic = currentState.importedMnemonic
             ?: (if (currentState.words24Option) currentState.generatedWords24 else currentState.generatedWords12)
