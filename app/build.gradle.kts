@@ -74,6 +74,7 @@ dependencies {
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
+    implementation(projects.domain.onramp)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -112,6 +113,7 @@ dependencies {
     implementation(projects.data.walletConnect)
     implementation(projects.data.markets)
     implementation(projects.data.manageTokens)
+    implementation(projects.data.onramp)
 
     /** Features */
     implementation(projects.features.onboarding)
