@@ -38,6 +38,8 @@ class GetCardImageUseCase(private val verifier: OnlineCardVerifier = OnlineCardV
         }
     }
 
+    fun getDefaultFallbackUrl(): String = Artwork.DEFAULT_IMG_URL
+
     private fun getFallbackArtworkUrl(cardId: String): String {
         return when {
             cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
@@ -45,7 +47,7 @@ class GetCardImageUseCase(private val verifier: OnlineCardVerifier = OnlineCardV
             else -> when (TwinsHelper.getTwinCardNumber(cardId)) {
                 TwinCardNumber.First -> Artwork.TWIN_CARD_1_URL
                 TwinCardNumber.Second -> Artwork.TWIN_CARD_2_URL
-                else -> Artwork.DEFAULT_IMG_URL
+                else -> getDefaultFallbackUrl()
             }
         }
     }
