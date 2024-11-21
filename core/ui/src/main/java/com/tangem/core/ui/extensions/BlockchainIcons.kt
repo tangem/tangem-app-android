@@ -83,6 +83,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "xodex" -> R.drawable.img_xodex_22
         "canxium" -> R.drawable.img_canxium_22
         "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
+        "alephium", "alephium/test" -> R.drawable.img_alephium_22
         "clore-ai" -> R.drawable.img_clore_22
         "fact0rn" -> R.drawable.img_fact0rn_22
         "odyssey", "odyssey/test" -> R.drawable.img_odyssey_chain_22
@@ -170,6 +171,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "xodex" -> R.drawable.img_xodex_22
         "canxium" -> R.drawable.img_canxium_22
         "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
+        "alephium", "alephium/test" -> R.drawable.img_alephium_22
         "clore-ai" -> R.drawable.img_clore_22
         "fact0rn" -> R.drawable.img_fact0rn_22
         "odyssey", "odyssey/test" -> R.drawable.img_odyssey_chain_22
@@ -260,6 +262,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "xodex" -> R.drawable.ic_xodex_22
         "canxium" -> R.drawable.ic_canxium_22
         "chiliz", "chiliz/test" -> R.drawable.ic_chiliz_22
+        "alephium", "alephium/test" -> R.drawable.ic_alephium_22
         "clore-ai" -> R.drawable.ic_clore_22
         "fact0rn" -> R.drawable.ic_fact0rn_22
         "odyssey", "odyssey/test" -> R.drawable.ic_odyssey_chain_22
