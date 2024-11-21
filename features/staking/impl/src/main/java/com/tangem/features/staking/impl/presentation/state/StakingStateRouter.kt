@@ -5,7 +5,6 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
-import com.tangem.lib.crypto.BlockchainUtils.isSolana
 
 internal class StakingStateRouter(
     private val appRouter: AppRouter,
@@ -24,13 +23,7 @@ internal class StakingStateRouter(
     fun onNextClick() {
         when (stateController.value.currentStep) {
             StakingStep.InitialInfo -> when (stateController.value.actionType) {
-                StakingActionCommonType.Enter -> showAmount()
-// [REDACTED_TODO_COMMENT]
-                StakingActionCommonType.Exit -> if (isSolana(stateController.value.cryptoCurrencyBlockchainId)) {
-                    showConfirmation()
-                } else {
-                    showAmount()
-                }
+                StakingActionCommonType.Enter, StakingActionCommonType.Exit -> showAmount()
                 StakingActionCommonType.Pending.Other,
                 StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
@@ -56,9 +49,8 @@ internal class StakingStateRouter(
             StakingStep.Confirmation -> {
                 val isEnter = uiState.actionType == StakingActionCommonType.Enter
                 val isExit = uiState.actionType == StakingActionCommonType.Exit
-// [REDACTED_TODO_COMMENT]
-                val isSolana = isSolana(uiState.cryptoCurrencyBlockchainId)
-                if (isEnter || isExit && !isSolana) {
+
+                if (isEnter || isExit) {
                     showAmount()
                 } else {
                     showInitial()
