@@ -114,6 +114,10 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object BackupError : MainScreen(event = "Notice - Backup Error")
 
+        data object NotePromo : MainScreen(event = "Notice - Note Promo")
+
+        data object NotePromoButton : MainScreen(event = "Note Promo Button")
+
         data object UnlockAllWithBiometrics : MainScreen(event = "Button - Unlock All With Biometrics")
 
         data object UnlockWithCardScan : MainScreen(event = "Button - Unlock With Card Scan")
