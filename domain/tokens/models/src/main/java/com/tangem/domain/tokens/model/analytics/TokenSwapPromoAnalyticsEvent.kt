@@ -2,19 +2,21 @@ package com.tangem.domain.tokens.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.EventValue
 
 sealed class TokenSwapPromoAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent(category = "Promotion", event = event, params = params) {
+
     class NoticePromotionBanner(
         source: AnalyticsParam.ScreensSources,
         programName: ProgramName,
     ) : TokenSwapPromoAnalyticsEvent(
         event = "Notice - Promotion Banner",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.value,
-            "Program Name" to programName.name,
+            AnalyticsParam.SOURCE to source.value.asStringValue(),
+            "Program Name" to programName.name.asStringValue(),
         ),
     )
 
@@ -25,9 +27,9 @@ sealed class TokenSwapPromoAnalyticsEvent(
     ) : TokenSwapPromoAnalyticsEvent(
         event = "Promo Banner Clicked",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.value,
-            "Program Name" to programName.name,
-            "Action" to action.action,
+            AnalyticsParam.SOURCE to source.value.asStringValue(),
+            "Program Name" to programName.name.asStringValue(),
+            "Action" to action.action.asStringValue(),
         ),
     ) {
         sealed class BannerAction(val action: String) {

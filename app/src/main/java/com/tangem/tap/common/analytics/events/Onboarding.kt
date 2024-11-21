@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 
 /**
 [REDACTED_AUTHOR]
@@ -8,7 +9,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 sealed class Onboarding(
     category: String,
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent(category, event, params) {
 
     class Started : Onboarding("Onboarding", "Onboarding Started")
@@ -16,7 +17,7 @@ sealed class Onboarding(
 
     sealed class CreateWallet(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : Onboarding("Onboarding / Create Wallet", event, params) {
 
         class ScreenOpened : CreateWallet("Create Wallet Screen Opened")
@@ -27,16 +28,16 @@ sealed class Onboarding(
         ) : CreateWallet(
             event = "Wallet Created Successfully",
             params = buildMap {
-                put(AnalyticsParam.CREATION_TYPE, creationType.value)
+                put(AnalyticsParam.CREATION_TYPE, creationType.value.asStringValue())
 
-                if (seedPhraseLength != null) put(AnalyticsParam.SEED_PHRASE_LENGTH, seedPhraseLength.toString())
+                if (seedPhraseLength != null) put(AnalyticsParam.SEED_PHRASE_LENGTH, seedPhraseLength.asStringValue())
             },
         )
     }
 
     sealed class Backup(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : Onboarding("Onboarding / Backup", event, params) {
 
         class ScreenOpened : Backup("Backup Screen Opened")
@@ -48,30 +49,30 @@ sealed class Onboarding(
 
         class Finished(cardsCount: Int) : Backup(
             event = "Backup Finished",
-            params = mapOf("Cards count" to "$cardsCount"),
+            params = mapOf("Cards count" to cardsCount.asStringValue()),
         )
 
-        object ResetCancelEvent : Backup(
+        data object ResetCancelEvent : Backup(
             event = "Reset Card Notification",
-            params = mapOf("Option" to "Cancel"),
+            params = mapOf("Option" to "Cancel".asStringValue()),
         )
 
-        object ResetPerformEvent : Backup(
+        data object ResetPerformEvent : Backup(
             event = "Reset Card Notification",
-            params = mapOf("Option" to "Reset"),
+            params = mapOf("Option" to "Reset".asStringValue()),
         )
     }
 
     sealed class Topup(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : Onboarding("Onboarding / Top Up", event, params) {
 
         class ScreenOpened : Topup("Activation Screen Opened")
 
         class ButtonBuyCrypto(currency: AnalyticsParam.CurrencyType) : Topup(
             event = "Button - Buy Crypto",
-            params = mapOf(AnalyticsParam.CURRENCY to currency.value),
+            params = mapOf(AnalyticsParam.CURRENCY to currency.value.asStringValue()),
         )
 
         class ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")
@@ -79,7 +80,7 @@ sealed class Onboarding(
 
     sealed class Twins(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : Onboarding("Onboarding / Twins", event, params) {
 
         class ScreenOpened : Twins("Twinning Screen Opened")
@@ -90,6 +91,6 @@ sealed class Onboarding(
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : Onboarding(
         category = "Onboarding / Biometric",
         event = "Enable Biometric",
-        params = mapOf("State" to state.value),
+        params = mapOf("State" to state.value.asStringValue()),
     )
 }

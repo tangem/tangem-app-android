@@ -9,13 +9,14 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TYPE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.VALIDATION
 import com.tangem.core.analytics.models.AnalyticsParam.OnOffState
+import com.tangem.core.analytics.models.EventValue
 
 /**
  * Send screen analytics
  */
 internal sealed class SendAnalyticEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent(category = "Token / Send", event = event, params = params) {
 
     /** Close button clicked */
@@ -26,9 +27,9 @@ internal sealed class SendAnalyticEvents(
     ) : SendAnalyticEvents(
         event = "Button - Close",
         params = mapOf(
-            SOURCE to source.name,
-            "FromSummary" to if (isFromSummary) "Yes" else "No",
-            "isValid" to if (isValid) "Yes" else "No",
+            SOURCE to source.name.asStringValue(),
+            "FromSummary" to if (isFromSummary) "Yes".asStringValue() else "No".asStringValue(),
+            "isValid" to if (isValid) "Yes".asStringValue() else "No".asStringValue(),
         ),
     )
 
@@ -40,8 +41,8 @@ internal sealed class SendAnalyticEvents(
     data class AddressEntered(val source: EnterAddressSource, val isValid: Boolean) : SendAnalyticEvents(
         event = "Address Entered",
         params = mapOf(
-            SOURCE to source.name,
-            VALIDATION to if (isValid) "Success" else "Fail",
+            SOURCE to source.name.asStringValue(),
+            VALIDATION to if (isValid) "Success".asStringValue()else "Fail".asStringValue(),
         ),
     )
 
@@ -56,7 +57,7 @@ internal sealed class SendAnalyticEvents(
     /** Selected currency */
     data class SelectedCurrency(val type: SelectedCurrencyType) : SendAnalyticEvents(
         event = "Selected Currency",
-        params = mapOf(TYPE to type.value),
+        params = mapOf(TYPE to type.value.asStringValue()),
     )
 
     /** Max amount button clicked */
@@ -70,7 +71,7 @@ internal sealed class SendAnalyticEvents(
     /** Selected fee (send after next screen opened) */
     data class SelectedFee(val feeType: AnalyticsParam.FeeType) : SendAnalyticEvents(
         event = "Fee Selected",
-        params = mapOf("Fee Type" to feeType.value),
+        params = mapOf("Fee Type" to feeType.value.asStringValue()),
     )
 
     /** Custom fee selected */
@@ -82,7 +83,9 @@ internal sealed class SendAnalyticEvents(
     /** Subtract from amount selector switched (send after next screen opened) */
     data class SubtractFromAmount(val status: Boolean) : SendAnalyticEvents(
         event = "Subtract from Amount",
-        params = mapOf("Status" to if (status) OnOffState.On.value else OnOffState.Off.value),
+        params = mapOf(
+            "Status" to if (status) OnOffState.On.value.asStringValue() else OnOffState.Off.value.asStringValue(),
+        ),
     )
     // endregion
 
@@ -93,7 +96,7 @@ internal sealed class SendAnalyticEvents(
     /** Screen reopened from confirmation screen */
     data class ScreenReopened(val source: SendScreenSource) : SendAnalyticEvents(
         event = "Screen Reopened",
-        params = mapOf(SOURCE to source.name),
+        params = mapOf(SOURCE to source.name.asStringValue()),
     )
     // endregion
 
@@ -105,8 +108,8 @@ internal sealed class SendAnalyticEvents(
     ) : SendAnalyticEvents(
         event = "Transaction Sent Screen Opened",
         params = mapOf(
-            TOKEN_PARAM to token,
-            FEE_TYPE to feeType.value,
+            TOKEN_PARAM to token.asStringValue(),
+            FEE_TYPE to feeType.value.asStringValue(),
         ),
     )
 
@@ -119,13 +122,13 @@ internal sealed class SendAnalyticEvents(
     /** If not enough fee notification is present */
     data class NoticeNotEnoughFee(val token: String, val blockchain: String) : SendAnalyticEvents(
         event = "Notice - Not Enough Fee",
-        params = mapOf(TOKEN_PARAM to token, BLOCKCHAIN to blockchain),
+        params = mapOf(TOKEN_PARAM to token.asStringValue(), BLOCKCHAIN to blockchain.asStringValue()),
     )
 
     /** If transaction delays notification is present */
     data class NoticeTransactionDelays(val token: String) : SendAnalyticEvents(
         event = "Notice - Transaction Delays Are Possible",
-        params = mapOf(TOKEN_PARAM to token),
+        params = mapOf(TOKEN_PARAM to token.asStringValue()),
     )
 
     data object NoticeFeeCoverage : SendAnalyticEvents(
@@ -135,7 +138,7 @@ internal sealed class SendAnalyticEvents(
     /** If error occurs during send transactions */
     data class TransactionError(val token: String) : SendAnalyticEvents(
         event = "Error - Transaction Rejected",
-        params = mapOf(TOKEN_PARAM to token),
+        params = mapOf(TOKEN_PARAM to token.asStringValue()),
     )
     // endregion
 }

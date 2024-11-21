@@ -3,6 +3,7 @@ package com.tangem.tap.common.analytics
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.core.analytics.api.ErrorEventLogger
 import com.tangem.core.analytics.api.EventLogger
+import com.tangem.core.analytics.models.EventValue
 import timber.log.Timber
 
 class AnalyticsEventsLogger(
@@ -10,11 +11,11 @@ class AnalyticsEventsLogger(
     private val jsonConverter: MoshiJsonConverter,
 ) : EventLogger, ErrorEventLogger {
 
-    override fun logEvent(event: String, params: Map<String, String>) {
+    override fun logEvent(event: String, params: Map<String, EventValue>) {
         Timber.d(jsonConverter.prettyPrint(PrintEventModel(name, event, params)))
     }
 
-    override fun logErrorEvent(error: Throwable, params: Map<String, String>) {
+    override fun logErrorEvent(error: Throwable, params: Map<String, EventValue>) {
         Timber.e(error, jsonConverter.prettyPrint(PrintEventModel(name, "error", params)))
     }
 }
@@ -22,5 +23,5 @@ class AnalyticsEventsLogger(
 private data class PrintEventModel(
     val client: String,
     val event: String,
-    val params: Map<String, String>,
+    val params: Map<String, EventValue>,
 )

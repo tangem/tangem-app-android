@@ -17,6 +17,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -300,13 +301,13 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
                 override fun canBeAppliedTo(event: AnalyticsEvent): Boolean = event is Basic.TransactionSent
 
-                override fun intercept(params: MutableMap<String, String>) {
+                override fun intercept(params: MutableMap<String, EventValue>) {
                     val isLastSignWithRing = store.state.globalState.isLastSignWithRing
 
                     params[AnalyticsParam.WALLET_FORM] = if (isLastSignWithRing) {
-                        WalletForm.Ring.name
+                        EventValue.StringValue(WalletForm.Ring.name)
                     } else {
-                        WalletForm.Card.name
+                        EventValue.StringValue(WalletForm.Card.name)
                     }
                 }
             },

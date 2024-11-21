@@ -2,6 +2,8 @@ package com.tangem.tap.common.analytics.paramsInterceptor
 
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent.Companion.asStringValue
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
@@ -36,17 +38,17 @@ class CardContextInterceptor(
         }
     }
 
-    override fun intercept(params: MutableMap<String, String>) {
+    override fun intercept(params: MutableMap<String, EventValue>) {
         val card = scanResponse.card
-        params[AnalyticsParam.BATCH] = card.batchId
-        params[AnalyticsParam.PRODUCT_TYPE] = getProductType()
-        params[AnalyticsParam.FIRMWARE] = card.firmwareVersion.stringValue
+        params[AnalyticsParam.BATCH] = card.batchId.asStringValue()
+        params[AnalyticsParam.PRODUCT_TYPE] = getProductType().asStringValue()
+        params[AnalyticsParam.FIRMWARE] = card.firmwareVersion.stringValue.asStringValue()
         if (userWalletId != null) {
-            params[AnalyticsParam.USER_WALLET_ID] = userWalletId.stringValue
+            params[AnalyticsParam.USER_WALLET_ID] = userWalletId.stringValue.asStringValue()
         }
 
         ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver)?.let {
-            params[AnalyticsParam.CURRENCY] = it.value
+            params[AnalyticsParam.CURRENCY] = it.value.asStringValue()
         }
     }
 
@@ -80,6 +82,8 @@ class CardContextInterceptor(
             }
         }
     }
+
+    private fun String.asStringValue() = EventValue.StringValue(this)
 
     companion object {
         fun id(): String = CardContextInterceptor::class.java.simpleName

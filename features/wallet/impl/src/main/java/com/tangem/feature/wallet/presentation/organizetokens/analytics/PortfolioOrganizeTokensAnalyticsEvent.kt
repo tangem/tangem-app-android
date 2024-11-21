@@ -2,10 +2,11 @@ package com.tangem.feature.wallet.presentation.organizetokens.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.EventValue
 
 sealed class PortfolioOrganizeTokensAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent("Portfolio / Organize Tokens", event, params) {
 
     object ScreenOpened : PortfolioOrganizeTokensAnalyticsEvent("Organize Tokens Screen Opened")
@@ -20,8 +21,8 @@ sealed class PortfolioOrganizeTokensAnalyticsEvent(
     ) : PortfolioOrganizeTokensAnalyticsEvent(
         "Button - Apply",
         params = mapOf(
-            "Group" to grouping.value,
-            "Sort" to organizeSortType.value,
+            "Group" to grouping.value.asStringValue(),
+            "Sort" to organizeSortType.value.asStringValue(),
         ),
     )
 

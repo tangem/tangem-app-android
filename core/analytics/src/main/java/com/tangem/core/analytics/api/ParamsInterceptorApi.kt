@@ -1,6 +1,7 @@
 package com.tangem.core.analytics.api
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 
 /**
 [REDACTED_AUTHOR]
@@ -8,7 +9,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 interface ParamsInterceptor {
     fun id(): String
     fun canBeAppliedTo(event: AnalyticsEvent): Boolean
-    fun intercept(params: MutableMap<String, String>)
+    fun intercept(params: MutableMap<String, EventValue>)
 }
 
 interface ParamsInterceptorHolder {

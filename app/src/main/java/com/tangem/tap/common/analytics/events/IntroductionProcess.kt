@@ -7,8 +7,7 @@ import com.tangem.core.analytics.models.AnalyticsEvent
  */
 sealed class IntroductionProcess(
     event: String,
-    params: Map<String, String> = mapOf(),
-) : AnalyticsEvent("Introduction Process", event, params) {
+) : AnalyticsEvent("Introduction Process", event) {
 
     class ScreenOpened : IntroductionProcess("Introduction Process Screen Opened")
     class ButtonTokensList : IntroductionProcess("Button - Tokens List")

@@ -4,6 +4,7 @@ import android.app.Application
 import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeClient
 import com.tangem.core.analytics.api.EventLogger
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.utils.converter.Converter
 import org.json.JSONObject
 
@@ -24,13 +25,13 @@ internal class AmplitudeClient(
         client.enableForegroundTracking(application)
     }
 
-    override fun logEvent(event: String, params: Map<String, String>) {
+    override fun logEvent(event: String, params: Map<String, EventValue>) {
         client.logEvent(event, ParamsToJSONObjectConverter().convert(params))
     }
 }
 
-private class ParamsToJSONObjectConverter : Converter<Map<String, String>, JSONObject> {
-    override fun convert(value: Map<String, String>): JSONObject = JSONObject().apply {
-        value.forEach { this.put(it.key, it.value) }
+private class ParamsToJSONObjectConverter : Converter<Map<String, EventValue>, JSONObject> {
+    override fun convert(value: Map<String, EventValue>): JSONObject = JSONObject().apply {
+        value.forEach { this.put(it.key, it.value.getValue()) }
     }
 }
