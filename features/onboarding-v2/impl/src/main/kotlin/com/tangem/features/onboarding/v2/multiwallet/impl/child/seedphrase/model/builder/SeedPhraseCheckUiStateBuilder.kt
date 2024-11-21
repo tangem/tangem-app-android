@@ -7,7 +7,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-class SeedPhraseCheckUiStateBuilder(
+internal class SeedPhraseCheckUiStateBuilder(
     private val state: MutableStateFlow<SeedPhraseState>,
     private val currentUiState: () -> MultiWalletSeedPhraseUM,
     private val updateUiState: (
