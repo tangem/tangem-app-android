@@ -9,6 +9,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.OutlineTextField
+import com.tangem.core.ui.components.OutlineTextFieldWithIcon
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -43,8 +44,10 @@ internal fun MultiWalletAccessCodeEnter(
             style = TangemTheme.typography.body1,
         )
 
-        OutlineTextField(
+        OutlineTextFieldWithIcon(
             modifier = modifier.fillMaxWidth(),
+            iconResId = R.drawable.ic_back_24,
+            onIconClick = {},
             value = if (reEnterAccessCodeState) {
                 state.accessCodeSecond
             } else {
@@ -57,10 +60,12 @@ internal fun MultiWalletAccessCodeEnter(
             },
             label = stringResource(id = R.string.onboarding_wallet_info_title_third),
             isError = state.codesNotMatchError,
-            caption = if (state.codesNotMatchError && reEnterAccessCodeState) {
-                stringResource(R.string.onboarding_access_codes_doesnt_match)
-            } else {
-                null
+            caption = when {
+                state.codesNotMatchError && reEnterAccessCodeState ->
+                    stringResource(R.string.onboarding_access_codes_doesnt_match)
+                state.atLeast4CharError && !reEnterAccessCodeState ->
+                    stringResource(R.string.onboarding_access_code_too_short)
+                else -> null
             },
         )
     }
