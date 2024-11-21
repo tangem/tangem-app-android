@@ -63,6 +63,8 @@ internal interface WalletWarningsClickIntents {
     fun onCloseRingPromoClick()
 
     fun onSupportClick()
+
+    fun onNoteMigrationButtonClick(url: String)
 }
 
 @Suppress("LongParameterList")
@@ -260,6 +262,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         viewModelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
+        }
+    }
+
+    override fun onNoteMigrationButtonClick(url: String) {
+        analyticsEventHandler.send(MainScreen.NotePromoButton)
+        viewModelScope.launch(dispatchers.main) {
+            router.openUrl(url)
         }
     }
 
