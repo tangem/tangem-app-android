@@ -64,7 +64,6 @@ internal class SetInitialDataStateTransformer(
             title = TextReference.EMPTY,
             cryptoCurrencyName = cryptoCurrency.name,
             cryptoCurrencySymbol = cryptoCurrency.symbol,
-            cryptoCurrencyBlockchainId = cryptoCurrency.network.id.value,
             clickIntents = clickIntents,
             currentStep = StakingStep.InitialInfo,
             initialInfoState = createInitialInfoState(),
