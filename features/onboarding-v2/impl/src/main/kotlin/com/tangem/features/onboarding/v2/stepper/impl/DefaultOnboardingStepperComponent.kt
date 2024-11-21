@@ -17,6 +17,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
     @Assisted val context: AppComponentContext,
@@ -27,6 +28,14 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
 
     override val state = instanceKeeper.getOrCreateSimple { MutableStateFlow(params.initState) }
 
+    init {
+        componentScope.launch {
+            state.collect {
+                Timber.tag("ASDASD").d("State: $it")
+            }
+        }
+    }
+
     private fun openSupport() {
         componentScope.launch {
             val cardInfo = getCardInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
@@ -36,10 +45,10 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by state.collectAsStateWithLifecycle()
+        val uiState by state.collectAsStateWithLifecycle()
 
         OnboardingStepper(
-            state = state,
+            state = uiState,
             onBackClick = remember(this) { params.popBack },
             onSupportButtonClick = remember(this) { ::openSupport },
             modifier = modifier,
