@@ -2,6 +2,7 @@ package com.tangem.core.analytics
 
 import com.tangem.core.analytics.api.*
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -72,7 +73,7 @@ object Analytics : GlobalAnalyticsEventHandler {
         }
     }
 
-    private suspend fun applyParamsInterceptors(event: AnalyticsEvent): MutableMap<String, String> {
+    private suspend fun applyParamsInterceptors(event: AnalyticsEvent): MutableMap<String, EventValue> {
         val interceptedParams = event.params.toMutableMap()
         analyticsMutex.withLock {
             paramsInterceptors.values

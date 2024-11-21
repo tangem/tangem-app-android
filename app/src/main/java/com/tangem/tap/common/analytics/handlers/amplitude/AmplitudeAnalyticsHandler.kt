@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.amplitude
 
 import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 class AmplitudeAnalyticsHandler(
@@ -9,7 +10,7 @@ class AmplitudeAnalyticsHandler(
 
     override fun id(): String = ID
 
-    override fun send(eventId: String, params: Map<String, String>) {
+    override fun send(eventId: String, params: Map<String, EventValue>) {
         client.logEvent(eventId, params)
     }
 

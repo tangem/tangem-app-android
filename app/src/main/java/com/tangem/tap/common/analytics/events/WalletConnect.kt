@@ -1,13 +1,14 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 
 /**
 [REDACTED_AUTHOR]
  */
 internal sealed class WalletConnect(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
     error: Throwable? = null,
 ) : AnalyticsEvent("Wallet Connect", event, params, error) {
 
@@ -15,16 +16,16 @@ internal sealed class WalletConnect(
     class NewSessionEstablished(dAppName: String, dAppUrl: String) : WalletConnect(
         event = "New Session Established",
         params = mapOf(
-            AnalyticsParam.DAPP_NAME to dAppName,
-            AnalyticsParam.DAPP_URL to dAppUrl,
+            AnalyticsParam.DAPP_NAME to dAppName.asStringValue(),
+            AnalyticsParam.DAPP_URL to dAppUrl.asStringValue(),
         ),
     )
 
     class SessionDisconnected(dAppName: String, dAppUrl: String) : WalletConnect(
         event = "Session Disconnected",
         params = mapOf(
-            AnalyticsParam.DAPP_NAME to dAppName,
-            AnalyticsParam.DAPP_URL to dAppUrl,
+            AnalyticsParam.DAPP_NAME to dAppName.asStringValue(),
+            AnalyticsParam.DAPP_URL to dAppUrl.asStringValue(),
         ),
     )
 
@@ -43,18 +44,18 @@ internal sealed class WalletConnect(
         val errorCode: String? = null,
         val errorDescription: String? = null,
     ) {
-        fun toParamsMap(): Map<String, String> {
+        fun toParamsMap(): Map<String, EventValue> {
             val validation = if (errorCode == null) Validation.SUCCESS.param else Validation.FAIL.param
             val code = errorCode ?: SUCCESS_CODE
             return buildMap {
-                put(AnalyticsParam.DAPP_NAME, dAppName)
-                put(AnalyticsParam.DAPP_URL, dAppUrl)
-                put(AnalyticsParam.METHOD_NAME, methodName)
-                put(AnalyticsParam.BLOCKCHAIN, blockchain)
-                put(AnalyticsParam.VALIDATION, validation)
-                put(AnalyticsParam.ERROR_CODE, code)
+                put(AnalyticsParam.DAPP_NAME, dAppName.asStringValue())
+                put(AnalyticsParam.DAPP_URL, dAppUrl.asStringValue())
+                put(AnalyticsParam.METHOD_NAME, methodName.asStringValue())
+                put(AnalyticsParam.BLOCKCHAIN, blockchain.asStringValue())
+                put(AnalyticsParam.VALIDATION, validation.asStringValue())
+                put(AnalyticsParam.ERROR_CODE, code.asStringValue())
                 if (errorDescription != null) {
-                    put(AnalyticsParam.ERROR_DESCRIPTION, errorDescription)
+                    put(AnalyticsParam.ERROR_DESCRIPTION, errorDescription.asStringValue())
                 }
             }
         }

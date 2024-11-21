@@ -2,7 +2,7 @@ package com.tangem.core.analytics.models
 
 sealed class Basic(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
     error: Throwable? = null,
 ) : AnalyticsEvent("Basic", event, params, error) {
 
@@ -11,7 +11,7 @@ sealed class Basic(
     ) : Basic(
         event = "Card Was Scanned",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.value,
+            AnalyticsParam.SOURCE to source.value.asStringValue(),
         ),
     )
 
@@ -24,12 +24,12 @@ sealed class Basic(
     ) : Basic(
         event = "Signed in",
         params = buildMap {
-            put(AnalyticsParam.CURRENCY, currency.value)
-            put(AnalyticsParam.BATCH, batch)
-            put("Sign in type", signInType.name)
-            put("Wallets Count", walletsCount)
+            put(AnalyticsParam.CURRENCY, currency.value.asStringValue())
+            put(AnalyticsParam.BATCH, batch.asStringValue())
+            put("Sign in type", signInType.name.asStringValue())
+            put("Wallets Count", walletsCount.asStringValue())
             if (hasBackup != null) {
-                put("Backuped", if (hasBackup) "Yes" else "No")
+                put("Backuped", if (hasBackup) "Yes".asStringValue() else "No".asStringValue())
             }
         },
     ) {
@@ -41,7 +41,7 @@ sealed class Basic(
     class ToppedUp(userWalletId: String, currency: AnalyticsParam.WalletType) :
         Basic(
             event = "Topped up",
-            params = mapOf(AnalyticsParam.CURRENCY to currency.value),
+            params = mapOf(AnalyticsParam.CURRENCY to currency.value.asStringValue()),
         ),
         OneTimeAnalyticsEvent {
 
@@ -52,16 +52,16 @@ sealed class Basic(
         Basic(
             event = "Transaction sent",
             params = buildMap {
-                this[AnalyticsParam.SOURCE] = sentFrom.value
+                this[AnalyticsParam.SOURCE] = sentFrom.value.asStringValue()
                 if (sentFrom is AnalyticsParam.TxData) {
-                    this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain
-                    this[AnalyticsParam.TOKEN_PARAM] = sentFrom.token
-                    this[AnalyticsParam.FEE_TYPE] = sentFrom.feeType.value
+                    this[AnalyticsParam.BLOCKCHAIN] = sentFrom.blockchain.asStringValue()
+                    this[AnalyticsParam.TOKEN_PARAM] = sentFrom.token.asStringValue()
+                    this[AnalyticsParam.FEE_TYPE] = sentFrom.feeType.value.asStringValue()
                 }
                 if (sentFrom is AnalyticsParam.TxSentFrom.Approve) {
-                    this[AnalyticsParam.PERMISSION_TYPE] = sentFrom.permissionType
+                    this[AnalyticsParam.PERMISSION_TYPE] = sentFrom.permissionType.asStringValue()
                 }
-                this["Memo"] = memoType.name
+                this["Memo"] = memoType.name.asStringValue()
             },
         ) {
         enum class MemoType {
@@ -81,7 +81,7 @@ sealed class Basic(
     class ButtonSupport(source: AnalyticsParam.ScreensSources) : Basic(
         event = "Request Support",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.value,
+            AnalyticsParam.SOURCE to source.value.asStringValue(),
         ),
     )
 }

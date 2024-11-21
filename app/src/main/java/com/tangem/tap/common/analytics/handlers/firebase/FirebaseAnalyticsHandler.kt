@@ -4,6 +4,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.ErrorEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.converters.AnalyticsErrorConverter
 import com.tangem.tap.common.analytics.events.Shop
@@ -14,7 +15,7 @@ class FirebaseAnalyticsHandler(
 
     override fun id(): String = ID
 
-    override fun send(eventId: String, params: Map<String, String>) {
+    override fun send(eventId: String, params: Map<String, EventValue>) {
         client.logEvent(eventId, params)
     }
 
@@ -25,9 +26,11 @@ class FirebaseAnalyticsHandler(
                 val errorConverter = AnalyticsErrorConverter()
                 if (!errorConverter.canBeHandled(error)) return
 
-                val errorParams = errorConverter.convert(error).toMutableMap()
-                errorParams["Category"] = event.category
-                errorParams["Event"] = event.event
+                val errorParams = errorConverter.convert(error)
+                    .mapValues { it.value.asStringValue() as EventValue }
+                    .toMutableMap()
+                errorParams["Category"] = event.category.asStringValue()
+                errorParams["Event"] = event.event.asStringValue()
                 errorParams.putAll(event.params)
                 send(error, errorParams)
             }
@@ -40,9 +43,11 @@ class FirebaseAnalyticsHandler(
         }
     }
 
-    override fun send(error: Throwable, params: Map<String, String>) {
+    override fun send(error: Throwable, params: Map<String, EventValue>) {
         client.logErrorEvent(error, params)
     }
+
+    private fun String.asStringValue() = EventValue.StringValue(this)
 
     companion object {
         const val ID = "Firebase"

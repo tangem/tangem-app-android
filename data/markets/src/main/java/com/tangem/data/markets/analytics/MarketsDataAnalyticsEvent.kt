@@ -1,12 +1,13 @@
 package com.tangem.data.markets.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 
 sealed interface MarketsDataAnalyticsEvent {
 
     sealed class List(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : AnalyticsEvent(category = "Markets", event = event, params = params), MarketsDataAnalyticsEvent {
 
         data class Error(
@@ -15,15 +16,15 @@ sealed interface MarketsDataAnalyticsEvent {
         ) : List(
             event = "Data Error",
             params = buildMap {
-                put("Error Type", errorType.value)
-                errorCode?.let { put("Error Code", it.toString()) }
+                put("Error Type", errorType.value.asStringValue())
+                errorCode?.let { put("Error Code", it.asStringValue()) }
             },
         )
     }
 
     sealed class Details(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params), MarketsDataAnalyticsEvent {
 
         data class Error(
@@ -34,10 +35,10 @@ sealed interface MarketsDataAnalyticsEvent {
         ) : Details(
             event = "Data Error",
             params = buildMap {
-                put("Source", request.source)
-                put("Token", tokenSymbol)
-                errorCode?.let { put("Error Code", it.toString()) }
-                put("Error Type", errorType.value)
+                put("Source", request.source.asStringValue())
+                put("Token", tokenSymbol.asStringValue())
+                errorCode?.let { put("Error Code", it.asStringValue()) }
+                put("Error Type", errorType.value.asStringValue())
             },
         ) {
 
@@ -62,10 +63,10 @@ sealed interface MarketsDataAnalyticsEvent {
         category = "Markets / Chart",
         event = "Data Error",
         params = buildMap {
-            put("Request path", requestPath)
-            errorCode?.let { put("Error Code", it.toString()) }
-            put("Error Type", errorType.value)
-            put("Error Description", "Chart data contains null values from the API")
+            put("Request path", requestPath.asStringValue())
+            errorCode?.let { put("Error Code", it.asStringValue()) }
+            put("Error Type", errorType.value.asStringValue())
+            put("Error Description", "Chart data contains null values from the API".asStringValue())
         },
     ),
         MarketsDataAnalyticsEvent

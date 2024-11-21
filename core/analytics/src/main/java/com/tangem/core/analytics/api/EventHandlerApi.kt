@@ -1,6 +1,7 @@
 package com.tangem.core.analytics.api
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 
 /**
 [REDACTED_AUTHOR]
@@ -12,7 +13,7 @@ interface AnalyticsEventHandler {
 interface AnalyticsHandler : AnalyticsEventHandler {
     fun id(): String
 
-    fun send(eventId: String, params: Map<String, String> = emptyMap())
+    fun send(eventId: String, params: Map<String, EventValue> = emptyMap())
 
     override fun send(event: AnalyticsEvent) {
         send(event.id, event.params)
@@ -20,7 +21,7 @@ interface AnalyticsHandler : AnalyticsEventHandler {
 }
 
 interface ErrorEventHandler {
-    fun send(error: Throwable, params: Map<String, String> = emptyMap())
+    fun send(error: Throwable, params: Map<String, EventValue> = emptyMap())
 }
 
 interface AnalyticsHandlerHolder {

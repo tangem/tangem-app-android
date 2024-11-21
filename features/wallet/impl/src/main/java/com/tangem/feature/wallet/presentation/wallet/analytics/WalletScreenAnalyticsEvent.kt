@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.core.analytics.models.OneTimeAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 
@@ -9,14 +10,14 @@ sealed class WalletScreenAnalyticsEvent {
 
     sealed class Basic(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
         error: Throwable? = null,
     ) : AnalyticsEvent(category = "Basic", event = event, params = params, error = error) {
 
         class WalletToppedUp(userWalletId: UserWalletId, walletType: AnalyticsParam.WalletType) :
             Basic(
                 event = "Topped up",
-                params = mapOf(AnalyticsParam.CURRENCY to walletType.value),
+                params = mapOf(AnalyticsParam.CURRENCY to walletType.value.asStringValue()),
             ),
             OneTimeAnalyticsEvent {
 
@@ -26,61 +27,61 @@ sealed class WalletScreenAnalyticsEvent {
         class CardWasScanned(source: AnalyticsParam.ScreensSources) : Basic(
             event = "Card Was Scanned",
             params = mapOf(
-                AnalyticsParam.SOURCE to source.value,
+                AnalyticsParam.SOURCE to source.value.asStringValue(),
             ),
         )
 
         class BalanceLoaded(balance: AnalyticsParam.CardBalanceState) : Basic(
             event = "Balance Loaded",
             params = mapOf(
-                AnalyticsParam.BALANCE to balance.value,
+                AnalyticsParam.BALANCE to balance.value.asStringValue(),
             ),
         )
 
         class TokenBalance(balance: AnalyticsParam.TokenBalanceState, token: String) : Basic(
             event = "Token Balance",
             params = mapOf(
-                AnalyticsParam.STATE to balance.value,
-                AnalyticsParam.TOKEN_PARAM to token,
+                AnalyticsParam.STATE to balance.value.asStringValue(),
+                AnalyticsParam.TOKEN_PARAM to token.asStringValue(),
             ),
         )
     }
 
     sealed class Token(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : AnalyticsEvent(category = "Token", event = event, params = params) {
 
         class PolkadotAccountReset(hasReset: Boolean) : Token(
             event = "Polkadot Account Reset",
             params = mapOf(
-                AnalyticsParam.STATE to if (hasReset) "Yes" else "No",
+                AnalyticsParam.STATE to if (hasReset) "Yes".asStringValue() else "No".asStringValue(),
             ),
         )
 
         class PolkadotImmortalTransactions(hasImmortalTransaction: Boolean) : Token(
             event = "Polkadot Immortal Transactions",
             params = mapOf(
-                AnalyticsParam.STATE to if (hasImmortalTransaction) "Yes" else "No",
+                AnalyticsParam.STATE to if (hasImmortalTransaction) "Yes".asStringValue() else "No".asStringValue(),
             ),
         )
     }
 
     sealed class MainScreen(
         event: String,
-        params: Map<String, String> = mapOf(),
+        params: Map<String, EventValue> = mapOf(),
     ) : AnalyticsEvent(category = "Main Screen", event = event, params = params) {
 
         data object ScreenOpened : MainScreen(event = "Screen opened")
 
         class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
             event = "Enable Biometric",
-            params = mapOf("State" to state.value),
+            params = mapOf("State" to state.value.asStringValue()),
         )
 
         class NoticeRateAppButton(result: AnalyticsParam.RateApp) : MainScreen(
             event = "Notice - Rate The App Button Tapped",
-            params = mapOf("Result" to result.value),
+            params = mapOf("Result" to result.value.asStringValue()),
         )
 
         data object NoticeBackupYourWalletTapped : MainScreen(event = "Notice - Backup Your Wallet Tapped")
@@ -91,7 +92,7 @@ sealed class WalletScreenAnalyticsEvent {
             tokens: List<String>,
         ) : MainScreen(
             event = "Notice - Networks Unreachable",
-            params = mapOf("Tokens" to tokens.joinToString()),
+            params = mapOf("Tokens" to tokens.asListValue()), // TODO analytics
         )
 
         data object MissingAddresses : MainScreen(event = "Notice - Missing Addresses")

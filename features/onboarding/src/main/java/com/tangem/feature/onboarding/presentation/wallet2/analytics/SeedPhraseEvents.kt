@@ -1,10 +1,11 @@
 package com.tangem.feature.onboarding.presentation.wallet2.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 
 sealed class SeedPhraseEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent(ONBOARDING_SEED_PHRASE, event, params) {
 
     object ButtonGenerateSeedPhrase : SeedPhraseEvents("Button - Generate Seed Phrase")
@@ -25,7 +26,7 @@ sealed class SeedPhraseEvents(
 
 sealed class CreateWalletEvents(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent(ONBOARDING_CREATE_WALLET, event, params) {
 
     object OnboardingSeedButtonCreateWallet : CreateWalletEvents("Button - Create Wallet")

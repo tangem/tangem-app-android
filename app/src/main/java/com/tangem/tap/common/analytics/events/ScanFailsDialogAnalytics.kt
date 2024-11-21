@@ -7,7 +7,7 @@ class ScanFailsDialogAnalytics(button: Buttons, source: AnalyticsParam.ScreensSo
     category = "Cant Scan The Card",
     event = button.event,
     params = mapOf(
-        AnalyticsParam.SOURCE to source.value,
+        AnalyticsParam.SOURCE to source.value.asStringValue(),
     ),
 ) {
     enum class Buttons(val event: String) {

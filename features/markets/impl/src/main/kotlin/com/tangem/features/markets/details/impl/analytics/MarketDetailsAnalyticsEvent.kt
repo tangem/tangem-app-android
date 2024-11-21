@@ -1,12 +1,13 @@
 package com.tangem.features.markets.details.impl.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketParams
 
 internal class MarketDetailsAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent(category = "Markets / Chart", event = event, params = params) {
 
     data class EventBuilder(
@@ -15,53 +16,53 @@ internal class MarketDetailsAnalyticsEvent(
         fun screenOpened(blockchain: String?, source: String) = MarketDetailsAnalyticsEvent(
             event = "Token Chart Screen Opened",
             params = buildMap {
-                put("Token", token.symbol)
-                blockchain?.let { put("blockchain", it) }
-                put("Source", source)
+                put("Token", token.symbol.asStringValue())
+                blockchain?.let { put("blockchain", it.asStringValue()) }
+                put("Source", source.asStringValue())
             },
         )
 
         fun intervalChanged(intervalType: IntervalType, interval: PriceChangeInterval) = MarketDetailsAnalyticsEvent(
             event = "Button - Period",
             params = mapOf(
-                "Token" to token.symbol,
-                "Period" to interval.toAnalyticsString(),
-                "Source" to intervalType.source,
+                "Token" to token.symbol.asStringValue(),
+                "Period" to interval.toAnalyticsString().asStringValue(),
+                "Source" to intervalType.source.asStringValue(),
             ),
         )
 
         fun readMoreClicked() = MarketDetailsAnalyticsEvent(
             event = "Button - Read More",
             params = mapOf(
-                "Token" to token.symbol,
+                "Token" to token.symbol.asStringValue(),
             ),
         )
 
         fun linkClicked(linkTitle: String) = MarketDetailsAnalyticsEvent(
             event = "Button - Links",
             params = mapOf(
-                "Token" to token.symbol,
-                "Link" to linkTitle,
+                "Token" to token.symbol.asStringValue(),
+                "Link" to linkTitle.asStringValue(),
             ),
         )
 
         fun exchangesScreenOpened() = MarketDetailsAnalyticsEvent(
             event = "Exchanges Screen Opened",
             params = mapOf(
-                "Token" to token.symbol,
+                "Token" to token.symbol.asStringValue(),
             ),
         )
 
         fun securityScoreOpened() = MarketDetailsAnalyticsEvent(
             event = "Security Score Info",
-            params = mapOf("Token" to token.symbol),
+            params = mapOf("Token" to token.symbol.asStringValue()),
         )
 
         fun securityScoreProviderClicked(provider: String) = MarketDetailsAnalyticsEvent(
             event = "Security Score Provider Clicked",
             params = mapOf(
-                "Token" to token.symbol,
-                "Provider" to provider,
+                "Token" to token.symbol.asStringValue(),
+                "Provider" to provider.asStringValue(),
             ),
         )
     }

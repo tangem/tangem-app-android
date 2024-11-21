@@ -2,13 +2,14 @@ package com.tangem.domain.staking.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent.ButtonRewards.addIfValueIsNotNull
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 
 sealed class StakingAnalyticsEvent(
     event: String,
-    params: Map<String, String> = mapOf(),
+    params: Map<String, EventValue> = mapOf(),
 ) : AnalyticsEvent(
     category = "Staking",
     event = event,
@@ -20,7 +21,7 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Staking Info Screen Opened",
         params = mapOf(
-            "Validators Count" to validatorsCount.toString(),
+            "Validators Count" to validatorsCount.asStringValue(),
         ),
     )
 
@@ -38,8 +39,8 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Confirmation Screen Opened",
         params = mapOf(
-            "Validator" to validator,
-            "Action" to action.asAnalyticName,
+            "Validator" to validator.asStringValue(),
+            "Action" to action.asAnalyticName.asStringValue(),
         ),
     )
 
@@ -49,8 +50,8 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Stake In Progress Screen Opened",
         params = mapOf(
-            "Validator" to validator,
-            "Action" to action.asAnalyticName,
+            "Validator" to validator.asStringValue(),
+            "Action" to action.asAnalyticName.asStringValue(),
         ),
     )
 
@@ -63,7 +64,7 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Selected Currency",
         params = mapOf(
-            AnalyticsParam.TYPE to if (isAppCurrency) "App Currency" else "Token",
+            AnalyticsParam.TYPE to if (isAppCurrency) "App Currency".asStringValue() else "Token".asStringValue(),
         ),
     )
 
@@ -76,7 +77,7 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Button - Cancel",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.name,
+            AnalyticsParam.SOURCE to source.name.asStringValue(),
         ),
     )
 
@@ -85,7 +86,7 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Validator Chosen",
         params = mapOf(
-            "Validator" to validator,
+            "Validator" to validator.asStringValue(),
         ),
     )
 
@@ -94,7 +95,7 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Button - Validator",
         params = mapOf(
-            AnalyticsParam.SOURCE to source.name,
+            AnalyticsParam.SOURCE to source.name.asStringValue(),
         ),
     )
 
@@ -108,7 +109,7 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Button - ${action.asAnalyticName}",
         params = mapOf(
-            "Validator" to validator,
+            "Validator" to validator.asStringValue(),
         ),
     )
 
@@ -121,9 +122,9 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Errors",
         params = buildMap {
-            addIfValueIsNotNull(AnalyticsParam.ERROR_MESSAGE, stakingError.message)
-            addIfValueIsNotNull(AnalyticsParam.ERROR_CODE, stakingError.code)
-            addIfValueIsNotNull(AnalyticsParam.METHOD_NAME, stakingError.methodName)
+            addIfValueIsNotNull(AnalyticsParam.ERROR_MESSAGE, stakingError.message?.asStringValue())
+            addIfValueIsNotNull(AnalyticsParam.ERROR_CODE, stakingError.code?.asStringValue())
+            addIfValueIsNotNull(AnalyticsParam.METHOD_NAME, stakingError.methodName?.asStringValue())
         },
     )
 
@@ -132,7 +133,7 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "Errors",
         params = buildMap {
-            addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakeKitUnknownError.jsonString)
+            addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakeKitUnknownError.jsonString?.asStringValue())
         },
     )
 
@@ -141,13 +142,13 @@ sealed class StakingAnalyticsEvent(
     ) : StakingAnalyticsEvent(
         event = "App Errors",
         params = buildMap {
-            addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakeKitDomainError.message)
+            addIfValueIsNotNull(AnalyticsParam.ERROR_DESCRIPTION, stakeKitDomainError.message?.asStringValue())
         },
     )
 
-    fun MutableMap<String, String>.addIfValueIsNotNull(key: String, value: Any?) {
+    fun MutableMap<String, EventValue>.addIfValueIsNotNull(key: String, value: EventValue?) {
         if (value != null) {
-            put(key, value.toString())
+            put(key, value)
         }
     }
 

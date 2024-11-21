@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.amplitude
 
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.core.analytics.models.EventValue
 import com.tangem.tap.common.analytics.AnalyticsEventsLogger
 
 /**
@@ -12,7 +13,7 @@ internal class AmplitudeLogClient(
 
     private val logger: AnalyticsEventsLogger = AnalyticsEventsLogger(AmplitudeAnalyticsHandler.ID, jsonConverter)
 
-    override fun logEvent(event: String, params: Map<String, String>) {
+    override fun logEvent(event: String, params: Map<String, EventValue>) {
         logger.logEvent(event, params)
     }
 }
