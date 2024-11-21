@@ -95,6 +95,8 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.HederaTestnet -> null
             Blockchain.Aurora -> null
             Blockchain.AuroraTestnet -> null
+            Blockchain.Alephium -> null
+            Blockchain.AlephiumTestnet -> null
             Blockchain.Areon -> null
             Blockchain.AreonTestnet -> null
             Blockchain.PulseChain -> null
