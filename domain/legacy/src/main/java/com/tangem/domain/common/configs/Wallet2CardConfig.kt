@@ -199,6 +199,8 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.ApeChain -> EllipticCurve.Secp256k1
             Blockchain.ApeChainTestnet -> EllipticCurve.Secp256k1
             Blockchain.KaspaTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Alephium -> EllipticCurve.Secp256k1
+            Blockchain.AlephiumTestnet -> EllipticCurve.Secp256k1
         }
     }
 }
