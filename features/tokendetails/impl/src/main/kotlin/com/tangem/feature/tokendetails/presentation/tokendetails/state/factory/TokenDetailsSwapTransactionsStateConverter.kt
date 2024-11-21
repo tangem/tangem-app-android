@@ -3,9 +3,9 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
@@ -55,16 +55,22 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             .forEach { swapTransaction ->
                 val toCryptoCurrency = swapTransaction.toCryptoCurrency
                 val fromCryptoCurrency = swapTransaction.fromCryptoCurrency
+                val toCryptoCurrencyRawId = swapTransaction.toCryptoCurrency.id.rawCurrencyId
+                val fromCryptoCurrencyRawId = swapTransaction.fromCryptoCurrency.id.rawCurrencyId
 
                 swapTransaction.transactions.forEach { transaction ->
                     val toAmount = transaction.toCryptoAmount
                     val fromAmount = transaction.fromCryptoAmount
-                    val toFiatAmount = quotes.firstOrNull {
-                        it.rawCurrencyId == swapTransaction.toCryptoCurrency.id.rawCurrencyId
-                    }?.fiatRate?.multiply(toAmount)
-                    val fromFiatAmount = quotes.firstOrNull {
-                        it.rawCurrencyId == swapTransaction.fromCryptoCurrency.id.rawCurrencyId
-                    }?.fiatRate?.multiply(fromAmount)
+                    var toFiatAmount: BigDecimal? = null
+                    var fromFiatAmount: BigDecimal? = null
+                    quotes.forEach { quote ->
+                        if (quote is Quote.Value && quote.rawCurrencyId == toCryptoCurrencyRawId) {
+                            toFiatAmount = quote.fiatRate.multiply(toAmount)
+                        }
+                        if (quote is Quote.Value && quote.rawCurrencyId == fromCryptoCurrencyRawId) {
+                            fromFiatAmount = quote.fiatRate.multiply(fromAmount)
+                        }
+                    }
                     val timestamp = transaction.timestamp
                     val notifications =
                         getNotification(transaction.status?.status, transaction.status?.txExternalUrl, null)
