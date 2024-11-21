@@ -6,13 +6,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -30,8 +31,26 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.st
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.utils.InvalidWordsColorTransformation
 import kotlinx.collections.immutable.ImmutableList
 
+@Suppress("LongMethod")
 @Composable
-fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, modifier: Modifier = Modifier) {
+internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, modifier: Modifier = Modifier) {
+    if (state.dialog != null) {
+        BasicDialog(
+            title = state.dialog.title.resolveReference(),
+            message = state.dialog.message.resolveReference(),
+            confirmButton = DialogButtonUM(
+                title = state.dialog.confirmButtonText.resolveReference(),
+                onClick = state.dialog.onConfirmClick,
+            ),
+            dismissButton = DialogButtonUM(
+                title = state.dialog.dismissButtonText.resolveReference(),
+                warning = state.dialog.dismissWarningColor,
+                onClick = state.dialog.onDismissButtonClick,
+            ),
+            onDismissDialog = state.dialog.onDismiss,
+        )
+    }
+
     Box(modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -109,14 +128,16 @@ private fun PhraseBlock(state: MultiWalletSeedPhraseUM.Import, modifier: Modifie
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
+        // TODO migrate to material3
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(TangemTheme.dimens.size142),
-            value = state.passPhrase,
-            onValueChange = state.passPhraseChange,
+            value = state.words,
+            onValueChange = state.wordsChange,
             textStyle = TangemTheme.typography.body1,
             singleLine = false,
+            colors = TangemTextFieldsDefault.defaultTextFieldColors,
             visualTransformation = invalidWordsColorTransformation,
         )
 
@@ -151,6 +172,7 @@ private fun SuggestionsBlock(
         visible = suggestionsList.isNotEmpty(),
     ) {
         LazyRow(
+            modifier = Modifier.padding(bottom = 8.dp),
             contentPadding = PaddingValues(horizontal = TangemTheme.dimens.size16),
         ) {
             items(suggestionsList.size) { index ->
@@ -171,13 +193,14 @@ private fun SuggestionsBlock(
 
 @Composable
 private fun SuggestionButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Box(modifier = modifier.clickable(onClick = onClick)) {
-        Notifier(
-            text = text,
-            backgroundColor = TangemTheme.colors.icon.primary1,
-            textColor = TangemTheme.colors.text.primary2,
-        )
-    }
+    Notifier(
+        text = text,
+        modifier = modifier
+            .clip(TangemTheme.shapes.roundedCorners8)
+            .clickable(onClick = onClick),
+        backgroundColor = TangemTheme.colors.icon.primary1,
+        textColor = TangemTheme.colors.text.primary2,
+    )
 }
 
 private fun Modifier.rowPadding(index: Int, rowSize: Int, outSide: Dp, inSide: Dp): Modifier = when (index) {
