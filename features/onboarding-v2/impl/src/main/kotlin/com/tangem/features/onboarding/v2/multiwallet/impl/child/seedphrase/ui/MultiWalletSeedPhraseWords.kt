@@ -26,7 +26,10 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 @Composable
-fun MultiWalletSeedPhraseWords(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifier: Modifier = Modifier) {
+internal fun MultiWalletSeedPhraseWords(
+    state: MultiWalletSeedPhraseUM.GenerateSeedPhrase,
+    modifier: Modifier = Modifier,
+) {
     Column(modifier.fillMaxSize()) {
         SegmentSeedBlock(
             modifier = Modifier.padding(vertical = 20.dp),
