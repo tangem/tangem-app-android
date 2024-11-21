@@ -167,6 +167,8 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         -> Network.TransactionExtrasType.MEMO
         // region Other blockchains
         Blockchain.Unknown,
+        Blockchain.Alephium,
+        Blockchain.AlephiumTestnet,
         Blockchain.Arbitrum,
         Blockchain.ArbitrumTestnet,
         Blockchain.Avalanche,
