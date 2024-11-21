@@ -8,7 +8,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-class GenerateSeedPhraseUiStateBuilder(
+internal class GenerateSeedPhraseUiStateBuilder(
     private val state: MutableStateFlow<SeedPhraseState>,
     private val updateUiState: (
         (MultiWalletSeedPhraseUM.GenerateSeedPhrase) -> MultiWalletSeedPhraseUM.GenerateSeedPhrase,
