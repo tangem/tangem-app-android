@@ -13,6 +13,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.state.MultiWalletCreateWalletUM
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -24,7 +25,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ComponentScoped
-class MultiWalletCreateWalletModel @Inject constructor(
+internal class MultiWalletCreateWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
