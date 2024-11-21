@@ -28,10 +28,11 @@ class YieldConverter(
             metadata = convertMetadata(value.metadata.asMandatory("metadata")),
             validators = value.validators.asMandatory("validators")
                 .asSequence()
+                .distinctBy { it.address }
                 .filter { it.status == ValidatorStatusDTO.ACTIVE }
                 .map { convertValidator(it) }
-                .sortedByDescending { it.isStrategicPartner }
                 .sortedByDescending { it.apr }
+                .sortedByDescending { it.isStrategicPartner }
                 .toImmutableList(),
             isAvailable = value.isAvailable.asMandatory("isAvailable"),
         )
