@@ -9,7 +9,16 @@ sealed interface MarketsDataAnalyticsEvent {
         params: Map<String, String> = mapOf(),
     ) : AnalyticsEvent(category = "Markets", event = event, params = params), MarketsDataAnalyticsEvent {
 
-        data object Error : List(event = "Data Error")
+        data class Error(
+            val errorType: Type,
+            val errorCode: Int? = null,
+        ) : List(
+            event = "Data Error",
+            params = buildMap {
+                put("Error Type", errorType.value)
+                errorCode?.let { put("Error Code", it.toString()) }
+            },
+        )
     }
 
     sealed class Details(
@@ -20,12 +29,16 @@ sealed interface MarketsDataAnalyticsEvent {
         data class Error(
             val request: Request,
             val tokenSymbol: String,
+            val errorType: Type,
+            val errorCode: Int? = null,
         ) : Details(
             event = "Data Error",
-            params = mapOf(
-                "Source" to request.source,
-                "Token" to tokenSymbol,
-            ),
+            params = buildMap {
+                put("Source", request.source)
+                put("Token", tokenSymbol)
+                errorCode?.let { put("Error Code", it.toString()) }
+                put("Error Type", errorType.value)
+            },
         ) {
 
             enum class Request(val source: String) {
@@ -43,13 +56,25 @@ sealed interface MarketsDataAnalyticsEvent {
 
     data class ChartNullValuesError(
         val requestPath: String,
+        val errorType: Type,
+        val errorCode: Int? = null,
     ) : AnalyticsEvent(
         category = "Markets / Chart",
         event = "Data Error",
-        params = mapOf("Request path" to requestPath),
-        error = IllegalStateException(
-            "Chart data contains null values from the API",
-        ),
+        params = buildMap {
+            put("Request path", requestPath)
+            errorCode?.let { put("Error Code", it.toString()) }
+            put("Error Type", errorType.value)
+            put("Error Description", "Chart data contains null values from the API")
+        },
     ),
         MarketsDataAnalyticsEvent
+
+    enum class Type(val value: String) {
+        Http("Http"),
+        Timeout("Timeout"),
+        Network("Network"),
+        Custom("Custom"),
+        Unknown("Unknown"),
+    }
 }
