@@ -294,6 +294,9 @@
   <string name="express_provider_not_available">No disponible para este par</string>
   <string name="express_provider_permission_needed">Permiso requerido</string>
   <string name="express_provider_recommended">Recomendado</string>
+  <string name="express_status_bought">Comprado %s</string>
+  <string name="express_status_buying">Comprando %s</string>
+  <string name="express_status_buying_active">Comprando %s...</string>
   <string name="express_token_list_empty_search">No se encontraron fichas. Por favor intenta con otra solicitud</string>
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transacción copiado</string>
@@ -907,6 +910,7 @@
   <string name="twins_recreate_warning">Esta acción es irreversible. No tendrá acceso la billetera antigua.</string>
   <string name="twins_scan_twin_with_number">Toque la tarjeta gemela con el número %s y no la retira hasta el final de la operación</string>
   <string name="unlock_wallet_description_full">Use %s o escanee una tarjeta/anillo para tener acceso a su billetera</string>
+  <string name="unsupported_wc_version">Error de conexión: Esta dApp utiliza la versión 1.0 de Wallet Connect, que no es compatible. Asegúrese de que la dApp sea compatible con la versión 2.0 de Wallet Connect para conectarse correctamente.</string>
   <string name="user_push_notification_agreement_argument_one">Manténgase actualizado con las últimas funciones y noticias</string>
   <string name="user_push_notification_agreement_argument_two">Sea el primero en enterarte de nuevas promociones</string>
   <string name="user_push_notification_agreement_header">¿Quiere utilizar\nnotificaciones push?</string>
@@ -1006,6 +1010,9 @@
   <string name="warning_hedera_missing_token_association_message_brief">Este token debe estar asociado con su cuenta de Hedera antes de poder recibirlo.</string>
   <string name="warning_hedera_missing_token_association_title">Asocie su token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">No hay suficiente %s. Recargue su cuenta de Hedera para asociar este token</string>
+  <string name="warning_kaspa_unfinished_token_transaction_discard_message">¿Está seguro(a) de que desea cancelar la transacción? No podrá volver a intentar realizarla.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
   <string name="warning_low_signatures_message">Solo quedan %s firmas en esta tarjeta. Deba retirar todos sus fondos.</string>
   <string name="warning_low_signatures_title">Recuento de firmas bajo</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Los tokens en diferentes redes pueden tener direcciones diferentes. Verifique que su dirección coincida con la red cuando transfieras fondos.</string>

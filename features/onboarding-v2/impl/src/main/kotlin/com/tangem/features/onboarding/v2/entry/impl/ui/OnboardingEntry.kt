@@ -31,7 +31,7 @@ internal inline fun OnboardingEntry(
             animation = stackAnimation(slide()),
         ) {
             when (it.configuration) {
-                is OnboardingRoute.Wallet12 -> {
+                is OnboardingRoute.MultiWallet -> {
                     (it.instance as OnboardingMultiWalletComponent).Content(
                         modifier = modifier,
                     )

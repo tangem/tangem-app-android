@@ -62,9 +62,9 @@ internal class OnboardingManageTokensModel @Inject constructor(
             .launchIn(modelScope)
 
         combine(
-            manageTokensListManager.currenciesToAdd,
-            manageTokensListManager.currenciesToRemove,
-            ::handleChangedCurrencies,
+            flow = manageTokensListManager.currenciesToAdd,
+            flow2 = manageTokensListManager.currenciesToRemove,
+            transform = ::handleChangedCurrencies,
         ).launchIn(modelScope)
 
         observeSearchQueryChanges()
