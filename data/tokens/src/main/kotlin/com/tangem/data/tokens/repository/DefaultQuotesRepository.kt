@@ -45,7 +45,7 @@ internal class DefaultQuotesRepository(
             .filterNotNull()
             .flatMapLatest { appCurrency ->
                 fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = refresh)
-                quotesStore.get(currenciesIds).map(quotesConverter::convertSet)
+                quotesStore.get(currenciesIds).map { quotesConverter.convert(currenciesIds to it) }
             }
             .cancellable()
             .flowOn(dispatchers.io)
@@ -77,14 +77,15 @@ internal class DefaultQuotesRepository(
 
             val quotes = quotesStore.getSync(currenciesIds)
 
-            quotesConverter.convertSet(quotes)
+            quotesConverter.convert(currenciesIds to quotes)
         }
     }
 
     override suspend fun getQuoteSync(currencyId: CryptoCurrency.ID): Quote? {
         return withContext(dispatchers.io) {
-            val quote = quotesStore.getSync(setOf(currencyId)).firstOrNull()
-            quote?.let { quotesConverter.convert(it) }
+            val setOfCurrencyId = setOf(currencyId)
+            val quote = quotesStore.getSync(setOfCurrencyId).firstOrNull()
+            quote?.let { quotesConverter.convert(setOfCurrencyId to setOf(it)).firstOrNull() }
         }
     }
 
