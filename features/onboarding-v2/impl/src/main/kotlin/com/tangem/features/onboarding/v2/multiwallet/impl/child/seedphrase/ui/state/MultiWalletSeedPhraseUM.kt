@@ -4,11 +4,12 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.OnboardingDialogUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Immutable
-sealed class MultiWalletSeedPhraseUM(
+internal sealed class MultiWalletSeedPhraseUM(
     val order: Int,
 ) {
 
@@ -35,6 +36,7 @@ sealed class MultiWalletSeedPhraseUM(
         val createWalletButtonEnabled: Boolean = false,
         val createWalletButtonProgress: Boolean = false,
         val onCreateWalletButtonClick: () -> Unit = {},
+        val dialog: OnboardingDialogUM? = null,
     ) : MultiWalletSeedPhraseUM(order = 2) {
         data class WordField(
             val index: Int,
@@ -58,5 +60,6 @@ sealed class MultiWalletSeedPhraseUM(
         val suggestionsList: ImmutableList<String> = persistentListOf(),
         val onSuggestionClick: (String) -> Unit = {},
         val infoBottomSheetConfig: TangemBottomSheetConfig = TangemBottomSheetConfig.Empty,
+        val dialog: OnboardingDialogUM? = null,
     ) : MultiWalletSeedPhraseUM(order = 1)
 }
