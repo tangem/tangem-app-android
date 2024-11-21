@@ -2178,8 +2178,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
     }
 
-    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote> {
-        val set = ids.toSet().getQuotesOrEmpty(false)
+    private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote.Value> {
+        val set = ids.toSet().getQuotesOrEmpty(false).filterIsInstance<Quote.Value>()
 
         return ids
             .mapNotNull { id -> set.find { it.rawCurrencyId == id.rawCurrencyId }?.let { id to it } }
