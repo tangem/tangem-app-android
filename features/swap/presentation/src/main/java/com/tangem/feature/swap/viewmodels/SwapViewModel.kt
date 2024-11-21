@@ -10,6 +10,7 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
+import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -530,10 +531,7 @@ internal class SwapViewModel @Inject constructor(
         swapDataModel: SwapDataModel?,
     ) {
         dataState = if (permissionState is PermissionDataState.PermissionReadyForRequest) {
-            dataState.copy(
-                approveDataModel = permissionState.requestApproveData,
-                approveType = dataState.approveType ?: ApproveType.UNLIMITED,
-            )
+            dataState.copy(approveDataModel = permissionState.requestApproveData)
         } else {
             dataState.copy(
                 swapDataModel = swapDataModel,
@@ -673,9 +671,10 @@ internal class SwapViewModel @Inject constructor(
                 val approveDataModel = requireNotNull(dataState.approveDataModel) {
                     "dataState.approveDataModel.spenderAddress shouldn't be null"
                 }
-                val approveType = requireNotNull(dataState.approveType?.toDomainApproveType()) {
-                    "uiState.permissionState should not be null"
-                }
+                val approveType =
+                    requireNotNull(uiState.permissionState.getApproveTypeOrNull()?.toDomainApproveType()) {
+                        "uiState.permissionState should not be null"
+                    }
                 val feeForPermission = when (val fee = approveDataModel.fee) {
                     TxFeeState.Empty -> {
                         makeDefaultAlert(resourceReference(R.string.swapping_fee_estimation_error_text))
@@ -1026,7 +1025,6 @@ internal class SwapViewModel @Inject constructor(
             onAmountSelected = { onAmountSelected(it) },
             onChangeApproveType = { approveType ->
                 uiState = stateBuilder.updateApproveType(uiState, approveType)
-                dataState = dataState.copy(approveType = approveType)
             },
             onClickFee = {
                 val selectedFee = dataState.selectedFee?.feeType ?: FeeType.NORMAL
@@ -1246,7 +1244,7 @@ internal class SwapViewModel @Inject constructor(
     private fun sendPermissionApproveClickedEvent() {
         val sendTokenSymbol = dataState.fromCryptoCurrency?.currency?.symbol
         val receiveTokenSymbol = dataState.toCryptoCurrency?.currency?.symbol
-        val approveType = dataState.approveType
+        val approveType = uiState.permissionState.getApproveTypeOrNull()
         if (sendTokenSymbol != null && receiveTokenSymbol != null && approveType != null) {
             analyticsEventHandler.send(
                 SwapEvents.ButtonPermissionApproveClicked(
