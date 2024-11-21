@@ -156,6 +156,8 @@ class Wallet2CardConfigTest {
         Blockchain.ApeChain to EllipticCurve.Secp256k1,
         Blockchain.ApeChainTestnet to EllipticCurve.Secp256k1,
         Blockchain.KaspaTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Alephium to EllipticCurve.Secp256k1,
+        Blockchain.AlephiumTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test

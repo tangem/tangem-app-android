@@ -9,6 +9,8 @@ import java.math.BigDecimal
 @Suppress("ComplexMethod", "LongMethod")
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
+        "alephium" -> Blockchain.Alephium
+        "alephium/test" -> Blockchain.AlephiumTestnet
         "arbitrum-one" -> Blockchain.Arbitrum
         "arbitrum-one/test" -> Blockchain.ArbitrumTestnet
         "avalanche", "avalanche-2" -> Blockchain.Avalanche
@@ -165,6 +167,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
+        Blockchain.Alephium -> "alephium"
+        Blockchain.AlephiumTestnet -> "alephium/test"
         Blockchain.Arbitrum -> "arbitrum-one"
         Blockchain.ArbitrumTestnet -> "arbitrum-one/test"
         Blockchain.Avalanche -> "avalanche"
@@ -328,6 +332,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano -> "cardano"
         Blockchain.Polygon, Blockchain.PolygonTestnet -> NEW_POLYGON_NAME
+        Blockchain.Alephium, Blockchain.AlephiumTestnet -> "alephium"
         Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "arbitrum-one"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
