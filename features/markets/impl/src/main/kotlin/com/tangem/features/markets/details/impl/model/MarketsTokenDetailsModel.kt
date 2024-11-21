@@ -88,6 +88,20 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.linkClicked(linkTitle = link.title))
         },
+        onSecurityScoreInfoClick = {
+            showBottomSheet(it)
+
+            // === Analytics ===
+            analyticsEventHandler.send(analyticsEventBuilder.securityScoreOpened())
+        },
+        onSecurityScoreProviderLinkClick = {
+            it.urlData?.fullUrl?.let { url ->
+                urlOpener.openUrl(url)
+            }
+
+            // === Analytics ===
+            analyticsEventHandler.send(analyticsEventBuilder.securityScoreProviderClicked(it.name))
+        },
         // === Analytics ===
         onPricePerformanceIntervalChanged = {
             analyticsEventHandler.send(
@@ -531,10 +545,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
             showBottomSheet(content = ExchangesBottomSheetContent.Loading(exchangesCount))
 
-            // Delay to show the bottom sheet
-            delay(timeMillis = 800L)
-
             val maybeExchanges = getTokenExchangesUseCase(tokenId = params.token.id)
+
+            // Delay to show the bottom sheet
+            delay(timeMillis = 400L)
 
             updateExchangeBSContent(maybeExchanges = maybeExchanges, exchangesCount = exchangesCount)
         }
