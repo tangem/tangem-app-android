@@ -23,11 +23,14 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.core.res)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
 
     /** Domain */
     implementation(projects.domain.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.core)
+    implementation(projects.domain.card)
+    implementation(projects.domain.wallets)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
@@ -49,11 +52,13 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.androidx.activity.compose)
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
+    implementation(deps.firebase.crashlytics)
 
     /** DI */
     implementation(deps.hilt.android)
