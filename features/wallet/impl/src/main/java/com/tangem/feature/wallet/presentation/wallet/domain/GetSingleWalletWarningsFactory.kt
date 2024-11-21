@@ -41,7 +41,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
             buildList {
                 addCriticalNotifications(cardTypesResolver)
 
-                addInformationalNotifications(cardTypesResolver)
+                addInformationalNotifications(cardTypesResolver, clickIntents)
 
                 addWarningNotifications(
                     userWallet,
@@ -75,7 +75,17 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         }
     }
 
-    private fun MutableList<WalletNotification>.addInformationalNotifications(cardTypesResolver: CardTypesResolver) {
+    private fun MutableList<WalletNotification>.addInformationalNotifications(
+        cardTypesResolver: CardTypesResolver,
+        clickIntents: WalletClickIntents,
+    ) {
+        addIf(
+            element = WalletNotification.NoteMigration(
+                onClick = { clickIntents.onNoteMigrationButtonClick(NOTE_MIGRATION_URL) },
+            ),
+            condition = cardTypesResolver.isTangemNote(),
+        )
+
         addIf(
             element = WalletNotification.Informational.DemoCard,
             condition = isDemoCardUseCase(cardId = cardTypesResolver.getCardId()),
@@ -160,13 +170,17 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     private fun MutableList<WalletNotification>.addIf(element: WalletNotification, condition: Boolean) {
         if (condition) {
             add(element = element)
-            if (element is WalletNotification.Critical || element is WalletNotification.Warning) {
+            if (element is WalletNotification.Critical ||
+                element is WalletNotification.Warning ||
+                element is WalletNotification.NoteMigration
+            ) {
                 readyForRateAppNotification = false
             }
         }
     }
 
     private companion object {
+        const val NOTE_MIGRATION_URL = "https://tangem.com/en/?promocode=Note10"
         const val MAX_REMAINING_SIGNATURES_COUNT = 10
     }
 }
