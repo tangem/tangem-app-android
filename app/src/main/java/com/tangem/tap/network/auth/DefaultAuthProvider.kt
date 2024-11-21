@@ -2,15 +2,15 @@ package com.tangem.tap.network.auth
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.datasource.api.common.AuthProvider
-import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 
-internal class DefaultAuthProvider(private val appStateHolder: AppStateHolder) : AuthProvider {
+internal class DefaultAuthProvider(private val userWalletsListManager: UserWalletsListManager) : AuthProvider {
 
     override fun getCardPublicKey(): String {
-        return appStateHolder.scanResponse?.card?.cardPublicKey?.toHexString() ?: ""
+        return userWalletsListManager.selectedUserWalletSync?.scanResponse?.card?.cardPublicKey?.toHexString() ?: ""
     }
 
     override fun getCardId(): String {
-        return appStateHolder.scanResponse?.card?.cardId ?: ""
+        return userWalletsListManager.selectedUserWalletSync?.scanResponse?.card?.cardId ?: ""
     }
 }
