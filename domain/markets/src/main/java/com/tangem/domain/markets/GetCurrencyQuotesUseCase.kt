@@ -15,10 +15,10 @@ class GetCurrencyQuotesUseCase(
         currencyID: CryptoCurrency.ID,
         interval: PriceChangeInterval,
         refresh: Boolean,
-    ): Flow<Option<Quote>> {
+    ): Flow<Option<Quote.Value>> {
         return quotesRepository.getQuotesUpdates(
             currenciesIds = setOf(currencyID),
             refresh = refresh,
-        ).map { it.firstOrNull().toOption() }.catch { emit(None) }
+        ).map { it.filterIsInstance<Quote.Value>().firstOrNull().toOption() }.catch { emit(None) }
     }
 }
