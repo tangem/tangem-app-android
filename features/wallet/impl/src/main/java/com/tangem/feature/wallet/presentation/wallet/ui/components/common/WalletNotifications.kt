@@ -1,9 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
+import com.tangem.core.ui.components.notifications.NoteMigrationNotification
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.OkxPromoNotification
 import com.tangem.core.ui.components.notifications.RingPromoNotification
@@ -19,7 +19,6 @@ import kotlinx.collections.immutable.ImmutableList
  *
 [REDACTED_AUTHOR]
  */
-@OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotification>, modifier: Modifier = Modifier) {
     items(
         items = configs,
@@ -31,16 +30,25 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                 is WalletNotification.SwapPromo -> {
                     OkxPromoNotification(
                         config = it.config,
-                        modifier = modifier.animateItemPlacement(),
+                        modifier = modifier.animateItem(),
                     )
                 }
                 is WalletNotification.RingPromo -> {
-                    RingPromoNotification(config = it.config, modifier = modifier.animateItemPlacement())
+                    RingPromoNotification(
+                        config = it.config,
+                        modifier = modifier.animateItem(),
+                    )
+                }
+                is WalletNotification.NoteMigration -> {
+                    NoteMigrationNotification(
+                        config = it.config,
+                        modifier = modifier.animateItem(),
+                    )
                 }
                 else -> {
                     Notification(
                         config = it.config,
-                        modifier = modifier.animateItemPlacement(),
+                        modifier = modifier.animateItem(),
                         iconTint = when (it) {
                             is WalletNotification.Critical -> TangemTheme.colors.icon.warning
                             is WalletNotification.Informational -> TangemTheme.colors.icon.accent
