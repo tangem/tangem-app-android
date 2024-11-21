@@ -102,4 +102,10 @@ internal object OnrampDomainModule {
     fun provideGetOnrampPaymentMethodsUseCase(onrampRepository: OnrampRepository): GetOnrampPaymentMethodsUseCase {
         return GetOnrampPaymentMethodsUseCase(onrampRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideClearOnrampCacheUseCase(onrampRepository: OnrampRepository): ClearOnrampCacheUseCase {
+        return ClearOnrampCacheUseCase(onrampRepository)
+    }
 }
