@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -11,6 +12,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
@@ -26,6 +28,8 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
+    private val rampStateManager: RampStateManager,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): WalletContentLoader {
@@ -41,6 +45,8 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
             applyTokenListSortingUseCase = applyTokenListSortingUseCase,
             runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
+            rampStateManager = rampStateManager,
+            walletFeatureToggles = walletFeatureToggles,
         )
     }
 }
