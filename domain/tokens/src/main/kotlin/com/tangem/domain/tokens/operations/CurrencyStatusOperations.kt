@@ -74,7 +74,7 @@ internal class CurrencyStatusOperations(
             null
         }
         return when {
-            ignoreQuote -> CryptoCurrencyStatus.NoQuote(
+            quote is Quote.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
@@ -91,8 +91,7 @@ internal class CurrencyStatusOperations(
                 networkAddress = status.address,
                 yieldBalance = currentYieldBalance,
             )
-            quote == null -> CryptoCurrencyStatus.Loading
-            else -> CryptoCurrencyStatus.Loaded(
+            quote is Quote.Value -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
                 fiatAmount = calculateFiatAmount(amount, quote.fiatRate),
                 fiatRate = quote.fiatRate,
@@ -102,6 +101,7 @@ internal class CurrencyStatusOperations(
                 networkAddress = status.address,
                 yieldBalance = currentYieldBalance,
             )
+            else -> CryptoCurrencyStatus.Loading
         }
     }
 
@@ -114,4 +114,16 @@ internal class CurrencyStatusOperations(
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
         return amount * fiatRate
     }
+
+    private val Quote?.fiatRate: BigDecimal?
+        get() = when (this) {
+            is Quote.Value -> this.fiatRate
+            is Quote.Empty, null -> null
+        }
+
+    private val Quote?.priceChange: BigDecimal?
+        get() = when (this) {
+            is Quote.Value -> this.priceChange
+            is Quote.Empty, null -> null
+        }
 }
