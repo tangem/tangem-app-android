@@ -4,7 +4,6 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys.ADDED_WALLETS_WITH_RING_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.IS_TOKEN_SWAP_PROMO_OKX_SHOW_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.IS_WALLET_SWAP_PROMO_OKX_SHOW_KEY
-import com.tangem.datasource.local.preferences.PreferencesKeys.IS_WALLET_TRAVALA_PROMO_SHOWN_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SHOW_RING_PROMO_KEY
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.store
@@ -38,17 +37,6 @@ class DefaultPromoSettingsRepository(
     override suspend fun setNeverToShowTokenSwapPromo() {
         appPreferencesStore.store(
             key = IS_TOKEN_SWAP_PROMO_OKX_SHOW_KEY,
-            value = false,
-        )
-    }
-
-    override fun isReadyToShowWalletTravalaPromo(): Flow<Boolean> {
-        return appPreferencesStore.get(IS_WALLET_TRAVALA_PROMO_SHOWN_KEY, true)
-    }
-
-    override suspend fun setNeverToShowWalletTravalaPromo() {
-        appPreferencesStore.store(
-            key = IS_WALLET_TRAVALA_PROMO_SHOWN_KEY,
             value = false,
         )
     }
