@@ -5,6 +5,7 @@ import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.utils.retryOnError
@@ -13,8 +14,10 @@ import com.tangem.data.markets.converters.*
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
+import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
+import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
@@ -27,12 +30,15 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
+@Suppress("LongParameterList")
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val cacheRegistry: CacheRegistry,
+    private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
 ) : MarketsTokenRepository {
 
     private fun createTokenMarketsFetcher(firstBatchSize: Int, nextBatchSize: Int) = LimitOffsetBatchFetcher(
@@ -253,9 +259,13 @@ internal class DefaultMarketsTokenRepository(
 
     override suspend fun getTokenExchanges(tokenId: String): List<TokenMarketExchange> {
         return withContext(dispatcherProvider.io) {
-            val response = marketsApi.getCoinExchanges(coinId = tokenId).getOrThrow()
+            cacheRegistry.invokeOnExpire(key = "coins/$tokenId/exchanges", skipCache = false) {
+                val response = marketsApi.getCoinExchanges(coinId = tokenId).getOrThrow()
 
-            TokenMarketExchangeConverter.convertList(input = response.exchanges)
+                tokenExchangesStore.store(value = response.exchanges)
+            }
+
+            TokenMarketExchangeConverter.convertList(input = tokenExchangesStore.get().value)
         }
     }
 

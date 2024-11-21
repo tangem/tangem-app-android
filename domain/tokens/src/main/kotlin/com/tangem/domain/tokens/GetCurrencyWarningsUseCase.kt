@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
@@ -26,7 +27,7 @@ class GetCurrencyWarningsUseCase(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val swapRepository: SwapRepository,
-    private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
+    private val rampStateManager: RampStateManager,
     private val stakingRepository: StakingRepository,
     private val promoRepository: PromoRepository,
     private val showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
@@ -57,7 +58,7 @@ class GetCurrencyWarningsUseCase(
                 derivationPath = derivationPath,
                 isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
-            flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
+            flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus, null)),
             flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
             getSwapPromoNotificationWarning(
@@ -90,10 +91,10 @@ class GetCurrencyWarningsUseCase(
         val cryptoStatuses = operations.getCurrenciesStatusesSync()
         val promoBanner = promoRepository.getOkxPromoBanner()
         return combine(
-            showSwapPromoTokenUseCase()
+            flow = showSwapPromoTokenUseCase()
                 .conflate()
                 .distinctUntilChanged(),
-            flowOf(marketCryptoCurrencyRepository.isExchangeable(userWalletId, currency))
+            flow2 = flowOf(rampStateManager.availableForSwap(userWalletId, currency))
                 .conflate()
                 .distinctUntilChanged(),
         ) { shouldShowSwapPromo, isExchangeable ->

@@ -116,7 +116,10 @@ internal fun LazyListScope.infoBlocksList(state: MarketsTokenDetailsUM.Informati
     }
 
     item(key = "listedOn") {
-        ListedOnBlock(state = state.listedOn, modifier = Modifier.blockPaddings())
+        ListedOnBlock(
+            state = state.listedOn,
+            modifier = Modifier.blockPaddings(),
+        )
     }
 
     if (state.links != null) {
@@ -133,10 +136,10 @@ private fun LazyListScope.loadingInfoBlocks() {
     item("insights-loading") {
         InsightsBlockPlaceholder(modifier = Modifier.blockPaddings())
     }
-// [REDACTED_TODO_COMMENT]
-    // item("securityScore-loading") {
-    //     SecurityScorePlaceHolder(modifier = Modifier.blockPaddings())
-    // }
+
+    item("securityScore-loading") {
+        SecurityScoreBlockPlaceholder(modifier = Modifier.blockPaddings())
+    }
 
     item("metrics-loading") {
         MetricsBlockPlaceholder(modifier = Modifier.blockPaddings())
