@@ -8,8 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -77,7 +78,6 @@ fun ActionButton(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Button(
     config: ActionButtonConfig,
@@ -89,12 +89,33 @@ private fun Button(
         targetValue = if (config.enabled) color else TangemTheme.colors.button.disabled,
         label = "Update background color",
     )
-    val context = LocalContext.current
-    Row(
+
+    Box(
         modifier = modifier
             .heightIn(min = TangemTheme.dimens.size36)
             .clip(shape)
-            .background(color = backgroundColor)
+            .background(color = backgroundColor),
+    ) {
+        Content(config = config)
+
+        if (config.isInProgress) {
+            Loading(
+                backgroundColor = backgroundColor,
+                modifier = Modifier
+                    .matchParentSize()
+                    .align(alignment = Alignment.Center),
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun Content(config: ActionButtonConfig) {
+    val context = LocalContext.current
+
+    Row(
+        modifier = Modifier
             .combinedClickable(
                 enabled = config.enabled,
                 onClick = config.onClick,
@@ -149,6 +170,19 @@ private fun Button(
     }
 }
 
+@Composable
+private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(color = backgroundColor),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(TangemTheme.dimens.size24),
+            color = TangemTheme.colors.icon.accent,
+        )
+    }
+}
+
 @Preview(group = "RoundedActionButton", showBackground = true)
 @Preview(group = "RoundedActionButton", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -187,6 +221,13 @@ private class ActionStateProvider : CollectionPreviewParameterProvider<ActionBut
             iconResId = R.drawable.ic_arrow_down_24,
             enabled = false,
             onClick = {},
+        ),
+        ActionButtonConfig(
+            text = TextReference.Str(value = "Loading"),
+            iconResId = R.drawable.ic_arrow_down_24,
+            enabled = false,
+            onClick = {},
+            isInProgress = true,
         ),
     ),
 )
