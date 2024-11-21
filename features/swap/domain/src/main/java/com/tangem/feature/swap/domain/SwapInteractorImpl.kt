@@ -980,6 +980,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 Canxium,
                 Chiliz,
                 ChilizTestnet,
+                Alephium,
+                AlephiumTestnet,
                 Clore,
                 VanarChain,
                 VanarChainTestnet,
@@ -1902,6 +1904,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         is Fee.Kaspa,
         is Fee.Tron,
         is Fee.VeChain,
+        is Fee.Alephium,
         -> null
     }
 
