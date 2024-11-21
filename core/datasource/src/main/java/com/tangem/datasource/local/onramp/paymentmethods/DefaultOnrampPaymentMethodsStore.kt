@@ -1,4 +1,4 @@
-package com.tangem.datasource.local.onramp
+package com.tangem.datasource.local.onramp.paymentmethods
 
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
