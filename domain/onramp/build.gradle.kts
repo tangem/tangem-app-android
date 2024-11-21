@@ -6,6 +6,8 @@ plugins {
 
 dependencies {
     api(projects.domain.onramp.models)
+    api(projects.domain.tokens.models)
+    api(projects.domain.wallets.models)
 
     api(projects.domain.core)
     implementation(deps.kotlin.serialization)
