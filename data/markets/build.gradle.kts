@@ -33,6 +33,7 @@ dependencies {
 
     // region Others dependencies
     implementation(deps.kotlin.coroutines)
+    implementation(deps.jodatime)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
