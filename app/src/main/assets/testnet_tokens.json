@@ -788,6 +788,16 @@
                     "networkId": "casper-network/test"
                 }
             ]
+        },
+        {
+            "id": "alephium",
+            "name": "Alephium",
+            "symbol": "ALPH",
+            "networks": [
+                {
+                    "networkId": "alephium/test"
+                }
+            ]
         }
     ]
 }
