@@ -25,7 +25,7 @@ internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val onApiError: () -> Unit,
+    private val onApiError: (ApiResponseError) -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
     override suspend fun BatchUpdateFetcher.UpdateContext<Int, List<TokenMarket>>.fetchUpdateAsync(
@@ -124,6 +124,7 @@ internal class MarketsBatchUpdateFetcher(
                     analyticsEventHandler.send(
                         MarketsDataAnalyticsEvent.ChartNullValuesError(
                             requestPath = "coins/history_preview",
+                            errorType = MarketsDataAnalyticsEvent.Type.Custom,
                         ),
                     )
 
@@ -133,11 +134,11 @@ internal class MarketsBatchUpdateFetcher(
         }
     }
 
-    private inline fun <T> catchApiError(onError: () -> Unit, block: () -> T): T {
+    private inline fun <T> catchApiError(onError: (ApiResponseError) -> Unit, block: () -> T): T {
         return try {
             block()
         } catch (e: ApiResponseError) {
-            onError()
+            onError(e)
             throw e
         }
     }
