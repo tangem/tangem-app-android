@@ -6,5 +6,7 @@ data class SeedPhraseState(
     val generatedWords12: Mnemonic? = null,
     val generatedWords24: Mnemonic? = null,
     val words24Option: Boolean = false,
+    val importedMnemonic: Mnemonic? = null,
+    val passphrase: String? = null,
     val readyToImport: Boolean = false,
 )
