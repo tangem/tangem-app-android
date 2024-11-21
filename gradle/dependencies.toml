@@ -87,7 +87,7 @@ markdownComposeView = "0.5.4"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-868"
+tangemBlockchainSdk = "develop-871"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-403"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
