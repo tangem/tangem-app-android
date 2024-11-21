@@ -1,11 +1,13 @@
 package com.tangem.datasource.api.common.config
 
+import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.utils.version.AppVersionProvider
 
 /** TangemTech [ApiConfig] */
 internal class TangemTech(
     private val appVersionProvider: AppVersionProvider,
+    private val authProvider: AuthProvider,
 ) : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
@@ -29,5 +31,6 @@ internal class TangemTech(
 
     private fun createHeaders() = buildMap {
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider).values)
+        putAll(from = RequestHeader.AuthenticationHeader(authProvider).values)
     }
 }

@@ -4,6 +4,7 @@ import android.net.Uri
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
+import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.extensions.toHexString
@@ -227,7 +228,7 @@ private fun navigateToWalletScreen() {
     }
 }
 
-private suspend fun readCard(onSuccess: suspend (ScanResponse) -> Unit) {
+private suspend fun readCard(onSuccess: suspend (ScanResponse) -> Unit, onFailure: (TangemError) -> Unit) {
     val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
 
     store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
@@ -248,6 +249,7 @@ private suspend fun readCard(onSuccess: suspend (ScanResponse) -> Unit) {
             Timber.e(it, "Unable to scan card")
             delay(HIDE_PROGRESS_DELAY)
             store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
+            onFailure(it)
         },
         onSuccess = onSuccess,
     )
@@ -606,9 +608,14 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
             if (scanResponse == null) {
                 scope.launch {
-                    readCard { newScanResponse ->
-                        handleFinishBackup(newScanResponse)
-                    }
+                    readCard(
+                        onSuccess = { newScanResponse ->
+                            handleFinishBackup(newScanResponse)
+                        },
+                        onFailure = {
+                            store.dispatchNavigationAction(AppRouter::pop)
+                        },
+                    )
                 }
             } else {
                 handleFinishBackup(scanResponse)
@@ -644,10 +651,15 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 } else {
                     delay(HIDE_PROGRESS_DELAY)
 
-                    readCard { newScanResponse ->
-                        scanResponse = newScanResponse
-                        userWallet = createUserWallet(newScanResponse, backupState)
-                    }
+                    readCard(
+                        onSuccess = { newScanResponse ->
+                            scanResponse = newScanResponse
+                            userWallet = createUserWallet(newScanResponse, backupState)
+                        },
+                        onFailure = {
+                            store.dispatchNavigationAction(AppRouter::pop)
+                        },
+                    )
                 }
 
                 val notActivatedCardIds = gatherCardIds(backupState, card).mapNotNull {
