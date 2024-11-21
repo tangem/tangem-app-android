@@ -183,6 +183,7 @@
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_today">Сегодня</string>
   <string name="common_transaction_failed">Ошибка транзакции</string>
+  <string name="common_transaction_status">Статус транзакции</string>
   <string name="common_transactions">Транзакции</string>
   <string name="common_transfer">Перевод</string>
   <string name="common_understand">Я понял</string>
@@ -580,7 +581,7 @@
   <string name="onramp_no_available_providers">Для данной валюты нет доступных провайдеров</string>
   <string name="onramp_pay_with">Оплата с</string>
   <string name="onramp_redirecting_to_provider_subtitle">Вы сможете завершить транзакцию через сервис стороннего провайдера, %s</string>
-  <string name="onramp_redirecting_to_provider_title">Переход к %s ...</string>
+  <string name="onramp_redirecting_to_provider_title">Переход к %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Наши сервисы недоступны в данной стране</string>
   <string name="onramp_settings_title">Настройки</string>
   <string name="onramp_via">Через</string>
@@ -965,7 +966,7 @@
   <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
   <string name="wallet_promo_banner_button_title">Получить с 10%% скидкой</string>
   <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменяйте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
-  <string name="wallet_promo_banner_title">Откройте Tangem Wallet </string>
+  <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
   <string name="wallet_settings_title">Настройки кошелька</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Используйте %s или отсканируйте карту/кольцо, чтобы разблокировать доступ к вашему кошельку</string>
@@ -1011,6 +1012,9 @@
   <string name="warning_hedera_missing_token_association_message_brief">Этот токен должен быть ассоциирован с вашей учетной записью Hedera, прежде чем вы сможете его принять</string>
   <string name="warning_hedera_missing_token_association_title">Ассоциируете свой токен</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Недостаточно %s. Пополните ваш аккаунт Hedera для ассоциации этого токена</string>
+  <string name="warning_kaspa_unfinished_token_transaction_discard_message">Вы уверены что хотите отменить эту транзакцию? Вы не сможете отправить ее еще раз</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакция %1$s %2$s не была завершена. Вы можете попробовать отправить ее еще раз.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_title">У вас есть незавершенная транзакция</string>
   <string name="warning_low_signatures_message">На этой карте осталось всего %s подписей. Вам следует вывести все ваши средства.</string>
   <string name="warning_low_signatures_title">Малое количество подписей</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токены на разных сетях могут иметь разные адреса. Пожалуйста, убедитесь при переводе средств, что ваш адрес соответствует сети.</string>
