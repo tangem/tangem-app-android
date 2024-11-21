@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.onramp.CheckOnrampAvailabilityUseCase
+import com.tangem.domain.onramp.ClearOnrampCacheUseCase
 import com.tangem.domain.onramp.GetOnrampCurrencyUseCase
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCurrency
@@ -27,6 +28,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val router: Router,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val getOnrampCurrencyUseCase: GetOnrampCurrencyUseCase,
+    private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampIntents {
 
@@ -53,7 +55,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun checkResidenceCountry() {
         modelScope.launch {
-            checkOnrampAvailabilityUseCase.invoke()
+            checkOnrampAvailabilityUseCase.invoke(params.cryptoCurrency)
                 .onRight(::handleOnrampAvailability)
                 .onLeft { Timber.e(it) }
         }
@@ -98,5 +100,10 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     override fun openCurrenciesList() {
         bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.CurrenciesList)
+    }
+
+    override fun onDestroy() {
+        modelScope.launch { clearOnrampCacheUseCase.invoke() }
+        super.onDestroy()
     }
 }
