@@ -22,5 +22,9 @@
     {
         "name": "apechain",
         "version": "undefined"
+    },
+    {
+        "name": "alephium",
+        "version": "undefined"
     }
 ]
