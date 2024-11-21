@@ -31,9 +31,13 @@ import com.tangem.domain.staking.GetActionsUseCase
 import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
 import com.tangem.domain.staking.IsAnyTokenStakedUseCase
 import com.tangem.domain.staking.IsApproveNeededUseCase
+import com.tangem.domain.staking.analytics.StakeScreenSource
+import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.StakingApproval
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -47,10 +51,6 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.staking.analytics.StakeScreenSource
-import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
-import com.tangem.domain.staking.model.stakekit.*
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -309,6 +309,22 @@ internal class StakingViewModel @Inject constructor(
                         analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer)
+                    },
+                    onFeeIncreased = { increasedFee ->
+                        stateController.updateAll(
+                            SetConfirmationStateResetAssentTransformer,
+                            SetConfirmationStateAssentTransformer(
+                                appCurrencyProvider = Provider { appCurrency },
+                                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                                fee = increasedFee,
+                            ),
+                        )
+                        stateController.updateEvent(
+                            StakingEvent.ShowAlert(
+                                StakingAlertUM.FeeIncreased(stateController::dismissAlert),
+                            ),
+                        )
+                        updateNotifications()
                     },
                 )
             }.saveIn(sendTransactionJobHolder)
@@ -622,6 +638,7 @@ internal class StakingViewModel @Inject constructor(
                 currencyStatus = cryptoCurrencyStatus,
                 amount = amount,
                 fee = fee,
+                balanceAfterTransaction = null, // ignore this in staking
             )
             stateController.update(
                 AddStakingNotificationsTransformer(
