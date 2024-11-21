@@ -294,6 +294,9 @@
   <string name="express_provider_not_available">Unavailable for this pair</string>
   <string name="express_provider_permission_needed">Permission Required</string>
   <string name="express_provider_recommended">Recommended</string>
+  <string name="express_status_bought">Bought %s</string>
+  <string name="express_status_buying">Buying %s</string>
+  <string name="express_status_buying_active">Buying %s...</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
@@ -1004,6 +1007,9 @@
   <string name="warning_hedera_missing_token_association_message_brief">This token must be associated with your Hedera account before you can receive it</string>
   <string name="warning_hedera_missing_token_association_title">Associate your token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Not enough %s. Top up your Hedera account to associate this token</string>
+  <string name="warning_kaspa_unfinished_token_transaction_discard_message">Are you sure you want to cancel the transaction? You will not be able to retry the transaction again</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_title">You have unfinished transaction</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
