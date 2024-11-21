@@ -53,10 +53,6 @@ object PreferencesKeys {
 
     val LAST_SWAPPED_CRYPTOCURRENCY_ID_KEY by lazy { stringPreferencesKey(name = "lastSwappedCryptoCurrency") }
 
-    val IS_WALLET_TRAVALA_PROMO_SHOWN_KEY by lazy {
-        booleanPreferencesKey(name = "isWalletTravalaPromoShown")
-    }
-
     val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
 
     val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
@@ -106,6 +102,8 @@ object PreferencesKeys {
     val ONRAMP_DEFAULT_CURRENCY by lazy { stringPreferencesKey(name = "onrampDefaultCurrency") }
 
     val ONRAMP_DEFAULT_COUNTRY by lazy { stringPreferencesKey(name = "onrampDefaultCountry") }
+
+    val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
 
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
