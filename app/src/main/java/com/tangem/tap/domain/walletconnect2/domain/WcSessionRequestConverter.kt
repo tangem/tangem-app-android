@@ -163,7 +163,9 @@ internal class WcSessionRequestConverter(
         return sessionsRepository.loadSessions(userWalletId)
             .firstOrNull { it.topic == sessionRequest.topic }
             ?.accounts?.firstOrNull {
-                it.chainId == sessionRequest.chainId && it.walletAddress.lowercase() == walletAddress?.lowercase()
+                // if walletAddress == null take first account
+                it.chainId == sessionRequest.chainId &&
+                    (walletAddress == null || it.walletAddress.lowercase() == walletAddress.lowercase())
             }?.derivationPath
     }
 
