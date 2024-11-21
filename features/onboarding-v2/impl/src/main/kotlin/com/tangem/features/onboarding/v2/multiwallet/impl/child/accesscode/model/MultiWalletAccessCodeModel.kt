@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val MINIMUM_ACCESS_CODE_LENGTH = 4
+
 @ComponentScoped
 internal class MultiWalletAccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -40,25 +42,44 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             }
             MultiWalletAccessCodeUM.Step.AccessCode -> {
                 _uiState.update {
-                    it.copy(step = MultiWalletAccessCodeUM.Step.Intro)
+                    it.copy(
+                        step = MultiWalletAccessCodeUM.Step.Intro,
+                        accessCodeFirst = TextFieldValue(""),
+                        accessCodeSecond = TextFieldValue(""),
+                    )
                 }
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
                 _uiState.update {
-                    it.copy(step = MultiWalletAccessCodeUM.Step.AccessCode)
+                    it.copy(
+                        step = MultiWalletAccessCodeUM.Step.AccessCode,
+                        accessCodeSecond = TextFieldValue(""),
+                    )
                 }
             }
         }
     }
 
     private fun getInitialState() = MultiWalletAccessCodeUM(
-        onContinue = ::onContinue,
         onAccessCodeFirstChange = ::onAccessCodeFirstChange,
         onAccessCodeSecondChange = ::onAccessCodeSecondChange,
+        onContinue = ::onContinue,
+        onAccessCodeHideClick = ::onAccessCodeHideClick,
     )
 
+    private fun onAccessCodeHideClick() {
+        _uiState.update {
+            it.copy(accessCodeHidden = !it.accessCodeHidden)
+        }
+    }
+
     private fun onAccessCodeFirstChange(textFieldValue: TextFieldValue) {
-        _uiState.update { it.copy(accessCodeFirst = textFieldValue) }
+        _uiState.update {
+            it.copy(
+                accessCodeFirst = textFieldValue,
+                atLeast4CharError = false,
+            )
+        }
     }
 
     private fun onAccessCodeSecondChange(textFieldValue: TextFieldValue) {
@@ -76,12 +97,20 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                 _uiState.update { it.copy(step = MultiWalletAccessCodeUM.Step.AccessCode) }
             }
             MultiWalletAccessCodeUM.Step.AccessCode -> {
-                if (_uiState.value.accessCodeFirst.text.length > 3) {
-                    _uiState.update { it.copy(step = MultiWalletAccessCodeUM.Step.ConfirmAccessCode) }
+                if (_uiState.value.accessCodeFirst.text.length >= MINIMUM_ACCESS_CODE_LENGTH) {
+                    _uiState.update {
+                        it.copy(
+                            step = MultiWalletAccessCodeUM.Step.ConfirmAccessCode,
+                            atLeast4CharError = false,
+                        )
+                    }
+                } else {
+                    _uiState.update {
+                        it.copy(atLeast4CharError = true)
+                    }
                 }
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
-                // TODO check
                 if (checkAccessCode()) {
                     params.multiWalletState.update {
                         it.copy(accessCode = OnboardingMultiWalletState.AccessCode(uiState.value.accessCodeFirst.text))
@@ -97,7 +126,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             return true
         } else {
             _uiState.update {
-                it.copy(codesNotMatchError = true,)
+                it.copy(codesNotMatchError = true)
             }
             return false
         }

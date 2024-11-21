@@ -12,6 +12,7 @@ internal data class MultiWalletAccessCodeUM(
     val onAccessCodeFirstChange: (TextFieldValue) -> Unit = {},
     val onAccessCodeSecondChange: (TextFieldValue) -> Unit = {},
     val onContinue: () -> Unit = {},
+    val onAccessCodeHideClick: () -> Unit = {},
 ) {
     enum class Step {
         Intro,

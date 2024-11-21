@@ -8,6 +8,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
 import kotlinx.coroutines.flow.SharedFlow
 
+@Suppress("UnusedPrivateMember")
 internal class MultiWalletFinalizeComponent(
     context: AppComponentContext,
     params: MultiWalletChildParams,

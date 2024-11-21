@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.state.MultiWalletFinalizeUM
 
+@Suppress("UnusedPrivateMember")
 @Composable
 fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifier = Modifier) {
     Column(

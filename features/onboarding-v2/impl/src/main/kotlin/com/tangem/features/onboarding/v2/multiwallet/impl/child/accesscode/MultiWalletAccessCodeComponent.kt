@@ -23,14 +23,14 @@ class MultiWalletAccessCodeComponent(
     private val onDismiss: () -> Unit,
 ) : AppComponentContext by context, ComposableBottomSheetComponent {
 
-    private val model : MultiWalletAccessCodeModel = getOrCreateModel(params)
+    private val model: MultiWalletAccessCodeModel = getOrCreateModel(params)
     private val showBs = MutableStateFlow(true)
 
     init {
         componentScope.launch {
             model.onDismiss.collect {
                 showBs.value = false
-                delay(500)
+                delay(timeMillis = 500)
                 onDismiss()
             }
         }
@@ -39,7 +39,7 @@ class MultiWalletAccessCodeComponent(
     override fun dismiss() {
         componentScope.launch {
             showBs.value = false
-            delay(500)
+            delay(timeMillis = 500)
             onDismiss()
         }
     }
