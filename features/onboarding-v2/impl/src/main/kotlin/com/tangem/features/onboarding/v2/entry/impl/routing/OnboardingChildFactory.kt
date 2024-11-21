@@ -5,12 +5,12 @@ import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletCo
 import javax.inject.Inject
 
 internal class OnboardingChildFactory @Inject constructor(
-    private val wallet12ComponentFactory: OnboardingMultiWalletComponent.Factory,
+    private val multiWalletComponentFactory: OnboardingMultiWalletComponent.Factory,
 ) {
 
     fun createChild(route: OnboardingRoute, childContext: AppComponentContext): Any {
         return when (route) {
-            is OnboardingRoute.Wallet12 -> wallet12ComponentFactory.create(
+            is OnboardingRoute.MultiWallet -> multiWalletComponentFactory.create(
                 context = childContext,
                 params = OnboardingMultiWalletComponent.Params(
                     scanResponse = route.scanResponse,
