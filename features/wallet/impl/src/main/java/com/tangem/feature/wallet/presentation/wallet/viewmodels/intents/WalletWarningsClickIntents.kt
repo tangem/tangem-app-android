@@ -62,10 +62,6 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseRingPromoClick()
 
-    fun onTravalaPromoClick(link: String?)
-
-    fun onCloseTravalaPromoClick()
-
     fun onSupportClick()
 }
 
@@ -87,7 +83,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
-    private val shouldShowTravalaPromoWalletUseCase: ShouldShowTravalaPromoWalletUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
@@ -256,34 +251,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         viewModelScope.launch {
             shouldShowRingPromoUseCase.neverToShow()
-        }
-    }
-
-    override fun onTravalaPromoClick(link: String?) {
-        analyticsEventHandler.send(
-            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
-                source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Travala,
-                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
-            ),
-        )
-        link?.let {
-            viewModelScope.launch(dispatchers.main) {
-                router.openUrl(link)
-            }
-        }
-    }
-
-    override fun onCloseTravalaPromoClick() {
-        analyticsEventHandler.send(
-            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
-                source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Travala,
-                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
-            ),
-        )
-        viewModelScope.launch(dispatchers.main) {
-            shouldShowTravalaPromoWalletUseCase.neverToShow()
         }
     }
 
