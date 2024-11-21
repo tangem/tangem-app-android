@@ -1,6 +1,5 @@
 package com.tangem.feature.swap.viewmodels
 
-import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
@@ -16,7 +15,6 @@ data class SwapProcessDataState(
     // Amount from input
     val amount: String? = null,
     val approveDataModel: RequestApproveStateData? = null,
-    val approveType: ApproveType? = null,
     val swapDataModel: SwapDataModel? = null,
     val selectedFee: TxFee? = null,
     val tokensDataState: TokensDataStateExpress? = null,
