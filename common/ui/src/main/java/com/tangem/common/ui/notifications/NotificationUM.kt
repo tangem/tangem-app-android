@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import java.math.BigDecimal
 
 sealed class NotificationUM(val config: NotificationConfig) {
@@ -304,6 +305,19 @@ sealed class NotificationUM(val config: NotificationConfig) {
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(R.string.send_notification_reduce_to, wrappedList(availableKoinForTransfer)),
                 onClick = onReduceClick,
+            ),
+        )
+    }
+
+    sealed interface Solana {
+
+        data class RentInfo(
+            private val rentInfo: CryptoCurrencyWarning.Rent,
+        ) : Info(
+            title = TextReference.Res(R.string.warning_rent_fee_title),
+            subtitle = TextReference.Res(
+                id = R.string.warning_solana_rent_fee_message,
+                formatArgs = wrappedList(rentInfo.rent, rentInfo.exemptionAmount),
             ),
         )
     }
