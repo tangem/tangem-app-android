@@ -1,15 +1,12 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder
 
 import com.tangem.crypto.bip39.Mnemonic
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.SeedPhraseState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 
 internal class GenerateSeedPhraseUiStateBuilder(
-    private val state: MutableStateFlow<SeedPhraseState>,
+    private val changeWords24Option: (Boolean) -> Unit,
     private val updateUiState: (
         (MultiWalletSeedPhraseUM.GenerateSeedPhrase) -> MultiWalletSeedPhraseUM.GenerateSeedPhrase,
     ) -> Unit,
@@ -25,7 +22,7 @@ internal class GenerateSeedPhraseUiStateBuilder(
         }.toImmutableList()
 
         return MultiWalletSeedPhraseUM.GenerateSeedPhrase(
-            words24OptionSelected = state.value.words24Option,
+            words24OptionSelected = false,
             words = words12,
             onWords24OptionSwitch = { switchType(words12, words24) },
             onContinueClick = onContinue,
@@ -37,7 +34,7 @@ internal class GenerateSeedPhraseUiStateBuilder(
         generatedWords24: ImmutableList<MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem>,
     ) {
         updateUiState { uiSt ->
-            state.update { it.copy(words24Option = uiSt.words24OptionSelected.not()) }
+            changeWords24Option(uiSt.words24OptionSelected.not())
 
             uiSt.copy(
                 words24OptionSelected = uiSt.words24OptionSelected.not(),
