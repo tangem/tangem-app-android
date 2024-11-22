@@ -12,36 +12,47 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.model.MultiWalletAccessCodeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.MultiWalletAccessCodeBS
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 @Suppress("UnusedPrivateMember")
 class MultiWalletAccessCodeComponent(
     context: AppComponentContext,
-    private val params: MultiWalletChildParams,
+    params: MultiWalletChildParams,
     private val onDismiss: () -> Unit,
 ) : AppComponentContext by context, ComposableBottomSheetComponent {
 
-    private val model = getOrCreateModel<MultiWalletAccessCodeModel>()
+    private val model: MultiWalletAccessCodeModel = getOrCreateModel(params)
+    private val showBs = MutableStateFlow(true)
 
     init {
         componentScope.launch {
             model.onDismiss.collect {
+                showBs.value = false
+                delay(timeMillis = 500)
                 onDismiss()
             }
         }
     }
 
     override fun dismiss() {
-        onDismiss()
+        componentScope.launch {
+            showBs.value = false
+            delay(timeMillis = 500)
+            onDismiss()
+        }
     }
 
     @Composable
     override fun BottomSheet() {
         val state by model.uiState.collectAsStateWithLifecycle()
-        val bsConfig = remember(this) {
+        val showBs by showBs.collectAsStateWithLifecycle()
+
+        val bsConfig = remember(this, showBs) {
             TangemBottomSheetConfig(
-                isShow = true,
-                onDismissRequest = onDismiss,
+                isShow = showBs,
+                onDismissRequest = { dismiss() },
                 content = TangemBottomSheetConfigContent.Empty,
             )
         }
