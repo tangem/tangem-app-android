@@ -266,7 +266,7 @@ fun ModalBottomSheetWithBackHandling(
     )
 
     LaunchedEffect(Unit) {
-        delay(200)
+        delay(timeMillis = 200)
         requester.requestFocus()
     }
 }
