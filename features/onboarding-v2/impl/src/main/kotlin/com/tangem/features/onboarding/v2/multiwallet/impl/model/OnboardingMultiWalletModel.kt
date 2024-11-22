@@ -25,6 +25,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         OnboardingMultiWalletState(
             currentStep = getInitialStep(),
             currentScanResponse = params.scanResponse,
+            accessCode = null,
         ),
     )
 
@@ -47,7 +48,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup ->
                 OnboardingMultiWalletState.Step.AddBackupDevice
             card.wallets.isNotEmpty() && card.backupStatus?.isActive == true ->
-                OnboardingMultiWalletState.Step.FinishBackup
+                OnboardingMultiWalletState.Step.Finalize
             else ->
                 OnboardingMultiWalletState.Step.CreateWallet
         }
