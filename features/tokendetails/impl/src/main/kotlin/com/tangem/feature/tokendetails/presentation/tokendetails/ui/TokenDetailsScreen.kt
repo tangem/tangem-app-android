@@ -51,6 +51,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheet
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.swapTransactionsItems
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.OnrampStatusBottomSheet
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.OnrampStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.onrampTransactionsItems
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 
@@ -178,8 +181,13 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 }
 
                 swapTransactionsItems(
-                    state.swapTxs,
-                    itemModifier,
+                    swapTxs = state.swapTxs,
+                    modifier = itemModifier,
+                )
+
+                onrampTransactionsItems(
+                    onrampTxs = state.onrampTxs,
+                    modifier = itemModifier,
                 )
 
                 txHistoryItems(
@@ -208,6 +216,9 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 }
                 is ExchangeStatusBottomSheetConfig -> {
                     ExchangeStatusBottomSheet(config = config)
+                }
+                is OnrampStatusBottomSheetConfig -> {
+                    OnrampStatusBottomSheet(config = config)
                 }
             }
         }
