@@ -7,8 +7,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -41,7 +41,6 @@ internal fun SecurityScoreBottomSheet(config: TangemBottomSheetConfig) {
 
     TangemBottomSheet<SecurityScoreBottomSheetContent>(
         config = config,
-        containerColor = TangemTheme.colors.background.secondary,
         addBottomInsets = false,
         title = { TangemBottomSheetTitle(title = it.title) },
         content = { content ->

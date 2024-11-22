@@ -62,11 +62,9 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseRingPromoClick()
 
-    fun onTravalaPromoClick(link: String?)
-
-    fun onCloseTravalaPromoClick()
-
     fun onSupportClick()
+
+    fun onNoteMigrationButtonClick(url: String)
 }
 
 @Suppress("LongParameterList")
@@ -87,7 +85,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
-    private val shouldShowTravalaPromoWalletUseCase: ShouldShowTravalaPromoWalletUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
@@ -259,40 +256,19 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onTravalaPromoClick(link: String?) {
-        analyticsEventHandler.send(
-            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
-                source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Travala,
-                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Clicked,
-            ),
-        )
-        link?.let {
-            viewModelScope.launch(dispatchers.main) {
-                router.openUrl(link)
-            }
-        }
-    }
-
-    override fun onCloseTravalaPromoClick() {
-        analyticsEventHandler.send(
-            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
-                source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Travala,
-                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
-            ),
-        )
-        viewModelScope.launch(dispatchers.main) {
-            shouldShowTravalaPromoWalletUseCase.neverToShow()
-        }
-    }
-
     override fun onSupportClick() {
         val scanResponse = getSelectedUserWallet()?.scanResponse ?: return
         val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
 
         viewModelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
+        }
+    }
+
+    override fun onNoteMigrationButtonClick(url: String) {
+        analyticsEventHandler.send(MainScreen.NotePromoButton)
+        viewModelScope.launch(dispatchers.main) {
+            router.openUrl(url)
         }
     }
 
