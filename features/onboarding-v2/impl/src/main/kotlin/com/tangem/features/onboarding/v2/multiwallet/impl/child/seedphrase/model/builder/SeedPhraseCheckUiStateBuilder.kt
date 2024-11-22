@@ -4,16 +4,15 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.SeedPhraseState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 
 internal class SeedPhraseCheckUiStateBuilder(
-    private val state: MutableStateFlow<SeedPhraseState>,
+    private val currentState: () -> SeedPhraseState,
     private val currentUiState: () -> MultiWalletSeedPhraseUM,
     private val updateUiState: (
         (MultiWalletSeedPhraseUM.GeneratedWordsCheck) -> MultiWalletSeedPhraseUM.GeneratedWordsCheck,
     ) -> Unit,
     private val importWallet: () -> Unit,
+    private val readyToImport: (Boolean) -> Unit,
 ) {
 
     @Suppress("MagicNumber")
@@ -43,7 +42,7 @@ internal class SeedPhraseCheckUiStateBuilder(
                         )
 
                         val allFieldsCorrect = newState.allFieldsCorrect()
-                        state.update { it.copy(readyToImport = allFieldsCorrect) }
+                        readyToImport(allFieldsCorrect)
 
                         newState.copy(
                             createWalletButtonEnabled = allFieldsCorrect,
@@ -89,7 +88,7 @@ internal class SeedPhraseCheckUiStateBuilder(
     }
 
     private fun checkWordField(word: String, shownIndex: Int): Boolean {
-        val currentState = state.value
+        val currentState = currentState()
 
         currentState.generatedWords12 ?: return false
         currentState.generatedWords24 ?: return false

@@ -6,6 +6,7 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -26,6 +27,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// =============================================
+// | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
+// =============================================
 @Suppress("LongParameterList")
 @ComponentScoped
 internal class MultiWalletSeedPhraseModel @Inject constructor(
@@ -45,21 +49,40 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val _uiState = MutableStateFlow(getStartState())
 
     private val generateSeedPhraseUiStateBuilder = GenerateSeedPhraseUiStateBuilder(
-        state = state,
         updateUiState = { block -> updateUiStateSpecific(block) },
         onContinue = ::openWordsCheck,
+
+        // =============================================
+        // | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
+        // =============================================
+        changeWords24Option = { state.update { it.copy(words24Option = it.words24Option) } },
+        // =============================================
     )
 
     private val seedPhraseCheckUiStateBuilder = SeedPhraseCheckUiStateBuilder(
-        state = state,
+        currentState = { state.value },
         currentUiState = { _uiState.value },
         updateUiState = { block -> updateUiStateSpecific(block) },
-        importWallet = ::importWallet,
+        readyToImport = { ready -> state.update { it.copy(readyToImport = ready) } },
+
+        // =============================================
+        // | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
+        // =============================================
+        importWallet = importWallet@{
+            importWallet(
+                mnemonic = if (state.value.words24Option) {
+                    state.value.generatedWords24 ?: return@importWallet
+                } else {
+                    state.value.generatedWords12 ?: return@importWallet
+                },
+                passphrase = null,
+            )
+        },
+        // =============================================
     )
 
     private val importSeedPhraseUiStateBuilder = ImportSeedPhraseUiStateBuilder(
         modelScope = modelScope,
-        state = state,
         mnemonicRepository = mnemonicRepository,
         updateUiState = { block -> updateUiStateSpecific(block) },
         importWallet = ::importWallet,
@@ -133,12 +156,12 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         }
     }
 
-    private fun importWallet(shouldReset: Boolean = false) {
-        // TODO make stateless AND-9167
+    // =============================================
+    // | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
+    // =============================================
+    private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {
         val currentState = state.value
-        val mnemonic = currentState.importedMnemonic
-            ?: (if (currentState.words24Option) currentState.generatedWords24 else currentState.generatedWords12)
-            ?: return
+        if (currentState.readyToImport.not()) return
 
         val scanResponse = params.parentParams.scanResponse
 
@@ -146,8 +169,8 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
             val result = tangemSdkManager.importWallet(
                 scanResponse = scanResponse,
                 mnemonic = mnemonic.mnemonicComponents.joinToString(" "),
-                passphrase = currentState.passphrase,
-                shouldReset = shouldReset,
+                passphrase = passphrase,
+                shouldReset = false,
             )
 
             when (result) {
@@ -176,6 +199,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
             }
         }
     }
+    // =============================================
 
     private fun handleActivationError() {
         updateDialog(
@@ -187,7 +211,16 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         )
     }
 
-    private fun resetCard() = importWallet(true)
+    private fun resetCard() {
+        val scanResponse = params.parentParams.scanResponse
+
+        modelScope.launch {
+            tangemSdkManager.resetToFactorySettings(
+                cardId = scanResponse.card.cardId,
+                allowsRequestAccessCodeFromRepository = true,
+            )
+        }
+    }
 
     fun navigateToSupportScreen() {
         modelScope.launch {
