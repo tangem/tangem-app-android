@@ -5,28 +5,27 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.crypto.bip39.Mnemonic
 import com.tangem.crypto.bip39.MnemonicErrorResult
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.MnemonicRepository
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.SeedPhraseState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class ImportSeedPhraseUiStateBuilder(
     private val modelScope: CoroutineScope,
-    private val state: MutableStateFlow<SeedPhraseState>,
     private val mnemonicRepository: MnemonicRepository,
     private val updateUiState: ((MultiWalletSeedPhraseUM.Import) -> MultiWalletSeedPhraseUM.Import) -> Unit,
-    private val importWallet: () -> Unit,
+    private val importWallet: (mnemonic: Mnemonic, passphrase: String?) -> Unit,
 ) {
     private val wordsCheckJobHolder = JobHolder()
+    private var importedMnemonic: Mnemonic? = null
+    private var passphrase: String? = null
 
     fun getState(): MultiWalletSeedPhraseUM {
         return MultiWalletSeedPhraseUM.Import(
@@ -38,13 +37,19 @@ internal class ImportSeedPhraseUiStateBuilder(
                 }
             },
             passPhraseChange = {
-                state.update { st -> st.copy(passphrase = it.text) }
+                passphrase = it.text
                 updateUiState { state -> state.copy(passPhrase = it) }
             },
             onPassphraseInfoClick = ::showInfoBS,
-            createWalletClick = importWallet,
+            createWalletClick = ::onCreateWallet,
             onSuggestionClick = { word -> addSuggestedWord(word) },
         )
+    }
+
+    private fun onCreateWallet() {
+        val mnemonic = importedMnemonic ?: return
+        val passphrase = passphrase?.takeIf { it.isNotEmpty() }
+        importWallet(mnemonic, passphrase)
     }
 
     private fun addSuggestedWord(word: String) {
@@ -102,7 +107,7 @@ internal class ImportSeedPhraseUiStateBuilder(
             )
         }
 
-        state.value = state.value.copy(importedMnemonic = null)
+        importedMnemonic = null
 
         val text = wordsField.text
         val wordsFromText = text.split(" ").filter { it.isNotBlank() }.map { it.trim() }
@@ -120,7 +125,7 @@ internal class ImportSeedPhraseUiStateBuilder(
 
         try {
             val mnemonic = mnemonicRepository.generateMnemonic(text)
-            state.value = state.value.copy(importedMnemonic = mnemonic)
+            importedMnemonic = mnemonic
             updateUiState {
                 it.copy(
                     invalidWords = emptyList<String>().toImmutableList(),
