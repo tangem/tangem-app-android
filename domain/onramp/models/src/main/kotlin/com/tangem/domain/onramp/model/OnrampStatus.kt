@@ -1,8 +1,5 @@
 package com.tangem.domain.onramp.model
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class OnrampStatus(
     val txId: String,
     val providerId: String,

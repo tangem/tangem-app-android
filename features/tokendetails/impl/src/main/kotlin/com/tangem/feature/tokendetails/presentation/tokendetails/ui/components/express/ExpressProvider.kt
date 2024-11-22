@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
 
+import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,8 +18,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
@@ -39,7 +43,7 @@ internal fun ExpressProvider(
             .clip(TangemTheme.shapes.roundedCornersXMedium)
             .background(TangemTheme.colors.background.action),
     ) {
-        Box(
+        Row(
             modifier = Modifier
                 .padding(top = TangemTheme.dimens.spacing12)
                 .padding(horizontal = TangemTheme.dimens.spacing12)
@@ -49,12 +53,12 @@ internal fun ExpressProvider(
                 text = stringResource(id = R.string.express_provider),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier.align(Alignment.CenterStart),
             )
+            SpacerWMax()
             if (!providerTxId.isNullOrEmpty()) {
                 Row(
                     modifier = Modifier
-                        .align(Alignment.CenterEnd)
+                        .padding(start = 8.dp)
                         .clickable {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             clipboardManager.setText(AnnotatedString(providerTxId))
@@ -73,6 +77,8 @@ internal fun ExpressProvider(
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
                         text = stringResource(R.string.express_transaction_id, providerTxId),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                     )
@@ -88,14 +94,15 @@ internal fun ExpressProvider(
     }
 }
 
-@Preview(showBackground = true)
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun ExpressProvider_Preview() {
-    TangemThemePreview(isDark = false) {
+    TangemThemePreview {
         ExpressProvider(
             providerName = TextReference.Str("Changelly"),
             providerType = TextReference.Str("CEX"),
-            providerTxId = "hjsbajcqb",
+            providerTxId = "hjsbajcqbhjsbajcqbhjsbajcqbhjsbajcqbhjsbajcqb",
             imageUrl = "",
         )
     }

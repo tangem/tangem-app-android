@@ -69,7 +69,7 @@ fun InputRowApprox(
                 tint = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing4,
+                        horizontal = TangemTheme.dimens.spacing8,
                         vertical = TangemTheme.dimens.spacing10,
                     ),
             )
