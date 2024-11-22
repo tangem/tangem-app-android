@@ -24,9 +24,9 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
     }
 
     override fun logErrorEvent(error: Throwable, params: Map<String, EventValue>) {
-        params.forEach { fbCrashlytics.setCustomKey(it.key, it.value.toString()) } // TODO analytics
+        params.forEach { fbCrashlytics.setCustomKey(it.key, it.value.toString()) }
         fbCrashlytics.recordException(error)
     }
 
-    private fun Map<String, EventValue>.toBundle(): Bundle = bundleOf(*this.toList().toTypedArray()) // TODO analytics
+    private fun Map<String, EventValue>.toBundle(): Bundle = bundleOf(*this.toList().toTypedArray())
 }
