@@ -4,6 +4,7 @@ import com.tangem.core.decompose.di.DecomposeComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.DefaultOnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.model.MultiWalletAccessCodeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.MultiWalletBackupModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model.MultiWalletCreateWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.MultiWalletSeedPhraseModel
@@ -48,4 +49,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(MultiWalletSeedPhraseModel::class)
     fun provideModel4(model: MultiWalletSeedPhraseModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(MultiWalletAccessCodeModel::class)
+    fun provideModel5(model: MultiWalletAccessCodeModel): Model
 }
