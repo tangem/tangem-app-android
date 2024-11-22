@@ -7,7 +7,6 @@ import com.tangem.core.analytics.api.EventLogger
 import com.tangem.core.analytics.models.EventValue
 import com.tangem.utils.converter.Converter
 import org.json.JSONObject
-import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
