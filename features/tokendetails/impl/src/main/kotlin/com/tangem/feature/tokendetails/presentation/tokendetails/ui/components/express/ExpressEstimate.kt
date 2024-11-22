@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
+package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -17,7 +17,7 @@ import com.tangem.features.tokendetails.impl.R
 
 @Suppress("LongParameterList")
 @Composable
-internal fun ExchangeEstimate(
+internal fun ExpressEstimate(
     timestamp: TextReference,
     fromTokenIconState: CurrencyIconState,
     toTokenIconState: CurrencyIconState,
@@ -25,8 +25,8 @@ internal fun ExchangeEstimate(
     fromCryptoSymbol: String,
     toCryptoAmount: TextReference,
     toCryptoSymbol: String,
-    fromFiatAmount: TextReference,
-    toFiatAmount: TextReference,
+    fromFiatAmount: TextReference?,
+    toFiatAmount: TextReference?,
     modifier: Modifier = Modifier,
 ) {
     Column(

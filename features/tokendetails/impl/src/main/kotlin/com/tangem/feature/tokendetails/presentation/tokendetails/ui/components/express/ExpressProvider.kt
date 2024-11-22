@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
+package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -25,7 +25,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-internal fun ExchangeProvider(
+internal fun ExpressProvider(
     providerName: TextReference,
     providerType: TextReference,
     providerTxId: String?,
@@ -90,9 +90,9 @@ internal fun ExchangeProvider(
 
 @Preview(showBackground = true)
 @Composable
-private fun ExchangeProvider_Preview() {
+private fun ExpressProvider_Preview() {
     TangemThemePreview(isDark = false) {
-        ExchangeProvider(
+        ExpressProvider(
             providerName = TextReference.Str("Changelly"),
             providerType = TextReference.Str("CEX"),
             providerTxId = "hjsbajcqb",
