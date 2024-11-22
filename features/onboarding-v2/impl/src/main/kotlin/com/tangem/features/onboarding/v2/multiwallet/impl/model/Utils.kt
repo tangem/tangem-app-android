@@ -11,6 +11,6 @@ fun screenTitleByStep(step: OnboardingMultiWalletState.Step): TextReference = wh
     OnboardingMultiWalletState.Step.SeedPhrase -> TODO()
     OnboardingMultiWalletState.Step.AddBackupDevice ->
         resourceReference(R.string.onboarding_navbar_title_creating_backup)
-    OnboardingMultiWalletState.Step.FinishBackup -> TODO()
+    OnboardingMultiWalletState.Step.Finalize -> TODO()
     OnboardingMultiWalletState.Step.Done -> TODO()
 }
