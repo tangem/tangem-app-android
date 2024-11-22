@@ -30,7 +30,7 @@ internal class PortfolioAnalyticsEvent(
             params = mapOf(
                 "Count" to blockchainNames.size.asStringValue(),
                 "Token" to token.symbol.asStringValue(),
-                "blockchain" to blockchainNames.asListValue(), // TODO analytics
+                "blockchain" to blockchainNames.asListValue(),
             ),
         )
 

@@ -7,6 +7,7 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfig
 import com.tangem.domain.common.AnalyticsHandlersLogConfig
 
 interface AnalyticsHandlerBuilder {
+
     fun build(data: Data): AnalyticsHandler?
 
     data class Data(

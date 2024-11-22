@@ -292,7 +292,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
             config = environmentConfig,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
-            jsonConverter = MoshiConverter.sdkMoshiConverter,
+            jsonConverter = MoshiConverter.analyticsMoshiConverter,
         )
 
         Analytics.addParamsInterceptor(

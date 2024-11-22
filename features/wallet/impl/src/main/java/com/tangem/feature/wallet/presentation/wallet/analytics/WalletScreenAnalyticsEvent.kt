@@ -92,7 +92,7 @@ sealed class WalletScreenAnalyticsEvent {
             tokens: List<String>,
         ) : MainScreen(
             event = "Notice - Networks Unreachable",
-            params = mapOf("Tokens" to tokens.asListValue()), // TODO analytics
+            params = mapOf("Tokens" to tokens.asListValue()),
         )
 
         data object MissingAddresses : MainScreen(event = "Notice - Missing Addresses")
