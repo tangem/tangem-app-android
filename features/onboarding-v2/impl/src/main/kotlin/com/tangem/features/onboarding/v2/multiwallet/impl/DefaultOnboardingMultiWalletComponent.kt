@@ -109,8 +109,9 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     init {
         componentScope.launch {
             childParams.multiWalletState
-                .distinctUntilChanged { old, new -> old != new && old.accessCode == null && new.accessCode != null }
-                .drop(1)
+                .map { it.accessCode }
+                .distinctUntilChanged()
+                .filter { it != null }
                 .collectLatest { handleNavigationEvent(Finalize) }
         }
         bottomSheetNavigation.navigate {}
