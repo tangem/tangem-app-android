@@ -203,7 +203,7 @@ private fun TangemTextField(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
                     text = caption,
-                    style = TangemTheme.typography.body1,
+                    style = TangemTheme.typography.caption2,
                     color = colors.captionColor(enabled = enabled, isError = isError).value,
                 )
             }
