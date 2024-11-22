@@ -195,14 +195,15 @@ private fun TangemTextField(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            if (caption.isNullOrEmpty()) return@AnimatedVisibility
+            val captionWrapped = remember(this) { requireNotNull(caption) }
+
             Column {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    text = caption,
+                    text = captionWrapped,
                     style = TangemTheme.typography.caption2,
                     color = colors.captionColor(enabled = enabled, isError = isError).value,
                 )
@@ -293,14 +294,15 @@ private fun TangemTextFieldWithIcon(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            if (caption.isNullOrEmpty()) return@AnimatedVisibility
+            val captionWrapped = remember(this) { requireNotNull(caption) }
+
             Column {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    text = caption,
+                    text = captionWrapped,
                     style = TangemTheme.typography.caption2,
                     color = colors.captionColor(enabled = enabled, isError = isError).value,
                 )
