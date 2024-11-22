@@ -108,6 +108,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     init {
         componentScope.launch {
+            // access code bs result
             childParams.multiWalletState
                 .map { it.accessCode }
                 .distinctUntilChanged()
