@@ -180,6 +180,7 @@
   <string name="common_terms_of_use">Conditions d\'utilisation</string>
   <string name="common_today">Aujourd\'hui</string>
   <string name="common_transaction_failed">La transaction a échoué</string>
+  <string name="common_transaction_status">Statut de la transaction</string>
   <string name="common_transactions">Transactions</string>
   <string name="common_transfer">Transfert</string>
   <string name="common_understand">Je comprends</string>
@@ -187,6 +188,7 @@
   <string name="common_unreachable">Inaccessible</string>
   <string name="common_unstake">Unstakez</string>
   <string name="common_week">semaine</string>
+  <string name="common_with">avec</string>
   <string name="common_yes">Oui</string>
   <string name="contract_address_copied_message">Adresse du contrat copiée !</string>
   <string name="currency_subtitle_expanded">Réseaux disponibles</string>
@@ -292,6 +294,9 @@
   <string name="express_provider_not_available">Indisponible pour cette paire</string>
   <string name="express_provider_permission_needed">Permission requise</string>
   <string name="express_provider_recommended">Recommandé</string>
+  <string name="express_status_bought">Acheté %s</string>
+  <string name="express_status_buying">Achat en cours %s</string>
+  <string name="express_status_buying_active">Achat en cours %s...</string>
   <string name="express_token_list_empty_search">Aucun jeton trouvé. Veuillez essayer une autre demande</string>
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transaction copié</string>
@@ -453,6 +458,7 @@
   <string name="markets_token_details_price_performance">Performance des prix</string>
   <string name="markets_token_details_repository">Dépôt</string>
   <string name="markets_token_details_security_score">Score de sécurité</string>
+  <string name="markets_token_details_security_score_description">Le score de sécurité d\'un jeton est une mesure qui évalue le niveau de sécurité d\'une blockchain ou d\'un jeton en fonction de divers facteurs. Ceci est compilé à partir des sources répertoriées ci-dessous.</string>
   <string name="markets_token_details_social">Social</string>
   <string name="markets_token_details_total_supply">Approvisionnement total</string>
   <string name="markets_token_details_total_supply_description">Le nombre maximal de pièces ou de jetons pouvant exister pour une crypto-monnaie particulière</string>
@@ -566,12 +572,15 @@
   <string name="onramp_min_amount_restriction">Le montant à acheter doit être au moins %s</string>
   <string name="onramp_no_available_providers">Aucun fournisseur disponible pour cette devise</string>
   <string name="onramp_pay_with">Payer avec</string>
+  <string name="onramp_redirecting_to_provider_subtitle">Vous pourrez finaliser votre transaction sur le fournisseur tiers, %s</string>
+  <string name="onramp_redirecting_to_provider_title">Redirection vers %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Nos services ne sont pas disponibles dans ce pays</string>
   <string name="onramp_residency_bottomsheet_country_subtitle">Modifiez-le ou confirmez-le</string>
   <string name="onramp_residency_bottomsheet_title">Votre résidence a été identifiée comme</string>
   <string name="onramp_settings_residence">Résidence</string>
   <string name="onramp_settings_residence_description">Veuillez sélectionner le bon pays pour garantir des options de paiement et des services précis.</string>
   <string name="onramp_settings_title">Paramètres</string>
+  <string name="onramp_transaction_status_footer_text">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton</string>
   <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Grouper</string>
   <string name="organize_tokens_sort_by_balance">Par solde</string>
@@ -596,9 +605,9 @@
     <item quantity="one">pour le portefeuille %d</item>
     <item quantity="other">pour les portefeuilles %d </item>
   </plurals>
-  <string name="referral_point_currencies_description">Obtiendras ^^%1$s^^ pour chaque portefeuille acheté par votre ami sur votre adresse de réseau %2$s %3$s ^^30 jours après^^</string>
+  <string name="referral_point_currencies_description">Obtiendrez ^^%1$s^^ pour chaque portefeuille acheté par votre ami sur votre adresse de réseau %2$s %3$s ^^30 jours après^^</string>
   <string name="referral_point_currencies_title">Vous</string>
-  <string name="referral_point_discount_description_prefix">Obtiendrez</string>
+  <string name="referral_point_discount_description_prefix">Obtiendra</string>
   <string name="referral_point_discount_description_suffix">lors de l\'achat d\'un portefeuille sur tangem.com</string>
   <string name="referral_point_discount_description_value">%s réduction</string>
   <string name="referral_point_discount_title">Votre ami</string>
@@ -899,6 +908,7 @@
   <string name="twins_recreate_warning">Cette action est irréversible. Vous n\'aurez plus accès à l\'ancien portefeuille.</string>
   <string name="twins_scan_twin_with_number">Appuyez sur la carte jumelle avec le numéro %s et ne la retirez pas jusqu\'à la fin de l\'opération</string>
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte/bague pour avoir accès à votre portefeuille</string>
+  <string name="unsupported_wc_version">Échec de la connexion : Cette dApp utilise Wallet Connect version1.0, qui n\'est pas prise en charge. Veuillez vous assurer que la dApp prend en charge Wallet Connect version2.0 pour réussir la connexion.</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
   <string name="user_push_notification_agreement_argument_two">Soyez le premier informé des nouvelles promotions</string>
   <string name="user_push_notification_agreement_header">Souhaitez-vous utiliser les\nnotifications push?</string>
@@ -950,6 +960,9 @@
   <string name="wallet_network_group_title">%s réseau</string>
   <string name="wallet_notification_address_copied">L\'adresse a été copiée avec succès</string>
   <string name="wallet_notification_no_internet">Pas de connexion internet</string>
+  <string name="wallet_promo_banner_button_title">Obtenez-le maintenant avec 10 %% de réduction</string>
+  <string name="wallet_promo_banner_description">Accédez à plus de 13 000 cryptomonnaies. Achetez, vendez, échangez et stakez en un seul clic.\nAssociez jusqu\'à trois cartes pour une sauvegarde.</string>
+  <string name="wallet_promo_banner_title">Découvrez le Portefeuille Tangem</string>
   <string name="wallet_settings_title">Paramètres du portefeuille</string>
   <string name="wallet_title">Tangem</string>
   <string name="warning_access_denied_message">Utilisez %s ou scannez une carte/bague pour déverrouiller l\'accès à votre portefeuille</string>
@@ -995,6 +1008,9 @@
   <string name="warning_hedera_missing_token_association_message_brief">Ce jeton doit être associé à votre compte Hedera avant que vous puissiez le recevoir</string>
   <string name="warning_hedera_missing_token_association_title">Associez votre jeton</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%s insuffisant. Renflouez votre compte Hedera pour associer ce jeton</string>
+  <string name="warning_kaspa_unfinished_token_transaction_discard_message">Êtes-vous sûr(e) de vouloir annuler la transaction ? Vous ne pourrez plus réessayer.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Votre transaction d\'un montant de %1$s %2$s n\'a pas été finalisée. Vous pouvez réessayer plus tard pour la finaliser.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_title">Vous avez une transaction inachevée</string>
   <string name="warning_low_signatures_message">Il ne reste que %s signatures sur cette carte. Vous devez retirer tous vos fonds.</string>
   <string name="warning_low_signatures_title">Faible nombre de signatures</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Les jetons sur différents réseaux peuvent avoir des adresses différentes. Vérifiez bien que votre adresse correspond au réseau lorsque vous transférez des fonds.</string>
