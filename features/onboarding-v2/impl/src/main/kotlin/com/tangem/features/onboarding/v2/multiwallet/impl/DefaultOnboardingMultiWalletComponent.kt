@@ -38,8 +38,8 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.ui.WalletArtworksState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
@@ -55,7 +55,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 ChooseBackupOption -> WalletArtworksState.Fan
                 SeedPhrase -> WalletArtworksState.Folded
                 AddBackupDevice -> WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
-                FinishBackup -> WalletArtworksState.Stack()
+                Finalize -> WalletArtworksState.Stack()
                 Done -> error("Done state should not be used as starting state")
             },
         )
@@ -107,6 +107,14 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     )
 
     init {
+        componentScope.launch {
+            // access code bs result
+            childParams.multiWalletState
+                .map { it.accessCode }
+                .distinctUntilChanged()
+                .filter { it != null }
+                .collectLatest { handleNavigationEvent(Finalize) }
+        }
         bottomSheetNavigation.navigate {}
     }
 
@@ -144,7 +152,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 ),
                 onEvent = ::handleBackupComponentEvent,
             )
-            FinishBackup -> TODO()
+            Finalize -> TODO()
             Done -> TODO()
         }
     }
@@ -154,12 +162,12 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             ChooseBackupOption -> {
                 artworksState.value = WalletArtworksState.Fan
             }
-            SeedPhrase -> {
-            }
+            SeedPhrase -> {}
             AddBackupDevice -> {
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
             }
-            FinishBackup -> {
+            Finalize -> {
+                artworksState.value = WalletArtworksState.Stack()
             }
             Done -> {
                 // TODO
@@ -172,7 +180,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     private fun handleBackupComponentEvent(event: MultiWalletBackupComponent.Event) {
         when (event) {
             MultiWalletBackupComponent.Event.Done -> {
-                // TODO navigate to finalize
+                artworksState.value = WalletArtworksState.Stack()
+                bottomSheetNavigation.navigate { }
             }
             MultiWalletBackupComponent.Event.OneDeviceAdded -> {
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.Second)
