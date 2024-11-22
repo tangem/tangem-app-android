@@ -297,6 +297,8 @@
   <string name="express_provider_not_available">Недоступно для этой пары</string>
   <string name="express_provider_permission_needed">Требуется разрешение</string>
   <string name="express_provider_recommended">Рекомендовано</string>
+  <string name="express_status_buying">Покупка %s</string>
+  <string name="express_status_buying_active">Покупка %s...</string>
   <string name="express_token_list_empty_search">Токены не найдены. Пожалуйста, попробуйте другой запрос</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакции скопирован</string>
@@ -889,6 +891,7 @@
   <string name="token_swap_promotion_button">Обменять</string>
   <string name="tokens_list_unavailable_to_purchase_header">Недоступно для покупки</string>
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажи</string>
+  <string name="tokens_list_unavailable_to_swap_header">Недоступно для обмена с %s</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
   <string name="transaction_history_empty_transactions">У вас еще нет транзакций</string>
   <string name="transaction_history_error_failed_to_load">Не удалось загрузить историю транзакций.\nНажмите на кнопку перезагрузки, чтобы обновить информацию.</string>
@@ -913,6 +916,7 @@
   <string name="twins_recreate_warning">Это действие необратимо. У вас не будет доступа к старому кошельку.</string>
   <string name="twins_scan_twin_with_number">Приложите twin-карту с номером %s и не убирайте до окончания операции</string>
   <string name="unlock_wallet_description_full">Используйте %s или отсканируйте карту/кольцо, чтобы получить доступ к своему кошельку</string>
+  <string name="unsupported_wc_version">Соединение не удалось: это dApp использует Wallet Connect версии 1.0, которая не поддерживается. Убедитесь, что dApp поддерживает Wallet Connect версии 2.0 для успешного подключения.</string>
   <string name="user_push_notification_agreement_argument_one">Будьте в курсе новых функций и новостей</string>
   <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
