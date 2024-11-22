@@ -10,6 +10,10 @@ import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.fade
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.router.slot.navigate
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
@@ -21,6 +25,7 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.MultiWalletAccessCodeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.Wallet1ChooseOptionComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.MultiWalletCreateWalletComponent
@@ -56,6 +61,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         )
     }
 
+    private val childParams = MultiWalletChildParams(
+        multiWalletState = model.state,
+        parentParams = params,
+    )
+
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = MutableStateFlow(
             MultiWalletInnerNavigationState(1, 5),
@@ -81,6 +91,24 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 )
             },
         )
+
+    private val bottomSheetNavigation = SlotNavigation<Unit>()
+    private val accessCodeBottomSheetSlot = childSlot(
+        source = bottomSheetNavigation,
+        serializer = null,
+        handleBackButton = false,
+        childFactory = { configuration, componentContext ->
+            MultiWalletAccessCodeComponent(
+                context = childByContext(componentContext),
+                params = childParams,
+                onDismiss = { bottomSheetNavigation.dismiss() },
+            )
+        },
+    )
+
+    init {
+        bottomSheetNavigation.navigate {}
+    }
 
     private fun createChild(
         step: OnboardingMultiWalletState.Step,
@@ -121,7 +149,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         }
     }
 
-    fun handleNavigationEvent(nextStep: OnboardingMultiWalletState.Step) {
+    private fun handleNavigationEvent(nextStep: OnboardingMultiWalletState.Step) {
         when (nextStep) {
             ChooseBackupOption -> {
                 artworksState.value = WalletArtworksState.Fan
@@ -141,7 +169,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         stackNavigation.push(nextStep)
     }
 
-    fun handleBackupComponentEvent(event: MultiWalletBackupComponent.Event) {
+    private fun handleBackupComponentEvent(event: MultiWalletBackupComponent.Event) {
         when (event) {
             MultiWalletBackupComponent.Event.Done -> {
                 // TODO navigate to finalize
@@ -184,6 +212,9 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 }
             },
         )
+
+        val bottomSheetState by accessCodeBottomSheetSlot.subscribeAsState()
+        bottomSheetState.child?.instance?.BottomSheet()
     }
 
     @AssistedFactory
