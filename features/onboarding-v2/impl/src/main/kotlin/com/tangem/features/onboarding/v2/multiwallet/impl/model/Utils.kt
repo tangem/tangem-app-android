@@ -12,5 +12,5 @@ fun screenTitleByStep(step: OnboardingMultiWalletState.Step): TextReference = wh
     OnboardingMultiWalletState.Step.AddBackupDevice ->
         resourceReference(R.string.onboarding_navbar_title_creating_backup)
     OnboardingMultiWalletState.Step.Finalize -> TODO()
-    OnboardingMultiWalletState.Step.Done -> TODO()
+    OnboardingMultiWalletState.Step.Done -> error("No title for Done step")
 }

@@ -27,6 +27,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             currentScanResponse = params.scanResponse,
             accessCode = null,
             isThreeCards = true,
+            resultUserWallet = null,
         ),
     )
 

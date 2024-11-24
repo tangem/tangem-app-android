@@ -5,11 +5,17 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.scan.isRing
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWalletFinalizeComponent
@@ -27,6 +33,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class MultiWalletFinalizeModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -35,6 +42,9 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val generateWalletNameUseCase: GenerateWalletNameUseCase,
+    private val userWalletsListManager: UserWalletsListManager,
+    private val cardRepository: CardRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -46,6 +56,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             cardNumber = backupServiceHolder.backupService.get()?.primaryCardId?.lastMasked().orEmpty(),
         ),
     )
+    private val backupCardIds = backupServiceHolder.backupService.get()?.backupCardIds.orEmpty()
+    private var walletHasBackupError = false
 
     val uiState = _uiState.asStateFlow()
     val onEvent = MutableSharedFlow<MultiWalletFinalizeComponent.Event>()
@@ -97,8 +109,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writeBackupCard(cardIndex: Int) {
         val backupService = backupServiceHolder.backupService.get() ?: return
-        Timber.tag("ASDASD").d("writeBackupCard $cardIndex || ${backupService.currentState}")
-        Timber.tag("ASDASD").d("writeBackupCard ${backupService.backupCardIds}")
 
         // store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
 
@@ -113,14 +123,11 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                     val backupValidator = BackupValidator()
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
                         // TODO store.dispatchOnMain(BackupAction.ErrorInBackupCard)
+                        walletHasBackupError = true
                     }
 
                     if (backupService.currentState == BackupService.State.Finished) {
-                        if (cardIndex == 1) {
-                            modelScope.launch { onEvent.emit(MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded) }
-                        } else {
-                            modelScope.launch { onEvent.emit(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded) }
-                        }
+                        finishBackup()
                     } else {
                         modelScope.launch { onEvent.emit(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded) }
                         _uiState.update { st ->
@@ -144,6 +151,76 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
             tangemSdkManager.clearProductType()
         }
+    }
+
+    private fun finishBackup() {
+        // TODO Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
+
+        modelScope.launch {
+            val scanResponse = params.multiWalletState.value.currentScanResponse
+
+            val userWallet = createUserWallet(scanResponse)
+            userWalletsListManager.save(
+                userWallet = userWallet.copy(
+                    scanResponse = scanResponse.updateScanResponseAfterBackup(),
+                ),
+                canOverride = true,
+            )
+
+            // TODO
+            // BackupStartedSource.CreateBackup -> updateWallet(
+            //                             userWalletsListManager = userWalletsListManager,
+            //                             userWallet = userWallet,
+            //                             backupState = backupState,
+            //                         )
+
+            // TODO maybe here we should check for backup cards activation status
+            // if (notActivatedCardIds.isEmpty()) {
+            //      delay(1000)
+            //      store.dispatchWithMain(BackupAction.BackupFinished(userWallet?.walletId))
+            //      return@launch
+            // }
+            //
+            // Analytics.send(Onboarding.Finished())
+            //
+            // store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
+            // handleFinishBackup(requireNotNull(scanResponse), userWallet)
+            // delay(1000)
+            // store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
+
+            cardRepository.finishCardActivation(scanResponse.card.cardId)
+
+            // save user wallet for manage tokens screen
+            params.multiWalletState.update {
+                it.copy(resultUserWallet = userWallet)
+            }
+
+            onEvent.emit(MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded)
+        }
+    }
+
+    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
+        Timber.tag("ASDASD").d("$backupCardIds")
+        Timber.tag("ASDASD").d("${scanResponse.card.wallets}")
+
+        return requireNotNull(
+            value = UserWalletBuilder(scanResponse, generateWalletNameUseCase)
+                .backupCardsIds(backupCardIds.toSet())
+                .hasBackupError(walletHasBackupError)
+                .build(),
+            lazyMessage = { "User wallet not created" },
+        )
+    }
+
+    @Suppress("MagicNumber")
+    private fun ScanResponse.updateScanResponseAfterBackup(): ScanResponse {
+        val cardsCount = if (params.multiWalletState.value.isThreeCards) 3 else 2
+
+        val card = card.copy(
+            backupStatus = CardDTO.BackupStatus.Active(cardCount = cardsCount),
+            isAccessCodeSet = true,
+        )
+        return copy(card = card)
     }
 
     private fun handleActivationError() {

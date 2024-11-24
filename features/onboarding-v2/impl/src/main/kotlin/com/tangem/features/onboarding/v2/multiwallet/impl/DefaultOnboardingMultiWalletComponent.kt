@@ -22,8 +22,8 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.MultiWalletAccessCodeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
@@ -78,7 +78,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         }
     }
 
-    private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, MultiWalletChildComponent>> =
+    private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, ComposableContentComponent>> =
         childStack(
             key = "innerStack",
             source = stackNavigation,
@@ -110,6 +110,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     init {
         componentScope.launch {
             // access code bs result
+            // TODO delete and use callback
             childParams.multiWalletState
                 .map { it.accessCode }
                 .distinctUntilChanged()
@@ -121,7 +122,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     private fun createChild(
         step: OnboardingMultiWalletState.Step,
         childContext: AppComponentContext,
-    ): MultiWalletChildComponent {
+    ): ComposableContentComponent {
         return when (step) {
             CreateWallet -> MultiWalletCreateWalletComponent(
                 context = childContext,
@@ -148,7 +149,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 params = childParams,
                 onEvent = ::handleFinalizeComponentEvent,
             )
-            Done -> TODO()
+            Done -> error("Unexpected Done state")
         }
     }
 
@@ -157,7 +158,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             ChooseBackupOption -> {
                 artworksState.value = WalletArtworksState.Fan
             }
-            SeedPhrase -> {}
             AddBackupDevice -> {
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
             }
@@ -165,7 +165,10 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 artworksState.value = WalletArtworksState.Stack(threeCards = model.state.value.isThreeCards)
             }
             Done -> {
-                // TODO
+                // final step - navigate to parent
+                val userWallet = childParams.multiWalletState.value.resultUserWallet ?: return
+                params.onDone(userWallet)
+                return
             }
             else -> return
         }
@@ -201,11 +204,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                         step = WalletArtworksState.Leapfrog.Step.Third,
                     )
                 } else {
-                    stackNavigation.push(Done)
+                    handleNavigationEvent(Done)
                 }
             }
             MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded -> {
-                stackNavigation.push(Done)
+                handleNavigationEvent(Done)
             }
         }
     }
