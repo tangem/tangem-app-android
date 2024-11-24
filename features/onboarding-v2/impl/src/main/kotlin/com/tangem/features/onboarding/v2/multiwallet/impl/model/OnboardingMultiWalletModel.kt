@@ -26,6 +26,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             currentStep = getInitialStep(),
             currentScanResponse = params.scanResponse,
             accessCode = null,
+            isThreeCards = true,
         ),
     )
 

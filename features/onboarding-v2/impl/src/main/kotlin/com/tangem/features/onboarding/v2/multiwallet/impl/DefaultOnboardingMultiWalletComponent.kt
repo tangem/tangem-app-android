@@ -29,6 +29,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.Multi
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.Wallet1ChooseOptionComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.MultiWalletCreateWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWalletFinalizeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.MultiWalletSeedPhraseComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
@@ -115,7 +116,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 .filter { it != null }
                 .collectLatest { handleNavigationEvent(Finalize) }
         }
-        bottomSheetNavigation.navigate {}
     }
 
     private fun createChild(
@@ -125,10 +125,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         return when (step) {
             CreateWallet -> MultiWalletCreateWalletComponent(
                 context = childContext,
-                params = MultiWalletChildParams(
-                    multiWalletState = model.state,
-                    parentParams = params,
-                ),
+                params = childParams,
                 onNextStep = ::handleNavigationEvent,
             )
             ChooseBackupOption -> Wallet1ChooseOptionComponent(
@@ -137,22 +134,20 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             )
             SeedPhrase -> MultiWalletSeedPhraseComponent(
                 context = childContext,
-                params = MultiWalletChildParams(
-                    multiWalletState = model.state,
-                    parentParams = params,
-                ),
+                params = childParams,
                 onNextStep = ::handleNavigationEvent,
-                backButtonClickFlow = MutableSharedFlow(),
+                backButtonClickFlow = MutableSharedFlow(), // TODO
             )
             AddBackupDevice -> MultiWalletBackupComponent(
                 context = childContext,
-                params = MultiWalletChildParams(
-                    multiWalletState = model.state,
-                    parentParams = params,
-                ),
+                params = childParams,
                 onEvent = ::handleBackupComponentEvent,
             )
-            Finalize -> TODO()
+            Finalize -> MultiWalletFinalizeComponent(
+                context = childContext,
+                params = childParams,
+                onEvent = ::handleFinalizeComponentEvent,
+            )
             Done -> TODO()
         }
     }
@@ -167,7 +162,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
             }
             Finalize -> {
-                artworksState.value = WalletArtworksState.Stack()
+                artworksState.value = WalletArtworksState.Stack(threeCards = model.state.value.isThreeCards)
             }
             Done -> {
                 // TODO
@@ -179,18 +174,43 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     private fun handleBackupComponentEvent(event: MultiWalletBackupComponent.Event) {
         when (event) {
-            MultiWalletBackupComponent.Event.Done -> {
-                artworksState.value = WalletArtworksState.Stack()
-                bottomSheetNavigation.navigate { }
-            }
             MultiWalletBackupComponent.Event.OneDeviceAdded -> {
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.Second)
             }
             MultiWalletBackupComponent.Event.TwoDeviceAdded -> {
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.Third)
             }
+            MultiWalletBackupComponent.Event.Done -> {
+                openAccessCodeBottomSheet()
+            }
         }
     }
+
+    private fun handleFinalizeComponentEvent(event: MultiWalletFinalizeComponent.Event) {
+        when (event) {
+            MultiWalletFinalizeComponent.Event.OneBackupCardAdded -> {
+                artworksState.value = WalletArtworksState.Leapfrog(
+                    threeCards = model.state.value.isThreeCards,
+                    step = WalletArtworksState.Leapfrog.Step.Second,
+                )
+            }
+            MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded -> {
+                if (model.state.value.isThreeCards) {
+                    artworksState.value = WalletArtworksState.Leapfrog(
+                        threeCards = model.state.value.isThreeCards,
+                        step = WalletArtworksState.Leapfrog.Step.Third,
+                    )
+                } else {
+                    stackNavigation.push(Done)
+                }
+            }
+            MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded -> {
+                stackNavigation.push(Done)
+            }
+        }
+    }
+
+    private fun openAccessCodeBottomSheet() { bottomSheetNavigation.navigate { } }
 
     @OptIn(FaultyDecomposeApi::class)
     @Composable

@@ -5,6 +5,7 @@ import com.tangem.domain.models.scan.ScanResponse
 data class OnboardingMultiWalletState(
     val currentStep: Step,
     val accessCode: AccessCode?,
+    val isThreeCards: Boolean,
     val currentScanResponse: ScanResponse,
 ) {
     /**
