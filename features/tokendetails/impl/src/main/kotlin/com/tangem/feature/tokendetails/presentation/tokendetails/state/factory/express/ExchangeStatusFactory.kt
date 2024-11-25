@@ -14,39 +14,36 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
-internal class ExchangeStatusFactory(
+internal class ExchangeStatusFactory @AssistedInject constructor(
     private val swapTransactionRepository: SwapTransactionRepository,
     private val swapRepository: SwapRepository,
     private val quotesRepository: QuotesRepository,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
-    private val dispatchers: CoroutineDispatcherProvider,
-    private val clickIntents: TokenDetailsClickIntents,
-    private val appCurrencyProvider: Provider<AppCurrency>,
-    private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
-    private val currentStateProvider: Provider<TokenDetailsState>,
-    private val userWalletId: UserWalletId,
-    private val cryptoCurrency: CryptoCurrency,
+    @Assisted private val clickIntents: TokenDetailsClickIntents,
+    @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
+    @Assisted private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
+    @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
+    @Assisted private val userWalletId: UserWalletId,
+    @Assisted private val cryptoCurrency: CryptoCurrency,
 ) {
 
     private val swapTransactionsStateConverter by lazy {
@@ -58,7 +55,7 @@ internal class ExchangeStatusFactory(
         )
     }
 
-    suspend operator fun invoke(): Flow<PersistentList<SwapTransactionsState>> {
+    suspend operator fun invoke(): Flow<PersistentList<ExpressTransactionStateUM.ExchangeUM>> {
         val selectedWallet = getSelectedWalletSyncUseCase().fold(
             ifLeft = { return emptyFlow() },
             ifRight = { it },
@@ -82,50 +79,39 @@ internal class ExchangeStatusFactory(
             }
     }
 
-    suspend fun removeTransactionOnBottomSheetClosed(isForceTerminal: Boolean = false): TokenDetailsState {
+    suspend fun removeTransactionOnBottomSheetClosed(isForceTerminal: Boolean = false) {
         val state = currentStateProvider()
-        val bottomSheetConfig = state.bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig ?: return state
-        val selectedTx = bottomSheetConfig.value
+        val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
+        val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.ExchangeUM ?: return
 
         val shouldTerminate = selectedTx.activeStatus.isTerminal(selectedTx.isRefundTerminalStatus) || isForceTerminal
-        return if (shouldTerminate) {
+        if (shouldTerminate) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = selectedTx.fromCryptoCurrency,
                 toCryptoCurrency = selectedTx.toCryptoCurrency,
-                txId = selectedTx.txId,
+                txId = selectedTx.info.txId,
             )
-            val filteredTxs = state.swapTxs
-                .filterNot { it.txId == selectedTx.txId }
-                .toPersistentList()
-            state.copy(swapTxs = filteredTxs)
-        } else {
-            state
         }
     }
 
-    suspend fun updateSwapTxStatuses(swapTxList: PersistentList<SwapTransactionsState>) = withContext(dispatchers.io) {
-        swapTxList.map { tx ->
-            async {
-                val statusModel = getExchangeStatus(tx.txId, tx.provider)
-                val isRefundTerminalStatus = statusModel?.refundNetwork == null &&
-                    statusModel?.refundContractAddress == null &&
-                    tx.provider.type != ExchangeProviderType.DEX_BRIDGE
-                if (tx.activeStatus.isTerminal(isRefundTerminalStatus)) {
-                    tx
-                } else {
-                    val addedRefundToken = addRefundCurrencyIfNeeded(statusModel, tx.provider.type)
-                    swapTransactionsStateConverter.updateTxStatus(
-                        tx = tx,
-                        statusModel = statusModel,
-                        refundToken = addedRefundToken,
-                        isRefundTerminalStatus = isRefundTerminalStatus,
-                    )
-                }
-            }
+    suspend fun updateSwapTxStatus(swapTx: ExpressTransactionStateUM.ExchangeUM): ExpressTransactionStateUM.ExchangeUM {
+        return if (swapTx.activeStatus.isTerminal(swapTx.isRefundTerminalStatus)) {
+            swapTx
+        } else {
+            val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider)
+            val isRefundTerminalStatus = statusModel?.refundNetwork == null &&
+                statusModel?.refundContractAddress == null &&
+                swapTx.provider.type != ExchangeProviderType.DEX_BRIDGE
+
+            val addedRefundToken = addRefundCurrencyIfNeeded(statusModel, swapTx.provider.type)
+            swapTransactionsStateConverter.updateTxStatus(
+                tx = swapTx,
+                statusModel = statusModel,
+                refundToken = addedRefundToken,
+                isRefundTerminalStatus = isRefundTerminalStatus,
+            )
         }
-            .awaitAll()
-            .toPersistentList()
     }
 
     private suspend fun getExchangeStatus(txId: String, provider: SwapProvider): ExchangeStatusModel? {
@@ -177,7 +163,7 @@ internal class ExchangeStatusFactory(
     private fun getExchangeStatusState(
         savedTransactions: List<SavedSwapTransactionListModel>?,
         quotes: Set<Quote>,
-    ): PersistentList<SwapTransactionsState> {
+    ): PersistentList<ExpressTransactionStateUM.ExchangeUM> {
         if (savedTransactions == null) {
             return persistentListOf()
         }
@@ -223,5 +209,17 @@ internal class ExchangeStatusFactory(
         } catch (t: Throwable) {
             emptySet()
         }
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(
+            clickIntents: TokenDetailsClickIntents,
+            appCurrencyProvider: Provider<AppCurrency>,
+            analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
+            currentStateProvider: Provider<TokenDetailsState>,
+            userWalletId: UserWalletId,
+            cryptoCurrency: CryptoCurrency,
+        ): ExchangeStatusFactory
     }
 }
