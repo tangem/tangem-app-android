@@ -80,6 +80,8 @@ dependencies {
     implementation(projects.domain.transaction)
     implementation(projects.domain.staking)
     implementation(projects.domain.markets.models)
+    implementation(projects.domain.onramp)
+    implementation(projects.domain.onramp.models)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)
