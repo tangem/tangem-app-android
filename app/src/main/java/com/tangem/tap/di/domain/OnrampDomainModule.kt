@@ -108,4 +108,16 @@ internal object OnrampDomainModule {
     fun provideClearOnrampCacheUseCase(onrampRepository: OnrampRepository): ClearOnrampCacheUseCase {
         return ClearOnrampCacheUseCase(onrampRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideOnrampFetchQuotesUseCase(onrampRepository: OnrampRepository): OnrampFetchQuotesUseCase {
+        return OnrampFetchQuotesUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampQuotesUseCase(onrampRepository: OnrampRepository): GetOnrampQuotesUseCase {
+        return GetOnrampQuotesUseCase(onrampRepository)
+    }
 }

@@ -20,7 +20,7 @@ import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
-import com.tangem.features.onramp.utils.SearchManager
+import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -33,7 +33,7 @@ internal class OnrampTokenListModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tokenListUMController: TokenListUMController,
-    private val searchManager: SearchManager,
+    private val searchManager: InputManager,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,

@@ -1,9 +1,14 @@
 package com.tangem.data.onramp.di
 
+import com.squareup.moshi.Moshi
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
+import com.tangem.data.onramp.converters.error.OnrampQuotesErrorConverter
+import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
@@ -26,19 +31,23 @@ internal object OnrampDataModule {
     @Singleton
     fun provideOnrampRepository(
         onrampApi: OnrampApi,
+        expressApi: TangemExpressApi,
         dispatchers: CoroutineDispatcherProvider,
         appPreferencesStore: AppPreferencesStore,
         paymentMethodsStore: OnrampPaymentMethodsStore,
         pairsStore: OnrampPairsStore,
         quotesStore: OnrampQuotesStore,
+        quotesErrorConverter: OnrampQuotesErrorConverter,
     ): OnrampRepository {
         return DefaultOnrampRepository(
             onrampApi = onrampApi,
+            expressApi = expressApi,
             dispatchers = dispatchers,
             appPreferencesStore = appPreferencesStore,
             paymentMethodsStore = paymentMethodsStore,
             pairsStore = pairsStore,
             quotesStore = quotesStore,
+            quotesErrorConverter = quotesErrorConverter,
         )
     }
 
@@ -58,5 +67,12 @@ internal object OnrampDataModule {
     @Singleton
     fun provideOnrampErrorResolver(): OnrampErrorResolver {
         return DefaultOnrampErrorResolver()
+    }
+
+    @Provides
+    @Singleton
+    internal fun provideErrorsConverter(@NetworkMoshi moshi: Moshi): OnrampQuotesErrorConverter {
+        val jsonAdapter = moshi.adapter(ExpressErrorResponse::class.java)
+        return OnrampQuotesErrorConverter(jsonAdapter)
     }
 }

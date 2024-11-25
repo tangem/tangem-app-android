@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
  * @author Andrew Khokhlov on 23/10/2024
  */
-internal class SearchManager @Inject constructor() {
+internal class InputManager @Inject constructor() {
 
     val query: Flow<String>
         get() = _query
