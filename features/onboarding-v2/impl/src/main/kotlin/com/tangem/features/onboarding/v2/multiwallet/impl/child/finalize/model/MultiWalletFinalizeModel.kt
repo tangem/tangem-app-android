@@ -68,19 +68,16 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 writePrimaryCard()
             }
             MultiWalletFinalizeUM.Step.BackupDevice1 -> {
-                writeBackupCard(0)
+                writeBackupCard(cardIndex = 0)
             }
             MultiWalletFinalizeUM.Step.BackupDevice2 -> {
-                writeBackupCard(1)
+                writeBackupCard(cardIndex = 1)
             }
         }
     }
 
     private fun writePrimaryCard() {
         val backupService = backupServiceHolder.backupService.get() ?: return
-        Timber.tag("ASDASD").d(
-            "writePrimaryCard ${backupService.backupCardIds} || ${backupService.currentState}",
-        )
         // store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
 
         val primaryCardBatchId = backupService.primaryCardBatchId ?: return
@@ -200,9 +197,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
-        Timber.tag("ASDASD").d("$backupCardIds")
-        Timber.tag("ASDASD").d("${scanResponse.card.wallets}")
-
         return requireNotNull(
             value = UserWalletBuilder(scanResponse, generateWalletNameUseCase)
                 .backupCardsIds(backupCardIds.toSet())
