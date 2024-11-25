@@ -67,6 +67,7 @@ internal class TokenDetailsSkeletonStateConverter(
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
             swapTxs = persistentListOf(),
+            onrampTxs = persistentListOf(),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
