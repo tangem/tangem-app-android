@@ -47,6 +47,8 @@ interface TokenDetailsClickIntents {
 
     fun onSwapTransactionClick(txId: String)
 
+    fun onOnrampTransactionClick(txId: String)
+
     fun onGoToProviderClick(url: String)
 
     fun onSwapPromoDismiss()
