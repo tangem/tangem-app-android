@@ -4,8 +4,10 @@ import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.PolkadotAccountHealthCheckRepository
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.scanCard.repository.DefaultScanCardRepository
@@ -45,6 +47,8 @@ internal object ActivityModule {
     fun provideDefaultRampManager(
         appStateHolder: AppStateHolder,
         swapServiceLoader: SwapServiceLoader,
+        currenciesRepository: CurrenciesRepository,
+        getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
         dispatchers: CoroutineDispatcherProvider,
     ): RampStateManager {
         return DefaultRampManager(
@@ -52,6 +56,8 @@ internal object ActivityModule {
             buyService = Provider { requireNotNull(appStateHolder.buyService) },
             sellService = Provider { requireNotNull(appStateHolder.sellService) },
             swapServiceLoader = swapServiceLoader,
+            currenciesRepository = currenciesRepository,
+            getNetworkCoinStatusUseCase = getNetworkCoinStatusUseCase,
             dispatchers = dispatchers,
         )
     }
