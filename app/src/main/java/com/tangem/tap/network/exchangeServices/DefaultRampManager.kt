@@ -4,22 +4,36 @@ import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRA
 import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 
+@Suppress("LongParameterList")
 internal class DefaultRampManager(
     private val exchangeService: ExchangeService?,
     private val buyService: Provider<ExchangeService>,
     private val sellService: Provider<ExchangeService>,
     private val swapServiceLoader: SwapServiceLoader,
+    private val currenciesRepository: CurrenciesRepository,
+    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : RampStateManager {
 
     private val cryptoCurrencyConverter = CryptoCurrencyConverter()
+
+    override fun isSellSupportedByService(cryptoCurrency: CryptoCurrency): Boolean {
+        return exchangeService?.availableForSell(
+            currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
+        ) ?: false
+    }
 
     override fun availableForBuy(scanResponse: ScanResponse, cryptoCurrency: CryptoCurrency): Boolean {
         return exchangeService?.availableForBuy(
@@ -28,10 +42,14 @@ internal class DefaultRampManager(
         ) ?: false
     }
 
-    override fun availableForSell(cryptoCurrency: CryptoCurrency): Boolean {
-        return exchangeService?.availableForSell(
-            currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
-        ) ?: false
+    override suspend fun availableForSell(userWalletId: UserWalletId, status: CryptoCurrencyStatus): Boolean {
+        val sellSupportedByService = isSellSupportedByService(cryptoCurrency = status.currency)
+
+        if (!sellSupportedByService) return false
+
+        val reason = getSendUnavailabilityReason(userWalletId, status)
+
+        return reason == ScenarioUnavailabilityReason.None
     }
 
     override suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
@@ -73,6 +91,36 @@ internal class DefaultRampManager(
             }
 
             asset?.exchangeAvailable ?: false
+        }
+    }
+
+    private suspend fun getSendUnavailabilityReason(
+        userWalletId: UserWalletId,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ): ScenarioUnavailabilityReason {
+        val coinStatus = getNetworkCoinStatusUseCase.invokeSync(
+            userWalletId = userWalletId,
+            networkId = cryptoCurrencyStatus.currency.network.id,
+            derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
+            isSingleWalletWithTokens = false,
+        ).getOrNull()
+
+        return when {
+            cryptoCurrencyStatus.value.amount.isNullOrZero() -> {
+                ScenarioUnavailabilityReason.EmptyBalance(ScenarioUnavailabilityReason.WithdrawalScenario.SEND)
+            }
+            currenciesRepository.isSendBlockedByPendingTransactions(
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                coinStatus = coinStatus,
+            ) -> {
+                ScenarioUnavailabilityReason.PendingTransaction(
+                    withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SEND,
+                    networkName = coinStatus?.currency?.network?.name.orEmpty(),
+                )
+            }
+            else -> {
+                ScenarioUnavailabilityReason.None
+            }
         }
     }
 }
