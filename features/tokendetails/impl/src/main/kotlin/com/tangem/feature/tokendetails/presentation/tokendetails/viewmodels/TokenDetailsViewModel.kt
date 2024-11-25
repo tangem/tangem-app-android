@@ -30,6 +30,11 @@ import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.onramp.GetOnrampStatusUseCase
+import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
+import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
+import com.tangem.domain.onramp.OnrampSaveTransactionUseCase
+import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
@@ -71,7 +76,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTrans
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExchangeStatusFactory
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.OnrampStatusFactory
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.OnrampStatusBottomSheetConfig
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -122,6 +130,10 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
+    private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
+    private val onrampSaveTransactionUseCase: OnrampSaveTransactionUseCase,
+    private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
+    private val getOnrampStatusUseCase: GetOnrampStatusUseCase,
     getUserWalletUseCase: GetUserWalletUseCase,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     deepLinksRegistry: DeepLinksRegistry,
@@ -146,12 +158,14 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private val warningsJobHolder = JobHolder()
     private val swapTxJobHolder = JobHolder()
+    private val onrampTxJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var stakingEntryInfo: StakingEntryInfo? = null
     private var stakingAvailability: StakingAvailability = StakingAvailability.Unavailable
     private var swapTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<SwapTransactionsState>>()
+    private var onrampTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<OnrampTransaction>>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
@@ -183,6 +197,22 @@ internal class TokenDetailsViewModel @Inject constructor(
             currentStateProvider = Provider { uiState.value },
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
+        )
+    }
+
+    private val onrampStatusFactory by lazy(LazyThreadSafetyMode.NONE) {
+        OnrampStatusFactory(
+            stateProvider = Provider { uiState.value },
+            appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
+            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+            clickIntents = this,
+            getOnrampTransactionsUseCase = getOnrampTransactionsUseCase,
+            onrampSaveTransactionUseCase = onrampSaveTransactionUseCase,
+            onrampRemoveTransactionUseCase = onrampRemoveTransactionUseCase,
+            getOnrampStatusUseCase = getOnrampStatusUseCase,
+            dispatchers = dispatchers,
         )
     }
 
@@ -226,12 +256,15 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onCleared() {
         swapTxStatusTaskScheduler.cancelTask()
+        onrampTxStatusTaskScheduler.cancelTask()
+        onrampTxJobHolder.cancel()
         super.onCleared()
     }
 
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExchangeTransactionsUpdates()
+        subscribeOnOnrampTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true)
 
         updateStakingInfo()
@@ -329,6 +362,38 @@ internal class TokenDetailsViewModel @Inject constructor(
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
                 .saveIn(swapTxJobHolder)
+        }
+    }
+
+    private fun subscribeOnOnrampTransactionsUpdates() {
+        viewModelScope.launch(dispatchers.main) {
+            onrampTxStatusTaskScheduler.cancelTask()
+            onrampStatusFactory.invoke().distinctUntilChanged()
+                .filterNot { it.isEmpty() }
+                .onEach { onrampTxs ->
+                    internalUiState.value = onrampStatusFactory.updateOnrampStatusBottomSheet(onrampTxs)
+                    onrampTxStatusTaskScheduler.scheduleTask(
+                        viewModelScope,
+                        PeriodicTask(
+                            delay = EXCHANGE_STATUS_UPDATE_DELAY,
+                            task = {
+                                runCatching {
+                                    val onrampTxsToUpdate = onrampTxs.filter { onrampTx ->
+                                        internalUiState.value.onrampTxs.any { it.info.txId == onrampTx.txId }
+                                    }
+                                    onrampStatusFactory.updateOnrmapTxStatuses(onrampTxsToUpdate)
+                                }
+                            },
+                            onSuccess = {
+                                internalUiState.value = onrampStatusFactory.updateOnrampStatusBottomSheet(onrampTxs)
+                            },
+                            onError = { /* no-op */ },
+                        ),
+                    )
+                }
+                .flowOn(dispatchers.main)
+                .launchIn(viewModelScope)
+                .saveIn(onrampTxJobHolder)
         }
     }
 
@@ -771,6 +836,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                         showItemsLoading = internalUiState.value.txHistoryState !is TxHistoryState.Content,
                     )
                     subscribeOnExchangeTransactionsUpdates()
+                    subscribeOnOnrampTransactionsUpdates()
                 },
             ).awaitAll()
             internalUiState.value = stateFactory.getRefreshedState()
@@ -779,9 +845,16 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         val bsContent = internalUiState.value.bottomSheetConfig?.content
-        if (bsContent is ExchangeStatusBottomSheetConfig) {
-            viewModelScope.launch(dispatchers.main) {
-                internalUiState.value = exchangeStatusFactory.removeTransactionOnBottomSheetClosed()
+        when (bsContent) {
+            is ExchangeStatusBottomSheetConfig -> {
+                viewModelScope.launch(dispatchers.main) {
+                    internalUiState.value = exchangeStatusFactory.removeTransactionOnBottomSheetClosed()
+                }
+            }
+            is OnrampStatusBottomSheetConfig -> {
+                viewModelScope.launch(dispatchers.main) {
+                    internalUiState.value = onrampStatusFactory.removeTransactionOnBottomSheetClosed()
+                }
             }
         }
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
@@ -795,6 +868,11 @@ internal class TokenDetailsViewModel @Inject constructor(
         val swapTxState = internalUiState.value.swapTxs.first { it.txId == txId }
         analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.CexTxStatusOpened(cryptoCurrency.symbol))
         internalUiState.value = stateFactory.getStateWithExchangeStatusBottomSheet(swapTxState)
+    }
+
+    override fun onOnrampTransactionClick(txId: String) {
+        val onrampTxState = internalUiState.value.onrampTxs.first { it.info.txId == txId }
+        internalUiState.value = onrampStatusFactory.getStateWithOnrampStatusBottomSheet(onrampTxState)
     }
 
     override fun onGoToProviderClick(url: String) {

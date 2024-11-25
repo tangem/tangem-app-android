@@ -31,6 +31,13 @@ internal fun ContentIcon(
             alpha = alpha,
             colorFilter = colorFilter,
         )
+        is CurrencyIconState.FiatIcon -> CoinIcon(
+            modifier = modifier,
+            url = icon.url,
+            fallbackResId = icon.fallbackResId,
+            alpha = alpha,
+            colorFilter = colorFilter,
+        )
         is CurrencyIconState.TokenIcon -> TokenIcon(
             modifier = modifier,
             url = icon.url,
