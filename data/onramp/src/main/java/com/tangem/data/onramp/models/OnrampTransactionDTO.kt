@@ -1,8 +1,10 @@
-package com.tangem.domain.onramp.model.cache
+package com.tangem.data.onramp.models
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import com.tangem.datasource.api.onramp.models.response.Status
+import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.domain.core.serialization.SerializedBigDecimal
-import com.tangem.domain.onramp.model.OnrampCurrency
-import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -22,18 +24,32 @@ import com.tangem.domain.wallets.models.UserWalletId
  * @property providerImageUrl   Provider image link
  * @property providerType       Provider type
  */
-data class OnrampTransaction(
+@JsonClass(generateAdapter = true)
+data class OnrampTransactionDTO(
+    @Json(name = "txId")
     val txId: String,
+    @Json(name = "userWalletId")
     val userWalletId: UserWalletId,
+    @Json(name = "fromAmount")
     val fromAmount: SerializedBigDecimal,
-    val fromCurrency: OnrampCurrency,
+    @Json(name = "fromCurrency")
+    val fromCurrency: OnrampCurrencyDTO,
+    @Json(name = "toAmount")
     val toAmount: SerializedBigDecimal,
+    @Json(name = "toCurrencyId")
     val toCurrencyId: String,
-    val status: OnrampStatus.Status,
+    @Json(name = "status")
+    val status: Status,
+    @Json(name = "externalTxUrl")
     val externalTxUrl: String?,
+    @Json(name = "externalTxId")
     val externalTxId: String?,
+    @Json(name = "timestamp")
     val timestamp: Long,
+    @Json(name = "providerName")
     val providerName: String, // todo onramp fix after SwapProvider moved to own module
+    @Json(name = "providerImageUrl")
     val providerImageUrl: String, // todo onramp fix after SwapProvider moved to own module
+    @Json(name = "providerType")
     val providerType: String, // todo onramp fix after SwapProvider moved to own module
 )
