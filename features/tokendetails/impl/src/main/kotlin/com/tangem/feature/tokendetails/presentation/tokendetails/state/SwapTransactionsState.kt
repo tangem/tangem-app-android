@@ -25,7 +25,7 @@ internal data class SwapTransactionsState(
     val toFiatAmount: String,
     val toCurrencyIcon: CurrencyIconState,
     val fromCryptoCurrency: CryptoCurrency,
-    val fromCryptoAmount: String,
+    val fromCryptoAmount: TextReference,
     val fromFiatAmount: String,
     val fromCurrencyIcon: CurrencyIconState,
     val showProviderLink: Boolean,
