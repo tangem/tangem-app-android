@@ -5,9 +5,9 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.onramp.model.OnrampStatus
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
 import kotlinx.collections.immutable.ImmutableList
 
@@ -23,6 +23,8 @@ internal sealed class ExpressTransactionStateUM {
         val notification: ExchangeStatusNotifications? = null,
         val showProviderLink: Boolean,
         val isRefundTerminalStatus: Boolean,
+        val fromCryptoCurrency: CryptoCurrency,
+        val toCryptoCurrency: CryptoCurrency,
     ) : ExpressTransactionStateUM()
 
     data class OnrampUM(
@@ -30,20 +32,22 @@ internal sealed class ExpressTransactionStateUM {
         val providerName: String, // todo onramp fix after SwapProvider moved to own module
         val providerImageUrl: String, // todo onramp fix after SwapProvider moved to own module
         val providerType: String, // todo onramp fix after SwapProvider moved to own module
-        val cryptoCurrencyName: String,
         val activeStatus: OnrampStatus.Status,
     ) : ExpressTransactionStateUM()
 }
 
 internal data class ExpressTransactionStateInfoUM(
+    val title: TextReference,
     val status: ExpressStatusUM,
     val notification: NotificationUM?,
     val txId: String,
-    val txUrl: String?,
     val txExternalId: String?,
-    val timestamp: TextReference,
+    val txExternalUrl: String?,
+    val timestamp: Long,
+    val timestampFormatted: TextReference,
     val onGoToProviderClick: (String) -> Unit,
     val onClick: () -> Unit,
+    val iconState: ExpressTransactionStateIconUM,
 
     val toAmount: TextReference,
     val toFiatAmount: TextReference?,
@@ -55,3 +59,9 @@ internal data class ExpressTransactionStateInfoUM(
     val fromAmountSymbol: String,
     val fromCurrencyIcon: CurrencyIconState,
 )
+
+internal enum class ExpressTransactionStateIconUM {
+    Warning,
+    Error,
+    None,
+}
