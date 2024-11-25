@@ -157,7 +157,7 @@ internal class SwapNotificationsFactory(
             receivedAmount = amountToRequest.value,
             cryptoCurrencyStatus = fromCurrencyStatus,
             onReduceClick = { _, reduceByDiff, _ ->
-                actions.onLeaveExistentialDeposit(
+                actions.onReduceAmount(
                     amountToRequest.copy(
                         value = amountToRequest.value.minus(reduceByDiff).minus(fee?.feeValue.orZero()),
                     ),
@@ -170,7 +170,7 @@ internal class SwapNotificationsFactory(
             cryptoCurrency = fromCurrencyStatus.currency,
             minAdaValue = quoteModel.minAdaValue,
             onReduceClick = { reduceTo, _ ->
-                actions.onLeaveExistentialDeposit(amountToRequest.copy(value = reduceTo))
+                actions.onReduceAmount(amountToRequest.copy(value = reduceTo))
             },
         )
         if (!isCardano) {
