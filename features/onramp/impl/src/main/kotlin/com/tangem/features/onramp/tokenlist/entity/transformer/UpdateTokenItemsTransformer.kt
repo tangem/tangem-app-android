@@ -124,7 +124,6 @@ internal class UpdateTokenItemsTransformer(
                     -> null
                 }
             },
-            onItemClick = onItemClick,
         )
     }
 
