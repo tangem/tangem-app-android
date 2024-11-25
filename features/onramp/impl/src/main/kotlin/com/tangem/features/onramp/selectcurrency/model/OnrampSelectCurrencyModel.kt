@@ -17,7 +17,7 @@ import com.tangem.features.onramp.selectcurrency.entity.CurrencyItemState
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyListController
 import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsLoadingTransformer
 import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsTransformer
-import com.tangem.features.onramp.utils.SearchManager
+import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -31,7 +31,7 @@ import javax.inject.Inject
 @ComponentScoped
 internal class OnrampSelectCurrencyModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val searchManager: SearchManager,
+    private val searchManager: InputManager,
     private val getOnrampCurrenciesUseCase: GetOnrampCurrenciesUseCase,
     private val saveDefaultCurrencyUseCase: OnrampSaveDefaultCurrencyUseCase,
     paramsContainer: ParamsContainer,
