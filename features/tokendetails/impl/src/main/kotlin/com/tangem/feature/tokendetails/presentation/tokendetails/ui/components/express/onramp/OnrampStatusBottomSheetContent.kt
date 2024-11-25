@@ -15,9 +15,6 @@ import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
@@ -25,17 +22,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.e
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressProvider
 
 @Composable
-internal fun OnrampStatusBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet(
-        config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
-    ) { content: OnrampStatusBottomSheetConfig ->
-        OnrampStatusBottomSheetContent(config = content.value)
-    }
-}
-
-@Composable
-private fun OnrampStatusBottomSheetContent(config: ExpressTransactionStateUM.OnrampUM) {
+internal fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM) {
     Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
         SpacerH10()
         Text(
@@ -55,33 +42,27 @@ private fun OnrampStatusBottomSheetContent(config: ExpressTransactionStateUM.Onr
         )
         SpacerH16()
         ExpressEstimate(
-            timestamp = config.info.timestamp,
-            fromTokenIconState = config.info.fromCurrencyIcon,
-            toTokenIconState = config.info.toCurrencyIcon,
-            fromCryptoAmount = config.info.fromAmount,
-            fromCryptoSymbol = config.info.fromAmountSymbol,
-            toCryptoAmount = config.info.toAmount,
-            toCryptoSymbol = config.info.toAmountSymbol,
-            fromFiatAmount = config.info.fromFiatAmount,
-            toFiatAmount = config.info.toFiatAmount,
+            timestamp = state.info.timestampFormatted,
+            fromTokenIconState = state.info.fromCurrencyIcon,
+            toTokenIconState = state.info.toCurrencyIcon,
+            fromCryptoAmount = state.info.fromAmount,
+            fromCryptoSymbol = state.info.fromAmountSymbol,
+            toCryptoAmount = state.info.toAmount,
+            toCryptoSymbol = state.info.toAmountSymbol,
+            fromFiatAmount = state.info.fromFiatAmount,
+            toFiatAmount = state.info.toFiatAmount,
         )
         SpacerH12()
 
         ExpressProvider(
-            providerName = stringReference(config.providerName),
-            providerType = stringReference(config.providerType),
-            providerTxId = config.info.txExternalId,
-            imageUrl = config.providerImageUrl,
+            providerName = stringReference(state.providerName),
+            providerType = stringReference(state.providerType),
+            providerTxId = state.info.txExternalId,
+            imageUrl = state.providerImageUrl,
         )
         SpacerH12()
-        ExpressStatusBlock(state = config.info.status)
-        if (config.info.notification != null) {
-            ExpressStatusNotificationBlock(state = config.info.notification)
-        }
+        ExpressStatusBlock(state = state.info.status)
+        ExpressStatusNotificationBlock(state = state.info.notification)
         SpacerH24()
     }
 }
-
-internal data class OnrampStatusBottomSheetConfig(
-    val value: ExpressTransactionStateUM.OnrampUM,
-) : TangemBottomSheetConfigContent
