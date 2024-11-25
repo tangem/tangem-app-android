@@ -14,30 +14,17 @@ import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.notifications.CurrencyNotification
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressEstimate
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressProvider
 
 @Composable
-internal fun ExchangeStatusBottomSheet(config: TangemBottomSheetConfig) {
-    TangemBottomSheet(
-        config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
-    ) { content: ExchangeStatusBottomSheetConfig ->
-        ExchangeStatusBottomSheetContent(config = content.value)
-    }
-}
-
-@Composable
-private fun ExchangeStatusBottomSheetContent(config: SwapTransactionsState) {
+internal fun ExchangeStatusBottomSheetContent(state: ExpressTransactionStateUM.ExchangeUM) {
     Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
         SpacerH10()
         Text(
@@ -57,31 +44,31 @@ private fun ExchangeStatusBottomSheetContent(config: SwapTransactionsState) {
         )
         SpacerH16()
         ExpressEstimate(
-            timestamp = config.timestamp,
-            fromTokenIconState = config.fromCurrencyIcon,
-            toTokenIconState = config.toCurrencyIcon,
-            fromCryptoAmount = config.fromCryptoAmount,
-            fromCryptoSymbol = config.fromCryptoCurrency.symbol,
-            toCryptoAmount = TextReference.Str(config.toCryptoAmount),
-            toCryptoSymbol = config.toCryptoCurrency.symbol,
-            fromFiatAmount = TextReference.Str(config.fromFiatAmount),
-            toFiatAmount = TextReference.Str(config.toFiatAmount),
+            timestamp = state.info.timestampFormatted,
+            fromTokenIconState = state.info.fromCurrencyIcon,
+            toTokenIconState = state.info.toCurrencyIcon,
+            fromCryptoAmount = state.info.fromAmount,
+            fromCryptoSymbol = state.info.fromAmountSymbol,
+            toCryptoAmount = state.info.toAmount,
+            toCryptoSymbol = state.info.toAmountSymbol,
+            fromFiatAmount = state.info.fromFiatAmount,
+            toFiatAmount = state.info.toFiatAmount,
         )
         SpacerH12()
         ExpressProvider(
-            providerName = TextReference.Str(config.provider.name),
-            providerType = TextReference.Str(config.provider.type.providerName),
-            providerTxId = config.txExternalId,
-            imageUrl = config.provider.imageLarge,
+            providerName = TextReference.Str(state.provider.name),
+            providerType = TextReference.Str(state.provider.type.providerName),
+            providerTxId = state.info.txExternalId,
+            imageUrl = state.provider.imageLarge,
         )
         SpacerH12()
         ExchangeStatusBlock(
-            statuses = config.statuses,
-            showLink = config.showProviderLink,
-            onClick = { config.onGoToProviderClick(config.txUrl.orEmpty()) },
+            statuses = state.statuses,
+            showLink = state.showProviderLink,
+            onClick = { state.info.onGoToProviderClick(state.info.txExternalUrl.orEmpty()) },
         )
-        if (config.notification != null) {
-            Notification(state = config.notification, activeStatus = config.activeStatus)
+        if (state.notification != null) {
+            Notification(state = state.notification, activeStatus = state.activeStatus)
         }
         SpacerH24()
     }
@@ -115,7 +102,3 @@ private fun Notification(state: ExchangeStatusNotifications, activeStatus: Excha
         }
     }
 }
-
-internal data class ExchangeStatusBottomSheetConfig(
-    val value: SwapTransactionsState,
-) : TangemBottomSheetConfigContent
