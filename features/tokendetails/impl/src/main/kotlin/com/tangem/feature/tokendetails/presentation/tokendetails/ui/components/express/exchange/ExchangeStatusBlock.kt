@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
+package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange
 
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedContent
