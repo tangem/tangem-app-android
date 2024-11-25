@@ -16,7 +16,7 @@ import com.tangem.features.onramp.selectcountry.entity.CountryListUM
 import com.tangem.features.onramp.selectcountry.entity.CountryListUMController
 import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsLoadingTransformer
 import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsTransformer
-import com.tangem.features.onramp.utils.SearchManager
+import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -30,7 +30,7 @@ import javax.inject.Inject
 @ComponentScoped
 internal class OnrampSelectCountryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val searchManager: SearchManager,
+    private val searchManager: InputManager,
     private val getOnrampCountriesUseCase: GetOnrampCountriesUseCase,
     private val saveDefaultCountryUseCase: OnrampSaveDefaultCountryUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,

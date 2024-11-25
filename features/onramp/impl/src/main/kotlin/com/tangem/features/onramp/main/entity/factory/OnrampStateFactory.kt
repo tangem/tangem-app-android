@@ -72,7 +72,7 @@ internal class OnrampStateFactory(
                 isValuePasted = false,
                 onValuePastedTriggerDismiss = {},
             ),
-            secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading,
+            secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
         )
     }
 
