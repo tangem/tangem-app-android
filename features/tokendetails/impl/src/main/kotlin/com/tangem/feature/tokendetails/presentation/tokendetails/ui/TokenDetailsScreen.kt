@@ -2,7 +2,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -49,15 +48,18 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheet
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.swapTransactionsItems
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheet
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.swapTransactionsItems
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.OnrampStatusBottomSheet
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.OnrampStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.onrampTransactionsItems
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 
 // TODO: Split to blocks [REDACTED_JIRA]
 @Suppress("LongMethod")
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockComponent: TokenMarketBlockComponent?) {
     BackHandler(onBack = state.topAppBarConfig.onBackClick)
@@ -127,11 +129,11 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                         if (it is TokenDetailsNotification.SwapPromo) {
                             OkxPromoNotification(
                                 config = it.config,
-                                modifier = itemModifier.animateItemPlacement(),
+                                modifier = itemModifier.animateItem(),
                             )
                         } else {
                             Notification(
-                                modifier = itemModifier.animateItemPlacement(),
+                                modifier = itemModifier.animateItem(),
                                 config = it.config,
                                 iconTint = when (it) {
                                     is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
@@ -179,8 +181,13 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 }
 
                 swapTransactionsItems(
-                    state.swapTxs,
-                    itemModifier,
+                    swapTxs = state.swapTxs,
+                    modifier = itemModifier,
+                )
+
+                onrampTransactionsItems(
+                    onrampTxs = state.onrampTxs,
+                    modifier = itemModifier,
                 )
 
                 txHistoryItems(
@@ -209,6 +216,9 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 }
                 is ExchangeStatusBottomSheetConfig -> {
                     ExchangeStatusBottomSheet(config = config)
+                }
+                is OnrampStatusBottomSheetConfig -> {
+                    OnrampStatusBottomSheet(config = config)
                 }
             }
         }
