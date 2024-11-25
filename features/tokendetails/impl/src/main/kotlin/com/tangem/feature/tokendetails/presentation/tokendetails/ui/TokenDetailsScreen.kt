@@ -48,12 +48,9 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheet
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.ExchangeStatusBottomSheetConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange.swapTransactionsItems
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.OnrampStatusBottomSheet
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.OnrampStatusBottomSheetConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp.onrampTransactionsItems
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.expressTransactionsItems
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 
@@ -180,13 +177,8 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                     )
                 }
 
-                swapTransactionsItems(
-                    swapTxs = state.swapTxs,
-                    modifier = itemModifier,
-                )
-
-                onrampTransactionsItems(
-                    onrampTxs = state.onrampTxs,
+                expressTransactionsItems(
+                    expressTxs = state.expressTxs,
                     modifier = itemModifier,
                 )
 
@@ -214,11 +206,8 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 is ChooseAddressBottomSheetConfig -> {
                     ChooseAddressBottomSheet(config = config)
                 }
-                is ExchangeStatusBottomSheetConfig -> {
-                    ExchangeStatusBottomSheet(config = config)
-                }
-                is OnrampStatusBottomSheetConfig -> {
-                    OnrampStatusBottomSheet(config = config)
+                is ExpressStatusBottomSheetConfig -> {
+                    ExpressStatusBottomSheet(config = config)
                 }
             }
         }
