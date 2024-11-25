@@ -1,14 +1,12 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
+package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -25,60 +22,25 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.features.tokendetails.impl.R
-import kotlinx.collections.immutable.PersistentList
-
-@OptIn(ExperimentalFoundationApi::class)
-internal fun LazyListScope.swapTransactionsItems(
-    swapTxs: PersistentList<SwapTransactionsState>,
-    modifier: Modifier = Modifier,
-) {
-    if (swapTxs.isNotEmpty()) {
-        items(
-            count = swapTxs.size,
-            key = { swapTxs[it].txId },
-            contentType = { swapTxs[it]::class.java },
-        ) {
-            val item = swapTxs[it]
-            val (iconRes, tint) = when (item.activeStatus) {
-                ExchangeStatus.Verifying -> R.drawable.ic_alert_triangle_20 to TangemTheme.colors.icon.attention
-                ExchangeStatus.Failed, ExchangeStatus.Cancelled -> {
-                    R.drawable.ic_alert_circle_24 to TangemTheme.colors.icon.warning
-                }
-                else -> null to null
-            }
-
-            ExchangeStatusItem(
-                providerName = item.provider.name,
-                fromTokenIconState = item.fromCurrencyIcon,
-                toTokenIconState = item.toCurrencyIcon,
-                fromAmount = item.fromCryptoAmount,
-                fromSymbol = item.fromCryptoCurrency.symbol,
-                toSymbol = item.toCryptoCurrency.symbol,
-                onClick = item.onClick,
-                infoIconRes = iconRes,
-                infoIconTint = tint,
-                modifier = modifier.animateItemPlacement(),
-            )
-        }
-    }
-}
 
 @Suppress("DestructuringDeclarationWithTooManyEntries", "LongMethod", "LongParameterList")
 @Composable
-private fun ExchangeStatusItem(
-    providerName: String,
+internal fun ExpressStatusItem(
+    title: TextReference,
     fromTokenIconState: CurrencyIconState,
     toTokenIconState: CurrencyIconState,
-    fromAmount: String,
+    fromAmount: TextReference,
     fromSymbol: String,
     toSymbol: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    toAmount: TextReference = TextReference.EMPTY,
     @DrawableRes infoIconRes: Int? = null,
     infoIconTint: Color? = null,
 ) {
@@ -94,7 +56,7 @@ private fun ExchangeStatusItem(
         val padding6 = TangemTheme.dimens.spacing6
 
         Text(
-            text = stringResource(id = R.string.express_exchange_by, providerName),
+            text = title.resolveReference(),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.constrainAs(titleRef) {
@@ -114,7 +76,7 @@ private fun ExchangeStatusItem(
                 },
         )
         EllipsisText(
-            text = fromAmount,
+            text = fromAmount.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
             ellipsis = TextEllipsis.OffsetEnd(fromSymbol.length),
@@ -151,10 +113,11 @@ private fun ExchangeStatusItem(
                     bottom.linkTo(parent.bottom)
                 },
         )
-        Text(
-            text = toSymbol,
+        EllipsisText(
+            text = toAmount.resolveReference(),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.primary1,
+            ellipsis = TextEllipsis.OffsetEnd(toSymbol.length),
             modifier = Modifier.constrainAs(toRef) {
                 start.linkTo(toIconRef.end, padding6)
                 top.linkTo(titleRef.bottom, padding6)
@@ -199,16 +162,17 @@ private fun ExchangeStatusItem(
 @Preview
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ExchangeStatusItemPreview(
-    @PreviewParameter(ExchangeStatusItemsPreviewParameterProvider::class) amount: String,
+private fun ExpressStatusItemPreview(
+    @PreviewParameter(ExpressStatusItemPreviewParameterProvider::class) amount: String,
 ) {
     TangemThemePreview {
-        ExchangeStatusItem(
-            providerName = "ChangeNow",
+        ExpressStatusItem(
+            title = stringReference("ChangeNow"),
             fromTokenIconState = CurrencyIconState.Loading,
             toTokenIconState = CurrencyIconState.Loading,
-            fromAmount = amount,
+            fromAmount = stringReference(amount),
             fromSymbol = "USDT",
+            toAmount = stringReference(amount),
             toSymbol = "USDT",
             onClick = {},
             infoIconRes = null,
@@ -217,7 +181,7 @@ private fun ExchangeStatusItemPreview(
     }
 }
 
-private class ExchangeStatusItemsPreviewParameterProvider : PreviewParameterProvider<String> {
+private class ExpressStatusItemPreviewParameterProvider : PreviewParameterProvider<String> {
     override val values: Sequence<String>
         get() = sequenceOf(
             "1111111111111111111111111111 USDT",
