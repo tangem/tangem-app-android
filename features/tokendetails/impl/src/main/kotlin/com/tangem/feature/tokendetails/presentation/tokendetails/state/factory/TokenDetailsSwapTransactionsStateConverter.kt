@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -94,7 +95,9 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             toFiatAmount = getFiatAmount(toFiatAmount),
                             toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
                             fromCryptoCurrency = fromCryptoCurrency,
-                            fromCryptoAmount = fromAmount.format { crypto(fromCryptoCurrency) },
+                            fromCryptoAmount = stringReference(
+                                fromAmount.format { crypto(fromCryptoCurrency) },
+                            ),
                             fromFiatAmount = getFiatAmount(fromFiatAmount),
                             fromCurrencyIcon = iconStateConverter.convert(fromCryptoCurrency),
                             showProviderLink = showProviderLink,
