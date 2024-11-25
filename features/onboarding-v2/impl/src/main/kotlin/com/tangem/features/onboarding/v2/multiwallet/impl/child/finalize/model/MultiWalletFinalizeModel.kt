@@ -24,6 +24,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDia
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -247,9 +248,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     private fun String.lastMasked(): String {
-        fun String.splitBySpace() = reversed().chunked(size = 4).joinToString(separator = "\u00a0").reversed()
+        val space = StringsSigns.NON_BREAKING_SPACE
+        fun String.splitBySpace() = reversed().chunked(size = 4).joinToString(separator = "$space").reversed()
         val last4 = takeLast(n = 4).splitBySpace()
-        val mask = "\u00a0*\u00a0*\u00a0*\u00a0"
+        val mask = "$space*$space*$space*$space"
         return mask + last4
     }
 }
