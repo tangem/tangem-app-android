@@ -11,10 +11,10 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.ui.OnrampSelectToken
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -34,7 +34,7 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
         params = OnrampTokenListComponent.Params(
             filterOperation = when (params) {
                 is OnrampOperationComponent.Params.Buy -> OnrampOperation.BUY
-                is OnrampOperationComponent.Params.Sell -> OnrampOperation.SWAP
+                is OnrampOperationComponent.Params.Sell -> OnrampOperation.SELL
             },
             hasSearchBar = true,
             userWalletId = params.userWalletId,
