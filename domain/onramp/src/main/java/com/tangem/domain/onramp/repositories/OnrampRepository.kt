@@ -1,9 +1,7 @@
 package com.tangem.domain.onramp.repositories
 
-import com.tangem.domain.onramp.model.OnrampCountry
-import com.tangem.domain.onramp.model.OnrampCurrency
-import com.tangem.domain.onramp.model.OnrampPaymentMethod
-import com.tangem.domain.onramp.model.OnrampStatus
+import com.tangem.domain.onramp.model.*
+import com.tangem.domain.tokens.model.Amount
 import com.tangem.domain.tokens.model.CryptoCurrency
 import kotlinx.coroutines.flow.Flow
 
@@ -15,12 +13,7 @@ interface OnrampRepository {
     suspend fun getStatus(txId: String): OnrampStatus
     suspend fun fetchPaymentMethodsIfAbsent()
     suspend fun fetchPairs(currency: OnrampCurrency, country: OnrampCountry, cryptoCurrency: CryptoCurrency)
-    suspend fun fetchQuotes(
-        currency: OnrampCurrency,
-        country: OnrampCountry,
-        cryptoCurrency: CryptoCurrency,
-        fromAmount: String,
-    )
+    suspend fun fetchQuotes(cryptoCurrency: CryptoCurrency, amount: Amount)
 
     // cache
     suspend fun saveDefaultCurrency(currency: OnrampCurrency)
@@ -30,5 +23,6 @@ interface OnrampRepository {
     suspend fun getDefaultCountrySync(): OnrampCountry?
     fun getDefaultCountry(): Flow<OnrampCountry?>
     suspend fun getPaymentMethods(): List<OnrampPaymentMethod>
+    fun getQuotes(): Flow<List<OnrampQuote>>
     suspend fun clearCache()
 }
