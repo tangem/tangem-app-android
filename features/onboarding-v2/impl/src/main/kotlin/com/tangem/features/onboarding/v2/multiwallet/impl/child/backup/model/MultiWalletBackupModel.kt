@@ -138,22 +138,13 @@ class MultiWalletBackupModel @Inject constructor(
         when (state.value.backupCardsNumber) {
             1 -> {
                 // TODO show dialog
-                params.multiWalletState.update {
-                    it.copy(
-                        isThreeCards = false,
-                    )
-                }
-                modelScope.launch { eventFlow.emit(MultiWalletBackupComponent.Event.Done) }
+                params.multiWalletState.update { it.copy(isThreeCards = false) }
             }
             2 -> {
-                params.multiWalletState.update {
-                    it.copy(
-                        isThreeCards = true,
-                    )
-                }
-                modelScope.launch { eventFlow.emit(MultiWalletBackupComponent.Event.Done) }
+                params.multiWalletState.update { it.copy(isThreeCards = true) }
             }
         }
+        modelScope.launch { eventFlow.emit(MultiWalletBackupComponent.Event.Done) }
     }
 
     private fun addBackupCardWithService() {
