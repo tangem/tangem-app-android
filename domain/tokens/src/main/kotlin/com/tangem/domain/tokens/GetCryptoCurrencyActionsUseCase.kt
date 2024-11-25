@@ -189,7 +189,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // sell
-        val sellSupportedByService = rampManager.availableForSell(cryptoCurrency)
+        val sellSupportedByService = rampManager.isSellSupportedByService(cryptoCurrency)
         val sendAvailable = sendUnavailabilityReason is ScenarioUnavailabilityReason.None
 
         when {
