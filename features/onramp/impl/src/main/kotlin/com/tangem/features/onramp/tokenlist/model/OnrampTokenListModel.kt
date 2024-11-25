@@ -15,8 +15,8 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
@@ -124,20 +124,35 @@ internal class OnrampTokenListModel @Inject constructor(
 
     private suspend fun List<CryptoCurrencyStatus>.filterByAvailability(): Map<Boolean, List<CryptoCurrencyStatus>> {
         return groupBy { status ->
-            val isAvailable = when (params.filterOperation) {
-                OnrampOperation.BUY -> {
-                    rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = status.currency)
-                }
-                OnrampOperation.SELL -> rampStateManager.availableForSell(cryptoCurrency = status.currency)
-                OnrampOperation.SWAP -> rampStateManager.availableForSwap(
+            val isAvailable = checkAvailabilityByOperation(status = status)
+            val isNotMissedDerivation = status.value !is CryptoCurrencyStatus.MissedDerivation
+
+            val isNotUnreachable = when (params.filterOperation) {
+                OnrampOperation.BUY -> true // unreachable state is available for Buy operation
+                OnrampOperation.SELL -> status.value !is CryptoCurrencyStatus.Unreachable
+                OnrampOperation.SWAP -> status.value !is CryptoCurrencyStatus.Unreachable
+            }
+
+            isAvailable && isNotMissedDerivation && isNotUnreachable
+        }
+    }
+
+    private suspend fun checkAvailabilityByOperation(status: CryptoCurrencyStatus): Boolean {
+        return when (params.filterOperation) {
+            OnrampOperation.BUY -> {
+                rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = status.currency)
+            }
+            OnrampOperation.SELL -> {
+                rampStateManager.availableForSell(userWalletId = params.userWalletId, status = status)
+            }
+            OnrampOperation.SWAP -> {
+                val isAvailable = rampStateManager.availableForSwap(
                     userWalletId = params.userWalletId,
                     cryptoCurrency = status.currency,
                 )
-            }
 
-            isAvailable &&
-                status.value !is CryptoCurrencyStatus.MissedDerivation &&
-                status.value !is CryptoCurrencyStatus.Unreachable
+                isAvailable && status.value !is CryptoCurrencyStatus.NoQuote
+            }
         }
     }
 }
