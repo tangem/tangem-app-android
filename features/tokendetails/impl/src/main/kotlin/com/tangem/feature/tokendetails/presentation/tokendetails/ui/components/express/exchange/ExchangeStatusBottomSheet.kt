@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange
+package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.exchange
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
@@ -23,6 +23,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressEstimate
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressProvider
 
 @Composable
 internal fun ExchangeStatusBottomSheet(config: TangemBottomSheetConfig) {
@@ -54,11 +56,11 @@ private fun ExchangeStatusBottomSheetContent(config: SwapTransactionsState) {
                 .align(CenterHorizontally),
         )
         SpacerH16()
-        ExchangeEstimate(
+        ExpressEstimate(
             timestamp = config.timestamp,
             fromTokenIconState = config.fromCurrencyIcon,
             toTokenIconState = config.toCurrencyIcon,
-            fromCryptoAmount = TextReference.Str(config.fromCryptoAmount),
+            fromCryptoAmount = config.fromCryptoAmount,
             fromCryptoSymbol = config.fromCryptoCurrency.symbol,
             toCryptoAmount = TextReference.Str(config.toCryptoAmount),
             toCryptoSymbol = config.toCryptoCurrency.symbol,
@@ -66,7 +68,7 @@ private fun ExchangeStatusBottomSheetContent(config: SwapTransactionsState) {
             toFiatAmount = TextReference.Str(config.toFiatAmount),
         )
         SpacerH12()
-        ExchangeProvider(
+        ExpressProvider(
             providerName = TextReference.Str(config.provider.name),
             providerType = TextReference.Str(config.provider.type.providerName),
             providerTxId = config.txExternalId,
