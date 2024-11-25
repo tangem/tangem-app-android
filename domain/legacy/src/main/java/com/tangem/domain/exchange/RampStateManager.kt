@@ -3,6 +3,7 @@ package com.tangem.domain.exchange
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -11,9 +12,18 @@ import kotlinx.coroutines.flow.Flow
  */
 interface RampStateManager {
 
+    /** Check if sell service is supported for given [CryptoCurrency] */
+    fun isSellSupportedByService(cryptoCurrency: CryptoCurrency): Boolean
+
     fun availableForBuy(scanResponse: ScanResponse, cryptoCurrency: CryptoCurrency): Boolean
 
-    fun availableForSell(cryptoCurrency: CryptoCurrency): Boolean
+    /**
+     * Check if [CryptoCurrency] is available for sell
+     *
+     * @param userWalletId id of multi-currency wallet
+     * @param status       crypto currency status
+     */
+    suspend fun availableForSell(userWalletId: UserWalletId, status: CryptoCurrencyStatus): Boolean
 
     suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean
 
