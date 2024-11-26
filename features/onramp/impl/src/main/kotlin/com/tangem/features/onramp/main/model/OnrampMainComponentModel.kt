@@ -41,7 +41,10 @@ internal class OnrampMainComponentModel @Inject constructor(
         cryptoCurrency = params.cryptoCurrency,
         onrampIntents = this,
     )
-    private val amountStateFactory = OnrampAmountStateFactory(currentStateProvider = Provider { _state.value })
+    private val amountStateFactory = OnrampAmountStateFactory(
+        currentStateProvider = Provider { _state.value },
+        onrampIntents = this,
+    )
 
     private val _state: MutableStateFlow<OnrampMainComponentUM> = MutableStateFlow(
         value = stateFactory.getInitialState(
@@ -128,6 +131,9 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     override fun openCurrenciesList() {
         bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.CurrenciesList)
+    }
+
+    override fun openProviders() {
     }
 
     override fun onDestroy() {
