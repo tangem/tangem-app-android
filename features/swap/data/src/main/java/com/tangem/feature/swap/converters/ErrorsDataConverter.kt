@@ -30,6 +30,7 @@ internal class ErrorsDataConverter(
                 2270 -> ExpressDataError.ExchangeNotEnoughBalanceError(code = error.code)
                 2280 -> ExpressDataError.ExchangeInvalidAddressError(code = error.code)
                 2290 -> tryParseExchangeInvalidFromDecimalsError(error = error)
+                2320 -> tryParseProviderDifferentAmountError(error = error)
                 else -> ExpressDataError.UnknownErrorWithCode(error.code)
             }
         } catch (e: Exception) {
@@ -77,6 +78,22 @@ internal class ErrorsDataConverter(
             code = error.code,
             receivedFromDecimals = receivedFromDecimals,
             expressFromDecimals = expressFromDecimals,
+        )
+    }
+
+    private fun tryParseProviderDifferentAmountError(error: ExpressError): ExpressDataError {
+        val decimals = error.value?.decimals ?: return ExpressDataError.UnknownErrorWithCode(error.code)
+
+        val fromAmount = error.value?.fromAmount?.toBigDecimalOrNull()
+            ?: return ExpressDataError.UnknownErrorWithCode(error.code)
+        val fromAmountProvider = error.value?.fromAmountProvider?.toBigDecimalOrNull()
+            ?: return ExpressDataError.UnknownErrorWithCode(error.code)
+
+        return ExpressDataError.ProviderDifferentAmountError(
+            code = error.code,
+            decimals = decimals,
+            fromAmount = fromAmount,
+            fromProviderAmount = fromAmountProvider,
         )
     }
 }
