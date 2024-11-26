@@ -6,6 +6,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSet
 import com.tangem.datasource.local.preferences.utils.getObjectSetSync
+import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -60,6 +61,12 @@ internal class DefaultOnrampTransactionRepository(
             transactions.filter {
                 it.userWalletId == userWalletId && it.toCurrencyId == cryptoCurrencyId.value
             }.map(transactionConverter::convert)
+        }
+
+    override suspend fun updateTransactionStatus(txId: String, status: OnrampStatus.Status) =
+        withContext(dispatchers.io) {
+            val updatedTx = getTransactionById(txId)?.copy(status = status) ?: return@withContext
+            storeTransaction(updatedTx)
         }
 
     override suspend fun removeTransaction(txId: String) {

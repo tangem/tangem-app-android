@@ -14,13 +14,14 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateIconUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateInfoUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
@@ -43,15 +44,17 @@ internal class TokenDetailsOnrampTransactionStateConverter(
         val appCurrency = appCurrencyProvider()
         return ExpressTransactionStateUM.OnrampUM(
             info = ExpressTransactionStateInfoUM(
+                title = resourceReference(id = R.string.express_status_buying, wrappedList(cryptoCurrency.name)),
                 status = convertStatuses(value.status, value.externalTxUrl),
                 notification = getNotification(value.status, value.externalTxUrl),
                 txId = value.txId,
                 txExternalId = value.externalTxId,
-                txUrl = value.externalTxUrl,
-                timestamp = resourceReference(
+                txExternalUrl = value.externalTxUrl,
+                timestamp = value.timestamp,
+                timestampFormatted = resourceReference(
                     R.string.send_date_format,
                     wrappedList(
-                        value.timestamp.toTimeFormat(DateTimeFormatters.dateFormatter),
+                        value.timestamp.toDateFormatWithTodayYesterday(),
                         value.timestamp.toTimeFormat(),
                     ),
                 ),
@@ -82,13 +85,13 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     url = value.fromCurrency.image,
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
+                iconState = getIconState(value.status),
                 onGoToProviderClick = clickIntents::onGoToProviderClick,
-                onClick = { clickIntents.onOnrampTransactionClick(value.txId) },
+                onClick = { clickIntents.onExpressTransactionClick(value.txId) },
             ),
             providerName = value.providerName,
             providerImageUrl = value.providerImageUrl,
             providerType = value.providerType,
-            cryptoCurrencyName = cryptoCurrency.name,
             activeStatus = value.status,
         )
     }
@@ -107,6 +110,14 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                 }
             }
             else -> null
+        }
+    }
+
+    private fun getIconState(status: OnrampStatus.Status): ExpressTransactionStateIconUM {
+        return when (status) {
+            OnrampStatus.Status.Verifying -> ExpressTransactionStateIconUM.Warning
+            OnrampStatus.Status.Failed -> ExpressTransactionStateIconUM.Error
+            else -> ExpressTransactionStateIconUM.None
         }
     }
 
