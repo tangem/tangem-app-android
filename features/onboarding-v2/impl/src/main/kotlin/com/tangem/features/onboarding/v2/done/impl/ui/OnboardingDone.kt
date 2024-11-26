@@ -23,66 +23,64 @@ import com.tangem.features.onboarding.v2.impl.R
 import kotlinx.coroutines.delay
 
 @Composable
-fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
     val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.anim_confetti))
     val progress by animateLottieCompositionAsState(composition)
     var showConfetti by remember { mutableStateOf(false) }
 
-    Box {
+    Column(
+        modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Column(
-            modifier
-                .fillMaxSize(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_success_blue_76),
+                tint = Color.Unspecified,
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Icon(
-                    imageVector = ImageVector.vectorResource(R.drawable.ic_success_blue_76),
-                    tint = Color.Unspecified,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(76.dp),
-                )
-                SpacerH32()
-                Text(
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                    text = stringResource(R.string.onboarding_done_header),
-                    style = TangemTheme.typography.h2,
-                    color = TangemTheme.colors.text.primary1,
-                )
-                SpacerH12()
-                Text(
-                    modifier = Modifier.padding(horizontal = 32.dp),
-                    text = stringResource(R.string.onboarding_subtitle_success_tangem_wallet_onboarding),
-                    style = TangemTheme.typography.body1,
-                    color = TangemTheme.colors.text.secondary,
-                )
-                SpacerH(72.dp)
-            }
-
-            PrimaryButton(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 16.dp)
-                    .navigationBarsPadding(),
-                text = stringResource(R.string.onboarding_button_continue_wallet),
-                onClick = onContinueClick,
+                    .size(76.dp),
             )
+            SpacerH32()
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                text = stringResource(R.string.onboarding_done_header),
+                style = TangemTheme.typography.h2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            SpacerH12()
+            Text(
+                modifier = Modifier.padding(horizontal = 32.dp),
+                text = stringResource(R.string.onboarding_subtitle_success_tangem_wallet_onboarding),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.secondary,
+            )
+            SpacerH(72.dp)
         }
 
-        if (showConfetti) {
-            FullScreen(notTouchable = true) {
-                LottieAnimation(
-                    composition = composition,
-                    progress = { progress },
-                )
-            }
+        PrimaryButton(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(bottom = 16.dp)
+                .navigationBarsPadding(),
+            text = stringResource(R.string.onboarding_button_continue_wallet),
+            onClick = onContinueClick,
+        )
+    }
+
+    if (showConfetti) {
+        FullScreen(notTouchable = true) {
+            LottieAnimation(
+                composition = composition,
+                progress = { progress },
+            )
         }
     }
 
