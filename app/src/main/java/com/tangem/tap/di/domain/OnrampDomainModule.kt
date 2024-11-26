@@ -54,9 +54,14 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideGetOnrampStatusUseCase(
         onrampRepository: OnrampRepository,
+        onrampTransactionRepository: OnrampTransactionRepository,
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampStatusUseCase {
-        return GetOnrampStatusUseCase(onrampRepository, onrampErrorResolver)
+        return GetOnrampStatusUseCase(
+            onrampRepository,
+            onrampTransactionRepository,
+            onrampErrorResolver,
+        )
     }
 
     @Provides
