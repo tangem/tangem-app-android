@@ -207,7 +207,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 // [REDACTED_TODO_COMMENT]
 // [REDACTED_JIRA]
-        runBlocking(dispatchers.io) {
+        runBlocking {
             awaitAll(
                 async { featureTogglesManager.init() },
                 async { excludedBlockchainsManager.init() },
