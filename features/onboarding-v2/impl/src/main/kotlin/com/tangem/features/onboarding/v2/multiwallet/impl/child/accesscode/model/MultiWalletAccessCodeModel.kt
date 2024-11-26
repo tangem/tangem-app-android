@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ private const val MINIMUM_ACCESS_CODE_LENGTH = 4
 internal class MultiWalletAccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val backupServiceHolder: BackupServiceHolder,
 ) : Model() {
 
     private val _uiState = MutableStateFlow(getInitialState())
@@ -112,6 +114,10 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
                 if (checkAccessCode()) {
+                    backupServiceHolder.backupService.get()?.setAccessCode(_uiState.value.accessCodeFirst.text)
+
+                    // TODO delete access code from state
+                    // make on done
                     params.multiWalletState.update {
                         it.copy(accessCode = OnboardingMultiWalletState.AccessCode(uiState.value.accessCodeFirst.text))
                     }
