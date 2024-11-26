@@ -3,6 +3,7 @@ package com.tangem.data.markets
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.cache.CacheRegistry
@@ -37,9 +38,13 @@ internal class DefaultMarketsTokenRepository(
     private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val excludedBlockchains: ExcludedBlockchains,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
 ) : MarketsTokenRepository {
+
+    private val tokenMarketInfoConverter: TokenMarketInfoConverter = TokenMarketInfoConverter(excludedBlockchains)
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
     private fun createTokenMarketsFetcher(firstBatchSize: Int, nextBatchSize: Int) = LimitOffsetBatchFetcher(
         prefetchDistance = firstBatchSize,
@@ -204,7 +209,7 @@ internal class DefaultMarketsTokenRepository(
         }
 
         val resultResponse = result.applyL2Compatibility(tokenId)
-        return@withContext TokenMarketInfoConverter.convert(resultResponse)
+        return@withContext tokenMarketInfoConverter.convert(resultResponse)
     }
 
     override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String) =
@@ -234,7 +239,7 @@ internal class DefaultMarketsTokenRepository(
         val blockchain = Blockchain.fromNetworkId(network.networkId) ?: error("Unknown network [${network.networkId}]")
 
         return if (network.contractAddress == null) {
-            CryptoCurrencyFactory().createCoin(
+            cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 scanResponse = userWallet.scanResponse,
@@ -244,9 +249,10 @@ internal class DefaultMarketsTokenRepository(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 scanResponse = userWallet.scanResponse,
+                excludedBlockchains = excludedBlockchains,
             ) ?: return null
 
-            CryptoCurrencyFactory().createToken(
+            cryptoCurrencyFactory.createToken(
                 network = currencyNetwork,
                 rawId = token.id,
                 name = token.name,
