@@ -96,7 +96,10 @@ private fun Button(
             .clip(shape)
             .background(color = backgroundColor),
     ) {
-        Content(config = config)
+        Content(
+            config = config,
+            modifier = Modifier.align(alignment = Alignment.Center),
+        )
 
         if (config.isInProgress) {
             Loading(
@@ -111,11 +114,11 @@ private fun Button(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Content(config: ActionButtonConfig) {
+private fun Content(config: ActionButtonConfig, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .combinedClickable(
                 enabled = config.enabled,
                 onClick = config.onClick,
