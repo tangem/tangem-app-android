@@ -6,8 +6,6 @@
   <string name="action_buttons_swap_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à l\'échange</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Il n\'y a pas de token disponible pour échanger avec le token sélectionné. Veuillez en choisir un autre.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Aucune paire disponible</string>
-  <string name="action_buttons_you_want_to_receive">Vous souhaitez recevoir</string>
-  <string name="action_buttons_you_want_to_swap">Vous souhaitez échanger</string>
   <string name="add_custom_token_choose_network">Choisissez le réseau</string>
   <string name="add_custom_token_title">Ajouter un jeton personnalisé</string>
   <string name="add_tokens_title">Gérer les jetons</string>
@@ -370,7 +368,7 @@
   <string name="manage_tokens_wallet_selector_title">Choisissez un portefeuille</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Le portefeuille ne prend pas en charge plus d\'un réseau</string>
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
-  <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est plus pris en charge dans le portefeuille</string>
+  <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas pris en charge dans le portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Cet actif n\'est pas disponible pour ce portefeuille</string>
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_add_token">Ajoutez un jeton</string>
