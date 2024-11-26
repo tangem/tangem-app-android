@@ -4,10 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -51,20 +48,18 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
             popBack = {
                 popInternal { success ->
                     if (success.not()) {
-                        stackNavigation.pop()
+                        model.stackNavigation.pop() // TODO
                     }
                 }
             },
         ),
     )
 
-    private val stackNavigation = StackNavigation<OnboardingRoute>()
-
     private val innerStack: Value<ChildStack<OnboardingRoute, Any>> = childStack(
         key = "innerStack",
-        source = stackNavigation,
+        source = model.stackNavigation,
         serializer = null,
-        initialConfiguration = model.state.value.currentRoute,
+        initialConfiguration = model.startRoute,
         handleBackButton = true,
         childFactory = { configuration, factoryContext ->
             onboardingChildFactory.createChild(
