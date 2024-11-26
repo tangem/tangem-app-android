@@ -3,8 +3,8 @@ package com.tangem.lib.crypto
 import com.tangem.blockchain.blockchains.xrp.XrpAddressService
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.lib.crypto.converter.XrpTaggedAddressConverter
 import com.tangem.lib.crypto.models.XrpTaggedAddress
 
@@ -64,8 +64,10 @@ object BlockchainUtils {
         return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
     }
 
-    fun isSupportedNetworkId(blockchainId: String): Boolean {
-        return Blockchain.fromNetworkId(blockchainId)?.isSupportedInApp() ?: false
+    fun isSupportedNetworkId(blockchainId: String, excludedBlockchains: ExcludedBlockchains): Boolean {
+        val blockchain = Blockchain.fromNetworkId(blockchainId)
+
+        return blockchain != null && blockchain !in excludedBlockchains
     }
 
     fun isArbitrum(blockchainId: String): Boolean {
