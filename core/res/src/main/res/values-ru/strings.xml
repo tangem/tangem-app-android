@@ -3,8 +3,6 @@
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных токенов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Нет доступных пар</string>
-  <string name="action_buttons_you_want_to_receive">Вы хотите получить</string>
-  <string name="action_buttons_you_want_to_swap">Вы хотите обменять</string>
   <string name="add_custom_token_choose_network">Выберите сеть</string>
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
@@ -129,7 +127,7 @@
   <string name="common_fee_selector_option_market">По рынку</string>
   <string name="common_fee_selector_option_slow">Медленно</string>
   <string name="common_fee_selector_title">Скорость и комиссия</string>
-  <string name="common_generate_addresses">Получить ваши адреса</string>
+  <string name="common_generate_addresses">Синхронизировать адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
   <string name="common_hour">час</string>
