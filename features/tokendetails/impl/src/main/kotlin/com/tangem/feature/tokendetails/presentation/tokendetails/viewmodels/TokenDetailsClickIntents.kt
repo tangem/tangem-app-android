@@ -45,9 +45,7 @@ interface TokenDetailsClickIntents {
 
     fun onCloseRentInfoNotification()
 
-    fun onSwapTransactionClick(txId: String)
-
-    fun onOnrampTransactionClick(txId: String)
+    fun onExpressTransactionClick(txId: String)
 
     fun onGoToProviderClick(url: String)
 
