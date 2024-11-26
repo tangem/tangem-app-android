@@ -10,11 +10,15 @@ import com.tangem.features.onramp.component.SwapSelectTokensComponent
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensController
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensUM
 import com.tangem.features.onramp.swap.entity.transformer.RemoveSelectedFromTokenTransformer
+import com.tangem.features.onramp.swap.entity.transformer.RemoveSelectedToTokenTransformer
 import com.tangem.features.onramp.swap.entity.transformer.SelectFromTokenTransformer
 import com.tangem.features.onramp.swap.entity.transformer.SelectToTokenTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -46,7 +50,7 @@ internal class SwapSelectTokensModel @Inject constructor(
         controller.update(
             transformer = SelectFromTokenTransformer(
                 selectedTokenItemState = selectedTokenItemState,
-                onRemoveClick = ::onRemoveClick,
+                onRemoveClick = ::removeSelectedFromToken,
             ),
         )
     }
@@ -58,22 +62,43 @@ internal class SwapSelectTokensModel @Inject constructor(
      * @param status                 crypto currency status
      */
     fun selectToToken(selectedTokenItemState: TokenItemState, status: CryptoCurrencyStatus) {
-        _toCurrencyStatus.value = status
+        modelScope.launch {
+            _toCurrencyStatus.value = status
 
-        controller.update(transformer = SelectToTokenTransformer(selectedTokenItemState))
+            controller.update(transformer = SelectToTokenTransformer(selectedTokenItemState))
 
-        router.push(
-            route = AppRoute.Swap(
-                currencyFrom = requireNotNull(fromCurrencyStatus.value).currency,
-                currencyTo = status.currency,
-                userWalletId = params.userWalletId,
-            ),
-        )
+            // require some delay to show state with selected "from" and "to" tokens
+            delay(timeMillis = 500)
+
+            router.push(
+                route = AppRoute.Swap(
+                    currencyFrom = requireNotNull(fromCurrencyStatus.value).currency,
+                    currencyTo = status.currency,
+                    userWalletId = params.userWalletId,
+                ),
+                onComplete = {
+                    modelScope.launch {
+                        withTimeout(timeMillis = 500) {
+                            // Return a state with selected only "from" token
+                            removeSelectedToToken()
+                        }
+                    }
+                },
+            )
+        }
     }
 
-    private fun onRemoveClick() {
+    private fun removeSelectedFromToken() {
         _fromCurrencyStatus.value = null
 
         controller.update(transformer = RemoveSelectedFromTokenTransformer)
+    }
+
+    private fun removeSelectedToToken() {
+        _toCurrencyStatus.value = null
+
+        controller.update(
+            transformer = RemoveSelectedToTokenTransformer(onRemoveFromTokenClick = ::removeSelectedFromToken),
+        )
     }
 }
