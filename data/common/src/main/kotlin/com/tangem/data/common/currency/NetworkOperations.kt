@@ -2,6 +2,7 @@ package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.FeePaidCurrency
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.extensions.canHandleToken
@@ -19,10 +20,10 @@ fun getNetwork(
     blockchain: Blockchain,
     extraDerivationPath: String?,
     derivationStyleProvider: DerivationStyleProvider?,
+    excludedBlockchains: ExcludedBlockchains,
     canHandleTokens: Boolean,
 ): Network? {
-    if (blockchain == Blockchain.Unknown) {
-        Timber.e("Unable to convert Unknown blockchain to the domain network model")
+    if (!isBlockchainSupported(blockchain, excludedBlockchains)) {
         return null
     }
 
@@ -43,10 +44,14 @@ fun getNetwork(
     )
 }
 
-fun getNetwork(networkId: Network.ID, derivationPath: Network.DerivationPath, scanResponse: ScanResponse): Network? {
+fun getNetwork(
+    networkId: Network.ID,
+    derivationPath: Network.DerivationPath,
+    scanResponse: ScanResponse,
+    excludedBlockchains: ExcludedBlockchains,
+): Network? {
     val blockchain = getBlockchain(networkId)
-    if (blockchain == Blockchain.Unknown) {
-        Timber.e("Unable to convert Unknown blockchain to the domain network model")
+    if (!isBlockchainSupported(blockchain, excludedBlockchains)) {
         return null
     }
 
@@ -59,16 +64,43 @@ fun getNetwork(networkId: Network.ID, derivationPath: Network.DerivationPath, sc
         currencySymbol = blockchain.currency,
         standardType = getNetworkStandardType(blockchain),
         hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
-        canHandleTokens = scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver),
+        canHandleTokens = scanResponse.card.canHandleToken(
+            blockchain,
+            scanResponse.cardTypesResolver,
+            excludedBlockchains,
+        ),
     )
 }
 
-fun getNetwork(blockchain: Blockchain, extraDerivationPath: String?, scanResponse: ScanResponse): Network? {
+private fun isBlockchainSupported(blockchain: Blockchain, excludedBlockchains: ExcludedBlockchains): Boolean {
+    if (blockchain == Blockchain.Unknown) {
+        Timber.w("Unable to convert Unknown blockchain to the domain network model")
+        return false
+    }
+    if (blockchain in excludedBlockchains) {
+        Timber.w("Unable to convert excluded blockchain to the domain network model")
+        return false
+    }
+
+    return true
+}
+
+fun getNetwork(
+    blockchain: Blockchain,
+    extraDerivationPath: String?,
+    scanResponse: ScanResponse,
+    excludedBlockchains: ExcludedBlockchains,
+): Network? {
     return getNetwork(
         blockchain = blockchain,
         extraDerivationPath = extraDerivationPath,
         derivationStyleProvider = scanResponse.derivationStyleProvider,
-        canHandleTokens = scanResponse.card.canHandleToken(blockchain, scanResponse.cardTypesResolver),
+        excludedBlockchains = excludedBlockchains,
+        canHandleTokens = scanResponse.card.canHandleToken(
+            blockchain,
+            scanResponse.cardTypesResolver,
+            excludedBlockchains,
+        ),
     )
 }
 
