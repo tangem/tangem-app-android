@@ -6,8 +6,8 @@
   <string name="action_buttons_swap_empty_search_message">Token not found in your portfolio? Check the Markets to find and add it for swap</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">There are no available tokens to swap with the selected token. Please choose another one.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No available pair</string>
-  <string name="action_buttons_you_want_to_receive">You want to Receive</string>
-  <string name="action_buttons_you_want_to_swap">You want to Swap</string>
+  <string name="action_buttons_you_want_to_receive">Choose the Token you want to Receive</string>
+  <string name="action_buttons_you_want_to_swap">Choose the Token you want to Swap</string>
   <string name="add_custom_token_choose_network">Choose network</string>
   <string name="add_custom_token_title">Add custom token</string>
   <string name="add_tokens_title">Manage tokens</string>
@@ -126,7 +126,7 @@
   <string name="common_fee_selector_option_market">Market</string>
   <string name="common_fee_selector_option_slow">Slow</string>
   <string name="common_fee_selector_title">Speed and fee</string>
-  <string name="common_generate_addresses">Get your addresses</string>
+  <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
   <string name="common_hour">hour</string>
@@ -251,6 +251,7 @@
   <string name="express_choose_providers_subtitle">Tangem offers token swaps via 3rd-party providers according to each provider\'s terms</string>
   <string name="express_choose_providers_title">Choose provider</string>
   <string name="express_error_code">An error occurred. Code: %s</string>
+  <string name="express_error_provider_amount_roundup">Error %1$s. The selected provider cannot process the specified transaction. Please round the value up to %2$s or change it</string>
   <string name="express_error_swap_pair_unavailable">Selected provider is unavailable at the moment. Please try again later. (Code: %s)</string>
   <string name="express_error_swap_unavailable">Swaps are unavailable at the moment. Please try again later. (Code: %s)</string>
   <string name="express_estimated_amount">Estimated amount</string>
@@ -565,6 +566,7 @@
   <string name="onboarding_wallet_info_title_fourth">Access code restore</string>
   <string name="onboarding_wallet_info_title_second">Identical cards</string>
   <string name="onboarding_wallet_info_title_third">Access code</string>
+  <string name="onramp_choose_provider_title_hint">Providers facilitate transactions, ensuring smooth and efficient token exchanges</string>
   <string name="onramp_country_search">Search by country</string>
   <string name="onramp_country_unavailable">Unavailable</string>
   <string name="onramp_currency_search">Search by currency</string>
