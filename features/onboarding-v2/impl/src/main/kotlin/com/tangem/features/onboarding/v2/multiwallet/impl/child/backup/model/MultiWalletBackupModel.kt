@@ -67,7 +67,7 @@ class MultiWalletBackupModel @Inject constructor(
                     addBackupButtonEnabled = true,
                     addBackupButtonLoading = false,
                     onAddBackupClick = ::startBackupWallet,
-                    onFinalizeButtonClick = {},
+                    onFinalizeButtonClick = ::onFinalizeClick,
                     onSkipButtonClick = {
                         // eventFlow.tryEmit(Unit)
                     },
@@ -80,7 +80,9 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun startBackupWallet() {
-        backupService.discardSavedBackup()
+        if (state.value.backupCardsNumber == 0) {
+            backupService.discardSavedBackup()
+        }
         val primaryCard = scanResponse.primaryCard
 
         if (primaryCard != null) {
@@ -107,6 +109,7 @@ class MultiWalletBackupModel @Inject constructor(
                     modelScope.launch {
                         eventFlow.emit(MultiWalletBackupComponent.Event.OneDeviceAdded)
                     }
+                    params.multiWalletState.update { it.copy(isThreeCards = false) }
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_one_backup_card),
                         bodyText = resourceReference(R.string.onboarding_subtitle_one_backup_card),
@@ -118,6 +121,7 @@ class MultiWalletBackupModel @Inject constructor(
                     modelScope.launch {
                         eventFlow.emit(MultiWalletBackupComponent.Event.TwoDeviceAdded)
                     }
+                    params.multiWalletState.update { it.copy(isThreeCards = true) }
                     st.copy(
                         title = resourceReference(R.string.onboarding_title_two_backup_cards),
                         bodyText = resourceReference(R.string.onboarding_subtitle_two_backup_cards),
@@ -128,6 +132,19 @@ class MultiWalletBackupModel @Inject constructor(
                 else -> st.copy(addBackupButtonEnabled = false)
             }
         }
+    }
+
+    private fun onFinalizeClick() {
+        when (state.value.backupCardsNumber) {
+            1 -> {
+                // TODO show dialog
+                params.multiWalletState.update { it.copy(isThreeCards = false) }
+            }
+            2 -> {
+                params.multiWalletState.update { it.copy(isThreeCards = true) }
+            }
+        }
+        modelScope.launch { eventFlow.emit(MultiWalletBackupComponent.Event.Done) }
     }
 
     private fun addBackupCardWithService() {
@@ -147,7 +164,6 @@ class MultiWalletBackupModel @Inject constructor(
                 is CompletionResult.Success -> {
                     state.update {
                         it.copy(
-                            backupCards = it.backupCards + result.data,
                             backupCardsNumber = it.backupCardsNumber + 1,
                         )
                     }
