@@ -208,7 +208,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
         // TODO: Try to performance and user experience.
         //  [REDACTED_JIRA]
-        runBlocking(dispatchers.io) {
+        runBlocking {
             awaitAll(
                 async { featureTogglesManager.init() },
                 async { excludedBlockchainsManager.init() },
