@@ -10,12 +10,13 @@ import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.main.entity.OnrampAmountBlockUM
-import com.tangem.features.onramp.main.entity.OnrampAmountSecondaryFieldUM
-import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
+import com.tangem.features.onramp.main.entity.*
 import com.tangem.utils.Provider
 
-internal class OnrampAmountStateFactory(private val currentStateProvider: Provider<OnrampMainComponentUM>) {
+internal class OnrampAmountStateFactory(
+    private val currentStateProvider: Provider<OnrampMainComponentUM>,
+    private val onrampIntents: OnrampIntents,
+) {
 
     private val onrampAmountFieldChangeConverter = OnrampAmountFieldChangeConverter(
         currentStateProvider = currentStateProvider,
@@ -64,14 +65,25 @@ internal class OnrampAmountStateFactory(private val currentStateProvider: Provid
         val amountState = currentState.amountBlockState
         return currentState.copy(
             amountBlockState = amountState.copy(
-                secondaryFieldModel = quote.toUiModel(amountState),
+                secondaryFieldModel = quote.toSecondaryFieldUiModel(amountState),
             ),
+            providerBlockState = quote.toProviderBlockState(),
         )
     }
 
-    private fun OnrampQuote.toUiModel(amountState: OnrampAmountBlockUM): OnrampAmountSecondaryFieldUM {
+    private fun OnrampQuote.toProviderBlockState(): OnrampProviderBlockUM {
+        return OnrampProviderBlockUM.Content(
+            paymentMethodIconUrl = paymentMethod.imageUrl,
+            paymentMethodName = paymentMethod.name,
+            providerName = provider.info.name,
+            isBestRate = true,
+            onClick = onrampIntents::openProviders,
+        )
+    }
+
+    private fun OnrampQuote.toSecondaryFieldUiModel(amountState: OnrampAmountBlockUM): OnrampAmountSecondaryFieldUM {
         return when (this) {
-            is OnrampQuote.Content -> {
+            is OnrampQuote.Data -> {
                 val amount = toAmount.format {
                     crypto(
                         symbol = amountState.amountFieldModel.cryptoAmount.currencySymbol,
