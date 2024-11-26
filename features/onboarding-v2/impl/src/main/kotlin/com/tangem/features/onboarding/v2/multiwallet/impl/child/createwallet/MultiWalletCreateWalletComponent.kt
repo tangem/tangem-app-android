@@ -13,6 +13,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model.MultiWalletCreateWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.MultiWalletCreateWallet
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class MultiWalletCreateWalletComponent(
@@ -24,6 +25,13 @@ internal class MultiWalletCreateWalletComponent(
     private val model: MultiWalletCreateWalletModel = getOrCreateModel(params)
 
     init {
+        params.innerNavigation.update {
+            it.copy(
+                stackSize = 2,
+                stackMaxSize = 8,
+            )
+        }
+
         params.parentParams.titleProvider.changeTitle(
             text = resourceReference(R.string.onboarding_create_wallet_header),
         )
