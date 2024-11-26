@@ -25,7 +25,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
