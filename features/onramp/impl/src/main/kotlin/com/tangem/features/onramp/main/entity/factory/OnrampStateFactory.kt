@@ -42,6 +42,7 @@ internal class OnrampStateFactory(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
             buyButtonConfig = state.buyButtonConfig,
             amountBlockState = getInitialAmountBlockState(currency),
+            providerBlockState = OnrampProviderBlockUM.Empty,
         )
     }
 
