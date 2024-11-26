@@ -10,10 +10,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.anyDecimals
-import com.tangem.core.ui.format.bigdecimal.crypto
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.uncapped
+import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -774,6 +771,19 @@ internal class StateBuilder(
                         formatArgs = wrappedList(expressDataError.amount.getFormattedCryptoAmount(fromToken)),
                     ),
                     subtitle = resourceReference(R.string.warning_express_wrong_amount_description),
+                    iconResId = R.drawable.ic_alert_circle_24,
+                ),
+            )
+            is ExpressDataError.ProviderDifferentAmountError -> SwapWarning.GeneralError(
+                notificationConfig = NotificationConfig(
+                    title = resourceReference(id = R.string.common_error),
+                    subtitle = resourceReference(
+                        R.string.express_error_provider_amount_roundup,
+                        formatArgs = wrappedList(
+                            expressDataError.code,
+                            expressDataError.fromProviderAmount.format { simple(decimals = expressDataError.decimals) },
+                        ),
+                    ),
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
             )
