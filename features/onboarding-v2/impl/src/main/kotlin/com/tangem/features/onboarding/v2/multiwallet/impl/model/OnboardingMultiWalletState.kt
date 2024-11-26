@@ -1,11 +1,14 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.models.UserWallet
 
 data class OnboardingMultiWalletState(
     val currentStep: Step,
     val accessCode: AccessCode?,
+    val isThreeCards: Boolean,
     val currentScanResponse: ScanResponse,
+    val resultUserWallet: UserWallet?, // TODO make callback instead
 ) {
     /**
      * Wallet1
