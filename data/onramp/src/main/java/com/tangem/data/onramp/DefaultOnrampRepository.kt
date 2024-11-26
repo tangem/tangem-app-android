@@ -5,6 +5,7 @@ import com.tangem.data.onramp.converters.CountryConverter
 import com.tangem.data.onramp.converters.CurrencyConverter
 import com.tangem.data.onramp.converters.PaymentMethodConverter
 import com.tangem.data.onramp.converters.StatusConverter
+import com.tangem.data.onramp.converters.error.OnrampQuoteErrorInput
 import com.tangem.data.onramp.converters.error.OnrampQuotesErrorConverter
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -192,18 +193,26 @@ internal class DefaultOnrampRepository(
                                     toDecimals = cryptoCurrency.decimals,
                                     providerId = provider.id,
                                 ).bind()
-                                OnrampQuote.Content(
+                                OnrampQuote.Data(
                                     fromAmount = convertToBigDecimal(response.fromAmount),
                                     toAmount = convertToBigDecimal(response.toAmount),
                                     minFromAmount = convertToBigDecimal(response.minFromAmount),
                                     maxFromAmount = convertToBigDecimal(response.maxFromAmount),
-                                    paymentMethodId = response.paymentMethod,
-                                    providerId = response.providerId,
+                                    paymentMethod = paymentMethod,
+                                    provider = provider,
                                 )
+                                null
                             },
                             onError = { error ->
                                 if (error is ApiResponseError.HttpException) {
-                                    quotesErrorConverter.convert(error.errorBody.orEmpty() to amount)
+                                    quotesErrorConverter.convert(
+                                        OnrampQuoteErrorInput(
+                                            errorBody = error.errorBody.orEmpty(),
+                                            amount = amount,
+                                            paymentMethod = paymentMethod,
+                                            provider = provider,
+                                        ),
+                                    )
                                 } else {
                                     Timber.w(error, "Unable to fetch onramp quotes for ${provider.id}. $error")
                                     null
