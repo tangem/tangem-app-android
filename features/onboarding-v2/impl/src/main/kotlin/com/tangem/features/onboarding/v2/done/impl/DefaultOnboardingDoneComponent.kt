@@ -10,7 +10,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-class DefaultOnboardingDoneComponent @AssistedInject constructor(
+internal class DefaultOnboardingDoneComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: OnboardingDoneComponent.Params,
 ) : OnboardingDoneComponent, AppComponentContext by context {
