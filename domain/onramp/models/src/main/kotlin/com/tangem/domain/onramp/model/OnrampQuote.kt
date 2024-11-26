@@ -5,19 +5,30 @@ import java.math.BigDecimal
 
 sealed class OnrampQuote {
 
-    data class Content(
+    abstract val paymentMethod: OnrampPaymentMethod
+    abstract val provider: OnrampProvider
+
+    data class Data(
+        override val paymentMethod: OnrampPaymentMethod,
+        override val provider: OnrampProvider,
         val fromAmount: BigDecimal,
         val toAmount: BigDecimal,
         val minFromAmount: BigDecimal,
         val maxFromAmount: BigDecimal,
-        val paymentMethodId: String,
-        val providerId: String,
     ) : OnrampQuote()
 
     sealed class Error : OnrampQuote() {
 
-        data class AmountTooSmallError(val amount: Amount) : Error()
+        data class AmountTooSmallError(
+            override val paymentMethod: OnrampPaymentMethod,
+            override val provider: OnrampProvider,
+            val amount: Amount,
+        ) : Error()
 
-        data class AmountTooBigError(val amount: Amount) : Error()
+        data class AmountTooBigError(
+            override val paymentMethod: OnrampPaymentMethod,
+            override val provider: OnrampProvider,
+            val amount: Amount,
+        ) : Error()
     }
 }
