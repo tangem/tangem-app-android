@@ -5,9 +5,13 @@ import com.arkivanov.decompose.router.slot.activate
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCurrency
+import com.tangem.domain.onramp.model.OnrampStatus
+import com.tangem.domain.onramp.model.cache.OnrampTransaction
+import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
@@ -19,15 +23,19 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import org.joda.time.DateTime
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
 internal class OnrampMainComponentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val urlOpener: UrlOpener,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val getOnrampCurrencyUseCase: GetOnrampCurrencyUseCase,
+    private val onrampSaveTransactionUseCase: OnrampSaveTransactionUseCase,
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
@@ -73,7 +81,7 @@ internal class OnrampMainComponentModel @Inject constructor(
             is OnrampAvailability.Available -> handleOnrampAvailable(availability.currency)
             is OnrampAvailability.ConfirmResidency,
             is OnrampAvailability.NotSupported,
-            -> bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.ConfirmResidency(availability.country))
+                -> bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.ConfirmResidency(availability.country))
         }
     }
 
@@ -126,7 +134,35 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onBuyClick() {
-        TODO("Not yet implemented")
+        // todo onramp only for development
+        val state = state.value as? OnrampMainComponentUM.Content ?: return
+        val onrampCurrency = state.amountBlockState.currencyUM
+        modelScope.launch {
+            onrampSaveTransactionUseCase(
+                OnrampTransaction(
+                    txId = "b2894851-7b63-4f56-bd75-e408f1dcba31",
+                    userWalletId = params.userWalletId,
+                    fromAmount = BigDecimal.ONE,
+                    fromCurrency = OnrampCurrency(
+                        name = onrampCurrency.code,
+                        code = onrampCurrency.code,
+                        image = onrampCurrency.iconUrl,
+                        precision = onrampCurrency.precision,
+                    ),
+                    toAmount = BigDecimal.TEN,
+                    toCurrencyId = params.cryptoCurrency.id.value,
+                    providerName = "ChangeNow",
+                    providerType = ExchangeProviderType.CEX.providerName,
+                    providerImageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/NOW1024.png",
+                    status = OnrampStatus.Status.Expired,
+                    externalTxUrl = "tangem.com",
+                    externalTxId = "b2894851-7b63-4f56-bd75-e408f1dcba31",
+                    timestamp = DateTime.parse("2024-11-13T10:30:10.868Z").millis,
+                ),
+            )
+            router.pop()
+            urlOpener.openUrl("https://sandbox-exchange.mrcr.io/")
+        }
     }
 
     override fun openCurrenciesList() {

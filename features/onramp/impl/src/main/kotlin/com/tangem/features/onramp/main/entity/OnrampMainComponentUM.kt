@@ -37,7 +37,7 @@ internal sealed interface OnrampMainComponentUM {
         override val buyButtonConfig: BuyButtonConfig = BuyButtonConfig(
             text = resourceReference(R.string.common_buy),
             onClick = onBuyClick,
-            enabled = false,
+            enabled = true, // todo onramp only for development
         )
     }
 
