@@ -45,6 +45,7 @@ internal sealed interface OnrampMainComponentUM {
         override val topBarConfig: OnrampMainTopBarUM,
         override val buyButtonConfig: BuyButtonConfig,
         val amountBlockState: OnrampAmountBlockUM,
+        val providerBlockState: OnrampProviderBlockUM,
     ) : OnrampMainComponentUM
 }
 
