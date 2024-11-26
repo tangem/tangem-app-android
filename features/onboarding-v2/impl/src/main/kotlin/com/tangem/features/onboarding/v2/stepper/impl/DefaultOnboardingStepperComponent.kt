@@ -31,6 +31,7 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
     init {
         componentScope.launch {
             state.collect {
+                // TODO
                 Timber.tag("ASDASD").d("State: $it")
             }
         }
