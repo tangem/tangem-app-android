@@ -42,6 +42,11 @@ internal inline fun OnboardingEntry(
                         modifier = modifier,
                     )
                 }
+                is OnboardingRoute.Done -> {
+                    (it.instance as ComposableContentComponent).Content(
+                        modifier = modifier,
+                    )
+                }
                 OnboardingRoute.None -> {}
             }
         }
