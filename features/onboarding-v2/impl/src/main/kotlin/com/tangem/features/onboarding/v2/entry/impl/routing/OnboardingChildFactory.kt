@@ -1,17 +1,18 @@
 package com.tangem.features.onboarding.v2.entry.impl.routing
 
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.features.managetokens.component.ManageTokensComponent
-import com.tangem.features.managetokens.component.ManageTokensSource
+import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
+import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import javax.inject.Inject
 
 internal class OnboardingChildFactory @Inject constructor(
     private val multiWalletComponentFactory: OnboardingMultiWalletComponent.Factory,
-    private val manageTokensComponentFactory: ManageTokensComponent.Factory,
+    private val onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory,
+    private val onboardingDoneComponentFactory: OnboardingDoneComponent.Factory,
 ) {
 
-    fun createChild(route: OnboardingRoute, childContext: AppComponentContext): Any {
+    fun createChild(route: OnboardingRoute, childContext: AppComponentContext, onManageTokensDone: () -> Unit): Any {
         return when (route) {
             is OnboardingRoute.MultiWallet -> multiWalletComponentFactory.create(
                 context = childContext,
@@ -22,11 +23,17 @@ internal class OnboardingChildFactory @Inject constructor(
                     onDone = route.onDone,
                 ),
             )
-            is OnboardingRoute.ManageTokens -> manageTokensComponentFactory.create( // TODO replace with wrapper
+            is OnboardingRoute.ManageTokens -> onboardingManageTokensComponentFactory.create(
                 context = childContext,
-                params = ManageTokensComponent.Params(
+                params = OnboardingManageTokensComponent.Params(
                     userWalletId = route.userWallet.walletId,
-                    source = ManageTokensSource.ONBOARDING,
+                ),
+                onDone = onManageTokensDone,
+            )
+            is OnboardingRoute.Done -> onboardingDoneComponentFactory.create(
+                context = childContext,
+                params = OnboardingDoneComponent.Params(
+                    onDone = route.onDone,
                 ),
             )
             else -> Unit
