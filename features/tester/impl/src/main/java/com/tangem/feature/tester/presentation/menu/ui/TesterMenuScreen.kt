@@ -52,6 +52,12 @@ internal fun TesterMenuScreen(state: TesterMenuContentState) {
             )
 
             PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(R.string.excluded_blockchains),
+                onClick = state.onExcludedBlockchainsClick,
+            )
+
+            PrimaryButton(
                 text = stringResource(R.string.environment_toggles),
                 onClick = state.onEnvironmentTogglesClick,
                 modifier = Modifier.fillMaxWidth(),
@@ -76,6 +82,7 @@ private fun PreviewTesterMenuScreen() {
                 onBackClick = {},
                 onFeatureTogglesClick = {},
                 onEnvironmentTogglesClick = {},
+                onExcludedBlockchainsClick = {},
                 onTesterActionsClick = {},
             ),
         )
