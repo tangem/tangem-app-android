@@ -1,6 +1,6 @@
 package com.tangem.blockchainsdk.featuretoggles
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 
 internal class DefaultBlockchainSDKFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
