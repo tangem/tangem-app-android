@@ -2,6 +2,7 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
@@ -48,12 +49,13 @@ internal class DefaultCurrenciesRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val swapServiceLoader: SwapServiceLoader,
     private val dispatchers: CoroutineDispatcherProvider,
+    excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory()
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
-    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
+    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
+    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig, excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
     private val customTokensMerger = CustomTokensMerger(tangemTechApi, dispatchers)
