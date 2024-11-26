@@ -14,6 +14,7 @@ android {
 dependencies {
     /** Api */
     implementation(projects.features.onboardingV2.api)
+    implementation(projects.features.manageTokens.api)
 
     /** Core modules */
     implementation(projects.core.featuretoggles)
@@ -34,6 +35,8 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.card)
     implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.legacy)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
