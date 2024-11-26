@@ -1,5 +1,6 @@
 package com.tangem.data.tokens.di
 
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.repository.*
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -31,6 +32,7 @@ internal object TokensDataModule {
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
         swapServiceLoader: SwapServiceLoader,
+        excludedBlockchains: ExcludedBlockchains,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
             tangemTechApi = tangemTechApi,
@@ -40,6 +42,7 @@ internal object TokensDataModule {
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
             swapServiceLoader = swapServiceLoader,
+            excludedBlockchains = excludedBlockchains,
         )
     }
 
@@ -70,6 +73,7 @@ internal object TokensDataModule {
         appPreferencesStore: AppPreferencesStore,
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
+        excludedBlockchains: ExcludedBlockchains,
     ): NetworksRepository {
         return DefaultNetworksRepository(
             networksStatusesStore = networksStatusesStore,
@@ -78,6 +82,7 @@ internal object TokensDataModule {
             appPreferencesStore = appPreferencesStore,
             cacheRegistry = cacheRegistry,
             dispatchers = dispatchers,
+            excludedBlockchains = excludedBlockchains,
         )
     }
 
