@@ -9,7 +9,7 @@ import com.tangem.blockchainsdk.datastorage.DefaultBlockchainDataStorage
 import com.tangem.blockchainsdk.featuretoggles.DefaultBlockchainSDKFeatureToggles
 import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
 import com.tangem.blockchainsdk.store.DefaultRuntimeStore
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
