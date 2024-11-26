@@ -5,4 +5,5 @@ interface OnrampIntents {
     fun openSettings()
     fun openCurrenciesList()
     fun onBuyClick()
+    fun openProviders()
 }
