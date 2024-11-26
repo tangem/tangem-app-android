@@ -2,25 +2,35 @@ package com.tangem.features.onboarding.v2.entry.impl.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.navigate
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
+import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ComponentScoped
 internal class OnboardingEntryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val router: Router,
+    private val tangemSdkManager: TangemSdkManager,
+    private val settingsRepository: SettingsRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingEntryComponent.Params>()
@@ -61,6 +71,22 @@ internal class OnboardingEntryModel @Inject constructor(
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
         stackNavigation.navigate {
             listOf(OnboardingRoute.ManageTokens(userWallet))
+        }
+    }
+
+    fun onManageTokensDone() {
+        stackNavigation.navigate {
+            listOf(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+        }
+    }
+
+    private fun navigateToWalletScreen() {
+        modelScope.launch(NonCancellable) {
+            router.replaceAll(AppRoute.Wallet)
+            if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+                delay(timeMillis = 1_800)
+                router.push(AppRoute.SaveWallet)
+            }
         }
     }
 }
