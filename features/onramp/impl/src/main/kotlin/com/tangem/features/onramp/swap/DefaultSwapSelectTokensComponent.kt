@@ -37,15 +37,14 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         ),
     )
 
-    private val selectToTokenListComponent: AvailableSwapPairsComponent =
-        availableSwapPairsComponentFactory.create(
-            context = child(key = "select_to_token_list"),
-            params = AvailableSwapPairsComponent.Params(
-                userWalletId = params.userWalletId,
-                selectedStatus = model.fromCurrencyStatus,
-                onTokenClick = model::selectToToken,
-            ),
-        )
+    private val selectToTokenListComponent: AvailableSwapPairsComponent = availableSwapPairsComponentFactory.create(
+        context = child(key = "select_to_token_list"),
+        params = AvailableSwapPairsComponent.Params(
+            userWalletId = params.userWalletId,
+            selectedStatus = model.fromCurrencyStatus,
+            onTokenClick = model::selectToToken,
+        ),
+    )
 
     @Composable
     override fun Content(modifier: Modifier) {
