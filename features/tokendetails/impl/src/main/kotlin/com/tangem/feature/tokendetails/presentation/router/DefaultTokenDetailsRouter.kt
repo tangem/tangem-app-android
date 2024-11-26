@@ -48,4 +48,8 @@ internal class DefaultTokenDetailsRouter(
             ),
         )
     }
+
+    override fun openOnrampSuccess(txId: String) {
+        router.push(AppRoute.OnrampSuccess(txId))
+    }
 }
