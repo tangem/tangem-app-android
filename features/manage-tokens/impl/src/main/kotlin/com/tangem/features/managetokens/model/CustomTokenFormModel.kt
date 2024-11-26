@@ -65,7 +65,7 @@ internal class CustomTokenFormModel @Inject constructor(
             observeTokenFormUpdates()
         }
 
-        createCoin()
+        validatePrefilledForm()
     }
 
     private fun getInitialState(): CustomTokenFormUM {
@@ -148,11 +148,12 @@ internal class CustomTokenFormModel @Inject constructor(
         }
     }
 
-    private fun createCoin() = modelScope.launch {
-        customCurrencyValidator.createCoin(
+    private fun validatePrefilledForm() = modelScope.launch {
+        customCurrencyValidator.validateForm(
             userWalletId = params.userWalletId,
             networkId = params.network.id,
             derivationPath = getDerivationPath(),
+            formValues = state.value.tokenForm.mapToDomainModel(),
         )
     }
 
