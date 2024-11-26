@@ -93,8 +93,10 @@ private fun Content(state: OnrampMainComponentUM.Content, modifier: Modifier = M
             .verticalScroll(rememberScrollState())
             .navigationBarsPadding()
             .padding(bottom = TangemTheme.dimens.spacing76),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         OnrampAmountContent(state = state.amountBlockState)
+        OnrampProviderContent(state = state.providerBlockState, modifier = Modifier.fillMaxWidth())
     }
 }
 
