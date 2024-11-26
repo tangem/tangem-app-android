@@ -28,6 +28,13 @@ internal fun getExpressErrorMessage(expressDataError: ExpressDataError): TextRef
             id = R.string.express_error_swap_pair_unavailable,
             formatArgs = wrappedList(expressDataError.code),
         )
+        is ExpressDataError.ProviderDifferentAmountError -> resourceReference(
+            R.string.express_error_provider_amount_roundup,
+            formatArgs = wrappedList(
+                expressDataError.code,
+                expressDataError.fromProviderAmount.format { simple(decimals = expressDataError.decimals) },
+            ),
+        )
         else -> resourceReference(R.string.express_error_code, wrappedList(expressDataError.code.toString()))
     }
 }
