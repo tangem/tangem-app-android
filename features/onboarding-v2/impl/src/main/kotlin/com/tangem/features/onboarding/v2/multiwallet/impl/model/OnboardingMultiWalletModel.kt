@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -30,6 +31,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             resultUserWallet = null,
         ),
     )
+    val backups = MutableStateFlow(MultiWalletChildParams.Backup())
 
     val uiState = _uiState.asStateFlow()
 
@@ -40,6 +42,30 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         // }
         initScreenTitleSub()
         loadCardArtwork()
+        subscribeToBackups()
+    }
+
+    private fun subscribeToBackups() {
+        modelScope.launch {
+            backups.collectLatest { bst ->
+                when {
+                    _uiState.value.artwork2Url == null && bst.card2 != null -> {
+                        val artwork =
+                            getCardImageUseCase.invoke(bst.card2.cardId, bst.card2.cardPublicKey)
+                        _uiState.update {
+                            it.copy(artwork2Url = artwork)
+                        }
+                    }
+                    _uiState.value.artwork3Url == null && bst.card3 != null -> {
+                        val artwork =
+                            getCardImageUseCase.invoke(bst.card3.cardId, bst.card3.cardPublicKey)
+                        _uiState.update {
+                            it.copy(artwork3Url = artwork)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun getInitialStep(): OnboardingMultiWalletState.Step {
@@ -76,7 +102,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
 
             if (artwork != getCardImageUseCase.getDefaultFallbackUrl()) {
                 _uiState.update {
-                    it.copy(artworkUrl = artwork)
+                    it.copy(artwork1Url = artwork)
                 }
             }
         }
