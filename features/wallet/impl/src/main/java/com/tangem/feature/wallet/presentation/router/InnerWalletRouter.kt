@@ -38,6 +38,9 @@ internal interface InnerWalletRouter : WalletRouter {
     /** Open onboarding screen */
     fun openOnboardingScreen()
 
+    /** Open onramp success screen for [txId] */
+    fun openOnrampSuccessScreen(txId: String)
+
     /** Open transaction history website by [url] */
     fun openUrl(url: String)
 
