@@ -66,6 +66,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.E
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -111,6 +112,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     expressStatusFactory: ExpressStatusFactory.Factory,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
     getUserWalletUseCase: GetUserWalletUseCase,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     deepLinksRegistry: DeepLinksRegistry,
@@ -193,9 +195,13 @@ internal class TokenDetailsViewModel @Inject constructor(
         userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
     }
 
-    private fun onBuyCurrencyDeepLink() {
-        val currency = cryptoCurrencyStatus?.currency ?: return
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
+    private fun onBuyCurrencyDeepLink(txId: String) {
+        if (onrampFeatureToggles.isFeatureEnabled) {
+            router.openOnrampSuccess(txId)
+        } else {
+            val currency = cryptoCurrencyStatus?.currency ?: return
+            analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
+        }
     }
 
     override fun onCreate(owner: LifecycleOwner) {
