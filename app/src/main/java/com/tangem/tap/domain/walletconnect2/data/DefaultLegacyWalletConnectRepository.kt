@@ -267,7 +267,7 @@ internal class DefaultLegacyWalletConnectRepository(
         )
     }
 
-    override fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>) {
+    override fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>, blockchainNames: List<String>) {
         val sessionProposal: Wallet.Model.SessionProposal = requireNotNull(this.sessionProposal)
 
         val userChains = userNamespaces.flatMap { namespace ->
@@ -311,6 +311,7 @@ internal class DefaultLegacyWalletConnectRepository(
                     WalletConnect.NewSessionEstablished(
                         dAppName = sessionProposal.name,
                         dAppUrl = sessionProposal.url,
+                        blockchainNames = blockchainNames,
                     ),
                 )
             },
