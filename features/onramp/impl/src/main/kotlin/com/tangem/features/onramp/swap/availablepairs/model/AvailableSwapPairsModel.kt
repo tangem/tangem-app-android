@@ -81,6 +81,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
                 val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
 
                 val filterTokenList = currencies
+                    .filter { it.currency != selectedStatus?.currency }
                     .filterByQuery(query = query)
                     .filterByAvailability(availablePairs = availablePairs)
 
