@@ -301,7 +301,7 @@
   <string name="express_provider_permission_needed">Потрібен дозвіл</string>
   <string name="express_provider_recommended">Рекомендовано</string>
   <string name="express_status_bought">Купив %s</string>
-  <string name="express_status_buying">Купівля %s...</string>
+  <string name="express_status_buying">Купівля %s</string>
   <string name="express_status_buying_active">Купівля %s...</string>
   <string name="express_token_list_empty_search">Токенів не знайдено. Будь ласка, спробуйте інший запит</string>
   <string name="express_transaction_id">ID: %s</string>

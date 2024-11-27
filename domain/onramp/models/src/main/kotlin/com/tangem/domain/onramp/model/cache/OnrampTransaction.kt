@@ -36,4 +36,5 @@ data class OnrampTransaction(
     val providerName: String, // todo onramp fix after SwapProvider moved to own module
     val providerImageUrl: String, // todo onramp fix after SwapProvider moved to own module
     val providerType: String, // todo onramp fix after SwapProvider moved to own module
+    val redirectUrl: String,
 )
