@@ -234,7 +234,7 @@ internal class SendNotificationFactory(
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
             feeAmount = feeState.fee?.amount?.value.orZero(),
-            receivedAmount = sendingAmount,
+            sendingAmount = sendingAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onReduceClick = clickIntents::onAmountReduceByClick,
         )
