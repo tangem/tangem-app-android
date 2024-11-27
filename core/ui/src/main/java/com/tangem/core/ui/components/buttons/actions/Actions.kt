@@ -140,33 +140,25 @@ private fun Content(config: ActionButtonConfig, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val iconTint by animateColorAsState(
-            targetValue = when {
-                !config.enabled -> TangemTheme.colors.icon.informative
-                config.dimContent -> TangemTheme.colors.icon.informative
-                else -> TangemTheme.colors.icon.primary1
-            },
-            label = "Update tint color",
-        )
-
+        val iconTint = when {
+            !config.enabled -> TangemTheme.colors.icon.informative
+            config.dimContent -> TangemTheme.colors.icon.informative
+            else -> TangemTheme.colors.icon.primary1
+        }
         Icon(
+            modifier = Modifier.size(size = TangemTheme.dimens.size20),
             painter = painterResource(id = config.iconResId),
             contentDescription = null,
-            modifier = Modifier.size(size = TangemTheme.dimens.size20),
             tint = iconTint,
         )
 
         SpacerW8()
 
-        val textColor by animateColorAsState(
-            targetValue = when {
-                !config.enabled -> TangemTheme.colors.text.disabled
-                config.dimContent -> TangemTheme.colors.text.tertiary
-                else -> TangemTheme.colors.text.primary1
-            },
-            label = "Update text color",
-        )
-
+        val textColor = when {
+            !config.enabled -> TangemTheme.colors.text.disabled
+            config.dimContent -> TangemTheme.colors.text.tertiary
+            else -> TangemTheme.colors.text.primary1
+        }
         Text(
             text = config.text.resolveReference(),
             color = textColor,
