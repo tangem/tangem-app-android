@@ -167,9 +167,9 @@ internal class DragAndDropAdapter(
 
         sealed class Type {
 
-            object Start : Type()
+            data object Start : Type()
 
-            object Dragged : Type()
+            data object Dragged : Type()
 
             data class End(val isItemsOrderChanged: Boolean) : Type()
         }
