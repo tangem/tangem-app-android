@@ -167,6 +167,18 @@ class MultiWalletBackupModel @Inject constructor(
                             backupCardsNumber = it.backupCardsNumber + 1,
                         )
                     }
+
+                    val backupCardInfo = MultiWalletChildParams.Backup.BackupCardInfo(
+                        cardId = result.data.cardId,
+                        cardPublicKey = result.data.cardPublicKey,
+                    )
+                    params.backups.update {
+                        it.copy(
+                            card2 = if (state.value.backupCardsNumber == 1) backupCardInfo else it.card2,
+                            card3 = if (state.value.backupCardsNumber == 2) backupCardInfo else it.card3,
+                        )
+                    }
+
                     setNumberOfBackupCards(state.value.backupCardsNumber)
                 }
                 is CompletionResult.Failure -> {
