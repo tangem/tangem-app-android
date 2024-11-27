@@ -93,6 +93,7 @@ dependencies {
     implementation(projects.features.details.api)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.markets.api)
+    implementation(projects.features.onramp.api)
 
     /** Common modules */
     implementation(projects.common.ui)
