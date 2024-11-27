@@ -70,6 +70,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         multiWalletState = model.state,
         parentParams = params,
         innerNavigation = innerNavigationStateFlow,
+        backups = model.backups,
     )
 
     private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, ComposableContentComponent>> =
