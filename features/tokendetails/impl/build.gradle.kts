@@ -93,5 +93,6 @@ dependencies {
     implementation(projects.features.send.api)
     implementation(projects.features.staking.api)
     implementation(projects.features.markets.api)
+    implementation(projects.features.onramp.api)
 
 }
