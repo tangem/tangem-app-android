@@ -79,14 +79,10 @@ internal class CustomCurrencyValidator @Inject constructor(
                     findToken(userWalletId, networkId, derivationPath, validatedForm)
                 }
                 is AddCustomTokenForm.Validated.Empty -> {
-                    createCoin(userWalletId, networkId, derivationPath)
+                    createCurrency(userWalletId, networkId, derivationPath, validatedForm = null)
                 }
             }
         }.saveInAndJoin(validateFormJobHolder)
-    }
-
-    suspend fun createCoin(userWalletId: UserWalletId, networkId: Network.ID, derivationPath: Network.DerivationPath) {
-        createCurrency(userWalletId, networkId, derivationPath, validatedForm = null)
     }
 
     private suspend fun findOrCreateCurrency(
