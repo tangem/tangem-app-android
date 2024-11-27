@@ -6,6 +6,7 @@ import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 
 internal data class CustomTokenFormUM(
     val networkName: ClickableFieldUM,
@@ -28,6 +29,11 @@ internal data class CustomTokenFormUM(
             NAME,
             SYMBOL,
             DECIMALS,
+        }
+
+        companion object {
+
+            val Empty = TokenFormUM(fields = persistentMapOf())
         }
     }
 
