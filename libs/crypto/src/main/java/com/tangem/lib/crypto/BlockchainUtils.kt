@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.lib.crypto.converter.XrpTaggedAddressConverter
 import com.tangem.lib.crypto.models.XrpTaggedAddress
