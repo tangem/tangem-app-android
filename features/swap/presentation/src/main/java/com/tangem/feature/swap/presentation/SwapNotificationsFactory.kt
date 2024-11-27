@@ -134,10 +134,11 @@ internal class SwapNotificationsFactory(
     ) {
         val fromCurrencyStatus = quoteModel.fromTokenInfo.cryptoCurrencyStatus
         val includeFeeInAmount = quoteModel.preparedSwapConfigState.includeFeeInAmount
+        val amount = quoteModel.fromTokenInfo.tokenAmount
         val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmount.Included) {
             includeFeeInAmount.amountSubtractFee
         } else {
-            quoteModel.fromTokenInfo.tokenAmount
+            amount
         }
         val fee = when (val feeState = quoteModel.txFee) {
             TxFeeState.Empty -> null
@@ -154,13 +155,12 @@ internal class SwapNotificationsFactory(
         addExistentialWarningNotification(
             existentialDeposit = quoteModel.currencyCheck?.existentialDeposit,
             feeAmount = fee?.feeValue.orZero(),
-            receivedAmount = amountToRequest.value,
+            sendingAmount = amount.value,
             cryptoCurrencyStatus = fromCurrencyStatus,
-            onReduceClick = { _, reduceByDiff, _ ->
-                actions.onLeaveExistentialDeposit(
-                    amountToRequest.copy(
-                        value = amountToRequest.value.minus(reduceByDiff).minus(fee?.feeValue.orZero()),
-                    ),
+            onReduceClick = { reduceBy, reduceByDiff, _ ->
+                actions.onReduceByAmount(
+                    amount.copy(value = amount.value.minus(reduceByDiff)),
+                    reduceBy,
                 )
             },
         )
@@ -170,7 +170,7 @@ internal class SwapNotificationsFactory(
             cryptoCurrency = fromCurrencyStatus.currency,
             minAdaValue = quoteModel.minAdaValue,
             onReduceClick = { reduceTo, _ ->
-                actions.onLeaveExistentialDeposit(amountToRequest.copy(value = reduceTo))
+                actions.onReduceToAmount(amount.copy(value = reduceTo))
             },
         )
         if (!isCardano) {
@@ -191,13 +191,13 @@ internal class SwapNotificationsFactory(
         addReduceAmountNotification(
             cryptoCurrencyStatus = fromCurrencyStatus,
             fromAmount = quoteModel.fromTokenInfo.tokenAmount,
-            onReduceAmount = actions.onReduceAmount,
+            onReduceByAmount = actions.onReduceByAmount,
         )
         addTransactionLimitErrorNotification(
             utxoLimit = quoteModel.currencyCheck?.utxoAmountLimit,
             cryptoCurrency = fromCurrencyStatus.currency,
             onReduceClick = { reduceTo, _ ->
-                actions.onReduceAmount(amountToRequest.copy(value = reduceTo))
+                actions.onReduceToAmount(amountToRequest.copy(value = reduceTo))
             },
         )
     }
@@ -294,7 +294,7 @@ internal class SwapNotificationsFactory(
     private fun MutableList<NotificationUM>.addReduceAmountNotification(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         fromAmount: SwapAmount,
-        onReduceAmount: (SwapAmount) -> Unit,
+        onReduceByAmount: (SwapAmount, BigDecimal) -> Unit,
     ) {
         val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
@@ -309,7 +309,7 @@ internal class SwapNotificationsFactory(
                         val patchedAmount = fromAmount.copy(
                             value = fromAmount.value - threshold,
                         )
-                        onReduceAmount(patchedAmount)
+                        onReduceByAmount(patchedAmount, threshold)
                     },
                 ),
             )
