@@ -113,10 +113,19 @@ object NotificationsFactory {
         }
     }
 
+    /**
+     * Adds Existential Warning
+     *
+     * @param existentialDeposit existential deposit of blockchain
+     * @param feeAmount amount of fee spending for transaction
+     * @param sendingAmount amount sending by user (excluding fee for coins)
+     * @param cryptoCurrencyStatus blockchain currency status
+     * @param onReduceClick action to leave existential amount in balance after transaction
+     */
     fun MutableList<NotificationUM>.addExistentialWarningNotification(
         existentialDeposit: BigDecimal?,
         feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
+        sendingAmount: BigDecimal,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         onReduceClick: (
             reduceAmountBy: BigDecimal,
@@ -129,7 +138,7 @@ object NotificationsFactory {
         val spendingAmount = if (cryptoCurrency is CryptoCurrency.Token) {
             feeAmount
         } else {
-            receivedAmount + feeAmount
+            sendingAmount
         }
         val diff = balance.minus(spendingAmount)
         if (existentialDeposit != null && diff >= BigDecimal.ZERO && existentialDeposit > diff) {
