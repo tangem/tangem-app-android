@@ -19,4 +19,8 @@ sealed class OnboardingRoute : Route {
     data class ManageTokens(
         val userWallet: UserWallet,
     ) : OnboardingRoute()
+
+    data class Done(
+        val onDone: () -> Unit,
+    ) : OnboardingRoute()
 }
