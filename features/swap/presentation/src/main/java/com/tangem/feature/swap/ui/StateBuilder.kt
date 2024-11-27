@@ -1721,7 +1721,8 @@ internal class StateBuilder(
     }
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
-        return this.divide(to, min(decimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
+        val rateDecimals = if (decimals == 0) IF_ZERO_DECIMALS_TO_SHOW else decimals
+        return this.divide(to, min(rateDecimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
     }
 
     private fun toBigDecimalOrNull(text: String): BigDecimal? {
@@ -1748,6 +1749,7 @@ internal class StateBuilder(
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
         private const val MAX_DECIMALS_TO_SHOW = 8
+        private const val IF_ZERO_DECIMALS_TO_SHOW = 2
         private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
         private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
