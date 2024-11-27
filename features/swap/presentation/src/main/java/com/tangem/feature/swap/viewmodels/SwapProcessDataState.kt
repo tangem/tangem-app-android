@@ -7,6 +7,7 @@ import com.tangem.feature.swap.domain.models.ui.RequestApproveStateData
 import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.domain.models.ui.TokensDataStateExpress
 import com.tangem.feature.swap.domain.models.ui.TxFee
+import java.math.BigDecimal
 
 data class SwapProcessDataState(
     // Initial network id
@@ -15,6 +16,7 @@ data class SwapProcessDataState(
     val feePaidCryptoCurrency: CryptoCurrencyStatus? = null,
     // Amount from input
     val amount: String? = null,
+    val reduceBalanceBy: BigDecimal = BigDecimal.ZERO,
     val approveDataModel: RequestApproveStateData? = null,
     val swapDataModel: SwapDataModel? = null,
     val selectedFee: TxFee? = null,

@@ -193,7 +193,7 @@ internal class AddStakingNotificationsTransformer(
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
             feeAmount = feeState?.fee?.amount?.value.orZero(),
-            receivedAmount = sendingAmount,
+            sendingAmount = sendingAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onReduceClick = prevState.clickIntents::onAmountReduceByClick,
         )
