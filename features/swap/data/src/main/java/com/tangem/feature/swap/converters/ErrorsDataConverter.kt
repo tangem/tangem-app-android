@@ -92,8 +92,8 @@ internal class ErrorsDataConverter(
         return ExpressDataError.ProviderDifferentAmountError(
             code = error.code,
             decimals = decimals,
-            fromAmount = fromAmount,
-            fromProviderAmount = fromAmountProvider,
+            fromAmount = fromAmount.movePointLeft(decimals),
+            fromProviderAmount = fromAmountProvider.movePointLeft(decimals),
         )
     }
 }
