@@ -3,9 +3,8 @@ package com.tangem.data.onramp.converters.error
 import com.squareup.moshi.JsonAdapter
 import com.tangem.datasource.api.express.models.response.ExpressError
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.domain.onramp.model.OnrampAmount
 import com.tangem.domain.onramp.model.OnrampQuote
-import com.tangem.domain.tokens.model.Amount
-import com.tangem.domain.tokens.model.AmountType
 import com.tangem.utils.converter.Converter
 
 internal class OnrampQuotesErrorConverter(
@@ -40,7 +39,6 @@ internal class OnrampQuotesErrorConverter(
                 amountWithOffset = minAmount,
                 decimals = decimals,
                 symbol = input.amount.currencySymbol,
-                type = input.amount.type,
             ),
         )
     }
@@ -59,24 +57,17 @@ internal class OnrampQuotesErrorConverter(
                 amountWithOffset = maxAmount,
                 decimals = decimals,
                 symbol = input.amount.currencySymbol,
-                type = input.amount.type,
             ),
         )
     }
 
-    private fun createFromAmountWithOffset(
-        amountWithOffset: String,
-        decimals: Int,
-        symbol: String,
-        type: AmountType,
-    ): Amount {
-        return Amount(
+    private fun createFromAmountWithOffset(amountWithOffset: String, decimals: Int, symbol: String): OnrampAmount {
+        return OnrampAmount(
             value = requireNotNull(
                 amountWithOffset.toBigDecimalOrNull()?.movePointLeft(decimals),
             ) { "wrong amount format, use only digits" },
             decimals = decimals,
-            currencySymbol = symbol,
-            type = type,
+            symbol = symbol,
         )
     }
 }
