@@ -1,6 +1,9 @@
 package com.tangem.features.onramp.swap.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -27,6 +30,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val controller: SwapSelectTokensController,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
@@ -38,6 +42,12 @@ internal class SwapSelectTokensModel @Inject constructor(
 
     private val params = paramsContainer.require<SwapSelectTokensComponent.Params>()
 
+    init {
+        controller.update {
+            it.copy(onBackClick = ::onBackClick)
+        }
+    }
+
     /**
      * Select "from" token
      *
@@ -45,12 +55,16 @@ internal class SwapSelectTokensModel @Inject constructor(
      * @param status                 crypto currency status
      */
     fun selectFromToken(selectedTokenItemState: TokenItemState, status: CryptoCurrencyStatus) {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.SwapTokenClicked(currencySymbol = status.currency.symbol),
+        )
+
         _fromCurrencyStatus.value = status
 
         controller.update(
             transformer = SelectFromTokenTransformer(
                 selectedTokenItemState = selectedTokenItemState,
-                onRemoveClick = ::removeSelectedFromToken,
+                onRemoveClick = ::onRemoveFromTokenClick,
             ),
         )
     }
@@ -62,6 +76,10 @@ internal class SwapSelectTokensModel @Inject constructor(
      * @param status                 crypto currency status
      */
     fun selectToToken(selectedTokenItemState: TokenItemState, status: CryptoCurrencyStatus) {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.ReceiveTokenClicked(currencySymbol = status.currency.symbol),
+        )
+
         modelScope.launch {
             _toCurrencyStatus.value = status
 
@@ -86,6 +104,26 @@ internal class SwapSelectTokensModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun onBackClick() {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.ButtonClose(source = AnalyticsParam.ScreensSources.Swap),
+        )
+
+        router.pop()
+    }
+
+    private fun onRemoveFromTokenClick() {
+        val currencySymbol = requireNotNull(_fromCurrencyStatus.value?.currency?.symbol) {
+            "Token was not selected"
+        }
+
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.RemoveTokenClicked(currencySymbol = currencySymbol),
+        )
+
+        removeSelectedFromToken()
     }
 
     private fun removeSelectedFromToken() {
