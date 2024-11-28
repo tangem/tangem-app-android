@@ -58,7 +58,7 @@ internal class InitializeWalletsTransformer(
             multiCurrencyCreator = {
                 WalletState.MultiCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
-                    buttons = createMultiWalletDisabledButtons(),
+                    buttons = createMultiWalletEnabledButtons(),
                     bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                 )
@@ -67,7 +67,7 @@ internal class InitializeWalletsTransformer(
                 WalletState.SingleCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
                     bottomSheetConfig = null,
-                    buttons = createDisabledButtons(),
+                    buttons = createSingleWalletDisabledButtons(),
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                     onExploreClick = clickIntents::onExploreClick,
                 )
@@ -75,7 +75,7 @@ internal class InitializeWalletsTransformer(
             visaWalletCreator = {
                 WalletState.Visa.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
-                    buttons = createMultiWalletDisabledButtons(),
+                    buttons = createMultiWalletEnabledButtons(),
                     bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                     onExploreClick = clickIntents::onExploreClick,
@@ -95,18 +95,17 @@ internal class InitializeWalletsTransformer(
         )
     }
 
-    private fun createMultiWalletDisabledButtons(): PersistentList<WalletManageButton> {
+    private fun createMultiWalletEnabledButtons(): PersistentList<WalletManageButton> {
         if (!walletFeatureToggles.isMainActionButtonsEnabled) return persistentListOf()
 
         return persistentListOf(
-            WalletManageButton.Receive(enabled = false, dimContent = false, onClick = {}, onLongClick = null),
-            WalletManageButton.Send(enabled = false, dimContent = false, onClick = {}),
             WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Swap(enabled = false, dimContent = false, onClick = {}),
             WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
         )
     }
 
-    private fun createDisabledButtons(): PersistentList<WalletManageButton> {
+    private fun createSingleWalletDisabledButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
             WalletManageButton.Receive(enabled = false, dimContent = false, onClick = {}, onLongClick = null),
             WalletManageButton.Send(enabled = false, dimContent = false, onClick = {}),
