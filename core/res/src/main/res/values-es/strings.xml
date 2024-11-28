@@ -6,8 +6,6 @@
   <string name="action_buttons_swap_empty_search_message">¿No encuentras el token en tu billetera? Consulte los mercados para encontrarlo y agregarlo al intercambio</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">No hay tokens disponibles para intercambiar con el token seleccionado. Por favor elige otro.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No hay par disponible</string>
-  <string name="action_buttons_you_want_to_receive">Desea recibir</string>
-  <string name="action_buttons_you_want_to_swap">Quiere intercambiar</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
