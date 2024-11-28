@@ -5,6 +5,8 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
@@ -439,16 +441,34 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletSellClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.ButtonSell(
+                status = AnalyticsParam.Status.Success, // TODO [REDACTED_JIRA]
+            ),
+        )
+
         // TODO [REDACTED_JIRA]
         appRouter.push(route = AppRoute.SellCrypto(userWalletId = userWalletId))
     }
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.ButtonSwap(
+                status = AnalyticsParam.Status.Success, // TODO [REDACTED_JIRA]
+            ),
+        )
+
         // TODO [REDACTED_JIRA]
         appRouter.push(route = AppRoute.SwapCrypto(userWalletId = userWalletId))
     }
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.ButtonBuy(
+                status = AnalyticsParam.Status.Success, // TODO [REDACTED_JIRA]
+            ),
+        )
+
         // TODO [REDACTED_JIRA]
         appRouter.push(route = AppRoute.BuyCrypto(userWalletId = userWalletId))
     }
