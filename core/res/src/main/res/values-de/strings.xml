@@ -296,7 +296,7 @@
   <string name="express_provider_recommended">Empfohlen</string>
   <string name="express_status_bought">Gekauft %s</string>
   <string name="express_status_buying">Kauf %s</string>
-  <string name="express_status_buying_active">Kauf %s...</string>
+  <string name="express_status_buying_active">Kauf %s…</string>
   <string name="express_token_list_empty_search">Keine Token gefunden. Bitte versuche eine andere Anfrage</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaktions-ID kopiert</string>
@@ -590,8 +590,11 @@
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
   <string name="qr_scanner_camera_denied_title">Kamerazugriff verweigert</string>
+  <string name="receive_bottom_sheet_no_memo_required_message">Kein Memo erforderlich</string>
   <string name="receive_bottom_sheet_warning_message">%1$s ( %2$s ) im %3$s Netzwerk</string>
+  <string name="receive_bottom_sheet_warning_message_description">Das Senden einer anderen Währung führt zu deren irreversiblem Verlust.</string>
   <string name="receive_bottom_sheet_warning_message_full">Sende nur %s an diese Adresse. Der Versand einer anderen Währung führt zu ihrem unwiderruflichen Verlust.</string>
+  <string name="receive_bottom_sheet_warning_message_title">Sende nur %s an diese Adresse.</string>
   <string name="receive_token_description">Überweise Geld von einem anderen Wallet oder einer anderen Börse</string>
   <string name="referral_button_participate">Teilnehmen</string>
   <string name="referral_error_failed_to_load_info">Die Informationen zum Empfehlungsprogramm konnten nicht geladen werden. Bitte versuche es später noch einmal.</string>
