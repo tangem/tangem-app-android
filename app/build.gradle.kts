@@ -228,8 +228,8 @@ dependencies {
     implementation(deps.armadillo)
     implementation(deps.mviCore.watcher)
     implementation(deps.kotlin.serialization)
-    implementation(deps.walletConnectCore)
-    implementation(deps.walletConnectWeb3)
+    implementation(deps.reownCore)
+    implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
 
     /** Testing libraries */
