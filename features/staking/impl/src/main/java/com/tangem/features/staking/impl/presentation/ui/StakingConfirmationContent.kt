@@ -40,9 +40,10 @@ internal fun StakingConfirmationContent(
     validatorState: StakingStates.ValidatorState,
     clickIntents: StakingClickIntents,
     type: StakingActionCommonType,
+    isSolana: Boolean, // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
-    val isAmountEditable = type == StakingActionCommonType.Enter || type == StakingActionCommonType.Exit
+    val isAmountEditable = type == StakingActionCommonType.Enter || type == StakingActionCommonType.Exit && !isSolana
     val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     val isTransactionInProgress = state.notifications.any { it is StakingNotification.Warning.TransactionInProgress }
     Column(
@@ -90,6 +91,7 @@ private fun Preview_StakingConfirmationContent() {
                 validatorState = ValidatorStatePreviewData.validatorState,
                 clickIntents = StakingClickIntentsStub,
                 type = StakingActionCommonType.Enter,
+                isSolana = false,
             )
         }
     }
