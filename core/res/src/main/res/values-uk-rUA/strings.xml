@@ -6,8 +6,6 @@
   <string name="action_buttons_swap_empty_search_message">Токен не знайдено у вашому портфелі? Перевірте ринки, щоб знайти та додати його для обміну</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Немає доступних токенів для обміну з обраним токеном. Будь ласка, оберіть інший.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Немає вільної пари</string>
-  <string name="action_buttons_you_want_to_receive">Ви хочете отримати</string>
-  <string name="action_buttons_you_want_to_swap">Ви хочете обміняти</string>
   <string name="add_custom_token_choose_network">Оберіть мережу</string>
   <string name="add_custom_token_title">Додати токен</string>
   <string name="add_tokens_title">Токени</string>

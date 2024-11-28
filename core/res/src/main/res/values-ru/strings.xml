@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
+  <string name="action_buttons_buy_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для покупки.</string>
+  <string name="action_buttons_sell_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для продажи.</string>
+  <string name="action_buttons_sell_navigation_bar_title">Продать криптовалюту</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
-  <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных токенов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
+  <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
+  <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных вариантов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Нет доступных пар</string>
-  <string name="action_buttons_you_want_to_receive">Вы хотите получить</string>
-  <string name="action_buttons_you_want_to_swap">Вы хотите обменять</string>
+  <string name="action_buttons_you_want_to_receive">Выберите токен для получения</string>
+  <string name="action_buttons_you_want_to_swap">Выберите токен для обмена</string>
   <string name="add_custom_token_choose_network">Выберите сеть</string>
   <string name="add_custom_token_title">Добавить токен</string>
   <string name="add_tokens_title">Валюты</string>
@@ -652,6 +656,10 @@
   <string name="scan_card_settings_button">Сканировать</string>
   <string name="scan_card_settings_message">Отсканируйте карту или кольцо, чтобы изменить ее настройки. Изменения затронут только ту карту или кольцо, которые вы отсканировали, и не повлияют на другие устройства, привязанные к вашему кошельку.</string>
   <string name="scan_card_settings_title">Приготовьте свой Tangem!</string>
+  <string name="selling_insufficient_balance_alert_message">На вашем балансе недостаточно средств для продажи этой криптовалюты. Пожалуйста, пополните нужный актив, чтобы продолжить.</string>
+  <string name="selling_insufficient_balance_alert_title">Недостаточно средств</string>
+  <string name="selling_regional_restriction_alert_message">Продажа криптовалюты в вашем регионе временно недоступна. Мы активно работаем над тем, чтобы добавить эту возможность. Следите за нашими новостями!</string>
+  <string name="selling_regional_restriction_alert_title">Региональные ограничения</string>
   <string name="send_additional_field_already_included">Уже содержится во введенном адресе</string>
   <string name="send_alert_fee_too_high_text">Сумма комиссии в %s раз превышает рекомендованную. Убедитесь, что указанная комиссия верна.</string>
   <string name="send_alert_fee_too_low_text">Вы указали комиссию ниже рекомендуемой, это может привести к задержке исполнения вашей транзакции. Продолжить?</string>
