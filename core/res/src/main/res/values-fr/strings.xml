@@ -370,7 +370,7 @@
   <string name="manage_tokens_wallet_selector_title">Choisissez un portefeuille</string>
   <string name="manage_tokens_wallet_support_only_one_network_title">Le portefeuille ne prend pas en charge plus d\'un réseau</string>
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
-  <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est plus pris en charge dans le portefeuille</string>
+  <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas pris en charge dans le portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Cet actif n\'est pas disponible pour ce portefeuille</string>
   <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_add_token">Ajoutez un jeton</string>
@@ -432,7 +432,6 @@
   <string name="markets_token_details_fully_diluted_valuation_description">La valeur théorique totale d\'une crypto-monnaie si toutes les pièces qui pourraient exister étaient en circulation, y compris celles qui ne circulent pas actuellement</string>
   <string name="markets_token_details_fully_diluted_valuation_full">Valorisation entièrement diluée</string>
   <string name="markets_token_details_genesis_date">Date de la Genesis</string>
-  <string name="markets_token_details_genesis_date_description">Vide</string>
   <string name="markets_token_details_high">Haut</string>
   <string name="markets_token_details_holders">Détenteurs</string>
   <string name="markets_token_details_holders_description">L\'évolution du nombre de détenteurs de jetons au cours d\'une période donnée</string>
@@ -443,7 +442,6 @@
   <string name="markets_token_details_liquidity_description">Le changement dans la quantité de liquidité disponible pour le jeton pendant la période spécifiée</string>
   <string name="markets_token_details_liquidity_full">Liquidité</string>
   <string name="markets_token_details_liquidity_index">Indice de liquidité</string>
-  <string name="markets_token_details_liquidity_index_description">Vide</string>
   <string name="markets_token_details_listed_on">Listé sur</string>
   <string name="markets_token_details_low">Faible</string>
   <string name="markets_token_details_market_capitalization">Cap. boursière</string>
@@ -517,12 +515,12 @@
   <string name="onboarding_navbar_title_creating_backup">Sauvegarde en cours</string>
   <string name="onboarding_seed_button_read_more">En savoir plus sur les seed phrases</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one">Vide</item>
+    <item quantity="one"></item>
     <item quantity="other">Écrivez ces %d mots dans l\'ordre indiqué ci-dessous et conservez-les dans un endroit sûr et secret.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Votre seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">Vide</item>
+    <item quantity="one"></item>
     <item quantity="other">%d mots</item>
   </plurals>
   <string name="onboarding_seed_import_message">Pour importer votre portefeuille, entrez votre seed phrase dans le champ ci-dessous</string>
@@ -607,9 +605,9 @@
     <item quantity="one">pour le portefeuille %d</item>
     <item quantity="other">pour les portefeuilles %d </item>
   </plurals>
-  <string name="referral_point_currencies_description">Obtiendras ^^%1$s^^ pour chaque portefeuille acheté par votre ami sur votre adresse de réseau %2$s %3$s ^^30 jours après^^</string>
+  <string name="referral_point_currencies_description">Obtiendrez ^^%1$s^^ pour chaque portefeuille acheté par votre ami sur votre adresse de réseau %2$s %3$s ^^30 jours après^^</string>
   <string name="referral_point_currencies_title">Vous</string>
-  <string name="referral_point_discount_description_prefix">Obtiendrez</string>
+  <string name="referral_point_discount_description_prefix">Obtiendra</string>
   <string name="referral_point_discount_description_suffix">lors de l\'achat d\'un portefeuille sur tangem.com</string>
   <string name="referral_point_discount_description_value">%s réduction</string>
   <string name="referral_point_discount_title">Votre ami</string>
