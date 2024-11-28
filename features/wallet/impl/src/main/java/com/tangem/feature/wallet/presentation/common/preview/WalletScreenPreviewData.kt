@@ -110,6 +110,7 @@ internal object WalletScreenPreviewData {
             balance = DASH_SIGN,
             onRenameClick = { _ -> },
             onDeleteClick = {},
+            isZeroBalance = false,
         )
     }
     private val multiWalletState by lazy {
