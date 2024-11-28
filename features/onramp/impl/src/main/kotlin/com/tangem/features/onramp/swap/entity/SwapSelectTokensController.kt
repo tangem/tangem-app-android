@@ -1,6 +1,5 @@
 package com.tangem.features.onramp.swap.entity
 
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.features.onramp.swap.entity.utils.createEmptyExchangeFrom
 import com.tangem.features.onramp.swap.entity.utils.createEmptyExchangeTo
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,19 +11,15 @@ import javax.inject.Inject
 /**
  * [SwapSelectTokensUM] controller
  *
- * @property router router
- *
 [REDACTED_AUTHOR]
  */
-internal class SwapSelectTokensController @Inject constructor(
-    private val router: Router,
-) {
+internal class SwapSelectTokensController @Inject constructor() {
 
     val state: StateFlow<SwapSelectTokensUM> get() = _state
 
     private val _state: MutableStateFlow<SwapSelectTokensUM> = MutableStateFlow(
         value = SwapSelectTokensUM(
-            onBackClick = router::pop,
+            onBackClick = {},
             exchangeFrom = createEmptyExchangeFrom(),
             exchangeTo = createEmptyExchangeTo(),
         ),
