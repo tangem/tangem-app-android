@@ -20,7 +20,6 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -85,7 +84,6 @@ internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Mo
     }
 
     LaunchedEffect(Unit) {
-        delay(timeMillis = 500)
         showConfetti = true
     }
 
