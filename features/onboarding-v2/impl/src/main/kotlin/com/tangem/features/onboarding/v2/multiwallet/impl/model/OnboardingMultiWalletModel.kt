@@ -3,10 +3,12 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.model
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -17,6 +19,7 @@ import javax.inject.Inject
 internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val router: Router,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val getCardImageUseCase = GetCardImageUseCase()
@@ -32,7 +35,6 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         ),
     )
     val backups = MutableStateFlow(MultiWalletChildParams.Backup())
-
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -40,9 +42,22 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         // if (!manager.isActivationStarted(notNullCard.cardId)) {
         //     Analytics.send(Onboarding.Started())
         // }
-        initScreenTitleSub()
+        initScreenTitle()
         loadCardArtwork()
         subscribeToBackups()
+    }
+
+    fun onBack() {
+        _uiState.update {
+            it.copy(
+                dialog = interruptBackupDialog(
+                    onConfirm = {
+                        router.pop()
+                    },
+                    dismiss = { _uiState.update { it.copy(dialog = null) } },
+                ),
+            )
+        }
     }
 
     private fun subscribeToBackups() {
@@ -82,17 +97,9 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         }
     }
 
-    private fun initScreenTitleSub() {
+    private fun initScreenTitle() {
         val title = screenTitleByStep(getInitialStep())
         params.titleProvider.changeTitle(title)
-
-        modelScope.launch {
-            state.map { it.currentStep }
-                .collectLatest { step ->
-                    val stepTitle = screenTitleByStep(step)
-                    params.titleProvider.changeTitle(stepTitle)
-                }
-        }
     }
 
     private fun loadCardArtwork() {
