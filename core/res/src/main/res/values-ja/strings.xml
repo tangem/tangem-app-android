@@ -2,12 +2,13 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、買付のために追加してください</string>
   <string name="action_buttons_sell_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、売却のために追加してください</string>
+  <string name="action_buttons_sell_navigation_bar_title">暗号資産を売却</string>
   <string name="action_buttons_swap_choose_token">トークンを選択</string>
   <string name="action_buttons_swap_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、スワップのために追加してください</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">選択したトークンと交換できるトークンがありません。別のトークンを選択してください。</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">利用可能なペアがありません</string>
-  <string name="action_buttons_you_want_to_receive">受け取りたい</string>
-  <string name="action_buttons_you_want_to_swap">交換したい</string>
+  <string name="action_buttons_you_want_to_receive">受け取りたいトークンを選択します</string>
+  <string name="action_buttons_you_want_to_swap">スワップしたいトークンを選択します</string>
   <string name="add_custom_token_choose_network">ネットワークを選択</string>
   <string name="add_custom_token_title">カスタムトークンの追加</string>
   <string name="add_tokens_title">トークンの管理</string>
