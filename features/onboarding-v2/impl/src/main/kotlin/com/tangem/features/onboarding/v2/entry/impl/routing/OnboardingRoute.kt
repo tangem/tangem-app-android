@@ -4,6 +4,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.TitleProvider
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 
 sealed class OnboardingRoute : Route {
 
@@ -13,6 +14,7 @@ sealed class OnboardingRoute : Route {
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
         val withSeedPhraseFlow: Boolean,
+        val mode: OnboardingMultiWalletComponent.Mode,
         val onDone: (UserWallet) -> Unit,
     ) : OnboardingRoute()
 
