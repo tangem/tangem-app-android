@@ -14,6 +14,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditiona
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.utils.extensions.isZero
 import org.joda.time.DateTime
 import org.joda.time.Days
 
@@ -76,6 +77,7 @@ internal class SetBalancesAndLimitsTransformer(
                     crypto(visaCurrency.symbol, visaCurrency.decimals)
                 },
                 cardCount = userWallet.getCardsCount(),
+                isZeroBalance = visaCurrency.balances.available.isZero(),
             )
         }
     }

@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="action_buttons_buy_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Kauf hinzuzufügen</string>
-  <string name="action_buttons_sell_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Verkauf hinzuzufügen</string>
+  <string name="action_buttons_sell_empty_search_message">Token nicht in Ihrem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Verkauf hinzuzufügen</string>
   <string name="action_buttons_swap_choose_token">Wähle den Token</string>
   <string name="action_buttons_swap_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es für Swaps zu finden und hinzuzufügen</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Es gibt keine verfügbaren Token, die mit dem ausgewählten Token getauscht werden können. Bitte wähle einen anderen.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Kein verfügbares Paar</string>
-  <string name="action_buttons_you_want_to_receive">Du möchtest erhalten</string>
-  <string name="action_buttons_you_want_to_swap">Du möchtest tauschen</string>
+  <string name="action_buttons_you_want_to_receive">Wähle den Token aus, das Du erhalten möchtest</string>
+  <string name="action_buttons_you_want_to_swap">Wähle den Token, den Du tauschen möchtest</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
