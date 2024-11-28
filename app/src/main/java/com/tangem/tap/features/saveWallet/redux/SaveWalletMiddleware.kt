@@ -5,11 +5,11 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchWithMain
@@ -110,7 +110,11 @@ internal class SaveWalletMiddleware {
             // TODO: Remove after onboarding refactoring
             Analytics.send(Onboarding.EnableBiometrics(AnalyticsParam.OnOffState.On))
         } else {
-            Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.On))
+            Analytics.send(
+                MainScreenAnalyticsEvent.EnableBiometrics(
+                    state = com.tangem.core.analytics.models.AnalyticsParam.OnOffState.On,
+                ),
+            )
         }
 
         /*
@@ -148,7 +152,11 @@ internal class SaveWalletMiddleware {
             // TODO: Remove after onboarding refactoring
             Analytics.send(Onboarding.EnableBiometrics(AnalyticsParam.OnOffState.Off))
         } else {
-            Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.Off))
+            Analytics.send(
+                MainScreenAnalyticsEvent.EnableBiometrics(
+                    com.tangem.core.analytics.models.AnalyticsParam.OnOffState.Off,
+                ),
+            )
         }
     }
 
