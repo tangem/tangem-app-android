@@ -235,6 +235,10 @@ internal class ChildFactory @Inject constructor(
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
                         startBackupFlow = route.startFromBackup,
+                        multiWalletMode = when (route.mode) {
+                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
+                            AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                        },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
                 )

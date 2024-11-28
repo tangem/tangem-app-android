@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -93,13 +94,10 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         override val state = innerNavigationStateFlow
 
         override fun pop(onComplete: (Boolean) -> Unit) {
-            when (childStack.active.configuration) {
-                CreateWallet -> { } // TODO show dialog
-                ChooseBackupOption -> { } // TODO show dialog
-                SeedPhrase -> { componentScope.launch { backButtonClickFlow.emit(Unit) } }
-                AddBackupDevice -> {}
-                Finalize -> {}
-                Done -> {}
+            if (childStack.active.configuration == SeedPhrase) {
+                componentScope.launch { backButtonClickFlow.emit(Unit) }
+            } else {
+                model.onBack()
             }
         }
     }
@@ -237,6 +235,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
         val artworksState by artworksState.collectAsStateWithLifecycle()
+
+        BackHandler { model.onBack() }
 
         OnboardingMultiWallet(
             state = state,

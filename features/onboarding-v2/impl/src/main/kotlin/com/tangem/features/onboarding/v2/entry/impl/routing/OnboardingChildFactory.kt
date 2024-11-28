@@ -21,6 +21,7 @@ internal class OnboardingChildFactory @Inject constructor(
                     withSeedPhraseFlow = route.withSeedPhraseFlow,
                     titleProvider = route.titleProvider,
                     onDone = route.onDone,
+                    mode = route.mode,
                 ),
             )
             is OnboardingRoute.ManageTokens -> onboardingManageTokensComponentFactory.create(
