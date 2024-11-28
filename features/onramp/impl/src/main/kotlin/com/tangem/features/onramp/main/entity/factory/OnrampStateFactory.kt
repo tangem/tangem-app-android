@@ -30,7 +30,6 @@ internal class OnrampStateFactory(
             currency = currency,
             onClose = onClose,
             openSettings = onrampIntents::openSettings,
-            onBuyClick = onrampIntents::onBuyClick,
         )
     }
 
