@@ -73,6 +73,7 @@ class MultiWalletBackupModel @Inject constructor(
                     },
                 )
             }
+            // TODO
             is BackupService.State.FinalizingBackupCard -> TODO()
             BackupService.State.FinalizingPrimaryCard -> TODO()
             BackupService.State.Finished -> TODO()
