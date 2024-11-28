@@ -13,8 +13,14 @@ interface OnboardingMultiWalletComponent : ComposableContentComponent, InnerNavi
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
         val withSeedPhraseFlow: Boolean,
+        val mode: Mode,
         val onDone: (UserWallet) -> Unit,
     )
+
+    enum class Mode {
+        Onboarding,
+        AddBackup,
+    }
 
     interface Factory : ComponentFactory<Params, OnboardingMultiWalletComponent>
 }
