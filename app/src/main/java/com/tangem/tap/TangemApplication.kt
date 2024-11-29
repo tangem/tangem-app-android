@@ -9,6 +9,7 @@ import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.ParamsInterceptor
@@ -189,6 +190,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val dispatchers: CoroutineDispatcherProvider
         get() = entryPoint.getCoroutineDispatcherProvider()
+
+    private val excludedBlockchains: ExcludedBlockchains
+        get() = entryPoint.getExcludedBlockchains()
     // endregion
 
     override fun onCreate() {
@@ -269,6 +273,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                    excludedBlockchains = excludedBlockchains,
                 ),
             ),
         )
