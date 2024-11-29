@@ -6,6 +6,7 @@ import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletCo
 import com.tangem.features.onboarding.v2.multiwallet.impl.DefaultOnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.model.MultiWalletAccessCodeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.MultiWalletBackupModel
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.model.Wallet1ChooseOptionModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model.MultiWalletCreateWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model.MultiWalletFinalizeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.MultiWalletSeedPhraseModel
@@ -60,4 +61,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(MultiWalletFinalizeModel::class)
     fun provideModel6(model: MultiWalletFinalizeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(Wallet1ChooseOptionModel::class)
+    fun provideModel7(model: Wallet1ChooseOptionModel): Model
 }
