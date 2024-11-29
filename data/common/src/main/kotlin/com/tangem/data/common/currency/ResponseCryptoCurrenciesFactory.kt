@@ -3,6 +3,7 @@ package com.tangem.data.common.currency
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -12,7 +13,9 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import timber.log.Timber
 import com.tangem.blockchain.common.Token as SdkToken
 
-class ResponseCryptoCurrenciesFactory {
+class ResponseCryptoCurrenciesFactory(
+    private val excludedBlockchains: ExcludedBlockchains,
+) {
 
     fun createCurrency(currencyId: String, response: UserTokensResponse, scanResponse: ScanResponse): CryptoCurrency {
         return response.tokens
@@ -65,7 +68,12 @@ class ResponseCryptoCurrenciesFactory {
         responseToken: UserTokensResponse.Token,
         scanResponse: ScanResponse,
     ): CryptoCurrency.Coin? {
-        val network = getNetwork(blockchain, responseToken.derivationPath, scanResponse) ?: return null
+        val network = getNetwork(
+            blockchain,
+            responseToken.derivationPath,
+            scanResponse,
+            excludedBlockchains,
+        ) ?: return null
 
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
@@ -111,8 +119,13 @@ class ResponseCryptoCurrenciesFactory {
         responseDerivationPath: String?,
         scanResponse: ScanResponse,
     ): CryptoCurrency.Token? {
-        val network = getNetwork(blockchain, responseDerivationPath, scanResponse)
-            ?: return null
+        val network = getNetwork(
+            blockchain,
+            responseDerivationPath,
+            scanResponse,
+            excludedBlockchains,
+        ) ?: return null
+
         val id = getTokenId(network, sdkToken)
 
         return CryptoCurrency.Token(
