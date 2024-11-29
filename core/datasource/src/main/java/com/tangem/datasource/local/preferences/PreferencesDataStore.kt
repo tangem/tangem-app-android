@@ -10,6 +10,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.tangem.datasource.local.preferences.PreferencesDataStore.INSTANCE
+import com.tangem.datasource.local.preferences.PreferencesKeys.APP_LOGS_KEY
+import com.tangem.datasource.local.preferences.utils.CleanupKeyMigration
 import com.tangem.datasource.local.preferences.utils.SharedPreferencesKeyMigration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -77,6 +79,7 @@ internal object PreferencesDataStore {
                 legacyKeyName = LEGACY_DEFAULT_KEY_NAME,
                 keyName = PreferencesKeys.BALANCE_HIDING_SETTINGS_KEY.name,
             ),
+            CleanupKeyMigration(key = APP_LOGS_KEY),
         )
     }
 }
