@@ -329,5 +329,12 @@ sealed class AppRoute(val path: String) : Route {
     data class Onboarding(
         val scanResponse: ScanResponse,
         val startFromBackup: Boolean,
-    ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}")
+        val mode: Mode = Mode.Onboarding,
+    ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}") {
+
+        enum class Mode {
+            Onboarding, // general Mode
+            AddBackup, // continue backup process for existing wallet 1
+        }
+    }
 }
