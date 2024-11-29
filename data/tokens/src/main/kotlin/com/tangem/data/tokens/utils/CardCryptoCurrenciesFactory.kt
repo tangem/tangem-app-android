@@ -1,6 +1,7 @@
 package com.tangem.data.tokens.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.util.cardTypesResolver
@@ -8,9 +9,12 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 
-class CardCryptoCurrenciesFactory(private val demoConfig: DemoConfig) {
+class CardCryptoCurrenciesFactory(
+    private val demoConfig: DemoConfig,
+    excludedBlockchains: ExcludedBlockchains,
+) {
 
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
     fun createDefaultCoinsForMultiCurrencyCard(scanResponse: ScanResponse): List<CryptoCurrency.Coin> {
         val card = scanResponse.card
