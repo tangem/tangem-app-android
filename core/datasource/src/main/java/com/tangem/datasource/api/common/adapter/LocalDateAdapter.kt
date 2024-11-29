@@ -10,8 +10,12 @@ internal class LocalDateAdapter : JsonAdapter<LocalDate>() {
 
     @FromJson
     override fun fromJson(reader: JsonReader): LocalDate? {
-        val dateString = reader.nextString()
-        return LocalDate.parse(dateString, formatter)
+        return if (reader.peek() == JsonReader.Token.NULL) {
+            reader.nextNull<LocalDate>()
+        } else {
+            val dateString = reader.nextString()
+            return LocalDate.parse(dateString, formatter)
+        }
     }
 
     @ToJson
