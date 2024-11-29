@@ -8,8 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.Text
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.extensions.TextReference
@@ -85,16 +87,17 @@ private fun Button(
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
 ) {
+    val context = LocalContext.current
     val backgroundColor by animateColorAsState(
         targetValue = if (config.enabled) color else TangemTheme.colors.button.disabled,
         label = "Update background color",
     )
-    val context = LocalContext.current
-    Row(
+
+    Box(
         modifier = modifier
-            .heightIn(min = TangemTheme.dimens.size36)
+            .heightIn(min = 36.dp)
+            .widthIn(min = 100.dp)
             .clip(shape)
-            .background(color = backgroundColor)
             .combinedClickable(
                 enabled = config.enabled,
                 onClick = config.onClick,
@@ -107,44 +110,74 @@ private fun Button(
                     }
                 },
             )
-            .padding(start = TangemTheme.dimens.spacing16, end = TangemTheme.dimens.spacing24)
+            .background(color = backgroundColor),
+    ) {
+        Content(
+            modifier = Modifier.align(Alignment.Center),
+            config = config,
+        )
+
+        if (config.isInProgress) {
+            Loading(
+                modifier = Modifier
+                    .align(alignment = Alignment.Center)
+                    .matchParentSize(),
+                backgroundColor = backgroundColor,
+            )
+        }
+    }
+}
+
+@Composable
+private fun Content(config: ActionButtonConfig, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .padding(
+                start = TangemTheme.dimens.spacing16,
+                end = TangemTheme.dimens.spacing24,
+            )
             .padding(vertical = TangemTheme.dimens.spacing8),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val iconTint by animateColorAsState(
-            targetValue = when {
-                !config.enabled -> TangemTheme.colors.icon.informative
-                config.dimContent -> TangemTheme.colors.icon.informative
-                else -> TangemTheme.colors.icon.primary1
-            },
-            label = "Update tint color",
-        )
-
+        val iconTint = when {
+            !config.enabled -> TangemTheme.colors.icon.informative
+            config.dimContent -> TangemTheme.colors.icon.informative
+            else -> TangemTheme.colors.icon.primary1
+        }
         Icon(
+            modifier = Modifier.size(size = TangemTheme.dimens.size20),
             painter = painterResource(id = config.iconResId),
             contentDescription = null,
-            modifier = Modifier.size(size = TangemTheme.dimens.size20),
             tint = iconTint,
         )
 
         SpacerW8()
 
-        val textColor by animateColorAsState(
-            targetValue = when {
-                !config.enabled -> TangemTheme.colors.text.disabled
-                config.dimContent -> TangemTheme.colors.text.tertiary
-                else -> TangemTheme.colors.text.primary1
-            },
-            label = "Update text color",
-        )
-
+        val textColor = when {
+            !config.enabled -> TangemTheme.colors.text.disabled
+            config.dimContent -> TangemTheme.colors.text.tertiary
+            else -> TangemTheme.colors.text.primary1
+        }
         Text(
             text = config.text.resolveReference(),
             color = textColor,
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
             style = TangemTheme.typography.button,
+        )
+    }
+}
+
+@Composable
+private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.background(color = backgroundColor),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(TangemTheme.dimens.size24),
+            color = TangemTheme.colors.icon.accent,
         )
     }
 }
@@ -187,6 +220,13 @@ private class ActionStateProvider : CollectionPreviewParameterProvider<ActionBut
             iconResId = R.drawable.ic_arrow_down_24,
             enabled = false,
             onClick = {},
+        ),
+        ActionButtonConfig(
+            text = TextReference.Str(value = "Loading"),
+            iconResId = R.drawable.ic_arrow_down_24,
+            enabled = false,
+            onClick = {},
+            isInProgress = true,
         ),
     ),
 )
