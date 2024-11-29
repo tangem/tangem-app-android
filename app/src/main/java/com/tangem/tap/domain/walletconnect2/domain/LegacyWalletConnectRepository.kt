@@ -21,7 +21,7 @@ interface LegacyWalletConnectRepository {
 
     fun disconnect(topic: String)
 
-    fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>)
+    fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>, blockchainNames: List<String>)
 
     fun reject()
 

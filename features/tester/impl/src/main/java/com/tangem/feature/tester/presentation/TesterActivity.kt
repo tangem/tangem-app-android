@@ -2,8 +2,10 @@ package com.tangem.feature.tester.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -17,6 +19,8 @@ import com.tangem.feature.tester.presentation.actions.TesterActionsScreen
 import com.tangem.feature.tester.presentation.actions.TesterActionsViewModel
 import com.tangem.feature.tester.presentation.environments.ui.EnvironmentTogglesScreen
 import com.tangem.feature.tester.presentation.environments.viewmodels.EnvironmentsTogglesViewModel
+import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsScreen
+import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsViewModel
 import com.tangem.feature.tester.presentation.featuretoggles.ui.FeatureTogglesScreen
 import com.tangem.feature.tester.presentation.featuretoggles.viewmodels.FeatureTogglesViewModel
 import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
@@ -70,6 +74,9 @@ internal class TesterActivity : ComposeActivity() {
                         onBackClick = { appRouter.pop { finish() } },
                         onFeatureTogglesClick = { innerTesterRouter.open(TesterScreen.FEATURE_TOGGLES) },
                         onEnvironmentTogglesClick = { innerTesterRouter.open(TesterScreen.ENVIRONMENTS_TOGGLES) },
+                        onExcludedBlockchainsClick = {
+                            innerTesterRouter.open(TesterScreen.EXCLUDED_BLOCKCHAINS)
+                        },
                         onTesterActionsClick = { innerTesterRouter.open(TesterScreen.TESTER_ACTIONS) },
                     ),
                 )
@@ -99,6 +106,15 @@ internal class TesterActivity : ComposeActivity() {
                 }
 
                 TesterActionsScreen(state = viewModel.uiState)
+            }
+
+            composable(route = TesterScreen.EXCLUDED_BLOCKCHAINS.name) {
+                val viewModel = hiltViewModel<ExcludedBlockchainsViewModel>().apply {
+                    setupNavigation(innerTesterRouter, appFinisher)
+                }
+
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                ExcludedBlockchainsScreen(state = state)
             }
         }
     }
