@@ -74,6 +74,7 @@ import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
+import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
@@ -392,6 +393,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun initIntentHandlers() {
         val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
+        intentProcessor.addHandler(OnPushClickedIntentHandler(analyticsEventsHandler))
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
     }
