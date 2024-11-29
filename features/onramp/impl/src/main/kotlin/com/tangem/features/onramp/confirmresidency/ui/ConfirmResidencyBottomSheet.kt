@@ -115,18 +115,14 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
             maxLines = 1,
         )
 
-        Text(
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),
-            text = stringResource(
-                id = if (isCountrySupported) {
-                    R.string.onramp_residency_bottomsheet_country_subtitle
-                } else {
-                    R.string.onramp_residency_bottomsheet_country_not_supported
-                },
-            ),
-            color = if (isCountrySupported) TangemTheme.colors.text.tertiary else TangemTheme.colors.text.warning,
-            style = TangemTheme.typography.body2,
-        )
+        if (!isCountrySupported) {
+            Text(
+                modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),
+                text = stringResource(id = R.string.onramp_residency_bottomsheet_country_not_supported),
+                color = TangemTheme.colors.text.warning,
+                style = TangemTheme.typography.body2,
+            )
+        }
     }
 }
 
