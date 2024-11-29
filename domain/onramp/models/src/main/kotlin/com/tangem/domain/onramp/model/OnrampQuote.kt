@@ -1,8 +1,5 @@
 package com.tangem.domain.onramp.model
 
-import com.tangem.domain.tokens.model.Amount
-import java.math.BigDecimal
-
 sealed class OnrampQuote {
 
     abstract val paymentMethod: OnrampPaymentMethod
@@ -11,10 +8,10 @@ sealed class OnrampQuote {
     data class Data(
         override val paymentMethod: OnrampPaymentMethod,
         override val provider: OnrampProvider,
-        val fromAmount: BigDecimal,
-        val toAmount: BigDecimal,
-        val minFromAmount: BigDecimal,
-        val maxFromAmount: BigDecimal,
+        val fromAmount: OnrampAmount,
+        val toAmount: OnrampAmount,
+        val minFromAmount: OnrampAmount,
+        val maxFromAmount: OnrampAmount,
     ) : OnrampQuote()
 
     sealed class Error : OnrampQuote() {
@@ -22,13 +19,13 @@ sealed class OnrampQuote {
         data class AmountTooSmallError(
             override val paymentMethod: OnrampPaymentMethod,
             override val provider: OnrampProvider,
-            val amount: Amount,
+            val amount: OnrampAmount,
         ) : Error()
 
         data class AmountTooBigError(
             override val paymentMethod: OnrampPaymentMethod,
             override val provider: OnrampProvider,
-            val amount: Amount,
+            val amount: OnrampAmount,
         ) : Error()
     }
 }
