@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -21,6 +23,7 @@ import dagger.assisted.AssistedInject
 internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
     tokenListComponentFactory: OnrampTokenListComponent.Factory,
     availableSwapPairsComponentFactory: AvailableSwapPairsComponent.Factory,
+    analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val appComponentContext: AppComponentContext,
     @Assisted private val params: SwapSelectTokensComponent.Params,
 ) : AppComponentContext by appComponentContext, SwapSelectTokensComponent {
@@ -37,15 +40,18 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         ),
     )
 
-    private val selectToTokenListComponent: AvailableSwapPairsComponent =
-        availableSwapPairsComponentFactory.create(
-            context = child(key = "select_to_token_list"),
-            params = AvailableSwapPairsComponent.Params(
-                userWalletId = params.userWalletId,
-                selectedStatus = model.fromCurrencyStatus,
-                onTokenClick = model::selectToToken,
-            ),
-        )
+    private val selectToTokenListComponent: AvailableSwapPairsComponent = availableSwapPairsComponentFactory.create(
+        context = child(key = "select_to_token_list"),
+        params = AvailableSwapPairsComponent.Params(
+            userWalletId = params.userWalletId,
+            selectedStatus = model.fromCurrencyStatus,
+            onTokenClick = model::selectToToken,
+        ),
+    )
+
+    init {
+        analyticsEventHandler.send(event = MainScreenAnalyticsEvent.SwapScreenOpened)
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
