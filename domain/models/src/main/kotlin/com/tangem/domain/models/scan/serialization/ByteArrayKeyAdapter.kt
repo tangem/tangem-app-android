@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.userWalletList.utils.json
+package com.tangem.domain.models.scan.serialization
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
 import com.tangem.common.extensions.ByteArrayKey
 
-internal class ByteArrayKeyAdapter {
+class ByteArrayKeyAdapter {
     @ToJson
     fun toJson(writer: JsonWriter, src: ByteArrayKey, byteArrayAdapter: JsonAdapter<ByteArray>) {
         byteArrayAdapter.toJson(writer, src.bytes)
