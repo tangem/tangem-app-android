@@ -295,7 +295,10 @@ sealed class AppRoute(val path: String) : Route {
     }
 
     @Serializable
-    data class Onramp(val currency: CryptoCurrency) : AppRoute(path = "/onramp/${currency.symbol}"), RouteBundleParams {
+    data class Onramp(
+        val userWalletId: UserWalletId,
+        val currency: CryptoCurrency,
+    ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
 
@@ -322,6 +325,7 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/swap_crypto/${userWalletId.stringValue}")
 
     // Onboarding V2
+    @Serializable
     data class Onboarding(
         val scanResponse: ScanResponse,
         val startFromBackup: Boolean,
