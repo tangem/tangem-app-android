@@ -31,10 +31,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.ImmutableList
@@ -118,7 +115,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
 @Composable
 private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest) {
     FooterContainer(
-        footer = stringResource(id = R.string.give_permission_policy_type_footer),
+        footer = resourceReference(R.string.give_permission_policy_type_footer),
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         AmountItem(
@@ -130,7 +127,7 @@ private fun ApprovalBottomSheetInfo(data: GiveTxPermissionState.ReadyForRequest)
     }
     SpacerH16()
     FooterContainer(
-        footer = data.footerText.resolveReference(),
+        footer = data.footerText,
         modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
     ) {
         FeeItem(fee = data.fee)

@@ -151,3 +151,11 @@ suspend inline fun <reified T> AppPreferencesStore.getObjectSetSync(key: Prefere
         ?.let(adapter::fromJson)
         .orEmpty()
 }
+
+/** Get flow of set of [T] by string [key], or empty if data is not found */
+inline fun <reified T> AppPreferencesStore.getObjectSet(key: Preferences.Key<String>): Flow<Set<T>> {
+    val adapter = moshi.adapter<Set<T>>(Types.newParameterizedType(Set::class.java, T::class.java))
+    return data.map {
+        it[key]?.let(adapter::fromJson) ?: emptySet()
+    }
+}
