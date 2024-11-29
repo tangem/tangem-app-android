@@ -1,6 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
-import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -22,7 +22,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val analyticsHandler: AnalyticsHandler,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val getCardImageUseCase = GetCardImageUseCase()

@@ -18,7 +18,7 @@ import com.arkivanov.decompose.router.slot.navigate
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
-import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -48,7 +48,7 @@ import kotlinx.coroutines.launch
 internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
     @Assisted private val params: OnboardingMultiWalletComponent.Params,
-    private val analyticsHandler: AnalyticsHandler,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : OnboardingMultiWalletComponent, AppComponentContext by context {
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)

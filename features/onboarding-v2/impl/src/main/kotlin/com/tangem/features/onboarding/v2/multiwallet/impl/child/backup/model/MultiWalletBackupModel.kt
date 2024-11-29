@@ -3,7 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -35,7 +35,7 @@ class MultiWalletBackupModel @Inject constructor(
     private val backupServiceHolder: BackupServiceHolder,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val tangemSdkManager: TangemSdkManager,
-    private val analyticsHandler: AnalyticsHandler,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")

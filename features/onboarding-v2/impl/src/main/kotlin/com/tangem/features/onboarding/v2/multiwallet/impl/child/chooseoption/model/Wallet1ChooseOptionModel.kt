@@ -1,6 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.model
 
-import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -25,7 +25,7 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val cardRepository: CardRepository,
     private val saveWalletUseCase: SaveWalletUseCase,
-    private val analyticsHandler: AnalyticsHandler,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()

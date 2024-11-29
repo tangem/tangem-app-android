@@ -2,7 +2,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.mode
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -43,7 +43,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val analyticsHandler: AnalyticsHandler,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
