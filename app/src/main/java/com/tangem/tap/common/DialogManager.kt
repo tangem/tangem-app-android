@@ -140,6 +140,11 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 message = state.dialog.error.message,
                 context = context,
             )
+            is WalletConnectDialog.UnsupportedWcVersion -> SimpleAlertDialog.create(
+                titleRes = R.string.common_error,
+                messageRes = R.string.unsupported_wc_version,
+                context = context,
+            )
             is BackupDialog.AttestationFailed -> AttestationFailedDialog.create(context)
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
