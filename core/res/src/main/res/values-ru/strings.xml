@@ -914,6 +914,7 @@
   <string name="tokens_list_unavailable_to_purchase_header">Недоступно для покупки</string>
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажи</string>
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обмена с %s</string>
+  <string name="tokens_list_unavailable_to_swap_source_header">Недоступно для обмена</string>
   <string name="transaction_history_contract_address">контракт: %s</string>
   <string name="transaction_history_empty_transactions">У вас еще нет транзакций</string>
   <string name="transaction_history_error_failed_to_load">Не удалось загрузить историю транзакций.\nНажмите на кнопку перезагрузки, чтобы обновить информацию.</string>
