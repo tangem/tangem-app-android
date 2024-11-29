@@ -22,6 +22,7 @@ import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponen
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetLoadingTokenItemsTransformer
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
+import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
@@ -80,24 +81,35 @@ internal class AvailableSwapPairsModel @Inject constructor(
             } else {
                 val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
 
-                val filterTokenList = currencies
+                val filterByQueryTokenList = currencies
                     .filter { it.currency != selectedStatus?.currency }
                     .filterByQuery(query = query)
-                    .filterByAvailability(availablePairs = availablePairs)
 
-                UpdateTokenItemsTransformer(
-                    appCurrency = appCurrency,
-                    onItemClick = params.onTokenClick,
-                    statuses = filterTokenList,
-                    isBalanceHidden = isBalanceHidden,
-                    hasSearchBar = currencies.isNotEmpty(),
-                    unavailableTokensHeaderReference = resourceReference(
-                        id = R.string.tokens_list_unavailable_to_swap_header,
-                        wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
-                    ),
-                    onQueryChange = ::onSearchQueryChange,
-                    onActiveChange = ::onSearchBarActiveChange,
-                )
+                if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
+                    SetNothingToFoundStateTransformer(
+                        isBalanceHidden = isBalanceHidden,
+                        hasSearchBar = currencies.isNotEmpty(),
+                        emptySearchMessageReference = resourceReference(
+                            id = R.string.action_buttons_swap_empty_search_message,
+                        ),
+                        onQueryChange = ::onSearchQueryChange,
+                        onActiveChange = ::onSearchBarActiveChange,
+                    )
+                } else {
+                    UpdateTokenItemsTransformer(
+                        appCurrency = appCurrency,
+                        onItemClick = params.onTokenClick,
+                        statuses = filterByQueryTokenList.filterByAvailability(availablePairs = availablePairs),
+                        isBalanceHidden = isBalanceHidden,
+                        hasSearchBar = currencies.isNotEmpty(),
+                        unavailableTokensHeaderReference = resourceReference(
+                            id = R.string.tokens_list_unavailable_to_swap_header,
+                            wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
+                        ),
+                        onQueryChange = ::onSearchQueryChange,
+                        onActiveChange = ::onSearchBarActiveChange,
+                    )
+                }
             }
         }
             .onEach(tokenListUMController::update)
