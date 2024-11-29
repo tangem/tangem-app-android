@@ -2,8 +2,8 @@ package com.tangem.data.markets.converters
 
 import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.BuildConfig
 import com.tangem.domain.markets.TokenMarketInfo
@@ -11,10 +11,9 @@ import com.tangem.domain.markets.TokenQuotes
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
-
-    private const val PROD_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/security_provider/"
-    private const val DEV_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api.dev/security_provider/"
+internal class TokenMarketInfoConverter(
+    private val excludedBlockchains: ExcludedBlockchains,
+) : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
 
     override fun convert(value: TokenMarketInfoResponse): TokenMarketInfo {
         return with(value) {
@@ -68,7 +67,8 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
                         decimalCount = network.decimalCount,
                     )
                 }
-                blockchain != null && blockchain.isSupportedInApp() && blockchain.canHandleTokens() -> {
+                blockchain != null && blockchain !in excludedBlockchains &&
+                    blockchain.canHandleTokens() -> {
                     TokenMarketInfo.Network(
                         networkId = network.networkId,
                         exchangeable = network.exchangeable,
@@ -192,5 +192,11 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
         } else {
             PROD_IMAGE_HOST
         }
+    }
+
+    private companion object {
+
+        const val PROD_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/security_provider/"
+        const val DEV_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api.dev/security_provider/"
     }
 }
