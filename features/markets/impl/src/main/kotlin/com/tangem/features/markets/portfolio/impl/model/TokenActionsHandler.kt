@@ -149,7 +149,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private fun onExchangeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
         router.push(
             AppRoute.Swap(
-                currency = cryptoCurrencyData.status.currency,
+                currencyFrom = cryptoCurrencyData.status.currency,
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 isInitialReverseOrder = true,
             ),
