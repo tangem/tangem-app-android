@@ -8,6 +8,7 @@ import com.tangem.data.onramp.converters.error.OnrampQuotesErrorConverter
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
@@ -16,6 +17,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -38,6 +40,9 @@ internal object OnrampDataModule {
         pairsStore: OnrampPairsStore,
         quotesStore: OnrampQuotesStore,
         quotesErrorConverter: OnrampQuotesErrorConverter,
+        walletManagersFacade: WalletManagersFacade,
+        dataSignatureVerifier: DataSignatureVerifier,
+        @NetworkMoshi moshi: Moshi,
     ): OnrampRepository {
         return DefaultOnrampRepository(
             onrampApi = onrampApi,
@@ -48,6 +53,9 @@ internal object OnrampDataModule {
             pairsStore = pairsStore,
             quotesStore = quotesStore,
             quotesErrorConverter = quotesErrorConverter,
+            walletManagersFacade = walletManagersFacade,
+            dataSignatureVerifier = dataSignatureVerifier,
+            moshi = moshi,
         )
     }
 
