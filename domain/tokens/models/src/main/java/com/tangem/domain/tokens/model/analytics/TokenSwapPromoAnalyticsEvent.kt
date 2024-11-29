@@ -37,7 +37,6 @@ sealed class TokenSwapPromoAnalyticsEvent(
     }
 
     enum class ProgramName {
-        Travala,
         OKX,
         Ring,
     }
