@@ -8,12 +8,18 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.HideKeyboardNestedScrollConnection
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
 import com.tangem.features.onramp.swap.entity.ExchangeCardUM
@@ -40,11 +46,17 @@ internal fun SwapSelectTokens(
 ) {
     BackHandler(onBack = state.onBackClick)
 
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val nestedScrollConnection = remember { HideKeyboardNestedScrollConnection(keyboardController) }
+
+    val lazyListState = rememberLazyListState()
     LazyColumn(
         modifier = modifier
+            .nestedScroll(nestedScrollConnection)
             .background(TangemTheme.colors.background.secondary)
             .imePadding()
             .systemBarsPadding(),
+        state = lazyListState,
         contentPadding = PaddingValues(bottom = 8.dp),
     ) {
         stickyHeader(key = "header") {
@@ -97,5 +109,10 @@ internal fun SwapSelectTokens(
                 }
             }
         }
+    }
+
+    // scroll to top after "from" token selection
+    LaunchedEffect(state.exchangeFrom !is ExchangeCardUM.Empty) {
+        lazyListState.scrollToItem(index = 0)
     }
 }

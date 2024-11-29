@@ -24,7 +24,19 @@ internal class SwapRouter(
         if (currentScreen == SwapNavScreen.SelectToken) {
             currentScreen = SwapNavScreen.Main
         } else {
-            router.pop()
+            val swapCryptoIndex = router.stack.indexOfFirst { it::class == AppRoute.SwapCrypto::class }
+
+            if (swapCryptoIndex == -1) {
+                router.pop()
+            } else {
+                val prevRoute = router.stack.getOrNull(index = swapCryptoIndex - 1)
+
+                if (prevRoute != null) {
+                    router.popTo(prevRoute)
+                } else {
+                    router.pop()
+                }
+            }
         }
     }
 
