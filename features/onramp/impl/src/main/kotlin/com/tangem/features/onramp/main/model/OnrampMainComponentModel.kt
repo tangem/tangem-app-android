@@ -8,10 +8,12 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCurrency
+import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.OnrampIntents
 import com.tangem.features.onramp.main.entity.OnrampMainBottomSheetConfig
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
+import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
 import com.tangem.features.onramp.utils.InputManager
@@ -58,6 +60,10 @@ internal class OnrampMainComponentModel @Inject constructor(
     init {
         checkResidenceCountry()
         subscribeToAmountChanges()
+    }
+
+    fun onProviderSelected(providerWithQuote: OnrampProviderWithQuote.Data) {
+        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(providerWithQuote) }
     }
 
     private fun checkResidenceCountry() {
@@ -125,8 +131,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         params.openSettings()
     }
 
-    override fun onBuyClick() {
-        TODO("Not yet implemented")
+    override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
+        params.openRedirectPage(quote)
     }
 
     override fun openCurrenciesList() {
@@ -134,6 +140,13 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun openProviders() {
+        val providerState = (state.value as? OnrampMainComponentUM.Content)?.providerBlockState ?: return
+        val providerContentState = providerState as? OnrampProviderBlockUM.Content ?: return
+        bottomSheetNavigation.activate(
+            OnrampMainBottomSheetConfig.ProvidersList(
+                selectedPaymentMethod = providerContentState.paymentMethod,
+            ),
+        )
     }
 
     override fun onDestroy() {
