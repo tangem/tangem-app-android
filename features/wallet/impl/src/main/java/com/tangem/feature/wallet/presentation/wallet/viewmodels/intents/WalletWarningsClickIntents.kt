@@ -104,9 +104,13 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                         canSkipBackup = false,
                     ),
                 )
+
+                // navigation action shouldn't be out of coroutine to avoid race
+                router.openOnboardingScreen(
+                    scanResponse = it.scanResponse,
+                    continueBackup = true,
+                )
             }
-            // navigation action shouldn't be out of coroutine to avoid race
-            router.openOnboardingScreen()
         }
     }
 
