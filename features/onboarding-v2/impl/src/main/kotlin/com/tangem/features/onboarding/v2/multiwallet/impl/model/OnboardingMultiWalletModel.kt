@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -7,6 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
@@ -20,6 +22,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val getCardImageUseCase = GetCardImageUseCase()
@@ -38,10 +41,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     init {
-        // TODO add analytics
-        // if (!manager.isActivationStarted(notNullCard.cardId)) {
-        //     Analytics.send(Onboarding.Started())
-        // }
+        analyticsHandler.send(OnboardingEvent.Started)
         initScreenTitle()
         loadCardArtwork()
         subscribeToBackups()
