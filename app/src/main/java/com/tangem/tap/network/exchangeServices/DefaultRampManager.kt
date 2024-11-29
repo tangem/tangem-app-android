@@ -1,5 +1,6 @@
 package com.tangem.tap.network.exchangeServices
 
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
 import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
 import com.tangem.domain.exchange.RampStateManager
@@ -25,9 +26,10 @@ internal class DefaultRampManager(
     private val currenciesRepository: CurrenciesRepository,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
+    excludedBlockchains: ExcludedBlockchains,
 ) : RampStateManager {
 
-    private val cryptoCurrencyConverter = CryptoCurrencyConverter()
+    private val cryptoCurrencyConverter = CryptoCurrencyConverter(excludedBlockchains)
 
     override fun isSellSupportedByService(cryptoCurrency: CryptoCurrency): Boolean {
         return exchangeService?.availableForSell(

@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.card
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
@@ -32,6 +33,7 @@ private typealias DerivedKeys = Map<ByteArrayKey, ExtendedPublicKeysMap>
 internal class DefaultDerivationsRepository(
     private val tangemSdkManager: TangemSdkManager,
     private val userWalletsStore: UserWalletsStore,
+    private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : DerivationsRepository {
 
@@ -49,6 +51,7 @@ internal class DefaultDerivationsRepository(
                     blockchain = Blockchain.fromNetworkId(it.value) ?: return@mapNotNull null,
                     extraDerivationPath = null,
                     scanResponse = userWallet.scanResponse,
+                    excludedBlockchains = excludedBlockchains,
                 )
             },
         )
@@ -85,6 +88,7 @@ internal class DefaultDerivationsRepository(
                         blockchain = Blockchain.fromNetworkId(backendId) ?: return@mapNotNull null,
                         extraDerivationPath = extraDerivationPath,
                         scanResponse = userWallet.scanResponse,
+                        excludedBlockchains = excludedBlockchains,
                     )
                 },
             )
