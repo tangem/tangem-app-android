@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.toggles
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 
 internal class WalletConnectFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,

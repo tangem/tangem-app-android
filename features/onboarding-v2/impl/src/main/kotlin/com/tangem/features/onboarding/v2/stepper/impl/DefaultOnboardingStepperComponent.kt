@@ -36,10 +36,10 @@ internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state by state.collectAsStateWithLifecycle()
+        val uiState by state.collectAsStateWithLifecycle()
 
         OnboardingStepper(
-            state = state,
+            state = uiState,
             onBackClick = remember(this) { params.popBack },
             onSupportButtonClick = remember(this) { ::openSupport },
             modifier = modifier,
