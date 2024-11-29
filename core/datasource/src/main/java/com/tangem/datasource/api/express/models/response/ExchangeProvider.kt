@@ -41,4 +41,7 @@ enum class ExchangeProviderType {
 
     @Json(name = "dex-bridge")
     DEX_BRIDGE,
+
+    @Json(name = "onramp")
+    ONRAMP,
 }
