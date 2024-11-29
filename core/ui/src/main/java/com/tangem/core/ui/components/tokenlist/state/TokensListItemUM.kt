@@ -48,4 +48,6 @@ sealed interface TokensListItemUM {
     data class Token(val state: TokenItemState) : TokensListItemUM {
         override val id: String = state.id
     }
+
+    data class Text(override val id: Any, val text: TextReference) : TokensListItemUM
 }
