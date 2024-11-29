@@ -898,6 +898,7 @@
   <string name="tokens_list_unavailable_to_purchase_header">Unavailable to purchase</string>
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
+  <string name="tokens_list_unavailable_to_swap_source_header">Unavailable for swap</string>
   <string name="transaction_history_contract_address">contract: %s</string>
   <string name="transaction_history_empty_transactions">You don\'t have any transactions yet</string>
   <string name="transaction_history_error_failed_to_load">Failed to load transaction history.\nClick on reload button to update the information.</string>
