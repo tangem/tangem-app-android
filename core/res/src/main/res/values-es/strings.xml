@@ -6,8 +6,6 @@
   <string name="action_buttons_swap_empty_search_message">¿No encuentras el token en tu billetera? Consulte los mercados para encontrarlo y agregarlo al intercambio</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">No hay tokens disponibles para intercambiar con el token seleccionado. Por favor elige otro.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No hay par disponible</string>
-  <string name="action_buttons_you_want_to_receive">Desea recibir</string>
-  <string name="action_buttons_you_want_to_swap">Quiere intercambiar</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
@@ -126,7 +124,7 @@
   <string name="common_fee_selector_option_market">Mercado</string>
   <string name="common_fee_selector_option_slow">Lento</string>
   <string name="common_fee_selector_title">Velocidad y tarifa</string>
-  <string name="common_generate_addresses">Obtener direcciones</string>
+  <string name="common_generate_addresses">Sincronizar direcciones</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
   <string name="common_hour">hora</string>
@@ -432,7 +430,6 @@
   <string name="markets_token_details_fully_diluted_valuation_description">El valor teórico total de una criptomoneda si todas las monedas que podrían existir estuvieran en circulación, incluidas las que actualmente no circulan.</string>
   <string name="markets_token_details_fully_diluted_valuation_full">Valoración totalmente diluida</string>
   <string name="markets_token_details_genesis_date">Dato de Genesis</string>
-  <string name="markets_token_details_genesis_date_description">Vacío</string>
   <string name="markets_token_details_high">Alto</string>
   <string name="markets_token_details_holders">Titulares</string>
   <string name="markets_token_details_holders_description">El cambio en el número de poseedores de tokens dentro de un período de tiempo específico</string>
@@ -443,7 +440,6 @@
   <string name="markets_token_details_liquidity_description">El cambio en la cantidad de liquidez disponible para el token durante el período de tiempo especificado</string>
   <string name="markets_token_details_liquidity_full">Liquidez</string>
   <string name="markets_token_details_liquidity_index">Índice de liquidez</string>
-  <string name="markets_token_details_liquidity_index_description">Vacío</string>
   <string name="markets_token_details_listed_on">Listado en</string>
   <string name="markets_token_details_low">Bajo</string>
   <string name="markets_token_details_market_capitalization">Capital. de mercado</string>
@@ -517,12 +513,12 @@
   <string name="onboarding_navbar_title_creating_backup">Creando un backup</string>
   <string name="onboarding_seed_button_read_more">Leer más sobre seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
-    <item quantity="one">Vacío</item>
+    <item quantity="one"></item>
     <item quantity="other">Escriba estas %d palabras en el orden que se indica a continuación y guárdelas en un lugar seguro y secreto.</item>
   </plurals>
   <string name="onboarding_seed_generate_title">Su seed phrase</string>
   <plurals name="onboarding_seed_generate_words_count">
-    <item quantity="one">Vacío</item>
+    <item quantity="one"></item>
     <item quantity="other">%d palabras</item>
   </plurals>
   <string name="onboarding_seed_import_message">Para importar su billetera, ingrese su seed phrase en el campo de abajo</string>
@@ -574,10 +570,11 @@
   <string name="onramp_min_amount_restriction">La cantidad a comprar debe ser como mínimo %s</string>
   <string name="onramp_no_available_providers">No hay proveedores disponibles para esta moneda</string>
   <string name="onramp_pay_with">Pagar con</string>
+  <string name="onramp_provider_max_amount">Disponible hasta %s</string>
+  <string name="onramp_provider_min_amount">Disponible desde %s</string>
   <string name="onramp_redirecting_to_provider_subtitle">Podrá completar su transacción en el proveedor externo, %s</string>
   <string name="onramp_redirecting_to_provider_title">Redirigiendo a %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Nuestros servicios no están disponibles en este país</string>
-  <string name="onramp_residency_bottomsheet_country_subtitle">Cámbielo o confírmelo</string>
   <string name="onramp_residency_bottomsheet_title">Su residencia ha sido identificada como</string>
   <string name="onramp_settings_residence">Residencia</string>
   <string name="onramp_settings_residence_description">Seleccione el país correcto para garantizar opciones de pago y servicios precisos.</string>
@@ -1006,12 +1003,12 @@
   <string name="warning_failed_to_verify_card_message">Esta tarjeta podría ser una muestra de producción o una falsificación</string>
   <string name="warning_failed_to_verify_card_title">La verificación de autenticidad falló</string>
   <string name="warning_hedera_missing_token_association_button_title">Asociar</string>
-  <string name="warning_hedera_missing_token_association_message">Este token debe estar asociado a tu cuenta de Hedera antes de que pueda recibirlo. Tarifa de asociación ~%1$s %2$s</string>
+  <string name="warning_hedera_missing_token_association_message">Este token debe estar asociado a tu cuenta de Hedera antes de que pueda recibirlo. Tarifa de asociación ~%1$s %2$s</string>
   <string name="warning_hedera_missing_token_association_message_brief">Este token debe estar asociado con su cuenta de Hedera antes de poder recibirlo.</string>
   <string name="warning_hedera_missing_token_association_title">Asocie su token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">No hay suficiente %s. Recargue su cuenta de Hedera para asociar este token</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">¿Está seguro(a) de que desea cancelar la transacción? No podrá volver a intentar realizarla.</string>
-  <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
   <string name="warning_low_signatures_message">Solo quedan %s firmas en esta tarjeta. Deba retirar todos sus fondos.</string>
   <string name="warning_low_signatures_title">Recuento de firmas bajo</string>
