@@ -25,7 +25,7 @@ internal class TransactionConverter : TwoWayConverter<OnrampTransactionDTO, Onra
             providerName = value.providerName,
             providerImageUrl = value.providerImageUrl,
             providerType = value.providerType,
-
+            redirectUrl = "", // not necessary field
         )
     }
 
