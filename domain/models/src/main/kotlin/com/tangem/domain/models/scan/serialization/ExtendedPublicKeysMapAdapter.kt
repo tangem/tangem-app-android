@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.userWalletList.utils.json
+package com.tangem.domain.models.scan.serialization
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
@@ -11,7 +11,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 
-internal class ExtendedPublicKeysMapAdapter {
+class ExtendedPublicKeysMapAdapter {
     @ToJson
     fun toJson(
         writer: JsonWriter,
