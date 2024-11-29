@@ -20,6 +20,7 @@ dependencies {
 
     /** Domain modules */
     implementation(projects.domain.onramp)
+    implementation(projects.domain.legacy)
 
     // region DI
 
