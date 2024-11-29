@@ -7,12 +7,10 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.MarketCryptoCurrencyRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,12 +25,10 @@ import kotlinx.coroutines.flow.*
 class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
     private val walletManagersFacade: WalletManagersFacade,
-    private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
-    private val stakingFeatureToggles: StakingFeatureToggles,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -134,28 +130,26 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // staking
-        if (stakingFeatureToggles.isStakingEnabled) {
-            if (isStakingAvailable(userWallet, cryptoCurrency)) {
-                val yield = kotlin.runCatching {
-                    stakingRepository.getYield(
-                        cryptoCurrencyId = cryptoCurrency.id,
-                        symbol = cryptoCurrency.symbol,
-                    )
-                }.getOrNull()
-                activeList.add(
-                    TokenActionsState.ActionState.Stake(
-                        unavailabilityReason = ScenarioUnavailabilityReason.None,
-                        yield = yield,
-                    ),
+        if (isStakingAvailable(userWallet, cryptoCurrency)) {
+            val yield = kotlin.runCatching {
+                stakingRepository.getYield(
+                    cryptoCurrencyId = cryptoCurrency.id,
+                    symbol = cryptoCurrency.symbol,
                 )
-            } else {
-                disabledList.add(
-                    TokenActionsState.ActionState.Stake(
-                        unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
-                        yield = null,
-                    ),
-                )
-            }
+            }.getOrNull()
+            activeList.add(
+                TokenActionsState.ActionState.Stake(
+                    unavailabilityReason = ScenarioUnavailabilityReason.None,
+                    yield = yield,
+                ),
+            )
+        } else {
+            disabledList.add(
+                TokenActionsState.ActionState.Stake(
+                    unavailabilityReason = ScenarioUnavailabilityReason.StakingUnavailable(cryptoCurrency.name),
+                    yield = null,
+                ),
+            )
         }
 
         // send
@@ -172,7 +166,7 @@ class GetCryptoCurrencyActionsUseCase(
         // swap
         if (userWallet.isMultiCurrency) {
             if (
-                marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency) &&
+                rampManager.availableForSwap(userWallet.walletId, cryptoCurrency) &&
                 cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote
             ) {
                 activeList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
@@ -195,7 +189,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // sell
-        val sellSupportedByService = rampManager.availableForSell(cryptoCurrency)
+        val sellSupportedByService = rampManager.isSellSupportedByService(cryptoCurrency)
         val sendAvailable = sendUnavailabilityReason is ScenarioUnavailabilityReason.None
 
         when {
@@ -271,9 +265,7 @@ class GetCryptoCurrencyActionsUseCase(
             }
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
-        if (stakingFeatureToggles.isStakingEnabled) {
-            actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable, null))
-        }
+        actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable, null))
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
 
         return actionsList
