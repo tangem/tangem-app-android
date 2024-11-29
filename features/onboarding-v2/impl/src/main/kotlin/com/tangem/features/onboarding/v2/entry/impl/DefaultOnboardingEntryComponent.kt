@@ -83,7 +83,9 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun linkToInnerNavigation() {
+        // stepper linking
         innerStack.observe { stack ->
             val activeChild = stack.active.instance
             if (activeChild is InnerNavigationHolder) {
@@ -99,6 +101,15 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                         }
                     }
                 }.saveIn(innerNavigationLinkJobHolder)
+            } else {
+                stepperComponent.state.update {
+                    it.copy(
+                        currentStep = if (stack.active.configuration is OnboardingRoute.ManageTokens) 7 else 8,
+                        steps = 8,
+                        title = model.titleProvider.currentTitle.value,
+                        showProgress = true,
+                    )
+                }
             }
         }
 
