@@ -35,6 +35,7 @@ internal object WalletPreviewData {
             onRenameClick = { _ -> },
             onDeleteClick = {},
             cardCount = 1,
+            isZeroBalance = false,
         )
     }
 
