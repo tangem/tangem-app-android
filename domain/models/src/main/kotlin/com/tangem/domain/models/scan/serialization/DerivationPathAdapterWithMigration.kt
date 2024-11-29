@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.userWalletList.utils.json
+package com.tangem.domain.models.scan.serialization
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.ToJson
@@ -6,7 +6,6 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.crypto.hdWallet.DerivationNode
 import com.tangem.crypto.hdWallet.DerivationPath
-import timber.log.Timber
 
 class DerivationPathAdapterWithMigration {
     @ToJson
@@ -26,7 +25,6 @@ class DerivationPathAdapterWithMigration {
     private fun fromLegacyScheme(jsonMap: Map<String, Any>): DerivationPath {
         val rawPath = jsonMap["rawPath"] as String
         val nodeIndexes = (jsonMap["nodes"] as? List<Number>).guard {
-            Timber.e("Unable to convert derivation path nodes from JSON")
             return DerivationPath(rawPath)
         }
         val nodes = nodeIndexes.map { DerivationNode.fromIndex(it.toLong()) }
