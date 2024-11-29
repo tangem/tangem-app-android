@@ -83,4 +83,32 @@ internal sealed interface WalletAlertState {
         )
         override val onConfirmClick: (() -> Unit)? = null
     }
+
+    data object ProvidersStillLoading : Basic() {
+        override val title: TextReference = stringReference(value = "Providers are still loading")
+        override val message: TextReference = resourceReference(R.string.wallet_connect_toast_awaiting_session_proposal)
+        override val onConfirmClick: (() -> Unit)? = null
+    }
+
+    data object UnavailableOperation : Basic() {
+        override val title: TextReference = stringReference(value = "This operation is currently unavailable")
+        override val message: TextReference = resourceReference(R.string.warning_some_networks_unreachable_message)
+        override val onConfirmClick: (() -> Unit)? = null
+    }
+
+    data object SellingRegionalRestriction : Basic() {
+        override val title: TextReference = resourceReference(id = R.string.selling_regional_restriction_alert_title)
+        override val message: TextReference =
+            resourceReference(id = R.string.selling_regional_restriction_alert_message)
+
+        override val onConfirmClick: (() -> Unit)? = null
+    }
+
+    data object InsufficientBalanceForSelling : Basic() {
+        override val title: TextReference = resourceReference(id = R.string.selling_insufficient_balance_alert_title)
+        override val message: TextReference =
+            resourceReference(id = R.string.selling_insufficient_balance_alert_message)
+
+        override val onConfirmClick: (() -> Unit)? = null
+    }
 }
