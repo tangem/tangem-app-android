@@ -55,11 +55,15 @@ object TradeCryptoMiddleware {
 
     private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val isOnrampEnabled = store.inject(DaggerGraphState::onrampFeatureToggles).isFeatureEnabled
-        if (isOnrampEnabled) proceedWithOnramp() else proceedWithLegacyBuyAction(state, action)
+        if (isOnrampEnabled) {
+            proceedWithOnramp(action.userWallet.walletId, action.cryptoCurrencyStatus.currency)
+        } else {
+            proceedWithLegacyBuyAction(state, action)
+        }
     }
 
-    private fun proceedWithOnramp() {
-        store.dispatchNavigationAction { push(AppRoute.Onramp) }
+    private fun proceedWithOnramp(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency) {
+        store.dispatchNavigationAction { push(AppRoute.Onramp(userWalletId = userWalletId, currency = cryptoCurrency)) }
     }
 
     private fun proceedWithLegacyBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
