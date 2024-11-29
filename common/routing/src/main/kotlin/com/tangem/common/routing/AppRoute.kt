@@ -325,6 +325,7 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/swap_crypto/${userWalletId.stringValue}")
 
     // Onboarding V2
+    @Serializable
     data class Onboarding(
         val scanResponse: ScanResponse,
         val startFromBackup: Boolean,
