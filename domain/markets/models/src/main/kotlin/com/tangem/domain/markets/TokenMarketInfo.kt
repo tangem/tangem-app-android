@@ -1,5 +1,6 @@
 package com.tangem.domain.markets
 
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 data class TokenMarketInfo(
@@ -12,6 +13,7 @@ data class TokenMarketInfo(
     val fullDescription: String?,
     val insights: Insights?,
     val metrics: Metrics?,
+    val securityData: SecurityData?,
     val links: Links?,
     val pricePerformance: PricePerformance?,
     val exchangesAmount: Int?,
@@ -50,6 +52,25 @@ data class TokenMarketInfo(
         val maxSupply: BigDecimal?,
         val fullyDilutedValuation: BigDecimal?,
     )
+
+    data class SecurityData(
+        val totalSecurityScore: Float,
+        val securityScoreProviderData: List<SecurityScoreProvider>,
+    )
+
+    data class SecurityScoreProvider(
+        val providerId: String,
+        val providerName: String,
+        val urlData: UrlData?,
+        val iconUrl: String,
+        val securityScore: Float,
+        val lastAuditDate: DateTime?,
+    ) {
+        data class UrlData(
+            val fullUrl: String,
+            val rootHost: String?,
+        )
+    }
 
     data class Links(
         val officialLinks: List<Link>?,
