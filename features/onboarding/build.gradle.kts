@@ -15,7 +15,7 @@ dependencies {
     /** Core modules */
     implementation(project(":common"))
     implementation(project(":domain:models"))
-    implementation(project(":core:featuretoggles"))
+    implementation(project(":core:config-toggles"))
     implementation(project(":core:datasource"))
     implementation(project(":core:analytics"))
     implementation(projects.core.analytics.models)
