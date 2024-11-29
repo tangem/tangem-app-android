@@ -53,6 +53,9 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsSta
                 store.inject(DaggerGraphState::balanceHidingRepository)
                     .getBalanceHidingSettings().isHidingEnabledInSettings
             },
+            needEnrollBiometrics = runBlocking {
+                runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() ?: false
+            },
         ),
     )
 }
