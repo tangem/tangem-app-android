@@ -14,7 +14,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onboarding.v2.impl.R
 
 @Composable
-fun Wallet1ChooseOption(onScipClick: () -> Unit, onBackupClick: () -> Unit, modifier: Modifier = Modifier) {
+fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -61,7 +61,7 @@ fun Wallet1ChooseOption(onScipClick: () -> Unit, onBackupClick: () -> Unit, modi
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
             text = stringResource(R.string.onboarding_button_skip_backup),
-            onClick = onScipClick,
+            onClick = onSkipClick,
         )
     }
 }
