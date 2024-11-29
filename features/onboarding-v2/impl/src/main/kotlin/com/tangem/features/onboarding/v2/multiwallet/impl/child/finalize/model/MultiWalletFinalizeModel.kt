@@ -79,7 +79,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writePrimaryCard() {
         val backupService = backupServiceHolder.backupService.get() ?: return
-        // store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+// [REDACTED_TODO_COMMENT]
 
         val primaryCardBatchId = backupService.primaryCardBatchId ?: return
         val isRing = isRing(primaryCardBatchId)
@@ -107,8 +107,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writeBackupCard(cardIndex: Int) {
         val backupService = backupServiceHolder.backupService.get() ?: return
-
-        // store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+// [REDACTED_TODO_COMMENT]
 
         val backupCardBatchId = backupService.backupCardsBatchIds.getOrNull(cardIndex) ?: return
         val isRing = isRing(backupCardBatchId)
@@ -120,7 +119,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 is CompletionResult.Success -> {
                     val backupValidator = BackupValidator()
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
-// [REDACTED_TODO_COMMENT]
                         walletHasBackupError = true
                     }
 
