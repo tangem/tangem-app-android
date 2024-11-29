@@ -150,4 +150,8 @@ internal class MockCurrenciesRepository(
     override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return emptyFlow()
     }
+
+    override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
+        return false
+    }
 }
