@@ -3,7 +3,7 @@ package com.tangem.tap.domain.walletconnect2.di
 import android.app.Application
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
 import com.tangem.domain.tokens.repository.CurrenciesRepository

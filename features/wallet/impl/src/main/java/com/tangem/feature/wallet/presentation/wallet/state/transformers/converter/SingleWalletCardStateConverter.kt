@@ -8,6 +8,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isZero
 
 internal class SingleWalletCardStateConverter(
     private val status: CryptoCurrencyStatus.Value,
@@ -63,6 +64,7 @@ internal class SingleWalletCardStateConverter(
             onDeleteClick = onDeleteClick,
             balance = formatFiatAmount(status = status, appCurrency = appCurrency),
             cardCount = selectedWallet.getCardsCount(),
+            isZeroBalance = status.fiatAmount?.isZero(),
         )
     }
 

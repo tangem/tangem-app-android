@@ -98,18 +98,18 @@ internal class WalletLoadingStateFactory(
 
         return persistentListOf(
             WalletManageButton.Buy(
-                enabled = false,
-                dimContent = true,
+                enabled = true,
+                dimContent = false,
                 onClick = { clickIntents.onMultiWalletBuyClick(userWalletId = userWallet.walletId) },
             ),
             WalletManageButton.Swap(
-                enabled = false,
-                dimContent = true,
+                enabled = true,
+                dimContent = false,
                 onClick = { clickIntents.onMultiWalletSwapClick(userWalletId = userWallet.walletId) },
             ),
             WalletManageButton.Sell(
-                enabled = false,
-                dimContent = true,
+                enabled = true,
+                dimContent = false,
                 onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
             ),
         )

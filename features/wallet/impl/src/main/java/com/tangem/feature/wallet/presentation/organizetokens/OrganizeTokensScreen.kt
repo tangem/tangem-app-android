@@ -246,6 +246,7 @@ private fun TopBar(
             horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
         ) {
             RoundedActionButton(
+                modifier = Modifier.weight(1f),
                 config = ActionButtonConfig(
                     text = TextReference.Res(id = R.string.organize_tokens_sort_by_balance),
                     iconResId = R.drawable.ic_sort_24,
@@ -253,10 +254,10 @@ private fun TopBar(
                     onClick = config.onSortClick,
                     dimContent = config.isSortedByBalance,
                 ),
-                modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
             )
             RoundedActionButton(
+                modifier = Modifier.weight(1f),
                 config = ActionButtonConfig(
                     text = TextReference.Res(
                         id = if (config.isGrouped) {
@@ -265,11 +266,10 @@ private fun TopBar(
                             R.string.organize_tokens_group
                         },
                     ),
-                    enabled = config.isEnabled,
                     iconResId = R.drawable.ic_group_24,
+                    enabled = config.isEnabled,
                     onClick = config.onGroupClick,
                 ),
-                modifier = Modifier.weight(1f),
                 color = TangemTheme.colors.background.primary,
             )
         }
