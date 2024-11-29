@@ -13,6 +13,7 @@ fun createPrivateProviderType(name: String): ProviderType? {
         "tangemRosetta" -> ProviderType.Cardano.Rosetta
         "fireAcademy" -> ProviderType.Chia.FireAcademy
         "tangemChia" -> ProviderType.Chia.Tangem
+        "tangemChia3" -> ProviderType.Chia.TangemNew
         "infura" -> ProviderType.EthereumLike.Infura
         "getblock" -> ProviderType.GetBlock
         "arkhiaHedera" -> ProviderType.Hedera.Arkhia
