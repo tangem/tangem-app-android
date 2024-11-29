@@ -3,6 +3,7 @@ package com.tangem.tap.domain.card
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetworkDerivationPath
@@ -17,7 +18,7 @@ import com.tangem.domain.tokens.model.Network
  */
 internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
 
-    private val factory = CryptoCurrencyFactory()
+    private val factory = CryptoCurrencyFactory(excludedBlockchains = ExcludedBlockchains())
 
     val cardano by lazy { listOf(createCoin(blockchain = Blockchain.Cardano)) }
     val chia by lazy { listOf(element = createCoin(Blockchain.Chia)) }
