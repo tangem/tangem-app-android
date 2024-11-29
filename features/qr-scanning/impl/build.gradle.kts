@@ -47,6 +47,9 @@ dependencies {
     implementation(projects.domain.qrScanning)
     implementation(projects.domain.qrScanning.models)
 
+    /** Data */
+    implementation(projects.data.card)
+
     /** Compose */
     implementation(deps.compose.foundation)
     implementation(deps.compose.ui)
@@ -57,4 +60,5 @@ dependencies {
     /** Other dependencies */
     implementation(deps.arrow.core)
     implementation(deps.timber)
+    implementation(deps.tangem.card.core)
 }
