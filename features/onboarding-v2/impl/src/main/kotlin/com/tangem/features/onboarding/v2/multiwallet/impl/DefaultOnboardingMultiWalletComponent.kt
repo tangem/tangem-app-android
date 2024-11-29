@@ -18,6 +18,7 @@ import com.arkivanov.decompose.router.slot.navigate
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -25,6 +26,7 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.MultiWalletAccessCodeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
@@ -46,6 +48,7 @@ import kotlinx.coroutines.launch
 internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
     @Assisted private val params: OnboardingMultiWalletComponent.Params,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : OnboardingMultiWalletComponent, AppComponentContext by context {
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)
@@ -182,6 +185,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             }
             Done -> {
                 // final step - navigate to parent
+                analyticsHandler.send(OnboardingEvent.Finished)
                 val userWallet = childParams.multiWalletState.value.resultUserWallet ?: return
                 params.onDone(userWallet)
             }
