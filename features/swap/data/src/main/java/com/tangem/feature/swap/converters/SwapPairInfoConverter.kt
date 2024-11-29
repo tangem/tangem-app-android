@@ -32,16 +32,17 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
         }
         return PairsWithProviders(
             pairs = pairs,
-            allProviders = value.providers.map { convertLeastProvider(it) },
+            allProviders = value.providers.mapNotNull { convertLeastProvider(it) },
         )
     }
 
-    private fun convertLeastProvider(exchangeProvider: ExchangeProvider): SwapProvider {
+    private fun convertLeastProvider(exchangeProvider: ExchangeProvider): SwapProvider? {
+        val type = convertExchangeType(exchangeProvider.type) ?: return null
         return SwapProvider(
             providerId = exchangeProvider.id,
             rateTypes = emptyList(),
             name = exchangeProvider.name,
-            type = convertExchangeType(exchangeProvider.type),
+            type = type,
             imageLarge = exchangeProvider.imageLargeUrl,
             termsOfUse = exchangeProvider.termsOfUse,
             privacyPolicy = exchangeProvider.privacyPolicy,
@@ -55,11 +56,12 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
         providerAdditional: Map<String, ExchangeProvider>,
     ): SwapPairProviderDomain? {
         val additionalProvider = providerAdditional[swapPairProvider.providerId] ?: return null
+        val type = convertExchangeType(additionalProvider.type) ?: return null
         return SwapPairProviderDomain(
             providerId = swapPairProvider.providerId,
             rateTypes = swapPairProvider.rateTypes.map { rateTypeConverter.convert(it) },
             name = additionalProvider.name,
-            type = convertExchangeType(additionalProvider.type),
+            type = type,
             imageLarge = additionalProvider.imageLargeUrl,
             termsOfUse = additionalProvider.termsOfUse,
             privacyPolicy = additionalProvider.privacyPolicy,
@@ -68,11 +70,12 @@ class SwapPairInfoConverter : Converter<SwapPairsWithProviders, PairsWithProvide
         )
     }
 
-    private fun convertExchangeType(type: ExchangeProviderType): ExchangeProviderTypeDomain {
+    private fun convertExchangeType(type: ExchangeProviderType): ExchangeProviderTypeDomain? {
         return when (type) {
             ExchangeProviderType.DEX -> ExchangeProviderTypeDomain.DEX
             ExchangeProviderType.CEX -> ExchangeProviderTypeDomain.CEX
             ExchangeProviderType.DEX_BRIDGE -> ExchangeProviderTypeDomain.DEX_BRIDGE
+            ExchangeProviderType.ONRAMP -> null
         }
     }
 }
