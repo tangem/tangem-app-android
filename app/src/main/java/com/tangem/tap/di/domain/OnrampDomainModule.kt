@@ -10,6 +10,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object OnrampDomainModule {
@@ -124,5 +125,36 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideGetOnrampQuotesUseCase(onrampRepository: OnrampRepository): GetOnrampQuotesUseCase {
         return GetOnrampQuotesUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampSelectedPaymentMethodUseCase(
+        onrampRepository: OnrampRepository,
+    ): GetOnrampSelectedPaymentMethodUseCase {
+        return GetOnrampSelectedPaymentMethodUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampProviderWithQuoteUseCase(
+        onrampRepository: OnrampRepository,
+    ): GetOnrampProviderWithQuoteUseCase {
+        return GetOnrampProviderWithQuoteUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampSaveSelectedPaymentMethod(onrampRepository: OnrampRepository): OnrampSaveSelectedPaymentMethod {
+        return OnrampSaveSelectedPaymentMethod(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampRedirectUrlUseCase(
+        onrampRepository: OnrampRepository,
+        transactionRepository: OnrampTransactionRepository,
+    ): GetOnrampRedirectUrlUseCase {
+        return GetOnrampRedirectUrlUseCase(onrampRepository, transactionRepository)
     }
 }
