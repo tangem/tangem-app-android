@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.userWalletList.utils.json
+package com.tangem.domain.models.scan.serialization
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.JsonAdapter
@@ -7,7 +7,7 @@ import com.squareup.moshi.JsonWriter
 import com.squareup.moshi.ToJson
 import com.tangem.domain.models.scan.CardDTO
 
-internal class CardBackupStatusAdapter {
+class CardBackupStatusAdapter {
     @ToJson
     fun toJson(writer: JsonWriter, src: CardDTO.BackupStatus?, mapAdapter: JsonAdapter<Map<String, String>>) {
         val jsonMap = mutableMapOf<String, String>()
