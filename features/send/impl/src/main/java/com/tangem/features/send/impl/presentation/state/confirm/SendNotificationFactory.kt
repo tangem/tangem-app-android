@@ -22,6 +22,7 @@ import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -93,12 +94,15 @@ internal class SendNotificationFactory(
             val feeError = (feeState.feeSelectorState as? FeeSelectorState.Error)?.error
 
             val recipientAddress = state.recipientState?.addressTextField?.value
+            val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
+            val balanceAfterTransaction = statusValue?.let { it.amount - sendingAmount - feeValue }
             val currencyCheck = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 amount = sendingAmount,
                 fee = feeValue,
                 recipientAddress = recipientAddress,
+                balanceAfterTransaction = balanceAfterTransaction,
             )
             buildList {
                 addErrorNotifications(
@@ -221,6 +225,11 @@ internal class SendNotificationFactory(
                 network = cryptoCurrencyStatus.currency.network,
             ).leftOrNull()
         }
+
+        addRentExemptionNotification(
+            rentWarning = currencyCheck.rentWarning,
+        )
+
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
             feeAmount = feeState.fee?.amount?.value.orZero(),
@@ -302,5 +311,10 @@ internal class SendNotificationFactory(
         checkIfFeeTooHigh(feeSelectorState) { diff ->
             add(NotificationUM.Warning.TooHigh(diff))
         }
+    }
+
+    private fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
+        if (rentWarning == null) return
+        add(NotificationUM.Solana.RentInfo(rentWarning))
     }
 }
