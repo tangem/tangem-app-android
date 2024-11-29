@@ -37,6 +37,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.features.markets.details.impl.ui.components.*
 import com.tangem.features.markets.details.impl.ui.components.ExchangesBottomSheet
 import com.tangem.features.markets.details.impl.ui.components.InfoBottomSheet
 import com.tangem.features.markets.details.impl.ui.components.MarketTokenDetailsChart
@@ -44,6 +45,7 @@ import com.tangem.features.markets.details.impl.ui.components.tokenMarketDetails
 import com.tangem.features.markets.details.impl.ui.state.ExchangesBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
+import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomSheetContent
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -72,6 +74,7 @@ internal fun MarketsTokenDetailsContent(
 
     when (state.bottomSheetConfig.content) {
         is InfoBottomSheetContent -> InfoBottomSheet(config = state.bottomSheetConfig)
+        is SecurityScoreBottomSheetContent -> SecurityScoreBottomSheet(config = state.bottomSheetConfig)
         is ExchangesBottomSheetContent -> ExchangesBottomSheet(config = state.bottomSheetConfig)
     }
 }
