@@ -18,7 +18,6 @@ internal sealed interface OnrampMainComponentUM {
         val currency: String,
         val onClose: () -> Unit,
         val openSettings: () -> Unit,
-        val onBuyClick: () -> Unit,
     ) : OnrampMainComponentUM {
         override val topBarConfig: OnrampMainTopBarUM = OnrampMainTopBarUM(
             title = combinedReference(resourceReference(R.string.common_buy), stringReference(" $currency")),
@@ -36,7 +35,7 @@ internal sealed interface OnrampMainComponentUM {
 
         override val buyButtonConfig: BuyButtonConfig = BuyButtonConfig(
             text = resourceReference(R.string.common_buy),
-            onClick = onBuyClick,
+            onClick = {},
             enabled = false,
         )
     }

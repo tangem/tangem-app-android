@@ -28,6 +28,7 @@ dependencies {
 
     /** Common */
     implementation(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Domain */
     implementation(projects.domain.models)
@@ -37,6 +38,7 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.legacy)
+    implementation(projects.domain.settings)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
@@ -57,6 +59,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
+    implementation(deps.lottie.compose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
 

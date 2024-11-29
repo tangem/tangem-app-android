@@ -62,21 +62,15 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         )
     }
 
+    private val innerNavigationStateFlow = MutableStateFlow(
+        MultiWalletInnerNavigationState(1, 5),
+    )
+
     private val childParams = MultiWalletChildParams(
         multiWalletState = model.state,
         parentParams = params,
+        innerNavigation = innerNavigationStateFlow,
     )
-
-    override val innerNavigation: InnerNavigation = object : InnerNavigation {
-        override val state = MutableStateFlow(
-            MultiWalletInnerNavigationState(1, 5),
-        )
-
-        override fun pop(onComplete: (Boolean) -> Unit) {
-            // TODO add warning dialog
-            stackNavigation.pop(onComplete)
-        }
-    }
 
     private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, ComposableContentComponent>> =
         childStack(
@@ -92,6 +86,22 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 )
             },
         )
+
+    val backButtonClickFlow = MutableSharedFlow<Unit>()
+    override val innerNavigation: InnerNavigation = object : InnerNavigation {
+        override val state = innerNavigationStateFlow
+
+        override fun pop(onComplete: (Boolean) -> Unit) {
+            when (childStack.active.configuration) {
+                CreateWallet -> { } // TODO show dialog
+                ChooseBackupOption -> { } // TODO show dialog
+                SeedPhrase -> { componentScope.launch { backButtonClickFlow.emit(Unit) } }
+                AddBackupDevice -> {}
+                Finalize -> {}
+                Done -> {}
+            }
+        }
+    }
 
     private val bottomSheetNavigation = SlotNavigation<Unit>()
     private val accessCodeBottomSheetSlot = childSlot(
@@ -110,7 +120,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
     init {
         componentScope.launch {
             // access code bs result
-            // TODO delete and use callback
             childParams.multiWalletState
                 .map { it.accessCode }
                 .distinctUntilChanged()
@@ -131,13 +140,15 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             )
             ChooseBackupOption -> Wallet1ChooseOptionComponent(
                 context = childContext,
+                params = childParams,
                 onNextStep = ::handleNavigationEvent,
             )
             SeedPhrase -> MultiWalletSeedPhraseComponent(
                 context = childContext,
                 params = childParams,
                 onNextStep = ::handleNavigationEvent,
-                backButtonClickFlow = MutableSharedFlow(), // TODO
+                backButtonClickFlow = backButtonClickFlow,
+                onBack = { stackNavigation.pop() },
             )
             AddBackupDevice -> MultiWalletBackupComponent(
                 context = childContext,
@@ -157,22 +168,26 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         when (nextStep) {
             ChooseBackupOption -> {
                 artworksState.value = WalletArtworksState.Fan
+                stackNavigation.navigate { listOf(nextStep) }
             }
             AddBackupDevice -> {
                 artworksState.value = WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
+                stackNavigation.navigate { listOf(nextStep) }
             }
             Finalize -> {
                 artworksState.value = WalletArtworksState.Stack(threeCards = model.state.value.isThreeCards)
+                stackNavigation.navigate { listOf(nextStep) }
+            }
+            SeedPhrase -> {
+                stackNavigation.push(nextStep)
             }
             Done -> {
                 // final step - navigate to parent
                 val userWallet = childParams.multiWalletState.value.resultUserWallet ?: return
                 params.onDone(userWallet)
-                return
             }
             else -> return
         }
-        stackNavigation.push(nextStep)
     }
 
     private fun handleBackupComponentEvent(event: MultiWalletBackupComponent.Event) {

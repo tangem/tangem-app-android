@@ -1,10 +1,7 @@
 package com.tangem.features.managetokens.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
@@ -71,7 +68,9 @@ internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modi
         },
         snackbarHost = {
             TangemSnackbarHost(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
+                modifier = Modifier
+                    .padding(all = TangemTheme.dimens.spacing16)
+                    .navigationBarsPadding(),
                 hostState = LocalSnackbarHostState.current,
             )
         },
@@ -80,7 +79,8 @@ internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modi
             FloatingActionButton(
                 modifier = Modifier
                     .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .navigationBarsPadding(),
                 config = state.actionButtonConfig,
             )
         },

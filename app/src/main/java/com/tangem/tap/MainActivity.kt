@@ -74,6 +74,7 @@ import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
+import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
@@ -91,6 +92,7 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.seconds
 
 lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
@@ -329,7 +331,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun installAppTheme() {
         appThemeModeFlow = createAppThemeModeFlow()
-        val mode = runBlocking { appThemeModeFlow.first() }
+        val mode = runBlocking {
+            withTimeoutOrNull(APP_THEME_LOAD_TIMEOUT.seconds) {
+                appThemeModeFlow.first()
+            } ?: AppThemeMode.DEFAULT
+        }
 
         updateAppTheme(mode)
     }
@@ -392,6 +398,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun initIntentHandlers() {
         val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
+        intentProcessor.addHandler(OnPushClickedIntentHandler(analyticsEventsHandler))
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
     }
@@ -596,5 +603,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 .onLeft { Timber.e(it.toString()) }
                 .onRight { Timber.d("Submitting hashes succeeded") }
         }
+    }
+
+    companion object {
+        private const val APP_THEME_LOAD_TIMEOUT = 2
     }
 }

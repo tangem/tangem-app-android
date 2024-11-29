@@ -17,6 +17,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onramp.component.OnrampComponent
 import com.tangem.features.onramp.main.OnrampMainComponent
+import com.tangem.features.onramp.redirect.OnrampRedirectComponent
 import com.tangem.features.onramp.root.entity.OnrampChild
 import com.tangem.features.onramp.settings.OnrampSettingsComponent
 import dagger.assisted.Assisted
@@ -29,6 +30,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
     @Assisted private val params: OnrampComponent.Params,
     private val settingsComponentFactory: OnrampSettingsComponent.Factory,
     private val onrampMainComponentFactory: OnrampMainComponent.Factory,
+    private val onrampRedirectComponentFactory: OnrampRedirectComponent.Factory,
 ) : OnrampComponent, AppComponentContext by context {
 
     private val navigation = StackNavigation<OnrampChild>()
@@ -65,6 +67,23 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                 params = OnrampMainComponent.Params(
                     cryptoCurrency = params.cryptoCurrency,
                     openSettings = { navigation.push(OnrampChild.Settings) },
+                    openRedirectPage = {
+                        navigation.push(
+                            OnrampChild.RedirectPage(
+                                quote = it,
+                                cryptoCurrency = params.cryptoCurrency,
+                            ),
+                        )
+                    },
+                ),
+            )
+            is OnrampChild.RedirectPage -> onrampRedirectComponentFactory.create(
+                context = childByContext(componentContext),
+                params = OnrampRedirectComponent.Params(
+                    userWalletId = params.userWalletId,
+                    onBack = navigation::pop,
+                    cryptoCurrency = config.cryptoCurrency,
+                    onrampProviderWithQuote = config.quote,
                 ),
             )
         }

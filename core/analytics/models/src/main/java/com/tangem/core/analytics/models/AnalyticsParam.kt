@@ -76,6 +76,9 @@ sealed class AnalyticsParam {
         data object MyWallets : ScreensSources("My Wallets")
         data object Token : ScreensSources("Token")
         data object Stories : ScreensSources("Stories")
+        data object Buy : ScreensSources("Buy")
+        data object Swap : ScreensSources("Swap")
+        data object Sell : ScreensSources("Sell")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -159,6 +162,12 @@ sealed class AnalyticsParam {
                 return status.value
             }
         }
+    }
+
+    enum class Status(val value: String) {
+        Success(value = "Success"),
+        Error(value = "Error"),
+        Pending(value = "Pending"),
     }
 
     companion object Key {
