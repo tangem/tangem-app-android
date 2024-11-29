@@ -37,4 +37,10 @@ data class ExpressErrorValue(
 
     @Json(name = "expressFromDecimals")
     val expressFromDecimals: Int?,
+
+    @Json(name = "fromAmount")
+    val fromAmount: String?,
+
+    @Json(name = "fromAmountProvider")
+    val fromAmountProvider: String?,
 )
