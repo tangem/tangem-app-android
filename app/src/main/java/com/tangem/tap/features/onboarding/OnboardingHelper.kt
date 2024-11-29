@@ -16,6 +16,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -23,8 +24,8 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -67,7 +68,10 @@ object OnboardingHelper {
 
     fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
         if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled) {
-            return AppRoute.Onboarding(scanResponse)
+            return AppRoute.Onboarding(
+                scanResponse = scanResponse,
+                startFromBackup = false,
+            )
         }
 
         return when (val type = scanResponse.productType) {
@@ -88,6 +92,7 @@ object OnboardingHelper {
     }
 
     fun saveWallet(
+        alreadyCreatedWallet: UserWallet?,
         scanResponse: ScanResponse,
         accessCode: String? = null,
         backupCardsIds: List<String>? = null,
@@ -117,7 +122,7 @@ object OnboardingHelper {
                 // When should not save user wallets but device has biometry and save wallet screen has not been shown,
                 // then open save wallet screen
                 tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen() -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError, alreadyCreatedWallet)
 
                     delay(timeMillis = 1_200)
 
@@ -131,7 +136,7 @@ object OnboardingHelper {
                 }
                 // If device has no biometry and save wallet screen has been shown, then go through old scenario
                 else -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError)
+                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError, alreadyCreatedWallet)
                 }
             }
         }
@@ -207,7 +212,9 @@ object OnboardingHelper {
 
     fun handleTopUpAction(walletManager: WalletManager, scanResponse: ScanResponse, globalState: GlobalState) {
         val blockchain = walletManager.wallet.blockchain
-        val cryptoCurrency = CryptoCurrencyFactory().createCoin(
+        val excludedBlockchains = store.inject(DaggerGraphState::excludedBlockchains)
+
+        val cryptoCurrency = CryptoCurrencyFactory(excludedBlockchains).createCoin(
             blockchain = blockchain,
             extraDerivationPath = null,
             scanResponse = scanResponse,
@@ -242,9 +249,10 @@ object OnboardingHelper {
         scanResponse: ScanResponse,
         backupCardsIds: List<String>?,
         hasBackupError: Boolean,
+        alreadyCreatedWallet: UserWallet? = null,
     ) {
         val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
-        val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
+        val userWallet = alreadyCreatedWallet ?: UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
             .hasBackupError(hasBackupError)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()
