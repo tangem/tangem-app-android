@@ -28,7 +28,6 @@ import com.tangem.domain.txhistory.models.TxHistoryListError
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsAppBarMenuConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -36,9 +35,7 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadedTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsLoadingTxHistoryConverter.TokenDetailsLoadingTxHistoryModel
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toImmutableList
@@ -56,7 +53,6 @@ internal class TokenDetailsStateFactory(
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val userWalletId: UserWalletId,
-    stakingFeatureToggles: StakingFeatureToggles,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     symbol: String,
     decimals: Int,
@@ -85,7 +81,6 @@ internal class TokenDetailsStateFactory(
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
-            stakingFeatureToggles = stakingFeatureToggles,
         )
     }
 
@@ -302,31 +297,6 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedHederaAssociateNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeHederaAssociateWarning(state))
-    }
-
-    fun getStateWithExchangeStatusBottomSheet(swapTxState: SwapTransactionsState): TokenDetailsState {
-        return currentStateProvider().copy(
-            bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
-                onDismissRequest = clickIntents::onDismissBottomSheet,
-                content = ExchangeStatusBottomSheetConfig(
-                    value = swapTxState,
-                ),
-            ),
-        )
-    }
-
-    fun updateStateWithExchangeStatusBottomSheet(swapTxState: SwapTransactionsState): TangemBottomSheetConfig? {
-        val state = currentStateProvider()
-        val bottomSheetConfig = state.bottomSheetConfig
-        val currentConfig = bottomSheetConfig?.content as? ExchangeStatusBottomSheetConfig ?: return bottomSheetConfig
-        return bottomSheetConfig.copy(
-            content = if (currentConfig.value != swapTxState) {
-                ExchangeStatusBottomSheetConfig(swapTxState)
-            } else {
-                currentConfig
-            },
-        )
     }
 
     fun getStateAndTriggerEvent(
