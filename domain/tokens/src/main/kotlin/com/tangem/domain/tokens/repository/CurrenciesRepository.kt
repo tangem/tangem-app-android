@@ -241,4 +241,6 @@ interface CurrenciesRepository {
 
     /** Get crypto currencies by [currencyRawId] from all user wallets */
     fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>>
+
+    fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
 }
