@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsDialogConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
 
@@ -20,7 +21,7 @@ internal data class TokenDetailsState(
     val stakingBlocksState: StakingBlockUM?,
     val notifications: ImmutableList<TokenDetailsNotification>,
     val pendingTxs: PersistentList<TransactionState>,
-    val swapTxs: PersistentList<SwapTransactionsState>,
+    val expressTxs: PersistentList<ExpressTransactionStateUM>,
     val txHistoryState: TxHistoryState,
     val dialogConfig: TokenDetailsDialogConfig?,
     val pullToRefreshConfig: PullToRefreshConfig,
