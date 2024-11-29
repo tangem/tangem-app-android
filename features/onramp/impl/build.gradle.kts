@@ -14,13 +14,19 @@ android {
 dependencies {
     /** Project - API */
     implementation(projects.features.onramp.api)
+    implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.domain.models)
 
     /** Project - Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
+    implementation(projects.core.navigation)
     implementation(projects.core.ui)
-    implementation(projects.core.featuretoggles)
 
     /** Project - Common */
+    implementation(projects.common.routing)
     implementation(projects.common.ui)
 
     /** Project - Domain */
@@ -30,6 +36,7 @@ dependencies {
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
+    implementation(projects.domain.onramp)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
@@ -37,7 +44,6 @@ dependencies {
 
     /** DI */
     implementation(deps.hilt.android)
-    implementation(project(":common:ui"))
     kapt(deps.hilt.kapt)
 
     /** AndroidX */

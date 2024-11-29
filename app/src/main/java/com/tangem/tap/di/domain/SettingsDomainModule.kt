@@ -135,14 +135,6 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
-    fun provideShouldShowTravalaPromoWalletUseCase(
-        promoSettingsRepository: PromoSettingsRepository,
-    ): ShouldShowTravalaPromoWalletUseCase {
-        return ShouldShowTravalaPromoWalletUseCase(promoSettingsRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideShouldShowSwapPromoTokenUseCase(
         promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowSwapPromoTokenUseCase {

@@ -21,6 +21,7 @@ dependencies {
     /** AndroidX libraries */
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.androidx.palette)
     implementation(deps.androidx.windowManager) {
         exclude(

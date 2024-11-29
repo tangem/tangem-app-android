@@ -32,7 +32,7 @@ internal fun PortfolioItem(state: PortfolioTokenUM, lastInList: Boolean, modifie
                         val onClick = state.tokenItemState.onItemClick
                         if (onClick != null) {
                             hapticManager.perform(TangemHapticEffect.View.ContextClick)
-                            onClick.invoke()
+                            onClick.invoke(it)
                         }
                     },
                 )
@@ -81,8 +81,8 @@ private fun Preview(@PreviewParameter(PortfolioTokenUMProvider::class) tokenUM: 
         PortfolioItem(
             state = tokenUM.copy(
                 tokenItemState = when (tokenUM.tokenItemState) {
-                    is TokenItemState.Content -> tokenUM.tokenItemState.copy(onItemClick = onItemClick)
-                    is TokenItemState.Unreachable -> tokenUM.tokenItemState.copy(onItemClick = onItemClick)
+                    is TokenItemState.Content -> tokenUM.tokenItemState.copy(onItemClick = { onItemClick() })
+                    is TokenItemState.Unreachable -> tokenUM.tokenItemState.copy(onItemClick = { onItemClick() })
                     else -> tokenUM.tokenItemState
                 },
                 isQuickActionsShown = quickActionsShown,

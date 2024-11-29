@@ -62,7 +62,7 @@ dependencies {
     /* Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
 

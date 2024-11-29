@@ -112,6 +112,10 @@ internal class DefaultWalletRouter(
         )
     }
 
+    override fun openOnrampSuccessScreen(txId: String) {
+        router.push(AppRoute.OnrampSuccess(txId))
+    }
+
     override fun openUrl(url: String) {
         urlOpener.openUrl(url)
     }

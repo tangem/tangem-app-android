@@ -2,6 +2,7 @@ package com.tangem.tap.proxy.redux
 
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
@@ -71,4 +72,5 @@ data class DaggerGraphState(
     val onrampFeatureToggles: OnrampFeatureToggles? = null,
     val environmentConfigStorage: EnvironmentConfigStorage? = null,
     val onboardingV2FeatureToggles: OnboardingV2FeatureToggles? = null,
+    val excludedBlockchains: ExcludedBlockchains? = null,
 ) : StateType

@@ -24,6 +24,7 @@ internal sealed interface WalletState : WalletStateHolder {
         data class Content(
             override val pullToRefreshConfig: PullToRefreshConfig,
             override val walletCardState: WalletCardState,
+            override val buttons: PersistentList<WalletManageButton>,
             override val warnings: ImmutableList<WalletNotification>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
             override val tokensListState: WalletTokensListState,
@@ -31,13 +32,15 @@ internal sealed interface WalletState : WalletStateHolder {
 
         data class Locked(
             override val walletCardState: WalletCardState,
+            override val buttons: PersistentList<WalletManageButton>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
             val onUnlockNotificationClick: () -> Unit,
         ) : MultiCurrency(),
             WalletStateHolder by LockedWalletStateHolder(
-                walletCardState,
-                bottomSheetConfig,
-                onUnlockNotificationClick,
+                walletCardState = walletCardState,
+                buttons = buttons,
+                bottomSheetConfig = bottomSheetConfig,
+                onUnlockNotificationClick = onUnlockNotificationClick,
             ) {
 
             override val tokensListState = WalletTokensListState.ContentState.Locked
@@ -46,7 +49,6 @@ internal sealed interface WalletState : WalletStateHolder {
 
     sealed class SingleCurrency : WalletState, TxHistoryStateHolder {
 
-        abstract val buttons: PersistentList<WalletManageButton>
         abstract val marketPriceBlockState: MarketPriceBlockState?
 
         data class Content(
@@ -68,9 +70,10 @@ internal sealed interface WalletState : WalletStateHolder {
         ) : SingleCurrency(),
             TxHistoryStateHolder by LockedTxHistoryStateHolder(onExploreClick),
             WalletStateHolder by LockedWalletStateHolder(
-                walletCardState,
-                bottomSheetConfig,
-                onUnlockNotificationClick,
+                walletCardState = walletCardState,
+                buttons = buttons,
+                bottomSheetConfig = bottomSheetConfig,
+                onUnlockNotificationClick = onUnlockNotificationClick,
             ) {
 
             override val marketPriceBlockState: MarketPriceBlockState? = null
@@ -84,6 +87,7 @@ internal sealed interface WalletState : WalletStateHolder {
         data class Content(
             override val pullToRefreshConfig: PullToRefreshConfig,
             override val walletCardState: WalletCardState,
+            override val buttons: PersistentList<WalletManageButton>,
             override val warnings: ImmutableList<WalletNotification>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
             override val balancesAndLimitBlockState: BalancesAndLimitsBlockState,
@@ -93,15 +97,17 @@ internal sealed interface WalletState : WalletStateHolder {
 
         data class Locked(
             override val walletCardState: WalletCardState,
-            val onUnlockNotificationClick: () -> Unit,
+            override val buttons: PersistentList<WalletManageButton>,
             override val bottomSheetConfig: TangemBottomSheetConfig?,
+            val onUnlockNotificationClick: () -> Unit,
             val onExploreClick: () -> Unit,
         ) : Visa(),
             TxHistoryStateHolder by LockedTxHistoryStateHolder(onExploreClick),
             WalletStateHolder by LockedWalletStateHolder(
-                walletCardState,
-                bottomSheetConfig,
-                onUnlockNotificationClick,
+                walletCardState = walletCardState,
+                buttons = buttons,
+                bottomSheetConfig = bottomSheetConfig,
+                onUnlockNotificationClick = onUnlockNotificationClick,
             ) {
 
             override val balancesAndLimitBlockState: BalancesAndLimitsBlockState? = null

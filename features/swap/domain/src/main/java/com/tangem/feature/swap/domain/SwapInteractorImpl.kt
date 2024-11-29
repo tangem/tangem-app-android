@@ -1047,6 +1047,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 CoreTestnet,
                 Xodex,
                 Canxium,
+                Chiliz,
+                ChilizTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }

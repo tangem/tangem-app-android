@@ -2,7 +2,6 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -49,14 +48,14 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.T
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsDialogs
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenDetailsTopAppBar
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.TokenInfoBlock
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheet
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.ExchangeStatusBottomSheetConfig
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.exchange.swapTransactionsItems
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheet
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.expressTransactionsItems
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.staking.TokenStakingBlock
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 // [REDACTED_TODO_COMMENT]
 @Suppress("LongMethod")
-@OptIn(ExperimentalMaterialApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockComponent: TokenMarketBlockComponent?) {
     BackHandler(onBack = state.topAppBarConfig.onBackClick)
@@ -126,11 +125,11 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                         if (it is TokenDetailsNotification.SwapPromo) {
                             OkxPromoNotification(
                                 config = it.config,
-                                modifier = itemModifier.animateItemPlacement(),
+                                modifier = itemModifier.animateItem(),
                             )
                         } else {
                             Notification(
-                                modifier = itemModifier.animateItemPlacement(),
+                                modifier = itemModifier.animateItem(),
                                 config = it.config,
                                 iconTint = when (it) {
                                     is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
@@ -177,9 +176,9 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                     )
                 }
 
-                swapTransactionsItems(
-                    state.swapTxs,
-                    itemModifier,
+                expressTransactionsItems(
+                    expressTxs = state.expressTxs,
+                    modifier = itemModifier,
                 )
 
                 txHistoryItems(
@@ -206,8 +205,8 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 is ChooseAddressBottomSheetConfig -> {
                     ChooseAddressBottomSheet(config = config)
                 }
-                is ExchangeStatusBottomSheetConfig -> {
-                    ExchangeStatusBottomSheet(config = config)
+                is ExpressStatusBottomSheetConfig -> {
+                    ExpressStatusBottomSheet(config = config)
                 }
             }
         }

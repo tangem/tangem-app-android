@@ -7,6 +7,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.presentation.wallet.state.utils.createStateByWalletType
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -16,10 +17,15 @@ internal class InitializeWalletsTransformer(
     private val wallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
-        WalletLoadingStateFactory(clickIntents = clickIntents, walletImageResolver = walletImageResolver)
+        WalletLoadingStateFactory(
+            clickIntents = clickIntents,
+            walletImageResolver = walletImageResolver,
+            walletFeatureToggles = walletFeatureToggles,
+        )
     }
 
     override fun transform(prevState: WalletScreenState): WalletScreenState {
@@ -52,6 +58,7 @@ internal class InitializeWalletsTransformer(
             multiCurrencyCreator = {
                 WalletState.MultiCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
+                    buttons = createMultiWalletEnabledButtons(),
                     bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                 )
@@ -60,7 +67,7 @@ internal class InitializeWalletsTransformer(
                 WalletState.SingleCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
                     bottomSheetConfig = null,
-                    buttons = createDisabledButtons(),
+                    buttons = createSingleWalletDisabledButtons(),
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                     onExploreClick = clickIntents::onExploreClick,
                 )
@@ -68,6 +75,7 @@ internal class InitializeWalletsTransformer(
             visaWalletCreator = {
                 WalletState.Visa.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
+                    buttons = createMultiWalletEnabledButtons(),
                     bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                     onExploreClick = clickIntents::onExploreClick,
@@ -87,7 +95,17 @@ internal class InitializeWalletsTransformer(
         )
     }
 
-    private fun createDisabledButtons(): PersistentList<WalletManageButton> {
+    private fun createMultiWalletEnabledButtons(): PersistentList<WalletManageButton> {
+        if (!walletFeatureToggles.isMainActionButtonsEnabled) return persistentListOf()
+
+        return persistentListOf(
+            WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Swap(enabled = false, dimContent = false, onClick = {}),
+            WalletManageButton.Sell(enabled = false, dimContent = false, onClick = {}),
+        )
+    }
+
+    private fun createSingleWalletDisabledButtons(): PersistentList<WalletManageButton> {
         return persistentListOf(
             WalletManageButton.Receive(enabled = false, dimContent = false, onClick = {}, onLongClick = null),
             WalletManageButton.Send(enabled = false, dimContent = false, onClick = {}),
