@@ -49,7 +49,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                 .size(size = TangemTheme.dimens.size40)
                 .clip(TangemTheme.shapes.roundedCorners8),
             model = ImageRequest.Builder(context = LocalContext.current)
-                .data(state.paymentMethodIconUrl)
+                .data(state.paymentMethod.imageUrl)
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
@@ -67,7 +67,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                             color = TangemTheme.colors.text.primary1,
                         ),
                     ) {
-                        append(state.paymentMethodName)
+                        append(state.paymentMethod.name)
                     }
                 },
                 color = TangemTheme.colors.text.tertiary,
