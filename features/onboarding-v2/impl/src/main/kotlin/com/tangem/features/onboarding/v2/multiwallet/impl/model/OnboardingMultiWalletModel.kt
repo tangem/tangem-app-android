@@ -1,22 +1,14 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
-import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.feedback.GetCardInfoUseCase
-import com.tangem.domain.feedback.SendFeedbackEmailUseCase
-import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
-import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,42 +16,41 @@ import javax.inject.Inject
 internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val tangemSdkManager: TangemSdkManager,
-    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val getCardInfoUseCase: GetCardInfoUseCase,
 ) : Model() {
-
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
-    private val currentScanResponse = MutableStateFlow(params.scanResponse)
+    private val getCardImageUseCase = GetCardImageUseCase()
+    private val _uiState = MutableStateFlow(OnboardingMultiWalletUM())
 
     val state = MutableStateFlow(
         OnboardingMultiWalletState(
             currentStep = getInitialStep(),
+            currentScanResponse = params.scanResponse,
+            accessCode = null,
+            isThreeCards = true,
+            resultUserWallet = null,
         ),
     )
 
-    val uiState = MutableStateFlow(
-        OnboardingMultiWalletUM(
-            onCreateWalletClick = { createWallet(false) },
-            showSeedPhraseOption = params.withSeedPhraseFlow,
-            onOtherOptionsClick = { /* navigate */ },
-            onBack = { },
-            dialog = null,
-        ),
-    )
+    val uiState = _uiState.asStateFlow()
 
     init {
+        // TODO add analytics
+        // if (!manager.isActivationStarted(notNullCard.cardId)) {
+        //     Analytics.send(Onboarding.Started())
+        // }
         initScreenTitleSub()
+        loadCardArtwork()
     }
 
     private fun getInitialStep(): OnboardingMultiWalletState.Step {
-        val card = currentScanResponse.value.card
+        val card = params.scanResponse.card
 
+        // todo check local storage for scan response
         return when {
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup ->
                 OnboardingMultiWalletState.Step.AddBackupDevice
             card.wallets.isNotEmpty() && card.backupStatus?.isActive == true ->
-                OnboardingMultiWalletState.Step.FinishBackup
+                OnboardingMultiWalletState.Step.Finalize
             else ->
                 OnboardingMultiWalletState.Step.CreateWallet
         }
@@ -70,71 +61,24 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         params.titleProvider.changeTitle(title)
 
         modelScope.launch {
-            state
-                .map { it.currentStep }
+            state.map { it.currentStep }
                 .collectLatest { step ->
-                    val title = screenTitleByStep(step)
-                    params.titleProvider.changeTitle(title)
+                    val stepTitle = screenTitleByStep(step)
+                    params.titleProvider.changeTitle(stepTitle)
                 }
         }
     }
 
-    private fun createWallet(shouldReset: Boolean) {
+    private fun loadCardArtwork() {
         modelScope.launch {
-            val result = tangemSdkManager.createProductWallet(
-                scanResponse = currentScanResponse.value,
-                shouldReset = shouldReset,
-            )
+            val artwork =
+                getCardImageUseCase.invoke(params.scanResponse.card.cardId, params.scanResponse.card.cardPublicKey)
 
-            when (result) {
-                is CompletionResult.Success -> {
-                    currentScanResponse.update {
-                        it.copy(
-                            card = result.data.card,
-                            derivedKeys = result.data.derivedKeys,
-                            primaryCard = result.data.primaryCard,
-                        )
-                    }
-
-                    // TODO
-                    // Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
-                }
-
-                is CompletionResult.Failure -> {
-                    if (result.error is TangemSdkError.WalletAlreadyCreated) {
-                        // show should reset dialog
-                        handleActivationError()
-                    }
+            if (artwork != getCardImageUseCase.getDefaultFallbackUrl()) {
+                _uiState.update {
+                    it.copy(artworkUrl = artwork)
                 }
             }
-        }
-    }
-
-    private fun handleActivationError() {
-        uiState.update {
-            it.copy(
-                dialog = resetCardDialog(
-                    onConfirm = {
-                        uiState.update { it.copy(dialog = null) }
-                        resetCard()
-                    },
-                    onDismiss = {
-                        uiState.update { it.copy(dialog = null) }
-                    },
-                    onDismissButtonClick = ::navigateToSupportScreen,
-                ),
-            )
-        }
-    }
-
-    private fun resetCard() {
-        createWallet(true)
-    }
-
-    fun navigateToSupportScreen() {
-        modelScope.launch {
-            val cardInfo = getCardInfoUseCase(currentScanResponse.value).getOrNull() ?: return@launch
-            sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))
         }
     }
 }
