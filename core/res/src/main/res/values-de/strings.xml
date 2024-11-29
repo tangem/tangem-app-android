@@ -891,6 +891,7 @@
   <string name="tokens_list_unavailable_to_purchase_header">Nicht verfügbar zum Kauf</string>
   <string name="tokens_list_unavailable_to_sell_header">Nicht zum Verkauf verfügbar</string>
   <string name="tokens_list_unavailable_to_swap_header">Nicht verfügbar für Tausch von %s</string>
+  <string name="tokens_list_unavailable_to_swap_source_header">Nicht zum Tausch verfügbar</string>
   <string name="transaction_history_contract_address">Vertrag: %s</string>
   <string name="transaction_history_empty_transactions">Du hast noch keine Transaktionen</string>
   <string name="transaction_history_error_failed_to_load">Der Transaktionsverlauf konnte nicht geladen werden.\nKlicke auf die Schaltfläche Neu laden, um die Informationen zu aktualisieren.</string>
