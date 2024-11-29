@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
@@ -25,6 +26,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val hasSingleWalletSignedHashesUseCase: HasSingleWalletSignedHashesUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) {
 
     private var readyForRateAppNotification = false
@@ -36,22 +38,32 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
             flow = getPrimaryCurrencyStatusUpdatesUseCase(userWallet.walletId),
             flow2 = isReadyToShowRateAppUseCase().conflate(),
             flow3 = isNeedToBackupUseCase(userWallet.walletId).conflate(),
-        ) { primaryCurrencyStatus, isReadyToShowRating, isNeedToBackup ->
+            flow4 = getWalletsUseCase().conflate(),
+        ) { maybePrimaryCurrencyStatus, isReadyToShowRating, isNeedToBackup, userWallets ->
             readyForRateAppNotification = true
             buildList {
-                addCriticalNotifications(cardTypesResolver)
-
-                addInformationalNotifications(cardTypesResolver, clickIntents)
-
-                addWarningNotifications(
-                    userWallet,
-                    cardTypesResolver,
-                    primaryCurrencyStatus,
-                    isNeedToBackup,
-                    clickIntents,
+                addCriticalNotifications(
+                    cardTypesResolver = cardTypesResolver,
                 )
 
-                addRateTheAppNotification(isReadyToShowRating, clickIntents)
+                addInformationalNotifications(
+                    userWallets = userWallets,
+                    cardTypesResolver = cardTypesResolver,
+                    clickIntents = clickIntents,
+                )
+
+                addWarningNotifications(
+                    userWallet = userWallet,
+                    cardTypesResolver = cardTypesResolver,
+                    maybePrimaryCurrencyStatus = maybePrimaryCurrencyStatus,
+                    isNeedToBackup = isNeedToBackup,
+                    clickIntents = clickIntents,
+                )
+
+                addRateTheAppNotification(
+                    isReadyToShowRating = isReadyToShowRating,
+                    clickIntents = clickIntents,
+                )
             }.toImmutableList()
         }
     }
@@ -76,14 +88,19 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
     }
 
     private fun MutableList<WalletNotification>.addInformationalNotifications(
+        userWallets: List<UserWallet>,
         cardTypesResolver: CardTypesResolver,
         clickIntents: WalletClickIntents,
     ) {
+        val userHasWalletOrWallet2 = userWallets.any {
+            val typesResolver = it.scanResponse.cardTypesResolver
+            typesResolver.isTangemWallet() || typesResolver.isWallet2()
+        }
         addIf(
             element = WalletNotification.NoteMigration(
                 onClick = { clickIntents.onNoteMigrationButtonClick(NOTE_MIGRATION_URL) },
             ),
-            condition = cardTypesResolver.isTangemNote(),
+            condition = cardTypesResolver.isTangemNote() && !userHasWalletOrWallet2,
         )
 
         addIf(
