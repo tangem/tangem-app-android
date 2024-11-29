@@ -39,4 +39,27 @@ enum class StakingActionType {
             MIGRATE -> "Migrate"
             UNKNOWN -> "Unknown"
         }
+
+    val canChooseValidator
+        get() = when (this) {
+            STAKE,
+            RESTAKE,
+            VOTE,
+            VOTE_LOCKED,
+            -> true
+
+            UNSTAKE,
+            CLAIM_REWARDS,
+            RESTAKE_REWARDS,
+            CLAIM_UNSTAKED,
+            WITHDRAW,
+            UNLOCK_LOCKED,
+            STAKE_LOCKED,
+            REVOKE,
+            REVOTE,
+            REBOND,
+            MIGRATE,
+            UNKNOWN,
+            -> false
+        }
 }
