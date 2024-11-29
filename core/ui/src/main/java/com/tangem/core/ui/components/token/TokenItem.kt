@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.token.internal.*
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -145,14 +146,16 @@ private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed 
         is TokenItemState.Unreachable,
         -> {
             val onClick = state.onItemClick
-            val onLongClick = state.onItemLongClick?.let { rememberHapticFeedback(state = state, onAction = it) }
+            val onLongClick = state.onItemLongClick?.let {
+                rememberHapticFeedback(state = state, onAction = { it(state) })
+            }
 
             when {
                 onClick == null && onLongClick == null -> this
                 onClick == null && onLongClick != null -> combinedClickable(onClick = {}, onLongClick = onLongClick)
-                onClick != null && onLongClick == null -> combinedClickable(onClick = onClick)
+                onClick != null && onLongClick == null -> combinedClickable(onClick = { onClick(state) })
                 onClick != null && onLongClick != null -> {
-                    combinedClickable(onClick = onClick, onLongClick = onLongClick)
+                    combinedClickable(onClick = { onClick(state) }, onLongClick = onLongClick)
                 }
                 else -> this
             }
@@ -456,7 +459,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
         tokenItemVisibleState.copy(
             iconState = coinIconState.copy(showCustomBadge = true),
             titleState = TokenItemState.TitleState.Content(
-                text = "PolygonPolygonPolygonPolygonPolygonPolygon",
+                text = stringReference(value = "PolygonPolygonPolygonPolygonPolygonPolygon"),
                 hasPending = true,
             ),
             fiatAmountState = TokenItemState.FiatAmountState.Content(
@@ -473,41 +476,41 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
         TokenItemState.Unreachable(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             onItemClick = {},
             onItemLongClick = {},
         ),
         TokenItemState.Unreachable(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            subtitleState = TokenItemState.SubtitleState.TextContent("Token"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
+            subtitleState = TokenItemState.SubtitleState.TextContent(stringReference(value = "Token")),
             onItemClick = {},
             onItemLongClick = {},
         ),
         TokenItemState.NoAddress(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             onItemLongClick = {},
         ),
         TokenItemState.NoAddress(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
-            subtitleState = TokenItemState.SubtitleState.TextContent("Token"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
+            subtitleState = TokenItemState.SubtitleState.TextContent(value = stringReference(value = "Token")),
             onItemLongClick = {},
         ),
         TokenItemState.Draggable(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "3 172,14 $"),
         ),
         TokenItemState.Content(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
             subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
@@ -521,7 +524,7 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
         TokenItemState.Content(
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
             subtitle2State = TokenItemState.Subtitle2State.LabelContent(
                 auditLabelUM = AuditLabelUM(
@@ -540,21 +543,21 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
         TokenItemState.Loading(
             id = "Loading#1",
             iconState = customTokenIconState.copy(isGrayscale = true),
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
         ),
         tokenItemVisibleState.copy(
-            titleState = TokenItemState.TitleState.Content(text = "Polygon testnet"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon testnet")),
             iconState = tokenIconState.copy(isGrayscale = true),
         ),
         tokenItemVisibleState.copy(
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             iconState = customTokenIconState.copy(
                 tint = TangemColorPalette.White,
                 background = TangemColorPalette.Black,
             ),
         ),
         tokenItemVisibleState.copy(
-            titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
             iconState = customTokenIconState.copy(isGrayscale = true),
         ),
     ),
@@ -592,7 +595,10 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             TokenItemState.Content(
                 id = UUID.randomUUID().toString(),
                 iconState = coinIconState,
-                titleState = TokenItemState.TitleState.Content(text = "Polygon", hasPending = true),
+                titleState = TokenItemState.TitleState.Content(
+                    text = stringReference(value = "Polygon"),
+                    hasPending = true,
+                ),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = true),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
                 subtitleState = TokenItemState.SubtitleState.Unknown,
