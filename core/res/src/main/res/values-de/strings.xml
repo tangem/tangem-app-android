@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
   <string name="action_buttons_buy_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Kauf hinzuzufügen</string>
-  <string name="action_buttons_sell_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Verkauf hinzuzufügen</string>
+  <string name="action_buttons_sell_empty_search_message">Token nicht in Ihrem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Verkauf hinzuzufügen</string>
   <string name="action_buttons_swap_choose_token">Wähle den Token</string>
   <string name="action_buttons_swap_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es für Swaps zu finden und hinzuzufügen</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Es gibt keine verfügbaren Token, die mit dem ausgewählten Token getauscht werden können. Bitte wähle einen anderen.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Kein verfügbares Paar</string>
-  <string name="action_buttons_you_want_to_receive">Du möchtest erhalten</string>
-  <string name="action_buttons_you_want_to_swap">Du möchtest tauschen</string>
+  <string name="action_buttons_you_want_to_receive">Wähle den Token aus, das Du erhalten möchtest</string>
+  <string name="action_buttons_you_want_to_swap">Wähle den Token, den Du tauschen möchtest</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
@@ -126,7 +126,7 @@
   <string name="common_fee_selector_option_market">Markt</string>
   <string name="common_fee_selector_option_slow">Langsam</string>
   <string name="common_fee_selector_title">Gebühren</string>
-  <string name="common_generate_addresses">Adressen abrufen</string>
+  <string name="common_generate_addresses">Adressen synchronisieren</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
   <string name="common_hour">stunde</string>
@@ -251,6 +251,7 @@
   <string name="express_choose_providers_subtitle">Tangem bietet Token-Swaps über Drittanbieter gemäß den jeweiligen Bedingungen des jeweiligen Anbieters an.</string>
   <string name="express_choose_providers_title">Anbieter wählen</string>
   <string name="express_error_code">Es ist ein Fehler aufgetreten. Code: %s</string>
+  <string name="express_error_provider_amount_roundup">Fehler %1$s. Der ausgewählte Anbieter kann die angegebene Transaktion nicht verarbeiten. Bitte runde den Wert auf %2$s auf oder änder diesen.</string>
   <string name="express_error_swap_pair_unavailable">Der gewählte Anbieter ist im Moment nicht verfügbar. Bitte versuche es später noch einmal. (Code: %s)</string>
   <string name="express_error_swap_unavailable">Swaps sind im Moment nicht verfügbar. Bitte versuche es später noch einmal. (Code: %s)</string>
   <string name="express_estimated_amount">Geschätzter Betrag</string>
@@ -296,7 +297,7 @@
   <string name="express_provider_recommended">Empfohlen</string>
   <string name="express_status_bought">Gekauft %s</string>
   <string name="express_status_buying">Kauf %s</string>
-  <string name="express_status_buying_active">Kauf %s...</string>
+  <string name="express_status_buying_active">Kauf %s…</string>
   <string name="express_token_list_empty_search">Keine Token gefunden. Bitte versuche eine andere Anfrage</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaktions-ID kopiert</string>
@@ -565,6 +566,8 @@
   <string name="onboarding_wallet_info_title_fourth">Zugangscode wiederherstellen</string>
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
+  <string name="onramp_avaiable_with_payment_methods">Verfügbar mit %s</string>
+  <string name="onramp_choose_provider_title_hint">Anbieter erleichtern Transaktionen und sorgen für einen reibungslosen und effizienten Token-Austausch</string>
   <string name="onramp_country_search">Suche nach Land</string>
   <string name="onramp_country_unavailable">Nicht verfügbar</string>
   <string name="onramp_currency_search">Suche nach Währung</string>
@@ -572,10 +575,11 @@
   <string name="onramp_min_amount_restriction">Der zu kaufende Betrag muss mindestens %s betragen</string>
   <string name="onramp_no_available_providers">Keine verfügbaren Anbieter für diese Währung</string>
   <string name="onramp_pay_with">Bezahlen mit</string>
+  <string name="onramp_provider_max_amount">Verfügbar bis zu %s</string>
+  <string name="onramp_provider_min_amount">Erhältlich bei %s</string>
   <string name="onramp_redirecting_to_provider_subtitle">Du kannst Deine Transaktion beim Drittanbieter %s abschließen.</string>
   <string name="onramp_redirecting_to_provider_title">Umleitung auf %s…</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Unsere Dienstleistungen sind in diesem Land nicht verfügbar</string>
-  <string name="onramp_residency_bottomsheet_country_subtitle">Änder oder bestätige bitte</string>
   <string name="onramp_residency_bottomsheet_title">Dein Wohnsitz wurde identifiziert als</string>
   <string name="onramp_settings_residence">Residenz</string>
   <string name="onramp_settings_residence_description">Bitte wähle das richtige Land aus, um korrekte Zahlungsoptionen und Dienstleistungen zu gewährleisten.</string>
@@ -590,8 +594,11 @@
   <string name="qr_scanner_camera_denied_settings_button">Einstellungen</string>
   <string name="qr_scanner_camera_denied_text">Du hast keinen Zugriff auf deine Kamera gewährt</string>
   <string name="qr_scanner_camera_denied_title">Kamerazugriff verweigert</string>
+  <string name="receive_bottom_sheet_no_memo_required_message">Kein Memo erforderlich</string>
   <string name="receive_bottom_sheet_warning_message">%1$s ( %2$s ) im %3$s Netzwerk</string>
+  <string name="receive_bottom_sheet_warning_message_description">Das Senden einer anderen Währung führt zu deren irreversiblem Verlust.</string>
   <string name="receive_bottom_sheet_warning_message_full">Sende nur %s an diese Adresse. Der Versand einer anderen Währung führt zu ihrem unwiderruflichen Verlust.</string>
+  <string name="receive_bottom_sheet_warning_message_title">Sende nur %s an diese Adresse.</string>
   <string name="receive_token_description">Überweise Geld von einem anderen Wallet oder einer anderen Börse</string>
   <string name="referral_button_participate">Teilnehmen</string>
   <string name="referral_error_failed_to_load_info">Die Informationen zum Empfehlungsprogramm konnten nicht geladen werden. Bitte versuche es später noch einmal.</string>
@@ -1004,12 +1011,12 @@
   <string name="warning_failed_to_verify_card_message">Bei dieser Karte oder Ring kann es sich um ein Produktionsmuster oder eine Fälschung handeln</string>
   <string name="warning_failed_to_verify_card_title">Echtheitsprüfung fehlgeschlagen</string>
   <string name="warning_hedera_missing_token_association_button_title">zuordnen</string>
-  <string name="warning_hedera_missing_token_association_message">Dieser Token muss mit Ihrem Hedera-Konto verbunden sein, bevor du diesen erhalten kannst. Zuordnungsgebühr ~%1$s %2$s</string>
+  <string name="warning_hedera_missing_token_association_message">Dieser Token muss mit Ihrem Hedera-Konto verbunden sein, bevor du diesen erhalten kannst. Zuordnungsgebühr ~%1$s %2$s</string>
   <string name="warning_hedera_missing_token_association_message_brief">Dieses Token muss mit deinem Hedera-Konto verknüpft sein, bevor du ihn erhalten kannst.</string>
   <string name="warning_hedera_missing_token_association_title">Verknüpfe deinen Token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Nicht genug %s. Lade dein Hedera-Konto auf, um dieses Token zuzuordnen</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Bist Du sicher, dass Du die Transaktion stornieren willst? Du kannst die Transaktion nicht erneut starten.</string>
-  <string name="warning_kaspa_unfinished_token_transaction_message">Deine Transaktion mit einem Betrag von %1$s %2$s wurde nicht abgeschlossen. Du kannst versuchen, diese erneut abzuschließen.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Deine Transaktion mit einem Betrag von %1$s %2$s wurde nicht abgeschlossen. Du kannst versuchen, diese erneut abzuschließen.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Du hast eine nicht abgeschlossene Transaktion</string>
   <string name="warning_low_signatures_message">Auf dieser Karte oder Ring sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>
   <string name="warning_low_signatures_title">Geringe Anzahl von Unterschriften</string>
