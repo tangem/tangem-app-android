@@ -2,6 +2,7 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
@@ -29,11 +30,11 @@ internal class PortfolioTokenUMConverter(
     override fun convert(value: PortfolioData.CryptoCurrencyData): PortfolioTokenUM {
         val tokenItemStateConverter = TokenItemStateConverter(
             appCurrency = appCurrency,
-            titleStateProvider = { TokenItemState.TitleState.Content(text = value.userWallet.name) },
+            titleStateProvider = { TokenItemState.TitleState.Content(text = stringReference(value.userWallet.name)) },
             subtitleStateProvider = {
-                TokenItemState.SubtitleState.TextContent(value = value.status.currency.name)
+                TokenItemState.SubtitleState.TextContent(value = stringReference(value.status.currency.name))
             },
-            onItemClick = onTokenItemClick,
+            onItemClick = { _, status -> onTokenItemClick(status) },
         )
 
         return PortfolioTokenUM(
