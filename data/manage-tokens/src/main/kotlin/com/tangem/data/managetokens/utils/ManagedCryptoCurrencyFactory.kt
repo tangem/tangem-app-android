@@ -79,12 +79,11 @@ internal class ManagedCryptoCurrencyFactory {
         scanResponse: ScanResponse,
     ): List<ManagedCryptoCurrency> = tokensResponse.tokens
         .mapNotNull { token ->
-            maybeCreateCustomToken(token, null, scanResponse)
+            maybeCreateCustomToken(token, scanResponse)
         }
 
     private fun maybeCreateCustomToken(
         token: UserTokensResponse.Token,
-        imageHost: String?,
         scanResponse: ScanResponse,
     ): ManagedCryptoCurrency? {
         val blockchain = Blockchain.fromNetworkId(token.networkId)
@@ -107,7 +106,7 @@ internal class ManagedCryptoCurrencyFactory {
                 currencyId = getCoinId(network, blockchain.toCoinId()),
                 name = token.name,
                 symbol = token.symbol,
-                iconUrl = getIconUrl(blockchain.id, imageHost),
+                iconUrl = getIconUrl(blockchain.id),
                 network = network,
             )
         } else {
@@ -115,7 +114,7 @@ internal class ManagedCryptoCurrencyFactory {
                 currencyId = getTokenId(network, token.id, contractAddress),
                 name = token.name,
                 symbol = token.symbol,
-                iconUrl = token.id?.let { getIconUrl(it, imageHost) },
+                iconUrl = token.id?.let { getIconUrl(it) },
                 contractAddress = contractAddress,
                 network = network,
                 decimals = token.decimals,
