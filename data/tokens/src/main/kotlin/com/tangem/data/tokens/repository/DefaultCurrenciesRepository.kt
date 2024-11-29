@@ -3,6 +3,7 @@ package com.tangem.data.tokens.repository
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
@@ -504,6 +505,11 @@ internal class DefaultCurrenciesRepository(
             combine(userWalletsWithCurrencies) { it.toMap() }
                 .onEmpty { emit(value = emptyMap()) }
         }
+    }
+
+    override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
+        val blockchain = Blockchain.fromNetworkId(network.backendId)
+        return blockchain?.isNetworkFeeZero() ?: false
     }
 
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
