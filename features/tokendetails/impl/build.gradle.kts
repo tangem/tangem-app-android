@@ -54,7 +54,7 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.common.ui)
 
@@ -93,5 +93,6 @@ dependencies {
     implementation(projects.features.send.api)
     implementation(projects.features.staking.api)
     implementation(projects.features.markets.api)
+    implementation(projects.features.onramp.api)
 
 }

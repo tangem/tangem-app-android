@@ -51,7 +51,6 @@ import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
@@ -87,7 +86,6 @@ internal class SwapViewModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
-    private val walletFeatureToggles: WalletFeatureToggles,
     swapInteractorFactory: SwapInteractor.Factory,
     private val savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
@@ -99,13 +97,8 @@ internal class SwapViewModel @Inject constructor(
                 ?: error("no expected parameter CryptoCurrency (from) found")
         }
 
-    private val initialCurrencyTo: CryptoCurrency?
-        get() = if (walletFeatureToggles.isMainActionButtonsEnabled) {
-            savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_TO_KEY)
-                ?.unbundle(CryptoCurrency.serializer())
-        } else {
-            null
-        }
+    private val initialCurrencyTo: CryptoCurrency? = savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_TO_KEY)
+        ?.unbundle(CryptoCurrency.serializer())
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Swap.USER_WALLET_ID_KEY)
         ?.unbundle(UserWalletId.serializer())

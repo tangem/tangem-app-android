@@ -3,6 +3,9 @@ package com.tangem.features.onramp.selecttoken
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -20,6 +23,8 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.launch
 
+// TODO: Add OnrampOperationModel
+@Suppress("LongParameterList")
 internal class DefaultOnrampOperationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     onrampTokenListComponentFactory: OnrampTokenListComponent.Factory,
@@ -27,6 +32,7 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : AppComponentContext by appComponentContext, OnrampOperationComponent {
 
     private val onrampTokenListComponent: OnrampTokenListComponent = onrampTokenListComponentFactory.create(
@@ -42,6 +48,15 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
         ),
     )
 
+    init {
+        analyticsEventHandler.send(
+            event = when (params) {
+                is OnrampOperationComponent.Params.Buy -> MainScreenAnalyticsEvent.BuyScreenOpened
+                is OnrampOperationComponent.Params.Sell -> MainScreenAnalyticsEvent.SellScreenOpened
+            },
+        )
+    }
+
     @Composable
     override fun Content(modifier: Modifier) {
         OnrampSelectToken(
@@ -49,13 +64,25 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
                 is OnrampOperationComponent.Params.Buy -> R.string.common_buy
                 is OnrampOperationComponent.Params.Sell -> R.string.common_sell
             },
-            onBackClick = router::pop,
+            onBackClick = ::onBackClick,
             onrampTokenListComponent = onrampTokenListComponent,
             modifier = modifier,
         )
     }
 
     private fun onTokenClick(status: CryptoCurrencyStatus) {
+        val currencySymbol = status.currency.symbol
+        analyticsEventHandler.send(
+            event = when (params) {
+                is OnrampOperationComponent.Params.Buy -> {
+                    MainScreenAnalyticsEvent.BuyTokenClicked(currencySymbol = currencySymbol)
+                }
+                is OnrampOperationComponent.Params.Sell -> {
+                    MainScreenAnalyticsEvent.SellTokenClicked(currencySymbol = currencySymbol)
+                }
+            },
+        )
+
         componentScope.launch {
             val appCurrencyCode = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }.code
 
@@ -74,6 +101,19 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
             cryptoCurrencyStatus = status,
             appCurrencyCode = appCurrencyCode,
         )
+    }
+
+    private fun onBackClick() {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.ButtonClose(
+                source = when (params) {
+                    is OnrampOperationComponent.Params.Buy -> AnalyticsParam.ScreensSources.Buy
+                    is OnrampOperationComponent.Params.Sell -> AnalyticsParam.ScreensSources.Sell
+                },
+            ),
+        )
+
+        router.pop()
     }
 
     @AssistedFactory
