@@ -2,6 +2,7 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
@@ -12,18 +13,14 @@ import com.tangem.data.tokens.utils.CustomTokensMerger
 import com.tangem.data.tokens.utils.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
-import com.tangem.datasource.api.express.models.request.AssetsRequestBody
-import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
@@ -46,19 +43,19 @@ import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
-    private val tangemExpressApi: TangemExpressApi,
     private val userWalletsStore: UserWalletsStore,
     private val walletManagersFacade: WalletManagersFacade,
-    private val expressAssetsStore: ExpressAssetsStore,
     private val cacheRegistry: CacheRegistry,
     private val appPreferencesStore: AppPreferencesStore,
+    private val swapServiceLoader: SwapServiceLoader,
     private val dispatchers: CoroutineDispatcherProvider,
+    excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory()
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
-    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
+    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
+    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig, excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
     private val customTokensMerger = CustomTokensMerger(tangemTechApi, dispatchers)
@@ -298,22 +295,27 @@ internal class DefaultCurrenciesRepository(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
     ): CryptoCurrency = withContext(dispatchers.io) {
-        val userWallet = getUserWallet(userWalletId)
-        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
-
-        val response = requireNotNull(
-            value = getSavedUserTokensResponseSync(key = userWalletId),
-            lazyMessage = {
-                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-            },
-        )
-
-        responseCurrenciesFactory.createCurrency(
-            currencyId = id,
-            response = response,
-            scanResponse = userWallet.scanResponse,
-        )
+        getMultiCurrencyWalletCurrency(userWalletId, id.value)
     }
+
+    override suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency =
+        withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+            val response = requireNotNull(
+                value = getSavedUserTokensResponseSync(key = userWalletId),
+                lazyMessage = {
+                    "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+                },
+            )
+
+            responseCurrenciesFactory.createCurrency(
+                currencyId = id,
+                response = response,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
 
     override suspend fun getNetworkCoin(
         userWalletId: UserWalletId,
@@ -565,27 +567,7 @@ internal class DefaultCurrenciesRepository(
         userWalletId: UserWalletId,
         userTokens: UserTokensResponse,
     ) {
-        try {
-            val tokensList = userTokens.tokens
-                .map {
-                    LeastTokenInfo(
-                        contractAddress = it.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
-                        network = it.networkId,
-                    )
-                }
-
-            if (tokensList.isNotEmpty()) {
-                val response = tangemExpressApi.getAssets(
-                    AssetsRequestBody(
-                        tokensList = tokensList,
-                    ),
-                )
-
-                expressAssetsStore.store(userWalletId, response.getOrThrow())
-            }
-        } catch (e: Throwable) {
-            Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
-        }
+        swapServiceLoader.update(userWalletId, userTokens)
     }
 
     private suspend fun handleFetchTokensError(userWallet: UserWallet, e: ApiResponseError): UserTokensResponse {
