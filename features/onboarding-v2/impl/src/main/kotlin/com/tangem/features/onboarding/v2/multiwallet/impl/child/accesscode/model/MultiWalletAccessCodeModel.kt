@@ -1,9 +1,11 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.model
 
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
@@ -23,6 +25,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val backupServiceHolder: BackupServiceHolder,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val _uiState = MutableStateFlow(getInitialState())
@@ -32,6 +35,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
     val onDismiss = MutableSharedFlow<Unit>()
 
     init {
+        analyticsHandler.send(OnboardingEvent.Backup.SettingAccessCodeStarted)
+
         params.multiWalletState.update {
             it.copy(accessCode = null)
         }
@@ -111,6 +116,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                         it.copy(atLeast4CharError = true)
                     }
                 }
+
+                analyticsHandler.send(OnboardingEvent.Backup.AccessCodeEntered)
             }
             MultiWalletAccessCodeUM.Step.ConfirmAccessCode -> {
                 if (checkAccessCode()) {
@@ -123,6 +130,8 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                     }
                     modelScope.launch { onDismiss.emit(Unit) }
                 }
+
+                analyticsHandler.send(OnboardingEvent.Backup.AccessCodeReEntered)
             }
         }
     }
