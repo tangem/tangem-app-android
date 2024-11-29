@@ -7,20 +7,32 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 
 internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM> {
 
     override val values: Sequence<TokenListUM> = sequenceOf(
-        createTokensList(hasSearchBar = false, createDefaultTokenItem()),
-        createTokensList(hasSearchBar = true, createDefaultTokenItem()),
+        createTokensList(
+            hasSearchBar = false,
+            createHeader(),
+            createDefaultTokenItem(),
+            createDefaultTokenItem(),
+        ),
+        createTokensList(
+            hasSearchBar = true,
+            createHeader(),
+            createDefaultTokenItem(),
+            createDefaultTokenItem(),
+        ),
     )
 
     private fun createTokensList(hasSearchBar: Boolean, vararg items: TokensListItemUM): TokenListUM {
         return TokenListUM(
-            items = buildList {
+            availableItems = buildList {
                 if (hasSearchBar) {
                     TokensListItemUM.SearchBar(
                         searchBarUM = SearchBarUM(
@@ -37,7 +49,19 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
                 addAll(items)
             }
                 .toImmutableList(),
+            unavailableItems = persistentListOf(
+                createHeader(),
+                createUnavailableTokenItem(),
+                createUnavailableTokenItem(),
+            ),
             isBalanceHidden = false,
+        )
+    }
+
+    private fun createHeader(): TokensListItemUM.GroupTitle {
+        return TokensListItemUM.GroupTitle(
+            id = "exchange_tokens_available_tokens_header",
+            text = resourceReference(R.string.exchange_tokens_available_tokens_header),
         )
     }
 
@@ -46,13 +70,37 @@ internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM
             state = TokenItemState.Content(
                 id = "1",
                 iconState = CurrencyIconState.Locked,
-                titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
+                titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Bitcoin")),
                 fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
                 subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                     price = "34 496,75 \$",
                     priceChangePercent = "0,43 %",
                     type = PriceChangeType.DOWN,
+                ),
+                onItemClick = {},
+                onItemLongClick = {},
+            ),
+        )
+    }
+
+    private fun createUnavailableTokenItem(): TokensListItemUM.Token {
+        return TokensListItemUM.Token(
+            state = TokenItemState.Content(
+                id = "2",
+                iconState = CurrencyIconState.Locked,
+                titleState = TokenItemState.TitleState.Content(
+                    text = stringReference(value = "Bitcoin"),
+                    isAvailable = false,
+                ),
+                fiatAmountState = TokenItemState.FiatAmountState.TextContent(
+                    text = "12 368,14 \$",
+                    isAvailable = false,
+                ),
+                subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
+                subtitleState = TokenItemState.SubtitleState.TextContent(
+                    value = stringReference(value = "BTC"),
+                    isAvailable = false,
                 ),
                 onItemClick = {},
                 onItemLongClick = {},
