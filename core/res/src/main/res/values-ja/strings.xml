@@ -2,12 +2,13 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、買付のために追加してください</string>
   <string name="action_buttons_sell_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、売却のために追加してください</string>
+  <string name="action_buttons_sell_navigation_bar_title">暗号資産を売却</string>
   <string name="action_buttons_swap_choose_token">トークンを選択</string>
   <string name="action_buttons_swap_empty_search_message">ポートフォリオにトークンが見つかりませんか？マーケットから見つけ、スワップのために追加してください</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">選択したトークンと交換できるトークンがありません。別のトークンを選択してください。</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">利用可能なペアがありません</string>
-  <string name="action_buttons_you_want_to_receive">受け取りたい</string>
-  <string name="action_buttons_you_want_to_swap">交換したい</string>
+  <string name="action_buttons_you_want_to_receive">受け取りたいトークンを選択します</string>
+  <string name="action_buttons_you_want_to_swap">スワップしたいトークンを選択します</string>
   <string name="add_custom_token_choose_network">ネットワークを選択</string>
   <string name="add_custom_token_title">カスタムトークンの追加</string>
   <string name="add_tokens_title">トークンの管理</string>
@@ -123,7 +124,7 @@
   <string name="common_fee_selector_option_market">マーケット</string>
   <string name="common_fee_selector_option_slow">遅い</string>
   <string name="common_fee_selector_title">速度と料金</string>
-  <string name="common_generate_addresses">アドレスを取得する</string>
+  <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
   <string name="common_hour">時間</string>
@@ -248,6 +249,7 @@
   <string name="express_choose_providers_subtitle">Tangemは、各プロバイダーの条件に従って、サードパーティプロバイダーを介してトークンスワップを提供します。</string>
   <string name="express_choose_providers_title">プロバイダーを選択</string>
   <string name="express_error_code">エラーが発生しました。コード: %s</string>
+  <string name="express_error_provider_amount_roundup">エラー%1$s 。選択したプロバイダーは指定された取引を処理できません。値を%2$sに切り上げるか、変更してください。</string>
   <string name="express_error_swap_pair_unavailable">選択したプロバイダーは現在利用できません。しばらくしてからもう一度お試しください。(コード: %s )</string>
   <string name="express_error_swap_unavailable">現在、交換はご利用いただけません。しばらくしてからもう一度お試しください。(コード: %s )</string>
   <string name="express_estimated_amount">推定金額</string>
@@ -557,6 +559,8 @@
   <string name="onboarding_wallet_info_title_fourth">アクセスコードの復元</string>
   <string name="onboarding_wallet_info_title_second">同一のカード</string>
   <string name="onboarding_wallet_info_title_third">アクセスコード</string>
+  <string name="onramp_avaiable_with_payment_methods">%sで利用可能</string>
+  <string name="onramp_choose_provider_title_hint">プロバイダーは取引を促進し、スムーズで効率的なトークン交換を保証します</string>
   <string name="onramp_country_search">国で検索</string>
   <string name="onramp_country_unavailable">利用不可</string>
   <string name="onramp_currency_search">通貨で検索</string>
@@ -564,10 +568,11 @@
   <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
   <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
   <string name="onramp_pay_with">支払う</string>
+  <string name="onramp_provider_max_amount">最大 %s まで使用可能</string>
+  <string name="onramp_provider_min_amount">%s 以上で利用可能</string>
   <string name="onramp_redirecting_to_provider_subtitle">サードパーティプロバイダー%sで取引を完了できます。</string>
   <string name="onramp_redirecting_to_provider_title">%sにリダイレクトしています...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">この国では当社のサービスはご利用いただけません</string>
-  <string name="onramp_residency_bottomsheet_country_subtitle">変更または確認</string>
   <string name="onramp_residency_bottomsheet_title">あなたの住居は次のように識別されています</string>
   <string name="onramp_settings_residence">住居</string>
   <string name="onramp_settings_residence_description">正確なお支払い方法とサービスを確保するため、正しい国を選択してください。</string>
@@ -582,8 +587,11 @@
   <string name="qr_scanner_camera_denied_settings_button">設定</string>
   <string name="qr_scanner_camera_denied_text">カメラへのアクセスを許可していません。</string>
   <string name="qr_scanner_camera_denied_title">カメラへのアクセスが拒否されました</string>
+  <string name="receive_bottom_sheet_no_memo_required_message">メモ不要</string>
   <string name="receive_bottom_sheet_warning_message">%3$sネットワーク上の%1$s ( %2$s )</string>
+  <string name="receive_bottom_sheet_warning_message_description">他の暗号資産を送信すると、取り返しのつかない損失が発生します。</string>
   <string name="receive_bottom_sheet_warning_message_full">このアドレスには%sのみを送金してください。他のトークンを送信すると、取り返しのつかない損失が発生します。</string>
+  <string name="receive_bottom_sheet_warning_message_title">このアドレスには%sのみを送信してください。</string>
   <string name="receive_token_description">ウォレットや取引所から資金を送金する</string>
   <string name="referral_button_participate">参加する</string>
   <string name="referral_error_failed_to_load_info">紹介プログラムに関する情報を読み込めませんでした。しばらくしてからもう一度お試しください。</string>
@@ -994,12 +1002,12 @@
   <string name="warning_failed_to_verify_card_message">このカードは、サンプル品または偽造品である可能性があります</string>
   <string name="warning_failed_to_verify_card_title">真正性チェックに失敗しました</string>
   <string name="warning_hedera_missing_token_association_button_title">関連付ける</string>
-  <string name="warning_hedera_missing_token_association_message">このトークンを受け取るには、Hederaアカウントに関連付ける必要があります。関連付け手数料 ~ %1$s %2$s</string>
+  <string name="warning_hedera_missing_token_association_message">このトークンを受け取るには、Hederaアカウントに関連付ける必要があります。関連付け手数料 ~ %1$s %2$s</string>
   <string name="warning_hedera_missing_token_association_message_brief">このトークンを受け取るには、Hederaアカウントに関連付ける必要があります。</string>
   <string name="warning_hedera_missing_token_association_title">トークンを関連付ける</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">%sが不足しています。このトークンを関連付けるには、Hederaアカウントに資金を追加してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">取引をキャンセルしてもよろしいですか? 取引を再試行することはできません</string>
-  <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">未完了の取引があります</string>
   <string name="warning_low_signatures_message">このカードには%sの署名のみが残っています。資金をすべて引き出す必要があります。</string>
   <string name="warning_low_signatures_title">署名数が少ないです</string>
