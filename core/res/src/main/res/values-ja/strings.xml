@@ -882,6 +882,7 @@
   <string name="tokens_list_unavailable_to_purchase_header">買付できません</string>
   <string name="tokens_list_unavailable_to_sell_header">売却できません</string>
   <string name="tokens_list_unavailable_to_swap_header">%sからのスワップは利用できません</string>
+  <string name="tokens_list_unavailable_to_swap_source_header">スワップはできません</string>
   <string name="transaction_history_contract_address">コントラクト: %s</string>
   <string name="transaction_history_empty_transactions">まだ取引はありません</string>
   <string name="transaction_history_error_failed_to_load">取引履歴の読み込みに失敗しました。\n情報を更新するには、リロードボタンをクリックしてください。</string>
