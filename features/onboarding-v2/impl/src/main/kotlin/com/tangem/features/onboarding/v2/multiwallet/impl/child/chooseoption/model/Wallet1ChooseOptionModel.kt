@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -9,6 +10,7 @@ import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
+import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,17 +25,24 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val cardRepository: CardRepository,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
     private var skipClicked = false
     val returnToParentFlow = MutableSharedFlow<Unit>()
 
+    init {
+        analyticsHandler.send(OnboardingEvent.Backup.ScreenOpened)
+    }
+
     fun onSkipClick() {
         // TODO show confirmation dialog
 
         if (skipClicked) return
         skipClicked = true
+
+        analyticsHandler.send(OnboardingEvent.Backup.Skipped)
 
         modelScope.launch {
             val scanResponse = params.multiWalletState.value.currentScanResponse
