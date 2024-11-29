@@ -569,6 +569,7 @@ internal class DefaultStakingRepository(
             -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
             Blockchain.BSC,
             Blockchain.Ethereum,
+            Blockchain.Polkadot,
             -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
             Blockchain.Tron -> {
                 val tronStakeKitTransaction = tronStakeKitTransactionAdapter.fromJson(unsignedTransaction)

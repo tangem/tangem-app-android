@@ -38,6 +38,7 @@ internal object NetworkModule {
 
     private const val PROD_V2_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v2/"
     private const val TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS = 60L
+    private const val STAKE_KIT_API_TIMEOUT_SECONDS = 60L
 
     @Provides
     @Singleton
@@ -88,6 +89,10 @@ internal object NetworkModule {
             context = context,
             apiConfigsManager = apiConfigsManager,
             clientBuilder = {
+                this.callTimeout(STAKE_KIT_API_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .connectTimeout(STAKE_KIT_API_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .readTimeout(STAKE_KIT_API_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                    .applyTimeoutAnnotations()
                 addInterceptor(
                     NetworkLogsSaveInterceptor(appLogsStore),
                 )
