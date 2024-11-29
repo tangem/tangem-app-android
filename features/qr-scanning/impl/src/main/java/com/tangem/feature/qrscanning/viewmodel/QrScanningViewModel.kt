@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.common.routing.AppRoute
+import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.navigation.QrScanningInnerRouter
 import com.tangem.feature.qrscanning.presentation.QrScanningState
@@ -20,6 +21,7 @@ import javax.inject.Inject
 internal class QrScanningViewModel @Inject constructor(
     private val stateHolder: QrScanningStateController,
     private val clickIntents: QrScanningClickIntentsImplementor,
+    private val cardSdkProvider: CardSdkProvider,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -30,6 +32,12 @@ internal class QrScanningViewModel @Inject constructor(
 
     val uiState: StateFlow<QrScanningState> = stateHolder.uiState
     val launchGalleryEvent: SharedFlow<GalleryRequest> = clickIntents.launchGallery
+
+    init {
+        // samsung for some reason disables reader mode, and then it works unstable
+        // to prevent this disable ir manually before scan QR
+        cardSdkProvider.sdk.forceDisableReaderMode()
+    }
 
     fun setRouter(router: QrScanningInnerRouter) {
         clickIntents.initialize(
@@ -48,5 +56,11 @@ internal class QrScanningViewModel @Inject constructor(
 
     fun onDismissBottomSheetState() {
         stateHolder.update(DismissBottomSheetTransformer())
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        // don't forget enable reader mode after scan complete
+        cardSdkProvider.sdk.forceEnableReaderMode()
     }
 }
