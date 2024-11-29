@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.TextReference
 
 /** TokenItem component state */
 @Immutable
@@ -31,10 +32,10 @@ sealed class TokenItemState {
     abstract val subtitle2State: Subtitle2State?
 
     /** Callback which will be called when an item is clicked */
-    abstract val onItemClick: (() -> Unit)?
+    abstract val onItemClick: ((TokenItemState) -> Unit)?
 
     /** Callback which will be called when an item is long clicked */
-    abstract val onItemLongClick: (() -> Unit)?
+    abstract val onItemLongClick: ((TokenItemState) -> Unit)?
 
     /**
      * Loading token state
@@ -52,8 +53,8 @@ sealed class TokenItemState {
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState = FiatAmountState.Loading
         override val subtitle2State: Subtitle2State = Subtitle2State.Loading
-        override val onItemClick: (() -> Unit)? = null
-        override val onItemLongClick: (() -> Unit)? = null
+        override val onItemClick: ((TokenItemState) -> Unit)? = null
+        override val onItemLongClick: ((TokenItemState) -> Unit)? = null
     }
 
     /**
@@ -67,8 +68,8 @@ sealed class TokenItemState {
         override val subtitleState: SubtitleState = SubtitleState.Locked
         override val fiatAmountState: FiatAmountState = FiatAmountState.Locked
         override val subtitle2State: Subtitle2State = Subtitle2State.Locked
-        override val onItemClick: (() -> Unit)? = null
-        override val onItemLongClick: (() -> Unit)? = null
+        override val onItemClick: ((TokenItemState) -> Unit)? = null
+        override val onItemLongClick: ((TokenItemState) -> Unit)? = null
     }
 
     /**
@@ -90,8 +91,8 @@ sealed class TokenItemState {
         override val subtitleState: SubtitleState,
         override val fiatAmountState: FiatAmountState,
         override val subtitle2State: Subtitle2State,
-        override val onItemClick: (() -> Unit)?,
-        override val onItemLongClick: (() -> Unit)?,
+        override val onItemClick: ((TokenItemState) -> Unit)?,
+        override val onItemLongClick: ((TokenItemState) -> Unit)?,
     ) : TokenItemState()
 
     /**
@@ -110,8 +111,8 @@ sealed class TokenItemState {
     ) : TokenItemState() {
         override val subtitleState: SubtitleState? = null
         override val fiatAmountState: FiatAmountState? = null
-        override val onItemClick: (() -> Unit)? = null
-        override val onItemLongClick: (() -> Unit)? = null
+        override val onItemClick: ((TokenItemState) -> Unit)? = null
+        override val onItemLongClick: ((TokenItemState) -> Unit)? = null
     }
 
     /**
@@ -129,8 +130,8 @@ sealed class TokenItemState {
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val subtitleState: SubtitleState? = null,
-        override val onItemClick: (() -> Unit)?,
-        override val onItemLongClick: (() -> Unit)?,
+        override val onItemClick: ((TokenItemState) -> Unit)?,
+        override val onItemLongClick: ((TokenItemState) -> Unit)?,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val subtitle2State: Subtitle2State? = null
@@ -150,18 +151,18 @@ sealed class TokenItemState {
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val subtitleState: SubtitleState? = null,
-        override val onItemLongClick: (() -> Unit)?,
+        override val onItemLongClick: ((TokenItemState) -> Unit)?,
     ) : TokenItemState() {
         override val fiatAmountState: FiatAmountState? = null
         override val subtitle2State: Subtitle2State? = null
-        override val onItemClick: (() -> Unit)? = null
+        override val onItemClick: ((TokenItemState) -> Unit)? = null
     }
 
     @Immutable
     sealed class TitleState {
 
         data class Content(
-            val text: String,
+            val text: TextReference,
             val hasPending: Boolean = false,
             val isAvailable: Boolean = true,
         ) : TitleState()
@@ -180,7 +181,7 @@ sealed class TokenItemState {
             val type: PriceChangeType,
         ) : SubtitleState()
 
-        data class TextContent(val value: String, val isAvailable: Boolean = true) : SubtitleState()
+        data class TextContent(val value: TextReference, val isAvailable: Boolean = true) : SubtitleState()
 
         data object Unknown : SubtitleState()
 
