@@ -92,6 +92,7 @@ import kotlinx.coroutines.flow.*
 import timber.log.Timber
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration.Companion.seconds
 
 lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
@@ -330,7 +331,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun installAppTheme() {
         appThemeModeFlow = createAppThemeModeFlow()
-        val mode = runBlocking { appThemeModeFlow.first() }
+        val mode = runBlocking {
+            withTimeoutOrNull(APP_THEME_LOAD_TIMEOUT.seconds) {
+                appThemeModeFlow.first()
+            } ?: AppThemeMode.DEFAULT
+        }
 
         updateAppTheme(mode)
     }
@@ -598,5 +603,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 .onLeft { Timber.e(it.toString()) }
                 .onRight { Timber.d("Submitting hashes succeeded") }
         }
+    }
+
+    companion object {
+        private const val APP_THEME_LOAD_TIMEOUT = 2
     }
 }
