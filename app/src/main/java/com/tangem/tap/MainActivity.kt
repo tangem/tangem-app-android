@@ -52,6 +52,7 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.send.api.navigation.SendRouter
@@ -59,6 +60,7 @@ import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.operations.backup.BackupService
+import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
@@ -72,6 +74,7 @@ import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
+import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
@@ -186,6 +189,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase
 
+    @Inject
+    lateinit var backupServiceHolder: BackupServiceHolder
+
+    @Inject
+    lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -295,7 +304,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
-        backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
+
+        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
+            backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
+            backupService = backupServiceHolder.backupService.get()!! // will be deleted eventually
+        } else {
+            backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
+        }
+
         lockUserWalletsTimer = LockUserWalletsTimer(
             owner = this,
             settingsRepository = settingsRepository,
@@ -382,6 +398,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun initIntentHandlers() {
         val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
+        intentProcessor.addHandler(OnPushClickedIntentHandler(analyticsEventsHandler))
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
     }
@@ -555,6 +572,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         }
 
+        // TODO add onboarding v2 handling
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
 

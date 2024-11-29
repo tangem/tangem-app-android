@@ -138,6 +138,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "core/test" -> Blockchain.CoreTestnet
         "casper-network" -> Blockchain.Casper
         "casper-network/test" -> Blockchain.CasperTestnet
+        "chiliz" -> Blockchain.Chiliz
+        "chiliz/test" -> Blockchain.ChilizTestnet
         "xodex" -> Blockchain.Xodex
         "canxium" -> Blockchain.Canxium
         else -> null
@@ -277,6 +279,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.CasperTestnet -> "casper-network/test"
         Blockchain.Core -> "core"
         Blockchain.CoreTestnet -> "core/test"
+        Blockchain.Chiliz -> "chiliz"
+        Blockchain.ChilizTestnet -> "chiliz/test"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
     }
@@ -368,6 +372,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-token"
         Blockchain.Casper, Blockchain.CasperTestnet -> "casper-network"
         Blockchain.Core, Blockchain.CoreTestnet -> "coredaoorg"
+        Blockchain.Chiliz, Blockchain.ChilizTestnet -> "chiliz"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
     }
@@ -380,10 +385,6 @@ fun Blockchain.toCoinId(): String {
 fun Blockchain.toMigratedCointId(): String = when (this) {
     Blockchain.Polygon, Blockchain.PolygonTestnet -> "polygon-ecosystem-token"
     else -> toCoinId()
-}
-
-fun Blockchain.isSupportedInApp(): Boolean {
-    return !excludedBlockchains.contains(this)
 }
 
 fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
@@ -405,11 +406,3 @@ fun Blockchain.minimalAmount(): BigDecimal {
 
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
-
-// no need to add testnets
-private val excludedBlockchains = listOf(
-    Blockchain.Unknown,
-    Blockchain.Nexa,
-    Blockchain.NexaTestnet,
-    Blockchain.Xodex,
-)
