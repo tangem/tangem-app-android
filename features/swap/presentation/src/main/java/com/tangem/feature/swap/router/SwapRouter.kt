@@ -24,12 +24,17 @@ internal class SwapRouter(
         if (currentScreen == SwapNavScreen.SelectToken) {
             currentScreen = SwapNavScreen.Main
         } else {
-            val swapCryptoIndex = router.stack.indexOfFirst { it::class == AppRoute.SwapCrypto::class }
+            val selectTokensIndex = router.stack.getSelectTokensRouteIndexOrNull()
 
-            if (swapCryptoIndex == -1) {
+            /*
+             * If select token screen is not in stack, then just pop to previous screen.
+             * Otherwise, pop to previous screen that was before select token screen.
+             */
+            if (selectTokensIndex == null) {
                 router.pop()
             } else {
-                val prevRoute = router.stack.getOrNull(index = swapCryptoIndex - 1)
+                // find previous screen that was before select token
+                val prevRoute = router.stack.getOrNull(index = selectTokensIndex - 1)
 
                 if (prevRoute != null) {
                     router.popTo(prevRoute)
@@ -57,6 +62,12 @@ internal class SwapRouter(
                 router.push(route)
             }
         }
+    }
+
+    private fun List<AppRoute>.getSelectTokensRouteIndexOrNull(): Int? {
+        return this
+            .indexOfFirst { it::class == AppRoute.SwapCrypto::class }
+            .takeIf { it != -1 }
     }
 }
 

@@ -8,15 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.HideKeyboardNestedScrollConnection
+import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.entity.OnrampOperationUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
@@ -30,8 +28,7 @@ internal fun OnrampSelectToken(
 ) {
     BackHandler(onBack = state.onBackClick)
 
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val nestedScrollConnection = remember { HideKeyboardNestedScrollConnection(keyboardController) }
+    val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
     LazyColumn(
         modifier = modifier
             .nestedScroll(nestedScrollConnection)

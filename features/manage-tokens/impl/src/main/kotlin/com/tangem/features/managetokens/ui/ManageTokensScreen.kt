@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,8 +60,8 @@ import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.HideKeyboardNestedScrollConnection
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
@@ -80,8 +79,7 @@ private const val LOAD_ITEMS_BUFFER = 10
 
 @Composable
 internal fun ManageTokensScreen(state: ManageTokensUM, modifier: Modifier = Modifier) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val nestedScrollConnection = remember { HideKeyboardNestedScrollConnection(keyboardController) }
+    val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
 
     Scaffold(
         modifier = modifier.nestedScroll(nestedScrollConnection),
