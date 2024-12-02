@@ -1,16 +1,18 @@
 package com.tangem.features.onramp.swap.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +31,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.utils.dashedBorder
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.entity.ExchangeCardUM
 
@@ -54,8 +57,18 @@ internal fun ExchangeCard(state: ExchangeCardUM, modifier: Modifier = Modifier) 
     ) {
         Title(titleReference = state.titleReference, removeButtonUM = state.removeButtonUM)
 
-        AnimatedContent(targetState = state.tokenItemState, label = "TokenItem's changing ") {
-            TokenItem(state = it, isBalanceHidden = false)
+        AnimatedContent(
+            targetState = state,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90))
+                    .togetherWith(fadeOut(animationSpec = tween(durationMillis = 90)))
+            },
+            label = "TokenItem's changing",
+        ) { animatedState ->
+            when (animatedState) {
+                is ExchangeCardUM.Empty -> EmptyTokenBlock(text = animatedState.subtitleReference)
+                is ExchangeCardUM.Filled -> TokenItem(state = animatedState.tokenItemState, isBalanceHidden = false)
+            }
         }
     }
 }
@@ -89,6 +102,32 @@ private fun RemoveButton(state: ExchangeCardUM.RemoveButtonUM?) {
                 onClick = state.onClick,
             ),
             color = TangemTheme.colors.text.accent,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = TangemTheme.typography.body2,
+        )
+    }
+}
+
+@Composable
+private fun EmptyTokenBlock(text: TextReference, modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 13.dp)
+            .heightIn(min = 50.dp)
+            .fillMaxWidth()
+            .dashedBorder(
+                color = TangemTheme.colors.icon.informative,
+                shape = RoundedCornerShape(16.dp),
+                dashLength = 2.dp,
+                gapLength = 6.dp,
+            )
+            .padding(vertical = 15.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text.resolveReference(),
+            color = TangemTheme.colors.text.tertiary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = TangemTheme.typography.body2,
