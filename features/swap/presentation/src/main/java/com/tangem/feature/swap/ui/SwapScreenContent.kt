@@ -57,7 +57,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
                 .padding(
                     start = TangemTheme.dimens.spacing16,
                     end = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing16,
+                    top = TangemTheme.dimens.spacing8,
                     bottom = TangemTheme.dimens.spacing32,
                 ),
             horizontalAlignment = Alignment.CenterHorizontally,
