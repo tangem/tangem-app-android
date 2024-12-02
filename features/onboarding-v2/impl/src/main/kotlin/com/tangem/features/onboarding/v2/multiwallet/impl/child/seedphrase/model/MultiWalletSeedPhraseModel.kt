@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.mode
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,6 +12,7 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.GenerateSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.ImportSeedPhraseUiStateBuilder
@@ -41,6 +43,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -76,6 +79,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
                     state.value.generatedWords12 ?: return@importWallet
                 },
                 passphrase = null,
+                generatedSeedPhrase = true,
             )
         },
         // =============================================
@@ -85,7 +89,13 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         modelScope = modelScope,
         mnemonicRepository = mnemonicRepository,
         updateUiState = { block -> updateUiStateSpecific(block) },
-        importWallet = ::importWallet,
+        importWallet = { mnemonic, passphrase ->
+            importWallet(
+                mnemonic = mnemonic,
+                passphrase = passphrase,
+                generatedSeedPhrase = false,
+            )
+        },
     )
 
     val uiState = _uiState.asStateFlow()
@@ -159,7 +169,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     // =============================================
     // | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
     // =============================================
-    private fun importWallet(mnemonic: Mnemonic, passphrase: String?) {
+    private fun importWallet(mnemonic: Mnemonic, passphrase: String?, generatedSeedPhrase: Boolean) {
         val currentState = state.value
         if (currentState.readyToImport.not()) return
 
@@ -175,7 +185,17 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    // TODO on success send analytics event
+                    analyticsHandler.send(
+                        OnboardingEvent.CreateWallet.WalletCreatedSuccessfully(
+                            creationType = if (generatedSeedPhrase) {
+                                OnboardingEvent.CreateWallet.WalletCreationType.NewSeed
+                            } else {
+                                OnboardingEvent.CreateWallet.WalletCreationType.SeedImport
+                            },
+                            seedPhraseLength = mnemonic.mnemonicComponents.size,
+                        ),
+                    )
+
                     multiWalletState.update {
                         it.copy(
                             currentScanResponse = it.currentScanResponse.copy(
