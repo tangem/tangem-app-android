@@ -6,14 +6,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -29,6 +24,7 @@ import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
+import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.features.managetokens.component.preview.PreviewOnboardingManageTokensComponent
 import com.tangem.features.managetokens.entity.managetokens.OnboardingManageTokensUM
@@ -36,16 +32,7 @@ import com.tangem.features.managetokens.impl.R
 
 @Composable
 internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modifier: Modifier = Modifier) {
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                keyboardController?.hide()
-
-                return super.onPreScroll(available, source)
-            }
-        }
-    }
+    val nestedScrollConnection = rememberHideKeyboardNestedScrollConnection()
 
     Scaffold(
         modifier = modifier.nestedScroll(nestedScrollConnection),
