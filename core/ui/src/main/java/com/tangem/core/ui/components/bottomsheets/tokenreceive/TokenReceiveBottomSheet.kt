@@ -1,13 +1,17 @@
 package com.tangem.core.ui.components.bottomsheets.tokenreceive
 
+import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,6 +26,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
@@ -30,7 +37,10 @@ import com.tangem.core.ui.components.rememberQrPainters
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbarHost
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.shareText
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 
 @Composable
@@ -95,7 +105,6 @@ private fun ContainerWithSnackbarHost(snackbarHostState: SnackbarHostState, cont
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChange: (AddressModel) -> Unit) {
     val qrCodes = rememberQrPainters(content.addresses.map(AddressModel::value))
@@ -248,3 +257,63 @@ private fun ShareButton(address: String, onClick: () -> Unit, modifier: Modifier
         },
     )
 }
+
+// region Preview
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_TokenReceiveBottomSheet(
+    @PreviewParameter(TokenReceiveBottomSheetConfigPreviewProvider::class) params: TangemBottomSheetConfig,
+) {
+    TangemThemePreview {
+        TokenReceiveBottomSheet(params)
+    }
+}
+
+private class TokenReceiveBottomSheetConfigPreviewProvider : PreviewParameterProvider<TangemBottomSheetConfig> {
+    override val values: Sequence<TangemBottomSheetConfig>
+        get() = sequenceOf(
+            TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = {},
+                content = TokenReceiveBottomSheetConfig(
+                    name = "Stellar",
+                    symbol = "XLM",
+                    network = "Ethereum",
+                    addresses = persistentListOf(
+                        AddressModel(
+                            displayName = stringReference("Address 1"),
+                            value = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
+                            type = AddressModel.Type.Default,
+                        ),
+                    ),
+                    onCopyClick = {},
+                    onShareClick = {},
+                ),
+            ),
+            TangemBottomSheetConfig(
+                isShow = true,
+                onDismissRequest = {},
+                content = TokenReceiveBottomSheetConfig(
+                    name = "Stellar",
+                    symbol = "XLM",
+                    network = "Ethereum",
+                    addresses = persistentListOf(
+                        AddressModel(
+                            displayName = stringReference("Address 1"),
+                            value = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
+                            type = AddressModel.Type.Default,
+                        ),
+                        AddressModel(
+                            displayName = stringReference("Address 2"),
+                            value = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
+                            type = AddressModel.Type.Legacy,
+                        ),
+                    ),
+                    onCopyClick = {},
+                    onShareClick = {},
+                ),
+            ),
+        )
+}
+// endregion Preview
