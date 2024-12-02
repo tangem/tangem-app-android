@@ -90,6 +90,7 @@ class AssetLoaderTest {
             contractAddress = "0x0000000000000000000000000000000000000000",
             network = "Network",
             exchangeAvailable = true,
+            onrampAvailable = true,
         )
 
         val assetList = listOf(assetObject, assetObject)
@@ -100,7 +101,8 @@ class AssetLoaderTest {
             {
               "contractAddress": "${assetObject.contractAddress}",
               "network": "${assetObject.network}",
-              "exchangeAvailable": ${assetObject.exchangeAvailable}
+              "exchangeAvailable": ${assetObject.exchangeAvailable},
+              "onrampAvailable": ${assetObject.onrampAvailable}
             }
         """.trimIndent()
 
