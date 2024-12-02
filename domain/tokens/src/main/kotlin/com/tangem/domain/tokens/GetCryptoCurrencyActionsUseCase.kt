@@ -17,6 +17,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Use case to determine which TokenActions are available for a [CryptoCurrency]
@@ -54,9 +55,13 @@ class GetCryptoCurrencyActionsUseCase(
             val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
             } else if (!userWallet.isMultiCurrency) {
-                operations.getPrimaryCurrencyStatusFlow()
+                operations.getPrimaryCurrencyStatusFlow(includeQuotes = false)
             } else {
-                operations.getNetworkCoinFlow(networkId, cryptoCurrencyStatus.currency.network.derivationPath)
+                operations.getNetworkCoinFlow(
+                    networkId = networkId,
+                    derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
+                    includeQuotes = false,
+                )
             }
 
             val flow = networkFlow.mapLatest { maybeCoinStatus ->
@@ -171,10 +176,10 @@ class GetCryptoCurrencyActionsUseCase(
 
         // swap
         if (userWallet.isMultiCurrency) {
-            if (
-                marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency) &&
-                cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote
-            ) {
+            val isExchangeable = withTimeoutOrNull(REQUEST_EXCHANGE_DATA_TIMEOUT) {
+                marketCryptoCurrencyRepository.isExchangeable(userWallet.walletId, cryptoCurrency)
+            } ?: false
+            if (isExchangeable && cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote) {
                 activeList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.None))
             } else {
                 disabledList.add(
@@ -311,5 +316,9 @@ class GetCryptoCurrencyActionsUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrency,
         ) is StakingAvailability.Available
+    }
+
+    private companion object {
+        const val REQUEST_EXCHANGE_DATA_TIMEOUT = 1000L
     }
 }
