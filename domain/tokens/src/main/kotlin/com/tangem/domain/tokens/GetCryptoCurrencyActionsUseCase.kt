@@ -180,7 +180,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // buy
-        if (rampManager.availableForBuy(userWallet.scanResponse, cryptoCurrency)) {
+        if (rampManager.availableForBuy(userWallet.scanResponse, userWallet.walletId, cryptoCurrency)) {
             activeList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
             disabledList.add(
@@ -233,7 +233,7 @@ class GetCryptoCurrencyActionsUseCase(
         return activeList + disabledList
     }
 
-    private fun getActionsForUnreachableCurrency(
+    private suspend fun getActionsForUnreachableCurrency(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         needAssociateAsset: Boolean,
@@ -243,7 +243,7 @@ class GetCryptoCurrencyActionsUseCase(
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
             actionsList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
         }
-        if (rampManager.availableForBuy(userWallet.scanResponse, cryptoCurrencyStatus.currency)) {
+        if (rampManager.availableForBuy(userWallet.scanResponse, userWallet.walletId, cryptoCurrencyStatus.currency)) {
             actionsList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
         } else {
             actionsList.add(

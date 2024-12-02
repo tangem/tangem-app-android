@@ -11,4 +11,7 @@ data class Asset(
 
     @Json(name = "exchangeAvailable")
     val exchangeAvailable: Boolean,
+
+    @Json(name = "onrampAvailable")
+    val onrampAvailable: Boolean?,
 )
