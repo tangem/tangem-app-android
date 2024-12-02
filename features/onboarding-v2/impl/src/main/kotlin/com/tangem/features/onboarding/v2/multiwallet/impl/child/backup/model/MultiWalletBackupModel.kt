@@ -15,6 +15,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEv
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.backupCardAttestationFailedDialog
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.onlyOneBackupDeviceDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetBackupCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
 import com.tangem.sdk.api.BackupServiceHolder
@@ -132,19 +133,35 @@ class MultiWalletBackupModel @Inject constructor(
         }
     }
 
-    private fun onFinalizeClick() {
+    private fun onFinalizeClick(fromDialog: Boolean = false) {
         when (state.value.numberOfBackupCards) {
             1 -> {
-                // TODO show dialog
                 params.multiWalletState.update { it.copy(isThreeCards = false) }
+
+                if (fromDialog.not()) {
+                    showOnlyOneBackupWarningDialog()
+                    return
+                }
             }
             2 -> {
                 params.multiWalletState.update { it.copy(isThreeCards = true) }
             }
         }
+
         modelScope.launch { eventFlow.emit(MultiWalletBackupComponent.Event.Done) }
 
         analyticsHandler.send(OnboardingEvent.Backup.Finished(cardsCount = state.value.numberOfBackupCards + 1))
+    }
+
+    private fun showOnlyOneBackupWarningDialog() {
+        _uiState.update {
+            it.copy(
+                dialog = onlyOneBackupDeviceDialog(
+                    onDismiss = { _uiState.update { it.copy(dialog = null) } },
+                    onConfirm = { onFinalizeClick(fromDialog = true) },
+                ),
+            )
+        }
     }
 
     private fun addBackupCardWithService() {
