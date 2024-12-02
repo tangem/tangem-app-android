@@ -128,8 +128,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writePrimaryCard() {
         val backupService = backupServiceHolder.backupService.get() ?: return
-        // TODO store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
-
         val primaryCardBatchId = backupService.primaryCardBatchId ?: return
         val isRing = isRing(primaryCardBatchId)
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
@@ -156,9 +154,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writeBackupCard(cardIndex: Int) {
         val backupService = backupServiceHolder.backupService.get() ?: return
-
-        // TODO store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
-
         val backupCardBatchId = backupService.backupCardsBatchIds.getOrNull(cardIndex) ?: return
         val isRing = isRing(backupCardBatchId)
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
