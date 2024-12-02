@@ -85,19 +85,20 @@ internal class CurrencyStatusOperations(
         } else {
             null
         }
+        // order is important for correct total balance calculation
         return when {
-            quote is Quote.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
-                amount = amount,
-                hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
-                pendingTransactions = currentTransactions,
-                networkAddress = status.address,
-                yieldBalance = currentYieldBalance,
-            )
             currency is CryptoCurrency.Token && currency.isCustom -> CryptoCurrencyStatus.Custom(
                 amount = amount,
                 fiatAmount = calculateFiatAmountOrNull(amount, quote?.fiatRate),
                 fiatRate = quote?.fiatRate,
                 priceChange = quote?.priceChange,
+                hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
+                pendingTransactions = currentTransactions,
+                networkAddress = status.address,
+                yieldBalance = currentYieldBalance,
+            )
+            quote is Quote.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
+                amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,
