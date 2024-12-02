@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -17,13 +18,10 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.appbar.TangemTopAppBar
-import com.tangem.core.ui.components.appbar.TangemTopAppBarHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -38,7 +36,6 @@ internal fun ConfirmResidencyBottomSheet(config: TangemBottomSheetConfig, conten
         config = config,
         addBottomInsets = true,
         containerColor = TangemTheme.colors.background.tertiary,
-        title = { _ -> Title() },
         content = {
             val contentModifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing16)
@@ -52,18 +49,17 @@ internal fun ConfirmResidencyBottomSheet(config: TangemBottomSheetConfig, conten
 }
 
 @Composable
-private fun Title(modifier: Modifier = Modifier) {
-    TangemTopAppBar(
-        modifier = modifier,
-        title = resourceReference(R.string.onramp_residency_bottomsheet_title),
-        titleAlignment = Alignment.CenterHorizontally,
-        height = TangemTopAppBarHeight.BOTTOM_SHEET,
-    )
-}
-
-@Composable
 internal fun ConfirmResidencyBottomSheetContent(model: ConfirmResidencyUM, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = TangemTheme.dimens.spacing10),
+            text = stringResource(id = R.string.onramp_residency_bottomsheet_title),
+            style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
+            textAlign = TextAlign.Center,
+        )
         CountryContent(
             modifier = Modifier
                 .fillMaxWidth()
