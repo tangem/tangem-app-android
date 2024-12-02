@@ -10,18 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.appendSpace
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
+import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 
 @Composable
 internal fun OnrampProviderContent(state: OnrampProviderBlockUM, modifier: Modifier = Modifier) {
@@ -41,21 +38,9 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
             .clickable(onClick = state.onClick)
             .padding(TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        SubcomposeAsyncImage(
-            modifier = Modifier
-                .padding(start = TangemTheme.dimens.spacing12)
-                .size(size = TangemTheme.dimens.size40)
-                .clip(TangemTheme.shapes.roundedCorners8),
-            model = ImageRequest.Builder(context = LocalContext.current)
-                .data(state.paymentMethod.imageUrl)
-                .crossfade(enable = true)
-                .allowHardware(false)
-                .build(),
-            loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
-            contentDescription = null,
-        )
+        PaymentMethodIcon(imageUrl = state.paymentMethod.imageUrl)
         Column(modifier = Modifier.weight(1F)) {
             Text(
                 text = buildAnnotatedString {
