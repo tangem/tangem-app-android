@@ -148,7 +148,11 @@ internal class OnrampTokenListModel @Inject constructor(
     private suspend fun checkAvailabilityByOperation(status: CryptoCurrencyStatus): Boolean {
         return when (params.filterOperation) {
             OnrampOperation.BUY -> {
-                rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = status.currency)
+                rampStateManager.availableForBuy(
+                    scanResponse = scanResponse,
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = status.currency,
+                )
             }
             OnrampOperation.SELL -> {
                 rampStateManager.availableForSell(userWalletId = params.userWalletId, status = status)
