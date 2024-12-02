@@ -67,6 +67,7 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
                 params = OnrampMainComponent.Params(
                     cryptoCurrency = params.cryptoCurrency,
                     openSettings = { navigation.push(OnrampChild.Settings) },
+                    source = params.source,
                     openRedirectPage = {
                         navigation.push(
                             OnrampChild.RedirectPage(

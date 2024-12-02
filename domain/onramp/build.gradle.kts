@@ -5,6 +5,9 @@ plugins {
 }
 
 dependencies {
+    /** Core modules */
+    implementation(projects.core.analytics.models)
+
     api(projects.domain.onramp.models)
     api(projects.domain.tokens.models)
     api(projects.domain.wallets.models)
