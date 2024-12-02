@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.selecttoken.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.imePadding
@@ -15,17 +14,17 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.selecttoken.entity.OnrampOperationUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun OnrampSelectToken(
-    @StringRes titleResId: Int,
-    onBackClick: () -> Unit,
+    state: OnrampOperationUM,
     onrampTokenListComponent: OnrampTokenListComponent,
     modifier: Modifier = Modifier,
 ) {
-    BackHandler(onBack = onBackClick)
+    BackHandler(onBack = state.onBackClick)
 
     LazyColumn(
         modifier = modifier
@@ -35,8 +34,8 @@ internal fun OnrampSelectToken(
     ) {
         stickyHeader(key = "header") {
             AppBarWithBackButton(
-                onBackClick = onBackClick,
-                text = stringResource(id = titleResId),
+                onBackClick = state.onBackClick,
+                text = stringResource(id = state.titleResId),
                 iconRes = R.drawable.ic_close_24,
                 containerColor = TangemTheme.colors.background.secondary,
             )
