@@ -572,8 +572,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         }
 
-        // TODO add onboarding v2 handling
-        store.dispatch(BackupAction.CheckForUnfinishedBackup)
+        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
+            viewModel.checkForUnfinishedBackup()
+        } else {
+            store.dispatch(BackupAction.CheckForUnfinishedBackup)
+        }
     }
 
     private fun observePolkadotAccountHealthCheck() {

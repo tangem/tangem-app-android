@@ -17,7 +17,6 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWall
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.backupCardAttestationFailedDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetBackupCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
-import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -70,30 +69,19 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun getInitState(): MultiWalletBackupUM {
-        return when (backupService.currentState) {
-            BackupService.State.Preparing -> {
-                MultiWalletBackupUM(
-                    title = resourceReference(R.string.onboarding_title_no_backup_cards),
-                    bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-                    finalizeButtonEnabled = false,
-                    addBackupButtonEnabled = true,
-                    addBackupButtonLoading = false,
-                    onAddBackupClick = ::startBackupWallet,
-                    onFinalizeButtonClick = ::onFinalizeClick,
-                    onSkipButtonClick = {
-                        // eventFlow.tryEmit(Unit)
-                    },
-                )
-            }
-            // TODO
-            is BackupService.State.FinalizingBackupCard -> TODO()
-            BackupService.State.FinalizingPrimaryCard -> TODO()
-            BackupService.State.Finished -> TODO()
-        }
+        return MultiWalletBackupUM(
+            title = resourceReference(R.string.onboarding_title_no_backup_cards),
+            bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
+            finalizeButtonEnabled = false,
+            addBackupButtonEnabled = true,
+            addBackupButtonLoading = false,
+            onAddBackupClick = ::startBackupWallet,
+            onFinalizeButtonClick = ::onFinalizeClick,
+        )
     }
 
     private fun startBackupWallet() {
-        if (state.value.backupCardsNumber == 0) {
+        if (state.value.numberOfBackupCards == 0) {
             backupService.discardSavedBackup()
         }
         val primaryCard = scanResponse.primaryCard
@@ -145,7 +133,7 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun onFinalizeClick() {
-        when (state.value.backupCardsNumber) {
+        when (state.value.numberOfBackupCards) {
             1 -> {
                 // TODO show dialog
                 params.multiWalletState.update { it.copy(isThreeCards = false) }
@@ -156,7 +144,7 @@ class MultiWalletBackupModel @Inject constructor(
         }
         modelScope.launch { eventFlow.emit(MultiWalletBackupComponent.Event.Done) }
 
-        analyticsHandler.send(OnboardingEvent.Backup.Finished(cardsCount = state.value.backupCardsNumber + 1))
+        analyticsHandler.send(OnboardingEvent.Backup.Finished(cardsCount = state.value.numberOfBackupCards + 1))
     }
 
     private fun addBackupCardWithService() {
@@ -176,7 +164,7 @@ class MultiWalletBackupModel @Inject constructor(
                 is CompletionResult.Success -> {
                     state.update {
                         it.copy(
-                            backupCardsNumber = it.backupCardsNumber + 1,
+                            numberOfBackupCards = it.numberOfBackupCards + 1,
                         )
                     }
 
@@ -186,12 +174,12 @@ class MultiWalletBackupModel @Inject constructor(
                     )
                     params.backups.update {
                         it.copy(
-                            card2 = if (state.value.backupCardsNumber == 1) backupCardInfo else it.card2,
-                            card3 = if (state.value.backupCardsNumber == 2) backupCardInfo else it.card3,
+                            card2 = if (state.value.numberOfBackupCards == 1) backupCardInfo else it.card2,
+                            card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else it.card3,
                         )
                     }
 
-                    setNumberOfBackupCards(state.value.backupCardsNumber)
+                    setNumberOfBackupCards(state.value.numberOfBackupCards)
                 }
                 is CompletionResult.Failure -> {
                     when (val error = result.error) {

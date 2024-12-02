@@ -107,6 +107,8 @@ object PreferencesKeys {
 
     val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
 
+    val ONBOARDING_FINALIZE_SCAN_RESPONSE by lazy { stringPreferencesKey(name = "onboardingFinalizeScanResponse") }
+
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 

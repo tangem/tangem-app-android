@@ -8,8 +8,13 @@ data class OnboardingMultiWalletState(
     val accessCode: AccessCode?,
     val isThreeCards: Boolean,
     val currentScanResponse: ScanResponse,
+    val startFromFinalize: FinalizeStage?,
     val resultUserWallet: UserWallet?, // TODO make callback instead
 ) {
+    enum class FinalizeStage {
+        ScanPrimaryCard, ScanBackupFirstCard, ScanBackupSecondCard
+    }
+
     /**
      * Wallet1
      * CreateWallet -> ChooseBackupOption -> AddBackupDevice -> Finalize -> [Done]

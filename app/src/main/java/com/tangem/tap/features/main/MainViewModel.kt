@@ -7,11 +7,15 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
@@ -44,6 +48,7 @@ internal class MainViewModel @Inject constructor(
     homeFeatureToggles: HomeFeatureToggles,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : ViewModel(), MainIntents {
 
     private val stateHolder = MainScreenStateHolder(
@@ -215,5 +220,16 @@ internal class MainViewModel @Inject constructor(
         router.pop()
         stateHolder.updateWithoutModalNotification()
         stateHolder.updateWithHiddenBalancesToast(true)
+    }
+
+    override fun checkForUnfinishedBackup() {
+        viewModelScope.launch {
+            val scanResponse =
+                appPreferencesStore
+                    .getObjectSyncOrNull<ScanResponse>(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE)
+                    ?: return@launch
+
+            router.push(AppRoute.Onboarding(scanResponse = scanResponse, startFromBackup = false))
+        }
     }
 }
