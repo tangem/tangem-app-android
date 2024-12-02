@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -17,6 +18,7 @@ import com.arkivanov.decompose.router.slot.navigate
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -24,6 +26,7 @@ import com.tangem.core.decompose.navigation.inner.InnerNavigation
 import com.tangem.core.decompose.navigation.inner.InnerNavigationState
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.MultiWalletAccessCodeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
@@ -45,6 +48,7 @@ import kotlinx.coroutines.launch
 internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor(
     @Assisted private val context: AppComponentContext,
     @Assisted private val params: OnboardingMultiWalletComponent.Params,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : OnboardingMultiWalletComponent, AppComponentContext by context {
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)
@@ -70,6 +74,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         multiWalletState = model.state,
         parentParams = params,
         innerNavigation = innerNavigationStateFlow,
+        backups = model.backups,
     )
 
     private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, ComposableContentComponent>> =
@@ -92,13 +97,10 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         override val state = innerNavigationStateFlow
 
         override fun pop(onComplete: (Boolean) -> Unit) {
-            when (childStack.active.configuration) {
-                CreateWallet -> { } // TODO show dialog
-                ChooseBackupOption -> { } // TODO show dialog
-                SeedPhrase -> { componentScope.launch { backButtonClickFlow.emit(Unit) } }
-                AddBackupDevice -> {}
-                Finalize -> {}
-                Done -> {}
+            if (childStack.active.configuration == SeedPhrase) {
+                componentScope.launch { backButtonClickFlow.emit(Unit) }
+            } else {
+                model.onBack()
             }
         }
     }
@@ -183,6 +185,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             }
             Done -> {
                 // final step - navigate to parent
+                analyticsHandler.send(OnboardingEvent.Finished)
                 val userWallet = childParams.multiWalletState.value.resultUserWallet ?: return
                 params.onDone(userWallet)
             }
@@ -236,6 +239,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         val stackState by childStack.subscribeAsState()
         val state by model.uiState.collectAsStateWithLifecycle()
         val artworksState by artworksState.collectAsStateWithLifecycle()
+
+        BackHandler { model.onBack() }
 
         OnboardingMultiWallet(
             state = state,
