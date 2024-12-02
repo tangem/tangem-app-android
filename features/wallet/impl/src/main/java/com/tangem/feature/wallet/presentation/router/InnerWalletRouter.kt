@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.router
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.markets.entry.MarketsEntryComponent
@@ -36,7 +37,7 @@ internal interface InnerWalletRouter : WalletRouter {
     fun openDetailsScreen(selectedWalletId: UserWalletId)
 
     /** Open onboarding screen */
-    fun openOnboardingScreen()
+    fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean = false)
 
     /** Open onramp success screen for [txId] */
     fun openOnrampSuccessScreen(txId: String)

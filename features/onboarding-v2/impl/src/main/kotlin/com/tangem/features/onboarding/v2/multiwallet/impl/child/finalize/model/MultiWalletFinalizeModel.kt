@@ -17,6 +17,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWalletFinalizeComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui.state.MultiWalletFinalizeUM
@@ -78,7 +79,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writePrimaryCard() {
         val backupService = backupServiceHolder.backupService.get() ?: return
-        // store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+// [REDACTED_TODO_COMMENT]
 
         val primaryCardBatchId = backupService.primaryCardBatchId ?: return
         val isRing = isRing(primaryCardBatchId)
@@ -106,8 +107,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private fun writeBackupCard(cardIndex: Int) {
         val backupService = backupServiceHolder.backupService.get() ?: return
-
-        // store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+// [REDACTED_TODO_COMMENT]
 
         val backupCardBatchId = backupService.backupCardsBatchIds.getOrNull(cardIndex) ?: return
         val isRing = isRing(backupCardBatchId)
@@ -119,7 +119,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 is CompletionResult.Success -> {
                     val backupValidator = BackupValidator()
                     if (backupValidator.isValidBackupStatus(CardDTO(result.data)).not()) {
-// [REDACTED_TODO_COMMENT]
                         walletHasBackupError = true
                     }
 
@@ -155,40 +154,35 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
         modelScope.launch {
             val scanResponse = params.multiWalletState.value.currentScanResponse
-
             val userWallet = createUserWallet(scanResponse)
-            userWalletsListManager.save(
-                userWallet = userWallet.copy(
-                    scanResponse = scanResponse.updateScanResponseAfterBackup(),
-                ),
-                canOverride = true,
-            )
-// [REDACTED_TODO_COMMENT]
-            // BackupStartedSource.CreateBackup -> updateWallet(
-            //                             userWalletsListManager = userWalletsListManager,
-            //                             userWallet = userWallet,
-            //                             backupState = backupState,
-            //                         )
-// [REDACTED_TODO_COMMENT]
-            // if (notActivatedCardIds.isEmpty()) {
-            //      delay(1000)
-            //      store.dispatchWithMain(BackupAction.BackupFinished(userWallet?.walletId))
-            //      return@launch
-            // }
-            //
-            // Analytics.send(Onboarding.Finished())
-            //
-            // store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
-            // handleFinishBackup(requireNotNull(scanResponse), userWallet)
-            // delay(1000)
-            // store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
 
-            cardRepository.finishCardActivation(scanResponse.card.cardId)
+            when (params.parentParams.mode) {
+                OnboardingMultiWalletComponent.Mode.Onboarding -> {
+                    userWalletsListManager.save(
+                        userWallet = userWallet.copy(
+                            scanResponse = scanResponse.updateScanResponseAfterBackup(),
+                        ),
+                        canOverride = true,
+                    )
+                }
+                OnboardingMultiWalletComponent.Mode.AddBackup -> {
+                    userWalletsListManager.update(
+                        userWalletId = userWallet.walletId,
+                        update = { wallet ->
+                            wallet.copy(
+                                scanResponse = scanResponse.updateScanResponseAfterBackup(),
+                            )
+                        },
+                    )
+                }
+            }
 
             // save user wallet for manage tokens screen
             params.multiWalletState.update {
                 it.copy(resultUserWallet = userWallet)
             }
+
+            cardRepository.finishCardActivation(scanResponse.card.cardId)
 
             onEvent.emit(MultiWalletFinalizeComponent.Event.ThreeBackupCardsAdded)
         }
@@ -216,8 +210,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     }
 
     private fun handleActivationError() {
-        _uiState.update {
-            it.copy(
+        _uiState.update { st ->
+            st.copy(
                 dialog = resetCardDialog(
                     onConfirm = ::navigateToSupportScreen,
                     dismiss = { _uiState.update { it.copy(dialog = null) } },

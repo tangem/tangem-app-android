@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.entry.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -48,7 +49,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
             popBack = {
                 popInternal { success ->
                     if (success.not()) {
-                        model.stackNavigation.pop() // TODO
+                        model.stackNavigation.pop()
                     }
                 }
             },
@@ -125,6 +126,9 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val innerStackState by innerStack.subscribeAsState()
+
+        // prevent back navigation
+        BackHandler { }
 
         OnboardingEntry(
             modifier = modifier,
