@@ -2,11 +2,17 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для покупки.</string>
   <string name="action_buttons_sell_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для продажи.</string>
-  <string name="action_buttons_sell_navigation_bar_title">Продать криптовалюту</string>
+  <string name="action_buttons_sell_navigation_bar_title">Продать</string>
+  <string name="action_buttons_service_loading_alert_message">Подключение может занять несколько секунд. Пожалуйста, подождите.</string>
+  <string name="action_buttons_service_loading_alert_title">Соединение</string>
+  <string name="action_buttons_something_wrong_alert_message">Действие в данный момент недоступно, пожалуйста попробуйте позже или обновить данные, сделав свайп экрана вниз.</string>
+  <string name="action_buttons_something_wrong_alert_title">Кнопка недоступна</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных вариантов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Нет доступных пар</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_message">Для использования функции обмена ваш портфель должен содержать минимум 2 токена.</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_title">Добавьте токены</string>
   <string name="action_buttons_you_want_to_receive">Выберите токен для получения</string>
   <string name="action_buttons_you_want_to_swap">Выберите токен для обмена</string>
   <string name="add_custom_token_choose_network">Выберите сеть</string>
