@@ -13,6 +13,7 @@ import com.tangem.core.ui.message.ContentMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.TokenActionsState
@@ -131,6 +132,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
         reduxStateHolder.dispatch(
             TradeCryptoAction.Buy(
                 userWallet = cryptoCurrencyData.userWallet,
+                source = OnrampSource.MARKETS,
                 cryptoCurrencyStatus = cryptoCurrencyData.status,
                 appCurrencyCode = currentAppCurrency().code,
             ),
