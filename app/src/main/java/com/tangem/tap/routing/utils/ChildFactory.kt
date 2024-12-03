@@ -197,7 +197,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Onramp -> {
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
-                    params = OnrampComponent.Params(userWalletId = route.userWalletId, cryptoCurrency = route.currency),
+                    params = OnrampComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.currency,
+                        source = route.source,
+                    ),
                     componentFactory = onrampComponentFactory,
                 )
             }
