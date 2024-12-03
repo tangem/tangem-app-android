@@ -9,6 +9,4 @@ internal interface MainIntents {
     fun onHiddenBalanceNotificationAction(isPermanent: Boolean)
 
     fun onDismissBottomSheet()
-
-    fun checkForUnfinishedBackup()
 }
