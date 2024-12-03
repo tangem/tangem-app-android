@@ -85,14 +85,14 @@ internal sealed interface WalletAlertState {
     }
 
     data object ProvidersStillLoading : Basic() {
-        override val title: TextReference = stringReference(value = "Providers are still loading")
-        override val message: TextReference = resourceReference(R.string.wallet_connect_toast_awaiting_session_proposal)
+        override val title: TextReference = resourceReference(R.string.action_buttons_service_loading_alert_title)
+        override val message: TextReference = resourceReference(R.string.action_buttons_service_loading_alert_message)
         override val onConfirmClick: (() -> Unit)? = null
     }
 
     data object UnavailableOperation : Basic() {
-        override val title: TextReference = stringReference(value = "This operation is currently unavailable")
-        override val message: TextReference = resourceReference(R.string.warning_some_networks_unreachable_message)
+        override val title: TextReference = resourceReference(R.string.action_buttons_something_wrong_alert_title)
+        override val message: TextReference = resourceReference(R.string.action_buttons_something_wrong_alert_message)
         override val onConfirmClick: (() -> Unit)? = null
     }
 
@@ -108,6 +108,16 @@ internal sealed interface WalletAlertState {
         override val title: TextReference = resourceReference(id = R.string.selling_insufficient_balance_alert_title)
         override val message: TextReference =
             resourceReference(id = R.string.selling_insufficient_balance_alert_message)
+
+        override val onConfirmClick: (() -> Unit)? = null
+    }
+
+    data object InsufficientTokensCountForSwapping : Basic() {
+        override val title: TextReference =
+            resourceReference(id = R.string.action_buttons_swap_no_tokens_added_alert_title)
+
+        override val message: TextReference =
+            resourceReference(id = R.string.action_buttons_swap_no_tokens_added_alert_message)
 
         override val onConfirmClick: (() -> Unit)? = null
     }
