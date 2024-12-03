@@ -13,4 +13,5 @@ internal data class SwapSelectTokensUM(
     val onBackClick: () -> Unit,
     val exchangeFrom: ExchangeCardUM,
     val exchangeTo: ExchangeCardUM,
+    val isBalanceHidden: Boolean,
 )
