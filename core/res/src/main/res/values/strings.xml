@@ -2,11 +2,17 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for purchase</string>
   <string name="action_buttons_sell_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for selling.</string>
-  <string name="action_buttons_sell_navigation_bar_title">Sell crypto</string>
+  <string name="action_buttons_sell_navigation_bar_title">Sell</string>
+  <string name="action_buttons_service_loading_alert_message">Connection may take a few seconds. Please wait.</string>
+  <string name="action_buttons_service_loading_alert_title">Connection</string>
+  <string name="action_buttons_something_wrong_alert_message">The action is currently unavailable. Please try again later or refresh the data by swiping down on the screen.</string>
+  <string name="action_buttons_something_wrong_alert_title">Button is unavailable</string>
   <string name="action_buttons_swap_choose_token">Choose the Token</string>
   <string name="action_buttons_swap_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for swapping.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">There are no available tokens to swap with the selected token. Please choose another one.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No available pair</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_message">To use the exchange feature, your portfolio must contain at least 2 tokens.</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_title">Add tokens</string>
   <string name="action_buttons_you_want_to_receive">Choose the token you want to receive</string>
   <string name="action_buttons_you_want_to_swap">Choose the token you want to swap</string>
   <string name="add_custom_token_choose_network">Choose network</string>
