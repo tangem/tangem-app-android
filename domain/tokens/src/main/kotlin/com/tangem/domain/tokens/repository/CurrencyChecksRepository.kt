@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.Network
@@ -17,7 +18,7 @@ interface CurrencyChecksRepository {
     suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
 
     /** Returns dust value */
-    suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal?
+    suspend fun getDustValue(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal?
 
     /** Returns reserve amount which is required to create an account */
     suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal?
@@ -38,6 +39,7 @@ interface CurrencyChecksRepository {
     suspend fun checkUtxoAmountLimit(
         userWalletId: UserWalletId,
         network: Network,
+        currency: CryptoCurrency,
         amount: BigDecimal,
         fee: BigDecimal,
     ): UtxoAmountLimit?

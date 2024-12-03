@@ -199,6 +199,19 @@ internal class TokenDetailsStateFactory(
         )
     }
 
+    fun getStateWithDismissIncompleteTransactionConfirmDialog(): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.RemoveIncompleteTransactionConfirmDialogConfig(
+                    onConfirmClick = clickIntents::onConfirmDismissIncompleteTransactionClick,
+                    onCancelClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
+    }
+
     fun getStateWithActionButtonErrorDialog(unavailabilityReason: ScenarioUnavailabilityReason): TokenDetailsState {
         return currentStateProvider().copy(
             dialogConfig = TokenDetailsDialogConfig(
@@ -298,6 +311,14 @@ internal class TokenDetailsStateFactory(
     fun getStateWithRemovedHederaAssociateNotification(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(notifications = notificationConverter.removeHederaAssociateWarning(state))
+    }
+
+    fun getStateWithRemovedKaspaIncompleteTransactionNotification(): TokenDetailsState {
+        val state = currentStateProvider()
+        return state.copy(
+            notifications = notificationConverter.removeKaspaIncompleteTransactionWarning(state),
+            dialogConfig = state.dialogConfig?.copy(isShow = false),
+        )
     }
 
     fun getStateAndTriggerEvent(

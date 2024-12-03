@@ -448,7 +448,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             is TxFeeState.SingleFeeState -> feeState.fee.feeValue
         }
 
-        val dustValue = currencyChecksRepository.getDustValue(userWalletId, fromTokenStatus.currency.network) ?: return
+        val dustValue = currencyChecksRepository.getDustValue(userWalletId, fromTokenStatus.currency) ?: return
 
         val change = when (fromTokenStatus.currency) {
             is CryptoCurrency.Coin -> {
@@ -552,7 +552,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             BlockchainSdkError.Cardano.InsufficientRemainingBalance,
             BlockchainSdkError.Cardano.InsufficientSendingAdaAmount,
             -> {
-                val dustValue = currencyChecksRepository.getDustValue(userWalletId, fromToken.network) ?: return
+                val dustValue = currencyChecksRepository.getDustValue(userWalletId, fromToken) ?: return
 
                 Warning.MinAmountWarning(dustValue)
             }

@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.Network
@@ -14,6 +15,7 @@ import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.walletmanager.utils.CryptoCurrencyTypeConverter
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
@@ -24,6 +26,9 @@ internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val coroutineDispatchers: CoroutineDispatcherProvider,
 ) : CurrencyChecksRepository {
+
+    private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
+
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
         val manager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -33,13 +38,16 @@ internal class DefaultCurrencyChecksRepository(
         return if (manager is ExistentialDepositProvider) manager.getExistentialDeposit() else null
     }
 
-    override suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal? {
+    override suspend fun getDustValue(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal? {
         val manager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
-            network = network,
+            network = cryptoCurrency.network,
         )
 
-        return manager?.dustValue
+        return when (cryptoCurrency) {
+            is CryptoCurrency.Coin -> manager?.dustValue
+            is CryptoCurrency.Token -> null
+        }
     }
 
     override suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal? {
@@ -108,6 +116,7 @@ internal class DefaultCurrencyChecksRepository(
     override suspend fun checkUtxoAmountLimit(
         userWalletId: UserWalletId,
         network: Network,
+        currency: CryptoCurrency,
         amount: BigDecimal,
         fee: BigDecimal,
     ): UtxoAmountLimit? {
@@ -116,7 +125,11 @@ internal class DefaultCurrencyChecksRepository(
             network = network,
         )
         val utxoAmount = if (manager is UtxoAmountLimitProvider) {
-            manager.checkUtxoAmountLimit(amount, fee)
+            manager.checkUtxoAmountLimit(
+                amount = amount,
+                fee = fee,
+                currencyType = cryptoCurrencyTypeConverter.convert(currency),
+            )
         } else {
             null
         }
