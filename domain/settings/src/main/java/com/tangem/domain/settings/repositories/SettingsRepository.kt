@@ -2,6 +2,7 @@ package com.tangem.domain.settings.repositories
 
 import com.tangem.domain.settings.usercountry.models.UserCountry
 
+@Suppress("TooManyFunctions")
 interface SettingsRepository {
 
     suspend fun shouldShowSaveUserWalletScreen(): Boolean
@@ -39,4 +40,12 @@ interface SettingsRepository {
     suspend fun getUserCountryCodeSync(): UserCountry?
 
     suspend fun fetchUserCountryCode()
+
+    suspend fun setGoogleServicesAvailability(value: Boolean)
+
+    suspend fun isGoogleServicesAvailability(): Boolean
+
+    suspend fun setGooglePayAvailability(value: Boolean)
+
+    suspend fun isGooglePayAvailability(): Boolean
 }
