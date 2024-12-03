@@ -11,44 +11,32 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 
 internal class PreviewTokenListUMProvider : PreviewParameterProvider<TokenListUM> {
 
     override val values: Sequence<TokenListUM> = sequenceOf(
         createTokensList(
-            hasSearchBar = false,
             createHeader(),
             createDefaultTokenItem(),
             createDefaultTokenItem(),
         ),
         createTokensList(
-            hasSearchBar = true,
             createHeader(),
             createDefaultTokenItem(),
             createDefaultTokenItem(),
         ),
     )
 
-    private fun createTokensList(hasSearchBar: Boolean, vararg items: TokensListItemUM): TokenListUM {
+    private fun createTokensList(vararg items: TokensListItemUM): TokenListUM {
         return TokenListUM(
-            availableItems = buildList {
-                if (hasSearchBar) {
-                    TokensListItemUM.SearchBar(
-                        searchBarUM = SearchBarUM(
-                            placeholderText = resourceReference(id = R.string.common_search),
-                            query = "",
-                            onQueryChange = {},
-                            isActive = false,
-                            onActiveChange = {},
-                        ),
-                    )
-                        .let { add(element = it) }
-                }
-
-                addAll(items)
-            }
-                .toImmutableList(),
+            searchBarUM = SearchBarUM(
+                placeholderText = resourceReference(id = R.string.common_search),
+                query = "",
+                onQueryChange = {},
+                isActive = false,
+                onActiveChange = {},
+            ),
+            availableItems = persistentListOf(*items),
             unavailableItems = persistentListOf(
                 createHeader(),
                 createUnavailableTokenItem(),

@@ -19,13 +19,11 @@ internal interface OnrampTokenListComponent : ComposableContentComponent {
      * Params
      *
      * @property filterOperation operation that is used to filter tokens by availability
-     * @property hasSearchBar    flag that indicates if search bar should be shown
      * @property userWalletId    id of multi-currency wallet
      * @property onTokenClick    callback for token click
      */
     data class Params(
         val filterOperation: OnrampOperation,
-        val hasSearchBar: Boolean,
         val userWalletId: UserWalletId,
         val onTokenClick: (TokenItemState, CryptoCurrencyStatus) -> Unit,
     )
