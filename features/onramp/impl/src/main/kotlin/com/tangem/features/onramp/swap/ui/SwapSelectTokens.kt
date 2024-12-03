@@ -68,6 +68,7 @@ internal fun SwapSelectTokens(
         item(key = "exchange_from", contentType = "exchange_from") {
             ExchangeCard(
                 state = state.exchangeFrom,
+                isBalanceHidden = state.isBalanceHidden,
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .padding(top = 8.dp, bottom = 12.dp)
@@ -89,6 +90,7 @@ internal fun SwapSelectTokens(
             item(key = "exchange_to", contentType = "exchange_to") {
                 ExchangeCard(
                     state = state.exchangeTo,
+                    isBalanceHidden = state.isBalanceHidden,
                     modifier = Modifier
                         .padding(horizontal = 16.dp)
                         .padding(bottom = 12.dp)
