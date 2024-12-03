@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-  <string name="action_buttons_buy_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Kauf hinzuzufügen</string>
-  <string name="action_buttons_sell_empty_search_message">Token nicht in Ihrem Portfolio gefunden? Überprüfe die Märkte, um es zu finden und zum Verkauf hinzuzufügen</string>
+  <string name="action_buttons_buy_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum kaufen im Portfolio hinzu.</string>
+  <string name="action_buttons_sell_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum verkaufen im Portfolio hinzu.</string>
+  <string name="action_buttons_sell_navigation_bar_title">Verkaufen</string>
   <string name="action_buttons_swap_choose_token">Wähle den Token</string>
-  <string name="action_buttons_swap_empty_search_message">Token nicht in Deinem Portfolio gefunden? Überprüfe die Märkte, um es für Swaps zu finden und hinzuzufügen</string>
+  <string name="action_buttons_swap_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum tauschen im Portfolio hinzu.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Es gibt keine verfügbaren Token, die mit dem ausgewählten Token getauscht werden können. Bitte wähle einen anderen.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Kein verfügbares Paar</string>
-  <string name="action_buttons_you_want_to_receive">Wähle den Token aus, das Du erhalten möchtest</string>
+  <string name="action_buttons_you_want_to_receive">Wähle den Token aus, den Du erhalten möchtest</string>
   <string name="action_buttons_you_want_to_swap">Wähle den Token, den Du tauschen möchtest</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
   <string name="add_custom_token_title">Token anlegen</string>
@@ -650,6 +651,10 @@
   <string name="scan_card_settings_button">Karte oder Ring scannen</string>
   <string name="scan_card_settings_message">Scanne die Karte oder Ring, um ihre Einstellungen zu ändern. Die Änderungen wirken sich nur auf die von dir gescannte Karte oder Ring aus und haben keine Auswirkungen auf andere mit deiner Wallet verknüpften Geräte.</string>
   <string name="scan_card_settings_title">Halte deine Karte oder Ring bereit!</string>
+  <string name="selling_insufficient_balance_alert_message">Dein Konto verfügt nicht über genügend Guthaben, um diese Kryptowährung zu verkaufen. Bitte zahle den gewünschten Vermögenswert ein, um fortzufahren.</string>
+  <string name="selling_insufficient_balance_alert_title">Unzureichendes Guthaben</string>
+  <string name="selling_regional_restriction_alert_message">Der Verkauf von Kryptowährung ist in Deiner Region derzeit nicht möglich. Wir arbeiten aktiv daran, Ihnen diese Option bald anzubieten – bleib dran!</string>
+  <string name="selling_regional_restriction_alert_title">Regionale Einschränkung</string>
   <string name="send_additional_field_already_included">Bereits in der eingegebenen Adresse enthalten</string>
   <string name="send_alert_fee_too_high_text">Der Provisionsbetrag ist %s mal der empfohlene Betrag. Stelle sicher, dass die benutzerdefinierten Einstellungen korrekt sind.</string>
   <string name="send_alert_fee_too_low_text">Du hast eine Kommission angegeben, die unter dem empfohlenen Betrag liegt, was zu einer Verzögerung Ihrer Transaktion führen könnte. Weiter?</string>
