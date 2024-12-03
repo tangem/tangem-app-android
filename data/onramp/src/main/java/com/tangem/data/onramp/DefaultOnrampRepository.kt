@@ -305,7 +305,7 @@ internal class DefaultOnrampRepository(
                     toAmount = quote.toAmount.value,
                 )
             } else {
-                error("Express signature invalid")
+                throw OnrampRedirectError.VerificationFailed
             }
         } catch (e: Exception) {
             Timber.e(e)
