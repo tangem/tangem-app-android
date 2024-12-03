@@ -9,7 +9,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 internal interface SelectProviderComponent : ComposableBottomSheetComponent {
 
     data class Params(
-        val onProviderClick: (OnrampProviderWithQuote.Data) -> Unit,
+        val onProviderClick: (OnrampProviderWithQuote.Data, Boolean) -> Unit,
         val onDismiss: () -> Unit,
         val selectedPaymentMethod: OnrampPaymentMethod,
         val cryptoCurrency: CryptoCurrency,
