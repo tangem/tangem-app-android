@@ -1,6 +1,8 @@
 package com.tangem.features.onramp.tokenlist.entity
 
-import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.utils.SearchBarUMTransformer
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +22,13 @@ internal class TokenListUMController @Inject constructor() {
 
     private val _state: MutableStateFlow<TokenListUM> = MutableStateFlow(
         value = TokenListUM(
+            searchBarUM = SearchBarUM(
+                placeholderText = resourceReference(id = R.string.common_search),
+                query = "",
+                onQueryChange = {},
+                isActive = false,
+                onActiveChange = {},
+            ),
             availableItems = persistentListOf(),
             unavailableItems = persistentListOf(),
             isBalanceHidden = false,
@@ -39,27 +48,9 @@ internal class TokenListUMController @Inject constructor() {
     fun update(transformer: SearchBarUMTransformer) {
         Timber.d("Applying ${transformer::class.simpleName}")
         _state.update { prevState ->
-            val searchBarItem = prevState.getSearchBar()
-
-            if (searchBarItem != null) {
-                val updatedSearchBar = searchBarItem.copy(
-                    searchBarUM = transformer.transform(searchBarItem.searchBarUM),
-                )
-
-                prevState.copy(
-                    availableItems = persistentListOf(
-                        updatedSearchBar,
-                        *prevState.getTokens().toTypedArray(),
-                    ),
-                )
-            } else {
-                prevState
-            }
+            prevState.copy(
+                searchBarUM = transformer.transform(prevState.searchBarUM),
+            )
         }
-    }
-
-    /** Get search bar if it exists */
-    fun getSearchBar(): TokensListItemUM.SearchBar? {
-        return _state.value.getSearchBar()
     }
 }

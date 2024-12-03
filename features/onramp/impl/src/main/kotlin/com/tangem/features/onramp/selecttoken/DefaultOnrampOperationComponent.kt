@@ -29,7 +29,6 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
                 is OnrampOperationComponent.Params.Buy -> OnrampOperation.BUY
                 is OnrampOperationComponent.Params.Sell -> OnrampOperation.SELL
             },
-            hasSearchBar = true,
             userWalletId = params.userWalletId,
             onTokenClick = { _, status -> model.onTokenClick(status) },
         ),
