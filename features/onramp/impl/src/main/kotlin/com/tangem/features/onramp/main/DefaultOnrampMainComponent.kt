@@ -55,7 +55,10 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
             context = childByContext(componentContext),
             params = ConfirmResidencyComponent.Params(
                 country = config.country,
-                onDismiss = { model.bottomSheetNavigation.dismiss() },
+                onDismiss = {
+                    model.bottomSheetNavigation.dismiss()
+                    model.handleOnrampAvailable(it.defaultCurrency)
+                },
             ),
         )
         is OnrampMainBottomSheetConfig.CurrenciesList -> selectCurrencyComponentFactory.create(

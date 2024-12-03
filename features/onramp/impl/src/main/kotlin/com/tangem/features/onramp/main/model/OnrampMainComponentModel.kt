@@ -75,6 +75,12 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
     }
 
+    fun handleOnrampAvailable(currency: OnrampCurrency) {
+        _state.update { stateFactory.getReadyState(currency) }
+        subscribeToCurrencyUpdates()
+        subscribeToQuotesUpdate()
+    }
+
     fun onProviderSelected(providerWithQuote: OnrampProviderWithQuote.Data) {
         _state.update { amountStateFactory.getAmountSecondaryUpdatedState(providerWithQuote) }
     }
@@ -94,12 +100,6 @@ internal class OnrampMainComponentModel @Inject constructor(
             is OnrampAvailability.NotSupported,
             -> bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.ConfirmResidency(availability.country))
         }
-    }
-
-    private fun handleOnrampAvailable(currency: OnrampCurrency) {
-        _state.update { stateFactory.getReadyState(currency) }
-        subscribeToCurrencyUpdates()
-        subscribeToQuotesUpdate()
     }
 
     private fun subscribeToCurrencyUpdates() {
