@@ -38,13 +38,14 @@ import com.tangem.features.onramp.swap.entity.ExchangeCardUM
 /**
  * Exchange card
  *
- * @param state    state
- * @param modifier modifier
+ * @param state           state
+ * @param isBalanceHidden is balance hidden
+ * @param modifier        modifier
  *
  * @author Andrew Khokhlov on 30/10/2024
  */
 @Composable
-internal fun ExchangeCard(state: ExchangeCardUM, modifier: Modifier = Modifier) {
+internal fun ExchangeCard(state: ExchangeCardUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -67,7 +68,9 @@ internal fun ExchangeCard(state: ExchangeCardUM, modifier: Modifier = Modifier) 
         ) { animatedState ->
             when (animatedState) {
                 is ExchangeCardUM.Empty -> EmptyTokenBlock(text = animatedState.subtitleReference)
-                is ExchangeCardUM.Filled -> TokenItem(state = animatedState.tokenItemState, isBalanceHidden = false)
+                is ExchangeCardUM.Filled -> {
+                    TokenItem(state = animatedState.tokenItemState, isBalanceHidden = isBalanceHidden)
+                }
             }
         }
     }
@@ -142,6 +145,7 @@ private fun Preview_ExchangeCard(@PreviewParameter(ExchangeCardUMProvider::class
     TangemThemePreview {
         ExchangeCard(
             state = state,
+            isBalanceHidden = false,
             modifier = Modifier
                 .background(TangemTheme.colors.background.secondary)
                 .padding(16.dp),
