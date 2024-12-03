@@ -226,7 +226,7 @@ internal class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val scanResponse =
                 appPreferencesStore
-                    .getObjectSyncOrNull<ScanResponse>(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE)
+                    .getObjectSyncOrNull<ScanResponse>(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY)
                     ?: return@launch
 
             router.push(AppRoute.Onboarding(scanResponse = scanResponse, startFromBackup = false))

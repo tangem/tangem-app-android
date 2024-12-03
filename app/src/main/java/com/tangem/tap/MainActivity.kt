@@ -572,11 +572,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         }
 
-        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
-            viewModel.checkForUnfinishedBackup()
-        } else {
-            store.dispatch(BackupAction.CheckForUnfinishedBackup)
-        }
+        // if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
+        //     viewModel.checkForUnfinishedBackup()
+        // } else {
+        store.dispatch(BackupAction.CheckForUnfinishedBackup)
+        // }
     }
 
     private fun observePolkadotAccountHealthCheck() {

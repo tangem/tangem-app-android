@@ -5,9 +5,6 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -15,6 +12,7 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.models.scan.isRing
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
@@ -50,7 +48,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val userWalletsListManager: UserWalletsListManager,
     private val cardRepository: CardRepository,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val onboardingRepository: OnboardingRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -68,11 +66,9 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         // save scan response to preferences to be able
         // to continue finalize process after app restart
         modelScope.launch {
-            appPreferencesStore
-                .storeObject<ScanResponse>(
-                    PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE,
-                    multiWalletState.value.currentScanResponse,
-                )
+            onboardingRepository.saveUnfinishedFinalizeOnboarding(
+                scanResponse = multiWalletState.value.currentScanResponse,
+            )
         }
     }
 
@@ -227,9 +223,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
             // user wallet is fully created and saved, remove scan response from preferences
             // to prevent showing finalize screen dialog on next app start
-            appPreferencesStore.editData { mutablePreferences ->
-                mutablePreferences.remove(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE)
-            }
+            onboardingRepository.clearUnfinishedFinalizeOnboarding()
 
             cardRepository.finishCardActivation(scanResponse.card.cardId)
             backupServiceHolder.backupService.get()?.discardSavedBackup()

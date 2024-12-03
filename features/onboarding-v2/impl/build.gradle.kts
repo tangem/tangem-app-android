@@ -40,6 +40,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.settings)
+    implementation(projects.domain.onboarding)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)

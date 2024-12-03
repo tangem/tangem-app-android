@@ -74,7 +74,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         // to prevent showing finalize screen dialog on next app start
         modelScope.launch {
             appPreferencesStore.editData { mutablePreferences ->
-                mutablePreferences.remove(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE)
+                mutablePreferences.remove(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY)
             }
         }
     }
