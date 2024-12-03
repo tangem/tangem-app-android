@@ -22,6 +22,7 @@ internal class SwapSelectTokensController @Inject constructor() {
             onBackClick = {},
             exchangeFrom = createEmptyExchangeFrom(),
             exchangeTo = createEmptyExchangeTo(),
+            isBalanceHidden = false,
         ),
     )
 
