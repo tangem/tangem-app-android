@@ -4,7 +4,6 @@ import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedCryptoAmount
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedFiatAmount
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
@@ -23,10 +22,7 @@ internal class UpdateTokenItemsTransformer(
     private val onItemClick: (TokenItemState, CryptoCurrencyStatus) -> Unit,
     private val statuses: Map<Boolean, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
-    private val hasSearchBar: Boolean,
     private val unavailableTokensHeaderReference: TextReference,
-    private val onQueryChange: (String) -> Unit,
-    private val onActiveChange: (Boolean) -> Unit,
 ) : TokenListUMTransformer {
 
     override fun transform(prevState: TokenListUM): TokenListUM {
@@ -40,18 +36,8 @@ internal class UpdateTokenItemsTransformer(
             statuses = statuses[false].orEmpty(),
         )
 
-        val searchBarItem = if (hasSearchBar) {
-            prevState.getSearchBar() ?: createSearchBarItem()
-        } else {
-            null
-        }
-
         return prevState.copy(
             availableItems = buildList {
-                if (searchBarItem != null) {
-                    add(searchBarItem)
-                }
-
                 if (availableItems.isNotEmpty()) {
                     createGroupTitle(
                         textReference = resourceReference(id = R.string.exchange_tokens_available_tokens_header),
@@ -68,7 +54,8 @@ internal class UpdateTokenItemsTransformer(
                 }
 
                 addAll(unavailableItems)
-            }.toImmutableList(),
+            }
+                .toImmutableList(),
             isBalanceHidden = isBalanceHidden,
         )
     }
@@ -156,18 +143,6 @@ internal class UpdateTokenItemsTransformer(
             is CryptoCurrencyStatus.Loading,
             -> null
         }
-    }
-
-    private fun createSearchBarItem(): TokensListItemUM.SearchBar {
-        return TokensListItemUM.SearchBar(
-            searchBarUM = SearchBarUM(
-                placeholderText = resourceReference(id = R.string.common_search),
-                query = "",
-                onQueryChange = onQueryChange,
-                isActive = false,
-                onActiveChange = onActiveChange,
-            ),
-        )
     }
 
     private fun createGroupTitle(textReference: TextReference): TokensListItemUM.GroupTitle {
