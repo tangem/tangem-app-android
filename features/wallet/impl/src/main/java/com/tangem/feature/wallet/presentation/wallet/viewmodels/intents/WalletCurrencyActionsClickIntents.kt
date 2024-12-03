@@ -13,6 +13,7 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
@@ -47,10 +48,7 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.DisableActionTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
@@ -492,6 +490,20 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
+        val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
+        val tokenListState = selectedWallet.tokensListState as? WalletTokensListState.ContentState.Content ?: return
+
+        if (tokenListState.items.count { it is TokensListItemUM.Token } < 2) {
+            handleError(
+                userWalletId = userWalletId,
+                actionKClass = WalletManageButton.Swap::class,
+                alertState = WalletAlertState.InsufficientTokensCountForSwapping,
+                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+            )
+
+            return
+        }
+
         onMultiWalletActionClick(
             userWalletId = userWalletId,
             statusFlow = rampStateManager.getSwapInitializationStatus(userWalletId),
