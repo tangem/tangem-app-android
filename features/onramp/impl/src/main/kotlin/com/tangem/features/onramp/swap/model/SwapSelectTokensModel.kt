@@ -8,6 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.onramp.component.SwapSelectTokensComponent
 import com.tangem.features.onramp.swap.entity.SwapSelectTokensController
@@ -18,8 +19,7 @@ import com.tangem.features.onramp.swap.entity.transformer.SelectFromTokenTransfo
 import com.tangem.features.onramp.swap.entity.transformer.SelectToTokenTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
@@ -31,6 +31,7 @@ internal class SwapSelectTokensModel @Inject constructor(
     private val controller: SwapSelectTokensController,
     private val router: Router,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : Model() {
 
     val state: StateFlow<SwapSelectTokensUM> = controller.state
@@ -43,9 +44,9 @@ internal class SwapSelectTokensModel @Inject constructor(
     private val params = paramsContainer.require<SwapSelectTokensComponent.Params>()
 
     init {
-        controller.update {
-            it.copy(onBackClick = ::onBackClick)
-        }
+        controller.update { it.copy(onBackClick = ::onBackClick) }
+
+        subscribeOnBalanceHidingSettings()
     }
 
     /**
@@ -104,6 +105,17 @@ internal class SwapSelectTokensModel @Inject constructor(
                 },
             )
         }
+    }
+
+    private fun subscribeOnBalanceHidingSettings() {
+        getBalanceHidingSettingsUseCase()
+            .map { it.isBalanceHidden }
+            .distinctUntilChanged()
+            .onEach {
+                controller.update { state -> state.copy(isBalanceHidden = it) }
+            }
+            .flowOn(dispatchers.mainImmediate)
+            .launchIn(modelScope)
     }
 
     private fun onBackClick() {
