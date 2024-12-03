@@ -24,7 +24,7 @@ import dagger.assisted.AssistedInject
 
 internal class DefaultOnrampMainComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
-    @Assisted params: OnrampMainComponent.Params,
+    @Assisted private val params: OnrampMainComponent.Params,
     private val confirmResidencyComponentFactory: ConfirmResidencyComponent.Factory,
     private val selectCurrencyComponentFactory: SelectCurrencyComponent.Factory,
     private val selectProviderComponentFactory: SelectProviderComponent.Factory,
@@ -68,6 +68,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 onProviderClick = model::onProviderSelected,
                 onDismiss = model.bottomSheetNavigation::dismiss,
                 selectedPaymentMethod = config.selectedPaymentMethod,
+                cryptoCurrency = params.cryptoCurrency,
             ),
         )
     }
