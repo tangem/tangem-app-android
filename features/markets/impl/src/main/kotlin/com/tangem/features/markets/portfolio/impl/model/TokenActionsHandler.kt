@@ -16,6 +16,7 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.impl.R
@@ -109,6 +110,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
                     addresses = networkAddress.availableAddresses
                         .mapToAddressModels(currency)
                         .toImmutableList(),
+                    showMemoDisclaimer = currency.network.transactionExtras != Network.TransactionExtras.NONE,
                     onCopyClick = {},
                     onShareClick = {},
                 ),

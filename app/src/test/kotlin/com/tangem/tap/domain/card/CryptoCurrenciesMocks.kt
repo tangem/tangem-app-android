@@ -59,6 +59,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
             standardType = getNetworkStandardType(blockchain),
             hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
             canHandleTokens = false,
+            transactionExtras = Network.TransactionExtras.NONE,
         )
 
         return factory.createCoin(network = network)
@@ -86,6 +87,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = true,
                 canHandleTokens = true,
+                transactionExtras = Network.TransactionExtras.NONE,
             ),
             name = "NEVER-MIND",
             symbol = "NEVER-MIND",
