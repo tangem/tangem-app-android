@@ -1,5 +1,8 @@
 package com.tangem.features.onramp.main.ui
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -68,20 +71,27 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                 color = TangemTheme.colors.text.tertiary,
             )
         }
-        Text(
-            modifier = Modifier
-                .background(
-                    color = TangemTheme.colors.icon.accent,
-                    shape = RoundedCornerShape(TangemTheme.dimens.radius4),
-                )
-                .padding(
-                    horizontal = TangemTheme.dimens.spacing6,
-                    vertical = TangemTheme.dimens.spacing1,
-                ),
-            text = stringResource(id = R.string.express_provider_best_rate),
-            style = TangemTheme.typography.caption1,
-            color = TangemTheme.colors.text.primary2,
-        )
+        AnimatedVisibility(
+            visible = state.isBestRate,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            label = "Best Rate visibility animation",
+        ) {
+            Text(
+                modifier = Modifier
+                    .background(
+                        color = TangemTheme.colors.icon.accent,
+                        shape = RoundedCornerShape(TangemTheme.dimens.radius4),
+                    )
+                    .padding(
+                        horizontal = TangemTheme.dimens.spacing6,
+                        vertical = TangemTheme.dimens.spacing1,
+                    ),
+                text = stringResource(id = R.string.express_provider_best_rate),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.primary2,
+            )
+        }
     }
 }
 
