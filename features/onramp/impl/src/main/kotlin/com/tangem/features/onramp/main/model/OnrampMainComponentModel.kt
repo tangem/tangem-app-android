@@ -2,10 +2,12 @@ package com.tangem.features.onramp.main.model
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.onramp.*
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
@@ -27,6 +29,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class OnrampMainComponentModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val router: Router,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
     private val getOnrampCurrencyUseCase: GetOnrampCurrencyUseCase,
@@ -58,8 +61,18 @@ internal class OnrampMainComponentModel @Inject constructor(
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
 
     init {
+        sendScreenOpenAnalytics()
         checkResidenceCountry()
         subscribeToAmountChanges()
+    }
+
+    private fun sendScreenOpenAnalytics() {
+        analyticsEventHandler.send(
+            OnrampAnalyticsEvent.ScreenOpened(
+                source = params.source,
+                cryptoCurrency = params.cryptoCurrency.name,
+            ),
+        )
     }
 
     fun onProviderSelected(providerWithQuote: OnrampProviderWithQuote.Data) {
@@ -132,10 +145,19 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
+        val currentContentState = state.value as? OnrampMainComponentUM.Content ?: return
+        analyticsEventHandler.send(
+            OnrampAnalyticsEvent.OnBuyClick(
+                providerName = quote.provider.info.name,
+                currency = currentContentState.amountBlockState.currencyUM.code,
+                cryptoCurrency = params.cryptoCurrency.name,
+            ),
+        )
         params.openRedirectPage(quote)
     }
 
     override fun openCurrenciesList() {
+        analyticsEventHandler.send(OnrampAnalyticsEvent.SelectCurrencyScreenOpened)
         bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.CurrenciesList)
     }
 
