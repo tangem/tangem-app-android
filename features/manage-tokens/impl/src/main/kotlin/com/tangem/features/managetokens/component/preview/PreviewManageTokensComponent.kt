@@ -161,6 +161,7 @@ internal class PreviewManageTokensComponent(
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = false,
                 canHandleTokens = false,
+                transactionExtras = Network.TransactionExtras.NONE,
             ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
