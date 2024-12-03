@@ -26,6 +26,7 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
@@ -374,6 +375,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
                         userWallet = userWallet,
+                        source = OnrampSource.TOKEN_LONG_TAP,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
                     ),
