@@ -31,6 +31,7 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -122,7 +123,9 @@ internal class SelectProviderModel @Inject constructor(
         }
     }
 
-    private fun List<OnrampProviderWithQuote>.toProvidersListItems() = mapIndexed { index, quote ->
+    private fun List<OnrampProviderWithQuote>.toProvidersListItems() = sortedByDescending {
+        (it as? OnrampProviderWithQuote.Data)?.toAmount?.value ?: BigDecimal.ZERO
+    }.mapIndexed { index, quote ->
         when (quote) {
             is OnrampProviderWithQuote.Data -> {
                 val rate = quote.toAmount.value.format {
