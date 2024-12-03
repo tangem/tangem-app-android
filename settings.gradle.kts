@@ -140,6 +140,7 @@ include(":core:pagination")
 
 // region Common modules
 include(":common:ui")
+include(":common:google")
 // endregion
 
 // region Libs modules
