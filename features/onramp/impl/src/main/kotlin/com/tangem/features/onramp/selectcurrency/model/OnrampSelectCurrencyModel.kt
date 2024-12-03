@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.selectcurrency.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,6 +9,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.onramp.GetOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCurrencyUseCase
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcurrency.SelectCurrencyComponent
@@ -31,6 +33,7 @@ import javax.inject.Inject
 @ComponentScoped
 internal class OnrampSelectCurrencyModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val searchManager: InputManager,
     private val getOnrampCurrenciesUseCase: GetOnrampCurrenciesUseCase,
     private val saveDefaultCurrencyUseCase: OnrampSaveDefaultCurrencyUseCase,
@@ -72,6 +75,7 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     }
 
     private fun saveDefaultCurrency(currency: OnrampCurrency) {
+        analyticsEventHandler.send(OnrampAnalyticsEvent.FiatCurrencyChosen(currency.code))
         modelScope.launch {
             saveDefaultCurrencyUseCase.invoke(currency)
             dismiss()
