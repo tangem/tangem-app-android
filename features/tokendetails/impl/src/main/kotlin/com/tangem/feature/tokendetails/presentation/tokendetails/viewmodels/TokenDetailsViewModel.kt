@@ -124,6 +124,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
+    private val getCryptoCurrencySyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     getUserWalletUseCase: GetUserWalletUseCase,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     deepLinksRegistry: DeepLinksRegistry,
@@ -223,6 +224,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.DetailsScreenOpened(token = cryptoCurrency.symbol),
         )
         updateTopBarMenu()
+        initButtons()
         updateContent()
         handleBalanceHiding(owner)
     }
@@ -230,6 +232,20 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onCleared() {
         swapTxStatusTaskScheduler.cancelTask()
         super.onCleared()
+    }
+
+    private fun initButtons() {
+        // we need also init buttons before start all loading to avoid buttons blocking
+        viewModelScope.launch {
+            val currentCryptoCurrencyStatus = getCryptoCurrencySyncUseCase.invoke(
+                userWalletId = userWalletId,
+                cryptoCurrencyId = cryptoCurrency.id,
+                isSingleWalletWithTokens = false,
+            ).getOrNull()
+            currentCryptoCurrencyStatus?.let {
+                updateButtons(it)
+            }
+        }
     }
 
     private fun updateContent() {
