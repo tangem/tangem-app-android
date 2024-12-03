@@ -34,7 +34,6 @@ internal class DefaultSwapSelectTokensComponent @AssistedInject constructor(
         context = child(key = "select_from_token_list"),
         params = OnrampTokenListComponent.Params(
             filterOperation = OnrampOperation.SWAP,
-            hasSearchBar = true,
             userWalletId = params.userWalletId,
             onTokenClick = model::selectFromToken,
         ),
