@@ -49,7 +49,11 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             cryptoCurrencyId = cryptoCurrency.id,
         ).map { maybeTransaction ->
             maybeTransaction.fold(
-                ifRight = onrampTransactionStateConverter::convertList,
+                ifRight = { onrampTxs ->
+                    val transactions = onrampTransactionStateConverter.convertList(onrampTxs)
+                    transactions.clearHiddenTerminal()
+                    transactions.filterNot { it.activeStatus.isHidden }
+                },
                 ifLeft = { persistentListOf() },
             )
         }
@@ -60,13 +64,13 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
-        if (selectedTx.activeStatus.isTerminal()) {
+        if (selectedTx.activeStatus.isTerminal) {
             onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
         }
     }
 
     suspend fun updateOnrmapTxStatus(onrampTx: ExpressTransactionStateUM.OnrampUM): ExpressTransactionStateUM.OnrampUM {
-        return if (onrampTx.activeStatus.isTerminal()) {
+        return if (onrampTx.activeStatus.isTerminal) {
             onrampTx
         } else {
             getOnrampStatusUseCase(onrampTx.info.txId).fold(
@@ -79,6 +83,11 @@ internal class OnrampStatusFactory @AssistedInject constructor(
                 },
             )
         }
+    }
+
+    private suspend fun List<ExpressTransactionStateUM.OnrampUM>.clearHiddenTerminal() {
+        this.filter { it.activeStatus.isHidden && it.activeStatus.isTerminal }
+            .forEach { onrampRemoveTransactionUseCase(txId = it.info.txId) }
     }
 
     @AssistedFactory
