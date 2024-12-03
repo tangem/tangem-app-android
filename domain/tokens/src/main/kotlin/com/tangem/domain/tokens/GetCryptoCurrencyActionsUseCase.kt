@@ -50,7 +50,9 @@ class GetCryptoCurrencyActionsUseCase(
             userWalletId = userWallet.walletId,
         )
         val networkId = cryptoCurrencyStatus.currency.network.id
-        val requirements = walletManagersFacade.getAssetRequirements(userWallet.walletId, cryptoCurrencyStatus.currency)
+        val requirements = withTimeoutOrNull(REQUEST_EXCHANGE_DATA_TIMEOUT) {
+            walletManagersFacade.getAssetRequirements(userWallet.walletId, cryptoCurrencyStatus.currency)
+        }
         return flow {
             val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
