@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.paymentmethod.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import coil.compose.AsyncImage
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
@@ -103,12 +103,7 @@ private fun PaymentMethodItem(paymentMethod: PaymentMethodUM, isSelected: Boolea
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        AsyncImage(
-            modifier = Modifier
-                .size(TangemTheme.dimens.size40),
-            model = paymentMethod.imageUrl,
-            contentDescription = null,
-        )
+        PaymentMethodIcon(paymentMethod.imageUrl)
         Text(
             text = paymentMethod.name,
             style = TangemTheme.typography.subtitle2,
