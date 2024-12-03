@@ -3,10 +3,12 @@ package com.tangem.features.onramp.settings.model
 import arrow.core.Either
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.features.onramp.settings.OnrampSettingsComponent
 import com.tangem.features.onramp.settings.entity.OnrampSettingsConfig
@@ -20,6 +22,7 @@ import javax.inject.Inject
 @ComponentScoped
 internal class OnrampSettingsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -31,6 +34,7 @@ internal class OnrampSettingsModel @Inject constructor(
     private val _state: MutableStateFlow<OnrampSettingsUM> = MutableStateFlow(getInitialState())
 
     init {
+        analyticsEventHandler.send(OnrampAnalyticsEvent.SettingsOpened)
         subscribeOnUpdateState()
     }
 

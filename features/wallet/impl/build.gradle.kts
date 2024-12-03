@@ -81,6 +81,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.onramp.models)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.features.onboarding)
 
