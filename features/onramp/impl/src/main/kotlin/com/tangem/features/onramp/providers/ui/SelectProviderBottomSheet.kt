@@ -1,11 +1,8 @@
 package com.tangem.features.onramp.providers.ui
 
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +26,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
 import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
 import com.tangem.features.onramp.providers.entity.ProviderListUM
@@ -79,18 +77,7 @@ private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Mod
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
-        SubcomposeAsyncImage(
-            modifier = Modifier
-                .size(size = TangemTheme.dimens.size40)
-                .clip(TangemTheme.shapes.roundedCorners8),
-            model = ImageRequest.Builder(context = LocalContext.current)
-                .data(state.imageUrl)
-                .crossfade(enable = true)
-                .allowHardware(false)
-                .build(),
-            loading = { RectangleShimmer(radius = TangemTheme.dimens.radius8) },
-            contentDescription = null,
-        )
+        PaymentMethodIcon(imageUrl = state.imageUrl)
         Column(modifier = Modifier.weight(1F)) {
             Text(
                 text = stringResource(id = R.string.onramp_pay_with),
