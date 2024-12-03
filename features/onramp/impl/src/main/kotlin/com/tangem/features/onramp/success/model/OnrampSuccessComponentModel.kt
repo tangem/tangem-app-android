@@ -89,7 +89,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     private fun removeTransactionIfTerminalStatus(status: OnrampStatus) {
         modelScope.launch {
-            if (status.status.isTerminal()) {
+            if (status.status.isTerminal) {
                 onrampRemoveTransactionUseCase(status.txId)
             }
         }
