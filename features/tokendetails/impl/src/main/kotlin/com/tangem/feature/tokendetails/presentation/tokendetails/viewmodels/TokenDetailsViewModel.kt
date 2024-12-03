@@ -243,6 +243,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 isSingleWalletWithTokens = false,
             ).getOrNull()
             currentCryptoCurrencyStatus?.let {
+                cryptoCurrencyStatus = it
                 updateButtons(it)
             }
         }
