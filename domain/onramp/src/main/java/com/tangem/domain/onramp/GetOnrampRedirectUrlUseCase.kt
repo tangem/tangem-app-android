@@ -2,6 +2,7 @@ package com.tangem.domain.onramp
 
 import arrow.core.Either
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
+import com.tangem.domain.onramp.model.OnrampRedirectError
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -16,7 +17,7 @@ class GetOnrampRedirectUrlUseCase(
         userWalletId: UserWalletId,
         quote: OnrampProviderWithQuote.Data,
         cryptoCurrency: CryptoCurrency,
-    ): Either<Throwable, String> {
+    ): Either<OnrampRedirectError, String> {
         return Either.catch {
             val transaction = repository.getOnrampData(
                 userWalletId = userWalletId,
@@ -25,6 +26,8 @@ class GetOnrampRedirectUrlUseCase(
             )
             transactionRepository.storeTransaction(transaction)
             transaction.redirectUrl
+        }.mapLeft { throwable ->
+            if (throwable is OnrampRedirectError) throwable else OnrampRedirectError.DataError(throwable)
         }
     }
 }
