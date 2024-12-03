@@ -1,7 +1,6 @@
 package com.tangem.tap.common.url
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
@@ -34,8 +33,6 @@ internal class CustomTabsUrlOpener : UrlOpener {
                 if (MutableAppThemeModeHolder.isDarkThemeActive) COLOR_SCHEME_DARK else COLOR_SCHEME_LIGHT,
             )
             .build()
-
-        customTabsIntent.intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 
         customTabsIntent.launchUrl(context, Uri.parse(url))
     }
