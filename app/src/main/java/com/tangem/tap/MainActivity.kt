@@ -44,6 +44,8 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
+import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
@@ -70,6 +72,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
+import com.tangem.google.GoogleServicesHelper
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
@@ -83,6 +86,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -195,6 +199,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
 
+    @Inject
+    lateinit var setGoogleServicesAvailabilityUseCase: SetGoogleServicesAvailabilityUseCase
+
+    @Inject
+    lateinit var setGooglePayAvailabilityUseCase: SetGooglePayAvailabilityUseCase
+
+    @Inject
+    lateinit var dispatchers: CoroutineDispatcherProvider
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -244,6 +257,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         observeStateUpdates()
         observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
+        checkGoogleServicesAvailability()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
@@ -602,6 +616,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             sendUnsubmittedHashesUseCase.invoke()
                 .onLeft { Timber.e(it.toString()) }
                 .onRight { Timber.d("Submitting hashes succeeded") }
+        }
+    }
+
+    private fun checkGoogleServicesAvailability() {
+        val isGoogleServicesAvailable = GoogleServicesHelper.checkGoogleServicesAvailability(this)
+
+        lifecycleScope.launch {
+            setGoogleServicesAvailabilityUseCase(isGoogleServicesAvailable)
+
+            if (isGoogleServicesAvailable) {
+                val paymentsClient = GoogleServicesHelper.createPaymentsClient(this@MainActivity)
+                val isGooglePayAvailable = GoogleServicesHelper.checkGooglePayAvailability(paymentsClient)
+                setGooglePayAvailabilityUseCase(isGooglePayAvailable)
+            } else {
+                setGooglePayAvailabilityUseCase(false)
+            }
         }
     }
 
