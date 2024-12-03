@@ -99,8 +99,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         subscribeToQuotesUpdate()
     }
 
-    fun onProviderSelected(providerWithQuote: OnrampProviderWithQuote.Data) {
-        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(providerWithQuote) }
+    fun onProviderSelected(providerWithQuote: OnrampProviderWithQuote.Data, isBestRate: Boolean) {
+        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(providerWithQuote, isBestRate) }
     }
 
     private fun checkResidenceCountry() {
