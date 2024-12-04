@@ -17,6 +17,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.Locale
 
+@Suppress("TooManyFunctions")
 internal class DefaultSettingsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val appLogsStore: AppLogsStore,
@@ -146,5 +147,27 @@ internal class DefaultSettingsRepository(
 
             userCountryFlow.value = code
         }
+    }
+
+    override suspend fun setGoogleServicesAvailability(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.IS_GOOGLE_SERVICES_AVAILABLE_KEY, value = value)
+    }
+
+    override suspend fun isGoogleServicesAvailability(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.IS_GOOGLE_SERVICES_AVAILABLE_KEY,
+            default = false,
+        )
+    }
+
+    override suspend fun setGooglePayAvailability(value: Boolean) {
+        appPreferencesStore.store(key = PreferencesKeys.IS_GOOGLE_PAY_AVAILABLE_KEY, value = value)
+    }
+
+    override suspend fun isGooglePayAvailability(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(
+            key = PreferencesKeys.IS_GOOGLE_PAY_AVAILABLE_KEY,
+            default = false,
+        )
     }
 }
