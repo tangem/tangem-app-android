@@ -14,12 +14,12 @@ sealed class OnrampAnalyticsEvent(
 
     data class ScreenOpened(
         val source: OnrampSource,
-        val cryptoCurrency: String,
+        val tokenSymbol: String,
     ) : OnrampAnalyticsEvent(
         event = "Buy Screen Opened",
         params = mapOf(
             "Source" to source.analyticsName,
-            "Token" to cryptoCurrency,
+            "Token" to tokenSymbol,
         ),
     )
 
@@ -65,40 +65,82 @@ sealed class OnrampAnalyticsEvent(
 
     data class ProviderCalculated(
         private val providerName: String,
-        private val cryptoCurrency: String,
+        private val tokenSymbol: String,
+        private val paymentMethod: String,
     ) : OnrampAnalyticsEvent(
         event = "Provider Calculated",
         params = mapOf(
             "Provider" to providerName,
-            "Token" to cryptoCurrency,
+            "Token" to tokenSymbol,
+            "Payment Method" to paymentMethod,
         ),
     )
 
     data object PaymentMethodsScreenOpened : OnrampAnalyticsEvent(event = "Payment Method Screen Opened")
 
-    data object OnPaymentMethodChosen : OnrampAnalyticsEvent(event = "Method Chosen")
+    data class OnPaymentMethodChosen(
+        private val paymentMethod: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Method Chosen",
+        params = mapOf(
+            "Payment Method" to paymentMethod,
+        ),
+    )
 
     data class OnProviderChosen(
         private val providerName: String,
-        private val cryptoCurrency: String,
+        private val tokenSymbol: String,
     ) : OnrampAnalyticsEvent(
         event = "Provider Chosen",
         params = mapOf(
             "Provider" to providerName,
-            "Token" to cryptoCurrency,
+            "Token" to tokenSymbol,
         ),
     )
 
     data class OnBuyClick(
         private val providerName: String,
         private val currency: String,
-        private val cryptoCurrency: String,
+        private val tokenSymbol: String,
     ) : OnrampAnalyticsEvent(
-        event = "Provider Chosen",
+        event = "Button - Buy",
         params = mapOf(
             "Provider" to providerName,
             "Currency" to currency,
-            "Token" to cryptoCurrency,
+            "Token" to tokenSymbol,
+        ),
+    )
+
+    data class SuccessScreenOpened(
+        private val providerName: String,
+        private val currency: String,
+        private val tokenSymbol: String,
+        private val residence: String,
+        private val paymentMethod: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Buying In Progress Screen Opened",
+        params = mapOf(
+            "Token" to tokenSymbol,
+            "Provider" to providerName,
+            "Residence" to residence,
+            "Currency" to currency,
+            "Method" to paymentMethod,
+        ),
+    )
+
+    data object MinAmountError : OnrampAnalyticsEvent(event = "Error - Min Amount")
+    data object MaxAmountError : OnrampAnalyticsEvent(event = "Error - Max Amount")
+
+    data class Errors(
+        private val tokenSymbol: String,
+        private val providerName: String,
+        private val errorCode: String,
+    ) : OnrampAnalyticsEvent(
+        event = "Errors",
+        params = mapOf(
+            "Token" to tokenSymbol,
+            "Provider" to providerName,
+            "Error Code" to errorCode,
         ),
     )
 }

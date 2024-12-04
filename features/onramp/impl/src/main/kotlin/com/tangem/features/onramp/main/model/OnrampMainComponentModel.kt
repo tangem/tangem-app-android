@@ -83,7 +83,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.ScreenOpened(
                 source = params.source,
-                cryptoCurrency = params.cryptoCurrency.name,
+                tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
     }
@@ -166,7 +166,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 OnrampAnalyticsEvent.OnBuyClick(
                     providerName = quote.provider.info.name,
                     currency = currentContentState.amountBlockState.currencyUM.code,
-                    cryptoCurrency = params.cryptoCurrency.name,
+                    tokenSymbol = params.cryptoCurrency.symbol,
                 ),
             )
             params.openRedirectPage(quote)
