@@ -69,6 +69,7 @@ import com.tangem.features.staking.impl.presentation.state.transformers.confirma
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.AddStakingNotificationsTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.DismissStakingNotificationsStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
+import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
 import com.tangem.utils.Provider
@@ -633,12 +634,17 @@ internal class StakingViewModel @Inject constructor(
                 ).leftOrNull()
             }
 
+            val balanceAfterTransaction = calculateBalanceAfterTransaction(
+                amount = amount.orZero(),
+                fee = fee.orZero(),
+                reduceAmountBy = confirmationState?.reduceAmountBy.orZero(),
+            )
             val currencyStatus = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 amount = amount,
                 fee = fee,
-                balanceAfterTransaction = null, // ignore this in staking
+                balanceAfterTransaction = balanceAfterTransaction,
             )
             stateController.update(
                 AddStakingNotificationsTransformer(
@@ -685,6 +691,22 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNotificationCancel(notification: Class<out NotificationUM>) {
         stateController.update(DismissStakingNotificationsStateTransformer(notification))
+    }
+
+    private fun calculateBalanceAfterTransaction(
+        amount: BigDecimal,
+        fee: BigDecimal,
+        reduceAmountBy: BigDecimal,
+    ): BigDecimal? {
+        val subtractedBalanceAmount = checkAndCalculateSubtractedAmount(
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            amountValue = amount.orZero(),
+            feeValue = fee.orZero(),
+            reduceAmountBy = reduceAmountBy,
+        )
+        val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
+        return statusValue?.let { it.amount - subtractedBalanceAmount - fee.orZero() }
     }
 
     private fun awaitForAllowance() {
