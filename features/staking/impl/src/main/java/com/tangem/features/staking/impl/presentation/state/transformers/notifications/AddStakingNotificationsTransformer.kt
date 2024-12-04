@@ -7,6 +7,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalance
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
@@ -188,6 +189,10 @@ internal class AddStakingNotificationsTransformer(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
+
+        addRentExemptionNotification(
+            rentWarning = currencyCheck.rentWarning,
+        )
 
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
