@@ -41,7 +41,7 @@ fun getNetwork(
         standardType = getNetworkStandardType(blockchain),
         hasFiatFeeRate = blockchain.feePaidCurrency() !is FeePaidCurrency.FeeResource,
         canHandleTokens = canHandleTokens,
-        transactionExtras = blockchain.getSupportedTransactionExtras(),
+        transactionExtrasType = blockchain.getSupportedTransactionExtras(),
     )
 }
 
@@ -70,7 +70,7 @@ fun getNetwork(
             scanResponse.cardTypesResolver,
             excludedBlockchains,
         ),
-        transactionExtras = blockchain.getSupportedTransactionExtras(),
+        transactionExtrasType = blockchain.getSupportedTransactionExtras(),
     )
 }
 
@@ -150,9 +150,9 @@ private fun getDefaultDerivationPath(
 }
 
 @Suppress("LongMethod")
-private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtras {
+private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtrasType {
     return when (this) {
-        Blockchain.XRP -> Network.TransactionExtras.DESTINATION_TAG
+        Blockchain.XRP -> Network.TransactionExtrasType.DESTINATION_TAG
         Blockchain.Binance,
         Blockchain.TON,
         Blockchain.Cosmos,
@@ -164,7 +164,7 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.Sei,
         Blockchain.InternetComputer,
         Blockchain.Casper,
-        -> Network.TransactionExtras.MEMO
+        -> Network.TransactionExtrasType.MEMO
         // region Other blockchains
         Blockchain.Unknown,
         Blockchain.Arbitrum,
@@ -288,7 +288,7 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.Canxium,
         Blockchain.Chiliz,
         Blockchain.ChilizTestnet,
-        -> Network.TransactionExtras.NONE
+        -> Network.TransactionExtrasType.NONE
         // endregion
     }
 }
