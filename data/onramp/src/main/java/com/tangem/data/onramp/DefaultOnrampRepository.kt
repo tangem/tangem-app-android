@@ -30,8 +30,10 @@ import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.getObjectSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.repositories.OnrampRepository
@@ -200,6 +202,7 @@ internal class DefaultOnrampRepository(
                             call = {
                                 val response = onrampApi.getQuote(
                                     fromCurrencyCode = currency.code,
+                                    fromPrecision = currency.precision,
                                     toContractAddress = cryptoCurrency.getContractAddress(),
                                     toNetwork = cryptoCurrency.network.backendId,
                                     paymentMethod = paymentMethod.id,
@@ -267,10 +270,12 @@ internal class DefaultOnrampRepository(
             val fromAmountString = quote.fromAmount.value.movePointRight(quote.fromAmount.decimals).toString()
             val currency = requireNotNull(getDefaultCurrencySync()) { "Default currency must not be null" }
             val country = requireNotNull(getDefaultCountrySync()) { "Default country must not be null" }
+            val requestId = UUID.randomUUID().toString()
             val data = safeApiCall(
                 call = {
                     onrampApi.getData(
                         fromCurrencyCode = currency.code,
+                        fromPrecision = currency.precision,
                         toContractAddress = cryptoCurrency.getContractAddress(),
                         toNetwork = cryptoCurrency.network.backendId,
                         paymentMethod = quote.paymentMethod.id,
@@ -281,8 +286,8 @@ internal class DefaultOnrampRepository(
                         toAddress = address,
                         redirectUrl = "tangem://redirect?action=dismissBrowser",
                         language = null,
-                        theme = null,
-                        requestId = UUID.randomUUID().toString(),
+                        theme = getTheme(),
+                        requestId = requestId,
                     ).bind()
                 },
                 onError = { e ->
@@ -294,6 +299,8 @@ internal class DefaultOnrampRepository(
                 val dataJson = requireNotNull(onrampDataAdapter.fromJson(data.dataJson)) {
                     "Can not parse dataJson. ${data.dataJson}"
                 }
+                if (requestId != dataJson.requestId) throw OnrampRedirectError.WrongRequestId
+
                 createOnrampTransaction(
                     txId = data.txId,
                     onrampDataJson = dataJson,
@@ -398,6 +405,19 @@ internal class DefaultOnrampRepository(
             symbol = cryptoCurrency.symbol,
             decimals = cryptoCurrency.decimals,
         )
+    }
+
+    private suspend fun getTheme(): String {
+        val appTheme = appPreferencesStore.getObjectSyncOrDefault(
+            key = PreferencesKeys.APP_THEME_MODE_KEY,
+            default = AppThemeMode.DEFAULT,
+        )
+        return when (appTheme) {
+            AppThemeMode.FORCE_DARK -> "dark"
+            AppThemeMode.FORCE_LIGHT,
+            AppThemeMode.FOLLOW_SYSTEM,
+            -> "light"
+        }
     }
 
     private fun List<PaymentMethodDTO>.removeApplePay(): List<PaymentMethodDTO> = filterNot { it.id == "apple-pay" }
