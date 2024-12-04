@@ -6,6 +6,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
@@ -106,7 +107,18 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     }
 
     fun getStateWithExpressStatusBottomSheet(expressState: ExpressTransactionStateUM): TokenDetailsState {
-        analyticsEventsHandler.send(TokenExchangeAnalyticsEvent.CexTxStatusOpened(cryptoCurrency.symbol))
+        val analyticEvent = when (expressState) {
+            is ExpressTransactionStateUM.ExchangeUM -> TokenExchangeAnalyticsEvent.CexTxStatusOpened(
+                cryptoCurrency.symbol,
+            )
+            is ExpressTransactionStateUM.OnrampUM -> TokenOnrampAnalyticsEvent.OnrampStatusOpened(
+                tokenSymbol = cryptoCurrency.symbol,
+                provider = expressState.providerName,
+                fiatCurrency = expressState.fromCurrencyCode,
+            )
+        }
+
+        analyticsEventsHandler.send(analyticEvent)
 
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(

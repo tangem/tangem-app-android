@@ -1,12 +1,14 @@
 package com.tangem.features.onramp.success.model
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
@@ -31,6 +33,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private val getOnrampStatusUseCase: GetOnrampStatusUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampSuccessClickIntents {
 
@@ -64,7 +67,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
-        val cryptoCurrencies = getCryptoCurrencyUseCase(
+        val cryptoCurrency = getCryptoCurrencyUseCase(
             transaction.userWalletId,
             transaction.toCurrencyId,
         ).getOrElse { error("Crypto currency not found") }
@@ -75,9 +78,18 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                     Timber.e(it.toString())
                 },
                 ifRight = { status ->
+                    analyticsEventHandler.send(
+                        OnrampAnalyticsEvent.SuccessScreenOpened(
+                            providerName = transaction.providerName,
+                            currency = transaction.fromCurrency.code,
+                            tokenSymbol = cryptoCurrency.symbol,
+                            residence = transaction.residency,
+                            paymentMethod = transaction.paymentMethod,
+                        ),
+                    )
                     _state.update {
                         SetOnrampSuccessContentConverter(
-                            cryptoCurrency = cryptoCurrencies,
+                            cryptoCurrency = cryptoCurrency,
                             transaction = transaction,
                             goToProviderClick = ::goToProviderClick,
                         ).convert(status)
