@@ -12,6 +12,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWar
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addMinimumAmountErrorNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
@@ -22,7 +23,6 @@ import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
-import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -311,10 +311,5 @@ internal class SendNotificationFactory(
         checkIfFeeTooHigh(feeSelectorState) { diff ->
             add(NotificationUM.Warning.TooHigh(diff))
         }
-    }
-
-    private fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
-        if (rentWarning == null) return
-        add(NotificationUM.Solana.RentInfo(rentWarning))
     }
 }
