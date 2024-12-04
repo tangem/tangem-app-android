@@ -252,6 +252,7 @@
   <string name="express_choose_providers_subtitle">Tangem propose des échanges de jetons via des fournisseurs tiers selon les conditions de chaque fournisseur</string>
   <string name="express_choose_providers_title">Choisissez un fournisseur</string>
   <string name="express_error_code">Une erreur s\'est produite. Code : %s</string>
+  <string name="express_error_provider_amount_roundup">Erreur %1$s. Le fournisseur sélectionné ne peut pas traiter la transaction spécifiée. Veuillez arrondir la valeur à %2$s ou la modifier</string>
   <string name="express_error_swap_pair_unavailable">Le fournisseur sélectionné n\'est pas disponible pour le moment. Veuillez réessayer plus tard. (Code : %s)</string>
   <string name="express_error_swap_unavailable">Les échanges ne sont pas disponibles pour le moment. Veuillez réessayer plus tard. (Code : %s)</string>
   <string name="express_estimated_amount">Montant estimé</string>
@@ -566,6 +567,7 @@
   <string name="onboarding_wallet_info_title_fourth">Restauration du code d\'accès</string>
   <string name="onboarding_wallet_info_title_second">Cartes identiques</string>
   <string name="onboarding_wallet_info_title_third">Code d\'accès</string>
+  <string name="onramp_avaiable_with_payment_methods">Disponible avec %s</string>
   <string name="onramp_country_search">Recherche par pays</string>
   <string name="onramp_country_unavailable">Indisponible</string>
   <string name="onramp_currency_search">Recherche par devise</string>
@@ -582,6 +584,7 @@
   <string name="onramp_settings_residence">Résidence</string>
   <string name="onramp_settings_residence_description">Veuillez sélectionner le bon pays pour garantir des options de paiement et des services précis.</string>
   <string name="onramp_settings_title">Paramètres</string>
+  <string name="onramp_statuses_view_footer">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton.</string>
   <string name="onramp_transaction_status_footer_text">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton</string>
   <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Grouper</string>
@@ -592,7 +595,9 @@
   <string name="qr_scanner_camera_denied_settings_button">Paramètres</string>
   <string name="qr_scanner_camera_denied_text">Vous n\'avez pas donné accès à votre caméra</string>
   <string name="qr_scanner_camera_denied_title">Accès à la caméra refusé</string>
+  <string name="receive_bottom_sheet_no_memo_required_message">Aucun mémo requis</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sur le réseau %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_description">L’envoi de toute autre devise entraînera sa perte irréversible.</string>
   <string name="receive_bottom_sheet_warning_message_full">Envoyez uniquement %s à cette adresse. L\'envoi de toute autre devise entraînera sa perte irréversible.</string>
   <string name="receive_token_description">Transférez des fonds depuis un autre portefeuille ou une autre bourse</string>
   <string name="referral_button_participate">Participer</string>
