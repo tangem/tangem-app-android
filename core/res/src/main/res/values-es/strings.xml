@@ -252,6 +252,7 @@
   <string name="express_choose_providers_subtitle">Tangem ofrece swaps de tokens a través de proveedores externos según los términos de cada proveedor</string>
   <string name="express_choose_providers_title">Elige un proveedor</string>
   <string name="express_error_code">Ha ocurrido un error. Código: %s</string>
+  <string name="express_error_provider_amount_roundup">Error %1$s. El proveedor seleccionado no puede procesar la transacción especificada. Por favor, redondee el valor a %2$s o cámbielo</string>
   <string name="express_error_swap_pair_unavailable">El proveedor seleccionado no está disponible actualmente. Inténtelo de nuevo más tarde. (Código: %s)</string>
   <string name="express_error_swap_unavailable">Los cambios no están disponibles en este momento. Inténtelo de nuevo más tarde. (Código: %s)</string>
   <string name="express_estimated_amount">Cantidad estimada</string>
@@ -566,6 +567,7 @@
   <string name="onboarding_wallet_info_title_fourth">Restaurar código de acceso</string>
   <string name="onboarding_wallet_info_title_second">Tarjetas idénticas</string>
   <string name="onboarding_wallet_info_title_third">Código de acceso</string>
+  <string name="onramp_avaiable_with_payment_methods">Disponible con %s</string>
   <string name="onramp_country_search">Buscar por país</string>
   <string name="onramp_country_unavailable">Indisponible</string>
   <string name="onramp_currency_search">Buscar por moneda</string>
@@ -582,6 +584,7 @@
   <string name="onramp_settings_residence">Residencia</string>
   <string name="onramp_settings_residence_description">Seleccione el país correcto para garantizar opciones de pago y servicios precisos.</string>
   <string name="onramp_settings_title">Ajustes</string>
+  <string name="onramp_statuses_view_footer">Puede comprobar el estado de la transacción desde la página del token.</string>
   <string name="onramp_transaction_status_footer_text">Puede comprobar el estado de la transacción desde la página del token</string>
   <string name="onramp_via">Vía</string>
   <string name="organize_tokens_group">Agrupar</string>
@@ -592,7 +595,9 @@
   <string name="qr_scanner_camera_denied_settings_button">Ajustes</string>
   <string name="qr_scanner_camera_denied_text">No ha dado acceso a su cámara</string>
   <string name="qr_scanner_camera_denied_title">Acceso a la cámara denegado</string>
+  <string name="receive_bottom_sheet_no_memo_required_message">No se requiere nota</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) en la red %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_description">El envío de cualquier otra moneda supondrá una pérdida irreversible.</string>
   <string name="receive_bottom_sheet_warning_message_full">Envíe solo %s a esta dirección. Enviar cualquier otra moneda resultará en su pérdida irreversible.</string>
   <string name="receive_token_description">Transfiera fondos desde otra billetera o intercambio</string>
   <string name="referral_button_participate">Participar</string>
