@@ -13,6 +13,8 @@
   <string name="action_buttons_swap_no_available_pair_notification_title">No available pair</string>
   <string name="action_buttons_swap_no_tokens_added_alert_message">To use the exchange feature, your portfolio must contain at least 2 tokens.</string>
   <string name="action_buttons_swap_no_tokens_added_alert_title">Add tokens</string>
+  <string name="action_buttons_swap_not_enough_tokens_alert_message">You only have 1 token added to your portfolio. To use the exchange feature, you need to add at least 2 tokens.</string>
+  <string name="action_buttons_swap_not_enough_tokens_alert_title">Add tokens</string>
   <string name="action_buttons_you_want_to_receive">Choose the token you want to receive</string>
   <string name="action_buttons_you_want_to_swap">Choose the token you want to swap</string>
   <string name="add_custom_token_choose_network">Choose network</string>
@@ -269,6 +271,9 @@
   <string name="express_exchange_notification_refund_title">The amount was refunded in %1$s (%2$s network)</string>
   <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
   <string name="express_exchange_notification_verification_title">KYC verification required by provider</string>
+  <string name="express_exchange_status_bought">Bought</string>
+  <string name="express_exchange_status_buying">Buying</string>
+  <string name="express_exchange_status_buying_active">Buying...</string>
   <string name="express_exchange_status_canceled">Canceled</string>
   <string name="express_exchange_status_confirmed">Confirmed</string>
   <string name="express_exchange_status_confirming">Confirming</string>
@@ -591,7 +596,7 @@
   <string name="onramp_settings_residence">Residence</string>
   <string name="onramp_settings_residence_description">Please select the correct country to ensure accurate payment options and services.</string>
   <string name="onramp_settings_title">Settings</string>
-  <string name="onramp_statuses_view_footer">You can check the transaction status from the token page.</string>
+  <string name="onramp_statuses_view_footer">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_transaction_status_footer_text">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Group</string>
@@ -606,7 +611,7 @@
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) on %3$s network</string>
   <string name="receive_bottom_sheet_warning_message_description">Sending any other currency will result in its irreversible loss.</string>
   <string name="receive_bottom_sheet_warning_message_full">Send only %s to this address. Sending any other currency will result in its irreversible loss.</string>
-  <string name="receive_bottom_sheet_warning_message_title">Send only %s to this address.</string>
+  <string name="receive_bottom_sheet_warning_title">Send only %1$s on the %2$s network</string>
   <string name="receive_token_description">Transfer funds from any wallet or exchange</string>
   <string name="referral_button_participate">Participate</string>
   <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
