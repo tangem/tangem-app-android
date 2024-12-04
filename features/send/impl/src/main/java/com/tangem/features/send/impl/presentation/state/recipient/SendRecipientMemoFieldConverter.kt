@@ -22,15 +22,15 @@ internal class SendRecipientMemoFieldConverter(
         val cryptoCurrency = cryptoCurrencyStatus().currency
         val memo = memoValue ?: ""
 
-        return when (cryptoCurrency.network.transactionExtras) {
-            Network.TransactionExtras.NONE -> null
-            Network.TransactionExtras.MEMO -> convert(
+        return when (cryptoCurrency.network.transactionExtrasType) {
+            Network.TransactionExtrasType.NONE -> null
+            Network.TransactionExtrasType.MEMO -> convert(
                 value = Data(
                     memo = memo,
                     label = R.string.send_extras_hint_memo,
                 ),
             )
-            Network.TransactionExtras.DESTINATION_TAG -> convert(
+            Network.TransactionExtrasType.DESTINATION_TAG -> convert(
                 value = Data(
                     memo = memo,
                     label = R.string.send_destination_tag_field,
