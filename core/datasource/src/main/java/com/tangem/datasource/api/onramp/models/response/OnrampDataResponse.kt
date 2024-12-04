@@ -25,6 +25,9 @@ data class OnrampDataJson(
     @Json(name = "widgetUrl")
     val widgetUrl: String,
 
+    @Json(name = "requestId")
+    val requestId: String,
+
     @Json(name = "externalTxId")
     val externalTxId: String,
 
