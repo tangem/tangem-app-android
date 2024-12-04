@@ -72,7 +72,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
             symbol = currency.symbol,
             network = currency.network.name,
             addresses = addresses.mapToAddressModels(currency).toImmutableList(),
-            showMemoDisclaimer = currency.network.transactionExtras != Network.TransactionExtras.NONE,
+            showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = { /* no-op */ },
             onShareClick = { /* no-op */ },
         )
