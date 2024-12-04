@@ -19,7 +19,7 @@ import kotlinx.serialization.Serializable
  * that cannot be represented in a fiat currency.
  * (For those blockchains that have FeeResource instead of a standard type of fee)
  * @property canHandleTokens Indicates whether the network can handle tokens.
- * @property transactionExtras The type of extras supported for sending a transaction.
+ * @property transactionExtrasType The type of extras supported for sending a transaction.
  */
 @Serializable
 data class Network(
@@ -32,7 +32,7 @@ data class Network(
     val standardType: StandardType,
     val hasFiatFeeRate: Boolean,
     val canHandleTokens: Boolean,
-    val transactionExtras: TransactionExtras,
+    val transactionExtrasType: TransactionExtrasType,
 ) {
 
     init {
@@ -135,7 +135,7 @@ data class Network(
     /**
      * Represents the supported type of extras for sending a transaction.
      * */
-    enum class TransactionExtras {
+    enum class TransactionExtrasType {
 
         /** No transaction extras supported */
         NONE,
