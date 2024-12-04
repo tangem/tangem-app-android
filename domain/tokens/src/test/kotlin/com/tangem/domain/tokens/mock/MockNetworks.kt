@@ -23,7 +23,7 @@ internal object MockNetworks {
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,
         canHandleTokens = true,
-        transactionExtras = Network.TransactionExtras.NONE,
+        transactionExtrasType = Network.TransactionExtrasType.NONE,
     )
 
     val network2 = Network(
@@ -36,7 +36,7 @@ internal object MockNetworks {
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,
         canHandleTokens = true,
-        transactionExtras = Network.TransactionExtras.NONE,
+        transactionExtrasType = Network.TransactionExtrasType.NONE,
     )
 
     val network3 = Network(
@@ -49,7 +49,7 @@ internal object MockNetworks {
         derivationPath = Network.DerivationPath.None,
         hasFiatFeeRate = true,
         canHandleTokens = true,
-        transactionExtras = Network.TransactionExtras.NONE,
+        transactionExtrasType = Network.TransactionExtrasType.NONE,
     )
 
     val networkStatus1 = NetworkStatus(
