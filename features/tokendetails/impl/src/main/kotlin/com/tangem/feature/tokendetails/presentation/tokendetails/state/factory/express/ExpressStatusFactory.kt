@@ -32,7 +32,6 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     @Assisted private val clickIntents: TokenDetailsClickIntents,
     @Assisted private val cryptoCurrency: CryptoCurrency,
     @Assisted appCurrencyProvider: Provider<AppCurrency>,
-    @Assisted analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
     @Assisted userWalletId: UserWalletId,
     @Assisted cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -45,7 +44,6 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         exchangeStatusFactory.create(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
-            analyticsEventsHandlerProvider = analyticsEventsHandlerProvider,
             currentStateProvider = currentStateProvider,
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
@@ -152,7 +150,6 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         fun create(
             clickIntents: TokenDetailsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
-            analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
             currentStateProvider: Provider<TokenDetailsState>,
             userWalletId: UserWalletId,
             cryptoCurrency: CryptoCurrency,
