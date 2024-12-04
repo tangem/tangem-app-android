@@ -12,6 +12,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,9 +24,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -47,9 +48,19 @@ fun RoundedActionButton(
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
 ) {
-    Button(
+    ActionBaseButton(
         config = config,
         shape = RoundedCornerShape(size = TangemTheme.dimens.radius24),
+        content = {
+            ActionButtonContent(
+                config = config,
+                text = { Text(text = config.text, textColor = it) },
+                modifier = it.padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing24,
+                ),
+            )
+        },
         modifier = modifier,
         color = color,
     )
@@ -71,9 +82,19 @@ fun ActionButton(
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
 ) {
-    Button(
+    ActionBaseButton(
         config = config,
         shape = RoundedCornerShape(size = TangemTheme.dimens.radius12),
+        content = {
+            ActionButtonContent(
+                config = config,
+                text = { textColor -> Text(text = config.text, textColor = textColor) },
+                modifier = it.padding(
+                    start = TangemTheme.dimens.spacing16,
+                    end = TangemTheme.dimens.spacing24,
+                ),
+            )
+        },
         modifier = modifier,
         color = color,
     )
@@ -81,9 +102,10 @@ fun ActionButton(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun Button(
+fun ActionBaseButton(
     config: ActionButtonConfig,
     shape: RoundedCornerShape,
+    content: @Composable (modifier: Modifier) -> Unit,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
 ) {
@@ -112,10 +134,7 @@ private fun Button(
             )
             .background(color = backgroundColor),
     ) {
-        Content(
-            modifier = Modifier.align(Alignment.Center),
-            config = config,
-        )
+        content(Modifier.align(Alignment.Center))
 
         if (config.isInProgress) {
             Loading(
@@ -129,13 +148,14 @@ private fun Button(
 }
 
 @Composable
-private fun Content(config: ActionButtonConfig, modifier: Modifier = Modifier) {
+fun ActionButtonContent(
+    config: ActionButtonConfig,
+    text: @Composable (Color) -> Unit,
+    modifier: Modifier = Modifier,
+    paddingBetweenIconAndText: Dp = 8.dp,
+) {
     Row(
         modifier = modifier
-            .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing24,
-            )
             .padding(vertical = TangemTheme.dimens.spacing8),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
@@ -152,21 +172,21 @@ private fun Content(config: ActionButtonConfig, modifier: Modifier = Modifier) {
             tint = iconTint,
         )
 
-        SpacerW8()
+        Spacer(modifier = Modifier.width(width = paddingBetweenIconAndText))
 
-        val textColor = when {
-            !config.enabled -> TangemTheme.colors.text.disabled
-            config.dimContent -> TangemTheme.colors.text.tertiary
-            else -> TangemTheme.colors.text.primary1
-        }
-        Text(
-            text = config.text.resolveReference(),
-            color = textColor,
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1,
-            style = TangemTheme.typography.button,
-        )
+        text(getTextColor(config))
     }
+}
+
+@Composable
+private fun Text(text: TextReference, textColor: Color) {
+    Text(
+        text = text.resolveReference(),
+        color = textColor,
+        overflow = TextOverflow.Ellipsis,
+        maxLines = 1,
+        style = TangemTheme.typography.button,
+    )
 }
 
 @Composable
@@ -179,6 +199,16 @@ private fun Loading(backgroundColor: Color, modifier: Modifier = Modifier) {
             modifier = Modifier.size(TangemTheme.dimens.size24),
             color = TangemTheme.colors.icon.accent,
         )
+    }
+}
+
+@Composable
+@ReadOnlyComposable
+fun getTextColor(config: ActionButtonConfig): Color {
+    return when {
+        !config.enabled -> TangemTheme.colors.text.disabled
+        config.dimContent -> TangemTheme.colors.text.tertiary
+        else -> TangemTheme.colors.text.primary1
     }
 }
 
