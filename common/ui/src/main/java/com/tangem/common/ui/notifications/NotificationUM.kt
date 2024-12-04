@@ -313,11 +313,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
 
         data class RentInfo(
             private val rentInfo: CryptoCurrencyWarning.Rent,
-        ) : Info(
-            title = TextReference.Res(R.string.warning_rent_fee_title),
+        ) : Error(
+            title = TextReference.Res(R.string.send_notification_invalid_amount_title),
             subtitle = TextReference.Res(
-                id = R.string.warning_solana_rent_fee_message,
-                formatArgs = wrappedList(rentInfo.rent, rentInfo.exemptionAmount),
+                id = R.string.send_notification_invalid_amount_rent_fee,
+                formatArgs = wrappedList(rentInfo.exemptionAmount),
             ),
         )
     }
