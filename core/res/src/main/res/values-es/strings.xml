@@ -2,10 +2,13 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">¿No encuentra el token en su billetera? Consulte los mercados para encontrarlo y añadirlo a la compra</string>
   <string name="action_buttons_sell_empty_search_message">¿No encuentra el token en su billetera? Consulte los mercados para encontrarlo y añadirlo a la venta</string>
+  <string name="action_buttons_sell_navigation_bar_title">Vender</string>
   <string name="action_buttons_swap_choose_token">Elige el token</string>
   <string name="action_buttons_swap_empty_search_message">¿No encuentras el token en tu billetera? Consulte los mercados para encontrarlo y agregarlo al intercambio</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">No hay tokens disponibles para intercambiar con el token seleccionado. Por favor elige otro.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No hay par disponible</string>
+  <string name="action_buttons_you_want_to_receive">Seleccione el token que desea recibir</string>
+  <string name="action_buttons_you_want_to_swap">Seleccione el token que desea intercambiar</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
@@ -642,6 +645,10 @@
   <string name="scan_card_settings_button">Escanee su tarjeta</string>
   <string name="scan_card_settings_message">Escanee la tarjeta para cambiar sus ajustes. Los cambios afectarán solo a la tarjeta que has escaneado y no afectarán a otras tarjetas vinculadas a su billetera.</string>
   <string name="scan_card_settings_title">¡Prepare su tarjeta!</string>
+  <string name="selling_insufficient_balance_alert_message">No tiene fondos suficientes en su saldo para vender esta criptomoneda. Deposite el activo deseado para continuar.</string>
+  <string name="selling_insufficient_balance_alert_title">Saldo insuficiente</string>
+  <string name="selling_regional_restriction_alert_message">La venta de criptomonedas no está disponible en su región en este momento. Estamos trabajando activamente para ofrecerle esta opción pronto. ¡Manténgase conectado!</string>
+  <string name="selling_regional_restriction_alert_title">Restricción Regional</string>
   <string name="send_additional_field_already_included">Ya incluido en la dirección ingresada</string>
   <string name="send_alert_fee_too_high_text">El monto de la comisión es %s veces el monto recomendado. Asegúrese de que la configuración personalizada sea correcta.</string>
   <string name="send_alert_fee_too_low_text">Ha especificado una comisión inferior a la cantidad recomendada, lo que podría provocar un retraso en su transacción. ¿Continuar?</string>
@@ -883,6 +890,7 @@
   <string name="tokens_list_unavailable_to_purchase_header">No disponible para compra</string>
   <string name="tokens_list_unavailable_to_sell_header">No disponible para vender</string>
   <string name="tokens_list_unavailable_to_swap_header">No disponible para cambio desde %s</string>
+  <string name="tokens_list_unavailable_to_swap_source_header">No disponible para intercambio</string>
   <string name="transaction_history_contract_address">contacto: %s</string>
   <string name="transaction_history_empty_transactions">Aún no tiene ninguna transacción</string>
   <string name="transaction_history_error_failed_to_load">Error al cargar el historial de transacciones.\nHaga clic en el botón de recarga para actualizar la información.</string>

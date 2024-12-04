@@ -29,6 +29,7 @@ import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
@@ -441,6 +442,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
                         userWallet = userWallet,
+                        source = OnrampSource.TOKEN_DETAILS,
                         cryptoCurrencyStatus = status,
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
                     ),

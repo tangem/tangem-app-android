@@ -81,6 +81,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.onramp.models)
 
     //TODO: Create api/impl modules for onboarding https://tangem.atlassian.net/browse/AND-4841
     implementation(projects.features.onboarding)

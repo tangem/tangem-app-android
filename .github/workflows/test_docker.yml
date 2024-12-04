@@ -1,0 +1,12 @@
+name: Test action
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-job:
+    runs-on: test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2

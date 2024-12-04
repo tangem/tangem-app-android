@@ -1,9 +1,9 @@
 package com.tangem.features.onramp.redirect.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -79,13 +79,14 @@ private fun LogoBlock(providerImageUrl: String, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(
+        Icon(
             modifier = Modifier
                 .size(TangemTheme.dimens.size64)
                 .clip(TangemTheme.shapes.roundedCorners8)
                 .background(TangemTheme.colors.background.primary)
                 .padding(vertical = TangemTheme.dimens.spacing8, horizontal = TangemTheme.dimens.spacing12),
             painter = painterResource(id = R.drawable.ic_tangem_24),
+            tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
         )
         LoadingDots()

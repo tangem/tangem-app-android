@@ -18,6 +18,7 @@ import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -118,6 +119,7 @@ internal class OnrampOperationModel @Inject constructor(
         return TradeCryptoAction.Buy(
             userWallet = selectedUserWallet,
             cryptoCurrencyStatus = status,
+            source = OnrampSource.ACTION_BUTTONS,
             appCurrencyCode = appCurrencyCode,
         )
     }

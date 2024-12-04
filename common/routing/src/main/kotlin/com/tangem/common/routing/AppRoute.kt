@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -296,6 +297,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Onramp(
+        val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
