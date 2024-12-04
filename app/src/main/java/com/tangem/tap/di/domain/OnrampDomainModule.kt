@@ -4,6 +4,7 @@ import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -123,8 +124,14 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetOnrampQuotesUseCase(onrampRepository: OnrampRepository): GetOnrampQuotesUseCase {
-        return GetOnrampQuotesUseCase(onrampRepository)
+    fun provideGetOnrampQuotesUseCase(
+        settingsRepository: SettingsRepository,
+        onrampRepository: OnrampRepository,
+    ): GetOnrampQuotesUseCase {
+        return GetOnrampQuotesUseCase(
+            settingsRepository = settingsRepository,
+            repository = onrampRepository,
+        )
     }
 
     @Provides
