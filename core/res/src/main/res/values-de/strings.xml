@@ -568,7 +568,7 @@
   <string name="onboarding_wallet_info_title_second">Identische Karten oder Ring</string>
   <string name="onboarding_wallet_info_title_third">Zugangscode</string>
   <string name="onramp_avaiable_with_payment_methods">Verfügbar mit %s</string>
-  <string name="onramp_choose_provider_title_hint">Anbieter erleichtern Transaktionen und sorgen für einen reibungslosen und effizienten Token-Austausch</string>
+  <string name="onramp_choose_provider_title_hint">Der Kauf von Kryptowährungen bei Tangem wird von Drittanbietern zu deren Bedingungen durchgeführt.</string>
   <string name="onramp_country_search">Suche nach Land</string>
   <string name="onramp_country_unavailable">Nicht verfügbar</string>
   <string name="onramp_currency_search">Suche nach Währung</string>
@@ -585,7 +585,8 @@
   <string name="onramp_settings_residence">Residenz</string>
   <string name="onramp_settings_residence_description">Bitte wähle das richtige Land aus, um korrekte Zahlungsoptionen und Dienstleistungen zu gewährleisten.</string>
   <string name="onramp_settings_title">Einstellungen</string>
-  <string name="onramp_transaction_status_footer_text">Du kannst den Transaktionsstatus auf der Token-Seite überprüfen.</string>
+  <string name="onramp_statuses_view_footer">Du kannst den Transaktionsstatus auf der Token-Seite überprüfen.</string>
+  <string name="onramp_transaction_status_footer_text">Du kannst diesen Bildschirm schließen und den Transaktionsstatus auf dem Bildschirm mit den Token-Details überprüfen.</string>
   <string name="onramp_via">Über</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
   <string name="organize_tokens_sort_by_balance">Nach Guthaben</string>
@@ -599,7 +600,6 @@
   <string name="receive_bottom_sheet_warning_message">%1$s ( %2$s ) im %3$s Netzwerk</string>
   <string name="receive_bottom_sheet_warning_message_description">Das Senden einer anderen Währung führt zu deren irreversiblem Verlust.</string>
   <string name="receive_bottom_sheet_warning_message_full">Sende nur %s an diese Adresse. Der Versand einer anderen Währung führt zu ihrem unwiderruflichen Verlust.</string>
-  <string name="receive_bottom_sheet_warning_message_title">Sende nur %s an diese Adresse.</string>
   <string name="receive_token_description">Überweise Geld von einem anderen Wallet oder einer anderen Börse</string>
   <string name="referral_button_participate">Teilnehmen</string>
   <string name="referral_error_failed_to_load_info">Die Informationen zum Empfehlungsprogramm konnten nicht geladen werden. Bitte versuche es später noch einmal.</string>
@@ -695,6 +695,7 @@
   <string name="send_notification_fee_too_high_title">Die individuelle Gebühr ist hoch</string>
   <string name="send_notification_high_fee_text">Aufgrund der Besonderheiten des Netzes %1$s ist die Gebühr für die Überweisung des gesamten Guthabens höher. Um die Kommission zu reduzieren, Kannst du %2$s verlassen.</string>
   <string name="send_notification_high_fee_title">Die Gebühr ist höher</string>
+  <string name="send_notification_invalid_amount_rent_fee">Dein Kontostand darf nicht niedriger sein als die Miete. Bitte halte mindestens %1$s auf Deinem Konto oder ziehe den gesamten Betrag ab.</string>
   <string name="send_notification_invalid_amount_text">Die enthaltene Kommission übersteigt den Überweisungsbetrag, was zu einem negativen Wert führt</string>
   <string name="send_notification_invalid_amount_title">Ungültige Menge</string>
   <string name="send_notification_invalid_minimum_amount_text">Der Mindestbetrag für den Versand beträgt %1$s. Bitte stell sicher, dass der Restbetrag nach dem Versand nicht unter %2$s liegt.</string>
