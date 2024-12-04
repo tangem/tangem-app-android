@@ -13,5 +13,6 @@ dependencies {
     api(projects.domain.wallets.models)
 
     api(projects.domain.core)
+    api(projects.domain.settings)
     implementation(deps.kotlin.serialization)
 }
