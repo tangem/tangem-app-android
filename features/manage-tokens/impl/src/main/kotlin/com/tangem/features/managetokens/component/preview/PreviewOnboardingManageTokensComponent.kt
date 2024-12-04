@@ -101,7 +101,7 @@ internal class PreviewOnboardingManageTokensComponent(
                 standardType = Network.StandardType.ERC20,
                 hasFiatFeeRate = false,
                 canHandleTokens = false,
-                transactionExtras = Network.TransactionExtras.NONE,
+                transactionExtrasType = Network.TransactionExtrasType.NONE,
             ),
             name = "NETWORK$networkIndex",
             type = "N$networkIndex",
