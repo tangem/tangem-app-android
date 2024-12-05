@@ -9,6 +9,7 @@ import com.tangem.datasource.api.common.adapter.DateTimeAdapter
 import com.tangem.datasource.api.common.adapter.LocalDateAdapter
 import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
 import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.domain.models.scan.serialization.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -49,7 +50,16 @@ class MoshiModule {
     @Singleton
     fun provideSdkMoshiConverter(): MoshiJsonConverter {
         return MoshiJsonConverter(
-            adapters = listOf(BigDecimalAdapter()) + MoshiJsonConverter.getTangemSdkAdapters(),
+            adapters = MoshiJsonConverter.getTangemSdkAdapters() +
+                listOf(
+                    BigDecimalAdapter(),
+                    WalletDerivedKeysMapAdapter(),
+                    ScanResponseDerivedKeysMapAdapter(),
+                    ByteArrayKeyAdapter(),
+                    ExtendedPublicKeysMapAdapter(),
+                    CardBackupStatusAdapter(),
+                    DerivationPathAdapterWithMigration(),
+                ),
             typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
         )
     }
