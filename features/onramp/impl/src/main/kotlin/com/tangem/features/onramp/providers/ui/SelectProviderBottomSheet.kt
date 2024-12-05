@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.providers.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,6 +16,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -25,11 +30,14 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
 import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
 import com.tangem.features.onramp.providers.entity.ProviderListUM
+import com.tangem.features.onramp.providers.model.previewData.SelectProviderPreviewData
+import com.tangem.features.onramp.utils.selectedBorder
 
 @Composable
 internal fun SelectProviderBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
@@ -43,7 +51,9 @@ internal fun SelectProviderBottomSheet(config: TangemBottomSheetConfig, content:
 @Composable
 internal fun SelectProviderBottomSheetContent(state: ProviderListUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
+        modifier = modifier
+            .background(TangemTheme.colors.background.primary)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
@@ -103,13 +113,11 @@ private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Mod
 private fun ProviderItem(state: ProviderListItemUM, modifier: Modifier = Modifier) {
     when (state) {
         is ProviderListItemUM.Available -> AvailableProviderItem(
-            modifier = modifier
-                .clickable(onClick = state.onClick)
-                .padding(all = TangemTheme.dimens.spacing12),
+            modifier = modifier,
             state = state,
         )
         is ProviderListItemUM.Unavailable -> UnavailableProviderItem(
-            modifier = modifier.padding(all = TangemTheme.dimens.spacing12),
+            modifier = modifier,
             state = state,
         )
     }
@@ -118,7 +126,16 @@ private fun ProviderItem(state: ProviderListItemUM, modifier: Modifier = Modifie
 @Composable
 private fun AvailableProviderItem(state: ProviderListItemUM.Available, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier,
+        modifier = modifier
+            .then(
+                if (state.isSelected) {
+                    Modifier.selectedBorder()
+                } else {
+                    Modifier.clip(RoundedCornerShape(16.dp))
+                },
+            )
+            .clickable(onClick = state.onClick)
+            .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
@@ -140,11 +157,34 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available, modifier:
             style = TangemTheme.typography.subtitle2,
             color = if (state.isSelected) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.secondary,
         )
-        Text(
-            text = state.rate,
-            style = TangemTheme.typography.body2,
-            color = TangemTheme.colors.text.primary1,
-        )
+        Column(
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = state.rate,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.primary1,
+            )
+            if (state.isBestRate) {
+                Text(
+                    text = stringResource(R.string.express_provider_best_rate),
+                    style = TangemTheme.typography.caption1,
+                    color = TangemTheme.colors.text.constantWhite,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(TangemTheme.colors.icon.accent)
+                        .padding(vertical = 1.dp, horizontal = 6.dp),
+                )
+            } else {
+                Text(
+                    text = state.diffRate.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.warning,
+                    modifier = Modifier.padding(vertical = 1.dp),
+                )
+            }
+        }
     }
 }
 
@@ -153,7 +193,7 @@ private const val UNAVAILABLE_ALPHA = 0.4F
 @Composable
 private fun UnavailableProviderItem(state: ProviderListItemUM.Unavailable, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier,
+        modifier = modifier.padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
@@ -184,3 +224,25 @@ private fun UnavailableProviderItem(state: ProviderListItemUM.Unavailable, modif
         }
     }
 }
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun SelectProviderBottomSheetContent_Preview(
+    @PreviewParameter(SelectProviderBottomSheetContentPreviewProvider::class)
+    data: ProviderListUM,
+) {
+    TangemThemePreview {
+        SelectProviderBottomSheetContent(data)
+    }
+}
+
+private class SelectProviderBottomSheetContentPreviewProvider :
+    PreviewParameterProvider<ProviderListUM> {
+    override val values: Sequence<ProviderListUM>
+        get() = sequenceOf(
+            SelectProviderPreviewData.state,
+        )
+}
+// endregion
