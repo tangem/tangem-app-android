@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.onramp.models)
+    implementation(projects.domain.models)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)
