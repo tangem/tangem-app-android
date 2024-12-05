@@ -74,7 +74,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
         if (selectedTx.activeStatus.isTerminal) {
-            onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
+            onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
         }
     }
 
@@ -97,14 +97,14 @@ internal class OnrampStatusFactory @AssistedInject constructor(
 
     private suspend fun List<ExpressTransactionStateUM.OnrampUM>.clearHiddenTerminal() {
         this.filter { it.activeStatus.isHidden && it.activeStatus.isTerminal }
-            .forEach { onrampRemoveTransactionUseCase(txId = it.info.txId) }
+            .forEach { onrampRemoveTransactionUseCase(externalTxId = it.info.txExternalId) }
     }
 
     private suspend fun sendStatusUpdateAnalytics(
         onrampTx: ExpressTransactionStateUM.OnrampUM,
         statusModel: OnrampStatus,
     ) {
-        val txId = statusModel.txId
+        val externalTxId = statusModel.externalTxId
         val status = toAnalyticStatus(statusModel.status) ?: return
 
         if (statusModel.status != onrampTx.activeStatus) {
@@ -116,7 +116,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
                     fiatCurrency = onrampTx.fromCurrencyCode,
                 ),
             )
-            onrampUpdateTransactionStatusUseCase(txId, statusModel.status)
+            onrampUpdateTransactionStatusUseCase(externalTxId = externalTxId, statusModel.status)
         }
     }
 
