@@ -53,8 +53,6 @@ internal class OnboardingEntryModel @Inject constructor(
         }
 
         return when (scanResponse.productType) {
-            ProductType.Note -> TODO()
-            ProductType.Twins -> TODO()
             ProductType.Wallet -> OnboardingRoute.MultiWallet(
                 scanResponse = scanResponse,
                 withSeedPhraseFlow = false,
@@ -71,8 +69,7 @@ internal class OnboardingEntryModel @Inject constructor(
                 onDone = ::onMultiWalletOnboardingDone,
                 mode = multiWalletNavigationMode,
             )
-            ProductType.Start2Coin -> TODO()
-            ProductType.Visa -> TODO()
+            else -> error("Unsupported")
         }
     }
 
