@@ -231,6 +231,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         bottomSheetNavigation.activate(
             OnrampMainBottomSheetConfig.ProvidersList(
                 selectedPaymentMethod = providerContentState.paymentMethod,
+                selectedProviderId = providerContentState.providerId,
             ),
         )
     }
