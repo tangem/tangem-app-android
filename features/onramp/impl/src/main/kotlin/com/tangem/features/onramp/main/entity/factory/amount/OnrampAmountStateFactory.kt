@@ -107,6 +107,7 @@ internal class OnrampAmountStateFactory(
             ),
             providerBlockState = OnrampProviderBlockUM.Content(
                 paymentMethod = quoteWithProvider.paymentMethod,
+                providerId = quoteWithProvider.provider.id,
                 providerName = quoteWithProvider.provider.info.name,
                 isBestRate = isBestRate,
                 onClick = onrampIntents::openProviders,
@@ -121,6 +122,7 @@ internal class OnrampAmountStateFactory(
     private fun OnrampQuote.toProviderBlockState(isBestRate: Boolean): OnrampProviderBlockUM {
         return OnrampProviderBlockUM.Content(
             paymentMethod = paymentMethod,
+            providerId = provider.id,
             providerName = provider.info.name,
             isBestRate = isBestRate,
             onClick = onrampIntents::openProviders,
