@@ -26,5 +26,6 @@ dependencies {
 
     // region Domain modules
     implementation(projects.domain.onboarding)
+    implementation(projects.domain.models)
     // endregion
 }
