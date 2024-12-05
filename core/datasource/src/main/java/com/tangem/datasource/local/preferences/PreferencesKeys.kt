@@ -107,6 +107,8 @@ object PreferencesKeys {
 
     val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
 
+    val ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY by lazy { stringPreferencesKey(name = "onboardingFinalizeScanResponse") }
+
     val IS_GOOGLE_SERVICES_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGoogleServicesAvailable") }
 
     val IS_GOOGLE_PAY_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGooglePayAvailable") }

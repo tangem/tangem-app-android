@@ -37,8 +37,6 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
     }
 
     fun onSkipClick() {
-// [REDACTED_TODO_COMMENT]
-
         if (skipClicked) return
         skipClicked = true
 

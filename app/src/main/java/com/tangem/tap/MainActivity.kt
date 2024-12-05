@@ -584,7 +584,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }
         }
-// [REDACTED_TODO_COMMENT]
+
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
 

@@ -135,8 +135,6 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
     }
 
     private fun openGeneratedSeedPhrase() {
-// [REDACTED_TODO_COMMENT]
-
         val words12 = state.value.generatedWords12 ?: return
         val words24 = state.value.generatedWords24 ?: return
 
