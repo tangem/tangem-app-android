@@ -12,6 +12,7 @@ internal interface SelectProviderComponent : ComposableBottomSheetComponent {
         val onProviderClick: (OnrampProviderWithQuote.Data, Boolean) -> Unit,
         val onDismiss: () -> Unit,
         val selectedPaymentMethod: OnrampPaymentMethod,
+        val selectedProviderId: String,
         val cryptoCurrency: CryptoCurrency,
     )
 
