@@ -60,6 +60,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel) {
         visualTransformation = AmountVisualTransformation(
             decimals = amountField.fiatAmount.decimals,
             symbol = amountField.fiatAmount.currencySymbol,
+            currencyCode = amountField.fiatAmount.currencySymbol,
             decimalFormat = decimalFormat,
         ),
         onValueChange = amountField.onValueChange,
