@@ -54,7 +54,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     private fun loadData() {
         modelScope.launch {
-            getOnrampTransactionUseCase(txId = params.txId)
+            getOnrampTransactionUseCase(externalTxId = params.externalTxId)
                 .fold(
                     ifLeft = {
                         Timber.e(it.toString())
@@ -72,7 +72,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
             transaction.toCurrencyId,
         ).getOrElse { error("Crypto currency not found") }
 
-        getOnrampStatusUseCase(txId = params.txId)
+        getOnrampStatusUseCase(externalTxId = params.externalTxId)
             .fold(
                 ifLeft = {
                     Timber.e(it.toString())
