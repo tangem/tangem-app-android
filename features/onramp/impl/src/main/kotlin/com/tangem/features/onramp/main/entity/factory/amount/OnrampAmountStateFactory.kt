@@ -39,7 +39,7 @@ internal class OnrampAmountStateFactory(
                 ),
                 amountFieldModel = amountState.amountFieldModel.copy(
                     fiatAmount = amountState.amountFieldModel.fiatAmount.copy(
-                        currencySymbol = currency.code,
+                        currencySymbol = currency.unit,
                         decimals = currency.precision,
                         type = AmountType.FiatType(currency.code),
                     ),
@@ -65,6 +65,8 @@ internal class OnrampAmountStateFactory(
         if (currentState !is OnrampMainComponentUM.Content) return currentState
 
         val amountState = currentState.amountBlockState
+        if (amountState.amountFieldModel.fiatValue.isEmpty()) return currentState
+
         return currentState.copy(
             amountBlockState = amountState.copy(
                 secondaryFieldModel = quote.toSecondaryFieldUiModel(amountState),
