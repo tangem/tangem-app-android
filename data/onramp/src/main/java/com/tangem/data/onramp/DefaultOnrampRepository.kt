@@ -319,11 +319,11 @@ internal class DefaultOnrampRepository(
         }
     }
 
-    override suspend fun getPaymentMethods(): List<OnrampPaymentMethod> {
-        val paymentMethods = requireNotNull(paymentMethodsStore.getSyncOrNull(PAYMENT_METHODS_KEY)) {
-            "Onramp payment methods is absent in storage"
-        }
-        return paymentMethodsConverter.convertList(paymentMethods)
+    override suspend fun getAvailablePaymentMethods(): Set<OnrampPaymentMethod> {
+        val quotes = requireNotNull(quotesStore.getSyncOrNull(QUOTES_KEY)) { "Quotes must not be null" }
+        return quotes
+            .filterIsInstance<OnrampQuote.Data>()
+            .mapTo(hashSetOf(), OnrampQuote.Data::paymentMethod)
     }
 
     override suspend fun saveSelectedPaymentMethod(paymentMethod: OnrampPaymentMethod) {
@@ -362,6 +362,12 @@ internal class DefaultOnrampRepository(
             OnrampPair(onrampProviders)
         }
         pairsStore.store(PAIRS_KEY, onrampPairs)
+    }
+
+    private suspend fun getPaymentMethods(): List<OnrampPaymentMethod> {
+        return requireNotNull(paymentMethodsStore.getSyncOrNull(PAYMENT_METHODS_KEY)) {
+            "Onramp payment methods is absent in storage"
+        }.let(paymentMethodsConverter::convertList)
     }
 
     private fun createOnrampTransaction(
