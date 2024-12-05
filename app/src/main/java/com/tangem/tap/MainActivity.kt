@@ -586,7 +586,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         }
 
-        // TODO add onboarding v2 handling
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
 
