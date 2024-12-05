@@ -32,7 +32,6 @@ import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -125,11 +124,11 @@ internal class SelectProviderModel @Inject constructor(
     }
 
     private fun List<OnrampProviderWithQuote>.toProvidersListItems(): ImmutableList<ProviderListItemUM> {
-        val sortedByRate = sortedByDescending {
-            (it as? OnrampProviderWithQuote.Data)?.toAmount?.value ?: BigDecimal.ZERO
-        }
-        val bestProvider = sortedByRate.firstOrNull()
-        return sortedByRate.mapIndexed { index, quote ->
+        val sorted = sortByRate()
+
+        val isQuoteExist = any { it is OnrampProviderWithQuote.Data }
+        val bestProvider = sorted.firstOrNull().takeIf { isQuoteExist }
+        return sorted.mapIndexed { index, quote ->
             when (quote) {
                 is OnrampProviderWithQuote.Data -> {
                     val rate = quote.toAmount.value.format {
@@ -154,8 +153,8 @@ internal class SelectProviderModel @Inject constructor(
                     )
                 }
                 is OnrampProviderWithQuote.Unavailable.AvailableFrom -> {
-                    val amount = quote.amount.value.format {
-                        crypto(symbol = quote.amount.symbol, decimals = quote.amount.decimals)
+                    val amount = quote.requiredAmount.value.format {
+                        crypto(symbol = quote.requiredAmount.symbol, decimals = quote.requiredAmount.decimals)
                     }
                     ProviderListItemUM.Unavailable(
                         providerId = quote.provider.id,
@@ -165,8 +164,8 @@ internal class SelectProviderModel @Inject constructor(
                     )
                 }
                 is OnrampProviderWithQuote.Unavailable.AvailableUpTo -> {
-                    val amount = quote.amount.value.format {
-                        crypto(symbol = quote.amount.symbol, decimals = quote.amount.decimals)
+                    val amount = quote.requiredAmount.value.format {
+                        crypto(symbol = quote.requiredAmount.symbol, decimals = quote.requiredAmount.decimals)
                     }
                     ProviderListItemUM.Unavailable(
                         providerId = quote.provider.id,
@@ -187,5 +186,22 @@ internal class SelectProviderModel @Inject constructor(
                 }
             }
         }.toImmutableList()
+    }
+
+    /**
+     * Sorting providers by rule:
+     *
+     * 1. Highest rate
+     * 2. Smallest difference between entered amount and required min/max amount
+     */
+    private fun List<OnrampProviderWithQuote>.sortByRate() = sortedByDescending {
+        when (it) {
+            is OnrampProviderWithQuote.Data -> it.toAmount.value
+
+            // negative difference to sort both when data and unavailable is present
+            is OnrampProviderWithQuote.Unavailable.AvailableFrom -> it.fromAmount.value - it.requiredAmount.value
+            is OnrampProviderWithQuote.Unavailable.AvailableUpTo -> it.requiredAmount.value - it.fromAmount.value
+            is OnrampProviderWithQuote.Unavailable.NotSupportedPaymentMethod -> null
+        }
     }
 }
