@@ -33,6 +33,9 @@ import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFa
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.PeriodicTask
+import com.tangem.utils.coroutines.SingleTaskScheduler
+import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -50,6 +53,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
+    private val fetchPairsUseCase: OnrampFetchPairsUseCase,
     private val amountInputManager: InputManager,
     private val messageSender: UiMessageSender,
     getWalletsUseCase: GetWalletsUseCase,
@@ -73,6 +77,7 @@ internal class OnrampMainComponentModel @Inject constructor(
             onClose = router::pop,
         ),
     )
+    private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
     val state: StateFlow<OnrampMainComponentUM> get() = _state.asStateFlow()
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
 
@@ -126,6 +131,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 val currency = maybeCurrency.getOrNull()
                 if (currency != null) {
                     _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
+                    updatePairsAndQuotes()
                 }
             }
             .launchIn(modelScope)
@@ -135,13 +141,37 @@ internal class OnrampMainComponentModel @Inject constructor(
         amountInputManager.query
             .filter(String::isNotEmpty)
             .collectLatest { _ ->
-                val content = state.value as? OnrampMainComponentUM.Content ?: return@collectLatest
                 _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
-                fetchQuotesUseCase.invoke(
-                    amount = content.amountBlockState.amountFieldModel.fiatAmount,
-                    cryptoCurrency = params.cryptoCurrency,
-                )
+                startLoadingQuotes()
             }
+    }
+
+    private suspend fun updatePairsAndQuotes() {
+        fetchPairsUseCase.invoke(params.cryptoCurrency)
+        startLoadingQuotes()
+    }
+
+    private fun startLoadingQuotes() {
+        quotesTaskScheduler.cancelTask()
+        quotesTaskScheduler.scheduleTask(scope = modelScope, task = loadQuotesTask())
+    }
+
+    private fun loadQuotesTask(): PeriodicTask<Unit> {
+        return PeriodicTask(
+            delay = UPDATE_DELAY,
+            task = {
+                runCatching {
+                    val content = state.value as? OnrampMainComponentUM.Content ?: return@runCatching
+                    if (content.amountBlockState.amountFieldModel.fiatAmount.value.isNullOrZero()) return@runCatching
+                    fetchQuotesUseCase.invoke(
+                        amount = content.amountBlockState.amountFieldModel.fiatAmount,
+                        cryptoCurrency = params.cryptoCurrency,
+                    )
+                }
+            },
+            onSuccess = {},
+            onError = {},
+        )
     }
 
     private fun subscribeToQuotesUpdate() {
@@ -205,6 +235,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     override fun onDestroy() {
         modelScope.launch { clearOnrampCacheUseCase.invoke() }
+        quotesTaskScheduler.cancelTask()
         super.onDestroy()
     }
 
@@ -235,5 +266,9 @@ internal class OnrampMainComponentModel @Inject constructor(
                 )
             },
         )
+    }
+
+    private companion object {
+        const val UPDATE_DELAY = 10_000L
     }
 }
