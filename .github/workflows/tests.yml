@@ -22,7 +22,8 @@ concurrency:
 jobs:
   test:
     name: Test
-    runs-on: [ self-hosted, ARM64, active-android ]
+    runs-on: [ self-hosted, ARM64, builder2 ]
+#    runs-on: [ self-hosted, ARM64, active-android ]
     if: github.event.pull_request.draft == false
     steps:
       - name: Checkout
