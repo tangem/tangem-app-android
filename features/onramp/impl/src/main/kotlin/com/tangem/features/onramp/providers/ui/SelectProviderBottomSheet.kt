@@ -1,9 +1,12 @@
 package com.tangem.features.onramp.providers.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.*
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -82,7 +85,7 @@ private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Mod
                 color = TangemTheme.colors.stroke.secondary,
                 shape = RoundedCornerShape(TangemTheme.dimens.radius16),
             )
-            .clickable(onClick = state.onClick)
+            .clickable(enabled = state.enabled, onClick = state.onClick)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
