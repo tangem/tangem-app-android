@@ -123,7 +123,6 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
                 if (checkAccessCode()) {
                     backupServiceHolder.backupService.get()?.setAccessCode(_uiState.value.accessCodeFirst.text)
 
-                    // TODO delete access code from state
                     // make on done
                     params.multiWalletState.update {
                         it.copy(accessCode = OnboardingMultiWalletState.AccessCode(uiState.value.accessCodeFirst.text))
