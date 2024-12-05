@@ -26,6 +26,8 @@ internal class TransactionConverter : TwoWayConverter<OnrampTransactionDTO, Onra
             providerImageUrl = value.providerImageUrl,
             providerType = value.providerType,
             redirectUrl = "", // not necessary field
+            paymentMethod = value.paymentMethod,
+            residency = value.residency,
         )
     }
 
@@ -44,6 +46,8 @@ internal class TransactionConverter : TwoWayConverter<OnrampTransactionDTO, Onra
             providerName = value.providerName,
             providerImageUrl = value.providerImageUrl,
             providerType = value.providerType,
+            paymentMethod = value.paymentMethod,
+            residency = value.residency,
         )
     }
 }
