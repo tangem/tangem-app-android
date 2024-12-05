@@ -29,3 +29,17 @@ internal fun backupCardAttestationFailedDialog(onDismiss: () -> Unit) = MultiWal
     onConfirm = onDismiss,
     onCancel = null,
 )
+
+internal fun onlyOneBackupDeviceDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) = MultiWalletBackupUMDialog(
+    title = resourceReference(R.string.common_warning),
+    bodyText = resourceReference(R.string.onboarding_alert_message_not_max_backup_cards_added),
+    confirmText = resourceReference(R.string.common_continue),
+    cancelText = resourceReference(R.string.common_cancel),
+    warningCancelColor = false,
+    onDismiss = onDismiss,
+    onConfirm = {
+        onDismiss()
+        onConfirm()
+    },
+    onCancel = onDismiss,
+)

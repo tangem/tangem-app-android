@@ -38,6 +38,7 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -188,6 +189,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles
         get() = entryPoint.getOnboardingV2FeatureToggles()
 
+    private val onboardingRepository: OnboardingRepository
+        get() = entryPoint.getOnboardingRepository()
+
     private val dispatchers: CoroutineDispatcherProvider
         get() = entryPoint.getCoroutineDispatcherProvider()
 
@@ -273,6 +277,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                    onboardingRepository = onboardingRepository,
                     excludedBlockchains = excludedBlockchains,
                 ),
             ),

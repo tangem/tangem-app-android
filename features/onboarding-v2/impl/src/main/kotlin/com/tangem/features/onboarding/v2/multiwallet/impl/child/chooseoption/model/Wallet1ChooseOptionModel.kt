@@ -37,8 +37,6 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
     }
 
     fun onSkipClick() {
-        // TODO show confirmation dialog
-
         if (skipClicked) return
         skipClicked = true
 
