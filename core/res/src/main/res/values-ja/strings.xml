@@ -6,6 +6,7 @@
   <string name="action_buttons_service_loading_alert_message">接続には数秒かかる場合があります。しばらくお待ちください。</string>
   <string name="action_buttons_service_loading_alert_title">接続</string>
   <string name="action_buttons_something_wrong_alert_message">この操作は現在利用できません。しばらくしてからもう一度お試しいただくか、画面を下にスワイプしてデータを更新してください。</string>
+  <string name="action_buttons_something_wrong_alert_title">ボタンは使用できません</string>
   <string name="action_buttons_swap_choose_token">トークンを選択</string>
   <string name="action_buttons_swap_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加してスワップできるようにします。</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">選択したトークンと交換できるトークンがありません。別のトークンを選択してください。</string>
