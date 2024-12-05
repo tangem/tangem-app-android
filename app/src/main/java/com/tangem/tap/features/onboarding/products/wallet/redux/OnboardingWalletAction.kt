@@ -3,6 +3,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import android.net.Uri
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
@@ -98,7 +99,10 @@ sealed class BackupAction : Action {
 
     data object DiscardBackup : BackupAction()
     data object DiscardSavedBackup : BackupAction()
-    data object ResumeFoundUnfinishedBackup : BackupAction()
+
+    data class ResumeFoundUnfinishedBackup(
+        val unfinishedBackupScanResponse: ScanResponse?,
+    ) : BackupAction()
 
     data class ResetBackupCard(val cardId: String) : BackupAction()
 }

@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.core.res)
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
+    implementation(projects.core.datasource)
 
     /** Common */
     implementation(projects.common.ui)
@@ -39,6 +40,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.settings)
+    implementation(projects.domain.onboarding)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
@@ -62,6 +64,7 @@ dependencies {
     implementation(deps.lottie.compose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.datastore)
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
