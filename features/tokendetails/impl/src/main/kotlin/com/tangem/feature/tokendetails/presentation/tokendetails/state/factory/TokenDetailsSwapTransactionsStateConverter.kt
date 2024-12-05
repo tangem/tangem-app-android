@@ -43,7 +43,7 @@ import java.util.Locale
 internal class TokenDetailsSwapTransactionsStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
     private val cryptoCurrency: CryptoCurrency,
-    private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     appCurrencyProvider: Provider<AppCurrency>,
 ) : Converter<Unit, PersistentList<ExpressTransactionStateUM.ExchangeUM>> {
 
@@ -157,7 +157,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             fromAmountSymbol = fromCryptoCurrency.symbol,
             onClick = { clickIntents.onExpressTransactionClick(transaction.txId) },
             onGoToProviderClick = { url ->
-                analyticsEventsHandlerProvider().send(
+                analyticsEventsHandler.send(
                     TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
                 )
                 clickIntents.onGoToProviderClick(url = url)
@@ -190,7 +190,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             ExchangeStatus.Failed -> {
                 if (txUrl == null) return null
                 ExchangeStatusNotifications.Failed {
-                    analyticsEventsHandlerProvider().send(
+                    analyticsEventsHandler.send(
                         TokenExchangeAnalyticsEvent.GoToProviderFail(cryptoCurrency.symbol),
                     )
                     clickIntents.onGoToProviderClick(txUrl)
@@ -199,7 +199,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             ExchangeStatus.Verifying -> {
                 if (txUrl == null) return null
                 ExchangeStatusNotifications.NeedVerification {
-                    analyticsEventsHandlerProvider().send(
+                    analyticsEventsHandler.send(
                         TokenExchangeAnalyticsEvent.GoToProviderKYC(cryptoCurrency.symbol),
                     )
                     clickIntents.onGoToProviderClick(txUrl)
