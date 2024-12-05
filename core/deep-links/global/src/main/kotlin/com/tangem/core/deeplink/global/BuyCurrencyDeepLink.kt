@@ -4,7 +4,7 @@ import com.tangem.core.deeplink.DeepLink
 
 class BuyCurrencyDeepLink(
     isOnrampFeatureEnabled: Boolean,
-    val onReceive: (txId: String) -> Unit,
+    val onReceive: (externalTxId: String) -> Unit,
 ) : DeepLink {
 
     override val uri: String = if (isOnrampFeatureEnabled) {
