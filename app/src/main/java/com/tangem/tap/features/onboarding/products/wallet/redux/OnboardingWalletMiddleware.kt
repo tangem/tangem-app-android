@@ -581,21 +581,50 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     store.state.globalState.onboardingState.onboardingManager?.finishActivation(it)
                 }
                 backupService.discardSavedBackup()
+
+                val isOnboardingV2Enabled = store.inject(DaggerGraphState::onboardingV2FeatureToggles)
+                    .isOnboardingV2Enabled
+
+                if (isOnboardingV2Enabled) {
+                    val onboardingRepository = store.inject(DaggerGraphState::onboardingRepository)
+                    onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                }
             }
         }
         is BackupAction.CheckForUnfinishedBackup -> {
-            if (backupService.hasIncompletedBackup) {
-                store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound))
+            val isOnboardingV2Enabled = store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled
+
+            if (isOnboardingV2Enabled) {
+                val onboardingRepository = store.inject(DaggerGraphState::onboardingRepository)
+
+                mainScope.launch {
+                    val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+                    store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+                }
+            } else if (backupService.hasIncompletedBackup) {
+                store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound()))
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {
-            store.dispatch(
-                GlobalAction.Onboarding.StartForUnfinishedBackup(
-                    addedBackupCardsCount = backupService.addedBackupCardsCount,
-                ),
-            )
+            if (action.unfinishedBackupScanResponse != null) {
+                // onboarding V2
+                store.dispatchNavigationAction {
+                    push(
+                        AppRoute.Onboarding(
+                            scanResponse = action.unfinishedBackupScanResponse,
+                            startFromBackup = false,
+                        ),
+                    )
+                }
+            } else {
+                store.dispatch(
+                    GlobalAction.Onboarding.StartForUnfinishedBackup(
+                        addedBackupCardsCount = backupService.addedBackupCardsCount,
+                    ),
+                )
 
-            store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
+                store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
+            }
         }
         is BackupAction.SkipBackup -> {
             Analytics.send(Onboarding.Backup.Skipped())
