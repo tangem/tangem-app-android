@@ -88,7 +88,10 @@ internal class OnrampAmountStateFactory(
         )
     }
 
-    fun getAmountSecondaryUpdatedState(quoteWithProvider: OnrampProviderWithQuote.Data): OnrampMainComponentUM {
+    fun getAmountSecondaryUpdatedState(
+        quoteWithProvider: OnrampProviderWithQuote.Data,
+        isBestRate: Boolean,
+    ): OnrampMainComponentUM {
         val currentState = currentStateProvider()
         if (currentState !is OnrampMainComponentUM.Content) return currentState
 
@@ -103,7 +106,7 @@ internal class OnrampAmountStateFactory(
             providerBlockState = OnrampProviderBlockUM.Content(
                 paymentMethod = quoteWithProvider.paymentMethod,
                 providerName = quoteWithProvider.provider.info.name,
-                isBestRate = true,
+                isBestRate = isBestRate,
                 onClick = onrampIntents::openProviders,
             ),
             buyButtonConfig = currentState.buyButtonConfig.copy(
