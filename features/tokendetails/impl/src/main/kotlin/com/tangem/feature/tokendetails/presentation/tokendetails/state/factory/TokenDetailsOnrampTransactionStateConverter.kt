@@ -6,6 +6,7 @@ import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.common.ui.notifications.ExpressNotificationsUM
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.resourceReference
@@ -21,6 +22,7 @@ import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateIconUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateInfoUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
@@ -35,6 +37,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
     private val cryptoCurrency: CryptoCurrency,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val appCurrencyProvider: Provider<AppCurrency>,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Converter<OnrampTransaction, ExpressTransactionStateUM.OnrampUM> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
@@ -46,7 +49,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
             info = ExpressTransactionStateInfoUM(
                 title = resourceReference(id = R.string.express_status_buying, wrappedList(cryptoCurrency.name)),
                 status = convertStatuses(value.status, value.externalTxUrl),
-                notification = getNotification(value.status, value.externalTxUrl),
+                notification = getNotification(value.status, value.externalTxUrl, value.providerName),
                 txId = value.txId,
                 txExternalId = value.externalTxId,
                 txExternalUrl = value.externalTxUrl,
@@ -86,20 +89,29 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     fallbackResId = R.drawable.ic_currency_24,
                 ),
                 iconState = getIconState(value.status),
-                onGoToProviderClick = clickIntents::onGoToProviderClick,
+                onGoToProviderClick = {
+                    analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
+                    clickIntents.onGoToProviderClick(it)
+                },
                 onClick = { clickIntents.onExpressTransactionClick(value.txId) },
             ),
             providerName = value.providerName,
             providerImageUrl = value.providerImageUrl,
             providerType = value.providerType,
             activeStatus = value.status,
+            fromCurrencyCode = value.fromCurrency.code,
         )
     }
 
-    private fun getNotification(status: OnrampStatus.Status, externalTxUrl: String?): NotificationUM? {
+    private fun getNotification(
+        status: OnrampStatus.Status,
+        externalTxUrl: String?,
+        providerName: String,
+    ): NotificationUM? {
         if (externalTxUrl == null) return null
         return when (status) {
             OnrampStatus.Status.Verifying -> {
+                analyticsEventHandler.send(TokenOnrampAnalyticsEvent.NoticeKYC(cryptoCurrency.symbol, providerName))
                 ExpressNotificationsUM.NeedVerification {
                     clickIntents.onGoToProviderClick(externalTxUrl)
                 }
