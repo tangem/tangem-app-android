@@ -62,6 +62,7 @@ internal class PreviewCustomTokenSelectorComponent(
                         standardType = Network.StandardType.ERC20,
                         hasFiatFeeRate = false,
                         canHandleTokens = false,
+                        transactionExtrasType = Network.TransactionExtrasType.NONE,
                     ),
                     name = "Network $index",
                     type = "N$index",
