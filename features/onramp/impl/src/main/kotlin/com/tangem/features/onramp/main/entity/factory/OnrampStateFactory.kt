@@ -12,10 +12,6 @@ import com.tangem.domain.tokens.model.AmountType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.convertToAmount
 import com.tangem.features.onramp.main.entity.*
-import com.tangem.features.onramp.main.entity.OnrampAmountBlockUM
-import com.tangem.features.onramp.main.entity.OnrampAmountSecondaryFieldUM
-import com.tangem.features.onramp.main.entity.OnrampCurrencyUM
-import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.utils.Provider
 import java.math.BigDecimal
 
@@ -77,7 +73,7 @@ internal class OnrampStateFactory(
     }
 
     private fun BigDecimal.convertToFiatAmount(currency: OnrampCurrency): Amount = Amount(
-        currencySymbol = currency.name,
+        currencySymbol = currency.unit,
         value = this,
         decimals = currency.precision,
         type = AmountType.FiatType(currency.code),
