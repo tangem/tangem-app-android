@@ -189,7 +189,10 @@ internal class TokenDetailsViewModel @Inject constructor(
         deepLinksRegistry.registerWithViewModel(
             viewModel = this,
             deepLinks = listOf(
-                BuyCurrencyDeepLink(::onBuyCurrencyDeepLink),
+                BuyCurrencyDeepLink(
+                    isOnrampFeatureEnabled = onrampFeatureToggles.isFeatureEnabled,
+                    onReceive = ::onBuyCurrencyDeepLink,
+                ),
             ),
         )
         userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
