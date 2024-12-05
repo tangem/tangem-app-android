@@ -12,5 +12,6 @@ data class TesterMenuContentState(
     val onBackClick: () -> Unit,
     val onFeatureTogglesClick: () -> Unit,
     val onEnvironmentTogglesClick: () -> Unit,
+    val onExcludedBlockchainsClick: () -> Unit,
     val onTesterActionsClick: () -> Unit,
 )

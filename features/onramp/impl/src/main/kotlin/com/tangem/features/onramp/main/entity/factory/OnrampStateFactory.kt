@@ -30,7 +30,6 @@ internal class OnrampStateFactory(
             currency = currency,
             onClose = onClose,
             openSettings = onrampIntents::openSettings,
-            onBuyClick = onrampIntents::onBuyClick,
         )
     }
 
@@ -42,6 +41,7 @@ internal class OnrampStateFactory(
             topBarConfig = state.topBarConfig.copy(endButtonUM = endButton),
             buyButtonConfig = state.buyButtonConfig,
             amountBlockState = getInitialAmountBlockState(currency),
+            providerBlockState = OnrampProviderBlockUM.Empty,
         )
     }
 
@@ -72,7 +72,7 @@ internal class OnrampStateFactory(
                 isValuePasted = false,
                 onValuePastedTriggerDismiss = {},
             ),
-            secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading,
+            secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
         )
     }
 

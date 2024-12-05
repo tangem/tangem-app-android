@@ -24,8 +24,9 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -67,10 +68,21 @@ object OnboardingHelper {
     }
 
     fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
-        if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled) {
+        val newOnboardingSupportTypes = scanResponse.productType == ProductType.Wallet2 ||
+            scanResponse.productType == ProductType.Ring ||
+            scanResponse.productType == ProductType.Wallet
+        if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled &&
+            newOnboardingSupportTypes
+        ) {
+            val backupState = store.state.onboardingWalletState.backupState
+
             return AppRoute.Onboarding(
                 scanResponse = scanResponse,
                 startFromBackup = false,
+                mode = when (backupState.startedSource) {
+                    BackupStartedSource.Onboarding -> AppRoute.Onboarding.Mode.Onboarding
+                    BackupStartedSource.CreateBackup -> AppRoute.Onboarding.Mode.AddBackup
+                },
             )
         }
 
@@ -212,7 +224,9 @@ object OnboardingHelper {
 
     fun handleTopUpAction(walletManager: WalletManager, scanResponse: ScanResponse, globalState: GlobalState) {
         val blockchain = walletManager.wallet.blockchain
-        val cryptoCurrency = CryptoCurrencyFactory().createCoin(
+        val excludedBlockchains = store.inject(DaggerGraphState::excludedBlockchains)
+
+        val cryptoCurrency = CryptoCurrencyFactory(excludedBlockchains).createCoin(
             blockchain = blockchain,
             extraDerivationPath = null,
             scanResponse = scanResponse,

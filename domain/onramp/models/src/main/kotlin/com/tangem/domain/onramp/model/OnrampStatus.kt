@@ -1,8 +1,5 @@
 package com.tangem.domain.onramp.model
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class OnrampStatus(
     val txId: String,
     val providerId: String,
@@ -36,19 +33,36 @@ data class OnrampStatus(
         Finished(order = 10),
         ;
 
-        fun isTerminal(): Boolean = when (this) {
-            Expired,
-            Failed,
-            Paused,
-            Finished,
-            -> true
-            Created,
-            WaitingForPayment,
-            PaymentProcessing,
-            Verifying,
-            Paid,
-            Sending,
-            -> false
-        }
+        val isTerminal: Boolean
+            get() = when (this) {
+                Expired,
+                Failed,
+                Paused,
+                Finished,
+                -> true
+                Created,
+                WaitingForPayment,
+                PaymentProcessing,
+                Verifying,
+                Paid,
+                Sending,
+                -> false
+            }
+
+        val isHidden: Boolean
+            get() = when (this) {
+                Created,
+                Expired,
+                Paused,
+                -> true
+                WaitingForPayment,
+                PaymentProcessing,
+                Verifying,
+                Failed,
+                Paid,
+                Sending,
+                Finished,
+                -> false
+            }
     }
 }

@@ -6,6 +6,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -17,26 +19,25 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 internal class DefaultOnboardingStepperComponent @AssistedInject constructor(
     @Assisted val context: AppComponentContext,
     @Assisted val params: OnboardingStepperComponent.Params,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : OnboardingStepperComponent, AppComponentContext by context {
 
     override val state = instanceKeeper.getOrCreateSimple { MutableStateFlow(params.initState) }
 
-    init {
-        componentScope.launch {
-            state.collect {
-                Timber.tag("ASDASD").d("State: $it")
-            }
-        }
-    }
-
     private fun openSupport() {
+        analyticsHandler.send(
+            AnalyticsEvent(
+                category = "Onboarding",
+                event = "Button - Chat",
+            ),
+        )
+
         componentScope.launch {
             val cardInfo = getCardInfoUseCase(params.scanResponse).getOrNull() ?: return@launch
             sendFeedbackEmailUseCase(FeedbackEmailType.DirectUserRequest(cardInfo))

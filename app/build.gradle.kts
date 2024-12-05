@@ -78,10 +78,11 @@ dependencies {
 
     implementation(projects.common)
     implementation(projects.common.routing)
+    implementation(projects.common.google)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
@@ -228,8 +229,8 @@ dependencies {
     implementation(deps.armadillo)
     implementation(deps.mviCore.watcher)
     implementation(deps.kotlin.serialization)
-    implementation(deps.walletConnectCore)
-    implementation(deps.walletConnectWeb3)
+    implementation(deps.reownCore)
+    implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
 
     /** Testing libraries */

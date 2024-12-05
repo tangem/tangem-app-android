@@ -55,6 +55,8 @@ object PreferencesKeys {
 
     val FEATURE_TOGGLES_KEY by lazy { stringPreferencesKey(name = "featureToggles") }
 
+    val EXCLUDED_BLOCKCHAINS_KEY by lazy { stringSetPreferencesKey(name = "excludedBlockchains") }
+
     val WAS_TWINS_ONBOARDING_SHOWN by lazy { booleanPreferencesKey(name = "twinsOnboardingShown") }
 
     val IS_TANGEM_TOS_ACCEPTED_KEY by lazy { booleanPreferencesKey(name = "tangem_tos_accepted") }
@@ -104,6 +106,10 @@ object PreferencesKeys {
     val ONRAMP_DEFAULT_COUNTRY by lazy { stringPreferencesKey(name = "onrampDefaultCountry") }
 
     val ONRAMP_TRANSACTIONS_STATUSES_KEY by lazy { stringPreferencesKey(name = "onrampTransactionsStatuses") }
+
+    val IS_GOOGLE_SERVICES_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGoogleServicesAvailable") }
+
+    val IS_GOOGLE_PAY_AVAILABLE_KEY by lazy { booleanPreferencesKey(name = "isGooglePayAvailable") }
 
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")

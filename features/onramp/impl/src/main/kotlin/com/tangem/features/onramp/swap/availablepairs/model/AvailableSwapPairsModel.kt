@@ -22,9 +22,11 @@ import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponen
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetLoadingTokenItemsTransformer
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
+import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
-import com.tangem.features.onramp.utils.SearchManager
+import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
+import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -37,7 +39,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
     getTokenListUseCase: GetTokenListUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tokenListUMController: TokenListUMController,
-    private val searchManager: SearchManager,
+    private val searchManager: InputManager,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getAvailablePairsUseCase: GetAvailablePairsUseCase,
@@ -61,6 +63,13 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val availablePairsByNetworkFlow = MutableStateFlow<Map<LeastTokenInfo, List<SwapPairLeast>>>(emptyMap())
 
     init {
+        tokenListUMController.update(
+            transformer = UpdateSearchBarCallbacksTransformer(
+                onQueryChange = ::onSearchQueryChange,
+                onActiveChange = ::onSearchBarActiveChange,
+            ),
+        )
+
         subscribeOnUpdateState()
         subscribeOnAvailablePairsUpdates()
     }
@@ -80,23 +89,29 @@ internal class AvailableSwapPairsModel @Inject constructor(
             } else {
                 val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
 
-                val filterTokenList = currencies
+                val filterByQueryTokenList = currencies
+                    .filter { it.currency != selectedStatus?.currency }
                     .filterByQuery(query = query)
-                    .filterByAvailability(availablePairs = availablePairs)
 
-                UpdateTokenItemsTransformer(
-                    appCurrency = appCurrency,
-                    onItemClick = params.onTokenClick,
-                    statuses = filterTokenList,
-                    isBalanceHidden = isBalanceHidden,
-                    hasSearchBar = currencies.isNotEmpty(),
-                    unavailableTokensHeaderReference = resourceReference(
-                        id = R.string.tokens_list_unavailable_to_swap_header,
-                        wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
-                    ),
-                    onQueryChange = ::onSearchQueryChange,
-                    onActiveChange = ::onSearchBarActiveChange,
-                )
+                if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
+                    SetNothingToFoundStateTransformer(
+                        isBalanceHidden = isBalanceHidden,
+                        emptySearchMessageReference = resourceReference(
+                            id = R.string.action_buttons_swap_empty_search_message,
+                        ),
+                    )
+                } else {
+                    UpdateTokenItemsTransformer(
+                        appCurrency = appCurrency,
+                        onItemClick = params.onTokenClick,
+                        statuses = filterByQueryTokenList.filterByAvailability(availablePairs = availablePairs),
+                        isBalanceHidden = isBalanceHidden,
+                        unavailableTokensHeaderReference = resourceReference(
+                            id = R.string.tokens_list_unavailable_to_swap_header,
+                            wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
+                        ),
+                    )
+                }
             }
         }
             .onEach(tokenListUMController::update)
@@ -138,8 +153,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
     }
 
     private fun onSearchQueryChange(newQuery: String) {
-        val searchBar = tokenListUMController.getSearchBar()
-        if (searchBar?.searchBarUM?.query == newQuery) return
+        if (state.value.searchBarUM.query == newQuery) return
 
         modelScope.launch {
             tokenListUMController.update(transformer = UpdateSearchQueryTransformer(newQuery))

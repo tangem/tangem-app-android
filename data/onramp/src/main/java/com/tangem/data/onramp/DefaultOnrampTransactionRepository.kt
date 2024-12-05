@@ -1,9 +1,12 @@
 package com.tangem.data.onramp
 
+import com.tangem.data.onramp.converters.TransactionConverter
+import com.tangem.data.onramp.models.OnrampTransactionDTO
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSet
 import com.tangem.datasource.local.preferences.utils.getObjectSetSync
+import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -19,17 +22,21 @@ internal class DefaultOnrampTransactionRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : OnrampTransactionRepository {
 
+    private val transactionConverter = TransactionConverter()
+
     override suspend fun storeTransaction(transaction: OnrampTransaction) {
         withContext(dispatchers.io) {
             appPreferencesStore.editData { mutablePreferences ->
-                val stored = mutablePreferences.getObjectSet<OnrampTransaction>(
+                val stored = mutablePreferences.getObjectSet<OnrampTransactionDTO>(
                     PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
-                )
-                val updated = stored?.toMutableSet()
-                    ?.addOrReplace(transaction) { it.txId == transaction.txId }
-                    ?: mutableSetOf(transaction)
+                )?.map(transactionConverter::convert) ?: mutableSetOf()
 
-                mutablePreferences.setObjectSet(
+                val updated = stored.toMutableSet()
+                    .addOrReplace(transaction) { it.txId == transaction.txId }
+                    .map(transactionConverter::convertBack)
+                    .toSet()
+
+                mutablePreferences.setObjectSet<OnrampTransactionDTO>(
                     key = PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
                     value = updated,
                 )
@@ -38,9 +45,9 @@ internal class DefaultOnrampTransactionRepository(
     }
 
     override suspend fun getTransactionById(txId: String): OnrampTransaction? = withContext(dispatchers.io) {
-        val stored = appPreferencesStore.getObjectSetSync<OnrampTransaction>(
+        val stored = appPreferencesStore.getObjectSetSync<OnrampTransactionDTO>(
             PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
-        )
+        ).map(transactionConverter::convert)
 
         stored.firstOrNull { it.txId == txId }
     }
@@ -49,24 +56,30 @@ internal class DefaultOnrampTransactionRepository(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
     ): Flow<List<OnrampTransaction>> = appPreferencesStore
-        .getObjectSet<OnrampTransaction>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
+        .getObjectSet<OnrampTransactionDTO>(PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY)
         .map { transactions ->
             transactions.filter {
                 it.userWalletId == userWalletId && it.toCurrencyId == cryptoCurrencyId.value
-            }
+            }.map(transactionConverter::convert)
+        }
+
+    override suspend fun updateTransactionStatus(txId: String, status: OnrampStatus.Status) =
+        withContext(dispatchers.io) {
+            val updatedTx = getTransactionById(txId)?.copy(status = status) ?: return@withContext
+            storeTransaction(updatedTx)
         }
 
     override suspend fun removeTransaction(txId: String) {
         withContext(dispatchers.io) {
             appPreferencesStore.editData { mutablePreferences ->
                 runCatching {
-                    val stored = mutablePreferences.getObjectSet<OnrampTransaction>(
+                    val stored = mutablePreferences.getObjectSet<OnrampTransactionDTO>(
                         PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
                     )?.toMutableSet()
 
                     stored?.removeIf { it.txId == txId }
 
-                    mutablePreferences.setObjectSet(
+                    mutablePreferences.setObjectSet<OnrampTransactionDTO>(
                         key = PreferencesKeys.ONRAMP_TRANSACTIONS_STATUSES_KEY,
                         value = stored ?: emptySet(),
                     )

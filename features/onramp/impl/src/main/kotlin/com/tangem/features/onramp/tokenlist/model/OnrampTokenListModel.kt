@@ -4,7 +4,6 @@ import arrow.core.getOrElse
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -15,13 +14,15 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
-import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
+import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
+import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
-import com.tangem.features.onramp.utils.SearchManager
+import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
+import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -33,7 +34,7 @@ internal class OnrampTokenListModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val tokenListUMController: TokenListUMController,
-    private val searchManager: SearchManager,
+    private val searchManager: InputManager,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getTokenListUseCase: GetTokenListUseCase,
@@ -49,6 +50,13 @@ internal class OnrampTokenListModel @Inject constructor(
     }
 
     init {
+        tokenListUMController.update(
+            transformer = UpdateSearchBarCallbacksTransformer(
+                onQueryChange = ::onSearchQueryChange,
+                onActiveChange = ::onSearchBarActiveChange,
+            ),
+        )
+
         subscribeOnUpdateState()
     }
 
@@ -65,30 +73,32 @@ internal class OnrampTokenListModel @Inject constructor(
             )
                 .flattenCurrencies()
 
-            val filterTokenList = currencies
+            val filterByQueryTokenList = currencies
                 .filterByQuery(query = query)
-                .filterByAvailability()
 
-            UpdateTokenItemsTransformer(
-                appCurrency = appCurrency,
-                onItemClick = params.onTokenClick,
-                statuses = filterTokenList,
-                isBalanceHidden = isBalanceHidden,
-                hasSearchBar = params.hasSearchBar && currencies.isNotEmpty(),
-                unavailableTokensHeaderReference = when (params.filterOperation) {
-                    OnrampOperation.BUY -> resourceReference(id = R.string.tokens_list_unavailable_to_purchase_header)
-                    OnrampOperation.SELL -> resourceReference(id = R.string.tokens_list_unavailable_to_sell_header)
-                    OnrampOperation.SWAP -> {
-                        // TODO: https://tangem.atlassian.net/browse/AND-9016
-                        resourceReference(
-                            id = R.string.tokens_list_unavailable_to_swap_header,
-                            wrappedList(""),
-                        )
+            if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
+                SetNothingToFoundStateTransformer(
+                    isBalanceHidden = isBalanceHidden,
+                    emptySearchMessageReference = when (params.filterOperation) {
+                        OnrampOperation.BUY -> R.string.action_buttons_buy_empty_search_message
+                        OnrampOperation.SELL -> R.string.action_buttons_sell_empty_search_message
+                        OnrampOperation.SWAP -> R.string.action_buttons_swap_empty_search_message
                     }
-                },
-                onQueryChange = ::onSearchQueryChange,
-                onActiveChange = ::onSearchBarActiveChange,
-            )
+                        .let(::resourceReference),
+                )
+            } else {
+                UpdateTokenItemsTransformer(
+                    appCurrency = appCurrency,
+                    onItemClick = params.onTokenClick,
+                    statuses = filterByQueryTokenList.filterByAvailability(),
+                    isBalanceHidden = isBalanceHidden,
+                    unavailableTokensHeaderReference = when (params.filterOperation) {
+                        OnrampOperation.BUY -> R.string.tokens_list_unavailable_to_purchase_header
+                        OnrampOperation.SELL -> R.string.tokens_list_unavailable_to_sell_header
+                        OnrampOperation.SWAP -> R.string.tokens_list_unavailable_to_swap_source_header
+                    }.let(::resourceReference),
+                )
+            }
         }
             .onEach(tokenListUMController::update)
             .flowOn(dispatchers.main)
@@ -96,8 +106,8 @@ internal class OnrampTokenListModel @Inject constructor(
     }
 
     private fun onSearchQueryChange(newQuery: String) {
-        val searchBar = tokenListUMController.getSearchBar()
-        if (searchBar?.searchBarUM?.query == newQuery) return
+        val searchBar = state.value.searchBarUM
+        if (searchBar.query == newQuery) return
 
         modelScope.launch {
             tokenListUMController.update(transformer = UpdateSearchQueryTransformer(newQuery))
@@ -124,20 +134,39 @@ internal class OnrampTokenListModel @Inject constructor(
 
     private suspend fun List<CryptoCurrencyStatus>.filterByAvailability(): Map<Boolean, List<CryptoCurrencyStatus>> {
         return groupBy { status ->
-            val isAvailable = when (params.filterOperation) {
-                OnrampOperation.BUY -> {
-                    rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = status.currency)
-                }
-                OnrampOperation.SELL -> rampStateManager.availableForSell(cryptoCurrency = status.currency)
-                OnrampOperation.SWAP -> rampStateManager.availableForSwap(
+            val isAvailable = checkAvailabilityByOperation(status = status)
+            val isNotMissedDerivation = status.value !is CryptoCurrencyStatus.MissedDerivation
+
+            val isNotUnreachable = when (params.filterOperation) {
+                OnrampOperation.BUY -> true // unreachable state is available for Buy operation
+                OnrampOperation.SELL -> status.value !is CryptoCurrencyStatus.Unreachable
+                OnrampOperation.SWAP -> status.value !is CryptoCurrencyStatus.Unreachable
+            }
+
+            isAvailable && isNotMissedDerivation && isNotUnreachable
+        }
+    }
+
+    private suspend fun checkAvailabilityByOperation(status: CryptoCurrencyStatus): Boolean {
+        return when (params.filterOperation) {
+            OnrampOperation.BUY -> {
+                rampStateManager.availableForBuy(
+                    scanResponse = scanResponse,
                     userWalletId = params.userWalletId,
                     cryptoCurrency = status.currency,
                 )
             }
+            OnrampOperation.SELL -> {
+                rampStateManager.availableForSell(userWalletId = params.userWalletId, status = status)
+            }
+            OnrampOperation.SWAP -> {
+                val isAvailable = rampStateManager.availableForSwap(
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = status.currency,
+                )
 
-            isAvailable &&
-                status.value !is CryptoCurrencyStatus.MissedDerivation &&
-                status.value !is CryptoCurrencyStatus.Unreachable
+                isAvailable && status.value !is CryptoCurrencyStatus.NoQuote
+            }
         }
     }
 }

@@ -19,10 +19,11 @@ dependencies {
     implementation(projects.features.swap.domain.models)
 
     /** Project - Core */
+    implementation(projects.core.analytics)
+    implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
-    implementation(projects.core.ui)
-    implementation(projects.core.featuretoggles)
     implementation(projects.core.navigation)
+    implementation(projects.core.ui)
 
     /** Project - Common */
     implementation(projects.common.routing)
@@ -33,6 +34,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
     implementation(projects.domain.onramp)
@@ -40,6 +42,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.settings)
 
     /** DI */
     implementation(deps.hilt.android)

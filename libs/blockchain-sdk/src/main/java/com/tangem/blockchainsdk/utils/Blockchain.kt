@@ -392,10 +392,6 @@ fun Blockchain.toMigratedCointId(): String = when (this) {
     else -> toCoinId()
 }
 
-fun Blockchain.isSupportedInApp(): Boolean {
-    return !excludedBlockchains.contains(this)
-}
-
 fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
     return when (this) {
         Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
@@ -415,11 +411,3 @@ fun Blockchain.minimalAmount(): BigDecimal {
 
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
-
-// no need to add testnets
-private val excludedBlockchains = listOf(
-    Blockchain.Unknown,
-    Blockchain.Nexa,
-    Blockchain.NexaTestnet,
-    Blockchain.Alephium,
-)

@@ -39,6 +39,13 @@ sealed class ExpressDataError {
         val expressFromDecimals: Int,
     ) : ExpressDataError()
 
+    data class ProviderDifferentAmountError(
+        override val code: Int,
+        val fromAmount: BigDecimal,
+        val fromProviderAmount: BigDecimal,
+        val decimals: Int,
+    ) : ExpressDataError()
+
     data class UnknownErrorWithCode(override val code: Int) : ExpressDataError()
 
     data class InvalidSignatureError(override val code: Int = 990) : ExpressDataError()

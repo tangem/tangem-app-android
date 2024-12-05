@@ -4,12 +4,14 @@ import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object OnrampDomainModule {
@@ -54,9 +56,14 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideGetOnrampStatusUseCase(
         onrampRepository: OnrampRepository,
+        onrampTransactionRepository: OnrampTransactionRepository,
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampStatusUseCase {
-        return GetOnrampStatusUseCase(onrampRepository, onrampErrorResolver)
+        return GetOnrampStatusUseCase(
+            onrampRepository,
+            onrampTransactionRepository,
+            onrampErrorResolver,
+        )
     }
 
     @Provides
@@ -107,5 +114,54 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideClearOnrampCacheUseCase(onrampRepository: OnrampRepository): ClearOnrampCacheUseCase {
         return ClearOnrampCacheUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampFetchQuotesUseCase(onrampRepository: OnrampRepository): OnrampFetchQuotesUseCase {
+        return OnrampFetchQuotesUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampQuotesUseCase(
+        settingsRepository: SettingsRepository,
+        onrampRepository: OnrampRepository,
+    ): GetOnrampQuotesUseCase {
+        return GetOnrampQuotesUseCase(
+            settingsRepository = settingsRepository,
+            repository = onrampRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampSelectedPaymentMethodUseCase(
+        onrampRepository: OnrampRepository,
+    ): GetOnrampSelectedPaymentMethodUseCase {
+        return GetOnrampSelectedPaymentMethodUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampProviderWithQuoteUseCase(
+        onrampRepository: OnrampRepository,
+    ): GetOnrampProviderWithQuoteUseCase {
+        return GetOnrampProviderWithQuoteUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampSaveSelectedPaymentMethod(onrampRepository: OnrampRepository): OnrampSaveSelectedPaymentMethod {
+        return OnrampSaveSelectedPaymentMethod(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampRedirectUrlUseCase(
+        onrampRepository: OnrampRepository,
+        transactionRepository: OnrampTransactionRepository,
+    ): GetOnrampRedirectUrlUseCase {
+        return GetOnrampRedirectUrlUseCase(onrampRepository, transactionRepository)
     }
 }

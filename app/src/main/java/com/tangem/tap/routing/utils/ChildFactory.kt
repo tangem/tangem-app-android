@@ -197,7 +197,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Onramp -> {
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
-                    params = OnrampComponent.Params(route.currency),
+                    params = OnrampComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.currency,
+                        source = route.source,
+                    ),
                     componentFactory = onrampComponentFactory,
                 )
             }
@@ -235,6 +239,10 @@ internal class ChildFactory @Inject constructor(
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
                         startBackupFlow = route.startFromBackup,
+                        multiWalletMode = when (route.mode) {
+                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
+                            AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                        },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
                 )

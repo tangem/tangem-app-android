@@ -3,8 +3,10 @@ package com.tangem.features.onramp.main.entity.factory.amount
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.onramp.main.entity.OnrampAmountSecondaryFieldUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
+import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
@@ -38,6 +40,7 @@ internal class OnrampAmountFieldChangeConverter(
                 amountFieldModel = amountFieldModel,
                 secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading,
             ),
+            providerBlockState = OnrampProviderBlockUM.Loading,
         )
     }
 
@@ -56,8 +59,9 @@ internal class OnrampAmountFieldChangeConverter(
         return copy(
             amountBlockState = amountBlockState.copy(
                 amountFieldModel = amountFieldModel,
-                secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading,
+                secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
             ),
+            providerBlockState = OnrampProviderBlockUM.Empty,
         )
     }
 }
