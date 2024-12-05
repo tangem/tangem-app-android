@@ -8,4 +8,5 @@ data class OnrampCurrency(
     val code: String,
     val image: String,
     val precision: Int,
+    val unit: String,
 )
