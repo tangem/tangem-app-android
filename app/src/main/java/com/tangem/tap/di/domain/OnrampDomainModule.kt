@@ -56,12 +56,10 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideGetOnrampStatusUseCase(
         onrampRepository: OnrampRepository,
-        onrampTransactionRepository: OnrampTransactionRepository,
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampStatusUseCase {
         return GetOnrampStatusUseCase(
             onrampRepository,
-            onrampTransactionRepository,
             onrampErrorResolver,
         )
     }
@@ -102,6 +100,14 @@ internal object OnrampDomainModule {
         onrampTransactionRepository: OnrampTransactionRepository,
     ): OnrampSaveTransactionUseCase {
         return OnrampSaveTransactionUseCase(onrampTransactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampUpdateTransactionStatusUseCase(
+        onrampTransactionRepository: OnrampTransactionRepository,
+    ): OnrampUpdateTransactionStatusUseCase {
+        return OnrampUpdateTransactionStatusUseCase(onrampTransactionRepository)
     }
 
     @Provides

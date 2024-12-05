@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
 import timber.log.Timber
-import java.math.BigDecimal
 import java.util.UUID
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
@@ -303,13 +302,12 @@ internal class DefaultOnrampRepository(
 
                 createOnrampTransaction(
                     txId = data.txId,
+                    quote = quote,
                     onrampDataJson = dataJson,
                     userWalletId = userWalletId,
                     currency = currency,
-                    provider = quote.provider,
                     cryptoCurrency = cryptoCurrency,
-                    fromAmount = quote.fromAmount.value,
-                    toAmount = quote.toAmount.value,
+                    residency = country.name,
                 )
             } else {
                 throw OnrampRedirectError.VerificationFailed
@@ -367,29 +365,30 @@ internal class DefaultOnrampRepository(
 
     private fun createOnrampTransaction(
         txId: String,
+        quote: OnrampProviderWithQuote.Data,
         onrampDataJson: OnrampDataJson,
         userWalletId: UserWalletId,
         currency: OnrampCurrency,
-        provider: OnrampProvider,
         cryptoCurrency: CryptoCurrency,
-        fromAmount: BigDecimal,
-        toAmount: BigDecimal,
+        residency: String,
     ): OnrampTransaction {
         return OnrampTransaction(
             txId = txId,
             userWalletId = userWalletId,
-            fromAmount = fromAmount,
+            fromAmount = quote.fromAmount.value,
             fromCurrency = currency,
-            toAmount = toAmount,
+            toAmount = quote.toAmount.value,
             toCurrencyId = cryptoCurrency.id.value,
             status = OnrampStatus.Status.Expired,
             externalTxUrl = onrampDataJson.externalTxUrl,
             externalTxId = onrampDataJson.externalTxId,
             timestamp = DateTime.now().millis,
-            providerName = provider.info.name,
-            providerImageUrl = provider.info.imageLarge,
+            providerName = quote.provider.info.name,
+            providerImageUrl = quote.provider.info.imageLarge,
             providerType = ExchangeProviderType.ONRAMP.name,
             redirectUrl = onrampDataJson.widgetUrl,
+            paymentMethod = quote.paymentMethod.name,
+            residency = residency,
         )
     }
 

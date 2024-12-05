@@ -164,7 +164,6 @@ internal class TokenDetailsViewModel @Inject constructor(
         expressStatusFactory.create(
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
-            analyticsEventsHandlerProvider = Provider { analyticsEventsHandler },
             currentStateProvider = Provider { uiState.value },
             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
             userWalletId = userWalletId,
