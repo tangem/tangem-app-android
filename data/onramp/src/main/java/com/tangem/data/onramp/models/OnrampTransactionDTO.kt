@@ -52,4 +52,8 @@ data class OnrampTransactionDTO(
     val providerImageUrl: String, // todo onramp fix after SwapProvider moved to own module
     @Json(name = "providerType")
     val providerType: String, // todo onramp fix after SwapProvider moved to own module
+    @Json(name = "paymentMethod")
+    val paymentMethod: String,
+    @Json(name = "residency")
+    val residency: String,
 )

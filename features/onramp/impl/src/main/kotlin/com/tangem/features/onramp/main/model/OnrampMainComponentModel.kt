@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.main.model
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.res.stringResource
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -19,6 +20,7 @@ import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
+import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.OnrampMainComponent
@@ -34,6 +36,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -73,6 +76,8 @@ internal class OnrampMainComponentModel @Inject constructor(
     val state: StateFlow<OnrampMainComponentUM> get() = _state.asStateFlow()
     val bottomSheetNavigation: SlotNavigation<OnrampMainBottomSheetConfig> = SlotNavigation()
 
+    private val lastAmount = mutableStateOf(BigDecimal.ZERO)
+
     init {
         sendScreenOpenAnalytics()
         checkResidenceCountry()
@@ -83,7 +88,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         analyticsEventHandler.send(
             OnrampAnalyticsEvent.ScreenOpened(
                 source = params.source,
-                cryptoCurrency = params.cryptoCurrency.name,
+                tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
     }
@@ -143,6 +148,16 @@ internal class OnrampMainComponentModel @Inject constructor(
         getOnrampQuotesUseCase.invoke()
             .onEach { maybeQuotes ->
                 val quote = maybeQuotes.getOrNull()?.firstOrNull() ?: return@onEach
+                if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
+                    lastAmount.value = quote.fromAmount.value
+                    analyticsEventHandler.send(
+                        OnrampAnalyticsEvent.ProviderCalculated(
+                            providerName = quote.provider.info.name,
+                            tokenSymbol = params.cryptoCurrency.symbol,
+                            paymentMethod = quote.paymentMethod.name,
+                        ),
+                    )
+                }
                 _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote) }
             }
             .launchIn(modelScope)
@@ -166,7 +181,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 OnrampAnalyticsEvent.OnBuyClick(
                     providerName = quote.provider.info.name,
                     currency = currentContentState.amountBlockState.currencyUM.code,
-                    cryptoCurrency = params.cryptoCurrency.name,
+                    tokenSymbol = params.cryptoCurrency.symbol,
                 ),
             )
             params.openRedirectPage(quote)
