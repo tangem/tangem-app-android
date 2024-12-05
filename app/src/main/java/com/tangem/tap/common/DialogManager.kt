@@ -148,8 +148,14 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.AttestationFailed -> AttestationFailedDialog.create(context)
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
-            is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
-            is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
+            is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(
+                context = context,
+                scanResponse = state.dialog.scanResponse,
+            )
+            is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(
+                context = context,
+                unfinishedBackupScanResponse = state.dialog.scanResponse,
+            )
             is BackupDialog.ResetBackupCard -> ResetBackupCardDialog.create(
                 context = context,
                 cardId = state.dialog.cardId,
