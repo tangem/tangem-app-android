@@ -14,6 +14,7 @@ dependencies {
     /** Core modules */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.deepLinks.global)
 
     /** Common modules */
     implementation(projects.data.common)
