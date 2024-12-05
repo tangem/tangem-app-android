@@ -1,7 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
