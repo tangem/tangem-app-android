@@ -11,6 +11,7 @@ internal class CurrencyConverter : TwoWayConverter<OnrampCurrencyDTO, OnrampCurr
         code = value.code,
         image = value.image,
         precision = value.precision,
+        unit = value.unit ?: value.code,
     )
 
     override fun convertBack(value: OnrampCurrency): OnrampCurrencyDTO = OnrampCurrencyDTO(
@@ -18,5 +19,6 @@ internal class CurrencyConverter : TwoWayConverter<OnrampCurrencyDTO, OnrampCurr
         code = value.code,
         image = value.image,
         precision = value.precision,
+        unit = value.unit,
     )
 }
