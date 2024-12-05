@@ -248,6 +248,7 @@ internal class TokenDetailsStateFactory(
                     symbol = currency.symbol,
                     network = currency.network.name,
                     addresses = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
+                    showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                     onCopyClick = sendCopyAnalyticsEvent,
                     onShareClick = sendShareAnalyticsEvent,
                 ),
