@@ -60,7 +60,7 @@ internal class OnrampAmountStateFactory(
         )
     }
 
-    fun getAmountSecondaryUpdatedState(quote: OnrampQuote): OnrampMainComponentUM {
+    fun getAmountSecondaryUpdatedState(quote: OnrampQuote, isBestRate: Boolean): OnrampMainComponentUM {
         val currentState = currentStateProvider()
         if (currentState !is OnrampMainComponentUM.Content) return currentState
 
@@ -71,7 +71,7 @@ internal class OnrampAmountStateFactory(
             amountBlockState = amountState.copy(
                 secondaryFieldModel = quote.toSecondaryFieldUiModel(amountState),
             ),
-            providerBlockState = quote.toProviderBlockState(),
+            providerBlockState = quote.toProviderBlockState(isBestRate),
             buyButtonConfig = currentState.buyButtonConfig.copy(
                 enabled = quote is OnrampQuote.Data,
                 onClick = {
@@ -118,11 +118,11 @@ internal class OnrampAmountStateFactory(
         )
     }
 
-    private fun OnrampQuote.toProviderBlockState(): OnrampProviderBlockUM {
+    private fun OnrampQuote.toProviderBlockState(isBestRate: Boolean): OnrampProviderBlockUM {
         return OnrampProviderBlockUM.Content(
             paymentMethod = paymentMethod,
             providerName = provider.info.name,
-            isBestRate = true,
+            isBestRate = isBestRate,
             onClick = onrampIntents::openProviders,
         )
     }
@@ -136,7 +136,7 @@ internal class OnrampAmountStateFactory(
                 OnrampAmountSecondaryFieldUM.Content(stringReference(amount))
             }
             is OnrampQuote.Error.AmountTooBigError -> {
-                val amount = this.amount.value.format {
+                val amount = requiredAmount.value.format {
                     fiat(
                         fiatCurrencyCode = amountState.amountFieldModel.fiatAmount.currencySymbol,
                         fiatCurrencySymbol = amountState.amountFieldModel.fiatAmount.currencySymbol,
@@ -150,7 +150,7 @@ internal class OnrampAmountStateFactory(
                 )
             }
             is OnrampQuote.Error.AmountTooSmallError -> {
-                val amount = this.amount.value.format {
+                val amount = requiredAmount.value.format {
                     fiat(
                         fiatCurrencyCode = amountState.amountFieldModel.fiatAmount.currencySymbol,
                         fiatCurrencySymbol = amountState.amountFieldModel.fiatAmount.currencySymbol,
