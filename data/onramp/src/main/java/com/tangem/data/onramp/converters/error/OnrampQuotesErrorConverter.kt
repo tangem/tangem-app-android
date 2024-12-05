@@ -6,6 +6,7 @@ import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.domain.onramp.model.OnrampAmount
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.orZero
 
 internal class OnrampQuotesErrorConverter(
     private val jsonAdapter: JsonAdapter<ExpressErrorResponse>,
@@ -35,7 +36,12 @@ internal class OnrampQuotesErrorConverter(
         return OnrampQuote.Error.AmountTooSmallError(
             paymentMethod = input.paymentMethod,
             provider = input.provider,
-            amount = createFromAmountWithOffset(
+            fromAmount = OnrampAmount(
+                symbol = input.amount.currencySymbol,
+                value = input.amount.value.orZero(),
+                decimals = input.amount.decimals,
+            ),
+            requiredAmount = createFromAmountWithOffset(
                 amountWithOffset = minAmount,
                 decimals = decimals,
                 symbol = input.amount.currencySymbol,
@@ -53,7 +59,12 @@ internal class OnrampQuotesErrorConverter(
         return OnrampQuote.Error.AmountTooBigError(
             paymentMethod = input.paymentMethod,
             provider = input.provider,
-            amount = createFromAmountWithOffset(
+            fromAmount = OnrampAmount(
+                symbol = input.amount.currencySymbol,
+                value = input.amount.value.orZero(),
+                decimals = input.amount.decimals,
+            ),
+            requiredAmount = createFromAmountWithOffset(
                 amountWithOffset = maxAmount,
                 decimals = decimals,
                 symbol = input.amount.currencySymbol,
