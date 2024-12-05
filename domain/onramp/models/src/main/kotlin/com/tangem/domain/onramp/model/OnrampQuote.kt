@@ -19,13 +19,15 @@ sealed class OnrampQuote {
         data class AmountTooSmallError(
             override val paymentMethod: OnrampPaymentMethod,
             override val provider: OnrampProvider,
-            val amount: OnrampAmount,
+            val fromAmount: OnrampAmount,
+            val requiredAmount: OnrampAmount,
         ) : Error()
 
         data class AmountTooBigError(
             override val paymentMethod: OnrampPaymentMethod,
             override val provider: OnrampProvider,
-            val amount: OnrampAmount,
+            val fromAmount: OnrampAmount,
+            val requiredAmount: OnrampAmount,
         ) : Error()
     }
 }
