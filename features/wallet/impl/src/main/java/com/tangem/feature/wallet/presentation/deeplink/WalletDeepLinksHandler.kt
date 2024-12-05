@@ -66,8 +66,8 @@ internal class WalletDeepLinksHandler @Inject constructor(
                 add(
                     BuyCurrencyDeepLink(
                         isOnrampFeatureEnabled = onrampFeatureToggles.isFeatureEnabled,
-                        onReceive = { txId ->
-                            scope.launch { onBuyCurrencyDeepLink(txId, userWallet) }
+                        onReceive = { externalTxId ->
+                            scope.launch { onBuyCurrencyDeepLink(externalTxId, userWallet) }
                         },
                     ),
                 )
@@ -107,9 +107,9 @@ internal class WalletDeepLinksHandler @Inject constructor(
         }
     }
 
-    private suspend fun onBuyCurrencyDeepLink(txId: String, userWallet: UserWallet) {
+    private suspend fun onBuyCurrencyDeepLink(externalTxId: String, userWallet: UserWallet) {
         if (onrampFeatureToggles.isFeatureEnabled) {
-            clickIntents.onOnrampSuccessClick(txId)
+            clickIntents.onOnrampSuccessClick(externalTxId)
         } else {
             val cryptoCurrency = getCryptoCurrencyUseCase(userWallet.walletId).getOrNull() ?: return
             analyticsEventHandler.send(TokenScreenAnalyticsEvent.Bought(cryptoCurrency.symbol))
