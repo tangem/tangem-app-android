@@ -108,7 +108,7 @@ internal class SelectProviderModel @Inject constructor(
     }
 
     private fun onPaymentMethodSelected(paymentMethod: OnrampPaymentMethod) {
-        analyticsEventHandler.send(OnrampAnalyticsEvent.OnPaymentMethodChosen)
+        analyticsEventHandler.send(OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = paymentMethod.name))
         modelScope.launch {
             saveSelectedPaymentMethod.invoke(paymentMethod)
             _state.update { state ->
@@ -141,7 +141,7 @@ internal class SelectProviderModel @Inject constructor(
                         analyticsEventHandler.send(
                             OnrampAnalyticsEvent.OnProviderChosen(
                                 providerName = quote.provider.info.name,
-                                cryptoCurrency = params.cryptoCurrency.name,
+                                tokenSymbol = params.cryptoCurrency.symbol,
                             ),
                         )
                         params.onProviderClick(quote)
