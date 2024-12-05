@@ -198,9 +198,9 @@ internal class TokenDetailsViewModel @Inject constructor(
         userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
     }
 
-    private fun onBuyCurrencyDeepLink(txId: String) {
+    private fun onBuyCurrencyDeepLink(externalTxId: String) {
         if (onrampFeatureToggles.isFeatureEnabled) {
-            router.openOnrampSuccess(txId)
+            router.openOnrampSuccess(externalTxId)
         } else {
             val currency = cryptoCurrencyStatus?.currency ?: return
             analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
