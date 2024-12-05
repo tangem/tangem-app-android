@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.visa.GetVisaTxDetailsUseCase
 import com.tangem.domain.wallets.models.UserWalletId
@@ -71,6 +72,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
             symbol = currency.symbol,
             network = currency.network.name,
             addresses = addresses.mapToAddressModels(currency).toImmutableList(),
+            showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = { /* no-op */ },
             onShareClick = { /* no-op */ },
         )
