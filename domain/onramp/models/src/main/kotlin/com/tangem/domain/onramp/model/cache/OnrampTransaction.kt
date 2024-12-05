@@ -21,6 +21,8 @@ import com.tangem.domain.wallets.models.UserWalletId
  * @property providerName       Provider name
  * @property providerImageUrl   Provider image link
  * @property providerType       Provider type
+ * @property paymentMethod      Transaction payment method
+ * @property paymentMethod      Residency country
  */
 data class OnrampTransaction(
     val txId: String,
@@ -37,4 +39,6 @@ data class OnrampTransaction(
     val providerImageUrl: String, // todo onramp fix after SwapProvider moved to own module
     val providerType: String, // todo onramp fix after SwapProvider moved to own module
     val redirectUrl: String,
+    val paymentMethod: String,
+    val residency: String,
 )
