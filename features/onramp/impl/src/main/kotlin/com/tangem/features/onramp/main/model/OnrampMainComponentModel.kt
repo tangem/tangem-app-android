@@ -177,7 +177,9 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun subscribeToQuotesUpdate() {
         getOnrampQuotesUseCase.invoke()
             .onEach { maybeQuotes ->
-                val quote = maybeQuotes.getOrNull()?.firstOrNull() ?: return@onEach
+                val quotes = maybeQuotes.getOrNull() ?: return@onEach
+                val isNoQuotes = quotes.none { it is OnrampQuote.Data }
+                val quote = quotes.firstOrNull() ?: return@onEach
                 if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
                     lastAmount.value = quote.fromAmount.value
                     analyticsEventHandler.send(
@@ -188,7 +190,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                         ),
                     )
                 }
-                _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote) }
+                _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote, isNoQuotes) }
             }
             .launchIn(modelScope)
     }
