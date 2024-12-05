@@ -164,6 +164,12 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
+    fun provideOnrampFetchPairsUseCase(onrampRepository: OnrampRepository): OnrampFetchPairsUseCase {
+        return OnrampFetchPairsUseCase(onrampRepository)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetOnrampRedirectUrlUseCase(
         onrampRepository: OnrampRepository,
         transactionRepository: OnrampTransactionRepository,

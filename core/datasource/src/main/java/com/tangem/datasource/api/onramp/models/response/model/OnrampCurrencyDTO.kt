@@ -16,4 +16,7 @@ data class OnrampCurrencyDTO(
 
     @Json(name = "precision")
     val precision: Int,
+
+    @Json(name = "unit")
+    val unit: String?,
 )
