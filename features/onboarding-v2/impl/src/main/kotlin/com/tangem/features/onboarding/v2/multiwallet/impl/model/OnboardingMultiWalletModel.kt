@@ -5,13 +5,18 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.interruptBackupDialog
+import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
+import com.tangem.operations.backup.BackupService
+import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -23,6 +28,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val analyticsHandler: AnalyticsEventHandler,
+    private val backupServiceHolder: BackupServiceHolder,
+    private val appPreferencesStore: AppPreferencesStore,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val getCardImageUseCase = GetCardImageUseCase()
@@ -35,6 +42,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             accessCode = null,
             isThreeCards = true,
             resultUserWallet = null,
+            startFromFinalize = getInitialStartFromFinalize(),
         ),
     )
     val backups = MutableStateFlow(MultiWalletChildParams.Backup())
@@ -48,10 +56,11 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     }
 
     fun onBack() {
-        _uiState.update {
-            it.copy(
+        _uiState.update { st ->
+            st.copy(
                 dialog = interruptBackupDialog(
                     onConfirm = {
+                        removeFinalizeScanResponseState()
                         router.pop()
                     },
                     dismiss = { _uiState.update { it.copy(dialog = null) } },
@@ -60,20 +69,30 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         }
     }
 
+    private fun removeFinalizeScanResponseState() {
+        // discarding onboarding means we have to remove scan response from preferences
+        // to prevent showing finalize screen dialog on next app start
+        modelScope.launch {
+            appPreferencesStore.editData { mutablePreferences ->
+                mutablePreferences.remove(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY)
+            }
+        }
+    }
+
     private fun subscribeToBackups() {
         modelScope.launch {
-            backups.collectLatest { bst ->
+            backups.collectLatest { backup ->
                 when {
-                    _uiState.value.artwork2Url == null && bst.card2 != null -> {
+                    _uiState.value.artwork2Url == null && backup.card2 != null -> {
                         val artwork =
-                            getCardImageUseCase.invoke(bst.card2.cardId, bst.card2.cardPublicKey)
+                            getCardImageUseCase.invoke(backup.card2.cardId, backup.card2.cardPublicKey)
                         _uiState.update {
                             it.copy(artwork2Url = artwork)
                         }
                     }
-                    _uiState.value.artwork3Url == null && bst.card3 != null -> {
+                    _uiState.value.artwork3Url == null && backup.card3 != null -> {
                         val artwork =
-                            getCardImageUseCase.invoke(bst.card3.cardId, bst.card3.cardPublicKey)
+                            getCardImageUseCase.invoke(backup.card3.cardId, backup.card3.cardPublicKey)
                         _uiState.update {
                             it.copy(artwork3Url = artwork)
                         }
@@ -85,15 +104,29 @@ internal class OnboardingMultiWalletModel @Inject constructor(
 
     private fun getInitialStep(): OnboardingMultiWalletState.Step {
         val card = params.scanResponse.card
+        val backupService = backupServiceHolder.backupService.get()!!
 
-        // todo check local storage for scan response
         return when {
+            backupService.hasIncompletedBackup -> OnboardingMultiWalletState.Step.Finalize
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup ->
                 OnboardingMultiWalletState.Step.AddBackupDevice
             card.wallets.isNotEmpty() && card.backupStatus?.isActive == true ->
                 OnboardingMultiWalletState.Step.Finalize
             else ->
                 OnboardingMultiWalletState.Step.CreateWallet
+        }
+    }
+
+    private fun getInitialStartFromFinalize(): FinalizeStage? {
+        val backupService = backupServiceHolder.backupService.get() ?: return null
+        return when (val state = backupService.currentState) {
+            BackupService.State.FinalizingPrimaryCard -> FinalizeStage.ScanPrimaryCard
+            is BackupService.State.FinalizingBackupCard -> if (state.index == 1) {
+                FinalizeStage.ScanBackupFirstCard
+            } else {
+                FinalizeStage.ScanBackupSecondCard
+            }
+            else -> null
         }
     }
 
