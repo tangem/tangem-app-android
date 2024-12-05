@@ -24,6 +24,7 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -118,6 +119,8 @@ interface ApplicationEntryPoint {
     fun getOnrampFeatureToggles(): OnrampFeatureToggles
 
     fun getOnboardingV2FeatureToggles(): OnboardingV2FeatureToggles
+
+    fun getOnboardingRepository(): OnboardingRepository
 
     fun getCoroutineDispatcherProvider(): CoroutineDispatcherProvider
 
