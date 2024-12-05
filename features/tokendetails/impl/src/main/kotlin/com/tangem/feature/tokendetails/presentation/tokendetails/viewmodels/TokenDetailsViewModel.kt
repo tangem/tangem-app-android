@@ -189,15 +189,18 @@ internal class TokenDetailsViewModel @Inject constructor(
         deepLinksRegistry.registerWithViewModel(
             viewModel = this,
             deepLinks = listOf(
-                BuyCurrencyDeepLink(::onBuyCurrencyDeepLink),
+                BuyCurrencyDeepLink(
+                    isOnrampFeatureEnabled = onrampFeatureToggles.isFeatureEnabled,
+                    onReceive = ::onBuyCurrencyDeepLink,
+                ),
             ),
         )
         userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
     }
 
-    private fun onBuyCurrencyDeepLink(txId: String) {
+    private fun onBuyCurrencyDeepLink(externalTxId: String) {
         if (onrampFeatureToggles.isFeatureEnabled) {
-            router.openOnrampSuccess(txId)
+            router.openOnrampSuccess(externalTxId)
         } else {
             val currency = cryptoCurrencyStatus?.currency ?: return
             analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
