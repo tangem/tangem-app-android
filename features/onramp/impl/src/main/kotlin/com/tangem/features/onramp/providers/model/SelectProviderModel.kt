@@ -70,7 +70,13 @@ internal class SelectProviderModel @Inject constructor(
         modelScope.launch {
             getOnrampProviderWithQuoteUseCase.invoke(paymentMethod)
                 .onRight { quotes ->
-                    _state.update { state -> state.copy(providers = quotes.toProvidersListItems()) }
+                    val hasQuotesData = quotes.any { it is OnrampProviderWithQuote.Data }
+                    _state.update { state ->
+                        state.copy(
+                            paymentMethod = state.paymentMethod.copy(enabled = hasQuotesData),
+                            providers = quotes.toProvidersListItems(),
+                        )
+                    }
                 }
                 .onLeft { Timber.e(it) }
         }
@@ -82,6 +88,7 @@ internal class SelectProviderModel @Inject constructor(
                 id = params.selectedPaymentMethod.id,
                 name = params.selectedPaymentMethod.name,
                 imageUrl = params.selectedPaymentMethod.imageUrl,
+                enabled = false,
                 onClick = ::openPaymentMethods,
             ),
             providers = emptyList<ProviderListItemUM>().toImmutableList(),
@@ -101,7 +108,7 @@ internal class SelectProviderModel @Inject constructor(
         }
     }
 
-    private fun List<OnrampPaymentMethod>.toPaymentUMList(): List<PaymentMethodUM> = map { method ->
+    private fun Set<OnrampPaymentMethod>.toPaymentUMList(): List<PaymentMethodUM> = map { method ->
         PaymentMethodUM(
             id = method.id,
             imageUrl = method.imageUrl,

@@ -6,7 +6,7 @@ import com.tangem.domain.onramp.repositories.OnrampRepository
 
 class GetOnrampPaymentMethodsUseCase(private val repository: OnrampRepository) {
 
-    suspend operator fun invoke(): Either<Throwable, List<OnrampPaymentMethod>> {
-        return Either.catch { repository.getPaymentMethods() }
+    suspend operator fun invoke(): Either<Throwable, Set<OnrampPaymentMethod>> {
+        return Either.catch { repository.getAvailablePaymentMethods() }
     }
 }
