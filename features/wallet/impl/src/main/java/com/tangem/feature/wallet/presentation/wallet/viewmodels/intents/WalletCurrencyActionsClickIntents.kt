@@ -34,10 +34,7 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -239,6 +236,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             symbol = currency.symbol,
             network = currency.network.name,
             addresses = addresses.mapToAddressModels(currency).toImmutableList(),
+            showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
             },
