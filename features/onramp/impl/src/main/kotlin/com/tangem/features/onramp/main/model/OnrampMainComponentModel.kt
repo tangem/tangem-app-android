@@ -113,7 +113,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         modelScope.launch {
             checkOnrampAvailabilityUseCase.invoke()
                 .onRight(::handleOnrampAvailability)
-                .onLeft { Timber.e(it) }
+                .onLeft { Timber.e(it.toString()) }
         }
     }
 
