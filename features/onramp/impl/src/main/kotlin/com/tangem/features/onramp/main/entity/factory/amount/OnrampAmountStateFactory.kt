@@ -1,11 +1,13 @@
 package com.tangem.features.onramp.main.entity.factory.amount
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
@@ -18,6 +20,7 @@ import com.tangem.utils.Provider
 
 internal class OnrampAmountStateFactory(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val onrampIntents: OnrampIntents,
 ) {
 
@@ -171,8 +174,14 @@ internal class OnrampAmountStateFactory(
         }
 
         val errorTextRes = when (error) {
-            is OnrampError.AmountError.TooBigError -> R.string.onramp_max_amount_restriction
-            is OnrampError.AmountError.TooSmallError -> R.string.onramp_min_amount_restriction
+            is OnrampError.AmountError.TooBigError -> {
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                R.string.onramp_max_amount_restriction
+            }
+            is OnrampError.AmountError.TooSmallError -> {
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                R.string.onramp_min_amount_restriction
+            }
         }
 
         return OnrampAmountSecondaryFieldUM.Error(

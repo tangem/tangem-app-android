@@ -21,6 +21,7 @@ import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.OnrampMainComponent
@@ -32,6 +33,7 @@ import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
 import com.tangem.features.onramp.providers.entity.SelectProviderResult
 import com.tangem.features.onramp.utils.InputManager
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.PeriodicTask
@@ -69,6 +71,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     )
     private val amountStateFactory = OnrampAmountStateFactory(
         currentStateProvider = Provider { _state.value },
+        analyticsEventHandler = analyticsEventHandler,
         onrampIntents = this,
     )
     private val selectedUserWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
@@ -111,9 +114,12 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun checkResidenceCountry() {
         modelScope.launch {
-            checkOnrampAvailabilityUseCase.invoke()
+            checkOnrampAvailabilityUseCase()
                 .onRight(::handleOnrampAvailability)
-                .onLeft { Timber.e(it.toString()) }
+                .onLeft { error ->
+                    Timber.e(error.toString())
+                    sendOnrampErrorAnalytic(error)
+                }
         }
     }
 
@@ -129,9 +135,14 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun subscribeToCurrencyUpdates() {
         getOnrampCurrencyUseCase.invoke()
             .onEach { maybeCurrency ->
-                val currency = maybeCurrency.getOrNull() ?: return@onEach
-                _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
-                updatePairsAndQuotes()
+                maybeCurrency.fold(
+                    ifLeft = ::sendOnrampErrorAnalytic,
+                    ifRight = { currency ->
+                        if (currency == null) return@onEach
+                        _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
+                        updatePairsAndQuotes()
+                    },
+                )
             }
             .launchIn(modelScope)
     }
@@ -146,7 +157,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private suspend fun updatePairsAndQuotes() {
-        fetchPairsUseCase.invoke(params.cryptoCurrency)
+        fetchPairsUseCase.invoke(params.cryptoCurrency).onLeft(::sendOnrampErrorAnalytic)
         startLoadingQuotes()
     }
 
@@ -165,7 +176,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                     fetchQuotesUseCase.invoke(
                         amount = content.amountBlockState.amountFieldModel.fiatAmount,
                         cryptoCurrency = params.cryptoCurrency,
-                    )
+                    ).onLeft(::sendOnrampErrorAnalytic)
                 }
             },
             onSuccess = {},
@@ -176,20 +187,27 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun subscribeToQuotesUpdate() {
         getOnrampQuotesUseCase.invoke()
             .onEach { maybeQuotes ->
-                val quotes = maybeQuotes.getOrNull() ?: return@onEach
-                val isNoQuotes = quotes.none { it is OnrampQuote.Data }
-                val quote = quotes.firstOrNull() ?: return@onEach
-                if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
-                    lastAmount.value = quote.fromAmount.value
-                    analyticsEventHandler.send(
-                        OnrampAnalyticsEvent.ProviderCalculated(
-                            providerName = quote.provider.info.name,
-                            tokenSymbol = params.cryptoCurrency.symbol,
-                            paymentMethod = quote.paymentMethod.name,
-                        ),
-                    )
-                }
-                _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote, isNoQuotes) }
+                maybeQuotes.fold(
+                    ifLeft = ::sendOnrampErrorAnalytic,
+                    ifRight = { quotes ->
+                        quotes.filterIsInstance<OnrampQuote.Error>().forEach { errorState ->
+                            sendOnrampErrorAnalytic(errorState.error)
+                        }
+                        val isNoQuotes = quotes.none { it is OnrampQuote.Data }
+                        val quote = quotes.firstOrNull() ?: return@onEach
+                        if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
+                            lastAmount.value = quote.fromAmount.value
+                            analyticsEventHandler.send(
+                                OnrampAnalyticsEvent.ProviderCalculated(
+                                    providerName = quote.provider.info.name,
+                                    tokenSymbol = params.cryptoCurrency.symbol,
+                                    paymentMethod = quote.paymentMethod.name,
+                                ),
+                            )
+                        }
+                        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote, isNoQuotes) }
+                    },
+                )
             }
             .launchIn(modelScope)
     }
@@ -267,6 +285,16 @@ internal class OnrampMainComponentModel @Inject constructor(
                     dismissButton = dismissButton,
                 )
             },
+        )
+    }
+
+    private fun sendOnrampErrorAnalytic(error: OnrampError) {
+        val content = state.value as? OnrampMainComponentUM.Content
+        val providerContent = content?.providerBlockState as? OnrampProviderBlockUM.Content
+        analyticsEventHandler.sendOnrampErrorEvent(
+            error = error,
+            tokenSymbol = params.cryptoCurrency.symbol,
+            providerName = providerContent?.providerName,
         )
     }
 

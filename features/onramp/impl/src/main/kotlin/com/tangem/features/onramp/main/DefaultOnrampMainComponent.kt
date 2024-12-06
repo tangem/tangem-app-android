@@ -54,6 +54,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
         is OnrampMainBottomSheetConfig.ConfirmResidency -> confirmResidencyComponentFactory.create(
             context = childByContext(componentContext),
             params = ConfirmResidencyComponent.Params(
+                cryptoCurrency = params.cryptoCurrency,
                 country = config.country,
                 onDismiss = {
                     model.bottomSheetNavigation.dismiss()
@@ -63,7 +64,10 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
         )
         is OnrampMainBottomSheetConfig.CurrenciesList -> selectCurrencyComponentFactory.create(
             context = childByContext(componentContext),
-            params = SelectCurrencyComponent.Params(model.bottomSheetNavigation::dismiss),
+            params = SelectCurrencyComponent.Params(
+                cryptoCurrency = params.cryptoCurrency,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
         )
         is OnrampMainBottomSheetConfig.ProvidersList -> selectProviderComponentFactory.create(
             context = childByContext(componentContext),

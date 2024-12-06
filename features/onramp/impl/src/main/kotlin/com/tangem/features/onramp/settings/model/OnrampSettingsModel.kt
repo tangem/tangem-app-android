@@ -15,6 +15,7 @@ import com.tangem.features.onramp.settings.OnrampSettingsComponent
 import com.tangem.features.onramp.settings.entity.OnrampSettingsConfig
 import com.tangem.features.onramp.settings.entity.OnrampSettingsItemUM
 import com.tangem.features.onramp.settings.entity.OnrampSettingsUM
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -46,19 +47,24 @@ internal class OnrampSettingsModel @Inject constructor(
     }
 
     private fun updateResidenceState(maybeCountry: Either<OnrampError, OnrampCountry?>) {
-        maybeCountry.onRight { country ->
-            _state.update { state ->
-                state.copy(
-                    items = listOf(
-                        OnrampSettingsItemUM.Residence(
-                            countryName = country?.name.orEmpty(),
-                            flagUrl = country?.image.orEmpty(),
-                            onClick = ::openSelectCountryBottomSheet,
-                        ),
-                    ).toImmutableList(),
-                )
-            }
-        }
+        maybeCountry.fold(
+            ifLeft = {
+                analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
+            },
+            ifRight = { country ->
+                _state.update { state ->
+                    state.copy(
+                        items = listOf(
+                            OnrampSettingsItemUM.Residence(
+                                countryName = country?.name.orEmpty(),
+                                flagUrl = country?.image.orEmpty(),
+                                onClick = ::openSelectCountryBottomSheet,
+                            ),
+                        ).toImmutableList(),
+                    )
+                }
+            },
+        )
     }
 
     private fun openSelectCountryBottomSheet() {

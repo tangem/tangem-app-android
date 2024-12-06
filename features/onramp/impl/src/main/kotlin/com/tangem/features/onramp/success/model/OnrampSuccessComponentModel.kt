@@ -12,10 +12,12 @@ import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.onramp.component.OnrampSuccessComponent
 import com.tangem.features.onramp.success.entity.OnrampSuccessClickIntents
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.conterter.SetOnrampSuccessContentConverter
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,8 +76,13 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
         getOnrampStatusUseCase(externalTxId = params.externalTxId)
             .fold(
-                ifLeft = {
-                    Timber.e(it.toString())
+                ifLeft = { error ->
+                    analyticsEventHandler.sendOnrampErrorEvent(
+                        error = error,
+                        tokenSymbol = cryptoCurrency.symbol,
+                        providerName = transaction.providerName,
+                    )
+                    Timber.e(error.toString())
                 },
                 ifRight = { status ->
                     analyticsEventHandler.send(
@@ -94,15 +101,25 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                             goToProviderClick = ::goToProviderClick,
                         ).convert(status)
                     }
-                    removeTransactionIfTerminalStatus(status)
+                    removeTransactionIfTerminalStatus(cryptoCurrency, transaction.providerName, status)
                 },
             )
     }
 
-    private fun removeTransactionIfTerminalStatus(status: OnrampStatus) {
+    private fun removeTransactionIfTerminalStatus(
+        cryptoCurrency: CryptoCurrency,
+        providerName: String,
+        status: OnrampStatus,
+    ) {
         modelScope.launch {
             if (status.status.isTerminal) {
-                onrampRemoveTransactionUseCase(status.txId)
+                onrampRemoveTransactionUseCase(status.txId).onLeft { error ->
+                    analyticsEventHandler.sendOnrampErrorEvent(
+                        error = error,
+                        tokenSymbol = cryptoCurrency.symbol,
+                        providerName = providerName,
+                    )
+                }
             }
         }
     }

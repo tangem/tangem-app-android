@@ -21,6 +21,7 @@ import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountry
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -61,10 +62,16 @@ internal class OnrampSelectCountryModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun subscribeOnUpdateState() {
         combine(
-            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCountriesUseCase.invoke()) },
-            flow2 = getOnrampCountryUseCase.invoke(),
+            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCountriesUseCase()) },
+            flow2 = getOnrampCountryUseCase(),
             flow3 = searchManager.query,
         ) { maybeCountries, maybeCountry, query ->
+            maybeCountries.onLeft {
+                analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
+            }
+            maybeCountry.onLeft {
+                analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
+            }
             UpdateCountryItemsTransformer(
                 maybeCountries = maybeCountries,
                 defaultCountry = maybeCountry.getOrNull(),
