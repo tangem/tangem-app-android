@@ -48,4 +48,10 @@ sealed class AppDialog : StateDialog {
         val messageRes: Int = R.string.token_details_unable_hide_alert_message
         val titleRes: Int = R.string.token_details_unable_hide_alert_title
     }
+
+    data class WalletAlreadyWasUsedDialog(
+        val onOk: () -> Unit,
+        val onSupportClick: () -> Unit,
+        val onCancel: () -> Unit,
+    ) : AppDialog()
 }
