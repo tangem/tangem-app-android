@@ -126,16 +126,29 @@ internal class DefaultCurrencyChecksRepository(
     override suspend fun getRentInfoWarning(
         userWalletId: UserWalletId,
         currencyStatus: CryptoCurrencyStatus,
-        balanceAfterTransaction: BigDecimal?,
     ): CryptoCurrencyWarning.Rent? {
         val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
         val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
         val stakingTotalBalance =
             (balanceValue.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance() ?: BigDecimal.ZERO
-        val amount = balanceAfterTransaction ?: balanceValue.amount
         return when {
-            amount.isZero() && stakingTotalBalance.isZero() -> null
-            amount < rentData.exemptionAmount && stakingTotalBalance.isZero() -> {
+            balanceValue.amount.isZero() && stakingTotalBalance.isZero() -> null
+            balanceValue.amount < rentData.exemptionAmount && stakingTotalBalance.isZero() -> {
+                CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
+            }
+            else -> null
+        }
+    }
+
+    override suspend fun getRentExemptionError(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        balanceAfterTransaction: BigDecimal,
+    ): CryptoCurrencyWarning.Rent? {
+        val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
+        return when {
+            balanceAfterTransaction.isZero() -> null
+            balanceAfterTransaction < rentData.exemptionAmount -> {
                 CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
             }
             else -> null
