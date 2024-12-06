@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.onramp.GetOnrampPaymentMethodsUseCase
 import com.tangem.domain.onramp.GetOnrampProviderWithQuoteUseCase
 import com.tangem.domain.onramp.GetOnrampSelectedPaymentMethodUseCase
@@ -26,12 +27,14 @@ import com.tangem.features.onramp.providers.entity.ProviderListBottomSheetConfig
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
 import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
 import com.tangem.features.onramp.providers.entity.ProviderListUM
+import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -126,20 +129,26 @@ internal class SelectProviderModel @Inject constructor(
     private fun List<OnrampProviderWithQuote>.toProvidersListItems(): ImmutableList<ProviderListItemUM> {
         val sorted = sortByRate()
 
-        val isQuoteExist = any { it is OnrampProviderWithQuote.Data }
-        val bestProvider = sorted.firstOrNull().takeIf { isQuoteExist }
+        val bestProvider = sorted.firstOrNull() as? OnrampProviderWithQuote.Data
         return sorted.mapIndexed { index, quote ->
             when (quote) {
                 is OnrampProviderWithQuote.Data -> {
                     val rate = quote.toAmount.value.format {
                         crypto(symbol = quote.toAmount.symbol, decimals = quote.toAmount.decimals)
                     }
+                    val rateDiff = bestProvider?.toAmount?.value?.let { bestRate ->
+                        BigDecimal.ONE - quote.toAmount.value / bestRate
+                    }
+                    val isSelectedProvider = quote.provider.id == params.selectedProviderId
+                    val isSelectedPayment = quote.paymentMethod.id == params.selectedPaymentMethod.id
                     ProviderListItemUM.Available(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
                         rate = rate,
-                        isSelected = index == 0,
+                        isSelected = isSelectedProvider && isSelectedPayment,
+                        isBestRate = quote == bestProvider,
+                        diffRate = stringReference("$MINUS${rateDiff.format { percent() }}"),
                         onClick = {
                             analyticsEventHandler.send(
                                 OnrampAnalyticsEvent.OnProviderChosen(
