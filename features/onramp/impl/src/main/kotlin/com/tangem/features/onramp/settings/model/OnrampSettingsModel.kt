@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.settings.OnrampSettingsComponent
 import com.tangem.features.onramp.settings.entity.OnrampSettingsConfig
 import com.tangem.features.onramp.settings.entity.OnrampSettingsItemUM
@@ -44,7 +45,7 @@ internal class OnrampSettingsModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun updateResidenceState(maybeCountry: Either<Throwable, OnrampCountry?>) {
+    private fun updateResidenceState(maybeCountry: Either<OnrampError, OnrampCountry?>) {
         maybeCountry.onRight { country ->
             _state.update { state ->
                 state.copy(
