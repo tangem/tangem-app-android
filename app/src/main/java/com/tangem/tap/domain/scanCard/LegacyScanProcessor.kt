@@ -57,6 +57,7 @@ internal object LegacyScanProcessor {
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         onWalletNotCreated: suspend () -> Unit,
         disclaimerWillShow: () -> Unit,
+        onCancel: suspend () -> Unit,
         onFailure: suspend (error: TangemError) -> Unit,
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit,
     ) = withMainContext {
@@ -88,6 +89,7 @@ internal object LegacyScanProcessor {
                             onProgressStateChange = onProgressStateChange,
                             onSuccess = onSuccess,
                             onWalletNotCreated = onWalletNotCreated,
+                            onCancel = onCancel,
                         )
                     },
                 )
@@ -138,13 +140,19 @@ internal object LegacyScanProcessor {
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         crossinline onWalletNotCreated: suspend () -> Unit,
+        crossinline onCancel: suspend () -> Unit,
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
     ) {
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
         checkCardWasUsedInApp(
             scanResponse = scanResponse,
-            onCancel = { mainScope.launch { onProgressStateChange.invoke(false) } },
+            onCancel = {
+                mainScope.launch {
+                    onProgressStateChange.invoke(false)
+                    onCancel()
+                }
+            },
         ) {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 Analytics.addContext(scanResponse)
