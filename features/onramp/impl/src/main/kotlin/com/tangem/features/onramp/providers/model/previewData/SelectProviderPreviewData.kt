@@ -15,6 +15,7 @@ internal object SelectProviderPreviewData {
             name = "Card",
             imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
             onClick = {},
+            enabled = false,
         ),
         providers = persistentListOf(
             ProviderListItemUM.Available(
