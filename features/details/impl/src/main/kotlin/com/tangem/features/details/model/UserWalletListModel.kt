@@ -64,6 +64,6 @@ internal class UserWalletListModel @Inject constructor(
     }
 
     private fun addUserWallet() = withProgress(isWalletSavingInProgress) {
-        userWalletSaver.scanAndSaveUserWallet()
+        userWalletSaver.scanAndSaveUserWallet(modelScope)
     }
 }
