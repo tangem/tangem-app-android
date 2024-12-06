@@ -155,11 +155,16 @@ internal class DefaultCurrenciesRepository(
         }
 
         return buildList {
-            networkToTokens.forEach { (network, networkTokens) ->
-                val networkCoin = networkToCoin[network] ?: cryptoCurrencyFactory.createCoin(network)
+            if (networkToTokens.isEmpty()) {
+                // add only coin here
+                addAll(networkToCoin.values)
+            } else {
+                networkToTokens.forEach { (network, networkTokens) ->
+                    val networkCoin = networkToCoin[network] ?: cryptoCurrencyFactory.createCoin(network)
 
-                add(networkCoin)
-                addAll(networkTokens)
+                    add(networkCoin)
+                    addAll(networkTokens)
+                }
             }
         }
     }
