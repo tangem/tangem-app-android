@@ -46,4 +46,6 @@ sealed interface FeedbackEmailType {
     data class CurrencyDescriptionError(val currencyId: String, val currencyName: String) : FeedbackEmailType {
         override val cardInfo: CardInfo? = null
     }
+
+    data class PreActivatedWallet(override val cardInfo: CardInfo) : FeedbackEmailType
 }
