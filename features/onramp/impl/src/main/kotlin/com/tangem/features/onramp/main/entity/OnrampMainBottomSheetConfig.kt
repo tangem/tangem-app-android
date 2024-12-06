@@ -13,5 +13,8 @@ internal sealed interface OnrampMainBottomSheetConfig {
     data object CurrenciesList : OnrampMainBottomSheetConfig
 
     @Serializable
-    data class ProvidersList(val selectedPaymentMethod: OnrampPaymentMethod) : OnrampMainBottomSheetConfig
+    data class ProvidersList(
+        val selectedProviderId: String,
+        val selectedPaymentMethod: OnrampPaymentMethod,
+    ) : OnrampMainBottomSheetConfig
 }

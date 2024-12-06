@@ -1,7 +1,5 @@
 package com.tangem.features.onramp.paymentmethod.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +18,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodUM
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodsBottomSheetConfig
+import com.tangem.features.onramp.utils.selectedBorder
 import kotlinx.collections.immutable.ImmutableList
 
 @Composable
@@ -63,12 +62,7 @@ private fun SelectPaymentMethodBottomSheetContent(
                 val itemModifier = if (isSelected) {
                     Modifier
                         .fillMaxWidth()
-                        .border(
-                            width = TangemTheme.dimens.size1,
-                            color = TangemTheme.colors.text.accent,
-                            shape = RoundedCornerShape(TangemTheme.dimens.radius16),
-                        )
-                        .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
+                        .selectedBorder()
                         .clickable(onClick = item.onSelect)
                         .padding(
                             start = TangemTheme.dimens.spacing12,
