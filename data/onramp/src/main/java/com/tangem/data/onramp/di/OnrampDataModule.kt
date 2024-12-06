@@ -1,10 +1,11 @@
 package com.tangem.data.onramp.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
-import com.tangem.data.onramp.converters.error.OnrampQuotesErrorConverter
+import com.tangem.data.onramp.converters.error.OnrampErrorConverter
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.onramp.OnrampApi
@@ -39,7 +40,6 @@ internal object OnrampDataModule {
         paymentMethodsStore: OnrampPaymentMethodsStore,
         pairsStore: OnrampPairsStore,
         quotesStore: OnrampQuotesStore,
-        quotesErrorConverter: OnrampQuotesErrorConverter,
         walletManagersFacade: WalletManagersFacade,
         dataSignatureVerifier: DataSignatureVerifier,
         @NetworkMoshi moshi: Moshi,
@@ -52,7 +52,6 @@ internal object OnrampDataModule {
             paymentMethodsStore = paymentMethodsStore,
             pairsStore = pairsStore,
             quotesStore = quotesStore,
-            quotesErrorConverter = quotesErrorConverter,
             walletManagersFacade = walletManagersFacade,
             dataSignatureVerifier = dataSignatureVerifier,
             moshi = moshi,
@@ -73,14 +72,14 @@ internal object OnrampDataModule {
 
     @Provides
     @Singleton
-    fun provideOnrampErrorResolver(): OnrampErrorResolver {
-        return DefaultOnrampErrorResolver()
-    }
-
-    @Provides
-    @Singleton
-    internal fun provideErrorsConverter(@NetworkMoshi moshi: Moshi): OnrampQuotesErrorConverter {
+    fun provideOnrampErrorResolver(
+        @NetworkMoshi moshi: Moshi,
+        analyticsEventHandler: AnalyticsEventHandler,
+    ): OnrampErrorResolver {
         val jsonAdapter = moshi.adapter(ExpressErrorResponse::class.java)
-        return OnrampQuotesErrorConverter(jsonAdapter)
+        return DefaultOnrampErrorResolver(
+            analyticsEventHandler,
+            OnrampErrorConverter(jsonAdapter),
+        )
     }
 }
