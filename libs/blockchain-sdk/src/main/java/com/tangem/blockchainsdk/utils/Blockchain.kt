@@ -1,7 +1,9 @@
 package com.tangem.blockchainsdk.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.WalletManager
 import java.math.BigDecimal
 
 @Suppress("ComplexMethod", "LongMethod")
@@ -390,10 +392,23 @@ fun Blockchain.toMigratedCointId(): String = when (this) {
     else -> toCoinId()
 }
 
-fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
+fun Blockchain.amountToCreateAccount(walletManager: WalletManager, token: Token? = null): BigDecimal? {
     return when (this) {
-        Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
-        Blockchain.XRP -> BigDecimal.TEN
+        Blockchain.Stellar -> {
+            val reserve = if (walletManager is ReserveAmountProvider) {
+                walletManager.getReserveAmount()
+            } else {
+                BigDecimal.ONE
+            }
+            if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else reserve
+        }
+        Blockchain.XRP -> {
+            if (walletManager is ReserveAmountProvider) {
+                walletManager.getReserveAmount()
+            } else {
+                BigDecimal.ONE
+            }
+        }
         Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
         Blockchain.Aptos, Blockchain.AptosTestnet,
         Blockchain.Filecoin,
