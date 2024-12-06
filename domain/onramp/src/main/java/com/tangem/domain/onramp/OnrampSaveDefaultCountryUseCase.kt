@@ -6,7 +6,7 @@ import com.tangem.domain.onramp.repositories.OnrampRepository
 class OnrampSaveDefaultCountryUseCase(private val repository: OnrampRepository) {
 
     suspend operator fun invoke(country: OnrampCountry) {
-        repository.saveDefaultCountry(country)
         repository.saveDefaultCurrency(country.defaultCurrency)
+        repository.saveDefaultCountry(country)
     }
 }
