@@ -307,6 +307,7 @@
   <string name="feedback_preface_scan_failed">Please tell us what card or ring do you have</string>
   <string name="feedback_preface_support">Hi support team,</string>
   <string name="feedback_preface_tx_failed">Please tell us more about your issue. Every small detail can help.</string>
+  <string name="feedback_subject_pre_activated_wallet">Previously activated wallet</string>
   <string name="feedback_subject_rate_negative">My suggestions</string>
   <string name="feedback_subject_scan_failed">Can\'t scan a card/ring</string>
   <string name="feedback_subject_support">Feedback</string>
@@ -648,6 +649,7 @@
   <string name="scan_card_settings_button">Scan card or ring</string>
   <string name="scan_card_settings_message">Scan the card or ring to change its settings. The changes will impact only the card or ring you\'ve scanned and will not affect other devices tied to your wallet.</string>
   <string name="scan_card_settings_title">Get your Tangem ready!</string>
+  <string name="security_alert_title">Security Alert</string>
   <string name="send_additional_field_already_included">Already included in the entered address</string>
   <string name="send_alert_fee_too_high_text">Your commission amount is %s times higher than the recommended amount. Please review and adjust your custom settings.</string>
   <string name="send_alert_fee_too_low_text">You specified a commission below the recommended amount, which could cause a delay in your transaction. Continue?</string>
@@ -860,6 +862,7 @@
   <string name="swapping_to_title">You receive</string>
   <string name="swapping_token_list_title">Choose token</string>
   <string name="swapping_token_not_available">not available</string>
+  <string name="this_is_my_wallet_title">This is my wallet</string>
   <string name="toast_balances_hidden">Balances hidden</string>
   <string name="toast_balances_shown">Balances shown</string>
   <string name="toast_undo">Undo</string>
@@ -928,6 +931,7 @@
   <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
   <string name="wallet_balance_missing_derivation">Scan card or ring</string>
+  <string name="wallet_been_activated_message">This wallet has already been activated earlier.\nIf it was done not by you please contact support.\nTangem never sells wallets along with the pre-generated access code.</string>
   <string name="wallet_connect_alert_sign_message">Requesting to sign a message.\n\n%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, requesting to\nsign BNB transaction.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Trade order for %1$s\nPrice: %2$s\nAmount to receive: %3$s\nAmount to pay: %4$s</string>
