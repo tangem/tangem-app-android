@@ -15,6 +15,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.onramp.GetOnrampRedirectUrlUseCase
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.OnrampRedirectComponent
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
@@ -76,8 +77,8 @@ internal class OnrampRedirectModel @Inject constructor(
         }
     }
 
-    private fun handleError(throwable: Throwable) {
-        Timber.e(throwable)
+    private fun handleError(error: OnrampError) {
+        Timber.e(error.toString())
 
         val contentMessage = ContentMessage { onDismiss ->
             BasicDialog(
