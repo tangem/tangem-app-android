@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
@@ -58,7 +59,7 @@ internal class InitializeWalletsTransformer(
             multiCurrencyCreator = {
                 WalletState.MultiCurrency.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
-                    buttons = createMultiWalletEnabledButtons(),
+                    buttons = createMultiWalletEnabledButtons(userWallet),
                     bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                 )
@@ -75,7 +76,7 @@ internal class InitializeWalletsTransformer(
             visaWalletCreator = {
                 WalletState.Visa.Locked(
                     walletCardState = userWallet.toLockedWalletCardState(),
-                    buttons = createMultiWalletEnabledButtons(),
+                    buttons = createMultiWalletEnabledButtons(userWallet),
                     bottomSheetConfig = null,
                     onUnlockNotificationClick = clickIntents::onOpenUnlockWalletsBottomSheetClick,
                     onExploreClick = clickIntents::onExploreClick,
@@ -95,8 +96,9 @@ internal class InitializeWalletsTransformer(
         )
     }
 
-    private fun createMultiWalletEnabledButtons(): PersistentList<WalletManageButton> {
-        if (!walletFeatureToggles.isMainActionButtonsEnabled) return persistentListOf()
+    private fun createMultiWalletEnabledButtons(userWallet: UserWallet): PersistentList<WalletManageButton> {
+        val isSingleWalletWithToken = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+        if (!walletFeatureToggles.isMainActionButtonsEnabled || isSingleWalletWithToken) return persistentListOf()
 
         return persistentListOf(
             WalletManageButton.Buy(enabled = false, dimContent = false, onClick = {}),
