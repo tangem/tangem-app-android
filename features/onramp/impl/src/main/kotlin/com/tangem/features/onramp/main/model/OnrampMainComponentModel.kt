@@ -110,7 +110,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun checkResidenceCountry() {
         modelScope.launch {
-            checkOnrampAvailabilityUseCase.invoke(params.cryptoCurrency)
+            checkOnrampAvailabilityUseCase.invoke()
                 .onRight(::handleOnrampAvailability)
                 .onLeft { Timber.e(it) }
         }
@@ -128,11 +128,9 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun subscribeToCurrencyUpdates() {
         getOnrampCurrencyUseCase.invoke()
             .onEach { maybeCurrency ->
-                val currency = maybeCurrency.getOrNull()
-                if (currency != null) {
-                    _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
-                    updatePairsAndQuotes()
-                }
+                val currency = maybeCurrency.getOrNull() ?: return@onEach
+                _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
+                updatePairsAndQuotes()
             }
             .launchIn(modelScope)
     }
