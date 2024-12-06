@@ -2,13 +2,14 @@ package com.tangem.features.onramp.selectcountry.entity.transformer
 
 import arrow.core.Either
 import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.selectcountry.entity.CountryItemState
 import com.tangem.features.onramp.selectcountry.entity.CountryListUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
 
 internal class UpdateCountryItemsTransformer(
-    private val maybeCountries: Either<Throwable, List<OnrampCountry>>,
+    private val maybeCountries: Either<OnrampError, List<OnrampCountry>>,
     private val defaultCountry: OnrampCountry?,
     private val query: String,
     private val onRetry: () -> Unit,
