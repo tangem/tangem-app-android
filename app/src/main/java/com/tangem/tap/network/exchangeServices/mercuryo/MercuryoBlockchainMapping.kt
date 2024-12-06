@@ -143,5 +143,6 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.Unknown -> null
             Blockchain.Xodex -> null
             Blockchain.Canxium -> null
+            Blockchain.Clore -> null
         }
     }
