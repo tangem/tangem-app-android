@@ -83,6 +83,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "xodex" -> R.drawable.img_xodex_22
         "canxium" -> R.drawable.img_canxium_22
         "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
+        "clore-ai" -> R.drawable.img_clore_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -164,6 +165,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "xodex" -> R.drawable.img_xodex_22
         "canxium" -> R.drawable.img_canxium_22
         "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
+        "clore-ai" -> R.drawable.img_clore_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -248,6 +250,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "xodex" -> R.drawable.ic_xodex_22
         "canxium" -> R.drawable.ic_canxium_22
         "chiliz", "chiliz/test" -> R.drawable.ic_chiliz_22
+        "clore-ai" -> R.drawable.ic_clore_22
         else -> R.drawable.ic_alert_24
     }
 }

@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.onramp.GetOnrampPaymentMethodsUseCase
 import com.tangem.domain.onramp.GetOnrampProviderWithQuoteUseCase
 import com.tangem.domain.onramp.GetOnrampSelectedPaymentMethodUseCase
@@ -26,12 +27,15 @@ import com.tangem.features.onramp.providers.entity.ProviderListBottomSheetConfig
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
 import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
 import com.tangem.features.onramp.providers.entity.ProviderListUM
+import com.tangem.utils.StringsSigns.MINUS
+import com.tangem.features.onramp.providers.entity.*
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -67,7 +71,13 @@ internal class SelectProviderModel @Inject constructor(
         modelScope.launch {
             getOnrampProviderWithQuoteUseCase.invoke(paymentMethod)
                 .onRight { quotes ->
-                    _state.update { state -> state.copy(providers = quotes.toProvidersListItems()) }
+                    val hasQuotesData = quotes.any { it is OnrampProviderWithQuote.Data }
+                    _state.update { state ->
+                        state.copy(
+                            paymentMethod = state.paymentMethod.copy(enabled = hasQuotesData),
+                            providers = quotes.toProvidersListItems(),
+                        )
+                    }
                 }
                 .onLeft { Timber.e(it) }
         }
@@ -79,6 +89,7 @@ internal class SelectProviderModel @Inject constructor(
                 id = params.selectedPaymentMethod.id,
                 name = params.selectedPaymentMethod.name,
                 imageUrl = params.selectedPaymentMethod.imageUrl,
+                enabled = false,
                 onClick = ::openPaymentMethods,
             ),
             providers = emptyList<ProviderListItemUM>().toImmutableList(),
@@ -98,7 +109,7 @@ internal class SelectProviderModel @Inject constructor(
         }
     }
 
-    private fun List<OnrampPaymentMethod>.toPaymentUMList(): List<PaymentMethodUM> = map { method ->
+    private fun Set<OnrampPaymentMethod>.toPaymentUMList(): List<PaymentMethodUM> = map { method ->
         PaymentMethodUM(
             id = method.id,
             imageUrl = method.imageUrl,
@@ -123,32 +134,40 @@ internal class SelectProviderModel @Inject constructor(
         }
     }
 
+    @Suppress("LongMethod")
     private fun List<OnrampProviderWithQuote>.toProvidersListItems(): ImmutableList<ProviderListItemUM> {
         val sorted = sortByRate()
 
-        val isQuoteExist = any { it is OnrampProviderWithQuote.Data }
-        val bestProvider = sorted.firstOrNull().takeIf { isQuoteExist }
+        val bestProvider = sorted.firstOrNull() as? OnrampProviderWithQuote.Data
         return sorted.mapIndexed { index, quote ->
             when (quote) {
                 is OnrampProviderWithQuote.Data -> {
                     val rate = quote.toAmount.value.format {
                         crypto(symbol = quote.toAmount.symbol, decimals = quote.toAmount.decimals)
                     }
+                    val rateDiff = bestProvider?.toAmount?.value?.let { bestRate ->
+                        BigDecimal.ONE - quote.toAmount.value / bestRate
+                    }
+                    val isSelectedProvider = quote.provider.id == params.selectedProviderId
+                    val isSelectedPayment = quote.paymentMethod.id == params.selectedPaymentMethod.id
                     ProviderListItemUM.Available(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
                         rate = rate,
-                        isSelected = index == 0,
+                        isSelected = isSelectedProvider && isSelectedPayment,
+                        isBestRate = quote == bestProvider,
+                        diffRate = stringReference("$MINUS${rateDiff.format { percent() }}"),
                         onClick = {
-                            analyticsEventHandler.send(
-                                OnrampAnalyticsEvent.OnProviderChosen(
-                                    providerName = quote.provider.info.name,
-                                    tokenSymbol = params.cryptoCurrency.symbol,
+                            onProviderSelected(
+                                result = SelectProviderResult.ProviderWithQuote(
+                                    paymentMethod = quote.paymentMethod,
+                                    provider = quote.provider,
+                                    fromAmount = quote.fromAmount,
+                                    toAmount = quote.toAmount,
                                 ),
+                                isBestRate = bestProvider == quote,
                             )
-                            params.onProviderClick(quote, bestProvider == quote)
-                            params.onDismiss()
                         },
                     )
                 }
@@ -156,22 +175,42 @@ internal class SelectProviderModel @Inject constructor(
                     val amount = quote.requiredAmount.value.format {
                         crypto(symbol = quote.requiredAmount.symbol, decimals = quote.requiredAmount.decimals)
                     }
-                    ProviderListItemUM.Unavailable(
+                    ProviderListItemUM.AvailableWithError(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
                         subtitle = resourceReference(R.string.express_provider_min_amount, wrappedList(amount)),
+                        onClick = {
+                            onProviderSelected(
+                                result = SelectProviderResult.ProviderWithError(
+                                    paymentMethod = quote.paymentMethod,
+                                    provider = quote.provider,
+                                    quoteError = quote.quoteError,
+                                ),
+                                isBestRate = bestProvider == quote,
+                            )
+                        },
                     )
                 }
                 is OnrampProviderWithQuote.Unavailable.AvailableUpTo -> {
                     val amount = quote.requiredAmount.value.format {
                         crypto(symbol = quote.requiredAmount.symbol, decimals = quote.requiredAmount.decimals)
                     }
-                    ProviderListItemUM.Unavailable(
+                    ProviderListItemUM.AvailableWithError(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
                         subtitle = resourceReference(R.string.express_provider_max_amount, wrappedList(amount)),
+                        onClick = {
+                            onProviderSelected(
+                                result = SelectProviderResult.ProviderWithError(
+                                    paymentMethod = quote.paymentMethod,
+                                    provider = quote.provider,
+                                    quoteError = quote.quoteError,
+                                ),
+                                isBestRate = bestProvider == quote,
+                            )
+                        },
                     )
                 }
                 is OnrampProviderWithQuote.Unavailable.NotSupportedPaymentMethod -> {
@@ -179,13 +218,25 @@ internal class SelectProviderModel @Inject constructor(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
-                        subtitle = stringReference(
-                            "Available with ${quote.availablePaymentMethods.joinToString { it.name }}",
+                        subtitle = resourceReference(
+                            id = R.string.onramp_avaiable_with_payment_methods,
+                            formatArgs = wrappedList(quote.availablePaymentMethods.joinToString { it.name }),
                         ),
                     )
                 }
             }
         }.toImmutableList()
+    }
+
+    private fun onProviderSelected(result: SelectProviderResult, isBestRate: Boolean) {
+        analyticsEventHandler.send(
+            OnrampAnalyticsEvent.OnProviderChosen(
+                providerName = result.provider.info.name,
+                tokenSymbol = params.cryptoCurrency.symbol,
+            ),
+        )
+        params.onProviderClick(result, isBestRate)
+        params.onDismiss()
     }
 
     /**

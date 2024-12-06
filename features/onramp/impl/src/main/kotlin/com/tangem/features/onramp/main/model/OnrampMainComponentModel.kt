@@ -30,6 +30,7 @@ import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
+import com.tangem.features.onramp.providers.entity.SelectProviderResult
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -104,13 +105,13 @@ internal class OnrampMainComponentModel @Inject constructor(
         subscribeToQuotesUpdate()
     }
 
-    fun onProviderSelected(providerWithQuote: OnrampProviderWithQuote.Data, isBestRate: Boolean) {
-        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(providerWithQuote, isBestRate) }
+    fun onProviderSelected(result: SelectProviderResult, isBestRate: Boolean) {
+        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(result, isBestRate) }
     }
 
     private fun checkResidenceCountry() {
         modelScope.launch {
-            checkOnrampAvailabilityUseCase.invoke(params.cryptoCurrency)
+            checkOnrampAvailabilityUseCase.invoke()
                 .onRight(::handleOnrampAvailability)
                 .onLeft { Timber.e(it) }
         }
@@ -128,11 +129,9 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun subscribeToCurrencyUpdates() {
         getOnrampCurrencyUseCase.invoke()
             .onEach { maybeCurrency ->
-                val currency = maybeCurrency.getOrNull()
-                if (currency != null) {
-                    _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
-                    updatePairsAndQuotes()
-                }
+                val currency = maybeCurrency.getOrNull() ?: return@onEach
+                _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
+                updatePairsAndQuotes()
             }
             .launchIn(modelScope)
     }
@@ -231,6 +230,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         bottomSheetNavigation.activate(
             OnrampMainBottomSheetConfig.ProvidersList(
                 selectedPaymentMethod = providerContentState.paymentMethod,
+                selectedProviderId = providerContentState.providerId,
             ),
         )
     }
