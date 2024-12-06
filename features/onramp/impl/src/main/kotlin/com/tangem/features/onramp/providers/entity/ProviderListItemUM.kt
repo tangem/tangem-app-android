@@ -17,6 +17,14 @@ internal sealed interface ProviderListItemUM {
         val onClick: () -> Unit,
     ) : ProviderListItemUM
 
+    data class AvailableWithError(
+        override val providerId: String,
+        val imageUrl: String,
+        val name: String,
+        val subtitle: TextReference,
+        val onClick: () -> Unit,
+    ) : ProviderListItemUM
+
     data class Unavailable(
         override val providerId: String,
         val imageUrl: String,

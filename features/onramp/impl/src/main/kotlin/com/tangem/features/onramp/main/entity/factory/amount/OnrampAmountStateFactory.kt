@@ -12,6 +12,7 @@ import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
+import com.tangem.features.onramp.providers.entity.SelectProviderResult
 import com.tangem.utils.Provider
 
 internal class OnrampAmountStateFactory(
@@ -91,30 +92,47 @@ internal class OnrampAmountStateFactory(
     }
 
     fun getAmountSecondaryUpdatedState(
-        quoteWithProvider: OnrampProviderWithQuote.Data,
+        providerResult: SelectProviderResult,
         isBestRate: Boolean,
     ): OnrampMainComponentUM {
         val currentState = currentStateProvider()
         if (currentState !is OnrampMainComponentUM.Content) return currentState
 
         val amountState = currentState.amountBlockState
-        val amount = quoteWithProvider.toAmount.value.format {
-            crypto(symbol = quoteWithProvider.toAmount.symbol, decimals = quoteWithProvider.toAmount.decimals)
+        val secondaryField = when (providerResult) {
+            is SelectProviderResult.ProviderWithError -> {
+                providerResult.quoteError.toSecondaryFieldUiModel(amountState)
+            }
+            is SelectProviderResult.ProviderWithQuote -> {
+                val amount = providerResult.toAmount.value.format {
+                    crypto(symbol = providerResult.toAmount.symbol, decimals = providerResult.toAmount.decimals)
+                }
+                OnrampAmountSecondaryFieldUM.Content(stringReference(amount))
+            }
         }
         return currentState.copy(
-            amountBlockState = amountState.copy(
-                secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(stringReference(amount)),
-            ),
+            amountBlockState = amountState.copy(secondaryFieldModel = secondaryField),
             providerBlockState = OnrampProviderBlockUM.Content(
-                paymentMethod = quoteWithProvider.paymentMethod,
-                providerId = quoteWithProvider.provider.id,
-                providerName = quoteWithProvider.provider.info.name,
+                paymentMethod = providerResult.paymentMethod,
+                providerId = providerResult.provider.id,
+                providerName = providerResult.provider.info.name,
                 isBestRate = isBestRate,
                 onClick = onrampIntents::openProviders,
             ),
             buyButtonConfig = currentState.buyButtonConfig.copy(
-                enabled = true,
-                onClick = { onrampIntents.onBuyClick(quoteWithProvider) },
+                enabled = providerResult is SelectProviderResult.ProviderWithQuote,
+                onClick = {
+                    if (providerResult is SelectProviderResult.ProviderWithQuote) {
+                        onrampIntents.onBuyClick(
+                            OnrampProviderWithQuote.Data(
+                                provider = providerResult.provider,
+                                paymentMethod = providerResult.paymentMethod,
+                                toAmount = providerResult.toAmount,
+                                fromAmount = providerResult.fromAmount,
+                            ),
+                        )
+                    }
+                },
             ),
         )
     }
@@ -137,6 +155,14 @@ internal class OnrampAmountStateFactory(
                 }
                 OnrampAmountSecondaryFieldUM.Content(stringReference(amount))
             }
+            is OnrampQuote.Error -> this.toSecondaryFieldUiModel(amountState)
+        }
+    }
+
+    private fun OnrampQuote.Error.toSecondaryFieldUiModel(
+        amountState: OnrampAmountBlockUM,
+    ): OnrampAmountSecondaryFieldUM.Error {
+        return when (this) {
             is OnrampQuote.Error.AmountTooBigError -> {
                 val amount = requiredAmount.value.format {
                     fiat(
