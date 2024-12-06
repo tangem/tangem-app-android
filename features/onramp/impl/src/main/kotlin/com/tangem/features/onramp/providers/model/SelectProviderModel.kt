@@ -20,15 +20,12 @@ import com.tangem.domain.onramp.OnrampSaveSelectedPaymentMethod
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodUM
 import com.tangem.features.onramp.providers.SelectProviderComponent
-import com.tangem.features.onramp.providers.entity.ProviderListBottomSheetConfig
-import com.tangem.features.onramp.providers.entity.ProviderListItemUM
-import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
-import com.tangem.features.onramp.providers.entity.ProviderListUM
-import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.features.onramp.providers.entity.*
+import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -79,7 +76,7 @@ internal class SelectProviderModel @Inject constructor(
                         )
                     }
                 }
-                .onLeft { Timber.e(it) }
+                .onLeft { Timber.e(it.toString()) }
         }
     }
 
@@ -171,40 +168,25 @@ internal class SelectProviderModel @Inject constructor(
                         },
                     )
                 }
-                is OnrampProviderWithQuote.Unavailable.AvailableFrom -> {
-                    val amount = quote.requiredAmount.value.format {
-                        crypto(symbol = quote.requiredAmount.symbol, decimals = quote.requiredAmount.decimals)
+                is OnrampProviderWithQuote.Unavailable.Error -> {
+                    val quoteError = quote.quoteError
+                    val amount = quoteError.error.requiredAmount.format {
+                        crypto(symbol = quoteError.fromAmount.symbol, decimals = quoteError.fromAmount.decimals)
                     }
+                    val errorSubtitleRes = when (quoteError.error) {
+                        is OnrampError.AmountError.TooBigError -> R.string.express_provider_max_amount
+                        is OnrampError.AmountError.TooSmallError -> R.string.express_provider_min_amount
+                    }
+
                     ProviderListItemUM.AvailableWithError(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
-                        subtitle = resourceReference(R.string.express_provider_min_amount, wrappedList(amount)),
+                        subtitle = resourceReference(errorSubtitleRes, wrappedList(amount)),
                         onClick = {
                             onProviderSelected(
                                 result = SelectProviderResult.ProviderWithError(
-                                    paymentMethod = quote.paymentMethod,
-                                    provider = quote.provider,
-                                    quoteError = quote.quoteError,
-                                ),
-                                isBestRate = bestProvider == quote,
-                            )
-                        },
-                    )
-                }
-                is OnrampProviderWithQuote.Unavailable.AvailableUpTo -> {
-                    val amount = quote.requiredAmount.value.format {
-                        crypto(symbol = quote.requiredAmount.symbol, decimals = quote.requiredAmount.decimals)
-                    }
-                    ProviderListItemUM.AvailableWithError(
-                        providerId = quote.provider.id,
-                        imageUrl = quote.provider.info.imageLarge,
-                        name = quote.provider.info.name,
-                        subtitle = resourceReference(R.string.express_provider_max_amount, wrappedList(amount)),
-                        onClick = {
-                            onProviderSelected(
-                                result = SelectProviderResult.ProviderWithError(
-                                    paymentMethod = quote.paymentMethod,
+                                    paymentMethod = quoteError.paymentMethod,
                                     provider = quote.provider,
                                     quoteError = quote.quoteError,
                                 ),
@@ -250,8 +232,13 @@ internal class SelectProviderModel @Inject constructor(
             is OnrampProviderWithQuote.Data -> it.toAmount.value
 
             // negative difference to sort both when data and unavailable is present
-            is OnrampProviderWithQuote.Unavailable.AvailableFrom -> it.fromAmount.value - it.requiredAmount.value
-            is OnrampProviderWithQuote.Unavailable.AvailableUpTo -> it.requiredAmount.value - it.fromAmount.value
+            is OnrampProviderWithQuote.Unavailable.Error -> {
+                when (val error = it.quoteError.error) {
+                    is OnrampError.AmountError.TooSmallError -> it.quoteError.fromAmount.value - error.requiredAmount
+                    is OnrampError.AmountError.TooBigError -> error.requiredAmount - it.quoteError.fromAmount.value
+                    else -> null
+                }
+            }
             is OnrampProviderWithQuote.Unavailable.NotSupportedPaymentMethod -> null
         }
     }
