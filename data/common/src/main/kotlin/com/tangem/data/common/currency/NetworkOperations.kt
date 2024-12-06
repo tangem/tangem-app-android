@@ -218,6 +218,7 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.TelosTestnet,
         Blockchain.TONTestnet,
         Blockchain.Ravencoin,
+        Blockchain.Clore,
         Blockchain.RavencoinTestnet,
         Blockchain.Cronos,
         Blockchain.AlephZero,
