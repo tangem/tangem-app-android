@@ -70,6 +70,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
             params = SelectProviderComponent.Params(
                 onProviderClick = model::onProviderSelected,
                 onDismiss = model.bottomSheetNavigation::dismiss,
+                selectedProviderId = config.selectedProviderId,
                 selectedPaymentMethod = config.selectedPaymentMethod,
                 cryptoCurrency = params.cryptoCurrency,
             ),
