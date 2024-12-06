@@ -58,7 +58,7 @@ class GetCurrencyWarningsUseCase(
                 derivationPath = derivationPath,
                 isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
-            flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus, null)),
+            flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
             flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
             getSwapPromoNotificationWarning(
