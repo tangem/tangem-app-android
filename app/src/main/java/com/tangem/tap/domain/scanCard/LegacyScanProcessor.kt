@@ -186,7 +186,7 @@ internal object LegacyScanProcessor {
         onCancel: () -> Unit,
         onSuccess: suspend () -> Unit,
     ) {
-        val userWalletId = UserWalletIdBuilder.card(scanResponse.card).build()
+        val userWalletId = runCatching { UserWalletIdBuilder.card(scanResponse.card).build() }.getOrNull()
         if (userWalletId == null) {
             onSuccess()
             return
