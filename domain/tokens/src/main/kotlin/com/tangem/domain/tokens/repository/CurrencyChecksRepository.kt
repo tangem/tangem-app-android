@@ -44,11 +44,19 @@ interface CurrencyChecksRepository {
 
     /**
      * Checks if need warning for Solana rent
-     * @param balanceAfterTransaction if non null, checks with balance remains after transaction
      */
     suspend fun getRentInfoWarning(
         userWalletId: UserWalletId,
         currencyStatus: CryptoCurrencyStatus,
-        balanceAfterTransaction: BigDecimal?,
+    ): CryptoCurrencyWarning.Rent?
+
+    /**
+     * Checks if need error before Solana tx about rent exemption
+     * @param balanceAfterTransaction if non null, checks with balance remains after transaction
+     */
+    suspend fun getRentExemptionError(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        balanceAfterTransaction: BigDecimal,
     ): CryptoCurrencyWarning.Rent?
 }
