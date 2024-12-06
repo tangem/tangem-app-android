@@ -197,6 +197,9 @@ internal class WelcomeMiddleware {
                     }
                 }
             },
+            onProgressStateChange = {
+                store.dispatchWithMain(WelcomeAction.ProceedWithCard.ChangeProgress(it))
+            },
             onWalletNotCreated = {
                 store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
             },
