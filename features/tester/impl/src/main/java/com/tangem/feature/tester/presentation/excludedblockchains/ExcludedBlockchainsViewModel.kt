@@ -45,7 +45,7 @@ internal class ExcludedBlockchainsViewModel @Inject constructor(
         state.update { state ->
             state.copy(
                 popBack = router::back,
-                onRestartClick = appFinisher::finish,
+                onRestartClick = appFinisher::restart,
             )
         }
     }

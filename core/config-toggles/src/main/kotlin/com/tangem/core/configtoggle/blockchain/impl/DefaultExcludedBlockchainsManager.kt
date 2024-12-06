@@ -40,7 +40,11 @@ internal class DefaultExcludedBlockchainsManager(
             .filterValues { isIncluded -> !isIncluded }
             .keys
 
-        currentExcludedBlockchainsIds = localExcludedBlockchainsIds + storedExcludedBlockchainsIds
+        if (storedExcludedBlockchainsIds.isEmpty()) {
+            recoverLocalConfig()
+        } else {
+            currentExcludedBlockchainsIds = storedExcludedBlockchainsIds
+        }
 
         isInitialized = true
     }
