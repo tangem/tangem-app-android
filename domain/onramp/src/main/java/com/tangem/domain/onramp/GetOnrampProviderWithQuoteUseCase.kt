@@ -54,11 +54,15 @@ class GetOnrampProviderWithQuoteUseCase(private val repository: OnrampRepository
                 when (amountError) {
                     is OnrampQuote.Error.AmountTooBigError -> Unavailable.AvailableUpTo(
                         provider = amountError.provider,
+                        paymentMethod = amountError.paymentMethod,
+                        quoteError = amountError,
                         fromAmount = amountError.fromAmount,
                         requiredAmount = amountError.requiredAmount,
                     )
                     is OnrampQuote.Error.AmountTooSmallError -> Unavailable.AvailableFrom(
                         provider = amountError.provider,
+                        paymentMethod = amountError.paymentMethod,
+                        quoteError = amountError,
                         fromAmount = amountError.fromAmount,
                         requiredAmount = amountError.requiredAmount,
                     )
