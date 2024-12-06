@@ -8,6 +8,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
@@ -71,4 +72,5 @@ data class DaggerGraphState(
     val onrampFeatureToggles: OnrampFeatureToggles? = null,
     val environmentConfigStorage: EnvironmentConfigStorage? = null,
     val onboardingV2FeatureToggles: OnboardingV2FeatureToggles? = null,
+    val appPreferencesStore: AppPreferencesStore? = null,
 ) : StateType
