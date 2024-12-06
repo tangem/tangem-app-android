@@ -1,12 +1,9 @@
 package com.tangem.features.onramp.providers.ui
 
 import android.content.res.Configuration
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +27,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -119,9 +117,19 @@ private fun ProviderItem(state: ProviderListItemUM, modifier: Modifier = Modifie
             modifier = modifier,
             state = state,
         )
+        is ProviderListItemUM.AvailableWithError -> {
+            UnavailableProviderItem(
+                modifier = modifier.clickable(onClick = state.onClick),
+                imageUrl = state.imageUrl,
+                providerName = state.name,
+                subtitle = state.subtitle,
+            )
+        }
         is ProviderListItemUM.Unavailable -> UnavailableProviderItem(
             modifier = modifier,
-            state = state,
+            imageUrl = state.imageUrl,
+            providerName = state.name,
+            subtitle = state.subtitle,
         )
     }
 }
@@ -194,7 +202,12 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available, modifier:
 private const val UNAVAILABLE_ALPHA = 0.4F
 
 @Composable
-private fun UnavailableProviderItem(state: ProviderListItemUM.Unavailable, modifier: Modifier = Modifier) {
+private fun UnavailableProviderItem(
+    imageUrl: String,
+    providerName: String,
+    subtitle: TextReference,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier.padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
@@ -206,7 +219,7 @@ private fun UnavailableProviderItem(state: ProviderListItemUM.Unavailable, modif
                 .clip(TangemTheme.shapes.roundedCorners8)
                 .alpha(UNAVAILABLE_ALPHA),
             model = ImageRequest.Builder(context = LocalContext.current)
-                .data(state.imageUrl)
+                .data(imageUrl)
                 .crossfade(enable = true)
                 .allowHardware(false)
                 .build(),
@@ -215,12 +228,12 @@ private fun UnavailableProviderItem(state: ProviderListItemUM.Unavailable, modif
         )
         Column(modifier = Modifier.weight(1F)) {
             Text(
-                text = state.name,
+                text = providerName,
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.secondary,
             )
             Text(
-                text = state.subtitle.resolveReference(),
+                text = subtitle.resolveReference(),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
