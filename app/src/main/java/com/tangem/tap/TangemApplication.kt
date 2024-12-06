@@ -257,6 +257,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                    appPreferencesStore = appPreferencesStore,
                 ),
             ),
         )
