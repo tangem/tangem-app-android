@@ -142,6 +142,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "chiliz/test" -> Blockchain.ChilizTestnet
         "xodex" -> Blockchain.Xodex
         "canxium" -> Blockchain.Canxium
+        "clore-ai" -> Blockchain.Clore
         else -> null
     }
 }
@@ -283,6 +284,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.ChilizTestnet -> "chiliz/test"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
+        Blockchain.Clore -> "clore-ai"
     }
 }
 
@@ -375,6 +377,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Chiliz, Blockchain.ChilizTestnet -> "chiliz"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
+        Blockchain.Clore -> "clore-ai"
     }
 }
 
