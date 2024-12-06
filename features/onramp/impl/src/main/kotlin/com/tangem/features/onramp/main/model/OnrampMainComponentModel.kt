@@ -30,6 +30,7 @@ import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
+import com.tangem.features.onramp.providers.entity.SelectProviderResult
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -104,8 +105,8 @@ internal class OnrampMainComponentModel @Inject constructor(
         subscribeToQuotesUpdate()
     }
 
-    fun onProviderSelected(providerWithQuote: OnrampProviderWithQuote.Data, isBestRate: Boolean) {
-        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(providerWithQuote, isBestRate) }
+    fun onProviderSelected(result: SelectProviderResult, isBestRate: Boolean) {
+        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(result, isBestRate) }
     }
 
     private fun checkResidenceCountry() {
