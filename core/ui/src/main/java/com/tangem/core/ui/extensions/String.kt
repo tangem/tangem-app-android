@@ -26,7 +26,11 @@ import java.util.Hashtable
 fun stringResourceSafe(@StringRes id: Int, vararg formatArgs: Any): String {
     val resources = LocalContext.current.resources
 
-    return resources.getStringSafe(id, *formatArgs)
+    return if (formatArgs.isEmpty()) {
+        resources.getStringSafe(id)
+    } else {
+        resources.getStringSafe(id, *formatArgs)
+    }
 }
 
 /**
@@ -41,7 +45,11 @@ fun stringResourceSafe(@StringRes id: Int, vararg formatArgs: Any): String {
 fun pluralStringResourceSafe(@PluralsRes id: Int, count: Int, vararg formatArgs: Any): String {
     val resources = LocalContext.current.resources
 
-    return resources.getPluralStringSafe(id, count, *formatArgs)
+    return if (formatArgs.isEmpty()) {
+        resources.getPluralStringSafe(id, count)
+    } else {
+        resources.getPluralStringSafe(id, count, *formatArgs)
+    }
 }
 
 @Suppress("MagicNumber")

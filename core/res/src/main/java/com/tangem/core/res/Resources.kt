@@ -10,6 +10,16 @@ import timber.log.Timber
 /**
  * Get a string resource safely or the resource name if an exception is thrown
  *
+ * @param id resource id
+ */
+fun Resources.getStringSafe(@StringRes id: Int): String {
+    return runCatching { getString(id) }
+        .getOrResourceName(resources = this, id)
+}
+
+/**
+ * Get a string resource safely or the resource name if an exception is thrown
+ *
  * @param id         resource id
  * @param formatArgs format args
  */
@@ -24,6 +34,17 @@ fun Resources.getStringSafe(@StringRes id: Int, vararg formatArgs: Any): String 
             string
         }
         .getOrResourceName(resources = this, id, *formatArgs)
+}
+
+/**
+ * Get a plural string resource safely or the resource name if an exception is thrown
+ *
+ * @param id         resource id
+ * @param count      count
+ */
+fun Resources.getPluralStringSafe(@PluralsRes id: Int, count: Int): String {
+    return runCatching { getQuantityString(id, count) }
+        .getOrResourceName(resources = this, id)
 }
 
 /**
