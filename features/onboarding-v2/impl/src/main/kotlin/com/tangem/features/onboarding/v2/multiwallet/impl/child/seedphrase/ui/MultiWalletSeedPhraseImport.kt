@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -63,7 +63,7 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
                     .weight(1f),
             ) {
                 Text(
-                    text = stringResource(id = R.string.onboarding_seed_import_message),
+                    text = stringResourceSafe(id = R.string.onboarding_seed_import_message),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.secondary,
                     textAlign = TextAlign.Center,
@@ -85,8 +85,8 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
                     onValueChange = state.passPhraseChange,
                     iconResId = R.drawable.ic_information_24,
                     iconColor = TangemTheme.colors.icon.informative,
-                    label = stringResource(id = R.string.common_passphrase),
-                    placeholder = stringResource(id = R.string.send_optional_field),
+                    label = stringResourceSafe(id = R.string.common_passphrase),
+                    placeholder = stringResourceSafe(id = R.string.send_optional_field),
                     onIconClick = state.onPassphraseInfoClick,
                 )
             }
@@ -95,7 +95,7 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth(),
-                text = stringResource(id = R.string.common_import),
+                text = stringResourceSafe(id = R.string.common_import),
                 iconResId = R.drawable.ic_tangem_24,
                 enabled = state.createWalletEnabled,
                 showProgress = state.createWalletProgress,

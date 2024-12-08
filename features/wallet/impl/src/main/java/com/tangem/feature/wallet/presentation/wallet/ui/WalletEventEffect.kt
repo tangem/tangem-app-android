@@ -8,6 +8,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
@@ -46,7 +47,7 @@ internal fun WalletEventEffect(
                 is WalletEvent.CopyAddress -> {
                     clipboardManager.setText(AnnotatedString(value.address))
                     snackbarHostState.showSnackbar(
-                        message = resources.getString(R.string.wallet_notification_address_copied),
+                        message = resources.getStringSafe(R.string.wallet_notification_address_copied),
                         duration = SnackbarDuration.Short,
                     )
                 }
