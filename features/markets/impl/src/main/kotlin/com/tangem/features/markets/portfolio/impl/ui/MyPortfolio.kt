@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.util.fastForEachIndexed
@@ -24,6 +23,7 @@ import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.impl.R
@@ -68,7 +68,7 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
 @Composable
 private fun Title() {
     Text(
-        text = stringResource(R.string.markets_common_my_portfolio),
+        text = stringResourceSafe(R.string.markets_common_my_portfolio),
         style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.tertiary,
     )
@@ -150,7 +150,7 @@ fun UnavailableAssetForWallet(modifier: Modifier = Modifier) {
 private fun UnavailableContent(@StringRes textId: Int, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier,
-        text = stringResource(textId),
+        text = stringResourceSafe(textId),
         style = TangemTheme.typography.body2,
         color = TangemTheme.colors.text.tertiary,
     )
@@ -163,14 +163,14 @@ private fun AddFirstTokenContent(state: MyPortfolioUM.AddFirstToken, modifier: M
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         Text(
-            text = stringResource(R.string.markets_add_to_my_portfolio_description),
+            text = stringResourceSafe(R.string.markets_add_to_my_portfolio_description),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
         )
 
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.markets_add_to_portfolio_button),
+            text = stringResourceSafe(R.string.markets_add_to_portfolio_button),
             onClick = state.onAddClick,
         )
     }

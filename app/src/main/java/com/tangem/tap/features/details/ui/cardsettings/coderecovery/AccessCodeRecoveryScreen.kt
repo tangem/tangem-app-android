@@ -5,7 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.DetailsRadioButtonElement
@@ -36,14 +36,14 @@ fun AccessCodeRecoveryOptions(state: AccessCodeRecoveryScreenState) {
         )
 
         DetailsRadioButtonElement(
-            title = stringResource(id = R.string.common_enabled),
-            subtitle = stringResource(id = R.string.card_settings_access_code_recovery_enabled_description),
+            title = stringResourceSafe(id = R.string.common_enabled),
+            subtitle = stringResourceSafe(id = R.string.card_settings_access_code_recovery_enabled_description),
             selected = state.enabledSelection,
             onClick = { state.onOptionClick(true) },
         )
         DetailsRadioButtonElement(
-            title = stringResource(id = R.string.common_disabled),
-            subtitle = stringResource(id = R.string.card_settings_access_code_recovery_disabled_description),
+            title = stringResourceSafe(id = R.string.common_disabled),
+            subtitle = stringResourceSafe(id = R.string.card_settings_access_code_recovery_disabled_description),
             selected = !state.enabledSelection,
             onClick = { state.onOptionClick(false) },
         )
@@ -51,7 +51,7 @@ fun AccessCodeRecoveryOptions(state: AccessCodeRecoveryScreenState) {
         Spacer(modifier = Modifier.weight(1f))
 
         DetailsMainButton(
-            title = stringResource(id = R.string.common_save_changes),
+            title = stringResourceSafe(id = R.string.common_save_changes),
             enabled = state.isSaveChangesEnabled,
             onClick = { state.onSaveChangesClick() },
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing20),

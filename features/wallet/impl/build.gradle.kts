@@ -56,6 +56,7 @@ dependencies {
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
     implementation(projects.core.decompose)
+    implementation(projects.core.res)
 
     implementation(projects.libs.crypto)
 
