@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.TextAlign
@@ -19,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerW8
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -51,7 +51,7 @@ internal fun MultiWalletSeedPhraseStart(state: MultiWalletSeedPhraseUM.Start, mo
                 Text(
                     modifier = Modifier
                         .padding(horizontal = TangemTheme.dimens.size12, vertical = TangemTheme.dimens.size4),
-                    text = stringResource(id = R.string.onboarding_seed_phrase_intro_legacy),
+                    text = stringResourceSafe(id = R.string.onboarding_seed_phrase_intro_legacy),
                     color = TangemTheme.colors.text.warning,
                     style = TangemTheme.typography.body1,
                 )
@@ -71,12 +71,12 @@ private fun BodyContent(state: MultiWalletSeedPhraseUM.Start, modifier: Modifier
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = stringResource(id = R.string.onboarding_seed_intro_title),
+            text = stringResourceSafe(id = R.string.onboarding_seed_intro_title),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
         )
         Text(
-            text = stringResource(id = R.string.onboarding_seed_intro_message),
+            text = stringResourceSafe(id = R.string.onboarding_seed_intro_message),
             style = TangemTheme.typography.body1
                 .copy(lineBreak = LineBreak.Paragraph),
             color = TangemTheme.colors.text.secondary,
@@ -119,7 +119,7 @@ private fun ReadMoreBlock(state: MultiWalletSeedPhraseUM.Start, modifier: Modifi
             Text(
                 modifier = Modifier.align(Alignment.CenterVertically),
                 style = TangemTheme.typography.button,
-                text = stringResource(id = R.string.onboarding_seed_button_read_more),
+                text = stringResourceSafe(id = R.string.onboarding_seed_button_read_more),
             )
         }
     }
@@ -135,13 +135,13 @@ private fun Buttons(state: MultiWalletSeedPhraseUM.Start, modifier: Modifier = M
     ) {
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(id = R.string.onboarding_seed_intro_button_generate),
+            text = stringResourceSafe(id = R.string.onboarding_seed_intro_button_generate),
             onClick = state.onGenerateSeedPhraseClicked,
         )
         SecondaryButton(
             modifier = Modifier
                 .fillMaxWidth(),
-            text = stringResource(id = R.string.onboarding_seed_intro_button_import),
+            text = stringResourceSafe(id = R.string.onboarding_seed_intro_button_import),
             onClick = state.onImportSeedPhraseClicked,
         )
     }

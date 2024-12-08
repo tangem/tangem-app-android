@@ -7,11 +7,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onboarding.v2.impl.R
 
@@ -34,7 +34,7 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(R.string.onboarding_create_wallet_header),
+                text = stringResourceSafe(R.string.onboarding_create_wallet_header),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -42,7 +42,7 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
             )
 
             Text(
-                text = stringResource(R.string.onboarding_create_wallet_body),
+                text = stringResourceSafe(R.string.onboarding_create_wallet_body),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -55,7 +55,7 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
                 .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                 .fillMaxWidth(),
             iconResId = R.drawable.ic_tangem_24,
-            text = stringResource(R.string.onboarding_button_backup_now),
+            text = stringResourceSafe(R.string.onboarding_button_backup_now),
             onClick = onBackupClick,
         )
 
@@ -63,7 +63,7 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
-            text = stringResource(R.string.onboarding_button_skip_backup),
+            text = stringResourceSafe(R.string.onboarding_button_skip_backup),
             onClick = onSkipClick,
         )
     }

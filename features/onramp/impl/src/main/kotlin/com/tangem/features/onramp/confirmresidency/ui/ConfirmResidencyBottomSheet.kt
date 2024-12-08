@@ -8,7 +8,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -23,6 +22,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
@@ -55,7 +55,7 @@ internal fun ConfirmResidencyBottomSheetContent(model: ConfirmResidencyUM, modif
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = TangemTheme.dimens.spacing10),
-            text = stringResource(id = R.string.onramp_residency_bottomsheet_title),
+            text = stringResourceSafe(id = R.string.onramp_residency_bottomsheet_title),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
@@ -114,7 +114,7 @@ private fun CountryContent(name: String, flagUrl: String, isCountrySupported: Bo
         if (!isCountrySupported) {
             Text(
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing6),
-                text = stringResource(id = R.string.onramp_residency_bottomsheet_country_not_supported),
+                text = stringResourceSafe(id = R.string.onramp_residency_bottomsheet_country_not_supported),
                 color = TangemTheme.colors.text.warning,
                 style = TangemTheme.typography.body2,
             )
