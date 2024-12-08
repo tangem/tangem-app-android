@@ -1,11 +1,12 @@
 package com.tangem.features.markets.details.impl.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.TextButton
@@ -14,6 +15,7 @@ import com.tangem.core.ui.components.block.information.GridItems
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
@@ -33,7 +35,7 @@ internal fun MetricsBlock(state: MetricsUM, modifier: Modifier = Modifier) {
         modifier = modifier,
         title = {
             Text(
-                text = stringResource(id = R.string.markets_token_details_metrics),
+                text = stringResourceSafe(id = R.string.markets_token_details_metrics),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 maxLines = 1,
