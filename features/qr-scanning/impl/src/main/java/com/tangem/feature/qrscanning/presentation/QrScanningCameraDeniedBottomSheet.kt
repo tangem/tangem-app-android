@@ -12,12 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.qrscanning.impl.R
@@ -39,7 +39,7 @@ private fun CameraDeniedBottomSheet(content: CameraDeniedBottomSheetConfig) {
     val context = LocalContext.current
     Column {
         SimpleSettingsRow(
-            title = stringResource(id = R.string.qr_scanner_camera_denied_settings_button),
+            title = stringResourceSafe(id = R.string.qr_scanner_camera_denied_settings_button),
             icon = R.drawable.ic_settings_24,
             onItemsClick = {
                 val intent = Intent(
@@ -50,12 +50,12 @@ private fun CameraDeniedBottomSheet(content: CameraDeniedBottomSheetConfig) {
             },
         )
         SimpleSettingsRow(
-            title = stringResource(id = R.string.qr_scanner_camera_denied_gallery_button),
+            title = stringResourceSafe(id = R.string.qr_scanner_camera_denied_gallery_button),
             icon = R.drawable.ic_gallery_24,
             onItemsClick = content.onGalleryClick,
         )
         SimpleSettingsRow(
-            title = stringResource(id = R.string.common_close),
+            title = stringResourceSafe(id = R.string.common_close),
             icon = R.drawable.ic_close_24,
             onItemsClick = content.onCancelClick,
             modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing16),
@@ -75,12 +75,12 @@ private fun CameraDeniedBottomSheetHeader(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
     ) {
         Text(
-            text = stringResource(id = R.string.qr_scanner_camera_denied_title),
+            text = stringResourceSafe(id = R.string.qr_scanner_camera_denied_title),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
         )
         Text(
-            text = stringResource(id = R.string.qr_scanner_camera_denied_text),
+            text = stringResourceSafe(id = R.string.qr_scanner_camera_denied_text),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.secondary,
         )

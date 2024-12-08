@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.components
 
 import androidx.compose.runtime.Immutable
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -9,6 +8,7 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.components.notifications.CurrencyNotificationConfig
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -58,8 +58,8 @@ internal sealed interface ExchangeStatusNotifications {
             ),
             subtitle = CurrencyNotificationConfig.AnnotatedSubtitle(
                 valueProvider = {
-                    val linkText = stringResource(R.string.common_read_more)
-                    val fullString = stringResource(
+                    val linkText = stringResourceSafe(R.string.common_read_more)
+                    val fullString = stringResourceSafe(
                         R.string.express_exchange_notification_refund_text,
                         cryptoCurrency.symbol,
                         linkText,

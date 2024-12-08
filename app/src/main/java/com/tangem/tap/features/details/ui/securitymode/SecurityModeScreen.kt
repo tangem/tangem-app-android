@@ -5,9 +5,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.DetailsRadioButtonElement
@@ -47,7 +47,7 @@ private fun SecurityModeOptions(state: SecurityModeScreenState) {
         Spacer(modifier = Modifier.weight(1f))
 
         DetailsMainButton(
-            title = stringResource(id = R.string.common_save_changes),
+            title = stringResourceSafe(id = R.string.common_save_changes),
             enabled = state.isSaveChangesEnabled,
             onClick = state.onSaveChangesClicked,
             modifier = Modifier.padding(start = 20.dp, end = 20.dp),
@@ -68,8 +68,8 @@ private fun SecurityOption(option: SecurityOption, state: SecurityModeScreenStat
     }
 
     DetailsRadioButtonElement(
-        title = stringResource(id = title),
-        subtitle = stringResource(id = subtitle),
+        title = stringResourceSafe(id = title),
+        subtitle = stringResourceSafe(id = subtitle),
         selected = selected,
         onClick = { state.onNewModeSelected(option) },
     )
@@ -80,7 +80,7 @@ private fun SecurityOption(option: SecurityOption, state: SecurityModeScreenStat
 private fun SecurityModeScreenPreview() {
     SecurityModeScreen(
         state = SecurityModeScreenState(
-            availableOptions = SecurityOption.values().toList(),
+            availableOptions = SecurityOption.entries,
             selectedSecurityMode = SecurityOption.LongTap,
             isSaveChangesEnabled = false,
             onNewModeSelected = {},

@@ -11,11 +11,11 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
@@ -91,7 +91,7 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
             )
 
             Text(
-                text = stringResource(id = R.string.main_empty_tokens_list_message),
+                text = stringResourceSafe(id = R.string.main_empty_tokens_list_message),
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing48),
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.Center,
