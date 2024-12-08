@@ -6,7 +6,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,6 +16,7 @@ import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
@@ -55,7 +55,7 @@ internal fun MultiWalletSeedPhraseWordsCheck(
                 .weight(1f),
         ) {
             Text(
-                text = stringResource(R.string.onboarding_seed_user_validation_title),
+                text = stringResourceSafe(R.string.onboarding_seed_user_validation_title),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -64,7 +64,7 @@ internal fun MultiWalletSeedPhraseWordsCheck(
                     .fillMaxWidth(),
             )
             Text(
-                text = stringResource(R.string.onboarding_seed_user_validation_message),
+                text = stringResourceSafe(R.string.onboarding_seed_user_validation_message),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -85,7 +85,7 @@ internal fun MultiWalletSeedPhraseWordsCheck(
                 .padding(16.dp)
                 .imePadding()
                 .fillMaxWidth(),
-            text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
+            text = stringResourceSafe(id = R.string.onboarding_create_wallet_button_create_wallet),
             iconResId = R.drawable.ic_tangem_24,
             enabled = state.createWalletButtonEnabled,
             showProgress = state.createWalletButtonProgress,
