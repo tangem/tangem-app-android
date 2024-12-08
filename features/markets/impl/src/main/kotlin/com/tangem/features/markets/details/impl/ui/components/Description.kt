@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -15,6 +14,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
@@ -34,7 +34,12 @@ internal fun Description(
                 append(description.resolveReference())
             }
             withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
-                append(" " + stringResource(R.string.common_read_more).replace(' ', StringsSigns.NON_BREAKING_SPACE))
+                append(
+                    " " + stringResourceSafe(R.string.common_read_more).replace(
+                        ' ',
+                        StringsSigns.NON_BREAKING_SPACE,
+                    ),
+                )
             }
         }
 

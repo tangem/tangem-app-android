@@ -11,12 +11,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.CircleShimmer
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.onramp.impl.R
@@ -104,7 +104,7 @@ private fun Content(state: OnrampMainComponentUM.Content, modifier: Modifier = M
 private fun BuyButton(onClick: () -> Unit, enabled: Boolean, modifier: Modifier = Modifier) {
     PrimaryButton(
         modifier = modifier,
-        text = stringResource(id = R.string.common_buy),
+        text = stringResourceSafe(id = R.string.common_buy),
         onClick = onClick,
         enabled = enabled,
     )
