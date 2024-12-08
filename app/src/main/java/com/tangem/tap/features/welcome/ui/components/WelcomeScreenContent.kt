@@ -9,10 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.wallet.R
@@ -38,7 +38,7 @@ internal fun WelcomeScreenContent(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .fillMaxWidth(),
-            text = stringResource(R.string.welcome_unlock_title),
+            text = stringResourceSafe(R.string.welcome_unlock_title),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
@@ -48,9 +48,9 @@ internal fun WelcomeScreenContent(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing44)
                 .fillMaxWidth(),
-            text = stringResource(
+            text = stringResourceSafe(
                 id = R.string.welcome_unlock_description,
-                stringResource(id = R.string.common_biometric_authentication),
+                stringResourceSafe(id = R.string.common_biometric_authentication),
             ),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
@@ -61,9 +61,9 @@ internal fun WelcomeScreenContent(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .fillMaxWidth(),
-            text = stringResource(
+            text = stringResourceSafe(
                 id = R.string.welcome_unlock,
-                stringResource(id = R.string.common_biometrics),
+                stringResourceSafe(id = R.string.common_biometrics),
             ),
             showProgress = showUnlockProgress,
             onClick = onUnlockClick,
@@ -73,7 +73,7 @@ internal fun WelcomeScreenContent(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .fillMaxWidth(),
-            text = stringResource(R.string.welcome_unlock_card),
+            text = stringResourceSafe(R.string.welcome_unlock_card),
             showProgress = showScanCardProgress,
             iconResId = R.drawable.ic_tangem_24,
             onClick = onScanCardClick,
