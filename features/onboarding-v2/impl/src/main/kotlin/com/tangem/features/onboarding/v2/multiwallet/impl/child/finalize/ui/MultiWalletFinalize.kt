@@ -7,11 +7,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -36,7 +36,7 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
         ) {
             Text(
                 modifier = Modifier.padding(top = 16.dp),
-                text = stringResource(
+                text = stringResourceSafe(
                     when {
                         state.scanPrimary && state.isRing -> R.string.common_origin_ring
                         state.scanPrimary && state.isRing.not() -> R.string.common_origin_card
@@ -52,9 +52,9 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
             Text(
                 modifier = Modifier.padding(top = 12.dp),
                 text = if (state.isRing) {
-                    stringResource(R.string.onboarding_subtitle_scan_ring)
+                    stringResourceSafe(R.string.onboarding_subtitle_scan_ring)
                 } else {
-                    stringResource(
+                    stringResourceSafe(
                         R.string.onboarding_subtitle_scan_backup_card_format,
                         state.cardNumber,
                     )
@@ -69,7 +69,7 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
-            text = stringResource(
+            text = stringResourceSafe(
                 if (state.isRing) R.string.onboarding_button_backup_ring else R.string.onboarding_button_backup_origin,
             ),
             iconResId = R.drawable.ic_tangem_24,
