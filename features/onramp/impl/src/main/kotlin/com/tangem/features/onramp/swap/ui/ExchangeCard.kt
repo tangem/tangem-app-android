@@ -14,7 +14,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -25,10 +24,7 @@ import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.rows.NetworkTitle
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.dashedBorder
@@ -98,7 +94,7 @@ private fun RemoveButton(state: ExchangeCardUM.RemoveButtonUM?) {
         state ?: return@AnimatedVisibility
 
         Text(
-            text = stringResource(id = R.string.manage_tokens_remove),
+            text = stringResourceSafe(id = R.string.manage_tokens_remove),
             modifier = Modifier.clickable(
                 indication = ripple(bounded = false),
                 interactionSource = remember { MutableInteractionSource() },

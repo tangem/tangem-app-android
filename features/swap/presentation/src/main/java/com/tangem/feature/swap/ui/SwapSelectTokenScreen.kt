@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerH12
@@ -27,6 +26,7 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
@@ -60,12 +60,12 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
         },
         topBar = {
             ExpandableSearchView(
-                title = stringResource(R.string.swapping_token_list_title),
+                title = stringResourceSafe(R.string.swapping_token_list_title),
                 onBackClick = onBack,
-                placeholderSearchText = stringResource(id = R.string.common_search_tokens),
+                placeholderSearchText = stringResourceSafe(id = R.string.common_search_tokens),
                 onSearchChange = state.onSearchEntered,
                 onSearchDisplayClose = { state.onSearchEntered("") },
-                subtitle = stringResource(id = R.string.express_exchange_token_list_subtitle),
+                subtitle = stringResourceSafe(id = R.string.express_exchange_token_list_subtitle),
             )
         },
     )
@@ -92,7 +92,7 @@ private fun EmptyTokensList(modifier: Modifier = Modifier) {
                     .padding(top = TangemTheme.dimens.spacing16)
                     .padding(horizontal = TangemTheme.dimens.spacing30)
                     .align(Alignment.CenterHorizontally),
-                text = stringResource(id = R.string.exchange_tokens_empty_tokens),
+                text = stringResourceSafe(id = R.string.exchange_tokens_empty_tokens),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.Center,
@@ -113,7 +113,7 @@ private fun TokensNotFound(modifier: Modifier = Modifier) {
                 .padding(top = TangemTheme.dimens.spacing32)
                 .padding(horizontal = TangemTheme.dimens.spacing30)
                 .align(Alignment.TopCenter),
-            text = stringResource(id = R.string.express_token_list_empty_search),
+            text = stringResourceSafe(id = R.string.express_token_list_empty_search),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
