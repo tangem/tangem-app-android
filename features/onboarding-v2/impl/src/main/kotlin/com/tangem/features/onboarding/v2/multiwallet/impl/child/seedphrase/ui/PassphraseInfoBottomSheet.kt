@@ -11,13 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -50,7 +50,7 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
         )
 
         Text(
-            text = stringResource(id = R.string.common_passphrase),
+            text = stringResourceSafe(id = R.string.common_passphrase),
             modifier = Modifier
                 .padding(top = TangemTheme.dimens.size40)
                 .align(Alignment.CenterHorizontally),
@@ -59,7 +59,7 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
         )
 
         Text(
-            text = stringResource(id = R.string.onboarding_bottom_sheet_passphrase_description),
+            text = stringResourceSafe(id = R.string.onboarding_bottom_sheet_passphrase_description),
             modifier = Modifier
                 .padding(top = TangemTheme.dimens.size16)
                 .padding(horizontal = TangemTheme.dimens.size24)
@@ -75,7 +75,7 @@ fun PassphraseInfoBottomSheetContent(onDismiss: () -> Unit) {
                 .padding(top = TangemTheme.dimens.size40)
                 .padding(bottom = TangemTheme.dimens.size32)
                 .fillMaxWidth(),
-            text = stringResource(id = R.string.common_ok),
+            text = stringResourceSafe(id = R.string.common_ok),
             onClick = onDismiss,
         )
     }
