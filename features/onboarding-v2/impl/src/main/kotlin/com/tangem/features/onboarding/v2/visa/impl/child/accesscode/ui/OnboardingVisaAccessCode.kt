@@ -20,6 +20,8 @@ import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.OutlineTextFieldWithIcon
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
@@ -92,6 +94,8 @@ private fun Content(
             textAlign = TextAlign.Center,
         )
 
+        SpacerH16()
+
         // TODO
         Text(
             modifier = Modifier
@@ -101,6 +105,8 @@ private fun Content(
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
         )
+
+        SpacerH32()
 
         val focusRequester = remember { FocusRequester() }
 
