@@ -3,7 +3,7 @@ package com.tangem.tap.features.details.ui.cardsettings
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.res.stringResource
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.securitymode.toTitleRes
 import com.tangem.wallet.R
@@ -77,7 +77,7 @@ internal sealed interface TextReference {
 @ReadOnlyComposable
 internal fun TextReference.resolveReference(): String {
     return when (this) {
-        is TextReference.Res -> stringResource(this.id, *this.formatArgs.toTypedArray())
+        is TextReference.Res -> stringResourceSafe(this.id, *this.formatArgs.toTypedArray())
         is TextReference.Str -> this.value
     }
 }
