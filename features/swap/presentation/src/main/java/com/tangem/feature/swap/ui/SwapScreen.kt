@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.bottomsheet.permission.GiveTxPermissionBottomSheet
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomSheetConfig
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.models.SwapStateHolder
@@ -26,7 +26,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
         modifier = Modifier.systemBarsPadding(),
         topBar = {
             AppBarWithBackButton(
-                text = stringResource(R.string.common_swap),
+                text = stringResourceSafe(R.string.common_swap),
                 onBackClick = stateHolder.onBackClicked,
                 iconRes = R.drawable.ic_close_24,
             )
