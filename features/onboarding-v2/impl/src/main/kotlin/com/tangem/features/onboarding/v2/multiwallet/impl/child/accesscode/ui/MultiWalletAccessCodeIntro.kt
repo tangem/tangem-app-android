@@ -8,12 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerW
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -26,7 +26,7 @@ internal fun MultiWalletAccessCodeIntro(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
-            text = stringResource(R.string.onboarding_access_code_intro_title),
+            text = stringResourceSafe(R.string.onboarding_access_code_intro_title),
             style = TangemTheme.typography.h2,
         )
         Icon(
@@ -41,18 +41,18 @@ internal fun MultiWalletAccessCodeIntro(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
             DescriptionItem(
-                title = stringResource(R.string.onboarding_access_code_feature_1_title),
-                body = stringResource(R.string.onboarding_access_code_feature_1_description),
+                title = stringResourceSafe(R.string.onboarding_access_code_feature_1_title),
+                body = stringResourceSafe(R.string.onboarding_access_code_feature_1_description),
                 iconRes = R.drawable.ic_feature_1,
             )
             DescriptionItem(
-                title = stringResource(R.string.onboarding_access_code_feature_2_title),
-                body = stringResource(R.string.onboarding_access_code_feature_2_description),
+                title = stringResourceSafe(R.string.onboarding_access_code_feature_2_title),
+                body = stringResourceSafe(R.string.onboarding_access_code_feature_2_description),
                 iconRes = R.drawable.ic_feature_2,
             )
             DescriptionItem(
-                title = stringResource(R.string.onboarding_access_code_feature_3_title),
-                body = stringResource(R.string.onboarding_access_code_feature_3_description),
+                title = stringResourceSafe(R.string.onboarding_access_code_feature_3_title),
+                body = stringResourceSafe(R.string.onboarding_access_code_feature_3_description),
                 iconRes = R.drawable.ic_feature_3,
             )
         }
