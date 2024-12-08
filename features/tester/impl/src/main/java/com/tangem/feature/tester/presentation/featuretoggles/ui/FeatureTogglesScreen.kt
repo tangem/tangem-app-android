@@ -10,7 +10,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -20,6 +19,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -68,7 +68,7 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
 
         item {
             PrimaryButton(
-                text = stringResource(id = R.string.restart_app),
+                text = stringResourceSafe(id = R.string.restart_app),
                 onClick = state.onRestartAppClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -82,7 +82,7 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
 private fun TopAppBar(state: FeatureTogglesContentState.TopBarState, onBackClick: () -> Unit) {
     AppBarWithBackButtonAndIcon(
         onBackClick = onBackClick,
-        text = stringResource(id = R.string.feature_toggles),
+        text = stringResourceSafe(id = R.string.feature_toggles),
         iconRes = if (state is FeatureTogglesContentState.TopBarState.CustomSetup) {
             R.drawable.ic_refresh_24
         } else {

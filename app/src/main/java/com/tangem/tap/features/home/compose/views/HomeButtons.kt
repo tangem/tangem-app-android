@@ -9,12 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
@@ -52,7 +52,7 @@ internal fun HomeButtons(
 private fun ScanCardButton(showProgress: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     StoriesButton(
         modifier = modifier,
-        text = stringResource(id = R.string.home_button_scan),
+        text = stringResourceSafe(id = R.string.home_button_scan),
         useDarkerColors = false,
         icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),
         onClick = onClick,
@@ -64,7 +64,7 @@ private fun ScanCardButton(showProgress: Boolean, onClick: () -> Unit, modifier:
 private fun OrderCardButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     StoriesButton(
         modifier = modifier,
-        text = stringResource(id = R.string.home_button_order),
+        text = stringResourceSafe(id = R.string.home_button_order),
         useDarkerColors = true,
         onClick = onClick,
     )

@@ -10,9 +10,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
@@ -71,7 +71,7 @@ private fun ResetCardView(state: ResetCardScreenState) {
 @Composable
 private fun Title() {
     Text(
-        text = stringResource(id = R.string.card_settings_reset_card_to_factory),
+        text = stringResourceSafe(id = R.string.card_settings_reset_card_to_factory),
         style = TangemTheme.typography.h1,
         color = TangemTheme.colors.text.primary1,
     )
@@ -89,7 +89,7 @@ private fun AlertImage() {
 @Composable
 private fun Subtitle() {
     Text(
-        text = stringResource(id = R.string.common_attention),
+        text = stringResourceSafe(id = R.string.common_attention),
         style = TangemTheme.typography.h3,
         color = TangemTheme.colors.text.primary1,
     )
@@ -179,7 +179,7 @@ private fun ColumnScope.DynamicSpacer(scrollState: ScrollState) {
 @Composable
 private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
     DetailsMainButton(
-        title = stringResource(id = R.string.reset_card_to_factory_button_title),
+        title = stringResourceSafe(id = R.string.reset_card_to_factory_button_title),
         onClick = onResetButtonClick,
         enabled = enabled,
     )
@@ -188,14 +188,14 @@ private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
 @Composable
 private fun CommonResetDialog(dialog: ResetCardScreenState.Dialog) {
     BasicDialog(
-        title = stringResource(dialog.titleResId),
-        message = stringResource(dialog.messageResId),
+        title = stringResourceSafe(dialog.titleResId),
+        message = stringResourceSafe(dialog.messageResId),
         dismissButton = DialogButtonUM(
-            title = stringResource(id = R.string.common_cancel),
+            title = stringResourceSafe(id = R.string.common_cancel),
             onClick = dialog.onDismiss,
         ),
         confirmButton = DialogButtonUM(
-            title = stringResource(id = R.string.card_settings_action_sheet_reset),
+            title = stringResourceSafe(id = R.string.card_settings_action_sheet_reset),
             warning = true,
             onClick = dialog.onConfirmClick,
         ),
@@ -206,10 +206,10 @@ private fun CommonResetDialog(dialog: ResetCardScreenState.Dialog) {
 @Composable
 private fun CompletedResetDialog(dialog: ResetCardDialog) {
     BasicDialog(
-        title = stringResource(id = dialog.titleResId),
-        message = stringResource(id = dialog.messageResId),
+        title = stringResourceSafe(id = dialog.titleResId),
+        message = stringResourceSafe(id = dialog.messageResId),
         confirmButton = DialogButtonUM(
-            title = stringResource(id = R.string.common_ok),
+            title = stringResourceSafe(id = R.string.common_ok),
             onClick = dialog.onConfirmClick,
         ),
         onDismissDialog = {},
