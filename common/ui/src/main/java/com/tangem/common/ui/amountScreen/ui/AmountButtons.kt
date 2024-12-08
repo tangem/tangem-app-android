@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
@@ -21,6 +20,7 @@ import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.currency.fiaticon.FiatIcon
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.PersistentList
 
@@ -62,7 +62,7 @@ internal fun LazyListScope.buttons(
                 SpacerWMax()
             }
             Text(
-                text = stringResource(R.string.send_max_amount),
+                text = stringResourceSafe(R.string.send_max_amount),
                 style = TangemTheme.typography.button,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier

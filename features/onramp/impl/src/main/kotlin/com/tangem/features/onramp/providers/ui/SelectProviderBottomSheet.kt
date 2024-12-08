@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -30,6 +29,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onramp.impl.R
@@ -58,7 +58,7 @@ internal fun SelectProviderBottomSheetContent(state: ProviderListUM, modifier: M
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(id = R.string.onramp_choose_provider_title_hint),
+            text = stringResourceSafe(id = R.string.onramp_choose_provider_title_hint),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
@@ -91,7 +91,7 @@ private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Mod
         PaymentMethodIcon(imageUrl = state.imageUrl)
         Column(modifier = Modifier.weight(1F)) {
             Text(
-                text = stringResource(id = R.string.onramp_pay_with),
+                text = stringResourceSafe(id = R.string.onramp_pay_with),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -179,7 +179,7 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available, modifier:
             )
             if (state.isBestRate) {
                 Text(
-                    text = stringResource(R.string.express_provider_best_rate),
+                    text = stringResourceSafe(R.string.express_provider_best_rate),
                     style = TangemTheme.typography.caption1,
                     color = TangemTheme.colors.text.constantWhite,
                     modifier = Modifier
