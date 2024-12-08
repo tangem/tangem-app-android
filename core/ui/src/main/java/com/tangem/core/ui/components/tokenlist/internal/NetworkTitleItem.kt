@@ -11,13 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.rows.NetworkTitle
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import org.burnoutcrew.reorderable.ReorderableLazyListState
@@ -64,7 +64,7 @@ private fun BaseNetworkTitleItem(
     NetworkTitle(
         title = {
             Text(
-                text = stringResource(id = R.string.wallet_network_group_title, networkName),
+                text = stringResourceSafe(id = R.string.wallet_network_group_title, networkName),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
