@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -18,6 +17,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
@@ -76,8 +76,8 @@ internal fun SendSpeedSelector(
 
 @Composable
 private fun FooterText(onReadMoreClick: () -> Unit) {
-    val linkText = stringResource(R.string.common_read_more)
-    val fullString = stringResource(R.string.common_fee_selector_footer, linkText)
+    val linkText = stringResourceSafe(R.string.common_read_more)
+    val fullString = stringResourceSafe(R.string.common_fee_selector_footer, linkText)
     val linkTextPosition = fullString.length - linkText.length
     val defaultStyle = TangemTheme.colors.text.tertiary
     val linkStyle = TangemTheme.colors.text.accent

@@ -13,10 +13,10 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.getFromClipboard
@@ -96,7 +96,7 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
         )
         Spacer(modifier = Modifier.size(24.dp))
         Text(
-            text = stringResource(id = R.string.wallet_connect_subtitle),
+            text = stringResourceSafe(id = R.string.wallet_connect_subtitle),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
         )

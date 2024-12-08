@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.wallet.R
@@ -18,7 +18,7 @@ import com.tangem.wallet.R
 internal fun SearchCurrenciesButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
     StoriesButton(
         modifier = modifier,
-        text = stringResource(id = R.string.common_search_tokens),
+        text = stringResourceSafe(id = R.string.common_search_tokens),
         icon = TangemButtonIconPosition.Start(R.drawable.ic_search_24),
         showProgress = false,
         useDarkerColors = true,

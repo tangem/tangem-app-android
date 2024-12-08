@@ -1,7 +1,6 @@
 package com.tangem.features.onramp.main.model
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.res.stringResource
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM
@@ -13,6 +12,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.*
@@ -273,7 +273,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                 )
 
                 val dismissButton = DialogButtonUM(
-                    title = stringResource(id = R.string.common_cancel),
+                    title = stringResourceSafe(id = R.string.common_cancel),
                     onClick = onDismiss,
                 )
 

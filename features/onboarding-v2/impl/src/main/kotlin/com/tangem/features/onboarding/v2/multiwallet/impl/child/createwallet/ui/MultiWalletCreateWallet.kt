@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -17,6 +16,7 @@ import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -77,7 +77,7 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
                 .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                 .fillMaxWidth(),
             iconResId = R.drawable.ic_tangem_24,
-            text = stringResource(R.string.onboarding_create_wallet_button_create_wallet),
+            text = stringResourceSafe(R.string.onboarding_create_wallet_button_create_wallet),
             onClick = state.onCreateWalletClick,
         )
 
@@ -86,7 +86,7 @@ internal fun MultiWalletCreateWallet(state: MultiWalletCreateWalletUM, modifier:
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                     .fillMaxWidth(),
-                text = stringResource(R.string.onboarding_create_wallet_options_button_options),
+                text = stringResourceSafe(R.string.onboarding_create_wallet_options_button_options),
                 onClick = state.onOtherOptionsClick,
             )
         }
