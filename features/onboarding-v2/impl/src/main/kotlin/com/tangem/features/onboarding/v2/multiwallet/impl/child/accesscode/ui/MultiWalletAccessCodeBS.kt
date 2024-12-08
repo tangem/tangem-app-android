@@ -4,12 +4,12 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.state.MultiWalletAccessCodeUM
@@ -65,9 +65,9 @@ private fun Content(state: MultiWalletAccessCodeUM, modifier: Modifier = Modifie
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .imePadding(),
             text = if (state.step == ConfirmAccessCode) {
-                stringResource(R.string.common_confirm)
+                stringResourceSafe(R.string.common_confirm)
             } else {
-                stringResource(R.string.common_continue)
+                stringResourceSafe(R.string.common_continue)
             },
             onClick = state.onContinue,
         )

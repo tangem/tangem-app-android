@@ -4,10 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.welcome.ui.model.WarningModel
 import com.tangem.wallet.R
@@ -18,8 +18,8 @@ internal fun WarningDialog(warning: WarningModel?) {
         null -> Unit
         is WarningModel.BiometricsLockoutWarning -> {
             BasicDialog(
-                title = stringResource(id = R.string.biometric_lockout_warning_title),
-                message = stringResource(
+                title = stringResourceSafe(id = R.string.biometric_lockout_warning_title),
+                message = stringResourceSafe(
                     id = if (warning.isPermanent) {
                         R.string.biometric_lockout_permanent_warning_description
                     } else {
@@ -28,30 +28,30 @@ internal fun WarningDialog(warning: WarningModel?) {
                 ),
                 onDismissDialog = warning.onDismiss,
                 confirmButton = DialogButtonUM(
-                    title = stringResource(id = R.string.common_ok),
+                    title = stringResourceSafe(id = R.string.common_ok),
                     onClick = warning.onDismiss,
                 ),
             )
         }
         is WarningModel.KeyInvalidatedWarning -> {
             BasicDialog(
-                title = stringResource(id = R.string.common_attention),
-                message = stringResource(id = R.string.key_invalidated_warning_description),
+                title = stringResourceSafe(id = R.string.common_attention),
+                message = stringResourceSafe(id = R.string.key_invalidated_warning_description),
                 onDismissDialog = warning.onDismiss,
                 confirmButton = DialogButtonUM(
-                    title = stringResource(id = R.string.common_ok),
+                    title = stringResourceSafe(id = R.string.common_ok),
                     onClick = warning.onDismiss,
                 ),
             )
         }
         is WarningModel.BiometricsDisabledWarning -> {
             BasicDialog(
-                title = stringResource(id = R.string.common_warning),
-                message = stringResource(id = R.string.biometric_unavailable_warning),
+                title = stringResourceSafe(id = R.string.common_warning),
+                message = stringResourceSafe(id = R.string.biometric_unavailable_warning),
                 onDismissDialog = warning.onDismiss,
                 isDismissable = false,
                 confirmButton = DialogButtonUM(
-                    title = stringResource(id = R.string.common_ok),
+                    title = stringResourceSafe(id = R.string.common_ok),
                     onClick = warning.onDismiss,
                 ),
             )

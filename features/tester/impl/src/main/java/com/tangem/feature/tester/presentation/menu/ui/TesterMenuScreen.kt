@@ -8,10 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tester.impl.R
@@ -33,7 +33,7 @@ internal fun TesterMenuScreen(state: TesterMenuContentState) {
     ) {
         AppBarWithBackButton(
             onBackClick = state.onBackClick,
-            text = stringResource(id = R.string.tester_menu),
+            text = stringResourceSafe(id = R.string.tester_menu),
         )
 
         Column(
@@ -46,26 +46,26 @@ internal fun TesterMenuScreen(state: TesterMenuContentState) {
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         ) {
             PrimaryButton(
-                text = stringResource(R.string.feature_toggles),
+                text = stringResourceSafe(R.string.feature_toggles),
                 onClick = state.onFeatureTogglesClick,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(R.string.excluded_blockchains),
+                text = stringResourceSafe(R.string.excluded_blockchains),
                 onClick = state.onExcludedBlockchainsClick,
             )
 
             PrimaryButton(
-                text = stringResource(R.string.environment_toggles),
+                text = stringResourceSafe(R.string.environment_toggles),
                 onClick = state.onEnvironmentTogglesClick,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.tester_actions),
+                text = stringResourceSafe(id = R.string.tester_actions),
                 onClick = state.onTesterActionsClick,
             )
         }
