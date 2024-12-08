@@ -13,11 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.features.onramp.impl.R
@@ -35,7 +35,7 @@ internal fun OnrampSettingsContent(state: OnrampSettingsUM, modifier: Modifier =
             AppBarWithBackButton(
                 modifier = Modifier.statusBarsPadding(),
                 onBackClick = state.onBack,
-                text = stringResource(id = R.string.onramp_settings_title),
+                text = stringResourceSafe(id = R.string.onramp_settings_title),
                 iconRes = R.drawable.ic_close_24,
             )
         },
@@ -81,7 +81,7 @@ private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Mo
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(id = R.string.onramp_settings_residence),
+                text = stringResourceSafe(id = R.string.onramp_settings_residence),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.subtitle2,
             )
@@ -103,7 +103,7 @@ private fun ResidenceSection(state: OnrampSettingsItemUM.Residence, modifier: Mo
             )
         }
         Text(
-            text = stringResource(id = R.string.onramp_settings_residence_description),
+            text = stringResourceSafe(id = R.string.onramp_settings_residence_description),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.caption2,
         )

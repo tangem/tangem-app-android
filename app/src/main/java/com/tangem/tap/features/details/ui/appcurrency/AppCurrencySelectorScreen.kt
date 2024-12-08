@@ -18,7 +18,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -27,8 +26,9 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorState.Currency
 import com.tangem.wallet.R
 import kotlinx.collections.immutable.ImmutableList
@@ -114,7 +114,7 @@ private fun TopBar(
                 is AppCurrencySelectorState.Loading,
                 is AppCurrencySelectorState.Default,
                 -> Text(
-                    text = stringResource(id = R.string.details_row_title_currency),
+                    text = stringResourceSafe(id = R.string.details_row_title_currency),
                     style = TangemTheme.typography.subtitle1,
                 )
             }
@@ -163,7 +163,7 @@ private fun SearchBar(onInputChange: (String) -> Unit, modifier: Modifier = Modi
         singleLine = true,
         textStyle = TangemTheme.typography.subtitle2,
         placeholder = {
-            Text(text = stringResource(id = R.string.common_search))
+            Text(text = stringResourceSafe(id = R.string.common_search))
         },
         colors = SearchBarColors,
     )

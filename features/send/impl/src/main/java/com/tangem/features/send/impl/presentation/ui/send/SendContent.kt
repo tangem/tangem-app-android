@@ -20,13 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.amountScreen.ui.AmountBlock
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -122,11 +122,12 @@ private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modif
             ).plus(fadeIn()),
             exit = slideOutVertically().plus(fadeOut()),
         ) {
+            modifier
+                .fillMaxWidth()
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = modifier
-                    .fillMaxWidth()
-                    .animateItemPlacement()
+                modifier = Modifier
+                    .animateItem(fadeInSpec = null, fadeOutSpec = null)
                     .padding(top = TangemTheme.dimens.spacing20),
             ) {
                 val background = TangemTheme.colors.button.secondary
@@ -137,7 +138,7 @@ private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modif
                     modifier = Modifier,
                 )
                 Text(
-                    text = stringResource(id = R.string.send_summary_tap_hint),
+                    text = stringResourceSafe(id = R.string.send_summary_tap_hint),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
                     modifier = Modifier

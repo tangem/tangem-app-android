@@ -8,13 +8,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingBalanceBlock
@@ -37,7 +37,7 @@ internal fun StakingBalanceBlock(
             modifier = Modifier.weight(1f),
         ) {
             Text(
-                text = stringResource(R.string.staking_native),
+                text = stringResourceSafe(R.string.staking_native),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing2),

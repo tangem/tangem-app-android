@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -33,6 +32,7 @@ import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.managetokens.component.preview.PreviewCustomTokenFormComponent
@@ -89,7 +89,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = TangemTheme.dimens.spacing16 + bottomBarHeight)
                 .fillMaxWidth(),
-            text = stringResource(id = R.string.custom_token_add_token),
+            text = stringResourceSafe(id = R.string.custom_token_add_token),
             colors = TangemButtonsDefaults.primaryButtonColors,
             enabled = model.canAddToken,
             showProgress = model.isValidating,

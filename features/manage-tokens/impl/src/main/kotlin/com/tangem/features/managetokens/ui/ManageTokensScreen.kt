@@ -23,7 +23,6 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -55,6 +54,7 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.LocalSnackbarHostState
@@ -165,7 +165,7 @@ private fun SaveChangesButton(
         label = "save_button_visibility",
     ) {
         TangemButton(
-            text = stringResource(id = R.string.common_save),
+            text = stringResourceSafe(id = R.string.common_save),
             icon = if (showIcon) {
                 TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
             } else {
@@ -277,7 +277,7 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.markets_search_token_no_result_title),
+            text = stringResourceSafe(R.string.markets_search_token_no_result_title),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
         )

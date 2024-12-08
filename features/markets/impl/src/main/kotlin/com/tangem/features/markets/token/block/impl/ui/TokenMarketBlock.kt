@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.common.ui.charts.MarketChartMini
@@ -21,6 +20,7 @@ import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.marketprice.PriceChangeInPercent
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.details.impl.model.formatter.toChartType
@@ -75,7 +75,7 @@ private fun LeftSide(
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
     ) {
         Text(
-            text = stringResource(id = R.string.wallet_marketplace_block_title, symbol),
+            text = stringResourceSafe(id = R.string.wallet_marketplace_block_title, symbol),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.subtitle2,
         )
@@ -99,7 +99,7 @@ private fun LeftSide(
                     )
                     Text(
                         modifier = Modifier.alignByBaseline(),
-                        text = stringResource(id = R.string.wallet_marketprice_block_update_time),
+                        text = stringResourceSafe(id = R.string.wallet_marketprice_block_update_time),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                     )

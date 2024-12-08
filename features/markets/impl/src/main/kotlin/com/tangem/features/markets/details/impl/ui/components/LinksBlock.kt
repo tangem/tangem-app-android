@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -16,6 +15,7 @@ import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.chip.Chip
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
@@ -31,7 +31,7 @@ internal fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
         contentHorizontalPadding = 0.dp,
         title = {
             Text(
-                text = stringResource(id = R.string.markets_token_details_links),
+                text = stringResourceSafe(id = R.string.markets_token_details_links),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 maxLines = 1,
@@ -41,22 +41,22 @@ internal fun LinksBlock(state: LinksUM, modifier: Modifier = Modifier) {
         content = {
             Column {
                 SubBlock(
-                    title = stringResource(id = R.string.markets_token_details_official_links),
+                    title = stringResourceSafe(id = R.string.markets_token_details_official_links),
                     links = state.officialLinks,
                     onLinkClick = state.onLinkClick,
                 )
                 SubBlock(
-                    title = stringResource(id = R.string.markets_token_details_social),
+                    title = stringResourceSafe(id = R.string.markets_token_details_social),
                     links = state.social,
                     onLinkClick = state.onLinkClick,
                 )
                 SubBlock(
-                    title = stringResource(id = R.string.markets_token_details_repository),
+                    title = stringResourceSafe(id = R.string.markets_token_details_repository),
                     links = state.repository,
                     onLinkClick = state.onLinkClick,
                 )
                 SubBlock(
-                    title = stringResource(id = R.string.markets_token_details_blockchain_site),
+                    title = stringResourceSafe(id = R.string.markets_token_details_blockchain_site),
                     links = state.blockchainSite,
                     onLinkClick = state.onLinkClick,
                     lastBlock = true,

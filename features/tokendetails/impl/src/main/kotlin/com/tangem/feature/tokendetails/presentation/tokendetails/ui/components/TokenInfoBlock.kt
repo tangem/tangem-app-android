@@ -12,10 +12,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
@@ -62,7 +62,7 @@ private fun NetworkInfoText(currency: TokenInfoBlockState.Currency) {
     when (currency) {
         TokenInfoBlockState.Currency.Native -> {
             Text(
-                text = stringResource(id = R.string.common_main_network),
+                text = stringResourceSafe(id = R.string.common_main_network),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.caption2,
             )
@@ -104,7 +104,7 @@ private const val SEPARATOR = "%image%"
 @Composable
 private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): ExtractedTokenNetworkText {
     val splitString = if (tokenCurrency.standardName != null) {
-        stringResource(
+        stringResourceSafe(
             id = R.string.token_details_token_type_subtitle,
             formatArgs = arrayOf(
                 tokenCurrency.standardName,
@@ -112,7 +112,7 @@ private fun extractNetwork(tokenCurrency: TokenInfoBlockState.Currency.Token): E
             ),
         )
     } else {
-        stringResource(
+        stringResourceSafe(
             id = R.string.token_details_token_type_subtitle_no_standard,
             formatArgs = arrayOf(
                 tokenCurrency.networkName,
