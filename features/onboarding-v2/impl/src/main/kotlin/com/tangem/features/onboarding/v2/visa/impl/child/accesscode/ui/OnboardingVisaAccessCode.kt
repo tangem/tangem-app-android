@@ -62,6 +62,8 @@ internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifie
                         resourceReference(R.string.onboarding_create_wallet_button_create_wallet)
                 },
                 onClick = state.onContinue,
+                iconRes = R.drawable.ic_tangem_24,
+                isIconVisible = state.step == OnboardingVisaAccessCodeUM.Step.ReEnter,
             ),
         )
     }
