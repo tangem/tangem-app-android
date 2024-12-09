@@ -14,6 +14,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
+private const val COEFFICIENT = 0.8f
+
 @Suppress("MagicNumber")
 @Composable
 fun ResizableText(
@@ -50,7 +52,7 @@ fun ResizableText(
                     fontSizeValue.value = fontSizeRange.min.value
                     readyToDraw.value = true
                 } else {
-                    fontSizeValue.value = nextFontSizeValue * 0.8f
+                    fontSizeValue.value = nextFontSizeValue * COEFFICIENT
                 }
             } else {
                 readyToDraw.value = true
@@ -116,6 +118,53 @@ fun ResizableText(
                 readyToDraw = true
             }
         },
+    )
+}
+
+@Composable
+fun ResizableText(
+    text: String,
+    fontSizeValue: TextUnit,
+    fontSizeRange: FontSizeRange,
+    onFontSizeChange: (Float) -> Unit,
+    modifier: Modifier = Modifier,
+    color: Color = Color.Unspecified,
+    overflow: TextOverflow = TextOverflow.Clip,
+    maxLines: Int = Int.MAX_VALUE,
+    style: TextStyle = LocalTextStyle.current,
+) {
+    val readyToDraw = remember { mutableStateOf(false) }
+
+    val textState = remember { mutableStateOf(text) }
+    if (textState.value != text) {
+        readyToDraw.value = false
+        onFontSizeChange(fontSizeRange.max.value)
+        textState.value = text
+    }
+
+    Text(
+        text = text,
+        modifier = modifier.drawWithContent { if (readyToDraw.value) drawContent() },
+        color = color,
+        fontSize = fontSizeValue.value.sp,
+        overflow = overflow,
+        softWrap = false,
+        maxLines = maxLines,
+        onTextLayout = {
+            if (it.hasVisualOverflow) {
+                val nextFontSizeValue = fontSizeValue.value - fontSizeRange.step.value
+                if (nextFontSizeValue <= fontSizeRange.min.value) {
+                    onFontSizeChange(fontSizeRange.min.value)
+                    readyToDraw.value = true
+                } else {
+                    val newSizeValue = nextFontSizeValue * COEFFICIENT
+                    onFontSizeChange(newSizeValue)
+                }
+            } else {
+                readyToDraw.value = true
+            }
+        },
+        style = style,
     )
 }
 

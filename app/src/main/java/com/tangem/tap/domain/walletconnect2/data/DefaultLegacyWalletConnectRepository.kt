@@ -2,6 +2,11 @@ package com.tangem.tap.domain.walletconnect2.data
 
 import android.app.Application
 import arrow.core.flatten
+import com.reown.android.Core
+import com.reown.android.CoreClient
+import com.reown.android.relay.ConnectionType
+import com.reown.walletkit.client.Wallet
+import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
@@ -9,11 +14,6 @@ import com.tangem.tap.domain.walletconnect2.domain.WcJrpcMethods
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.domain.WcRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.*
-import com.walletconnect.android.Core
-import com.walletconnect.android.CoreClient
-import com.walletconnect.android.relay.ConnectionType
-import com.walletconnect.web3.wallet.client.Wallet
-import com.walletconnect.web3.wallet.client.Web3Wallet
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -72,7 +72,7 @@ internal class DefaultLegacyWalletConnectRepository(
             }
         }
 
-        Web3Wallet.initialize(Wallet.Params.Init(core = CoreClient)) { error ->
+        WalletKit.initialize(Wallet.Params.Init(core = CoreClient)) { error ->
             Timber.e("Error while initializing Web3Wallet: $error")
             scope.launch {
                 _events.emit(
@@ -84,11 +84,11 @@ internal class DefaultLegacyWalletConnectRepository(
         }
 
         val walletDelegate = defineWalletDelegate()
-        Web3Wallet.setWalletDelegate(walletDelegate)
+        WalletKit.setWalletDelegate(walletDelegate)
     }
 
-    private fun defineWalletDelegate(): Web3Wallet.WalletDelegate {
-        return object : Web3Wallet.WalletDelegate {
+    private fun defineWalletDelegate(): WalletKit.WalletDelegate {
+        return object : WalletKit.WalletDelegate {
             override fun onSessionProposal(
                 sessionProposal: Wallet.Model.SessionProposal,
                 verifyContext: Wallet.Model.VerifyContext,
@@ -188,14 +188,6 @@ internal class DefaultLegacyWalletConnectRepository(
                 }
             }
 
-            override fun onAuthRequest(
-                authRequest: Wallet.Model.AuthRequest,
-                verifyContext: Wallet.Model.VerifyContext,
-            ) {
-                // Triggered when Dapp / Requester makes an authorization request
-                Timber.i("onAuthRequest: $authRequest")
-            }
-
             override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
                 // Triggered when the session is deleted by the peer
                 if (sessionDelete is Wallet.Model.SessionDelete.Success) {
@@ -251,7 +243,7 @@ internal class DefaultLegacyWalletConnectRepository(
     }
 
     override fun pair(uri: String) {
-        Web3Wallet.pair(
+        WalletKit.pair(
             params = Wallet.Params.Pair(uri),
             onSuccess = {
                 Timber.i("Paired successfully: $it")
@@ -267,7 +259,7 @@ internal class DefaultLegacyWalletConnectRepository(
         )
     }
 
-    override fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>) {
+    override fun approve(userNamespaces: Map<NetworkNamespace, List<Account>>, blockchainNames: List<String>) {
         val sessionProposal: Wallet.Model.SessionProposal = requireNotNull(this.sessionProposal)
 
         val userChains = userNamespaces.flatMap { namespace ->
@@ -303,7 +295,7 @@ internal class DefaultLegacyWalletConnectRepository(
 
         Timber.i("Session approval is prepared for sending: $sessionApproval")
 
-        Web3Wallet.approveSession(
+        WalletKit.approveSession(
             params = sessionApproval,
             onSuccess = {
                 Timber.i("Approved successfully: $it")
@@ -311,6 +303,7 @@ internal class DefaultLegacyWalletConnectRepository(
                     WalletConnect.NewSessionEstablished(
                         dAppName = sessionProposal.name,
                         dAppUrl = sessionProposal.url,
+                        blockchainNames = blockchainNames,
                     ),
                 )
             },
@@ -363,7 +356,7 @@ internal class DefaultLegacyWalletConnectRepository(
             )
         }
 
-        Web3Wallet.respondSessionRequest(
+        WalletKit.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = requestData.topic,
                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
@@ -408,7 +401,7 @@ internal class DefaultLegacyWalletConnectRepository(
     }
 
     override fun cancelRequest(topic: String, id: Long, message: String) {
-        Web3Wallet.respondSessionRequest(
+        WalletKit.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = topic,
                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
@@ -423,7 +416,7 @@ internal class DefaultLegacyWalletConnectRepository(
     }
 
     override fun reject() {
-        Web3Wallet.rejectSession(
+        WalletKit.rejectSession(
             params = Wallet.Params.SessionReject(
                 proposerPublicKey = sessionProposal?.proposerPublicKey ?: "",
                 reason = "",
@@ -439,7 +432,7 @@ internal class DefaultLegacyWalletConnectRepository(
 
     override fun disconnect(topic: String) {
         val session = currentSessions.find { it.topic == topic }
-        Web3Wallet.disconnectSession(
+        WalletKit.disconnectSession(
             params = Wallet.Params.SessionDisconnect(topic),
             onSuccess = {
                 analyticsHandler.send(
@@ -458,7 +451,7 @@ internal class DefaultLegacyWalletConnectRepository(
     }
 
     fun send(topic: String, id: Long, data: String) {
-        Web3Wallet.respondSessionRequest(
+        WalletKit.respondSessionRequest(
             params = Wallet.Params.SessionRequestResponse(
                 sessionTopic = topic,
                 jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcResult(
@@ -476,7 +469,7 @@ internal class DefaultLegacyWalletConnectRepository(
     }
 
     private fun updateSessionsInternal(): Job = scope.launch {
-        val availableSessions = Web3Wallet.getListOfActiveSessions()
+        val availableSessions = WalletKit.getListOfActiveSessions()
             .map {
                 WalletConnectSession(
                     topic = it.topic,

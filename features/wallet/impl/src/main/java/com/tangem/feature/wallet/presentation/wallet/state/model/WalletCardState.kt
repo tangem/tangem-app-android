@@ -50,6 +50,7 @@ internal sealed interface WalletCardState {
         override val onDeleteClick: (UserWalletId) -> Unit,
         val cardCount: Int?,
         val balance: String,
+        val isZeroBalance: Boolean?,
     ) : WalletCardState
 
     /**

@@ -1,5 +1,6 @@
 package com.tangem.data.managetokens.di
 
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.managetokens.DefaultCustomTokensRepository
 import com.tangem.data.managetokens.DefaultManageTokensRepository
 import com.tangem.data.managetokens.utils.ManageTokensUpdateFetcher
@@ -30,6 +31,7 @@ internal object ManageTokensDataModule {
         appPreferencesStore: AppPreferencesStore,
         testnetTokensStorage: TestnetTokensStorage,
         dispatchers: CoroutineDispatcherProvider,
+        excludedBlockchains: ExcludedBlockchains,
     ): ManageTokensRepository {
         return DefaultManageTokensRepository(
             tangemTechApi,
@@ -37,6 +39,7 @@ internal object ManageTokensDataModule {
             manageTokensUpdateFetcher,
             appPreferencesStore,
             testnetTokensStorage,
+            excludedBlockchains,
             dispatchers,
         )
     }
@@ -49,12 +52,14 @@ internal object ManageTokensDataModule {
         appPreferencesStore: AppPreferencesStore,
         walletManagersFacade: WalletManagersFacade,
         dispatchers: CoroutineDispatcherProvider,
+        excludedBlockchains: ExcludedBlockchains,
     ): CustomTokensRepository {
         return DefaultCustomTokensRepository(
             tangemTechApi,
             userWalletsStore,
             appPreferencesStore,
             walletManagersFacade,
+            excludedBlockchains,
             dispatchers,
         )
     }

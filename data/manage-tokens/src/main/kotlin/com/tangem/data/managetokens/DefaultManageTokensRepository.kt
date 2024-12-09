@@ -2,8 +2,8 @@ package com.tangem.data.managetokens
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.currency.UserTokensResponseFactory
@@ -47,12 +47,13 @@ internal class DefaultManageTokensRepository(
     private val manageTokensUpdateFetcher: ManageTokensUpdateFetcher,
     private val appPreferencesStore: AppPreferencesStore,
     private val testnetTokensStorage: TestnetTokensStorage,
+    private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ManageTokensRepository {
 
-    private val managedCryptoCurrencyFactory = ManagedCryptoCurrencyFactory()
+    private val managedCryptoCurrencyFactory = ManagedCryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
-    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(DemoConfig())
+    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(DemoConfig(), excludedBlockchains)
 
     // region getTokenListBatchFlow
     override fun getTokenListBatchFlow(
@@ -202,9 +203,9 @@ internal class DefaultManageTokensRepository(
 
     private fun getSupportedBlockchains(userWallet: UserWallet?): List<Blockchain> {
         return userWallet?.scanResponse?.let {
-            it.card.supportedBlockchains(it.cardTypesResolver)
+            it.card.supportedBlockchains(it.cardTypesResolver, excludedBlockchains)
         } ?: Blockchain.entries.filter {
-            !it.isTestnet() && it.isSupportedInApp()
+            !it.isTestnet() && it !in excludedBlockchains
         }
     }
     // endregion
@@ -290,6 +291,7 @@ internal class DefaultManageTokensRepository(
         val canHandleBlockchain = userWallet.scanResponse.card.canHandleBlockchain(
             blockchain = blockchain,
             cardTypesResolver = userWallet.cardTypesResolver,
+            excludedBlockchains = excludedBlockchains,
         )
 
         return if (!canHandleBlockchain) {
@@ -304,7 +306,10 @@ internal class DefaultManageTokensRepository(
         blockchain: Blockchain,
     ): CurrencyUnsupportedState.Token? {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
-        val supportedTokens = userWallet.scanResponse.card.supportedTokens(cardTypesResolver)
+        val supportedTokens = userWallet.scanResponse.card.supportedTokens(
+            cardTypesResolver,
+            excludedBlockchains,
+        )
 
         return when {
             // refactor this later by moving all this logic in card config

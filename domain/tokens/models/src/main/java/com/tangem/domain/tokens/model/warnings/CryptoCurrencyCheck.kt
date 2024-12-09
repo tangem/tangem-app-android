@@ -10,4 +10,5 @@ data class CryptoCurrencyCheck(
     val existentialDeposit: BigDecimal?,
     val utxoAmountLimit: UtxoAmountLimit?,
     val isAccountFunded: Boolean,
+    val rentWarning: CryptoCurrencyWarning.Rent?,
 )

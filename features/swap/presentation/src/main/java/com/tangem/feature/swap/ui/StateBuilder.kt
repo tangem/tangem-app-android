@@ -60,9 +60,13 @@ internal class StateBuilder(
         appCurrencyProvider = appCurrencyProvider,
     )
 
-    fun createInitialLoadingState(initialCurrency: CryptoCurrency, networkInfo: NetworkInfo): SwapStateHolder {
+    fun createInitialLoadingState(
+        initialCurrencyFrom: CryptoCurrency,
+        initialCurrencyTo: CryptoCurrency?,
+        fromNetworkInfo: NetworkInfo,
+    ): SwapStateHolder {
         return SwapStateHolder(
-            blockchainId = networkInfo.blockchainId,
+            blockchainId = fromNetworkInfo.blockchainId,
             sendCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.Inputtable(
                     onAmountChanged = actions.onAmountChanged,
@@ -72,27 +76,27 @@ internal class StateBuilder(
                 amountEquivalent = null,
                 amountTextFieldValue = null,
                 token = null,
-                tokenIconUrl = initialCurrency.iconUrl,
-                tokenCurrency = initialCurrency.symbol,
-                coinId = initialCurrency.network.backendId,
+                tokenIconUrl = initialCurrencyFrom.iconUrl,
+                tokenCurrency = initialCurrencyFrom.symbol,
+                coinId = initialCurrencyFrom.network.backendId,
                 canSelectAnotherToken = false,
-                isNotNativeToken = initialCurrency is CryptoCurrency.Token,
+                isNotNativeToken = initialCurrencyFrom is CryptoCurrency.Token,
                 balance = "",
-                networkIconRes = getActiveIconRes(initialCurrency.network.id.value),
+                networkIconRes = getActiveIconRes(initialCurrencyFrom.network.id.value),
                 isBalanceHidden = true,
             ),
             receiveCardData = SwapCardState.SwapCardData(
                 type = TransactionCardType.ReadOnly(),
                 amountEquivalent = null,
-                tokenIconUrl = "",
-                tokenCurrency = "",
+                tokenIconUrl = initialCurrencyTo?.iconUrl,
+                tokenCurrency = initialCurrencyTo?.symbol ?: "",
                 token = null,
                 amountTextFieldValue = null,
                 canSelectAnotherToken = false,
                 balance = "",
-                isNotNativeToken = false,
-                networkIconRes = null,
-                coinId = null,
+                isNotNativeToken = initialCurrencyTo is CryptoCurrency.Token,
+                networkIconRes = initialCurrencyTo?.let { getActiveIconRes(it.network.id.value) },
+                coinId = initialCurrencyTo?.network?.backendId,
                 isBalanceHidden = true,
             ),
             fee = FeeItemState.Empty,
@@ -1727,7 +1731,8 @@ internal class StateBuilder(
     }
 
     private fun BigDecimal.calculateRate(to: BigDecimal, decimals: Int): BigDecimal {
-        return this.divide(to, min(decimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
+        val rateDecimals = if (decimals == 0) IF_ZERO_DECIMALS_TO_SHOW else decimals
+        return this.divide(to, min(rateDecimals, MAX_DECIMALS_TO_SHOW), RoundingMode.HALF_UP)
     }
 
     private fun toBigDecimalOrNull(text: String): BigDecimal? {
@@ -1754,6 +1759,7 @@ internal class StateBuilder(
         const val ADDRESS_SECOND_PART_LENGTH = 4
         private const val PRICE_IMPACT_THRESHOLD = 0.1
         private const val MAX_DECIMALS_TO_SHOW = 8
+        private const val IF_ZERO_DECIMALS_TO_SHOW = 2
         private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
         private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
