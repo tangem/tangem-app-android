@@ -13,6 +13,7 @@ internal class SdkRequirementsConditionConverter : Converter<SdkRequirementsCond
                 feeCurrencySymbol = value.feeAmount.currencySymbol,
                 decimals = value.feeAmount.decimals,
             )
+            is SdkRequirementsCondition.IncompleteTransaction -> TODO()
         }
     }
 }
