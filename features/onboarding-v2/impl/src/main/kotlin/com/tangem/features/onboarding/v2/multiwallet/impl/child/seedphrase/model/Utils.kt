@@ -4,6 +4,7 @@ import android.net.Uri
 import com.tangem.utils.SupportedLanguages
 import java.util.Locale
 
+// TODO: [REDACTED_JIRA]
 internal fun seedPhraseLearnMoreUrl(): String {
     val language = Locale.getDefault().language
 
