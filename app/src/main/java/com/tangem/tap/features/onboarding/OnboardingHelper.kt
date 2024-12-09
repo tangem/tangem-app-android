@@ -239,6 +239,7 @@ object OnboardingHelper {
 
         scope.launch {
             val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
+            val onrampFeatureToggles = store.inject(DaggerGraphState::onrampFeatureToggles)
 
             val isRussia = if (homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
                 val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
@@ -248,7 +249,7 @@ object OnboardingHelper {
                 globalState.userCountryCode == RUSSIA_COUNTRY_CODE
             }
 
-            if (isRussia) {
+            if (isRussia && !onrampFeatureToggles.isFeatureEnabled) {
                 val dialogData = AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
                 store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(dialogData))
             } else {
