@@ -46,7 +46,7 @@ inline fun RowContentContainer(
 }
 
 @Composable
-internal fun RowText(
+fun RowText(
     mainText: String,
     secondText: String,
     accentMainText: Boolean,
