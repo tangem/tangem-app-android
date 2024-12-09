@@ -42,13 +42,7 @@ platform :android do
 
   desc "Build external and release APKs"
   lane :build do |options|
-     gradle(
-       task: "clean assemble",
-       build_type: "External",
-       properties: {
-           'versionCode' => options[:versionCode],
-           'versionName' => options[:versionName],
-         })
+     gradle(task: 'clean')
      gradle(
        task: "bundle",
        build_type: "Release",
