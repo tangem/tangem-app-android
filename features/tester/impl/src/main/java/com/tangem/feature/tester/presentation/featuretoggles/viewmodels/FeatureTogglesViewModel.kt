@@ -5,8 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
-import com.tangem.core.featuretoggle.manager.MutableFeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
