@@ -116,10 +116,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         modelScope.launch {
             checkOnrampAvailabilityUseCase()
                 .onRight(::handleOnrampAvailability)
-                .onLeft { error ->
-                    Timber.e(error.toString())
-                    sendOnrampErrorAnalytic(error)
-                }
+                .onLeft(::handleOnrampError)
         }
     }
 
@@ -136,7 +133,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         getOnrampCurrencyUseCase.invoke()
             .onEach { maybeCurrency ->
                 maybeCurrency.fold(
-                    ifLeft = ::sendOnrampErrorAnalytic,
+                    ifLeft = ::handleOnrampError,
                     ifRight = { currency ->
                         if (currency == null) return@onEach
                         _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
@@ -157,8 +154,14 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private suspend fun updatePairsAndQuotes() {
-        fetchPairsUseCase.invoke(params.cryptoCurrency).onLeft(::sendOnrampErrorAnalytic)
+        fetchPairsUseCase.invoke(params.cryptoCurrency).onLeft(::handleOnrampError)
         startLoadingQuotes()
+    }
+
+    private fun handleOnrampError(onrampError: OnrampError) {
+        Timber.e(onrampError.toString())
+        sendOnrampErrorAnalytic(onrampError)
+        _state.update { stateFactory.getOnrampErrorState(onrampError) }
     }
 
     private fun startLoadingQuotes() {
@@ -176,7 +179,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                     fetchQuotesUseCase.invoke(
                         amount = content.amountBlockState.amountFieldModel.fiatAmount,
                         cryptoCurrency = params.cryptoCurrency,
-                    ).onLeft(::sendOnrampErrorAnalytic)
+                    ).onLeft(::handleOnrampError)
                 }
             },
             onSuccess = {},
@@ -188,7 +191,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         getOnrampQuotesUseCase.invoke()
             .onEach { maybeQuotes ->
                 maybeQuotes.fold(
-                    ifLeft = ::sendOnrampErrorAnalytic,
+                    ifLeft = ::handleOnrampError,
                     ifRight = { quotes ->
                         quotes.filterIsInstance<OnrampQuote.Error>().forEach { errorState ->
                             sendOnrampErrorAnalytic(errorState.error)
@@ -251,6 +254,20 @@ internal class OnrampMainComponentModel @Inject constructor(
                 selectedProviderId = providerContentState.providerId,
             ),
         )
+    }
+
+    override fun onRefresh() {
+        _state.update {
+            stateFactory.getInitialState(
+                currency = params.cryptoCurrency.name,
+                onClose = router::pop,
+            )
+        }
+        quotesTaskScheduler.cancelTask()
+        modelScope.launch {
+            clearOnrampCacheUseCase.invoke()
+            checkResidenceCountry()
+        }
     }
 
     override fun onDestroy() {
