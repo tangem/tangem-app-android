@@ -95,7 +95,7 @@ object TradeCryptoMiddleware {
 
         scope.launch {
             val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
-
+            val onrampFeatureToggles = store.inject(DaggerGraphState::onrampFeatureToggles)
             val isRussia = if (homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
                 val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
 
@@ -104,7 +104,7 @@ object TradeCryptoMiddleware {
                 state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE
             }
 
-            if (action.checkUserLocation && isRussia) {
+            if (action.checkUserLocation && isRussia && !onrampFeatureToggles.isFeatureEnabled) {
                 val dialogData = topUrl?.let {
                     AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl = it)
                 }
