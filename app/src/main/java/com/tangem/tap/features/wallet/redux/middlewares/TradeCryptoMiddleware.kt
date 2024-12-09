@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -55,11 +56,23 @@ object TradeCryptoMiddleware {
 
     private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
         val isOnrampEnabled = store.inject(DaggerGraphState::onrampFeatureToggles).isFeatureEnabled
-        if (isOnrampEnabled) proceedWithOnramp() else proceedWithLegacyBuyAction(state, action)
+        if (isOnrampEnabled) {
+            proceedWithOnramp(action.userWallet.walletId, action.cryptoCurrencyStatus.currency, action.source)
+        } else {
+            proceedWithLegacyBuyAction(state, action)
+        }
     }
 
-    private fun proceedWithOnramp() {
-        store.dispatchNavigationAction { push(AppRoute.Onramp) }
+    private fun proceedWithOnramp(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, source: OnrampSource) {
+        store.dispatchNavigationAction {
+            push(
+                AppRoute.Onramp(
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrency,
+                    source = source,
+                ),
+            )
+        }
     }
 
     private fun proceedWithLegacyBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
