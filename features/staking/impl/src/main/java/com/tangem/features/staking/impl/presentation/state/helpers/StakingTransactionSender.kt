@@ -4,9 +4,14 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.domain.staking.*
+import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
+import com.tangem.domain.staking.GetStakingTransactionUseCase
+import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
+import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.SubmitHashData
-import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.PendingAction
+import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
@@ -18,7 +23,10 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.state.FeeState
+import com.tangem.features.staking.impl.presentation.state.StakingStateController
+import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.utils.extensions.orZero
@@ -55,6 +63,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         onConstructError: (StakingError) -> Unit,
         onSendSuccess: (String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
+        onFeeIncreased: (Fee) -> Unit,
     ) {
         val state = stateController.value
 
@@ -82,13 +91,22 @@ internal class StakingTransactionSender @AssistedInject constructor(
             return
         }
 
-        onConstructSuccess(fullTransactionsData.map { it.stakeKitTransaction })
+        val totalFee = fullTransactionsData.sumOf { it.stakeKitTransaction.gasEstimate?.amount.orZero() }
 
-        sendStakingTransaction(
-            fullTransactionsData = fullTransactionsData,
-            onSendSuccess = onSendSuccess,
-            onSendError = onSendError,
-        )
+        if (fee.amount.value.orZero() >= totalFee) {
+            onConstructSuccess(fullTransactionsData.map { it.stakeKitTransaction })
+            sendStakingTransaction(
+                fullTransactionsData = fullTransactionsData,
+                onSendSuccess = onSendSuccess,
+                onSendError = onSendError,
+            )
+        } else {
+            onFeeIncreased(
+                Fee.Common(
+                    fee.amount.copy(value = totalFee),
+                ),
+            )
+        }
     }
 
     private suspend fun getStakingTransactions(
