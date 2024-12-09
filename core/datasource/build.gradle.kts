@@ -21,11 +21,14 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.libs.auth)
     implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.core)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.staking.models)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.models)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)
