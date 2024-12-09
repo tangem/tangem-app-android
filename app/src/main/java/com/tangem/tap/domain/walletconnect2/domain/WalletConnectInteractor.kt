@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import arrow.core.flatten
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -236,8 +237,12 @@ class WalletConnectInteractor(
                 blockchainHelper.getNamespaceFromFullChainIdOrNull(account.chainId)
                     ?.let { NetworkNamespace(it) }
             }.filterNotNull()
+
+        val blockchainNames = blockchainHelper.chainIdsToBlockchains(userNamespaces.values.flatten().map { it.chainId })
+            .map { it.fullName }
         walletConnectRepository.approve(
             userNamespaces = userNamespaces,
+            blockchainNames = blockchainNames,
         )
     }
 

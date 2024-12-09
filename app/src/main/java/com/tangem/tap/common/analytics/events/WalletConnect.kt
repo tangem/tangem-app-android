@@ -12,11 +12,12 @@ internal sealed class WalletConnect(
 ) : AnalyticsEvent("Wallet Connect", event, params, error) {
 
     class ScreenOpened : WalletConnect(event = "WC Screen Opened")
-    class NewSessionEstablished(dAppName: String, dAppUrl: String) : WalletConnect(
+    class NewSessionEstablished(dAppName: String, dAppUrl: String, blockchainNames: List<String>) : WalletConnect(
         event = "New Session Established",
         params = mapOf(
             AnalyticsParam.DAPP_NAME to dAppName,
             AnalyticsParam.DAPP_URL to dAppUrl,
+            AnalyticsParam.BLOCKCHAIN to blockchainNames.joinToString(","),
         ),
     )
 

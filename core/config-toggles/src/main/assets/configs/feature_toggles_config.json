@@ -1,0 +1,30 @@
+[
+    {
+        "name": "NEW_CARD_SCANNING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "WC_SOLANA_TX_SIGN_ENABLED",
+        "version": "5.18.0"
+    },
+    {
+        "name": "IS_ETHEREUM_EIP_1559_ENABLED",
+        "version": "5.17.0"
+    },
+    {
+        "name": "MIGRATE_USER_COUNTRY_CODE_ENABLED",
+        "version": "5.17.0"
+    },
+    {
+        "name": "ONRAMP_ENABLED",
+        "version": "5.19.0"
+    },
+    {
+        "name": "MAIN_ACTION_BUTTONS_ENABLED",
+        "version": "5.19.0"
+    },
+    {
+        "name": "ONBOARDING_CODE_REFACTORING_ENABLED",
+        "version": "undefined"
+    }
+]

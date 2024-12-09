@@ -9,6 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
+import com.tangem.feature.wallet.presentation.wallet.state.utils.disableButtons
 import timber.log.Timber
 import java.math.BigDecimal
 
@@ -26,6 +27,11 @@ internal class SetTokenListErrorTransformer(
                         prevState.copy(
                             walletCardState = prevState.walletCardState.toLoadedState(),
                             tokensListState = WalletTokensListState.Empty,
+                            buttons = if (error == TokenListError.EmptyTokens) {
+                                prevState.disableButtons()
+                            } else {
+                                prevState.buttons
+                            },
                         )
                     }
                     is WalletState.MultiCurrency.Locked -> {
@@ -62,6 +68,7 @@ internal class SetTokenListErrorTransformer(
                 fiatCurrencySymbol = appCurrency.symbol,
             ),
             cardCount = selectedWallet.getCardsCount(),
+            isZeroBalance = true,
         )
     }
 }

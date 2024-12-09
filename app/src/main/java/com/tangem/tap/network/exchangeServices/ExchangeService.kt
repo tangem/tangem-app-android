@@ -1,8 +1,14 @@
 package com.tangem.tap.network.exchangeServices
 
+import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+
+typealias ExchangeServiceInitializationStatus = Lce<Throwable, Any>
 
 interface Exchanger {
     fun isBuyAllowed(): Boolean
@@ -12,10 +18,17 @@ interface Exchanger {
 }
 
 interface ExchangeService : Exchanger, ExchangeUrlBuilder {
+
+    val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
+
     suspend fun update()
 
     companion object {
         fun dummy(): ExchangeService = object : ExchangeService {
+
+            override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus> =
+                MutableStateFlow(value = lceLoading())
+
             override suspend fun update() {}
             override fun isBuyAllowed(): Boolean = false
             override fun isSellAllowed(): Boolean = false
