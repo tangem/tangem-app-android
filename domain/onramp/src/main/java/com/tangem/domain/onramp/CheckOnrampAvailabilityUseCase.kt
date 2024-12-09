@@ -3,11 +3,16 @@ package com.tangem.domain.onramp
 import arrow.core.Either
 import com.tangem.domain.onramp.model.OnrampAvailability
 import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 
-class CheckOnrampAvailabilityUseCase(private val repository: OnrampRepository) {
+class CheckOnrampAvailabilityUseCase(
+    private val repository: OnrampRepository,
+    private val errorResolver: OnrampErrorResolver,
+) {
 
-    suspend operator fun invoke(): Either<Throwable, OnrampAvailability> {
+    suspend operator fun invoke(): Either<OnrampError, OnrampAvailability> {
         return Either.catch {
             repository.fetchPaymentMethodsIfAbsent()
             val savedCountry = repository.getDefaultCountrySync()
@@ -17,7 +22,7 @@ class CheckOnrampAvailabilityUseCase(private val repository: OnrampRepository) {
                 val detectedCountry = repository.getCountryByIp()
                 OnrampAvailability.ConfirmResidency(detectedCountry)
             }
-        }
+        }.mapLeft(errorResolver::resolve)
     }
 
     private suspend fun proceedWithSavedCountry(savedCountry: OnrampCountry): OnrampAvailability {

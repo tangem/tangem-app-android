@@ -1,14 +1,17 @@
 package com.tangem.features.onramp.main.entity.factory.amount
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.AmountType
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
@@ -17,6 +20,7 @@ import com.tangem.utils.Provider
 
 internal class OnrampAmountStateFactory(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val onrampIntents: OnrampIntents,
 ) {
 
@@ -162,35 +166,29 @@ internal class OnrampAmountStateFactory(
     private fun OnrampQuote.Error.toSecondaryFieldUiModel(
         amountState: OnrampAmountBlockUM,
     ): OnrampAmountSecondaryFieldUM.Error {
-        return when (this) {
-            is OnrampQuote.Error.AmountTooBigError -> {
-                val amount = requiredAmount.value.format {
-                    fiat(
-                        fiatCurrencyCode = amountState.amountFieldModel.fiatAmount.currencySymbol,
-                        fiatCurrencySymbol = amountState.amountFieldModel.fiatAmount.currencySymbol,
-                    )
-                }
-                OnrampAmountSecondaryFieldUM.Error(
-                    resourceReference(
-                        R.string.onramp_max_amount_restriction,
-                        wrappedList(amount),
-                    ),
-                )
+        val amount = error.requiredAmount.format {
+            fiat(
+                fiatCurrencyCode = amountState.amountFieldModel.fiatAmount.currencySymbol,
+                fiatCurrencySymbol = amountState.amountFieldModel.fiatAmount.currencySymbol,
+            )
+        }
+
+        val errorTextRes = when (error) {
+            is OnrampError.AmountError.TooBigError -> {
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                R.string.onramp_max_amount_restriction
             }
-            is OnrampQuote.Error.AmountTooSmallError -> {
-                val amount = requiredAmount.value.format {
-                    fiat(
-                        fiatCurrencyCode = amountState.amountFieldModel.fiatAmount.currencySymbol,
-                        fiatCurrencySymbol = amountState.amountFieldModel.fiatAmount.currencySymbol,
-                    )
-                }
-                OnrampAmountSecondaryFieldUM.Error(
-                    resourceReference(
-                        R.string.onramp_min_amount_restriction,
-                        wrappedList(amount),
-                    ),
-                )
+            is OnrampError.AmountError.TooSmallError -> {
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                R.string.onramp_min_amount_restriction
             }
         }
+
+        return OnrampAmountSecondaryFieldUM.Error(
+            resourceReference(
+                errorTextRes,
+                wrappedList(amount),
+            ),
+        )
     }
 }
