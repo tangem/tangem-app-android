@@ -585,7 +585,7 @@ class DefaultWalletManagersFacade(
         return withContext(dispatchers.io) {
             val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
             val currencyType = cryptoCurrencyTypeConverter.convert(currency)
-            if (walletManager !is AssetRequirementsManager || !walletManager.hasRequirements(currencyType)) {
+            if (walletManager !is AssetRequirementsManager) {
                 return@withContext null
             }
 
