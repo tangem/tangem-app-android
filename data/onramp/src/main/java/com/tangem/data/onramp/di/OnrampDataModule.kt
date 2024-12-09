@@ -1,7 +1,6 @@
 package com.tangem.data.onramp.di
 
 import com.squareup.moshi.Moshi
-import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
@@ -72,13 +71,9 @@ internal object OnrampDataModule {
 
     @Provides
     @Singleton
-    fun provideOnrampErrorResolver(
-        @NetworkMoshi moshi: Moshi,
-        analyticsEventHandler: AnalyticsEventHandler,
-    ): OnrampErrorResolver {
+    fun provideOnrampErrorResolver(@NetworkMoshi moshi: Moshi): OnrampErrorResolver {
         val jsonAdapter = moshi.adapter(ExpressErrorResponse::class.java)
         return DefaultOnrampErrorResolver(
-            analyticsEventHandler,
             OnrampErrorConverter(jsonAdapter),
         )
     }
