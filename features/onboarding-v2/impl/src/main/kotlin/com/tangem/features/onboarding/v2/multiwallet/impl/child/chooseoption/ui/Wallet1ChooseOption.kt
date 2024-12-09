@@ -34,7 +34,7 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(R.string.onboarding_create_wallet_header),
+                text = stringResource(R.string.onboarding_wallet_info_title_first),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -42,7 +42,7 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
             )
 
             Text(
-                text = stringResource(R.string.onboarding_create_wallet_body),
+                text = stringResource(R.string.onboarding_wallet_info_subtitle_first),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
