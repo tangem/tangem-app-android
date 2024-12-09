@@ -6,6 +6,7 @@ sealed class OnrampError {
 
     sealed class AmountError : OnrampError() {
         abstract val requiredAmount: BigDecimal
+
         data class TooSmallError(
             override val requiredAmount: BigDecimal,
         ) : AmountError()
@@ -25,5 +26,7 @@ sealed class OnrampError {
         val description: String?,
     ) : OnrampError()
 
-    data class DomainError(val error: String?) : OnrampError()
+    data class DomainError(
+        val description: String?,
+    ) : OnrampError()
 }
