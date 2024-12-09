@@ -1,6 +1,6 @@
 package com.tangem.tap.features.home.featuretoggles
 
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import javax.inject.Inject
 
 class HomeFeatureToggles @Inject constructor(
