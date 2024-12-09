@@ -29,7 +29,9 @@ import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -41,22 +43,39 @@ import javax.inject.Inject
 internal class SelectProviderModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getSelectedPaymentMethodsUseCase: GetOnrampPaymentMethodsUseCase,
+    private val getOnrampPaymentMethodsUseCase: GetOnrampPaymentMethodsUseCase,
     private val getOnrampSelectedPaymentMethodUseCase: GetOnrampSelectedPaymentMethodUseCase,
     private val getOnrampProviderWithQuoteUseCase: GetOnrampProviderWithQuoteUseCase,
     private val saveSelectedPaymentMethod: OnrampSaveSelectedPaymentMethod,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    val state: StateFlow<ProviderListUM> get() = _state.asStateFlow()
+    val state: StateFlow<SelectPaymentAndProviderUM> get() = _state.asStateFlow()
     val bottomSheetNavigation: SlotNavigation<ProviderListBottomSheetConfig> = SlotNavigation()
     private val params: SelectProviderComponent.Params = paramsContainer.require()
     private val _state = MutableStateFlow(getInitialState())
 
     init {
         analyticsEventHandler.send(OnrampAnalyticsEvent.ProvidersScreenOpened)
+        getPaymentMethods()
         getProviders(params.selectedPaymentMethod)
         subscribeToPaymentMethodUpdates()
+    }
+
+    private fun getPaymentMethods() {
+        modelScope.launch {
+            val methods = getOnrampPaymentMethodsUseCase().fold(
+                ifLeft = { error ->
+                    sendOnrampErrorEvent(error)
+                    emptySet()
+                },
+                ifRight = { it },
+            )
+            _state.value = state.value.copy(
+                paymentMethods = methods.toPersistentList(),
+                isPaymentMethodClickEnabled = methods.isNotEmpty(),
+            )
+        }
     }
 
     private fun subscribeToPaymentMethodUpdates() {
@@ -74,11 +93,11 @@ internal class SelectProviderModel @Inject constructor(
         modelScope.launch {
             getOnrampProviderWithQuoteUseCase.invoke(paymentMethod)
                 .onRight { quotes ->
-                    val hasQuotesData = quotes.any { it is OnrampProviderWithQuote.Data }
                     _state.update { state ->
                         state.copy(
-                            paymentMethod = state.paymentMethod.copy(enabled = hasQuotesData),
-                            providers = quotes.toProvidersListItems(),
+                            selectedPaymentMethod = state.selectedPaymentMethod.copy(
+                                providers = quotes.toProvidersListItems(),
+                            ),
                         )
                     }
                 }
@@ -89,58 +108,47 @@ internal class SelectProviderModel @Inject constructor(
         }
     }
 
-    private fun getInitialState(): ProviderListUM {
-        return ProviderListUM(
-            paymentMethod = ProviderListPaymentMethodUM(
-                id = params.selectedPaymentMethod.id,
-                name = params.selectedPaymentMethod.name,
-                imageUrl = params.selectedPaymentMethod.imageUrl,
-                enabled = false,
-                onClick = ::openPaymentMethods,
+    private fun getInitialState(): SelectPaymentAndProviderUM {
+        return SelectPaymentAndProviderUM(
+            paymentMethods = persistentListOf(params.selectedPaymentMethod),
+            isPaymentMethodClickEnabled = false,
+            onPaymentMethodClick = ::openPaymentMethods,
+            selectedPaymentMethod = SelectProviderUM(
+                paymentMethod = params.selectedPaymentMethod,
+                providers = emptyList<ProviderListItemUM>().toImmutableList(),
             ),
-            providers = emptyList<ProviderListItemUM>().toImmutableList(),
         )
     }
 
     private fun openPaymentMethods() {
         analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
-        modelScope.launch {
-            val methods = getSelectedPaymentMethodsUseCase().fold(
-                ifLeft = { error ->
-                    sendOnrampErrorEvent(error)
-                    emptySet()
-                },
-                ifRight = { it },
-            )
-            bottomSheetNavigation.activate(
-                ProviderListBottomSheetConfig.PaymentMethods(
-                    selectedMethodId = _state.value.paymentMethod.id,
-                    paymentMethodsUM = methods.toPaymentUMList(),
-                ),
-            )
-        }
+        bottomSheetNavigation.activate(
+            ProviderListBottomSheetConfig.PaymentMethods(
+                selectedMethodId = state.value.selectedPaymentMethod.paymentMethod.id,
+                paymentMethodsUM = state.value.paymentMethods.toPaymentUMList(),
+            ),
+        )
     }
 
-    private fun Set<OnrampPaymentMethod>.toPaymentUMList(): List<PaymentMethodUM> = map { method ->
+    private fun ImmutableList<OnrampPaymentMethod>.toPaymentUMList(): ImmutableList<PaymentMethodUM> = map { method ->
         PaymentMethodUM(
             id = method.id,
             imageUrl = method.imageUrl,
             name = method.name,
             onSelect = { onPaymentMethodSelected(method) },
         )
-    }
+    }.toPersistentList()
 
     private fun onPaymentMethodSelected(paymentMethod: OnrampPaymentMethod) {
         analyticsEventHandler.send(OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = paymentMethod.name))
         modelScope.launch {
             saveSelectedPaymentMethod.invoke(paymentMethod)
             _state.update { state ->
-                val paymentMethodUM = state.paymentMethod.copy(
-                    id = paymentMethod.id,
-                    name = paymentMethod.name,
-                    imageUrl = paymentMethod.imageUrl,
+                state.copy(
+                    selectedPaymentMethod = state.selectedPaymentMethod.copy(
+                        paymentMethod = paymentMethod,
+                    ),
                 )
-                state.copy(paymentMethod = paymentMethodUM)
             }
             bottomSheetNavigation.dismiss()
         }
@@ -237,7 +245,7 @@ internal class SelectProviderModel @Inject constructor(
     }
 
     private fun sendOnrampErrorEvent(error: OnrampError) {
-        val selectedProvider = state.value.providers.firstOrNull {
+        val selectedProvider = state.value.selectedPaymentMethod.providers.firstOrNull {
             it.providerId == params.selectedProviderId
         }
         analyticsEventHandler.sendOnrampErrorEvent(
