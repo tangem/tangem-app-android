@@ -19,6 +19,7 @@ internal sealed interface ExchangeStatusNotifications {
 
     sealed class CommonNotification(val config: NotificationConfig) : ExchangeStatusNotifications
 
+    @Deprecated("Use one in ExpressNotificationsUM")
     data class NeedVerification(val onGoToProviderClick: () -> Unit) : CommonNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.express_exchange_notification_verification_title),
@@ -31,6 +32,7 @@ internal sealed interface ExchangeStatusNotifications {
         ),
     )
 
+    @Deprecated("Use one in ExpressNotificationsUM")
     data class Failed(val onGoToProviderClick: () -> Unit) : CommonNotification(
         config = NotificationConfig(
             title = resourceReference(R.string.express_exchange_notification_failed_title),

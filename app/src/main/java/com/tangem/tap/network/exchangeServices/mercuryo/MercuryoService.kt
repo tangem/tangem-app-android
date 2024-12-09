@@ -6,12 +6,19 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
+import com.tangem.tap.network.exchangeServices.ExchangeServiceInitializationStatus
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import timber.log.Timber
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -19,9 +26,33 @@ import java.util.concurrent.CopyOnWriteArrayList
  */
 internal class MercuryoService(private val environment: MercuryoEnvironment) : ExchangeService {
 
+    override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
+        get() = _initializationStatus
+
+    private val _initializationStatus: MutableStateFlow<ExchangeServiceInitializationStatus> =
+        MutableStateFlow(value = lceLoading())
+
     private val api: MercuryoApi = environment.mercuryoApi
 
     private val availableMercuryoCurrencies = CopyOnWriteArrayList<MercuryoCurrenciesResponse.MercuryoCryptoCurrency>()
+
+    override suspend fun update() {
+        Timber.i("Start updating")
+        _initializationStatus.value = lceLoading()
+
+        val result = performRequest { api.currencies(environment.apiVersion) }
+        when {
+            result is Result.Success && result.data.status == RESPONSE_SUCCESS_STATUS_CODE -> {
+                handleSuccessfullyUpdatedData(data = result.data.data)
+            }
+            result is Result.Failure -> {
+                availableMercuryoCurrencies.clear()
+
+                Timber.e("Failed to load currencies", result.error)
+                _initializationStatus.value = result.error.lceError()
+            }
+        }
+    }
 
     override fun isBuyAllowed(): Boolean = true
 
@@ -41,18 +72,6 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
     }
 
     override fun availableForSell(currency: Currency): Boolean = false
-
-    override suspend fun update() {
-        val result = performRequest { api.currencies(environment.apiVersion) }
-        when {
-            result is Result.Success && result.data.status == RESPONSE_SUCCESS_STATUS_CODE -> {
-                handleSuccessfullyUpdatedData(data = result.data.data)
-            }
-            result is Result.Failure -> {
-                availableMercuryoCurrencies.clear()
-            }
-        }
-    }
 
     override fun getUrl(
         action: CurrencyExchangeManager.Action,
@@ -89,6 +108,9 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
     private fun handleSuccessfullyUpdatedData(data: MercuryoCurrenciesResponse.Data) {
         availableMercuryoCurrencies.clear()
         availableMercuryoCurrencies.addAll(data.config.cryptoCurrencies)
+
+        Timber.i("Successfully updated")
+        _initializationStatus.value = lceContent()
     }
 
     private fun signature(address: String) = (address + environment.secret).calculateSha512().toHexString().lowercase()

@@ -44,7 +44,7 @@ internal fun LazyListScope.notifications(
                     is NotificationUM.Warning,
                     -> null
                     is NotificationUM.Error -> TangemTheme.colors.icon.warning
-                    is NotificationUM.Info -> null
+                    is NotificationUM.Info -> TangemTheme.colors.icon.accent
                 },
                 isEnabled = !isClickDisabled,
             )

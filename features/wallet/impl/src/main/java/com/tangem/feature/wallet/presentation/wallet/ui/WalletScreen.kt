@@ -75,8 +75,8 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.PushNotificat
 import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
+import com.tangem.feature.wallet.presentation.wallet.ui.components.common.actions
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
-import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.controlButtons
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
@@ -191,12 +191,23 @@ private fun WalletContent(
                 )
             }
 
-            (selectedWallet as? WalletState.SingleCurrency)?.let {
-                controlButtons(
-                    configs = it.buttons,
-                    selectedWalletIndex = selectedWalletIndex,
-                    modifier = movableItemModifier.padding(top = betweenItemsPadding),
-                )
+            when (selectedWallet) {
+                is WalletState.MultiCurrency,
+                is WalletState.Visa,
+                -> {
+                    actions(
+                        actions = selectedWallet.buttons,
+                        selectedWalletIndex = selectedWalletIndex,
+                        modifier = movableItemModifier.padding(top = betweenItemsPadding),
+                    )
+                }
+                is WalletState.SingleCurrency -> {
+                    lazyActions(
+                        actions = selectedWallet.buttons,
+                        selectedWalletIndex = selectedWalletIndex,
+                        modifier = movableItemModifier.padding(top = betweenItemsPadding),
+                    )
+                }
             }
 
             notifications(configs = selectedWallet.warnings, modifier = itemModifier)

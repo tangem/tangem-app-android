@@ -8,6 +8,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.isZero
 
 internal class MultiWalletCardStateConverter(
     private val fiatBalance: TotalFiatBalance,
@@ -58,6 +59,7 @@ internal class MultiWalletCardStateConverter(
                 fiatCurrencyCode = appCurrency.code,
                 fiatCurrencySymbol = appCurrency.symbol,
             ),
+            isZeroBalance = fiatBalance.amount.isZero(),
             cardCount = selectedWallet.getCardsCount(),
         )
     }

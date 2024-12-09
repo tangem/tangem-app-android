@@ -197,11 +197,11 @@ private fun handleWalletAction(action: Action) {
     }
 }
 
-private fun handleFinishBackup(scanResponse: ScanResponse) {
+private fun handleFinishBackup(scanResponse: ScanResponse, userWallet: UserWallet? = null) {
     val backupState = store.state.onboardingWalletState.backupState
     val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
 
-    val userWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+    val userWalletId = userWallet?.walletId ?: UserWalletIdBuilder.scanResponse(scanResponse).build()
     if (backupState.hasRing && userWalletId != null) {
         scope.launch {
             store.inject(DaggerGraphState::walletsRepository).setHasWalletsWithRing(userWalletId = userWalletId)
@@ -209,6 +209,7 @@ private fun handleFinishBackup(scanResponse: ScanResponse) {
     }
 
     OnboardingHelper.saveWallet(
+        alreadyCreatedWallet = userWallet,
         scanResponse = updatedScanResponse,
         accessCode = backupState.accessCode,
         backupCardsIds = backupState.backupCardIds,
@@ -580,21 +581,50 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     store.state.globalState.onboardingState.onboardingManager?.finishActivation(it)
                 }
                 backupService.discardSavedBackup()
+
+                val isOnboardingV2Enabled = store.inject(DaggerGraphState::onboardingV2FeatureToggles)
+                    .isOnboardingV2Enabled
+
+                if (isOnboardingV2Enabled) {
+                    val onboardingRepository = store.inject(DaggerGraphState::onboardingRepository)
+                    onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                }
             }
         }
         is BackupAction.CheckForUnfinishedBackup -> {
-            if (backupService.hasIncompletedBackup) {
-                store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound))
+            val isOnboardingV2Enabled = store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled
+
+            if (isOnboardingV2Enabled) {
+                val onboardingRepository = store.inject(DaggerGraphState::onboardingRepository)
+
+                mainScope.launch {
+                    val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+                    store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+                }
+            } else if (backupService.hasIncompletedBackup) {
+                store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound()))
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {
-            store.dispatch(
-                GlobalAction.Onboarding.StartForUnfinishedBackup(
-                    addedBackupCardsCount = backupService.addedBackupCardsCount,
-                ),
-            )
+            if (action.unfinishedBackupScanResponse != null) {
+                // onboarding V2
+                store.dispatchNavigationAction {
+                    push(
+                        AppRoute.Onboarding(
+                            scanResponse = action.unfinishedBackupScanResponse,
+                            startFromBackup = false,
+                        ),
+                    )
+                }
+            } else {
+                store.dispatch(
+                    GlobalAction.Onboarding.StartForUnfinishedBackup(
+                        addedBackupCardsCount = backupService.addedBackupCardsCount,
+                    ),
+                )
 
-            store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
+                store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
+            }
         }
         is BackupAction.SkipBackup -> {
             Analytics.send(Onboarding.Backup.Skipped())
@@ -679,7 +709,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 Analytics.send(Onboarding.Finished())
 
                 store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
-                handleFinishBackup(requireNotNull(scanResponse))
+                handleFinishBackup(requireNotNull(scanResponse), userWallet)
                 delay(1000)
                 store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
             }
@@ -740,6 +770,7 @@ private suspend fun createUserWallet(scanResponse: ScanResponse, backupState: Ba
     return requireNotNull(
         value = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
             .backupCardsIds(backupState.backupCardIds.toSet())
+            .hasBackupError(backupState.hasBackupError)
             .build(),
         lazyMessage = { "User wallet not created" },
     )

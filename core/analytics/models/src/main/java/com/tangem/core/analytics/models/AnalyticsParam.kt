@@ -76,6 +76,9 @@ sealed class AnalyticsParam {
         data object MyWallets : ScreensSources("My Wallets")
         data object Token : ScreensSources("Token")
         data object Stories : ScreensSources("Stories")
+        data object Buy : ScreensSources("Buy")
+        data object Swap : ScreensSources("Swap")
+        data object Sell : ScreensSources("Sell")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -161,11 +164,18 @@ sealed class AnalyticsParam {
         }
     }
 
+    enum class Status(val value: String) {
+        Success(value = "Success"),
+        Error(value = "Error"),
+        Pending(value = "Pending"),
+    }
+
     companion object Key {
         const val BLOCKCHAIN = "blockchain"
         const val TOKEN_PARAM = "Token"
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
+        const val TOKENS_COUNT = "Tokens Count"
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
@@ -190,12 +200,10 @@ sealed class AnalyticsParam {
         const val INPUT = "Input"
         const val COUNT = "Count"
         const val DERIVATION = "Derivation"
-
-        // region swap
-        const val TOKEN_CATEGORY = "Token"
         const val STATUS = "Status"
         const val PROVIDER = "Provider"
         const val PLACE = "Place"
-        //
+        const val RESIDENCE = "Residence"
+        const val PAYMENT_METHOD = "Payment Method"
     }
 }
