@@ -12,6 +12,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWar
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addMinimumAmountErrorNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
@@ -93,12 +94,15 @@ internal class SendNotificationFactory(
             val feeError = (feeState.feeSelectorState as? FeeSelectorState.Error)?.error
 
             val recipientAddress = state.recipientState?.addressTextField?.value
+            val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
+            val balanceAfterTransaction = statusValue?.let { it.amount - sendingAmount - feeValue }
             val currencyCheck = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 amount = sendingAmount,
                 fee = feeValue,
                 recipientAddress = recipientAddress,
+                balanceAfterTransaction = balanceAfterTransaction,
             )
             buildList {
                 addErrorNotifications(
@@ -221,6 +225,11 @@ internal class SendNotificationFactory(
                 network = cryptoCurrencyStatus.currency.network,
             ).leftOrNull()
         }
+
+        addRentExemptionNotification(
+            rentWarning = currencyCheck.rentWarning,
+        )
+
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
             feeAmount = feeState.fee?.amount?.value.orZero(),
