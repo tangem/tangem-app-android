@@ -219,4 +219,22 @@ internal object OnrampDomainModule {
     ): GetOnrampRedirectUrlUseCase {
         return GetOnrampRedirectUrlUseCase(onrampRepository, transactionRepository, onrampErrorResolver)
     }
+
+    @Provides
+    @Singleton
+    fun provideFetchOnrampCurrenciesUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): FetchOnrampCurrenciesUseCase {
+        return FetchOnrampCurrenciesUseCase(onrampRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchOnrampCountriesUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): FetchOnrampCountriesUseCase {
+        return FetchOnrampCountriesUseCase(onrampRepository, onrampErrorResolver)
+    }
 }
