@@ -51,7 +51,10 @@ internal class DefaultOnrampSettingsComponent @AssistedInject constructor(
     ): ComposableBottomSheetComponent = when (config) {
         OnrampSettingsConfig.SelectCountry -> selectCountryComponentFactory.create(
             context = childByContext(componentContext),
-            params = SelectCountryComponent.Params(model.bottomSheetNavigation::dismiss),
+            params = SelectCountryComponent.Params(
+                params.cryptoCurrency,
+                model.bottomSheetNavigation::dismiss,
+            ),
         )
     }
 
