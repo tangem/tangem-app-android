@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.onramp.FetchOnrampCountriesUseCase
 import com.tangem.domain.onramp.GetOnrampCountriesUseCase
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
@@ -39,6 +40,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
     private val getOnrampCountriesUseCase: GetOnrampCountriesUseCase,
     private val saveDefaultCountryUseCase: OnrampSaveDefaultCountryUseCase,
     private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
+    private val fetchOnrampCountriesUseCase: FetchOnrampCountriesUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -52,7 +54,14 @@ internal class OnrampSelectCountryModel @Inject constructor(
 
     init {
         analyticsEventHandler.send(OnrampAnalyticsEvent.SelectResidenceOpened)
+        updateCountriesList()
         modelScope.launch { subscribeOnUpdateState() }
+    }
+
+    private fun updateCountriesList() {
+        modelScope.launch {
+            fetchOnrampCountriesUseCase()
+        }
     }
 
     fun dismiss() {
@@ -62,7 +71,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun subscribeOnUpdateState() {
         combine(
-            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCountriesUseCase()) },
+            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { getOnrampCountriesUseCase() },
             flow2 = getOnrampCountryUseCase(),
             flow3 = searchManager.query,
         ) { maybeCountries, maybeCountry, query ->
