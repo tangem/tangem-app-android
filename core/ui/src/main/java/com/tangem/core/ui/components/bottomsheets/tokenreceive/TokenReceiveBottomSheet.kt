@@ -1,13 +1,17 @@
 package com.tangem.core.ui.components.bottomsheets.tokenreceive
 
+import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,15 +26,22 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.notifications.Notification
+import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.components.rememberQrPainters
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbarHost
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.shareText
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 
 @Composable
@@ -50,34 +61,59 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
         Column(
             modifier = Modifier
                 .verticalScroll(state = rememberScrollState())
-                .padding(
-                    start = TangemTheme.dimens.spacing24,
-                    top = TangemTheme.dimens.spacing24,
-                    end = TangemTheme.dimens.spacing24,
-                    bottom = TangemTheme.dimens.spacing16,
-                ),
+                .padding(top = 24.dp, bottom = 16.dp)
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing24),
+            verticalArrangement = Arrangement.spacedBy(space = 24.dp),
         ) {
             QrCodeContent(content = content, onAddressChange = { selectedAddress = it })
 
-            DisclaimerText(text = content.name)
+            Info(
+                currency = content.symbol,
+                network = content.network,
+                showMemoDisclaimer = content.showMemoDisclaimer,
+            )
 
-            Row(horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16)) {
-                CopyButton(
-                    address = selectedAddress.value,
-                    snackbarHostState = snackbarHostState,
-                    onClick = content.onCopyClick,
-                    modifier = Modifier.weight(1f),
-                )
-
-                ShareButton(
-                    address = selectedAddress.value,
-                    onClick = content.onShareClick,
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            Buttons(
+                address = selectedAddress.value,
+                snackbarHostState = snackbarHostState,
+                onShareClick = content.onShareClick,
+                onCopyClick = content.onCopyClick,
+            )
         }
+    }
+}
+
+@Composable
+private fun Info(currency: String, network: String, showMemoDisclaimer: Boolean, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(space = 16.dp),
+    ) {
+        if (showMemoDisclaimer) {
+            Text(
+                modifier = Modifier
+                    .padding(horizontal = 18.dp)
+                    .fillMaxWidth(),
+                text = stringResource(R.string.receive_bottom_sheet_no_memo_required_message),
+                style = TangemTheme.typography.caption1,
+                color = TangemTheme.colors.text.tertiary,
+                textAlign = TextAlign.Center,
+            )
+        }
+
+        Notification(
+            config = NotificationConfig(
+                title = resourceReference(
+                    R.string.receive_bottom_sheet_warning_title,
+                    wrappedList(currency, network),
+                ),
+                subtitle = resourceReference(R.string.receive_bottom_sheet_warning_message_description),
+                iconResId = R.drawable.ic_alert_circle_24,
+            ),
+            iconTint = TangemTheme.colors.icon.accent,
+        )
     }
 }
 
@@ -90,12 +126,11 @@ private fun ContainerWithSnackbarHost(snackbarHostState: SnackbarHostState, cont
             hostState = snackbarHostState,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = TangemTheme.dimens.spacing80),
+                .padding(bottom = 80.dp),
         )
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChange: (AddressModel) -> Unit) {
     val qrCodes = rememberQrPainters(content.addresses.map(AddressModel::value))
@@ -124,7 +159,7 @@ private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChang
         val unselectedColor = TangemTheme.colors.icon.informative
 
         LazyRow(
-            modifier = Modifier.height(TangemTheme.dimens.size20),
+            modifier = Modifier.height(20.dp),
             state = indicatorState,
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,
@@ -138,9 +173,9 @@ private fun QrCodeContent(content: TokenReceiveBottomSheetConfig, onAddressChang
 
                     Box(
                         modifier = Modifier
-                            .padding(horizontal = TangemTheme.dimens.spacing4, vertical = TangemTheme.dimens.spacing6)
+                            .padding(horizontal = 4.dp, vertical = 6.dp)
                             .background(color = color, shape = CircleShape)
-                            .size(TangemTheme.dimens.size7),
+                            .size(7.dp),
                     )
                 }
             }
@@ -153,7 +188,7 @@ private fun QrCodePage(content: TokenReceiveBottomSheetConfig, qrCodePainter: Pa
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         Text(
             text = stringResource(
@@ -171,7 +206,7 @@ private fun QrCodePage(content: TokenReceiveBottomSheetConfig, qrCodePainter: Pa
             painter = qrCodePainter,
             contentDescription = null,
             contentScale = ContentScale.Fit,
-            modifier = Modifier.size(TangemTheme.dimens.size248),
+            modifier = Modifier.size(248.dp),
         )
 
         Text(
@@ -193,58 +228,108 @@ private fun getName(content: TokenReceiveBottomSheetConfig, index: Int): String 
 }
 
 @Composable
-private fun DisclaimerText(text: String) {
-    Text(
-        text = stringResource(R.string.receive_bottom_sheet_warning_message_full, text),
-        color = TangemTheme.colors.text.secondary,
-        textAlign = TextAlign.Center,
-        style = TangemTheme.typography.caption2,
-    )
-}
-
-@Composable
-private fun CopyButton(
+private fun Buttons(
     address: String,
     snackbarHostState: SnackbarHostState,
-    onClick: () -> Unit,
+    onShareClick: () -> Unit,
+    onCopyClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
-    val resources = LocalContext.current.resources
-
-    SecondaryButtonIconStart(
-        modifier = modifier,
-        text = stringResource(id = R.string.common_copy),
-        iconResId = R.drawable.ic_copy_24,
-        onClick = {
-            onClick()
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            clipboardManager.setText(AnnotatedString(address))
-
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(
-                    message = resources.getString(R.string.wallet_notification_address_copied),
-                )
-            }
-        },
-    )
-}
-
-@Composable
-private fun ShareButton(address: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val hapticFeedback = LocalHapticFeedback.current
     val context = LocalContext.current
+    val resources = context.resources
 
-    SecondaryButtonIconStart(
+    Row(
         modifier = modifier,
-        text = stringResource(id = R.string.common_share),
-        iconResId = R.drawable.ic_share_24,
-        onClick = {
-            onClick()
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-            context.shareText(address)
-        },
-    )
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        SecondaryButtonIconStart(
+            modifier = Modifier.weight(1f),
+            text = stringResource(id = R.string.common_copy),
+            iconResId = R.drawable.ic_copy_24,
+            onClick = {
+                onCopyClick()
+
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                clipboardManager.setText(AnnotatedString(address))
+
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = resources.getString(R.string.wallet_notification_address_copied),
+                    )
+                }
+            },
+        )
+
+        SecondaryButtonIconStart(
+            modifier = Modifier.weight(1f),
+            text = stringResource(id = R.string.common_share),
+            iconResId = R.drawable.ic_share_24,
+            onClick = {
+                onShareClick()
+
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                context.shareText(address)
+            },
+        )
+    }
 }
+
+// region Preview
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_TokenReceiveBottomSheet(
+    @PreviewParameter(TokenReceiveBottomSheetConfigPreviewProvider::class) params: TokenReceiveBottomSheetConfig,
+) {
+    TangemThemePreview {
+        val config = TangemBottomSheetConfig(
+            isShow = true,
+            content = params,
+            onDismissRequest = {},
+        )
+
+        TokenReceiveBottomSheet(config)
+    }
+}
+
+private class TokenReceiveBottomSheetConfigPreviewProvider : PreviewParameterProvider<TokenReceiveBottomSheetConfig> {
+    val address = AddressModel(
+        displayName = stringReference("Address 1"),
+        value = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
+        type = AddressModel.Type.Default,
+    )
+    private val baseConfig = TokenReceiveBottomSheetConfig(
+        name = "Stellar",
+        symbol = "XLM",
+        network = "Ethereum",
+        addresses = persistentListOf(address),
+        showMemoDisclaimer = false,
+        onCopyClick = {},
+        onShareClick = {},
+    )
+
+    override val values: Sequence<TokenReceiveBottomSheetConfig>
+        get() = sequenceOf(
+            baseConfig,
+            baseConfig.copy(
+                addresses = persistentListOf(
+                    address,
+                    address.copy(displayName = stringReference("Address 2")),
+                ),
+            ),
+            baseConfig.copy(
+                showMemoDisclaimer = true,
+            ),
+            baseConfig.copy(
+                showMemoDisclaimer = true,
+                addresses = persistentListOf(
+                    address,
+                    address.copy(displayName = stringReference("Address 2")),
+                ),
+            ),
+        )
+}
+// endregion Preview
