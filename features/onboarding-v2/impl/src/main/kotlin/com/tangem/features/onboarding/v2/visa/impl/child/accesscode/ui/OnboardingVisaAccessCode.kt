@@ -71,6 +71,7 @@ internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifie
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun Content(
     state: OnboardingVisaAccessCodeUM,
