@@ -100,7 +100,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         override fun pop(onComplete: (Boolean) -> Unit) {
             val config = childStack.active.configuration
 
-            if (config == SeedPhrase || config == Finalize || config == AddBackupDevice) {
+            if (config == SeedPhrase || config == Finalize) {
                 componentScope.launch { backButtonClickFlow.emit(Unit) }
             } else {
                 model.onBack()
@@ -158,8 +158,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             AddBackupDevice -> MultiWalletBackupComponent(
                 context = childContext,
                 params = childParams,
-                backButtonClickFlow = backButtonClickFlow,
-                onBack = { model.onBack() },
                 onEvent = ::handleBackupComponentEvent,
             )
             Finalize -> MultiWalletFinalizeComponent(
