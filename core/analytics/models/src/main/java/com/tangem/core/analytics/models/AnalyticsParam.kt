@@ -200,12 +200,10 @@ sealed class AnalyticsParam {
         const val INPUT = "Input"
         const val COUNT = "Count"
         const val DERIVATION = "Derivation"
-
-        // region swap
-        const val TOKEN_CATEGORY = "Token"
         const val STATUS = "Status"
         const val PROVIDER = "Provider"
         const val PLACE = "Place"
-        //
+        const val RESIDENCE = "Residence"
+        const val PAYMENT_METHOD = "Payment Method"
     }
 }
