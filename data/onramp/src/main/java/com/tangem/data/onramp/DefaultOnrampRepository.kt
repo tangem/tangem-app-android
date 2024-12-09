@@ -38,6 +38,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.model.error.OnrampPairsError
 import com.tangem.domain.onramp.model.error.OnrampRedirectError
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
@@ -341,6 +342,7 @@ internal class DefaultOnrampRepository(
     }
 
     private suspend fun storeOnrampPairs(pairs: List<OnrampPairDTO>, providers: List<ExchangeProvider>) {
+        if (pairs.isEmpty() || providers.isEmpty()) throw OnrampPairsError.PairsNotFound
         val onrampPaymentMethods = getPaymentMethods()
         val onrampPairs = pairs.map { pair ->
             val onrampProviders = pair.providers.mapNotNull { onrampProviderDTO ->
