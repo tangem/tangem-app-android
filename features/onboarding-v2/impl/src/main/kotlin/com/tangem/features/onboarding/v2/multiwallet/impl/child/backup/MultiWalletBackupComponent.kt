@@ -1,6 +1,5 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.backup
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -13,7 +12,6 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChild
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.MultiWalletBackupModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.MultiWalletBackup
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -21,8 +19,6 @@ import kotlinx.coroutines.launch
 class MultiWalletBackupComponent(
     context: AppComponentContext,
     params: MultiWalletChildParams,
-    backButtonClickFlow: SharedFlow<Unit>,
-    onBack: () -> Unit,
     onEvent: (event: Event) -> Unit,
 ) : AppComponentContext by context, MultiWalletChildComponent {
 
@@ -43,20 +39,11 @@ class MultiWalletBackupComponent(
         componentScope.launch {
             model.eventFlow.collect(onEvent)
         }
-
-        componentScope.launch {
-            backButtonClickFlow.collect { model.onBack() }
-        }
-
-        componentScope.launch {
-            model.onBackFlow.collect { onBack() }
-        }
     }
 
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-        BackHandler { model.onBack() }
 
         MultiWalletBackup(
             modifier = modifier,
