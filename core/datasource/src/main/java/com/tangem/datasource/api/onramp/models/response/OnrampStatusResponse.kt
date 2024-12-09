@@ -14,8 +14,8 @@ data class OnrampStatusResponse(
     @Json(name = "payoutAddress")
     val payoutAddress: String,
 
-    // @Json(name = "status")
-    // val status: ???
+    @Json(name = "status")
+    val status: Status,
 
     @Json(name = "failReason")
     val failReason: String?,
@@ -48,10 +48,10 @@ data class OnrampStatusResponse(
     val toDecimals: String,
 
     @Json(name = "toAmount")
-    val toAmount: String,
+    val toAmount: String?,
 
     @Json(name = "toActualAmount")
-    val toActualAmount: String,
+    val toActualAmount: String?,
 
     @Json(name = "paymentMethod")
     val paymentMethod: String,
@@ -59,3 +59,35 @@ data class OnrampStatusResponse(
     @Json(name = "countryCode")
     val countryCode: String,
 )
+
+enum class Status {
+    @Json(name = "created")
+    Created,
+
+    @Json(name = "expired")
+    Expired,
+
+    @Json(name = "waiting-for-payment")
+    WaitingForPayment,
+
+    @Json(name = "payment-processing")
+    PaymentProcessing,
+
+    @Json(name = "verifying")
+    Verifying,
+
+    @Json(name = "failed")
+    Failed,
+
+    @Json(name = "paid")
+    Paid,
+
+    @Json(name = "sending")
+    Sending,
+
+    @Json(name = "finished")
+    Finished,
+
+    @Json(name = "paused")
+    Paused,
+}

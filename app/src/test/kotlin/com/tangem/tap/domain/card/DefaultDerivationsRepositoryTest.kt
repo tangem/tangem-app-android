@@ -2,6 +2,7 @@ package com.tangem.tap.domain.card
 
 import android.annotation.SuppressLint
 import com.google.common.truth.Truth
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.CompletionResult
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.ScanCardException
@@ -29,6 +30,7 @@ internal class DefaultDerivationsRepositoryTest {
         tangemSdkManager = tangemSdkManager,
         userWalletsStore = userWalletsStore,
         dispatchers = TestingCoroutineDispatcherProvider(),
+        excludedBlockchains = ExcludedBlockchains(),
     )
 
     private val defaultUserWalletId = UserWalletId("011")

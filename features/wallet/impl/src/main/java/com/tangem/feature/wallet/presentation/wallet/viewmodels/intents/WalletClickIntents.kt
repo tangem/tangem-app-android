@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
@@ -20,6 +21,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetToken
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -41,6 +44,7 @@ internal class WalletClickIntents @Inject constructor(
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val neverToShowWalletsScrollPreview: NeverToShowWalletsScrollPreview,
+    private val rampStateManager: RampStateManager,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
@@ -115,6 +119,12 @@ internal class WalletClickIntents @Inject constructor(
             } else {
                 fetchTokenListUseCase(userWalletId = userWallet.walletId, mode = RefreshMode.FULL)
             }
+
+            listOf(
+                async { rampStateManager.fetchBuyServiceData() },
+                async { rampStateManager.fetchSellServiceData() },
+            )
+                .awaitAll()
 
             maybeFetchResult.onLeft {
                 stateHolder.update(

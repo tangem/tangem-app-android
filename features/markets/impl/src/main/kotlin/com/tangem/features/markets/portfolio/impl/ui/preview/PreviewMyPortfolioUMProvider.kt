@@ -4,6 +4,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
@@ -49,10 +50,12 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
         tokenItemState = TokenItemState.Content(
             id = "",
             iconState = CurrencyIconState.Locked,
-            titleState = TokenItemState.TitleState.Content(text = "My wallet"),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value = "My wallet")),
             fiatAmountState = TokenItemState.FiatAmountState.Content(text = "486,65 \$"),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "733,71097 MATIC"),
-            subtitleState = TokenItemState.SubtitleState.TextContent(value = "XRP Ledger token"),
+            subtitleState = TokenItemState.SubtitleState.TextContent(
+                value = stringReference(value = "XRP Ledger token"),
+            ),
             onItemClick = {},
             onItemLongClick = {},
         ),

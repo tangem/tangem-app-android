@@ -35,6 +35,7 @@ interface OnrampApi {
     @GET("onramp-quote")
     suspend fun getQuote(
         @Query("fromCurrencyCode") fromCurrencyCode: String,
+        @Query("fromPrecision") fromPrecision: Int,
         @Query("toContractAddress") toContractAddress: String,
         @Query("toNetwork") toNetwork: String,
         @Query("paymentMethod") paymentMethod: String,
@@ -47,6 +48,7 @@ interface OnrampApi {
     @GET("onramp-data")
     suspend fun getData(
         @Query("fromCurrencyCode") fromCurrencyCode: String,
+        @Query("fromPrecision") fromPrecision: Int,
         @Query("toContractAddress") toContractAddress: String,
         @Query("toNetwork") toNetwork: String,
         @Query("paymentMethod") paymentMethod: String,

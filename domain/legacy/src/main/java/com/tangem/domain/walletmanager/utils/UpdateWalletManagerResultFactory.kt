@@ -48,7 +48,7 @@ internal class UpdateWalletManagerResultFactory {
         val wallet = walletManager.wallet
         val blockchain = wallet.blockchain
         val firstWalletToken = wallet.getTokens().firstOrNull()
-        val amount = amountToCreateAccount ?: blockchain.amountToCreateAccount(firstWalletToken)
+        val amount = amountToCreateAccount ?: blockchain.amountToCreateAccount(walletManager, firstWalletToken)
 
         return if (amount == null) {
             Timber.w("Unable to get required amount to create account for: $blockchain")

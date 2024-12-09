@@ -7,7 +7,6 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -119,26 +118,26 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         swapRepository: SwapRepository,
         currencyChecksRepository: CurrencyChecksRepository,
         showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
         promoRepository: PromoRepository,
         stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
+        rampStateManager: RampStateManager,
     ): GetCurrencyWarningsUseCase {
         return GetCurrencyWarningsUseCase(
             walletManagersFacade = walletManagersFacade,
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
-            marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
             currencyChecksRepository = currencyChecksRepository,
             swapRepository = swapRepository,
             showSwapPromoTokenUseCase = showSwapPromoTokenUseCase,
             promoRepository = promoRepository,
             stakingRepository = stakingRepository,
             dispatchers = dispatchers,
+            rampStateManager = rampStateManager,
         )
     }
 
@@ -216,23 +215,19 @@ internal object TokensDomainModule {
     fun provideGetCryptoCurrencyActionsUseCase(
         rampStateManager: RampStateManager,
         walletManagersFacade: WalletManagersFacade,
-        marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
-        stakingFeatureToggles: StakingFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
             rampManager = rampStateManager,
             walletManagersFacade = walletManagersFacade,
-            marketCryptoCurrencyRepository = marketCryptoCurrencyRepository,
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
-            stakingFeatureToggles = stakingFeatureToggles,
             dispatchers = dispatchers,
         )
     }
