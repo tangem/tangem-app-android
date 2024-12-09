@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.presentation.state.transformers
 
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
@@ -19,7 +18,6 @@ internal class SetConfirmationStateInProgressTransformer : Transformer<StakingUi
             copy(
                 isPrimaryButtonEnabled = false,
                 innerState = InnerConfirmationStakingState.IN_PROGRESS,
-                footerText = TextReference.EMPTY,
             )
         } else {
             this

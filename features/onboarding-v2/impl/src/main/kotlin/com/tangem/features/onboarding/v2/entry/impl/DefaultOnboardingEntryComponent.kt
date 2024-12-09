@@ -1,13 +1,11 @@
 package com.tangem.features.onboarding.v2.entry.impl
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
-import com.arkivanov.decompose.router.stack.ChildStack
-import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
@@ -51,25 +49,24 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
             popBack = {
                 popInternal { success ->
                     if (success.not()) {
-                        stackNavigation.pop()
+                        model.stackNavigation.pop()
                     }
                 }
             },
         ),
     )
 
-    private val stackNavigation = StackNavigation<OnboardingRoute>()
-
     private val innerStack: Value<ChildStack<OnboardingRoute, Any>> = childStack(
         key = "innerStack",
-        source = stackNavigation,
+        source = model.stackNavigation,
         serializer = null,
-        initialConfiguration = model.state.value.currentRoute,
+        initialConfiguration = model.startRoute,
         handleBackButton = true,
         childFactory = { configuration, factoryContext ->
             onboardingChildFactory.createChild(
                 route = configuration,
                 childContext = childByContext(factoryContext),
+                onManageTokensDone = model::onManageTokensDone,
             )
         },
     )
@@ -87,7 +84,9 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun linkToInnerNavigation() {
+        // stepper linking
         innerStack.observe { stack ->
             val activeChild = stack.active.instance
             if (activeChild is InnerNavigationHolder) {
@@ -103,6 +102,23 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                         }
                     }
                 }.saveIn(innerNavigationLinkJobHolder)
+            } else {
+                stepperComponent.state.update {
+                    it.copy(
+                        currentStep = if (stack.active.configuration is OnboardingRoute.ManageTokens) 7 else 8,
+                        steps = 8,
+                        title = model.titleProvider.currentTitle.value,
+                        showProgress = true,
+                    )
+                }
+            }
+        }
+
+        componentScope.launch {
+            model.titleProvider.currentTitle.collect { title ->
+                stepperComponent.state.update {
+                    it.copy(title = title)
+                }
             }
         }
     }
@@ -110,6 +126,9 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val innerStackState by innerStack.subscribeAsState()
+
+        // prevent back navigation
+        BackHandler { }
 
         OnboardingEntry(
             modifier = modifier,

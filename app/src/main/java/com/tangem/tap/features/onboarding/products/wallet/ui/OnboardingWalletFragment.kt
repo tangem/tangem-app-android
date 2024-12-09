@@ -272,6 +272,7 @@ class OnboardingWalletFragment :
         onboardingManageTokensComponent = onboardingManageTokensComponentFactory.create(
             context = onboardingComponentContext,
             params = OnboardingManageTokensComponent.Params(userWalletId = userWalletId),
+            onDone = {},
         )
     }
 

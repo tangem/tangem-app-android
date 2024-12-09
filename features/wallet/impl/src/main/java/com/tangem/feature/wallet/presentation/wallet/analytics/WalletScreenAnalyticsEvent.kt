@@ -30,11 +30,12 @@ sealed class WalletScreenAnalyticsEvent {
             ),
         )
 
-        class BalanceLoaded(balance: AnalyticsParam.CardBalanceState) : Basic(
+        class BalanceLoaded(balance: AnalyticsParam.CardBalanceState, tokensCount: Int?) : Basic(
             event = "Balance Loaded",
-            params = mapOf(
-                AnalyticsParam.BALANCE to balance.value,
-            ),
+            params = buildMap {
+                put(AnalyticsParam.BALANCE, balance.value)
+                tokensCount?.let { put(AnalyticsParam.TOKENS_COUNT, it.toString()) }
+            },
         )
 
         class TokenBalance(balance: AnalyticsParam.TokenBalanceState, token: String) : Basic(
