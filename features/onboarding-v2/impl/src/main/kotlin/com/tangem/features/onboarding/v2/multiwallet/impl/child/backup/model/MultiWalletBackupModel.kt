@@ -59,6 +59,7 @@ class MultiWalletBackupModel @Inject constructor(
 
     val uiState: StateFlow<MultiWalletBackupUM> = _uiState
     val eventFlow = MutableSharedFlow<MultiWalletBackupComponent.Event>()
+    val onBackFlow = MutableSharedFlow<Unit>()
 
     init {
         // for wallet 1 this event is sent in Wallet1ChooseOptionModel
@@ -67,6 +68,12 @@ class MultiWalletBackupModel @Inject constructor(
         }
 
         analyticsHandler.send(OnboardingEvent.Backup.Started)
+    }
+
+    fun onBack() {
+        if (state.value.numberOfBackupCards == 0) {
+            modelScope.launch { onBackFlow.emit(Unit) }
+        }
     }
 
     private fun getInitState(): MultiWalletBackupUM {

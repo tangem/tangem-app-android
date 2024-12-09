@@ -59,6 +59,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private var walletHasBackupError = false
     val uiState = _uiState.asStateFlow()
+    val onBackFlow = MutableSharedFlow<Unit>()
 
     val onEvent = MutableSharedFlow<MultiWalletFinalizeComponent.Event>()
 
@@ -69,6 +70,12 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             onboardingRepository.saveUnfinishedFinalizeOnboarding(
                 scanResponse = multiWalletState.value.currentScanResponse,
             )
+        }
+    }
+
+    fun onBack() {
+        if (uiState.value.scanPrimary) {
+            modelScope.launch { onBackFlow.emit(Unit) }
         }
     }
 
