@@ -46,7 +46,7 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Core modules */
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
@@ -81,6 +81,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.onramp.models)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.features.onboarding)
 
@@ -93,6 +94,8 @@ dependencies {
     implementation(projects.features.details.api)
     implementation(projects.features.pushNotifications.api)
     implementation(projects.features.markets.api)
+    implementation(projects.features.onramp.api)
+    implementation(projects.features.onboardingV2.api)
 
     /** Common modules */
     implementation(projects.common.ui)
