@@ -23,4 +23,5 @@ data class ActionButtonConfig(
     val onLongClick: (() -> TextReference?)? = null,
     val enabled: Boolean = true,
     val dimContent: Boolean = false,
+    val isInProgress: Boolean = false,
 )
