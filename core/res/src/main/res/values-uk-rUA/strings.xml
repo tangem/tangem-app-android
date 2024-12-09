@@ -130,7 +130,7 @@
   <string name="common_fee_selector_option_market">За ринком</string>
   <string name="common_fee_selector_option_slow">Повільно</string>
   <string name="common_fee_selector_title">Швидкість та комісія</string>
-  <string name="common_generate_addresses">Отримати ваші адреси</string>
+  <string name="common_generate_addresses">Синхронізувати адреси</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
   <string name="common_hour">година</string>
@@ -586,10 +586,11 @@
   <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
   <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>
   <string name="onramp_pay_with">Оплата з</string>
+  <string name="onramp_provider_max_amount">Доступно до %s</string>
+  <string name="onramp_provider_min_amount">Доступно від %s</string>
   <string name="onramp_redirecting_to_provider_subtitle">Ви зможете завершити транзакцію у стороннього постачальника, %s</string>
   <string name="onramp_redirecting_to_provider_title">Перенаправлення на %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Наші сервіси недоступні в цій країні</string>
-  <string name="onramp_residency_bottomsheet_country_subtitle">Змінити або підтвердити</string>
   <string name="onramp_residency_bottomsheet_title">Ваше місце проживання визначено як</string>
   <string name="onramp_settings_residence_description">Будь ласка, виберіть правильну країну, щоб забезпечити точні способи оплати та послуги.</string>
   <string name="onramp_settings_title">Параметри</string>
@@ -1021,12 +1022,12 @@
   <string name="warning_failed_to_verify_card_message">Ця картка може бути виробничим зразком або підробкою</string>
   <string name="warning_failed_to_verify_card_title">Перевірка автентичності не вдалася</string>
   <string name="warning_hedera_missing_token_association_button_title">Асоціювати</string>
-  <string name="warning_hedera_missing_token_association_message">Цей токен повинен бути асоційований з вашим обліковим записом Hedera, перш ніж ви зможете його прийняти. Вартість асоціації ~ %1$s %2$s</string>
+  <string name="warning_hedera_missing_token_association_message">Цей токен повинен бути асоційований з вашим обліковим записом Hedera, перш ніж ви зможете його прийняти. Вартість асоціації ~ %1$s %2$s</string>
   <string name="warning_hedera_missing_token_association_message_brief">Цей токен повинен бути асоційований з вашим обліковим записом Hedera, перш ніж ви зможете його прийняти</string>
   <string name="warning_hedera_missing_token_association_title">Асоціюйте свій токен</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">Недостатньо %s. Поповніть ваш обліковий запис Hedera для асоціації цього токена</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Ви впевнені, що хочете скасувати цю транзакцію? Ви не зможете відправити її ще раз</string>
-  <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакція %1$s %2$s не була завершена. Ви можете спробувати відправити її ще раз.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакція %1$s %2$s не була завершена. Ви можете спробувати відправити її ще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас є незавершена транзакція</string>
   <string name="warning_low_signatures_message">На цій картці залишається лише %s підписів. Ви повинні вивести всі свої кошти.</string>
   <string name="warning_low_signatures_title">Низька кількість підписів</string>
