@@ -21,8 +21,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.inputrow.InputRowRecipient
+import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
@@ -32,8 +36,6 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.state.previewdata.RecipientStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
-import com.tangem.core.ui.components.containers.FooterContainer
-import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
@@ -107,7 +109,7 @@ private fun LazyListScope.addressItem(
 ) {
     item(key = ADDRESS_FIELD_KEY) {
         FooterContainer(
-            footer = stringResource(R.string.send_recipient_address_footer, network),
+            footer = resourceReference(R.string.send_recipient_address_footer, wrappedList(network)),
         ) {
             InputRowRecipient(
                 value = address.value,
@@ -137,7 +139,7 @@ private fun LazyListScope.memoField(memoField: SendTextField.RecipientMemo?, onM
                 value = memoField.value,
                 label = memoField.label,
                 placeholder = placeholder,
-                footer = stringResource(R.string.send_recipient_memo_footer),
+                footer = resourceReference(R.string.send_recipient_memo_footer),
                 onValueChange = memoField.onValueChange,
                 onPasteClick = onMemoChange,
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),

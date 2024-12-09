@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.TitleState as TokenTitleState
 
@@ -46,7 +47,7 @@ private fun ContentTitle(state: TokenTitleState.Content, modifier: Modifier = Mo
          * So we need to use [weight] to avoid displacement.
          */
         CurrencyNameText(
-            name = state.text,
+            name = state.text.resolveReference(),
             isAvailable = state.isAvailable,
             modifier = Modifier.weight(weight = 1f, fill = false),
         )

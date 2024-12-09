@@ -43,6 +43,7 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Filecoin -> MoonPaySupportedCurrency(networkCode = "filecoin", currencyCode = "fil")
         Sui -> MoonPaySupportedCurrency(networkCode = "sui", currencyCode = "sui")
         Core -> MoonPaySupportedCurrency(networkCode = "core", currencyCode = "core")
+        Chiliz -> MoonPaySupportedCurrency(networkCode = "ethereum", currencyCode = "chz")
         ArbitrumTestnet -> null
         AvalancheTestnet -> null
         BinanceTestnet -> null
@@ -139,7 +140,9 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Casper -> null
         CasperTestnet -> null
         CoreTestnet -> null
+        ChilizTestnet -> null
         Unknown -> null
         Xodex -> null
         Canxium -> null
+        Clore -> null
     }

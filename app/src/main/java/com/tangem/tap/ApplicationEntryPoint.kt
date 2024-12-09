@@ -3,9 +3,11 @@ package com.tangem.tap
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -22,6 +24,7 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -34,6 +37,7 @@ import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
@@ -51,6 +55,8 @@ interface ApplicationEntryPoint {
     fun getIssuersConfigStorage(): IssuersConfigStorage
 
     fun getFeatureTogglesManager(): FeatureTogglesManager
+
+    fun getExcludedBlockchainsManager(): ExcludedBlockchainsManager
 
     fun getNetworkConnectionManager(): NetworkConnectionManager
 
@@ -113,4 +119,10 @@ interface ApplicationEntryPoint {
     fun getOnrampFeatureToggles(): OnrampFeatureToggles
 
     fun getOnboardingV2FeatureToggles(): OnboardingV2FeatureToggles
+
+    fun getOnboardingRepository(): OnboardingRepository
+
+    fun getCoroutineDispatcherProvider(): CoroutineDispatcherProvider
+
+    fun getExcludedBlockchains(): ExcludedBlockchains
 }

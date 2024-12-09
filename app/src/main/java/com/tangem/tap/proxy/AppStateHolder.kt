@@ -1,6 +1,5 @@
 package com.tangem.tap.proxy
 
-import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
@@ -26,10 +25,8 @@ class AppStateHolder @Inject constructor() : ReduxStateHolder {
     var mainStore: Store<AppState>? = null
     var tangemSdkManager: TangemSdkManager? = null
     var exchangeService: ExchangeService? = null
-
-    fun getActualCard(): CardDTO? {
-        return scanResponse?.card
-    }
+    var buyService: ExchangeService? = null
+    var sellService: ExchangeService? = null
 
     override fun dispatch(action: Action) {
         mainStore?.dispatch(action)

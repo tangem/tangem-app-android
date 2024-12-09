@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.inputrow.InputRowEnterAmount
 import com.tangem.core.ui.components.inputrow.InputRowEnterInfoAmount
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
@@ -41,7 +40,7 @@ internal fun SendCustomFee(
             repeat(customValues.size) { index ->
                 val value = customValues[index]
                 FooterContainer(
-                    footer = value.footer.resolveReference(),
+                    footer = value.footer,
                 ) {
                     if (value.label != null) {
                         InputRowEnterInfoAmount(

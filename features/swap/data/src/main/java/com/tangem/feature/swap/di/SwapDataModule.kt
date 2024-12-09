@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.crypto.DataSignatureVerifier
@@ -34,6 +35,7 @@ internal class SwapDataModule {
         userWalletsListManager: UserWalletsListManager,
         errorsDataConverter: ErrorsDataConverter,
         @NetworkMoshi moshi: Moshi,
+        excludedBlockchains: ExcludedBlockchains,
     ): SwapRepository {
         return DefaultSwapRepository(
             tangemExpressApi = tangemExpressApi,
@@ -43,6 +45,7 @@ internal class SwapDataModule {
             errorsDataConverter = errorsDataConverter,
             dataSignatureVerifier = dataSignature,
             moshi = moshi,
+            excludedBlockchains = excludedBlockchains,
         )
     }
 
@@ -51,10 +54,12 @@ internal class SwapDataModule {
     fun provideSwapTransactionRepository(
         appPreferencesStore: AppPreferencesStore,
         dispatcherProvider: CoroutineDispatcherProvider,
+        excludedBlockchains: ExcludedBlockchains,
     ): SwapTransactionRepository {
         return DefaultSwapTransactionRepository(
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatcherProvider,
+            excludedBlockchains = excludedBlockchains,
         )
     }
 

@@ -43,7 +43,7 @@ dependencies {
     implementation(deps.tangem.blockchain)
 
     /** Core modules */
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)

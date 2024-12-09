@@ -4,13 +4,12 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PLACE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
-import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_CATEGORY
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 class TokenExchangeAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent(TOKEN_CATEGORY, event, params, null) {
+) : AnalyticsEvent("Token", event, params, null) {
 
     class CexTxStatusOpened(token: String) : TokenScreenAnalyticsEvent(
         event = "Swap Status Opened",

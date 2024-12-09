@@ -9,7 +9,6 @@ import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.IntroductionProcess
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -31,7 +30,7 @@ class CardContextInterceptor(
 
     override fun canBeAppliedTo(event: AnalyticsEvent): Boolean {
         return when (event) {
-            is IntroductionProcess.ButtonScanCard, is MainScreen.ButtonScanCard -> false
+            is IntroductionProcess.ButtonScanCard -> false
             else -> true
         }
     }

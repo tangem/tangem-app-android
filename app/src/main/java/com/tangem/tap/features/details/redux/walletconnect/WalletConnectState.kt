@@ -82,6 +82,7 @@ data class WalletForSession(
 }
 
 sealed class WalletConnectDialog : StateDialog {
+    data object UnsupportedWcVersion : WalletConnectDialog()
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
     data object UnsupportedCard : WalletConnectDialog()
     data class UnsupportedNetwork(val networks: List<String>? = null) : WalletConnectDialog()

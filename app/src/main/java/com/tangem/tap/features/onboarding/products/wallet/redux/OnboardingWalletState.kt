@@ -3,6 +3,7 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import android.graphics.Bitmap
 import android.net.Uri
 import com.tangem.common.card.Card
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWalletId
 import org.rekotlin.StateType
@@ -99,22 +100,29 @@ enum class AccessCodeError {
 typealias CardId = String
 
 sealed class BackupStep {
-    object InitBackup : BackupStep()
-    object ScanOriginCard : BackupStep()
-    object AddBackupCards : BackupStep()
-    object SetAccessCode : BackupStep()
-    object EnterAccessCode : BackupStep()
-    object ReenterAccessCode : BackupStep()
-    object WritePrimaryCard : BackupStep()
+    data object InitBackup : BackupStep()
+    data object ScanOriginCard : BackupStep()
+    data object AddBackupCards : BackupStep()
+    data object SetAccessCode : BackupStep()
+    data object EnterAccessCode : BackupStep()
+    data object ReenterAccessCode : BackupStep()
+    data object WritePrimaryCard : BackupStep()
     data class WriteBackupCard(val cardNumber: Int) : BackupStep()
-    object Finished : BackupStep()
+    data object Finished : BackupStep()
 }
 
 sealed class BackupDialog : StateDialog {
-    object AttestationFailed : BackupDialog()
-    object AddMoreBackupCards : BackupDialog()
-    object BackupInProgress : BackupDialog()
-    object UnfinishedBackupFound : BackupDialog()
-    object ConfirmDiscardingBackup : BackupDialog()
+    data object AttestationFailed : BackupDialog()
+    data object AddMoreBackupCards : BackupDialog()
+    data object BackupInProgress : BackupDialog()
+
+    data class UnfinishedBackupFound(
+        val scanResponse: ScanResponse? = null,
+    ) : BackupDialog()
+
+    data class ConfirmDiscardingBackup(
+        val scanResponse: ScanResponse? = null,
+    ) : BackupDialog()
+
     data class ResetBackupCard(val cardId: String) : BackupDialog()
 }
