@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.onramp.FetchOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.GetOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCurrencyUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
@@ -31,6 +32,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class OnrampSelectCurrencyModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -38,6 +40,7 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     private val searchManager: InputManager,
     private val getOnrampCurrenciesUseCase: GetOnrampCurrenciesUseCase,
     private val saveDefaultCurrencyUseCase: OnrampSaveDefaultCurrencyUseCase,
+    private val fetchOnrampCurrenciesUseCase: FetchOnrampCurrenciesUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -51,13 +54,20 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     private val refreshTrigger = MutableSharedFlow<Unit>()
 
     init {
+        updateCurrenciesList()
         subscribeOnUpdateState()
+    }
+
+    private fun updateCurrenciesList() {
+        modelScope.launch {
+            fetchOnrampCurrenciesUseCase()
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun subscribeOnUpdateState() {
         combine(
-            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCurrenciesUseCase.invoke()) },
+            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { getOnrampCurrenciesUseCase() },
             flow2 = searchManager.query,
         ) { maybeCurrencies, query ->
             maybeCurrencies.onLeft {
