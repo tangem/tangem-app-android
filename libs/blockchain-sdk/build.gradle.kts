@@ -13,7 +13,7 @@ dependencies {
 
     // region Core modules
     implementation(projects.core.datasource)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.utils)
     // endregion
 

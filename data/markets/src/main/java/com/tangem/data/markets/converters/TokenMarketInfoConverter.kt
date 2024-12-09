@@ -1,15 +1,19 @@
 package com.tangem.data.markets.converters
 
+import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.isSupportedInApp
 import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
+import com.tangem.domain.markets.BuildConfig
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.markets.TokenQuotes
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
+internal class TokenMarketInfoConverter(
+    private val excludedBlockchains: ExcludedBlockchains,
+) : Converter<TokenMarketInfoResponse, TokenMarketInfo> {
 
     override fun convert(value: TokenMarketInfoResponse): TokenMarketInfo {
         return with(value) {
@@ -23,6 +27,7 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
                 fullDescription = fullDescription,
                 insights = insights?.convert(),
                 metrics = metrics?.convert(),
+                securityData = securityData?.convert(),
                 links = links?.convert(),
                 pricePerformance = pricePerformance?.convert(),
                 exchangesAmount = exchangesAmount,
@@ -62,7 +67,8 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
                         decimalCount = network.decimalCount,
                     )
                 }
-                blockchain != null && blockchain.isSupportedInApp() && blockchain.canHandleTokens() -> {
+                blockchain != null && blockchain !in excludedBlockchains &&
+                    blockchain.canHandleTokens() -> {
                     TokenMarketInfo.Network(
                         networkId = network.networkId,
                         exchangeable = network.exchangeable,
@@ -105,6 +111,31 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
         )
     }
 
+    private fun TokenMarketInfoResponse.SecurityData.convert(): TokenMarketInfo.SecurityData {
+        return TokenMarketInfo.SecurityData(
+            totalSecurityScore = totalSecurityScore,
+            securityScoreProviderData = providerData.map { it.convert() },
+        )
+    }
+
+    private fun TokenMarketInfoResponse.ProviderData.convert(): TokenMarketInfo.SecurityScoreProvider {
+        return TokenMarketInfo.SecurityScoreProvider(
+            providerId = providerId,
+            providerName = providerName,
+            urlData = link?.convertToUrlData(),
+            securityScore = securityScore,
+            lastAuditDate = lastAuditDate,
+            iconUrl = "${getImageHost()}large/$providerId.png",
+        )
+    }
+
+    private fun String.convertToUrlData(): TokenMarketInfo.SecurityScoreProvider.UrlData {
+        return TokenMarketInfo.SecurityScoreProvider.UrlData(
+            fullUrl = this,
+            rootHost = this.extractMainDomainOrNull(),
+        )
+    }
+
     private fun TokenMarketInfoResponse.Links.convert(): TokenMarketInfo.Links {
         return TokenMarketInfo.Links(
             officialLinks = officialLinks?.convert(),
@@ -138,5 +169,34 @@ internal object TokenMarketInfoConverter : Converter<TokenMarketInfoResponse, To
             low = low,
             high = high,
         )
+    }
+
+    private fun String.extractMainDomainOrNull(): String? {
+        return runCatching {
+            val uri = Uri.parse(this)
+            val host = uri.host ?: return null
+
+            val parts = host.split(".")
+
+            if (parts.size >= 2) {
+                parts.takeLast(2).joinToString(".")
+            } else {
+                host
+            }
+        }.getOrNull()
+    }
+
+    private fun getImageHost(): String {
+        return if (BuildConfig.TESTER_MENU_ENABLED) {
+            DEV_IMAGE_HOST
+        } else {
+            PROD_IMAGE_HOST
+        }
+    }
+
+    private companion object {
+
+        const val PROD_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/security_provider/"
+        const val DEV_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api.dev/security_provider/"
     }
 }

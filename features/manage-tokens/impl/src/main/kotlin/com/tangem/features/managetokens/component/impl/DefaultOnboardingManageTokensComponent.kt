@@ -12,13 +12,21 @@ import com.tangem.features.managetokens.ui.OnboardingManageTokensContent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.launch
 
 internal class DefaultOnboardingManageTokensComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted params: OnboardingManageTokensComponent.Params,
+    @Assisted onDone: () -> Unit,
 ) : OnboardingManageTokensComponent, AppComponentContext by context {
 
     private val model: OnboardingManageTokensModel = getOrCreateModel(params)
+
+    init {
+        componentScope.launch {
+            model.returnToParentComponentFlow.collect { onDone() }
+        }
+    }
 
     @Composable
     override fun Content(modifier: Modifier) {
@@ -32,6 +40,7 @@ internal class DefaultOnboardingManageTokensComponent @AssistedInject constructo
         override fun create(
             context: AppComponentContext,
             params: OnboardingManageTokensComponent.Params,
+            onDone: () -> Unit,
         ): DefaultOnboardingManageTokensComponent
     }
 }

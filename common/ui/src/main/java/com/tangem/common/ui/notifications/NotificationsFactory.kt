@@ -345,6 +345,11 @@ object NotificationsFactory {
         }
     }
 
+    fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
+        if (rentWarning == null) return
+        add(NotificationUM.Solana.RentInfo(rentWarning))
+    }
+
     private fun checkDustLimits(
         feeAmount: BigDecimal,
         receivedAmount: BigDecimal,

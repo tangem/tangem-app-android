@@ -28,6 +28,22 @@ class GetCryptoCurrencyUseCase(
     }
 
     /**
+     * Returns specific cryptocurrency for a given user wallet.
+     *
+     * !!! Important Use only [CryptoCurrency.ID.value] as cryptoCurrencyId
+     *
+     * @param userWalletId The ID of the user's wallet.
+     * @param cryptoCurrencyId String representation of the [CryptoCurrency.ID.value] of the cryptocurrency.
+     * @return An [Either] representing success (Right) or an error (Left) in fetching the status.
+     */
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        cryptoCurrencyId: String,
+    ): Either<CurrencyStatusError, CryptoCurrency> {
+        return either { getCurrency(userWalletId, cryptoCurrencyId) }
+    }
+
+    /**
      * Returns the primary cryptocurrency for a given user wallet.
      *
      * @param userWalletId The ID of the user's wallet.
@@ -40,6 +56,18 @@ class GetCryptoCurrencyUseCase(
     private suspend fun Raise<CurrencyStatusError>.getCurrency(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
+    ): CryptoCurrency {
+        return catch(
+            block = {
+                currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, id)
+            },
+            catch = { raise(CurrencyStatusError.DataError(it)) },
+        )
+    }
+
+    private suspend fun Raise<CurrencyStatusError>.getCurrency(
+        userWalletId: UserWalletId,
+        id: String,
     ): CryptoCurrency {
         return catch(
             block = {

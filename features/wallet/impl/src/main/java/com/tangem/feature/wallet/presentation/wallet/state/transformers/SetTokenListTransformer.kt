@@ -8,6 +8,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
+import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import timber.log.Timber
 
@@ -24,6 +25,7 @@ internal class SetTokenListTransformer(
                 prevState.copy(
                     walletCardState = prevState.walletCardState.toLoadedState(),
                     tokensListState = prevState.tokensListState.toLoadedState(),
+                    buttons = prevState.enableButtons(),
                 )
             }
             is WalletState.MultiCurrency.Locked -> {

@@ -1,12 +1,16 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
+import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
+import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -16,9 +20,12 @@ import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.ExchangeStatusState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.SwapTransactionsState
+import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateIconUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateInfoUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -31,25 +38,27 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.util.Locale
 
+// Fixme [REDACTED_JIRA]
+@Suppress("LargeClass")
 internal class TokenDetailsSwapTransactionsStateConverter(
     private val clickIntents: TokenDetailsClickIntents,
     private val cryptoCurrency: CryptoCurrency,
-    private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     appCurrencyProvider: Provider<AppCurrency>,
-) : Converter<Unit, PersistentList<SwapTransactionsState>> {
+) : Converter<Unit, PersistentList<ExpressTransactionStateUM.ExchangeUM>> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
     private val appCurrency = appCurrencyProvider()
 
-    override fun convert(value: Unit): PersistentList<SwapTransactionsState> {
+    override fun convert(value: Unit): PersistentList<ExpressTransactionStateUM.ExchangeUM> {
         return persistentListOf()
     }
 
     fun convert(
         savedTransactions: List<SavedSwapTransactionListModel>,
         quotes: Set<Quote>,
-    ): PersistentList<SwapTransactionsState> {
-        val result = mutableListOf<SwapTransactionsState>()
+    ): PersistentList<ExpressTransactionStateUM.ExchangeUM> {
+        val result = mutableListOf<ExpressTransactionStateUM.ExchangeUM>()
 
         savedTransactions
             .forEach { swapTransaction ->
@@ -71,40 +80,26 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             fromFiatAmount = quote.fiatRate.multiply(fromAmount)
                         }
                     }
-                    val timestamp = transaction.timestamp
                     val notifications =
                         getNotification(transaction.status?.status, transaction.status?.txExternalUrl, null)
                     val showProviderLink = getShowProviderLink(notifications, transaction.status)
                     result.add(
-                        SwapTransactionsState(
-                            txId = transaction.txId,
+                        ExpressTransactionStateUM.ExchangeUM(
                             provider = transaction.provider,
-                            txUrl = transaction.status?.txExternalUrl,
-                            txExternalId = transaction.status?.txExternalId,
-                            timestamp = TextReference.Str(
-                                "${timestamp.toDateFormatWithTodayYesterday()}, ${timestamp.toTimeFormat()}",
-                            ),
-                            fiatSymbol = appCurrency.symbol,
                             statuses = getStatuses(transaction.status?.status),
-                            hasFailed = transaction.status?.status == ExchangeStatus.Failed,
-                            activeStatus = transaction.status?.status,
                             notification = notifications,
-                            toCryptoCurrency = toCryptoCurrency,
-                            toCryptoAmount = toAmount.format { crypto(toCryptoCurrency) },
-                            toFiatAmount = getFiatAmount(toFiatAmount),
-                            toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
-                            fromCryptoCurrency = fromCryptoCurrency,
-                            fromCryptoAmount = fromAmount.format { crypto(fromCryptoCurrency) },
-                            fromFiatAmount = getFiatAmount(fromFiatAmount),
-                            fromCurrencyIcon = iconStateConverter.convert(fromCryptoCurrency),
+                            activeStatus = transaction.status?.status,
                             showProviderLink = showProviderLink,
-                            onClick = { clickIntents.onSwapTransactionClick(transaction.txId) },
-                            onGoToProviderClick = { url ->
-                                analyticsEventsHandlerProvider().send(
-                                    TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
-                                )
-                                clickIntents.onGoToProviderClick(url = url)
-                            },
+                            isRefundTerminalStatus = true,
+                            fromCryptoCurrency = fromCryptoCurrency,
+                            toCryptoCurrency = toCryptoCurrency,
+                            info = createStateInfo(
+                                transaction,
+                                toCryptoCurrency,
+                                fromCryptoCurrency,
+                                toFiatAmount,
+                                fromFiatAmount,
+                            ),
                         ),
                     )
                 }
@@ -113,36 +108,78 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     }
 
     fun updateTxStatus(
-        tx: SwapTransactionsState,
+        tx: ExpressTransactionStateUM.ExchangeUM,
         statusModel: ExchangeStatusModel?,
         refundToken: CryptoCurrency?,
         isRefundTerminalStatus: Boolean,
-    ): SwapTransactionsState {
+    ): ExpressTransactionStateUM.ExchangeUM {
         if (statusModel == null || tx.activeStatus == statusModel.status) {
             Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
         }
-        val hasFailed = tx.hasFailed || statusModel.status == ExchangeStatus.Failed
+        val hasFailed = statusModel.status == ExchangeStatus.Failed
         val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, refundToken)
         val showProviderLink = getShowProviderLink(notifications, statusModel)
         return tx.copy(
             activeStatus = statusModel.status,
-            hasFailed = hasFailed,
             notification = notifications,
             statuses = getStatuses(statusModel.status, hasFailed),
-            txUrl = statusModel.txExternalUrl,
             showProviderLink = showProviderLink,
             isRefundTerminalStatus = isRefundTerminalStatus,
+            info = tx.info.copy(txExternalUrl = statusModel.txExternalUrl),
         )
     }
 
-    private fun getFiatAmount(toFiatAmount: BigDecimal?): String {
-        return BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = toFiatAmount,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
+    private fun createStateInfo(
+        transaction: SavedSwapTransactionModel,
+        toCryptoCurrency: CryptoCurrency,
+        fromCryptoCurrency: CryptoCurrency,
+        toFiatAmount: BigDecimal?,
+        fromFiatAmount: BigDecimal?,
+    ): ExpressTransactionStateInfoUM {
+        val timestamp = transaction.timestamp
+        return ExpressTransactionStateInfoUM(
+            title = resourceReference(R.string.express_exchange_by, wrappedList(transaction.provider.name)),
+            txId = transaction.txId,
+            txExternalUrl = transaction.status?.txExternalUrl,
+            txExternalId = transaction.status?.txExternalId,
+            timestamp = timestamp,
+            timestampFormatted = stringReference(
+                "${timestamp.toDateFormatWithTodayYesterday()}, ${timestamp.toTimeFormat()}",
+            ),
+            toAmount = getCryptoAmount(transaction.toCryptoAmount, toCryptoCurrency),
+            toFiatAmount = getFiatAmount(toFiatAmount),
+            toCurrencyIcon = iconStateConverter.convert(toCryptoCurrency),
+            toAmountSymbol = toCryptoCurrency.symbol,
+            fromAmount = getCryptoAmount(transaction.fromCryptoAmount, fromCryptoCurrency),
+            fromFiatAmount = getFiatAmount(fromFiatAmount),
+            fromCurrencyIcon = iconStateConverter.convert(fromCryptoCurrency),
+            fromAmountSymbol = fromCryptoCurrency.symbol,
+            onClick = { clickIntents.onExpressTransactionClick(transaction.txId) },
+            onGoToProviderClick = { url ->
+                analyticsEventsHandler.send(
+                    TokenExchangeAnalyticsEvent.GoToProviderStatus(cryptoCurrency.symbol),
+                )
+                clickIntents.onGoToProviderClick(url = url)
+            },
+            iconState = getIconState(transaction.status?.status),
+            status = getStatusState(),
+            notification = null, // fixme [REDACTED_JIRA]
         )
     }
+
+    private fun getCryptoAmount(amount: BigDecimal?, cryptoCurrency: CryptoCurrency) = stringReference(
+        amount.format { crypto(cryptoCurrency) },
+    )
+
+    private fun getFiatAmount(toFiatAmount: BigDecimal?) = stringReference(
+        toFiatAmount.format {
+            fiat(
+                fiatCurrencyCode = appCurrency.code,
+                fiatCurrencySymbol = appCurrency.symbol,
+            )
+        },
+    )
 
     private fun getNotification(
         status: ExchangeStatus?,
@@ -153,7 +190,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             ExchangeStatus.Failed -> {
                 if (txUrl == null) return null
                 ExchangeStatusNotifications.Failed {
-                    analyticsEventsHandlerProvider().send(
+                    analyticsEventsHandler.send(
                         TokenExchangeAnalyticsEvent.GoToProviderFail(cryptoCurrency.symbol),
                     )
                     clickIntents.onGoToProviderClick(txUrl)
@@ -162,7 +199,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             ExchangeStatus.Verifying -> {
                 if (txUrl == null) return null
                 ExchangeStatusNotifications.NeedVerification {
-                    analyticsEventsHandlerProvider().send(
+                    analyticsEventsHandler.send(
                         TokenExchangeAnalyticsEvent.GoToProviderKYC(cryptoCurrency.symbol),
                     )
                     clickIntents.onGoToProviderClick(txUrl)
@@ -182,6 +219,21 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             else -> null
         }
     }
+
+    private fun getIconState(status: ExchangeStatus?): ExpressTransactionStateIconUM {
+        return when (status) {
+            ExchangeStatus.Verifying -> ExpressTransactionStateIconUM.Warning
+            ExchangeStatus.Failed, ExchangeStatus.Cancelled -> ExpressTransactionStateIconUM.Error
+            else -> ExpressTransactionStateIconUM.None
+        }
+    }
+
+    // Fixme [REDACTED_JIRA]
+    private fun getStatusState() = ExpressStatusUM(
+        title = resourceReference(R.string.express_exchange_status_title),
+        link = ExpressLinkUM.Empty,
+        statuses = persistentListOf(),
+    )
 
     private fun getShowProviderLink(notifications: ExchangeStatusNotifications?, status: ExchangeStatusModel?) =
         notifications == null && status?.txExternalUrl != null && status.status != ExchangeStatus.Cancelled
