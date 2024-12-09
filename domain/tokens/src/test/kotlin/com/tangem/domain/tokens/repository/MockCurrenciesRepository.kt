@@ -100,6 +100,14 @@ internal class MockCurrenciesRepository(
         return token
     }
 
+    override suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency {
+        val token = token.getOrElse { e -> throw e }
+
+        require(token.id.value == id)
+
+        return token
+    }
+
     override suspend fun getNetworkCoin(
         userWalletId: UserWalletId,
         networkId: Network.ID,
@@ -141,5 +149,9 @@ internal class MockCurrenciesRepository(
 
     override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return emptyFlow()
+    }
+
+    override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
+        return false
     }
 }

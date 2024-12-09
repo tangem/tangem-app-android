@@ -127,7 +127,7 @@ include(":common:routing")
 include(":core:analytics")
 include(":core:analytics:models")
 include(":core:datasource")
-include(":core:featuretoggles")
+include(":core:config-toggles")
 include(":core:navigation")
 include(":core:res")
 include(":core:ui")
@@ -140,6 +140,7 @@ include(":core:pagination")
 
 // region Common modules
 include(":common:ui")
+include(":common:google")
 // endregion
 
 // region Libs modules

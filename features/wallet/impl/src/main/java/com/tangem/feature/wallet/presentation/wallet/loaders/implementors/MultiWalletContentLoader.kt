@@ -31,7 +31,7 @@ internal class MultiWalletContentLoader(
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
-        return listOf(
+        return listOfNotNull(
             MultiWalletTokenListSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
