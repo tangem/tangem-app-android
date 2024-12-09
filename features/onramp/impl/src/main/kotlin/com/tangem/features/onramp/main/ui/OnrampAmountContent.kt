@@ -30,7 +30,6 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampAmountBlockUM
 import com.tangem.features.onramp.main.entity.OnrampAmountSecondaryFieldUM
 import com.tangem.features.onramp.main.entity.OnrampCurrencyUM
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnrampAmountContent(state: OnrampAmountBlockUM, modifier: Modifier = Modifier) {
@@ -85,7 +84,6 @@ private fun OnrampAmountField(amountField: AmountFieldModel) {
     )
 
     LaunchedEffect(key1 = Unit) {
-        delay(timeMillis = 200)
         requester.requestFocus()
     }
 }
