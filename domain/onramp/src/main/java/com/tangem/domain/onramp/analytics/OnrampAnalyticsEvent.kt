@@ -1,6 +1,14 @@
 package com.tangem.domain.onramp.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.CURRENCY
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
+import com.tangem.core.analytics.models.AnalyticsParam.Key.PAYMENT_METHOD
+import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
+import com.tangem.core.analytics.models.AnalyticsParam.Key.RESIDENCE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.SOURCE
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.domain.onramp.model.OnrampSource
 
 sealed class OnrampAnalyticsEvent(
@@ -18,8 +26,8 @@ sealed class OnrampAnalyticsEvent(
     ) : OnrampAnalyticsEvent(
         event = "Buy Screen Opened",
         params = mapOf(
-            "Source" to source.analyticsName,
-            "Token" to tokenSymbol,
+            SOURCE to source.analyticsName,
+            TOKEN_PARAM to tokenSymbol,
         ),
     )
 
@@ -29,7 +37,7 @@ sealed class OnrampAnalyticsEvent(
         private val currency: String,
     ) : OnrampAnalyticsEvent(
         event = "Currency Chosen",
-        params = mapOf("Currency" to currency),
+        params = mapOf(CURRENCY to currency),
     )
 
     data object CloseOnramp : OnrampAnalyticsEvent(event = "Button - Close")
@@ -42,14 +50,14 @@ sealed class OnrampAnalyticsEvent(
         private val residence: String,
     ) : OnrampAnalyticsEvent(
         event = "Residence Chosen",
-        params = mapOf("Residence" to residence),
+        params = mapOf(RESIDENCE to residence),
     )
 
     data class ResidenceConfirmScreenOpened(
         private val residence: String,
     ) : OnrampAnalyticsEvent(
         event = "Residence Confirm Screen",
-        params = mapOf("Residence" to residence),
+        params = mapOf(RESIDENCE to residence),
     )
 
     data object OnResidenceChange : OnrampAnalyticsEvent(event = "Button - Change")
@@ -58,7 +66,7 @@ sealed class OnrampAnalyticsEvent(
         private val residence: String,
     ) : OnrampAnalyticsEvent(
         event = "Button - Confirm",
-        params = mapOf("Residence" to residence),
+        params = mapOf(RESIDENCE to residence),
     )
 
     data object ProvidersScreenOpened : OnrampAnalyticsEvent(event = "Providers Screen Opened")
@@ -70,9 +78,9 @@ sealed class OnrampAnalyticsEvent(
     ) : OnrampAnalyticsEvent(
         event = "Provider Calculated",
         params = mapOf(
-            "Provider" to providerName,
-            "Token" to tokenSymbol,
-            "Payment Method" to paymentMethod,
+            PROVIDER to providerName,
+            TOKEN_PARAM to tokenSymbol,
+            PAYMENT_METHOD to paymentMethod,
         ),
     )
 
@@ -83,7 +91,7 @@ sealed class OnrampAnalyticsEvent(
     ) : OnrampAnalyticsEvent(
         event = "Method Chosen",
         params = mapOf(
-            "Payment Method" to paymentMethod,
+            PAYMENT_METHOD to paymentMethod,
         ),
     )
 
@@ -93,8 +101,8 @@ sealed class OnrampAnalyticsEvent(
     ) : OnrampAnalyticsEvent(
         event = "Provider Chosen",
         params = mapOf(
-            "Provider" to providerName,
-            "Token" to tokenSymbol,
+            PROVIDER to providerName,
+            TOKEN_PARAM to tokenSymbol,
         ),
     )
 
@@ -105,9 +113,9 @@ sealed class OnrampAnalyticsEvent(
     ) : OnrampAnalyticsEvent(
         event = "Button - Buy",
         params = mapOf(
-            "Provider" to providerName,
-            "Currency" to currency,
-            "Token" to tokenSymbol,
+            PROVIDER to providerName,
+            CURRENCY to currency,
+            TOKEN_PARAM to tokenSymbol,
         ),
     )
 
@@ -120,11 +128,11 @@ sealed class OnrampAnalyticsEvent(
     ) : OnrampAnalyticsEvent(
         event = "Buying In Progress Screen Opened",
         params = mapOf(
-            "Token" to tokenSymbol,
-            "Provider" to providerName,
-            "Residence" to residence,
-            "Currency" to currency,
-            "Method" to paymentMethod,
+            TOKEN_PARAM to tokenSymbol,
+            PROVIDER to providerName,
+            RESIDENCE to residence,
+            CURRENCY to currency,
+            PAYMENT_METHOD to paymentMethod,
         ),
     )
 
@@ -133,14 +141,25 @@ sealed class OnrampAnalyticsEvent(
 
     data class Errors(
         private val tokenSymbol: String,
-        private val providerName: String,
         private val errorCode: String,
+        private val providerName: String?,
     ) : OnrampAnalyticsEvent(
         event = "Errors",
+        params = buildMap {
+            put(TOKEN_PARAM, tokenSymbol)
+            providerName?.let { put(PROVIDER, providerName) }
+            put(ERROR_CODE, errorCode)
+        },
+    )
+
+    data class AppErrors(
+        private val tokenSymbol: String,
+        private val errorDescription: String,
+    ) : OnrampAnalyticsEvent(
+        event = "App Errors",
         params = mapOf(
-            "Token" to tokenSymbol,
-            "Provider" to providerName,
-            "Error Code" to errorCode,
+            TOKEN_PARAM to tokenSymbol,
+            ERROR_DESCRIPTION to errorDescription,
         ),
     )
 }

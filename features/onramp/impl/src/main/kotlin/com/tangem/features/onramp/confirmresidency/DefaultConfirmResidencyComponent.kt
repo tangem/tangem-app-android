@@ -14,10 +14,10 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.confirmresidency.model.ConfirmResidencyModel
 import com.tangem.features.onramp.confirmresidency.ui.ConfirmResidencyBottomSheet
 import com.tangem.features.onramp.confirmresidency.ui.ConfirmResidencyBottomSheetContent
-import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.selectcountry.SelectCountryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -68,7 +68,10 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
     ): ComposableBottomSheetComponent = when (config) {
         ConfirmResidencyBottomSheetConfig.SelectCountry -> selectCountryComponentFactory.create(
             context = childByContext(componentContext),
-            params = SelectCountryComponent.Params(onDismiss = model.bottomSheetNavigation::dismiss),
+            params = SelectCountryComponent.Params(
+                cryptoCurrency = params.cryptoCurrency,
+                onDismiss = model.bottomSheetNavigation::dismiss,
+            ),
         )
     }
 
