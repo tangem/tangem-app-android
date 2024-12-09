@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.main.entity
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.combinedReference
@@ -13,11 +14,13 @@ internal sealed interface OnrampMainComponentUM {
 
     val topBarConfig: OnrampMainTopBarUM
     val buyButtonConfig: BuyButtonConfig
+    val errorNotification: NotificationUM?
 
     data class InitialLoading(
         val currency: String,
         val onClose: () -> Unit,
         val openSettings: () -> Unit,
+        override val errorNotification: NotificationUM? = null,
     ) : OnrampMainComponentUM {
         override val topBarConfig: OnrampMainTopBarUM = OnrampMainTopBarUM(
             title = combinedReference(resourceReference(R.string.common_buy), stringReference(" $currency")),
@@ -43,6 +46,7 @@ internal sealed interface OnrampMainComponentUM {
     data class Content(
         override val topBarConfig: OnrampMainTopBarUM,
         override val buyButtonConfig: BuyButtonConfig,
+        override val errorNotification: NotificationUM?,
         val amountBlockState: OnrampAmountBlockUM,
         val providerBlockState: OnrampProviderBlockUM,
     ) : OnrampMainComponentUM
