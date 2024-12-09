@@ -9,10 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
 
 @Composable
@@ -50,11 +53,10 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
             )
         }
 
-        PrimaryButtonIconEnd(
+        PrimaryButton(
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                 .fillMaxWidth(),
-            iconResId = R.drawable.ic_tangem_24,
             text = stringResource(R.string.onboarding_button_backup_now),
             onClick = onBackupClick,
         )
@@ -65,6 +67,18 @@ fun Wallet1ChooseOption(onSkipClick: () -> Unit, onBackupClick: () -> Unit, modi
                 .fillMaxWidth(),
             text = stringResource(R.string.onboarding_button_skip_backup),
             onClick = onSkipClick,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun Preview() {
+    TangemThemePreview {
+        Wallet1ChooseOption(
+            onSkipClick = {},
+            onBackupClick = {},
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
