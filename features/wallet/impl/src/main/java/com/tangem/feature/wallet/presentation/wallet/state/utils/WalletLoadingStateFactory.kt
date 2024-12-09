@@ -9,6 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class WalletLoadingStateFactory(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
+    private val walletFeatureToggles: WalletFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -35,6 +37,7 @@ internal class WalletLoadingStateFactory(
         return WalletState.MultiCurrency.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
             walletCardState = userWallet.toLoadingWalletCardState(),
+            buttons = createMultiWalletActions(userWallet),
             warnings = persistentListOf(),
             bottomSheetConfig = null,
             tokensListState = WalletTokensListState.ContentState.Loading,
@@ -62,6 +65,7 @@ internal class WalletLoadingStateFactory(
         return WalletState.Visa.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
             walletCardState = userWallet.toLoadingWalletCardState(),
+            buttons = createMultiWalletActions(userWallet),
             warnings = persistentListOf(),
             bottomSheetConfig = null,
             balancesAndLimitBlockState = BalancesAndLimitsBlockState.Loading,
@@ -86,6 +90,29 @@ internal class WalletLoadingStateFactory(
             imageResId = walletImageResolver.resolve(userWallet = this),
             onRenameClick = clickIntents::onRenameBeforeConfirmationClick,
             onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
+        )
+    }
+
+    private fun createMultiWalletActions(userWallet: UserWallet): PersistentList<WalletManageButton> {
+        val isSingleWalletWithToken = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+        if (!walletFeatureToggles.isMainActionButtonsEnabled || isSingleWalletWithToken) return persistentListOf()
+
+        return persistentListOf(
+            WalletManageButton.Buy(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onMultiWalletBuyClick(userWalletId = userWallet.walletId) },
+            ),
+            WalletManageButton.Swap(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onMultiWalletSwapClick(userWalletId = userWallet.walletId) },
+            ),
+            WalletManageButton.Sell(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
+            ),
         )
     }
 
