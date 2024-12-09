@@ -1,7 +1,9 @@
 package com.tangem.blockchainsdk.utils
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.WalletManager
 import java.math.BigDecimal
 
 @Suppress("ComplexMethod", "LongMethod")
@@ -138,8 +140,11 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "core/test" -> Blockchain.CoreTestnet
         "casper-network" -> Blockchain.Casper
         "casper-network/test" -> Blockchain.CasperTestnet
+        "chiliz" -> Blockchain.Chiliz
+        "chiliz/test" -> Blockchain.ChilizTestnet
         "xodex" -> Blockchain.Xodex
         "canxium" -> Blockchain.Canxium
+        "clore-ai" -> Blockchain.Clore
         else -> null
     }
 }
@@ -277,8 +282,11 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.CasperTestnet -> "casper-network/test"
         Blockchain.Core -> "core"
         Blockchain.CoreTestnet -> "core/test"
+        Blockchain.Chiliz -> "chiliz"
+        Blockchain.ChilizTestnet -> "chiliz/test"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
+        Blockchain.Clore -> "clore-ai"
     }
 }
 
@@ -368,8 +376,10 @@ fun Blockchain.toCoinId(): String {
         Blockchain.EnergyWebX, Blockchain.EnergyWebXTestnet -> "energy-web-token"
         Blockchain.Casper, Blockchain.CasperTestnet -> "casper-network"
         Blockchain.Core, Blockchain.CoreTestnet -> "coredaoorg"
+        Blockchain.Chiliz, Blockchain.ChilizTestnet -> "chiliz"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
+        Blockchain.Clore -> "clore-ai"
     }
 }
 
@@ -382,14 +392,23 @@ fun Blockchain.toMigratedCointId(): String = when (this) {
     else -> toCoinId()
 }
 
-fun Blockchain.isSupportedInApp(): Boolean {
-    return !excludedBlockchains.contains(this)
-}
-
-fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
+fun Blockchain.amountToCreateAccount(walletManager: WalletManager, token: Token? = null): BigDecimal? {
     return when (this) {
-        Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else BigDecimal.ONE
-        Blockchain.XRP -> BigDecimal.TEN
+        Blockchain.Stellar -> {
+            val reserve = if (walletManager is ReserveAmountProvider) {
+                walletManager.getReserveAmount()
+            } else {
+                BigDecimal.ONE
+            }
+            if (token?.symbol == NODL) BigDecimal(NODL_AMOUNT_TO_CREATE_ACCOUNT) else reserve
+        }
+        Blockchain.XRP -> {
+            if (walletManager is ReserveAmountProvider) {
+                walletManager.getReserveAmount()
+            } else {
+                BigDecimal.ONE
+            }
+        }
         Blockchain.Near, Blockchain.NearTestnet -> 0.00182.toBigDecimal()
         Blockchain.Aptos, Blockchain.AptosTestnet,
         Blockchain.Filecoin,
@@ -405,11 +424,3 @@ fun Blockchain.minimalAmount(): BigDecimal {
 
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5
-
-// no need to add testnets
-private val excludedBlockchains = listOf(
-    Blockchain.Unknown,
-    Blockchain.Nexa,
-    Blockchain.NexaTestnet,
-    Blockchain.Xodex,
-)

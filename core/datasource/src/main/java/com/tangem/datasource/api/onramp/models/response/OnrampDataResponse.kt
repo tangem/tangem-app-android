@@ -21,6 +21,21 @@ data class OnrampDataResponse(
 )
 
 @JsonClass(generateAdapter = true)
+data class OnrampDataJson(
+    @Json(name = "widgetUrl")
+    val widgetUrl: String,
+
+    @Json(name = "requestId")
+    val requestId: String,
+
+    @Json(name = "externalTxId")
+    val externalTxId: String,
+
+    @Json(name = "externalTxUrl")
+    val externalTxUrl: String?,
+)
+
+@JsonClass(generateAdapter = true)
 data class OnrampTxDetails(
     @Json(name = "fromCurrencyCode")
     val fromCurrencyCode: String,

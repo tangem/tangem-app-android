@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.markets.TokenMarketExchange
 import com.tangem.domain.markets.TokenMarketExchange.TrustScore
@@ -26,7 +27,7 @@ internal object ExchangeItemStateConverter : Converter<TokenMarketExchange, Toke
                 isGrayscale = false,
                 showCustomBadge = false,
             ),
-            titleState = TokenItemState.TitleState.Content(text = value.name),
+            titleState = TokenItemState.TitleState.Content(text = stringReference(value.name)),
             fiatAmountState = TokenItemState.FiatAmountState.Content(
                 text = BigDecimalFormatter.formatFiatPriceUncapped(
                     fiatAmount = value.volumeInUsd,
@@ -35,7 +36,7 @@ internal object ExchangeItemStateConverter : Converter<TokenMarketExchange, Toke
                 ),
             ),
             subtitleState = TokenItemState.SubtitleState.TextContent(
-                value = if (value.isCentralized) "CEX" else "DEX",
+                value = stringReference(value = if (value.isCentralized) "CEX" else "DEX"),
             ),
             subtitle2State = TokenItemState.Subtitle2State.LabelContent(
                 auditLabelUM = value.trustScore.toAuditLabelUM(),

@@ -2,6 +2,8 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.data.common.api.safeApiCall
@@ -12,18 +14,14 @@ import com.tangem.data.tokens.utils.CustomTokensMerger
 import com.tangem.data.tokens.utils.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.express.TangemExpressApi
-import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
-import com.tangem.datasource.api.express.models.request.AssetsRequestBody
-import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.error.DataError
 import com.tangem.domain.demo.DemoConfig
@@ -46,19 +44,19 @@ import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
 internal class DefaultCurrenciesRepository(
     private val tangemTechApi: TangemTechApi,
-    private val tangemExpressApi: TangemExpressApi,
     private val userWalletsStore: UserWalletsStore,
     private val walletManagersFacade: WalletManagersFacade,
-    private val expressAssetsStore: ExpressAssetsStore,
     private val cacheRegistry: CacheRegistry,
     private val appPreferencesStore: AppPreferencesStore,
+    private val swapServiceLoader: SwapServiceLoader,
     private val dispatchers: CoroutineDispatcherProvider,
+    excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
 
     private val demoConfig = DemoConfig()
-    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory()
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
-    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig)
+    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
+    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig, excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
     private val customTokensMerger = CustomTokensMerger(tangemTechApi, dispatchers)
@@ -81,54 +79,39 @@ internal class DefaultCurrenciesRepository(
     }
 
     override suspend fun saveNewCurrenciesList(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        val savedResponse = requireNotNull(
-            value = getSavedUserTokensResponseSync(key = userWalletId),
-            lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
-        )
-        val newCoins = createCoinsForNewTokenList(
-            userWalletId = userWalletId,
-            newTokens = currencies.filterIsInstance<CryptoCurrency.Token>(),
-        )
-        val newCurrencies = (newCoins + currencies).distinct()
-        val updatedResponse = savedResponse.copy(
-            tokens = newCurrencies.map(userTokensResponseFactory::createResponseToken),
-        )
-        storeAndPushTokens(
-            userWalletId = userWalletId,
-            response = updatedResponse,
-        )
-        fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
+        withContext(dispatchers.io) {
+            val savedResponse = requireNotNull(
+                value = getSavedUserTokensResponseSync(key = userWalletId),
+                lazyMessage = { "Saved tokens empty. Can not perform add currencies action." },
+            )
+
+            val newCurrencies = populateCurrenciesWithMissedCoins(currencies)
+
+            val updatedResponse = savedResponse.copy(
+                tokens = newCurrencies.map(userTokensResponseFactory::createResponseToken),
+            )
+            storeAndPushTokens(
+                userWalletId = userWalletId,
+                response = updatedResponse,
+            )
+
+            fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
+        }
     }
 
     override suspend fun addCurrencies(userWalletId: UserWalletId, currencies: List<CryptoCurrency>) {
-        return withContext(dispatchers.io) {
+        withContext(dispatchers.io) {
             val savedCurrencies = requireNotNull(
                 value = getSavedUserTokensResponseSync(key = userWalletId),
                 lazyMessage = { "Saved tokens empty. Can not perform add currencies action" },
             )
 
-            val filteredCurrencies = currencies.toMutableList()
-            filteredCurrencies.filterNot { currency ->
-                val blockchain = getBlockchain(networkId = currency.network.id)
-                val networkId = blockchain.toNetworkId()
-                val contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress
-                savedCurrencies.tokens.firstOrNull { token ->
-                    token.contractAddress == contractAddress &&
-                        token.networkId == networkId &&
-                        token.derivationPath == currency.network.derivationPath.value
-                } != null
-            }
-
-            val newCoins = createCoinsForNewTokens(
-                userWalletId = userWalletId,
-                newTokens = filteredCurrencies.filterIsInstance<CryptoCurrency.Token>(),
-                savedCurrencies = savedCurrencies.tokens,
+            val currenciesToAdd = populateCurrenciesWithMissedCoins(
+                currencies = filterAlreadyAddedCurrencies(savedCurrencies.tokens, currencies),
             )
 
-            val newCurrencies = (newCoins + filteredCurrencies).distinct()
-
             val updatedResponse = savedCurrencies.copy(
-                tokens = savedCurrencies.tokens + newCurrencies.map(userTokensResponseFactory::createResponseToken),
+                tokens = savedCurrencies.tokens + currenciesToAdd.map(userTokensResponseFactory::createResponseToken),
             )
             storeAndPushTokens(
                 userWalletId = userWalletId,
@@ -138,34 +121,52 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    private suspend fun createCoinsForNewTokenList(
-        userWalletId: UserWalletId,
-        newTokens: List<CryptoCurrency.Token>,
-    ): List<CryptoCurrency.Coin> {
-        return newTokens.mapNotNull {
-            cryptoCurrencyFactory.createCoin(
-                blockchain = getBlockchain(networkId = it.network.id),
-                extraDerivationPath = it.network.derivationPath.value,
-                scanResponse = getUserWallet(userWalletId).scanResponse,
-            )
-        }.distinct()
+    private fun filterAlreadyAddedCurrencies(
+        savedCurrencies: List<UserTokensResponse.Token>,
+        currenciesToAdd: List<CryptoCurrency>,
+    ): List<CryptoCurrency> {
+        return currenciesToAdd.filter { currency ->
+            val blockchain = getBlockchain(networkId = currency.network.id)
+            val networkId = blockchain.toNetworkId()
+            val contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress
+
+            savedCurrencies.none { token ->
+                token.contractAddress == contractAddress &&
+                    token.networkId == networkId &&
+                    token.derivationPath == currency.network.derivationPath.value
+            }
+        }
     }
 
-    private suspend fun createCoinsForNewTokens(
-        userWalletId: UserWalletId,
-        newTokens: List<CryptoCurrency.Token>,
-        savedCurrencies: List<UserTokensResponse.Token>,
-    ): List<CryptoCurrency.Coin> {
-        return newTokens
-            .filterNot { savedCurrencies.hasCoinForToken(it.network) } // tokens without coins
-            .mapNotNull {
-                cryptoCurrencyFactory.createCoin(
-                    blockchain = getBlockchain(networkId = it.network.id),
-                    extraDerivationPath = it.network.derivationPath.value,
-                    scanResponse = getUserWallet(userWalletId).scanResponse,
-                )
+    private fun populateCurrenciesWithMissedCoins(currencies: List<CryptoCurrency>): List<CryptoCurrency> {
+        val networkToCoin = mutableMapOf<Network, CryptoCurrency.Coin>()
+        val networkToTokens = mutableMapOf<Network, List<CryptoCurrency.Token>>()
+
+        currencies.forEach { currency ->
+            when (currency) {
+                is CryptoCurrency.Coin -> {
+                    networkToCoin[currency.network] = currency
+                }
+                is CryptoCurrency.Token -> {
+                    val tokens = networkToTokens.getOrElse(currency.network, ::emptyList)
+                    networkToTokens[currency.network] = tokens + currency
+                }
             }
-            .distinct()
+        }
+
+        return buildList {
+            if (networkToTokens.isEmpty()) {
+                // add only coin here
+                addAll(networkToCoin.values)
+            } else {
+                networkToTokens.forEach { (network, networkTokens) ->
+                    val networkCoin = networkToCoin[network] ?: cryptoCurrencyFactory.createCoin(network)
+
+                    add(networkCoin)
+                    addAll(networkTokens)
+                }
+            }
+        }
     }
 
     override suspend fun removeCurrency(userWalletId: UserWalletId, currency: CryptoCurrency) =
@@ -298,22 +299,27 @@ internal class DefaultCurrenciesRepository(
         userWalletId: UserWalletId,
         id: CryptoCurrency.ID,
     ): CryptoCurrency = withContext(dispatchers.io) {
-        val userWallet = getUserWallet(userWalletId)
-        ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
-
-        val response = requireNotNull(
-            value = getSavedUserTokensResponseSync(key = userWalletId),
-            lazyMessage = {
-                "Unable to find tokens response for user wallet with provided ID: $userWalletId"
-            },
-        )
-
-        responseCurrenciesFactory.createCurrency(
-            currencyId = id,
-            response = response,
-            scanResponse = userWallet.scanResponse,
-        )
+        getMultiCurrencyWalletCurrency(userWalletId, id.value)
     }
+
+    override suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency =
+        withContext(dispatchers.io) {
+            val userWallet = getUserWallet(userWalletId)
+            ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = true)
+
+            val response = requireNotNull(
+                value = getSavedUserTokensResponseSync(key = userWalletId),
+                lazyMessage = {
+                    "Unable to find tokens response for user wallet with provided ID: $userWalletId"
+                },
+            )
+
+            responseCurrenciesFactory.createCurrency(
+                currencyId = id,
+                response = response,
+                scanResponse = userWallet.scanResponse,
+            )
+        }
 
     override suspend fun getNetworkCoin(
         userWalletId: UserWalletId,
@@ -504,6 +510,11 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
+    override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
+        val blockchain = Blockchain.fromNetworkId(network.backendId)
+        return blockchain?.isNetworkFeeZero() ?: false
+    }
+
     private fun getMultiCurrencyWalletCurrencies(userWallet: UserWallet): Flow<List<CryptoCurrency>> {
         return getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
             responseCurrenciesFactory.createCurrencies(
@@ -565,27 +576,7 @@ internal class DefaultCurrenciesRepository(
         userWalletId: UserWalletId,
         userTokens: UserTokensResponse,
     ) {
-        try {
-            val tokensList = userTokens.tokens
-                .map {
-                    LeastTokenInfo(
-                        contractAddress = it.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
-                        network = it.networkId,
-                    )
-                }
-
-            if (tokensList.isNotEmpty()) {
-                val response = tangemExpressApi.getAssets(
-                    AssetsRequestBody(
-                        tokensList = tokensList,
-                    ),
-                )
-
-                expressAssetsStore.store(userWalletId, response.getOrThrow())
-            }
-        } catch (e: Throwable) {
-            Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
-        }
+        swapServiceLoader.update(userWalletId, userTokens)
     }
 
     private suspend fun handleFetchTokensError(userWallet: UserWallet, e: ApiResponseError): UserTokensResponse {
