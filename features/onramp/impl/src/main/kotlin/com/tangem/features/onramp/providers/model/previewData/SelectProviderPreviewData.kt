@@ -2,21 +2,26 @@ package com.tangem.features.onramp.providers.model.previewData
 
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.onramp.model.OnrampPaymentMethod
+import com.tangem.domain.onramp.model.PaymentMethodType
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
-import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
-import com.tangem.features.onramp.providers.entity.ProviderListUM
+import com.tangem.features.onramp.providers.entity.SelectPaymentAndProviderUM
+import com.tangem.features.onramp.providers.entity.SelectProviderUM
 import kotlinx.collections.immutable.persistentListOf
 
 internal object SelectProviderPreviewData {
 
-    val state = ProviderListUM(
-        paymentMethod = ProviderListPaymentMethodUM(
+    private val paymentMethods = persistentListOf(
+        OnrampPaymentMethod(
             id = "card",
             name = "Card",
             imageUrl = "https://s3.eu-central-1.amazonaws.com/tangem.api/express/PaymentMethods/visa-mc.png",
-            onClick = {},
-            enabled = false,
+            type = PaymentMethodType.CARD,
         ),
+    )
+
+    private val providerListUM = SelectProviderUM(
+        paymentMethod = paymentMethods.first(),
         providers = persistentListOf(
             ProviderListItemUM.Available(
                 providerId = "mercuryo",
@@ -45,5 +50,12 @@ internal object SelectProviderPreviewData {
                 subtitle = stringReference("Avaiable from 0,00413 BTC"),
             ),
         ),
+    )
+
+    val state = SelectPaymentAndProviderUM(
+        paymentMethods = paymentMethods,
+        selectedPaymentMethod = providerListUM,
+        isPaymentMethodClickEnabled = false,
+        onPaymentMethodClick = {},
     )
 }
