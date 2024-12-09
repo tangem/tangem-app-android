@@ -21,6 +21,10 @@ internal class DefaultBlockchainDataStorage(
         return appPreferencesStore.getSyncOrNull(key = stringPreferencesKey(name = key))
     }
 
+    override suspend fun remove(key: String) {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun store(key: String, value: String) {
         appPreferencesStore.edit {
             it[stringPreferencesKey(key)] = value
