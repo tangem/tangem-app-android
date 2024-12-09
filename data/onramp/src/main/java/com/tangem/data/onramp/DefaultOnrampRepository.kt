@@ -343,9 +343,7 @@ internal class DefaultOnrampRepository(
 
     override suspend fun getAvailablePaymentMethods(): Set<OnrampPaymentMethod> {
         val quotes = requireNotNull(quotesStore.getSyncOrNull(QUOTES_KEY)) { "Quotes must not be null" }
-        return quotes
-            .filterIsInstance<OnrampQuote.Data>()
-            .mapTo(hashSetOf(), OnrampQuote.Data::paymentMethod)
+        return quotes.mapTo(hashSetOf(), OnrampQuote::paymentMethod)
     }
 
     override suspend fun saveSelectedPaymentMethod(paymentMethod: OnrampPaymentMethod) {
