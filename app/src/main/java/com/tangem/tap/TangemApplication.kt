@@ -278,6 +278,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                     onboardingRepository = onboardingRepository,
                     excludedBlockchains = excludedBlockchains,
+                    appPreferencesStore = appPreferencesStore,
                 ),
             ),
         )
