@@ -15,6 +15,7 @@ import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
 import com.tangem.features.onramp.impl.R
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -51,6 +52,9 @@ internal class ConfirmResidencyModel @Inject constructor(
         analyticsEventHandler.send(OnrampAnalyticsEvent.ResidenceConfirmScreenOpened(params.country.name))
         getOnrampCountryUseCase.invoke()
             .onEach { maybeCountry ->
+                maybeCountry.onLeft {
+                    analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
+                }
                 val country = maybeCountry.getOrNull()
                 if (country != null) {
                     params.onDismiss(country)
