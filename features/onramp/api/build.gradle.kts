@@ -15,6 +15,8 @@ dependencies {
     implementation(projects.core.ui)
 
     /* Project - Domain */
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 
     /* Compose */
