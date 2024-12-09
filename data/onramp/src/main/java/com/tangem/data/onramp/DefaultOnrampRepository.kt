@@ -25,6 +25,8 @@ import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
+import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
@@ -66,6 +68,8 @@ internal class DefaultOnrampRepository(
     private val paymentMethodsStore: OnrampPaymentMethodsStore,
     private val pairsStore: OnrampPairsStore,
     private val quotesStore: OnrampQuotesStore,
+    private val countriesStore: OnrampCountriesStore,
+    private val currenciesStore: OnrampCurrenciesStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val dataSignatureVerifier: DataSignatureVerifier,
     moshi: Moshi,
@@ -79,16 +83,36 @@ internal class DefaultOnrampRepository(
     private val onrampErrorAdapter = moshi.adapter(ExpressErrorResponse::class.java)
     private val onrampErrorConverter = OnrampErrorConverter(onrampErrorAdapter)
 
-    override suspend fun getCurrencies(): List<OnrampCurrency> = withContext(dispatchers.io) {
-        onrampApi.getCurrencies()
-            .getOrThrow()
-            .map(currencyConverter::convert)
+    override suspend fun getCurrencies(): Flow<List<OnrampCurrency>> = withContext(dispatchers.io) {
+        currenciesStore.get(CURRENCIES_KEY)
     }
 
-    override suspend fun getCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
-        onrampApi.getCountries()
+    override suspend fun fetchCurrencies() = withContext(dispatchers.io) {
+        if (!currenciesStore.getSyncOrNull(CURRENCIES_KEY).isNullOrEmpty()) return@withContext
+
+        val result = onrampApi.getCurrencies()
+            .getOrThrow()
+            .map(currencyConverter::convert)
+
+        currenciesStore.store(CURRENCIES_KEY, result)
+    }
+
+    override suspend fun getCountries(): Flow<List<OnrampCountry>> = withContext(dispatchers.io) {
+        countriesStore.get(COUNTRIES_KEY)
+    }
+
+    override suspend fun getCountriesSync(): List<OnrampCountry>? {
+        return countriesStore.getSyncOrNull(COUNTRIES_KEY)
+    }
+
+    override suspend fun fetchCountries() = withContext(dispatchers.io) {
+        if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext
+
+        val result = onrampApi.getCountries()
             .getOrThrow()
             .map(countryConverter::convert)
+
+        countriesStore.store(COUNTRIES_KEY, result)
     }
 
     override suspend fun getCountryByIp(): OnrampCountry = withContext(dispatchers.io) {
@@ -339,6 +363,8 @@ internal class DefaultOnrampRepository(
         paymentMethodsStore.clear()
         pairsStore.clear()
         quotesStore.clear()
+        countriesStore.clear()
+        currenciesStore.clear()
     }
 
     private suspend fun storeOnrampPairs(pairs: List<OnrampPairDTO>, providers: List<ExchangeProvider>) {
@@ -455,6 +481,8 @@ internal class DefaultOnrampRepository(
         const val SELECTED_PAYMENT_METHOD_KEY = "onramp_selected_payment_method"
         const val PAIRS_KEY = "onramp_pairs"
         const val QUOTES_KEY = "onramp_quotes"
+        const val COUNTRIES_KEY = "onramp_countries"
+        const val CURRENCIES_KEY = "onramp_currencies"
         const val PROVIDER_THEME_DARK = "dark"
         const val PROVIDER_THEME_LIGHT = "light"
     }
