@@ -26,6 +26,7 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.StakingProblem -> addStakingProblemBody(type)
             is FeedbackEmailType.SwapProblem -> addSwapProblemBody(type)
             is FeedbackEmailType.CurrencyDescriptionError -> addTokenInfo(type)
+            is FeedbackEmailType.PreActivatedWallet -> addUserRequestBody(type.cardInfo)
         }
 
         return build()
