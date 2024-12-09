@@ -8,4 +8,5 @@ interface OnrampIntents {
     fun openCurrenciesList()
     fun onBuyClick(quote: OnrampProviderWithQuote.Data)
     fun openProviders()
+    fun onRefresh()
 }
