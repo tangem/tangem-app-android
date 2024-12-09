@@ -23,11 +23,9 @@ import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDr
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.router.WalletRoute
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -40,7 +38,6 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val dispatchers: CoroutineDispatcherProvider,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, OrganizeTokensIntents {
 
@@ -95,7 +92,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
-        viewModelScope.launch(dispatchers.default) {
+        viewModelScope.launch {
             toggleTokenListSortingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
@@ -111,7 +108,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
 
-        viewModelScope.launch(dispatchers.default) {
+        viewModelScope.launch {
             toggleTokenListGroupingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
@@ -123,7 +120,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onApplyClick() {
-        viewModelScope.launch(dispatchers.default) {
+        viewModelScope.launch {
             stateHolder.updateStateToDisplayProgress()
 
             val listState = uiState.value.itemsState
@@ -147,8 +144,8 @@ internal class OrganizeTokensViewModel @Inject constructor(
             result.fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
+                    router.popBackStack()
                     stateHolder.updateStateToHideProgress()
-                    withContext(dispatchers.main) { router.popBackStack() }
                 },
             )
         }
@@ -161,7 +158,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     private fun bootstrapTokenList() {
-        viewModelScope.launch(dispatchers.default) {
+        viewModelScope.launch {
             val tokenList = getTokenList() ?: return@launch
 
             stateHolder.updateStateWithTokenList(tokenList)
