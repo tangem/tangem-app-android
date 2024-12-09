@@ -57,6 +57,7 @@ class SendFeedbackEmailUseCase(
         return when (type) {
             is FeedbackEmailType.ScanningProblem,
             is FeedbackEmailType.CurrencyDescriptionError,
+            is FeedbackEmailType.PreActivatedWallet,
             -> this
             is FeedbackEmailType.DirectUserRequest,
             is FeedbackEmailType.RateCanBeBetter,
