@@ -32,11 +32,11 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
-import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
-import com.tangem.features.onramp.providers.entity.ProviderListUM
+import com.tangem.features.onramp.providers.entity.SelectPaymentAndProviderUM
 import com.tangem.features.onramp.providers.model.previewData.SelectProviderPreviewData
 import com.tangem.features.onramp.utils.selectedBorder
 
@@ -50,7 +50,7 @@ internal fun SelectProviderBottomSheet(config: TangemBottomSheetConfig, content:
 }
 
 @Composable
-internal fun SelectProviderBottomSheetContent(state: ProviderListUM, modifier: Modifier = Modifier) {
+internal fun SelectProviderBottomSheetContent(state: SelectPaymentAndProviderUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -65,16 +65,23 @@ internal fun SelectProviderBottomSheetContent(state: ProviderListUM, modifier: M
         )
         PaymentMethodBlock(
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing20, bottom = TangemTheme.dimens.spacing16),
-            state = state.paymentMethod,
+            state = state.selectedPaymentMethod.paymentMethod,
+            isClickEnabled = state.isPaymentMethodClickEnabled,
+            onPaymentMethodClick = state.onPaymentMethodClick,
         )
-        state.providers.fastForEach { provider ->
+        state.selectedPaymentMethod.providers.fastForEach { provider ->
             key(provider.providerId) { ProviderItem(state = provider) }
         }
     }
 }
 
 @Composable
-private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Modifier = Modifier) {
+private fun PaymentMethodBlock(
+    state: OnrampPaymentMethod,
+    isClickEnabled: Boolean,
+    onPaymentMethodClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
@@ -83,7 +90,7 @@ private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Mod
                 color = TangemTheme.colors.stroke.secondary,
                 shape = RoundedCornerShape(TangemTheme.dimens.radius16),
             )
-            .clickable(enabled = state.enabled, onClick = state.onClick)
+            .clickable(enabled = isClickEnabled, onClick = onPaymentMethodClick)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
@@ -247,7 +254,7 @@ private fun UnavailableProviderItem(
 @Composable
 private fun SelectProviderBottomSheetContent_Preview(
     @PreviewParameter(SelectProviderBottomSheetContentPreviewProvider::class)
-    data: ProviderListUM,
+    data: SelectPaymentAndProviderUM,
 ) {
     TangemThemePreview {
         SelectProviderBottomSheetContent(data)
@@ -255,8 +262,8 @@ private fun SelectProviderBottomSheetContent_Preview(
 }
 
 private class SelectProviderBottomSheetContentPreviewProvider :
-    PreviewParameterProvider<ProviderListUM> {
-    override val values: Sequence<ProviderListUM>
+    PreviewParameterProvider<SelectPaymentAndProviderUM> {
+    override val values: Sequence<SelectPaymentAndProviderUM>
         get() = sequenceOf(
             SelectProviderPreviewData.state,
         )
