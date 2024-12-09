@@ -35,6 +35,7 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFra
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.routing.RoutingComponent.Child
+import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.Provider
 import dagger.hilt.android.scopes.ActivityScoped
 import java.util.WeakHashMap
@@ -61,10 +62,19 @@ internal class ChildFactory @Inject constructor(
     private val stakingRouter: StakingRouter,
     private val testerRouter: TesterRouter,
     private val pushNotificationRouter: PushNotificationsRouter,
+    private val routingFeatureToggles: RoutingFeatureToggles,
 ) {
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
     fun createChild(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
+        return if (routingFeatureToggles.isNavigationRefactoringEnabled) {
+            TODO("Will be implemented in [REDACTED_JIRA]")
+        } else {
+            createChildLegacy(route, contextFactory)
+        }
+    }
+
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
+    private fun createChildLegacy(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
         componentContexts[route] = contextFactory(route)
 
         return when (route) {
