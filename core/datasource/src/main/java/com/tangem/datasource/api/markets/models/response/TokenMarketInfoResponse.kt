@@ -2,6 +2,7 @@ package com.tangem.datasource.api.markets.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import org.joda.time.DateTime
 import java.math.BigDecimal
 
 @JsonClass(generateAdapter = true)
@@ -26,6 +27,8 @@ data class TokenMarketInfoResponse(
     val insights: Insights?,
     @Json(name = "metrics")
     val metrics: Metrics?,
+    @Json(name = "security_data")
+    val securityData: SecurityData?,
     @Json(name = "links")
     val links: Links?,
     @Json(name = "price_performance")
@@ -142,6 +145,28 @@ data class TokenMarketInfoResponse(
         val month: Range?,
         @Json(name = "all_time")
         val allTime: Range?,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class SecurityData(
+        @Json(name = "total_security_score")
+        val totalSecurityScore: Float,
+        @Json(name = "provider_data")
+        val providerData: List<ProviderData>,
+    )
+
+    @JsonClass(generateAdapter = true)
+    data class ProviderData(
+        @Json(name = "provider_id")
+        val providerId: String,
+        @Json(name = "provider_name")
+        val providerName: String,
+        @Json(name = "link")
+        val link: String?,
+        @Json(name = "security_score")
+        val securityScore: Float,
+        @Json(name = "last_audit_date")
+        val lastAuditDate: DateTime?,
     )
 
     @JsonClass(generateAdapter = true)
