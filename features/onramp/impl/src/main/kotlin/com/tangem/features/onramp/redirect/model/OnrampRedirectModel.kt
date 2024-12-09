@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.redirect.model
 
 import androidx.compose.ui.res.stringResource
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -20,16 +21,19 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.OnrampRedirectComponent
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class OnrampRedirectModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val urlOpener: UrlOpener,
     private val getOnrampRedirectUrlUseCase: GetOnrampRedirectUrlUseCase,
     private val messageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     router: Router,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -79,7 +83,11 @@ internal class OnrampRedirectModel @Inject constructor(
 
     private fun handleError(error: OnrampError) {
         Timber.e(error.toString())
-
+        analyticsEventHandler.sendOnrampErrorEvent(
+            error = error,
+            tokenSymbol = params.cryptoCurrency.symbol,
+            providerName = params.onrampProviderWithQuote.provider.info.name,
+        )
         val contentMessage = ContentMessage { onDismiss ->
             BasicDialog(
                 message = stringResource(id = R.string.common_unknown_error),
