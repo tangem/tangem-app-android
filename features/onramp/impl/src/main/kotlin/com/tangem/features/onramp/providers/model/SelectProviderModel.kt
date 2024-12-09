@@ -25,6 +25,7 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.entity.PaymentMethodUM
 import com.tangem.features.onramp.providers.SelectProviderComponent
 import com.tangem.features.onramp.providers.entity.*
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
@@ -60,7 +61,12 @@ internal class SelectProviderModel @Inject constructor(
 
     private fun subscribeToPaymentMethodUpdates() {
         getOnrampSelectedPaymentMethodUseCase.invoke()
-            .onEach { it.getOrNull()?.let(::getProviders) }
+            .onEach { maybePaymentMethod ->
+                maybePaymentMethod.fold(
+                    ifLeft = ::sendOnrampErrorEvent,
+                    ifRight = ::getProviders,
+                )
+            }
             .launchIn(modelScope)
     }
 
@@ -76,7 +82,10 @@ internal class SelectProviderModel @Inject constructor(
                         )
                     }
                 }
-                .onLeft { Timber.e(it.toString()) }
+                .onLeft { error ->
+                    sendOnrampErrorEvent(error)
+                    Timber.e(error.toString())
+                }
         }
     }
 
@@ -96,7 +105,13 @@ internal class SelectProviderModel @Inject constructor(
     private fun openPaymentMethods() {
         analyticsEventHandler.send(OnrampAnalyticsEvent.PaymentMethodsScreenOpened)
         modelScope.launch {
-            val methods = getSelectedPaymentMethodsUseCase.invoke().getOrNull().orEmpty()
+            val methods = getSelectedPaymentMethodsUseCase().fold(
+                ifLeft = { error ->
+                    sendOnrampErrorEvent(error)
+                    emptySet()
+                },
+                ifRight = { it },
+            )
             bottomSheetNavigation.activate(
                 ProviderListBottomSheetConfig.PaymentMethods(
                     selectedMethodId = _state.value.paymentMethod.id,
@@ -219,6 +234,17 @@ internal class SelectProviderModel @Inject constructor(
         )
         params.onProviderClick(result, isBestRate)
         params.onDismiss()
+    }
+
+    private fun sendOnrampErrorEvent(error: OnrampError) {
+        val selectedProvider = state.value.providers.firstOrNull {
+            it.providerId == params.selectedProviderId
+        }
+        analyticsEventHandler.sendOnrampErrorEvent(
+            error = error,
+            tokenSymbol = params.cryptoCurrency.symbol,
+            providerName = selectedProvider?.name,
+        )
     }
 
     /**
