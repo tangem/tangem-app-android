@@ -9,6 +9,7 @@ import com.tangem.feature.swap.domain.models.domain.PermissionOptions
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.domain.SwapProvider
 import com.tangem.feature.swap.domain.models.ui.*
+import java.math.BigDecimal
 
 interface SwapInteractor {
 
@@ -39,6 +40,7 @@ interface SwapInteractor {
         toToken: CryptoCurrencyStatus,
         providers: List<SwapProvider>,
         amountToSwap: String,
+        reduceBalanceBy: BigDecimal,
         selectedFee: FeeType = FeeType.NORMAL,
     ): Map<SwapProvider, SwapState>
 
@@ -70,6 +72,7 @@ interface SwapInteractor {
         selectedFee: FeeType,
         fromToken: CryptoCurrencyStatus,
         amountToSwap: String,
+        reduceBalanceBy: BigDecimal,
     ): SwapState.QuotesLoadedState
 
     /**
