@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -40,7 +41,7 @@ class GetCurrencyCheckUseCase(
                     recipientAddress,
                 )
             } ?: false
-            val utxoAmountLimit = if (amount != null && fee != null) {
+            val utxoAmountLimit = if (currency is CryptoCurrency.Token && amount != null && fee != null) {
                 currencyChecksRepository.checkUtxoAmountLimit(
                     userWalletId = userWalletId,
                     network = network,

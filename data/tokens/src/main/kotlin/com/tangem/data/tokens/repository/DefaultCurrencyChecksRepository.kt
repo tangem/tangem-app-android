@@ -15,7 +15,6 @@ import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.walletmanager.utils.CryptoCurrencyTypeConverter
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
@@ -26,8 +25,6 @@ internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val coroutineDispatchers: CoroutineDispatcherProvider,
 ) : CurrencyChecksRepository {
-
-    private val cryptoCurrencyTypeConverter by lazy { CryptoCurrencyTypeConverter() }
 
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
         val manager = walletManagersFacade.getOrCreateWalletManager(
@@ -44,10 +41,7 @@ internal class DefaultCurrencyChecksRepository(
             network = cryptoCurrency.network,
         )
 
-        return when (cryptoCurrency) {
-            is CryptoCurrency.Coin -> manager?.dustValue
-            is CryptoCurrency.Token -> null
-        }
+        return manager?.dustValue
     }
 
     override suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal? {
@@ -125,11 +119,7 @@ internal class DefaultCurrencyChecksRepository(
             network = network,
         )
         val utxoAmount = if (manager is UtxoAmountLimitProvider) {
-            manager.checkUtxoAmountLimit(
-                amount = amount,
-                fee = fee,
-                currencyType = cryptoCurrencyTypeConverter.convert(currency),
-            )
+            manager.checkUtxoAmountLimit(amount, fee)
         } else {
             null
         }
