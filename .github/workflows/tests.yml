@@ -37,14 +37,9 @@ jobs:
 
       - name: Run tests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
           BUNDLE_PATH: vendor/bundle
         run: |
           docker run --rm \
-            -e GITHUB_TOKEN \
-            -e GITHUB_ACTOR \
-            -e BUNDLE_PATH \
             -v ~/.gradle:/root/.gradle \
             -v ${{ github.workspace }}:/workspace \
             tangem_ci_android_environment \
