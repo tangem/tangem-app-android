@@ -28,6 +28,7 @@ import com.tangem.features.onramp.providers.entity.*
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.isSingleItem
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -159,7 +160,11 @@ internal class SelectProviderModel @Inject constructor(
         val sorted = sortByRate()
 
         val bestProvider = sorted.firstOrNull() as? OnrampProviderWithQuote.Data
-        return sorted.mapIndexed { index, quote ->
+        val isMultipleQuotes = !sorted.isSingleItem()
+        val isOtherQuotesHasData = sorted.filterNot { it == bestProvider }.any { it is OnrampProviderWithQuote.Data }
+        val hasBestProvider = isMultipleQuotes && isOtherQuotesHasData
+
+        return sorted.map { quote ->
             when (quote) {
                 is OnrampProviderWithQuote.Data -> {
                     val rate = quote.toAmount.value.format {
@@ -170,14 +175,16 @@ internal class SelectProviderModel @Inject constructor(
                     }
                     val isSelectedProvider = quote.provider.id == params.selectedProviderId
                     val isSelectedPayment = quote.paymentMethod.id == params.selectedPaymentMethod.id
+                    val isBestProvider = quote == bestProvider && hasBestProvider
                     ProviderListItemUM.Available(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
                         rate = rate,
                         isSelected = isSelectedProvider && isSelectedPayment,
-                        isBestRate = quote == bestProvider,
-                        diffRate = stringReference("$MINUS${rateDiff.format { percent() }}"),
+                        isBestRate = isBestProvider,
+                        diffRate = stringReference("$MINUS${rateDiff.format { percent() }}")
+                            .takeIf { hasBestProvider },
                         onClick = {
                             onProviderSelected(
                                 result = SelectProviderResult.ProviderWithQuote(
@@ -186,7 +193,7 @@ internal class SelectProviderModel @Inject constructor(
                                     fromAmount = quote.fromAmount,
                                     toAmount = quote.toAmount,
                                 ),
-                                isBestRate = bestProvider == quote,
+                                isBestRate = isBestProvider,
                             )
                         },
                     )
