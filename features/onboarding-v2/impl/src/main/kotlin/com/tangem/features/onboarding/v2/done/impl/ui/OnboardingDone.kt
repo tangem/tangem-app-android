@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
@@ -59,6 +60,7 @@ internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Mo
                 text = stringResource(R.string.onboarding_subtitle_success_tangem_wallet_onboarding),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
+                textAlign = TextAlign.Center,
             )
             SpacerH(72.dp)
         }
