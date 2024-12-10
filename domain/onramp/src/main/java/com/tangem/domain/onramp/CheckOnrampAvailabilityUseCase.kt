@@ -26,7 +26,7 @@ class CheckOnrampAvailabilityUseCase(
     }
 
     private suspend fun proceedWithSavedCountry(savedCountry: OnrampCountry): OnrampAvailability {
-        val countries = repository.getCountries()
+        val countries = repository.getCountriesSync().orEmpty()
         val onrampAvailable = countries.find { it == savedCountry }?.onrampAvailable ?: false
         return if (onrampAvailable) {
             val currency = repository.getDefaultCurrencySync() ?: run {
