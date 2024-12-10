@@ -1,6 +1,10 @@
 package com.tangem.datasource.di
 
 import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.datasource.local.onramp.countries.DefaultOnrampCountriesStore
+import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
+import com.tangem.datasource.local.onramp.currencies.DefaultOnrampCurrenciesStore
+import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.DefaultOnrampPairsStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.DefaultOnrampPaymentMethodsStore
@@ -33,5 +37,17 @@ internal object OnrampStoreModule {
     @Singleton
     fun provideOnrampQuotesStore(): OnrampQuotesStore {
         return DefaultOnrampQuotesStore(dataStore = RuntimeDataStore())
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampCountriesStore(): OnrampCountriesStore {
+        return DefaultOnrampCountriesStore(dataStore = RuntimeDataStore())
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampCurrencies(): OnrampCurrenciesStore {
+        return DefaultOnrampCurrenciesStore(dataStore = RuntimeDataStore())
     }
 }
