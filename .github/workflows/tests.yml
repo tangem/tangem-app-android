@@ -22,37 +22,37 @@ concurrency:
 jobs:
   test:
     name: Test
-    runs-on: [ self-hosted, old ]
+    runs-on: [ self-hosted, ARM64, active-android ]
     if: github.event.pull_request.draft == false
     steps:
-
-      - name: 'Cleanup build folder'
-        run: |
-          ls -la ./
-          rm -rf ./* || true
-          rm -rf ./.??* || true
-          ls -la ./
-
       - name: Checkout
         uses: actions/checkout@v3
         with:
           submodules: true
           token: ${{ secrets.GH_MOBILE_PAT }}
 
-      - uses: actions/setup-java@v1
-        with:
-          java-version: '17'
-
-      - name: Bundle install
+      - name: Build Docker image
         run: |
-          bundle config path vendor/bundle
-          bundle install --jobs 4 --retry 3
+          docker build --platform linux/arm64 -t tangem_ci_android_environment .
 
-      - name: Tests
+      - name: Run tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-        run: bundle exec fastlane test
+          BUNDLE_PATH: vendor/bundle
+        run: |
+          docker run --rm \
+            -e GITHUB_TOKEN \
+            -e GITHUB_ACTOR \
+            -e BUNDLE_PATH \
+            -v ~/.gradle:/root/.gradle \
+            -v ${{ github.workspace }}:/workspace \
+            tangem_ci_android_environment \
+            sh -c "
+              echo 'Running tests...';
+          
+              cd /workspace && fastlane test;
+            "
 
       - name: Build notification
         if: failure()
@@ -64,4 +64,4 @@ jobs:
           text: 'Tangem app tests #${{ github.run_number }} failed'
           color: 'danger'
           fields: |
-            [{ "title": "Action URL", "value": "${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}"}]
+            [{ "title": "Action URL", "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
