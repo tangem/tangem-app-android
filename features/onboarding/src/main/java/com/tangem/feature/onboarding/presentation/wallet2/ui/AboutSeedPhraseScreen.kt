@@ -13,10 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerW8
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.AboutState
@@ -56,7 +56,7 @@ fun AboutSeedPhraseScreen(state: AboutState, modifier: Modifier = Modifier) {
                     SecondaryButton(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        text = stringResource(id = R.string.onboarding_seed_intro_button_generate),
+                        text = stringResourceSafe(id = R.string.onboarding_seed_intro_button_generate),
                         enabled = state.buttonGenerateSeedPhrase.enabled,
                         showProgress = state.buttonGenerateSeedPhrase.showProgress,
                         onClick = state.buttonGenerateSeedPhrase.onClick,
@@ -66,7 +66,7 @@ fun AboutSeedPhraseScreen(state: AboutState, modifier: Modifier = Modifier) {
                     SecondaryButton(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        text = stringResource(id = R.string.onboarding_seed_intro_button_import),
+                        text = stringResourceSafe(id = R.string.onboarding_seed_intro_button_import),
                         enabled = state.buttonImportSeedPhrase.enabled,
                         showProgress = state.buttonImportSeedPhrase.showProgress,
                         onClick = state.buttonImportSeedPhrase.onClick,
@@ -105,7 +105,7 @@ private fun EditIconBlock() {
                         horizontal = TangemTheme.dimens.size12,
                         vertical = TangemTheme.dimens.size4,
                     ),
-                text = stringResource(id = R.string.onboarding_seed_phrase_intro_legacy),
+                text = stringResourceSafe(id = R.string.onboarding_seed_phrase_intro_legacy),
                 color = TangemTheme.colors.text.warning,
                 style = TangemTheme.typography.body1,
             )
@@ -143,7 +143,7 @@ private fun ReadMoreBlock(state: AboutState) {
             )
             SpacerW8()
             Text(
-                text = stringResource(id = R.string.onboarding_seed_button_read_more),
+                text = stringResourceSafe(id = R.string.onboarding_seed_button_read_more),
                 color = TangemTheme.colors.text.primary1,
             )
         }

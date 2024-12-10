@@ -4,6 +4,7 @@ import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
+import com.tangem.domain.settings.repositories.SettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,96 +18,131 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetOnrampCurrenciesUseCase(onrampRepository: OnrampRepository): GetOnrampCurrenciesUseCase {
-        return GetOnrampCurrenciesUseCase(onrampRepository)
+    fun provideGetOnrampCurrenciesUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampCurrenciesUseCase {
+        return GetOnrampCurrenciesUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideOnrampSaveDefaultCurrencyUseCase(onrampRepository: OnrampRepository): OnrampSaveDefaultCurrencyUseCase {
-        return OnrampSaveDefaultCurrencyUseCase(onrampRepository)
+    fun provideOnrampSaveDefaultCurrencyUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): OnrampSaveDefaultCurrencyUseCase {
+        return OnrampSaveDefaultCurrencyUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideGetOnrampCountriesUseCase(onrampRepository: OnrampRepository): GetOnrampCountriesUseCase {
-        return GetOnrampCountriesUseCase(onrampRepository)
+    fun provideGetOnrampCountriesUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampCountriesUseCase {
+        return GetOnrampCountriesUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideGetOnrampCountryUseCase(onrampRepository: OnrampRepository): GetOnrampCountryUseCase {
-        return GetOnrampCountryUseCase(onrampRepository)
+    fun provideGetOnrampCountryUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampCountryUseCase {
+        return GetOnrampCountryUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideOnrampSaveDefaultCountryUseCase(onrampRepository: OnrampRepository): OnrampSaveDefaultCountryUseCase {
-        return OnrampSaveDefaultCountryUseCase(onrampRepository)
+    fun provideOnrampSaveDefaultCountryUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): OnrampSaveDefaultCountryUseCase {
+        return OnrampSaveDefaultCountryUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideCheckOnrampAvailabilityUseCase(onrampRepository: OnrampRepository): CheckOnrampAvailabilityUseCase {
-        return CheckOnrampAvailabilityUseCase(onrampRepository)
+    fun provideCheckOnrampAvailabilityUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): CheckOnrampAvailabilityUseCase {
+        return CheckOnrampAvailabilityUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
     fun provideGetOnrampStatusUseCase(
         onrampRepository: OnrampRepository,
-        onrampTransactionRepository: OnrampTransactionRepository,
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampStatusUseCase {
         return GetOnrampStatusUseCase(
             onrampRepository,
-            onrampTransactionRepository,
             onrampErrorResolver,
         )
     }
 
     @Provides
     @Singleton
-    fun provideGetOnrampCurrencyUseCase(onrampRepository: OnrampRepository): GetOnrampCurrencyUseCase {
-        return GetOnrampCurrencyUseCase(onrampRepository)
+    fun provideGetOnrampCurrencyUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampCurrencyUseCase {
+        return GetOnrampCurrencyUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
     fun provideGetOnrampTransactionsUseCase(
         onrampTransactionRepository: OnrampTransactionRepository,
+        onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampTransactionsUseCase {
-        return GetOnrampTransactionsUseCase(onrampTransactionRepository)
+        return GetOnrampTransactionsUseCase(onrampTransactionRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
     fun provideGetOnrampTransactionUseCase(
         onrampTransactionRepository: OnrampTransactionRepository,
+        onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampTransactionUseCase {
-        return GetOnrampTransactionUseCase(onrampTransactionRepository)
+        return GetOnrampTransactionUseCase(onrampTransactionRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
     fun provideOnrampRemoveTransactionUseCase(
         onrampTransactionRepository: OnrampTransactionRepository,
+        onrampErrorResolver: OnrampErrorResolver,
     ): OnrampRemoveTransactionUseCase {
-        return OnrampRemoveTransactionUseCase(onrampTransactionRepository)
+        return OnrampRemoveTransactionUseCase(onrampTransactionRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
     fun provideOnrampSaveTransactionUseCase(
         onrampTransactionRepository: OnrampTransactionRepository,
+        onrampErrorResolver: OnrampErrorResolver,
     ): OnrampSaveTransactionUseCase {
-        return OnrampSaveTransactionUseCase(onrampTransactionRepository)
+        return OnrampSaveTransactionUseCase(onrampTransactionRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideGetOnrampPaymentMethodsUseCase(onrampRepository: OnrampRepository): GetOnrampPaymentMethodsUseCase {
-        return GetOnrampPaymentMethodsUseCase(onrampRepository)
+    fun provideOnrampUpdateTransactionStatusUseCase(
+        onrampTransactionRepository: OnrampTransactionRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): OnrampUpdateTransactionStatusUseCase {
+        return OnrampUpdateTransactionStatusUseCase(onrampTransactionRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetOnrampPaymentMethodsUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampPaymentMethodsUseCase {
+        return GetOnrampPaymentMethodsUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
@@ -117,36 +153,61 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
-    fun provideOnrampFetchQuotesUseCase(onrampRepository: OnrampRepository): OnrampFetchQuotesUseCase {
-        return OnrampFetchQuotesUseCase(onrampRepository)
+    fun provideOnrampFetchQuotesUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): OnrampFetchQuotesUseCase {
+        return OnrampFetchQuotesUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideGetOnrampQuotesUseCase(onrampRepository: OnrampRepository): GetOnrampQuotesUseCase {
-        return GetOnrampQuotesUseCase(onrampRepository)
+    fun provideGetOnrampQuotesUseCase(
+        settingsRepository: SettingsRepository,
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): GetOnrampQuotesUseCase {
+        return GetOnrampQuotesUseCase(
+            settingsRepository = settingsRepository,
+            repository = onrampRepository,
+            errorResolver = onrampErrorResolver,
+        )
     }
 
     @Provides
     @Singleton
     fun provideGetOnrampSelectedPaymentMethodUseCase(
         onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampSelectedPaymentMethodUseCase {
-        return GetOnrampSelectedPaymentMethodUseCase(onrampRepository)
+        return GetOnrampSelectedPaymentMethodUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
     fun provideGetOnrampProviderWithQuoteUseCase(
         onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampProviderWithQuoteUseCase {
-        return GetOnrampProviderWithQuoteUseCase(onrampRepository)
+        return GetOnrampProviderWithQuoteUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
     @Singleton
-    fun provideOnrampSaveSelectedPaymentMethod(onrampRepository: OnrampRepository): OnrampSaveSelectedPaymentMethod {
-        return OnrampSaveSelectedPaymentMethod(onrampRepository)
+    fun provideOnrampSaveSelectedPaymentMethod(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): OnrampSaveSelectedPaymentMethod {
+        return OnrampSaveSelectedPaymentMethod(onrampRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
+    fun provideOnrampFetchPairsUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): OnrampFetchPairsUseCase {
+        return OnrampFetchPairsUseCase(onrampRepository, onrampErrorResolver)
     }
 
     @Provides
@@ -154,7 +215,8 @@ internal object OnrampDomainModule {
     fun provideGetOnrampRedirectUrlUseCase(
         onrampRepository: OnrampRepository,
         transactionRepository: OnrampTransactionRepository,
+        onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampRedirectUrlUseCase {
-        return GetOnrampRedirectUrlUseCase(onrampRepository, transactionRepository)
+        return GetOnrampRedirectUrlUseCase(onrampRepository, transactionRepository, onrampErrorResolver)
     }
 }

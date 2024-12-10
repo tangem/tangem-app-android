@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.datasource.local.swaptx.ExchangeAnalyticsStatus
+import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
@@ -38,9 +38,9 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     @Assisted private val clickIntents: TokenDetailsClickIntents,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
-    @Assisted private val analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
     @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
     @Assisted private val userWalletId: UserWalletId,
     @Assisted private val cryptoCurrency: CryptoCurrency,
@@ -51,7 +51,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
             clickIntents = clickIntents,
             cryptoCurrency = cryptoCurrency,
             appCurrencyProvider = appCurrencyProvider,
-            analyticsEventsHandlerProvider = analyticsEventsHandlerProvider,
+            analyticsEventsHandler = analyticsEventsHandler,
         )
     }
 
@@ -132,7 +132,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         val savedStatus = swapTransactionStatusStore.getTransactionStatus(txId)
 
         if (savedStatus != status) {
-            analyticsEventsHandlerProvider().send(
+            analyticsEventsHandler.send(
                 TokenExchangeAnalyticsEvent.CexTxStatusChanged(cryptoCurrency.symbol, status.value, provider.name),
             )
             swapTransactionStatusStore.setTransactionStatus(txId, status)
@@ -183,22 +183,22 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
             this == ExchangeStatus.Unknown
     }
 
-    private fun toAnalyticStatus(status: ExchangeStatus?): ExchangeAnalyticsStatus? {
+    private fun toAnalyticStatus(status: ExchangeStatus?): ExpressAnalyticsStatus? {
         return when (status) {
             ExchangeStatus.New,
             ExchangeStatus.Waiting,
             ExchangeStatus.Sending,
             ExchangeStatus.Confirming,
             ExchangeStatus.Exchanging,
-            -> ExchangeAnalyticsStatus.InProgress
-            ExchangeStatus.WaitingTxHash -> ExchangeAnalyticsStatus.WaitingTxHash
-            ExchangeStatus.Verifying -> ExchangeAnalyticsStatus.KYC
-            ExchangeStatus.Failed -> ExchangeAnalyticsStatus.Fail
-            ExchangeStatus.TxFailed -> ExchangeAnalyticsStatus.FailTx
-            ExchangeStatus.Finished -> ExchangeAnalyticsStatus.Done
-            ExchangeStatus.Refunded -> ExchangeAnalyticsStatus.Refunded
-            ExchangeStatus.Cancelled -> ExchangeAnalyticsStatus.Cancelled
-            ExchangeStatus.Unknown -> ExchangeAnalyticsStatus.Unknown
+            -> ExpressAnalyticsStatus.InProgress
+            ExchangeStatus.WaitingTxHash -> ExpressAnalyticsStatus.WaitingTxHash
+            ExchangeStatus.Verifying -> ExpressAnalyticsStatus.KYC
+            ExchangeStatus.Failed -> ExpressAnalyticsStatus.Fail
+            ExchangeStatus.TxFailed -> ExpressAnalyticsStatus.FailTx
+            ExchangeStatus.Finished -> ExpressAnalyticsStatus.Done
+            ExchangeStatus.Refunded -> ExpressAnalyticsStatus.Refunded
+            ExchangeStatus.Cancelled -> ExpressAnalyticsStatus.Cancelled
+            ExchangeStatus.Unknown -> ExpressAnalyticsStatus.Unknown
             else -> null
         }
     }
@@ -216,7 +216,6 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         fun create(
             clickIntents: TokenDetailsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
-            analyticsEventsHandlerProvider: Provider<AnalyticsEventHandler>,
             currentStateProvider: Provider<TokenDetailsState>,
             userWalletId: UserWalletId,
             cryptoCurrency: CryptoCurrency,

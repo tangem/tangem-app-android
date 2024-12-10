@@ -6,11 +6,18 @@ import com.tangem.domain.onramp.model.OnrampProvider
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote.Unavailable
 import com.tangem.domain.onramp.model.OnrampQuote
+import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 
-class GetOnrampProviderWithQuoteUseCase(private val repository: OnrampRepository) {
+class GetOnrampProviderWithQuoteUseCase(
+    private val repository: OnrampRepository,
+    private val errorResolver: OnrampErrorResolver,
+) {
 
-    suspend operator fun invoke(paymentMethod: OnrampPaymentMethod): Either<Throwable, List<OnrampProviderWithQuote>> {
+    suspend operator fun invoke(
+        paymentMethod: OnrampPaymentMethod,
+    ): Either<OnrampError, List<OnrampProviderWithQuote>> {
         return Either.catch {
             val quotes: List<OnrampQuote> = requireNotNull(repository.getQuotesSync()) { "Quotes must not be null" }
             quotes
@@ -18,7 +25,7 @@ class GetOnrampProviderWithQuoteUseCase(private val repository: OnrampRepository
                 .mapNotNull { (provider, quotes) ->
                     quotes.quoteWithProvider(provider = provider, selectedPaymentMethod = paymentMethod)
                 }
-        }
+        }.mapLeft(errorResolver::resolve)
     }
 
     private fun List<OnrampQuote>.quoteWithProvider(
@@ -27,40 +34,29 @@ class GetOnrampProviderWithQuoteUseCase(private val repository: OnrampRepository
     ): OnrampProviderWithQuote? {
         val quoteData = this.filterIsInstance<OnrampQuote.Data>()
         val matchedPaymentMethodQuote = quoteData.firstOrNull { it.paymentMethod == selectedPaymentMethod }
-
-        if (matchedPaymentMethodQuote != null) {
-            return OnrampProviderWithQuote.Data(
-                provider = matchedPaymentMethodQuote.provider,
-                paymentMethod = matchedPaymentMethodQuote.paymentMethod,
-                toAmount = matchedPaymentMethodQuote.toAmount,
-                fromAmount = matchedPaymentMethodQuote.fromAmount,
-            )
-        }
-
         val paymentMethodNotSupported = quoteData.filterNot { it.paymentMethod == selectedPaymentMethod }
-        if (paymentMethodNotSupported.isNotEmpty()) {
-            return Unavailable.NotSupportedPaymentMethod(
-                provider = provider,
-                availablePaymentMethods = paymentMethodNotSupported.map(OnrampQuote.Data::paymentMethod),
-            )
-        }
-
-        val amountError = this
-            .filterIsInstance<OnrampQuote.Error>()
-            .firstOrNull { it.paymentMethod == selectedPaymentMethod }
-
+        val amountError =
+            filterIsInstance<OnrampQuote.Error>().firstOrNull { it.paymentMethod == selectedPaymentMethod }
         return when {
+            matchedPaymentMethodQuote != null -> {
+                OnrampProviderWithQuote.Data(
+                    provider = matchedPaymentMethodQuote.provider,
+                    paymentMethod = matchedPaymentMethodQuote.paymentMethod,
+                    toAmount = matchedPaymentMethodQuote.toAmount,
+                    fromAmount = matchedPaymentMethodQuote.fromAmount,
+                )
+            }
+            paymentMethodNotSupported.isNotEmpty() -> {
+                Unavailable.NotSupportedPaymentMethod(
+                    provider = provider,
+                    availablePaymentMethods = paymentMethodNotSupported.map(OnrampQuote.Data::paymentMethod),
+                )
+            }
             amountError != null -> {
-                when (amountError) {
-                    is OnrampQuote.Error.AmountTooBigError -> Unavailable.AvailableUpTo(
-                        provider = amountError.provider,
-                        amount = amountError.amount,
-                    )
-                    is OnrampQuote.Error.AmountTooSmallError -> Unavailable.AvailableFrom(
-                        provider = amountError.provider,
-                        amount = amountError.amount,
-                    )
-                }
+                Unavailable.Error(
+                    amountError.provider,
+                    amountError,
+                )
             }
             else -> null
         }

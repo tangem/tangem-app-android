@@ -13,7 +13,6 @@ data class MultiWalletBackupUM(
     val finalizeButtonEnabled: Boolean = false,
     val onAddBackupClick: () -> Unit = {},
     val onFinalizeButtonClick: () -> Unit = {},
-    val onSkipButtonClick: () -> Unit = {},
     val dialog: MultiWalletBackupUMDialog? = null,
 )
 

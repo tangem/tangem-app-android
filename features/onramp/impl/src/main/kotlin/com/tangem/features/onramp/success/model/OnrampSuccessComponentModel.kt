@@ -1,19 +1,23 @@
 package com.tangem.features.onramp.success.model
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.onramp.component.OnrampSuccessComponent
 import com.tangem.features.onramp.success.entity.OnrampSuccessClickIntents
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.conterter.SetOnrampSuccessContentConverter
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +35,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private val getOnrampStatusUseCase: GetOnrampStatusUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampSuccessClickIntents {
 
@@ -51,7 +56,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     private fun loadData() {
         modelScope.launch {
-            getOnrampTransactionUseCase(txId = params.txId)
+            getOnrampTransactionUseCase(externalTxId = params.externalTxId)
                 .fold(
                     ifLeft = {
                         Timber.e(it.toString())
@@ -64,33 +69,57 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
-        val cryptoCurrencies = getCryptoCurrencyUseCase(
+        val cryptoCurrency = getCryptoCurrencyUseCase(
             transaction.userWalletId,
             transaction.toCurrencyId,
         ).getOrElse { error("Crypto currency not found") }
 
-        getOnrampStatusUseCase(txId = params.txId)
+        getOnrampStatusUseCase(externalTxId = params.externalTxId)
             .fold(
-                ifLeft = {
-                    Timber.e(it.toString())
+                ifLeft = { error ->
+                    analyticsEventHandler.sendOnrampErrorEvent(
+                        error = error,
+                        tokenSymbol = cryptoCurrency.symbol,
+                        providerName = transaction.providerName,
+                    )
+                    Timber.e(error.toString())
                 },
                 ifRight = { status ->
+                    analyticsEventHandler.send(
+                        OnrampAnalyticsEvent.SuccessScreenOpened(
+                            providerName = transaction.providerName,
+                            currency = transaction.fromCurrency.code,
+                            tokenSymbol = cryptoCurrency.symbol,
+                            residence = transaction.residency,
+                            paymentMethod = transaction.paymentMethod,
+                        ),
+                    )
                     _state.update {
                         SetOnrampSuccessContentConverter(
-                            cryptoCurrency = cryptoCurrencies,
+                            cryptoCurrency = cryptoCurrency,
                             transaction = transaction,
                             goToProviderClick = ::goToProviderClick,
                         ).convert(status)
                     }
-                    removeTransactionIfTerminalStatus(status)
+                    removeTransactionIfTerminalStatus(cryptoCurrency, transaction.providerName, status)
                 },
             )
     }
 
-    private fun removeTransactionIfTerminalStatus(status: OnrampStatus) {
+    private fun removeTransactionIfTerminalStatus(
+        cryptoCurrency: CryptoCurrency,
+        providerName: String,
+        status: OnrampStatus,
+    ) {
         modelScope.launch {
-            if (status.status.isTerminal()) {
-                onrampRemoveTransactionUseCase(status.txId)
+            if (status.status.isTerminal) {
+                onrampRemoveTransactionUseCase(status.txId).onLeft { error ->
+                    analyticsEventHandler.sendOnrampErrorEvent(
+                        error = error,
+                        tokenSymbol = cryptoCurrency.symbol,
+                        providerName = providerName,
+                    )
+                }
             }
         }
     }

@@ -35,6 +35,7 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFra
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.routing.RoutingComponent.Child
+import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.Provider
 import dagger.hilt.android.scopes.ActivityScoped
 import java.util.WeakHashMap
@@ -61,10 +62,19 @@ internal class ChildFactory @Inject constructor(
     private val stakingRouter: StakingRouter,
     private val testerRouter: TesterRouter,
     private val pushNotificationRouter: PushNotificationsRouter,
+    private val routingFeatureToggles: RoutingFeatureToggles,
 ) {
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
     fun createChild(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
+        return if (routingFeatureToggles.isNavigationRefactoringEnabled) {
+            TODO("Will be implemented in [REDACTED_JIRA]")
+        } else {
+            createChildLegacy(route, contextFactory)
+        }
+    }
+
+    @Suppress("LongMethod", "CyclomaticComplexMethod")
+    private fun createChildLegacy(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
         componentContexts[route] = contextFactory(route)
 
         return when (route) {
@@ -197,14 +207,18 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Onramp -> {
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
-                    params = OnrampComponent.Params(userWalletId = route.userWalletId, cryptoCurrency = route.currency),
+                    params = OnrampComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cryptoCurrency = route.currency,
+                        source = route.source,
+                    ),
                     componentFactory = onrampComponentFactory,
                 )
             }
             is AppRoute.OnrampSuccess -> {
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
-                    params = OnrampSuccessComponent.Params(route.txId),
+                    params = OnrampSuccessComponent.Params(route.externalTxId),
                     componentFactory = onrampSuccessComponentFactory,
                 )
             }
@@ -235,6 +249,10 @@ internal class ChildFactory @Inject constructor(
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
                         startBackupFlow = route.startFromBackup,
+                        multiWalletMode = when (route.mode) {
+                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
+                            AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                        },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
                 )

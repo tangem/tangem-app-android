@@ -2,10 +2,13 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à l\'achat</string>
   <string name="action_buttons_sell_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à la vente</string>
+  <string name="action_buttons_sell_navigation_bar_title">Vendre</string>
   <string name="action_buttons_swap_choose_token">Choisissez le jeton</string>
   <string name="action_buttons_swap_empty_search_message">Jeton non trouvé dans votre portefeuille ? Consultez les marchés pour le trouver et l\'ajouter à l\'échange</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Il n\'y a pas de token disponible pour échanger avec le token sélectionné. Veuillez en choisir un autre.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Aucune paire disponible</string>
+  <string name="action_buttons_you_want_to_receive">Sélectionnez le jeton que vous souhaitez recevoir</string>
+  <string name="action_buttons_you_want_to_swap">Sélectionnez le jeton que vous souhaitez échanger</string>
   <string name="add_custom_token_choose_network">Choisissez le réseau</string>
   <string name="add_custom_token_title">Ajouter un jeton personnalisé</string>
   <string name="add_tokens_title">Gérer les jetons</string>
@@ -249,6 +252,7 @@
   <string name="express_choose_providers_subtitle">Tangem propose des échanges de jetons via des fournisseurs tiers selon les conditions de chaque fournisseur</string>
   <string name="express_choose_providers_title">Choisissez un fournisseur</string>
   <string name="express_error_code">Une erreur s\'est produite. Code : %s</string>
+  <string name="express_error_provider_amount_roundup">Erreur %1$s. Le fournisseur sélectionné ne peut pas traiter la transaction spécifiée. Veuillez arrondir la valeur à %2$s ou la modifier</string>
   <string name="express_error_swap_pair_unavailable">Le fournisseur sélectionné n\'est pas disponible pour le moment. Veuillez réessayer plus tard. (Code : %s)</string>
   <string name="express_error_swap_unavailable">Les échanges ne sont pas disponibles pour le moment. Veuillez réessayer plus tard. (Code : %s)</string>
   <string name="express_estimated_amount">Montant estimé</string>
@@ -563,6 +567,7 @@
   <string name="onboarding_wallet_info_title_fourth">Restauration du code d\'accès</string>
   <string name="onboarding_wallet_info_title_second">Cartes identiques</string>
   <string name="onboarding_wallet_info_title_third">Code d\'accès</string>
+  <string name="onramp_avaiable_with_payment_methods">Disponible avec %s</string>
   <string name="onramp_country_search">Recherche par pays</string>
   <string name="onramp_country_unavailable">Indisponible</string>
   <string name="onramp_currency_search">Recherche par devise</string>
@@ -579,6 +584,7 @@
   <string name="onramp_settings_residence">Résidence</string>
   <string name="onramp_settings_residence_description">Veuillez sélectionner le bon pays pour garantir des options de paiement et des services précis.</string>
   <string name="onramp_settings_title">Paramètres</string>
+  <string name="onramp_statuses_view_footer">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton.</string>
   <string name="onramp_transaction_status_footer_text">Vous pouvez vérifier l\'état de la transaction à partir de la page du jeton</string>
   <string name="onramp_via">Via</string>
   <string name="organize_tokens_group">Grouper</string>
@@ -589,7 +595,9 @@
   <string name="qr_scanner_camera_denied_settings_button">Paramètres</string>
   <string name="qr_scanner_camera_denied_text">Vous n\'avez pas donné accès à votre caméra</string>
   <string name="qr_scanner_camera_denied_title">Accès à la caméra refusé</string>
+  <string name="receive_bottom_sheet_no_memo_required_message">Aucun mémo requis</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) sur le réseau %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_description">L’envoi de toute autre devise entraînera sa perte irréversible.</string>
   <string name="receive_bottom_sheet_warning_message_full">Envoyez uniquement %s à cette adresse. L\'envoi de toute autre devise entraînera sa perte irréversible.</string>
   <string name="receive_token_description">Transférez des fonds depuis un autre portefeuille ou une autre bourse</string>
   <string name="referral_button_participate">Participer</string>
@@ -642,6 +650,10 @@
   <string name="scan_card_settings_button">Scannez votre carte</string>
   <string name="scan_card_settings_message">Scannez la carte pour modifier ses paramètres. Les modifications n\'affecteront que la carte que vous avez scannée et n\'affecteront pas les autres cartes liées à votre portefeuille.</string>
   <string name="scan_card_settings_title">Préparez votre carte !</string>
+  <string name="selling_insufficient_balance_alert_message">Vous n\'avez pas assez de fonds sur votre solde pour vendre cette cryptomonnaie. Veuillez déposer l\'actif souhaité pour continuer.</string>
+  <string name="selling_insufficient_balance_alert_title">Solde insuffisant</string>
+  <string name="selling_regional_restriction_alert_message">La vente de cryptomonnaies n\'est pas disponible dans votre région pour le moment. Nous travaillons activement pour vous proposer cette option prochainement. Restez connecté !</string>
+  <string name="selling_regional_restriction_alert_title">Restriction Régionale</string>
   <string name="send_additional_field_already_included">Déjà inclus dans l\'adresse saisie</string>
   <string name="send_alert_fee_too_high_text">Le montant de la commission est %s fois le montant recommandé. Assurez-vous que les paramètres personnalisés sont corrects.</string>
   <string name="send_alert_fee_too_low_text">Vous avez spécifié une commission inférieure au montant recommandé, ce qui pourrait entraîner un retard dans votre transaction. Continuer?</string>
@@ -883,6 +895,7 @@
   <string name="tokens_list_unavailable_to_purchase_header">Non disponible à l\'achat</string>
   <string name="tokens_list_unavailable_to_sell_header">Indisponible à la vente</string>
   <string name="tokens_list_unavailable_to_swap_header">Non disponible pour l\'échange de %s</string>
+  <string name="tokens_list_unavailable_to_swap_source_header">Indisponible pour un échange</string>
   <string name="transaction_history_contract_address">contrat : %s</string>
   <string name="transaction_history_empty_transactions">Vous n\'avez pas encore de transactions</string>
   <string name="transaction_history_error_failed_to_load">Échec du chargement de l\'historique des transactions.\nCliquez sur le bouton de rechargement pour mettre à jour les informations.</string>

@@ -27,8 +27,11 @@ class GetCurrencyCheckUseCase(
             val reserveAmount = currencyChecksRepository.getReserveAmount(userWalletId, network)
             val minimumSendAmount = currencyChecksRepository.getMinimumSendAmount(userWalletId, network)
             val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, network)
-            val rentWarning =
-                currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus, balanceAfterTransaction)
+            val rentWarning = currencyChecksRepository.getRentExemptionError(
+                userWalletId = userWalletId,
+                currencyStatus = currencyStatus,
+                balanceAfterTransaction = balanceAfterTransaction ?: BigDecimal.ZERO,
+            )
             val isAccountFunded = recipientAddress?.let {
                 currencyChecksRepository.checkIfAccountFunded(
                     userWalletId,

@@ -29,6 +29,7 @@ import com.tangem.domain.card.GetExtendedPublicKeyForCurrencyUseCase
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
@@ -163,7 +164,6 @@ internal class TokenDetailsViewModel @Inject constructor(
         expressStatusFactory.create(
             clickIntents = this,
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
-            analyticsEventsHandlerProvider = Provider { analyticsEventsHandler },
             currentStateProvider = Provider { uiState.value },
             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
             userWalletId = userWalletId,
@@ -189,15 +189,18 @@ internal class TokenDetailsViewModel @Inject constructor(
         deepLinksRegistry.registerWithViewModel(
             viewModel = this,
             deepLinks = listOf(
-                BuyCurrencyDeepLink(::onBuyCurrencyDeepLink),
+                BuyCurrencyDeepLink(
+                    isOnrampFeatureEnabled = onrampFeatureToggles.isFeatureEnabled,
+                    onReceive = ::onBuyCurrencyDeepLink,
+                ),
             ),
         )
         userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
     }
 
-    private fun onBuyCurrencyDeepLink(txId: String) {
+    private fun onBuyCurrencyDeepLink(externalTxId: String) {
         if (onrampFeatureToggles.isFeatureEnabled) {
-            router.openOnrampSuccess(txId)
+            router.openOnrampSuccess(externalTxId)
         } else {
             val currency = cryptoCurrencyStatus?.currency ?: return
             analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
@@ -441,6 +444,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
                         userWallet = userWallet,
+                        source = OnrampSource.TOKEN_DETAILS,
                         cryptoCurrencyStatus = status,
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
                     ),

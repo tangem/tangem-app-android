@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
+import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
@@ -46,14 +47,18 @@ internal class OnboardingEntryModel @Inject constructor(
     val startRoute = routeByProductType(params.scanResponse)
 
     private fun routeByProductType(scanResponse: ScanResponse): OnboardingRoute {
+        val multiWalletNavigationMode = when (params.multiWalletMode) {
+            OnboardingEntryComponent.MultiWalletMode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
+            OnboardingEntryComponent.MultiWalletMode.AddBackup -> OnboardingMultiWalletComponent.Mode.AddBackup
+        }
+
         return when (scanResponse.productType) {
-            ProductType.Note -> TODO()
-            ProductType.Twins -> TODO()
             ProductType.Wallet -> OnboardingRoute.MultiWallet(
                 scanResponse = scanResponse,
                 withSeedPhraseFlow = false,
                 titleProvider = titleProvider,
                 onDone = ::onMultiWalletOnboardingDone,
+                mode = multiWalletNavigationMode,
             )
             ProductType.Ring,
             ProductType.Wallet2,
@@ -62,9 +67,9 @@ internal class OnboardingEntryModel @Inject constructor(
                 withSeedPhraseFlow = true,
                 titleProvider = titleProvider,
                 onDone = ::onMultiWalletOnboardingDone,
+                mode = multiWalletNavigationMode,
             )
-            ProductType.Start2Coin -> TODO()
-            ProductType.Visa -> TODO()
+            else -> error("Unsupported")
         }
     }
 

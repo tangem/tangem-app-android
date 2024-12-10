@@ -1,5 +1,7 @@
 package com.tangem.domain.onramp.model
 
+import com.tangem.domain.onramp.model.error.OnrampError
+
 sealed class OnrampQuote {
 
     abstract val paymentMethod: OnrampPaymentMethod
@@ -14,18 +16,10 @@ sealed class OnrampQuote {
         val maxFromAmount: OnrampAmount,
     ) : OnrampQuote()
 
-    sealed class Error : OnrampQuote() {
-
-        data class AmountTooSmallError(
-            override val paymentMethod: OnrampPaymentMethod,
-            override val provider: OnrampProvider,
-            val amount: OnrampAmount,
-        ) : Error()
-
-        data class AmountTooBigError(
-            override val paymentMethod: OnrampPaymentMethod,
-            override val provider: OnrampProvider,
-            val amount: OnrampAmount,
-        ) : Error()
-    }
+    data class Error(
+        override val paymentMethod: OnrampPaymentMethod,
+        override val provider: OnrampProvider,
+        val fromAmount: OnrampAmount,
+        val error: OnrampError.AmountError,
+    ) : OnrampQuote()
 }

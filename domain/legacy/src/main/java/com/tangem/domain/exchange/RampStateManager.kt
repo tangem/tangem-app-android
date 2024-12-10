@@ -15,7 +15,11 @@ interface RampStateManager {
     /** Check if sell service is supported for given [CryptoCurrency] */
     fun isSellSupportedByService(cryptoCurrency: CryptoCurrency): Boolean
 
-    fun availableForBuy(scanResponse: ScanResponse, cryptoCurrency: CryptoCurrency): Boolean
+    suspend fun availableForBuy(
+        scanResponse: ScanResponse,
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): Boolean
 
     /**
      * Check if [CryptoCurrency] is available for sell

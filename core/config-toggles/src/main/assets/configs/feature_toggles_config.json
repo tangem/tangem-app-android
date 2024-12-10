@@ -17,7 +17,7 @@
     },
     {
         "name": "ONRAMP_ENABLED",
-        "version": "undefined"
+        "version": "5.19.0"
     },
     {
         "name": "MAIN_ACTION_BUTTONS_ENABLED",
@@ -25,6 +25,10 @@
     },
     {
         "name": "ONBOARDING_CODE_REFACTORING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "NAVIGATION_REFACTORING",
         "version": "undefined"
     }
 ]

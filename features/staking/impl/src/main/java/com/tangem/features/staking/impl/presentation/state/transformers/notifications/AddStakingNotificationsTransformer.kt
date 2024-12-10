@@ -1,5 +1,6 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.notifications
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -7,6 +8,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExceedsBalance
 import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWarningNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
@@ -189,10 +191,14 @@ internal class AddStakingNotificationsTransformer(
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
 
+        addRentExemptionNotification(
+            rentWarning = currencyCheck.rentWarning,
+        )
+
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
             feeAmount = feeState?.fee?.amount?.value.orZero(),
-            receivedAmount = sendingAmount,
+            sendingAmount = sendingAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onReduceClick = prevState.clickIntents::onAmountReduceByClick,
         )
@@ -207,7 +213,7 @@ internal class AddStakingNotificationsTransformer(
         // blockchain specific
         addValidateTransactionNotifications(
             dustValue = currencyCheck.dustValue.orZero(),
-            fee = feeState?.fee,
+            minAdaValue = (feeState?.fee as? Fee.CardanoToken)?.minAdaValue,
             validationError = validatorError,
             cryptoCurrency = cryptoCurrency,
             onReduceClick = prevState.clickIntents::onAmountReduceToClick,

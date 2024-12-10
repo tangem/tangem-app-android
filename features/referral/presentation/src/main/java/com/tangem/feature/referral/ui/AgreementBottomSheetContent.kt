@@ -11,13 +11,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.presentation.R
@@ -35,7 +35,7 @@ internal fun AgreementBottomSheetContent(url: String, bottomBarHeight: Dp) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        TangemTopAppBar(title = stringResource(id = R.string.details_referral_title))
+        TangemTopAppBar(title = stringResourceSafe(id = R.string.details_referral_title))
         AgreementHtmlView(url = url)
         Spacer(modifier = Modifier.height(bottomBarHeight))
     }

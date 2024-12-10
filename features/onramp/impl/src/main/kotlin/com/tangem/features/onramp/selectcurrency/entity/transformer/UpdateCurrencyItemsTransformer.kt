@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.onramp.model.OnrampCurrencies
 import com.tangem.domain.onramp.model.OnrampCurrency
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesSection
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyItemState
@@ -11,7 +12,7 @@ import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
 
 internal class UpdateCurrencyItemsTransformer(
-    private val maybeCurrencies: Either<Throwable, OnrampCurrencies>,
+    private val maybeCurrencies: Either<OnrampError, OnrampCurrencies>,
     private val query: String,
     private val onRetry: () -> Unit,
     private val onCurrencyClick: (OnrampCurrency) -> Unit,
