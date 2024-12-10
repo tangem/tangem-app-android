@@ -19,9 +19,9 @@ sealed class NavigationButtonsState {
 data class NavigationButton(
     val textReference: TextReference,
     @DrawableRes val iconRes: Int? = null,
-    val isSecondary: Boolean,
-    val isIconVisible: Boolean,
-    val showProgress: Boolean,
-    val isEnabled: Boolean,
+    val isSecondary: Boolean = false,
+    val isIconVisible: Boolean = false,
+    val showProgress: Boolean = false,
+    val isEnabled: Boolean = true,
     val onClick: () -> Unit,
 )
