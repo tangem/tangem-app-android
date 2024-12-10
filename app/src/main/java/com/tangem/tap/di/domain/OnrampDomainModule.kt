@@ -140,9 +140,10 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideGetOnrampPaymentMethodsUseCase(
         onrampRepository: OnrampRepository,
+        settingsRepository: SettingsRepository,
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampPaymentMethodsUseCase {
-        return GetOnrampPaymentMethodsUseCase(onrampRepository, onrampErrorResolver)
+        return GetOnrampPaymentMethodsUseCase(onrampRepository, settingsRepository, onrampErrorResolver)
     }
 
     @Provides
