@@ -867,7 +867,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onRetryIncompleteTransactionClick() {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch {
             retryIncompleteTransactionUseCase(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,
@@ -896,7 +896,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onConfirmDismissIncompleteTransactionClick() {
-        viewModelScope.launch(dispatchers.io) {
+        viewModelScope.launch {
             dismissIncompleteTransactionUseCase(
                 userWalletId = userWalletId,
                 currency = cryptoCurrency,

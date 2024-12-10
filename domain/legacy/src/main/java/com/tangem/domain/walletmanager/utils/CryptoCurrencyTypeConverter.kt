@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.converter.Converter
 
-class CryptoCurrencyTypeConverter : Converter<CryptoCurrency, CryptoCurrencyType> {
+internal class CryptoCurrencyTypeConverter : Converter<CryptoCurrency, CryptoCurrencyType> {
     override fun convert(value: CryptoCurrency): CryptoCurrencyType {
         return when (value) {
             is CryptoCurrency.Coin -> CryptoCurrencyType.Coin

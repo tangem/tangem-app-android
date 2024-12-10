@@ -25,7 +25,7 @@ class GetCurrencyCheckUseCase(
         return withContext(dispatchers.io) {
             val currency = currencyStatus.currency
             val network = currency.network
-            val dustValue = currencyChecksRepository.getDustValue(userWalletId, currency)
+            val dustValue = currencyChecksRepository.getDustValue(userWalletId, network)
             val reserveAmount = currencyChecksRepository.getReserveAmount(userWalletId, network)
             val minimumSendAmount = currencyChecksRepository.getMinimumSendAmount(userWalletId, network)
             val existentialDeposit = currencyChecksRepository.getExistentialDeposit(userWalletId, network)
@@ -41,7 +41,7 @@ class GetCurrencyCheckUseCase(
                     recipientAddress,
                 )
             } ?: false
-            val utxoAmountLimit = if (currency is CryptoCurrency.Token && amount != null && fee != null) {
+            val utxoAmountLimit = if (currency is CryptoCurrency.Coin && amount != null && fee != null) {
                 currencyChecksRepository.checkUtxoAmountLimit(
                     userWalletId = userWalletId,
                     network = network,

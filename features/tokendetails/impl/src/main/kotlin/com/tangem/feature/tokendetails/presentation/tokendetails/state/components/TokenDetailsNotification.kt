@@ -14,10 +14,10 @@ import org.joda.time.DateTime
 @Immutable
 internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
 
-    sealed class Alert(
+    sealed class Warning(
         title: TextReference,
         subtitle: TextReference,
-        iconResId: Int = R.drawable.ic_alert_circle_red_20,
+        iconResId: Int = R.drawable.img_attention_20,
         buttonsState: NotificationConfig.ButtonsState? = null,
         onCloseClick: (() -> Unit)? = null,
     ) : TokenDetailsNotification(
@@ -27,20 +27,6 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             iconResId = iconResId,
             buttonsState = buttonsState,
             onCloseClick = onCloseClick,
-        ),
-    )
-
-    sealed class Warning(
-        title: TextReference,
-        subtitle: TextReference,
-        iconResId: Int = R.drawable.img_attention_20,
-        buttonsState: NotificationConfig.ButtonsState? = null,
-    ) : TokenDetailsNotification(
-        config = NotificationConfig(
-            title = title,
-            subtitle = subtitle,
-            iconResId = iconResId,
-            buttonsState = buttonsState,
         ),
     )
 
@@ -213,7 +199,7 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         private val currencySymbol: String,
         private val onRetryIncompleteTransactionClick: () -> Unit,
         private val onDismissIncompleteTransactionClick: () -> Unit,
-    ) : Alert(
+    ) : Warning(
         title = resourceReference(R.string.warning_kaspa_unfinished_token_transaction_title),
         subtitle = resourceReference(
             id = R.string.warning_kaspa_unfinished_token_transaction_message,

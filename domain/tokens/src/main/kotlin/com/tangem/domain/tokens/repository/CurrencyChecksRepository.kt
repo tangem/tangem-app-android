@@ -18,7 +18,7 @@ interface CurrencyChecksRepository {
     suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal?
 
     /** Returns dust value */
-    suspend fun getDustValue(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal?
+    suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal?
 
     /** Returns reserve amount which is required to create an account */
     suspend fun getReserveAmount(userWalletId: UserWalletId, network: Network): BigDecimal?

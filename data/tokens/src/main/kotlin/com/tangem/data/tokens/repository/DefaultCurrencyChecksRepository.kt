@@ -35,10 +35,10 @@ internal class DefaultCurrencyChecksRepository(
         return if (manager is ExistentialDepositProvider) manager.getExistentialDeposit() else null
     }
 
-    override suspend fun getDustValue(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): BigDecimal? {
+    override suspend fun getDustValue(userWalletId: UserWalletId, network: Network): BigDecimal? {
         val manager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
-            network = cryptoCurrency.network,
+            network = network,
         )
 
         return manager?.dustValue
