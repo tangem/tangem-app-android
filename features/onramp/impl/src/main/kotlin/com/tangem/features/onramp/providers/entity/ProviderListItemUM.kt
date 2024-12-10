@@ -13,7 +13,7 @@ internal sealed interface ProviderListItemUM {
         val imageUrl: String,
         val rate: String,
         val isBestRate: Boolean,
-        val diffRate: TextReference,
+        val diffRate: TextReference?,
         val isSelected: Boolean,
         val onClick: () -> Unit,
     ) : ProviderListItemUM
