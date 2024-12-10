@@ -22,6 +22,7 @@ import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurren
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -59,6 +60,9 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
             flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCurrenciesUseCase.invoke()) },
             flow2 = searchManager.query,
         ) { maybeCurrencies, query ->
+            maybeCurrencies.onLeft {
+                analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
+            }
             UpdateCurrencyItemsTransformer(
                 maybeCurrencies = maybeCurrencies,
                 query = query,

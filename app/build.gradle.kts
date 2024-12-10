@@ -166,6 +166,7 @@ dependencies {
     implementation(deps.androidx.browser)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.swipeRefreshLayout)
+    implementation(deps.androidx.fragment.compose)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)

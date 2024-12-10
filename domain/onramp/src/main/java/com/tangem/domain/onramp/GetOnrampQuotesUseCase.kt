@@ -5,6 +5,8 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.PaymentMethodType
+import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.Flow
@@ -14,11 +16,12 @@ import kotlinx.coroutines.flow.map
 class GetOnrampQuotesUseCase(
     private val settingsRepository: SettingsRepository,
     private val repository: OnrampRepository,
+    private val errorResolver: OnrampErrorResolver,
 ) {
 
-    operator fun invoke(): Flow<Either<Throwable, List<OnrampQuote>>> {
+    operator fun invoke(): Flow<Either<OnrampError, List<OnrampQuote>>> {
         return repository.getQuotes()
-            .map<List<OnrampQuote>, Either<Throwable, List<OnrampQuote>>> { quotes ->
+            .map<List<OnrampQuote>, Either<OnrampError, List<OnrampQuote>>> { quotes ->
                 val isGooglePayAvailable = settingsRepository.isGooglePayAvailability()
 
                 quotes.groupBy { it.paymentMethod.type }
@@ -29,7 +32,9 @@ class GetOnrampQuotesUseCase(
                     .flatten()
                     .right()
             }
-            .catch { emit(it.left()) }
+            .catch {
+                emit(errorResolver.resolve(it).left())
+            }
     }
 
     /**
@@ -44,8 +49,13 @@ class GetOnrampQuotesUseCase(
                 is OnrampQuote.Data -> it.toAmount.value
 
                 // negative difference to sort both when data and unavailable is present
-                is OnrampQuote.Error.AmountTooSmallError -> it.fromAmount.value - it.requiredAmount.value
-                is OnrampQuote.Error.AmountTooBigError -> it.requiredAmount.value - it.fromAmount.value
+                is OnrampQuote.Error -> {
+                    when (val error = it.error) {
+                        is OnrampError.AmountError.TooSmallError -> it.fromAmount.value - error.requiredAmount
+                        is OnrampError.AmountError.TooBigError -> error.requiredAmount - it.fromAmount.value
+                        else -> null
+                    }
+                }
             }
         }
     }

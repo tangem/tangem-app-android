@@ -14,8 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
@@ -88,13 +88,13 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
                 ),
         ) {
             Text(
-                text = stringResource(id = R.string.scan_card_settings_title),
+                text = stringResourceSafe(id = R.string.scan_card_settings_title),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.h3,
             )
             Spacer(modifier = Modifier.size(TangemTheme.dimens.size20))
             Text(
-                text = stringResource(id = R.string.scan_card_settings_message),
+                text = stringResourceSafe(id = R.string.scan_card_settings_message),
                 color = TangemTheme.colors.text.secondary,
                 style = TangemTheme.typography.body1,
                 modifier = Modifier
@@ -103,7 +103,7 @@ private fun CardSettingsReadCard(onScanCardClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.size(TangemTheme.dimens.size32))
             DetailsMainButton(
-                title = stringResource(id = R.string.scan_card_settings_button),
+                title = stringResourceSafe(id = R.string.scan_card_settings_button),
                 onClick = onScanCardClick,
             )
         }

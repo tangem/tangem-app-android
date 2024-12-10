@@ -1,8 +1,6 @@
-package com.tangem.domain.onramp.model
+package com.tangem.domain.onramp.model.error
 
 sealed class OnrampRedirectError : Throwable() {
-
-    data class DataError(override val cause: Throwable?) : OnrampRedirectError()
 
     data object VerificationFailed : OnrampRedirectError()
 
