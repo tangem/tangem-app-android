@@ -1,6 +1,8 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,7 +29,8 @@ internal fun MultiWalletFinalize(state: MultiWalletFinalizeUM, modifier: Modifie
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(start = 32.dp, end = 32.dp, bottom = 74.dp)
+                .padding(start = 32.dp, end = 32.dp, bottom = 16.dp)
+                .verticalScroll(rememberScrollState())
                 .weight(1f),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
