@@ -228,9 +228,13 @@ sealed class NotificationUM(val config: NotificationConfig) {
             ),
         )
 
-        data class OnrampErrorNotification(val onRefresh: () -> Unit) : Warning(
+        data class OnrampErrorNotification(val errorCode: String?, val onRefresh: () -> Unit) : Warning(
             title = resourceReference(R.string.common_error),
-            subtitle = resourceReference(R.string.common_unknown_error),
+            subtitle = if (errorCode != null) {
+                resourceReference(R.string.express_error_code, wrappedList(errorCode))
+            } else {
+                resourceReference(R.string.common_unknown_error)
+            },
             buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
                 text = resourceReference(R.string.warning_button_refresh),
                 onClick = onRefresh,
