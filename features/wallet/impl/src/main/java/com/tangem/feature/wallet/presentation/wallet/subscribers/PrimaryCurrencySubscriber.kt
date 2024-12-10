@@ -81,7 +81,13 @@ internal class PrimaryCurrencySubscriber(
         }
 
         cardBalanceState?.let {
-            analyticsEventHandler.send(event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(balance = it))
+            // do not send tokens count for single currency wallet
+            analyticsEventHandler.send(
+                event = WalletScreenAnalyticsEvent.Basic.BalanceLoaded(
+                    balance = it,
+                    tokensCount = null,
+                ),
+            )
         }
     }
 

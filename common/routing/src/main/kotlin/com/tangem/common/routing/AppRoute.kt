@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -296,6 +297,7 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class Onramp(
+        val source: OnrampSource,
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
     ) : AppRoute(path = "/onramp/${userWalletId.stringValue}/${currency.symbol}"), RouteBundleParams {
@@ -304,8 +306,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class OnrampSuccess(
-        val txId: String,
-    ) : AppRoute(path = "/onramp/success/$txId"), RouteBundleParams {
+        val externalTxId: String,
+    ) : AppRoute(path = "/onramp/success/$externalTxId"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
 
@@ -329,5 +331,12 @@ sealed class AppRoute(val path: String) : Route {
     data class Onboarding(
         val scanResponse: ScanResponse,
         val startFromBackup: Boolean,
-    ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}")
+        val mode: Mode = Mode.Onboarding,
+    ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}") {
+
+        enum class Mode {
+            Onboarding, // general Mode
+            AddBackup, // continue backup process for existing wallet 1
+        }
+    }
 }

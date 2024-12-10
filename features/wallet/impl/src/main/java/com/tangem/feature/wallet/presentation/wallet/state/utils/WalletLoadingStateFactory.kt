@@ -94,7 +94,8 @@ internal class WalletLoadingStateFactory(
     }
 
     private fun createMultiWalletActions(userWallet: UserWallet): PersistentList<WalletManageButton> {
-        if (!walletFeatureToggles.isMainActionButtonsEnabled) return persistentListOf()
+        val isSingleWalletWithToken = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
+        if (!walletFeatureToggles.isMainActionButtonsEnabled || isSingleWalletWithToken) return persistentListOf()
 
         return persistentListOf(
             WalletManageButton.Buy(

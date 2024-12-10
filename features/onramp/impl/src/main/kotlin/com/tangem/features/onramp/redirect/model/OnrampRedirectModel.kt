@@ -1,28 +1,35 @@
 package com.tangem.features.onramp.redirect.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.extensions.combinedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.onramp.GetOnrampRedirectUrlUseCase
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.OnrampRedirectComponent
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectUM
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class OnrampRedirectModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val urlOpener: UrlOpener,
     private val getOnrampRedirectUrlUseCase: GetOnrampRedirectUrlUseCase,
+    private val messageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     router: Router,
     paramsContainer: ParamsContainer,
 ) : Model() {
@@ -62,8 +69,37 @@ internal class OnrampRedirectModel @Inject constructor(
                 quote = params.onrampProviderWithQuote,
                 cryptoCurrency = params.cryptoCurrency,
             )
-                .onLeft { Timber.e(it) }
-                .onRight { urlOpener.openUrl(it) }
+                .onLeft(::handleError)
+                .onRight {
+                    params.onBack()
+                    urlOpener.openUrl(it)
+                }
         }
+    }
+
+    private fun handleError(error: OnrampError) {
+        Timber.e(error.toString())
+        analyticsEventHandler.sendOnrampErrorEvent(
+            error = error,
+            tokenSymbol = params.cryptoCurrency.symbol,
+            providerName = params.onrampProviderWithQuote.provider.info.name,
+        )
+        val contentMessage = ContentMessage { onDismiss ->
+            BasicDialog(
+                message = stringResourceSafe(id = R.string.common_unknown_error),
+                confirmButton = DialogButtonUM(
+                    title = stringResourceSafe(id = R.string.common_ok),
+                    onClick = {
+                        params.onBack()
+                        onDismiss()
+                    },
+                ),
+                onDismissDialog = {
+                    params.onBack()
+                    onDismiss()
+                },
+            )
+        }
+        messageSender.send(contentMessage)
     }
 }

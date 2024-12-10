@@ -4,12 +4,12 @@ package com.tangem.datasource.local.swaptx
  * Runtime cache for storing swap transactions statuses sent to analytics
  */
 interface SwapTransactionStatusStore {
-    suspend fun getTransactionStatus(txId: String): ExchangeAnalyticsStatus?
+    suspend fun getTransactionStatus(txId: String): ExpressAnalyticsStatus?
 
-    suspend fun setTransactionStatus(txId: String, status: ExchangeAnalyticsStatus)
+    suspend fun setTransactionStatus(txId: String, status: ExpressAnalyticsStatus)
 }
 
-enum class ExchangeAnalyticsStatus(val value: String) {
+enum class ExpressAnalyticsStatus(val value: String) {
     WaitingTxHash("Waiting tx hash"),
     InProgress("In Progress"),
     Done("Done"),

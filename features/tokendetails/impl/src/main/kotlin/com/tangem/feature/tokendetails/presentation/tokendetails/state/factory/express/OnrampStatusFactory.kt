@@ -1,11 +1,17 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
+import com.tangem.domain.onramp.OnrampUpdateTransactionStatusUseCase
+import com.tangem.domain.onramp.model.OnrampStatus
+import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
@@ -26,6 +32,8 @@ internal class OnrampStatusFactory @AssistedInject constructor(
     private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
     private val getOnrampStatusUseCase: GetOnrampStatusUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
+    private val onrampUpdateTransactionStatusUseCase: OnrampUpdateTransactionStatusUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
     @Assisted private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
@@ -40,6 +48,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             cryptoCurrency = cryptoCurrency,
             cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
             appCurrencyProvider = appCurrencyProvider,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 
@@ -49,7 +58,11 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             cryptoCurrencyId = cryptoCurrency.id,
         ).map { maybeTransaction ->
             maybeTransaction.fold(
-                ifRight = onrampTransactionStateConverter::convertList,
+                ifRight = { onrampTxs ->
+                    val transactions = onrampTransactionStateConverter.convertList(onrampTxs)
+                    transactions.clearHiddenTerminal()
+                    transactions.filterNot { it.activeStatus.isHidden }
+                },
                 ifLeft = { persistentListOf() },
             )
         }
@@ -60,13 +73,13 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
-        if (selectedTx.activeStatus.isTerminal()) {
-            onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
+        if (selectedTx.activeStatus.isTerminal) {
+            onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
         }
     }
 
     suspend fun updateOnrmapTxStatus(onrampTx: ExpressTransactionStateUM.OnrampUM): ExpressTransactionStateUM.OnrampUM {
-        return if (onrampTx.activeStatus.isTerminal()) {
+        return if (onrampTx.activeStatus.isTerminal) {
             onrampTx
         } else {
             getOnrampStatusUseCase(onrampTx.info.txId).fold(
@@ -75,9 +88,53 @@ internal class OnrampStatusFactory @AssistedInject constructor(
                     onrampTx
                 },
                 ifRight = { statusModel ->
+                    sendStatusUpdateAnalytics(onrampTx, statusModel)
                     onrampTx.copy(activeStatus = statusModel.status)
                 },
             )
+        }
+    }
+
+    private suspend fun List<ExpressTransactionStateUM.OnrampUM>.clearHiddenTerminal() {
+        this.filter { it.activeStatus.isHidden && it.activeStatus.isTerminal }
+            .forEach { onrampRemoveTransactionUseCase(externalTxId = it.info.txExternalId) }
+    }
+
+    private suspend fun sendStatusUpdateAnalytics(
+        onrampTx: ExpressTransactionStateUM.OnrampUM,
+        statusModel: OnrampStatus,
+    ) {
+        val externalTxId = statusModel.externalTxId
+        val status = toAnalyticStatus(statusModel.status) ?: return
+
+        if (statusModel.status != onrampTx.activeStatus) {
+            analyticsEventHandler.send(
+                TokenOnrampAnalyticsEvent.OnrampStatusChanged(
+                    tokenSymbol = cryptoCurrency.symbol,
+                    status = status.name,
+                    provider = onrampTx.providerName,
+                    fiatCurrency = onrampTx.fromCurrencyCode,
+                ),
+            )
+            onrampUpdateTransactionStatusUseCase(externalTxId = externalTxId, statusModel.status)
+        }
+    }
+
+    private fun toAnalyticStatus(status: OnrampStatus.Status?): ExpressAnalyticsStatus? {
+        return when (status) {
+            Expired,
+            Paused,
+            -> ExpressAnalyticsStatus.Cancelled
+            Created,
+            WaitingForPayment,
+            PaymentProcessing,
+            Paid,
+            Sending,
+            -> ExpressAnalyticsStatus.InProgress
+            Verifying -> ExpressAnalyticsStatus.KYC
+            Failed -> ExpressAnalyticsStatus.Fail
+            Finished -> ExpressAnalyticsStatus.Done
+            null -> null
         }
     }
 

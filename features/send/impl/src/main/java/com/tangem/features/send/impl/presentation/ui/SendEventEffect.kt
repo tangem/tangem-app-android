@@ -4,13 +4,13 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.SendEvent
 
@@ -58,7 +58,7 @@ internal fun SendAlert(state: AlertUM, onDismiss: () -> Unit) {
             },
         )
         dismissButton = DialogButtonUM(
-            title = stringResource(id = R.string.common_cancel),
+            title = stringResourceSafe(id = R.string.common_cancel),
             onClick = onDismiss,
         )
     } else {

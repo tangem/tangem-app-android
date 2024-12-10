@@ -175,6 +175,7 @@ sealed class AnalyticsParam {
         const val TOKEN_PARAM = "Token"
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
+        const val TOKENS_COUNT = "Tokens Count"
         const val STATE = "State"
         const val BATCH = "Batch"
         const val TYPE = "Type"
@@ -199,12 +200,10 @@ sealed class AnalyticsParam {
         const val INPUT = "Input"
         const val COUNT = "Count"
         const val DERIVATION = "Derivation"
-
-        // region swap
-        const val TOKEN_CATEGORY = "Token"
         const val STATUS = "Status"
         const val PROVIDER = "Provider"
         const val PLACE = "Place"
-        //
+        const val RESIDENCE = "Residence"
+        const val PAYMENT_METHOD = "Payment Method"
     }
 }

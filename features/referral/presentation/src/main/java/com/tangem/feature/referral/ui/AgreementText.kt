@@ -9,20 +9,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.presentation.R
 
 @Composable
 internal fun AgreementText(@StringRes firstPartResId: Int, onClick: () -> Unit) {
-    val agreementText = annotatedAgreementString(firstPart = stringResource(firstPartResId))
+    val agreementText = annotatedAgreementString(firstPart = stringResourceSafe(firstPartResId))
     ClickableText(
         text = agreementText,
         modifier = Modifier
@@ -46,10 +46,10 @@ private fun annotatedAgreementString(firstPart: String): AnnotatedString {
             append("$firstPart ")
         }
         withStyle(SpanStyle(color = TangemTheme.colors.text.accent)) {
-            append(stringResource(id = R.string.common_terms_and_conditions))
+            append(stringResourceSafe(id = R.string.common_terms_and_conditions))
         }
         withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
-            append(" ${stringResource(id = R.string.referral_tos_suffix)}")
+            append(" ${stringResourceSafe(id = R.string.referral_tos_suffix)}")
         }
     }
 }

@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -10,12 +11,13 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWalletBackupComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.backupCardAttestationFailedDialog
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.onlyOneBackupDeviceDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.resetBackupCardDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.state.MultiWalletBackupUM
-import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -33,6 +35,7 @@ class MultiWalletBackupModel @Inject constructor(
     private val backupServiceHolder: BackupServiceHolder,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val tangemSdkManager: TangemSdkManager,
+    private val analyticsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")
@@ -57,30 +60,29 @@ class MultiWalletBackupModel @Inject constructor(
     val uiState: StateFlow<MultiWalletBackupUM> = _uiState
     val eventFlow = MutableSharedFlow<MultiWalletBackupComponent.Event>()
 
-    private fun getInitState(): MultiWalletBackupUM {
-        return when (backupService.currentState) {
-            BackupService.State.Preparing -> {
-                MultiWalletBackupUM(
-                    title = resourceReference(R.string.onboarding_title_no_backup_cards),
-                    bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
-                    finalizeButtonEnabled = false,
-                    addBackupButtonEnabled = true,
-                    addBackupButtonLoading = false,
-                    onAddBackupClick = ::startBackupWallet,
-                    onFinalizeButtonClick = ::onFinalizeClick,
-                    onSkipButtonClick = {
-                        // eventFlow.tryEmit(Unit)
-                    },
-                )
-            }
-            is BackupService.State.FinalizingBackupCard -> TODO()
-            BackupService.State.FinalizingPrimaryCard -> TODO()
-            BackupService.State.Finished -> TODO()
+    init {
+        // for wallet 1 this event is sent in Wallet1ChooseOptionModel
+        if (scanResponse.productType == ProductType.Wallet2 || scanResponse.productType == ProductType.Ring) {
+            analyticsHandler.send(OnboardingEvent.Backup.ScreenOpened)
         }
+
+        analyticsHandler.send(OnboardingEvent.Backup.Started)
+    }
+
+    private fun getInitState(): MultiWalletBackupUM {
+        return MultiWalletBackupUM(
+            title = resourceReference(R.string.onboarding_title_no_backup_cards),
+            bodyText = resourceReference(R.string.onboarding_subtitle_no_backup_cards),
+            finalizeButtonEnabled = false,
+            addBackupButtonEnabled = true,
+            addBackupButtonLoading = false,
+            onAddBackupClick = ::startBackupWallet,
+            onFinalizeButtonClick = ::onFinalizeClick,
+        )
     }
 
     private fun startBackupWallet() {
-        if (state.value.backupCardsNumber == 0) {
+        if (state.value.numberOfBackupCards == 0) {
             backupService.discardSavedBackup()
         }
         val primaryCard = scanResponse.primaryCard
@@ -88,9 +90,6 @@ class MultiWalletBackupModel @Inject constructor(
         if (primaryCard != null) {
             backupService.setPrimaryCard(primaryCard)
             addBackupCardWithService()
-        } else {
-            // TODO wallet 2 ??? or from main?
-            // BackupAction.StartAddingPrimaryCard
         }
     }
 
@@ -134,17 +133,35 @@ class MultiWalletBackupModel @Inject constructor(
         }
     }
 
-    private fun onFinalizeClick() {
-        when (state.value.backupCardsNumber) {
+    private fun onFinalizeClick(fromDialog: Boolean = false) {
+        when (state.value.numberOfBackupCards) {
             1 -> {
-                // TODO show dialog
                 params.multiWalletState.update { it.copy(isThreeCards = false) }
+
+                if (fromDialog.not()) {
+                    showOnlyOneBackupWarningDialog()
+                    return
+                }
             }
             2 -> {
                 params.multiWalletState.update { it.copy(isThreeCards = true) }
             }
         }
+
         modelScope.launch { eventFlow.emit(MultiWalletBackupComponent.Event.Done) }
+
+        analyticsHandler.send(OnboardingEvent.Backup.Finished(cardsCount = state.value.numberOfBackupCards + 1))
+    }
+
+    private fun showOnlyOneBackupWarningDialog() {
+        _uiState.update {
+            it.copy(
+                dialog = onlyOneBackupDeviceDialog(
+                    onDismiss = { _uiState.update { it.copy(dialog = null) } },
+                    onConfirm = { onFinalizeClick(fromDialog = true) },
+                ),
+            )
+        }
     }
 
     private fun addBackupCardWithService() {
@@ -164,10 +181,22 @@ class MultiWalletBackupModel @Inject constructor(
                 is CompletionResult.Success -> {
                     state.update {
                         it.copy(
-                            backupCardsNumber = it.backupCardsNumber + 1,
+                            numberOfBackupCards = it.numberOfBackupCards + 1,
                         )
                     }
-                    setNumberOfBackupCards(state.value.backupCardsNumber)
+
+                    val backupCardInfo = MultiWalletChildParams.Backup.BackupCardInfo(
+                        cardId = result.data.cardId,
+                        cardPublicKey = result.data.cardPublicKey,
+                    )
+                    params.backups.update {
+                        it.copy(
+                            card2 = if (state.value.numberOfBackupCards == 1) backupCardInfo else it.card2,
+                            card3 = if (state.value.numberOfBackupCards == 2) backupCardInfo else it.card3,
+                        )
+                    }
+
+                    setNumberOfBackupCards(state.value.numberOfBackupCards)
                 }
                 is CompletionResult.Failure -> {
                     when (val error = result.error) {
@@ -176,7 +205,12 @@ class MultiWalletBackupModel @Inject constructor(
                                 st.copy(
                                     dialog = resetBackupCardDialog(
                                         onReset = { resetBackupCard(cardId = error.cardId) },
-                                        onDismiss = { _uiState.update { it.copy(dialog = null) } },
+                                        onDismiss = {
+                                            _uiState.update { it.copy(dialog = null) }
+                                        },
+                                        onDismissClick = {
+                                            analyticsHandler.send(OnboardingEvent.Backup.ResetCancelEvent)
+                                        },
                                     ),
                                 )
                             }
@@ -198,6 +232,8 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun resetBackupCard(cardId: String) {
+        analyticsHandler.send(OnboardingEvent.Backup.ResetPerformEvent)
+
         modelScope.launch {
             tangemSdkManager.resetToFactorySettings(
                 cardId = cardId,

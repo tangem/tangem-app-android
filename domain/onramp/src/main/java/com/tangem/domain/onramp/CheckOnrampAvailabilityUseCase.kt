@@ -2,33 +2,40 @@ package com.tangem.domain.onramp
 
 import arrow.core.Either
 import com.tangem.domain.onramp.model.OnrampAvailability
+import com.tangem.domain.onramp.model.OnrampCountry
+import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
-import com.tangem.domain.tokens.model.CryptoCurrency
 
-class CheckOnrampAvailabilityUseCase(private val repository: OnrampRepository) {
+class CheckOnrampAvailabilityUseCase(
+    private val repository: OnrampRepository,
+    private val errorResolver: OnrampErrorResolver,
+) {
 
-    suspend operator fun invoke(cryptoCurrency: CryptoCurrency): Either<Throwable, OnrampAvailability> {
+    suspend operator fun invoke(): Either<OnrampError, OnrampAvailability> {
         return Either.catch {
             repository.fetchPaymentMethodsIfAbsent()
-            repository.getDefaultCountrySync()?.let { savedCountry ->
-                return@catch if (savedCountry.onrampAvailable) {
-                    val currency = repository.getDefaultCurrencySync() ?: run {
-                        repository.saveDefaultCurrency(savedCountry.defaultCurrency)
-                        savedCountry.defaultCurrency
-                    }
-                    repository.fetchPairs(
-                        currency = currency,
-                        country = savedCountry,
-                        cryptoCurrency = cryptoCurrency,
-                    )
-                    OnrampAvailability.Available(country = savedCountry, currency = currency)
-                } else {
-                    OnrampAvailability.NotSupported(savedCountry)
-                }
+            val savedCountry = repository.getDefaultCountrySync()
+            if (savedCountry != null) {
+                proceedWithSavedCountry(savedCountry = savedCountry)
+            } else {
+                val detectedCountry = repository.getCountryByIp()
+                OnrampAvailability.ConfirmResidency(detectedCountry)
             }
+        }.mapLeft(errorResolver::resolve)
+    }
 
-            val detectedCountry = repository.getCountryByIp()
-            OnrampAvailability.ConfirmResidency(detectedCountry)
+    private suspend fun proceedWithSavedCountry(savedCountry: OnrampCountry): OnrampAvailability {
+        val countries = repository.getCountries()
+        val onrampAvailable = countries.find { it == savedCountry }?.onrampAvailable ?: false
+        return if (onrampAvailable) {
+            val currency = repository.getDefaultCurrencySync() ?: run {
+                repository.saveDefaultCurrency(savedCountry.defaultCurrency)
+                savedCountry.defaultCurrency
+            }
+            OnrampAvailability.Available(country = savedCountry, currency = currency)
+        } else {
+            OnrampAvailability.NotSupported(savedCountry)
         }
     }
 }

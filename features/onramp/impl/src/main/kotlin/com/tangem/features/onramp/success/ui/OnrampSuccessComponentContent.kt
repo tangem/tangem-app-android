@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -27,10 +26,7 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.containers.FooterContainer
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
@@ -73,7 +69,7 @@ private fun Content(state: OnrampSuccessComponentUM.Content, onBackClick: () -> 
         },
         bottomBar = {
             PrimaryButton(
-                text = stringResource(R.string.common_close),
+                text = stringResourceSafe(R.string.common_close),
                 onClick = onBackClick,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -171,7 +167,7 @@ private fun AmountProviderBlock(providerName: TextReference, providerImageUrl: S
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Text(
-            text = stringResource(R.string.common_with),
+            text = stringResourceSafe(R.string.common_with),
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
         )

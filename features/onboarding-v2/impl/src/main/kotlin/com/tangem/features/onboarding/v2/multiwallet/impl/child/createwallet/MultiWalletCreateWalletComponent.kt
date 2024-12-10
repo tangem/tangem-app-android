@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arkivanov.essenty.lifecycle.doOnStart
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.resourceReference
@@ -25,16 +26,18 @@ internal class MultiWalletCreateWalletComponent(
     private val model: MultiWalletCreateWalletModel = getOrCreateModel(params)
 
     init {
-        params.innerNavigation.update {
-            it.copy(
-                stackSize = 2,
-                stackMaxSize = 8,
+        lifecycle.doOnStart {
+            params.innerNavigation.update {
+                it.copy(
+                    stackSize = 2,
+                    stackMaxSize = 8,
+                )
+            }
+
+            params.parentParams.titleProvider.changeTitle(
+                text = resourceReference(R.string.onboarding_create_wallet_header),
             )
         }
-
-        params.parentParams.titleProvider.changeTitle(
-            text = resourceReference(R.string.onboarding_create_wallet_header),
-        )
 
         componentScope.launch {
             model.onDone.collect(onNextStep)

@@ -2,11 +2,19 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для покупки.</string>
   <string name="action_buttons_sell_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для продажи.</string>
-  <string name="action_buttons_sell_navigation_bar_title">Продать криптовалюту</string>
+  <string name="action_buttons_sell_navigation_bar_title">Продать</string>
+  <string name="action_buttons_service_loading_alert_message">Подключение может занять несколько секунд. Пожалуйста, подождите.</string>
+  <string name="action_buttons_service_loading_alert_title">Соединение</string>
+  <string name="action_buttons_something_wrong_alert_message">Действие в данный момент недоступно, пожалуйста попробуйте позже или обновить данные, сделав свайп экрана вниз.</string>
+  <string name="action_buttons_something_wrong_alert_title">Кнопка недоступна</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных вариантов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Нет доступных пар</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_message">Для использования функции обмена ваш портфель должен содержать минимум 2 токена.</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_title">Добавьте токены</string>
+  <string name="action_buttons_swap_not_enough_tokens_alert_message">У вас добавлен всего 1 токен. Для использования функции обмена необходимо добавить минимум 2 токена.</string>
+  <string name="action_buttons_swap_not_enough_tokens_alert_title">Добавьте токены</string>
   <string name="action_buttons_you_want_to_receive">Выберите токен для получения</string>
   <string name="action_buttons_you_want_to_swap">Выберите токен для обмена</string>
   <string name="add_custom_token_choose_network">Выберите сеть</string>
@@ -182,7 +190,7 @@
   <string name="common_submit">Отправить</string>
   <string name="common_success">Успешно</string>
   <string name="common_support">Поддержка</string>
-  <string name="common_swap">Обмен</string>
+  <string name="common_swap">Обменять</string>
   <string name="common_terms_and_conditions">условия участия</string>
   <string name="common_terms_of_use">Условиями использования</string>
   <string name="common_today">Сегодня</string>
@@ -269,6 +277,9 @@
   <string name="express_exchange_notification_refund_title">Сумма была возвращена в %1$s (%2$s сети)</string>
   <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
   <string name="express_exchange_notification_verification_title">Провайдер запрашивает прохождение верификации</string>
+  <string name="express_exchange_status_bought">Куплено</string>
+  <string name="express_exchange_status_buying">Покупка</string>
+  <string name="express_exchange_status_buying_active">Покупка...</string>
   <string name="express_exchange_status_canceled">Отменен</string>
   <string name="express_exchange_status_confirmed">Подтверждено</string>
   <string name="express_exchange_status_confirming">Подтверждение</string>
@@ -599,6 +610,7 @@
   <string name="onramp_settings_residence">Страна проживания</string>
   <string name="onramp_settings_residence_description">Пожалуйста, укажите правильную страну, чтобы обеспечить точность доступных способов оплаты и услуг.</string>
   <string name="onramp_settings_title">Настройки</string>
+  <string name="onramp_statuses_view_footer">You can close this screen and check the transaction status on the token details screen.</string>
   <string name="onramp_transaction_status_footer_text">Вы можете закрыть этот экран и проверить статус транзакции на экране информации о токене.</string>
   <string name="onramp_via">Через</string>
   <string name="organize_tokens_group">Группы</string>
@@ -613,7 +625,7 @@
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_description">Использование другой сети может привести к утрате средств.</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
-  <string name="receive_bottom_sheet_warning_message_title">Отправляйте только %s на этот адрес</string>
+  <string name="receive_bottom_sheet_warning_title">Отправляйте только %1$s в сети %2$s </string>
   <string name="receive_token_description">Переводите средства с любого кошелька или биржи</string>
   <string name="referral_button_participate">Участвовать</string>
   <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>

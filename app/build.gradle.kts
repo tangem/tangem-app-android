@@ -78,6 +78,7 @@ dependencies {
 
     implementation(projects.common)
     implementation(projects.common.routing)
+    implementation(projects.common.google)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
@@ -165,6 +166,7 @@ dependencies {
     implementation(deps.androidx.browser)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.swipeRefreshLayout)
+    implementation(deps.androidx.fragment.compose)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)

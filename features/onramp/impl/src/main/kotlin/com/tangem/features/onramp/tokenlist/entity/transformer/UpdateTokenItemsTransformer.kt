@@ -1,9 +1,9 @@
 package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
+import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedCryptoAmount
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedFiatAmount
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
@@ -22,15 +22,12 @@ internal class UpdateTokenItemsTransformer(
     private val onItemClick: (TokenItemState, CryptoCurrencyStatus) -> Unit,
     private val statuses: Map<Boolean, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
-    private val hasSearchBar: Boolean,
     private val unavailableTokensHeaderReference: TextReference,
-    private val onQueryChange: (String) -> Unit,
-    private val onActiveChange: (Boolean) -> Unit,
 ) : TokenListUMTransformer {
 
     override fun transform(prevState: TokenListUM): TokenListUM {
         val availableItems = convertStatuses(
-            converter = createDefaultTokenItemStateConverter(),
+            converter = createAvailableTokenItemStateConverter(),
             statuses = statuses[true].orEmpty(),
         )
 
@@ -39,18 +36,8 @@ internal class UpdateTokenItemsTransformer(
             statuses = statuses[false].orEmpty(),
         )
 
-        val searchBarItem = if (hasSearchBar) {
-            prevState.getSearchBar() ?: createSearchBarItem()
-        } else {
-            null
-        }
-
         return prevState.copy(
             availableItems = buildList {
-                if (searchBarItem != null) {
-                    add(searchBarItem)
-                }
-
                 if (availableItems.isNotEmpty()) {
                     createGroupTitle(
                         textReference = resourceReference(id = R.string.exchange_tokens_available_tokens_header),
@@ -67,7 +54,8 @@ internal class UpdateTokenItemsTransformer(
                 }
 
                 addAll(unavailableItems)
-            }.toImmutableList(),
+            }
+                .toImmutableList(),
             isBalanceHidden = isBalanceHidden,
         )
     }
@@ -80,8 +68,13 @@ internal class UpdateTokenItemsTransformer(
             .map(TokensListItemUM::Token)
     }
 
-    private fun createDefaultTokenItemStateConverter(): TokenItemStateConverter {
-        return TokenItemStateConverter(appCurrency = appCurrency, onItemClick = onItemClick)
+    private fun createAvailableTokenItemStateConverter(): TokenItemStateConverter {
+        return TokenItemStateConverter(
+            appCurrency = appCurrency,
+            subtitle2StateProvider = ::createSubtitle2State,
+            fiatAmountStateProvider = { createFiatAmountStateProvider(status = it, isAvailable = true) },
+            onItemClick = onItemClick,
+        )
     }
 
     private fun createUnavailableTokenItemStateConverter(): TokenItemStateConverter {
@@ -105,38 +98,51 @@ internal class UpdateTokenItemsTransformer(
                     }
                 }
             },
-            fiatAmountStateProvider = {
-                when (it.value) {
-                    is CryptoCurrencyStatus.Loaded,
-                    is CryptoCurrencyStatus.Custom,
-                    is CryptoCurrencyStatus.NoQuote,
-                    is CryptoCurrencyStatus.NoAccount,
-                    -> {
-                        TokenItemState.FiatAmountState.TextContent(
-                            text = it.getFormattedFiatAmount(appCurrency),
-                            isAvailable = false,
-                        )
-                    }
-                    is CryptoCurrencyStatus.Unreachable,
-                    is CryptoCurrencyStatus.NoAmount,
-                    is CryptoCurrencyStatus.MissedDerivation,
-                    is CryptoCurrencyStatus.Loading,
-                    -> null
-                }
-            },
+            subtitle2StateProvider = ::createSubtitle2State,
+            fiatAmountStateProvider = { createFiatAmountStateProvider(status = it, isAvailable = false) },
         )
     }
 
-    private fun createSearchBarItem(): TokensListItemUM.SearchBar {
-        return TokensListItemUM.SearchBar(
-            searchBarUM = SearchBarUM(
-                placeholderText = resourceReference(id = R.string.common_search),
-                query = "",
-                onQueryChange = onQueryChange,
-                isActive = false,
-                onActiveChange = onActiveChange,
-            ),
-        )
+    private fun createSubtitle2State(status: CryptoCurrencyStatus): TokenItemState.Subtitle2State? {
+        return when (status.value) {
+            is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.NoAccount,
+            -> {
+                TokenItemState.Subtitle2State.TextContent(
+                    text = status.getFormattedCryptoAmount(includeStaking = false),
+                )
+            }
+            is CryptoCurrencyStatus.Loading,
+            is CryptoCurrencyStatus.MissedDerivation,
+            is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
+            -> null
+        }
+    }
+
+    private fun createFiatAmountStateProvider(
+        status: CryptoCurrencyStatus,
+        isAvailable: Boolean,
+    ): TokenItemState.FiatAmountState? {
+        return when (status.value) {
+            is CryptoCurrencyStatus.Loaded,
+            is CryptoCurrencyStatus.Custom,
+            is CryptoCurrencyStatus.NoQuote,
+            is CryptoCurrencyStatus.NoAccount,
+            -> {
+                TokenItemState.FiatAmountState.TextContent(
+                    text = status.getFormattedFiatAmount(appCurrency = appCurrency, includeStaking = false),
+                    isAvailable = isAvailable,
+                )
+            }
+            is CryptoCurrencyStatus.Unreachable,
+            is CryptoCurrencyStatus.NoAmount,
+            is CryptoCurrencyStatus.MissedDerivation,
+            is CryptoCurrencyStatus.Loading,
+            -> null
+        }
     }
 
     private fun createGroupTitle(textReference: TextReference): TokensListItemUM.GroupTitle {

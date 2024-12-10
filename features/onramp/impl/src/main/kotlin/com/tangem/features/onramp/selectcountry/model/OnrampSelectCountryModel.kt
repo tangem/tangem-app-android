@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.selectcountry.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -8,6 +9,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.onramp.GetOnrampCountriesUseCase
 import com.tangem.domain.onramp.GetOnrampCountryUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
+import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcountry.SelectCountryComponent
@@ -19,6 +21,7 @@ import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountry
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
+import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
@@ -27,9 +30,11 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class OnrampSelectCountryModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     private val searchManager: InputManager,
     private val getOnrampCountriesUseCase: GetOnrampCountriesUseCase,
     private val saveDefaultCountryUseCase: OnrampSaveDefaultCountryUseCase,
@@ -46,6 +51,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
     private val refreshTrigger = MutableSharedFlow<Unit>()
 
     init {
+        analyticsEventHandler.send(OnrampAnalyticsEvent.SelectResidenceOpened)
         modelScope.launch { subscribeOnUpdateState() }
     }
 
@@ -56,10 +62,16 @@ internal class OnrampSelectCountryModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun subscribeOnUpdateState() {
         combine(
-            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCountriesUseCase.invoke()) },
-            flow2 = getOnrampCountryUseCase.invoke(),
+            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCountriesUseCase()) },
+            flow2 = getOnrampCountryUseCase(),
             flow3 = searchManager.query,
         ) { maybeCountries, maybeCountry, query ->
+            maybeCountries.onLeft {
+                analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
+            }
+            maybeCountry.onLeft {
+                analyticsEventHandler.sendOnrampErrorEvent(it, params.cryptoCurrency.symbol)
+            }
             UpdateCountryItemsTransformer(
                 maybeCountries = maybeCountries,
                 defaultCountry = maybeCountry.getOrNull(),
@@ -73,6 +85,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
     }
 
     private fun saveCountry(country: OnrampCountry) {
+        analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceChosen(country.name))
         modelScope.launch {
             saveDefaultCountryUseCase.invoke(country)
             dismiss()

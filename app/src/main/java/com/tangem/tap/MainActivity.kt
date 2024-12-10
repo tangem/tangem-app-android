@@ -44,6 +44,8 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
+import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
@@ -59,6 +61,7 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
@@ -83,6 +86,8 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.tap.routing.toggle.RoutingFeatureToggles
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -195,6 +200,18 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
 
+    @Inject
+    lateinit var setGoogleServicesAvailabilityUseCase: SetGoogleServicesAvailabilityUseCase
+
+    @Inject
+    lateinit var setGooglePayAvailabilityUseCase: SetGooglePayAvailabilityUseCase
+
+    @Inject
+    lateinit var dispatchers: CoroutineDispatcherProvider
+
+    @Inject
+    internal lateinit var routingFeatureToggles: RoutingFeatureToggles
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -237,13 +254,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         installActivityDependencies()
         observeAppThemeModeUpdates()
 
-        setContentView(R.layout.activity_main)
-        installRouting()
+        if (routingFeatureToggles.isNavigationRefactoringEnabled) {
+            TODO(
+                "Will be implemented in [REDACTED_JIRA] " +
+                    "and in [REDACTED_JIRA]",
+            )
+        } else {
+            setContentView(R.layout.activity_main)
+            installRouting()
+        }
+
         initContent()
 
         observeStateUpdates()
         observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
+        checkGoogleServicesAvailability()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
@@ -572,7 +598,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         }
 
-        // TODO add onboarding v2 handling
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
 
@@ -602,6 +627,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             sendUnsubmittedHashesUseCase.invoke()
                 .onLeft { Timber.e(it.toString()) }
                 .onRight { Timber.d("Submitting hashes succeeded") }
+        }
+    }
+
+    private fun checkGoogleServicesAvailability() {
+        val isGoogleServicesAvailable = GoogleServicesHelper.checkGoogleServicesAvailability(this)
+
+        lifecycleScope.launch {
+            setGoogleServicesAvailabilityUseCase(isGoogleServicesAvailable)
+
+            if (isGoogleServicesAvailable) {
+                val paymentsClient = GoogleServicesHelper.createPaymentsClient(this@MainActivity)
+                val isGooglePayAvailable = GoogleServicesHelper.checkGooglePayAvailability(paymentsClient)
+                setGooglePayAvailabilityUseCase(isGooglePayAvailable)
+            } else {
+                setGooglePayAvailabilityUseCase(false)
+            }
         }
     }
 

@@ -22,6 +22,7 @@ import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFound
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
 import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
+import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
@@ -49,6 +50,13 @@ internal class OnrampTokenListModel @Inject constructor(
     }
 
     init {
+        tokenListUMController.update(
+            transformer = UpdateSearchBarCallbacksTransformer(
+                onQueryChange = ::onSearchQueryChange,
+                onActiveChange = ::onSearchBarActiveChange,
+            ),
+        )
+
         subscribeOnUpdateState()
     }
 
@@ -71,15 +79,12 @@ internal class OnrampTokenListModel @Inject constructor(
             if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
                 SetNothingToFoundStateTransformer(
                     isBalanceHidden = isBalanceHidden,
-                    hasSearchBar = params.hasSearchBar && currencies.isNotEmpty(),
                     emptySearchMessageReference = when (params.filterOperation) {
                         OnrampOperation.BUY -> R.string.action_buttons_buy_empty_search_message
                         OnrampOperation.SELL -> R.string.action_buttons_sell_empty_search_message
                         OnrampOperation.SWAP -> R.string.action_buttons_swap_empty_search_message
                     }
                         .let(::resourceReference),
-                    onQueryChange = ::onSearchQueryChange,
-                    onActiveChange = ::onSearchBarActiveChange,
                 )
             } else {
                 UpdateTokenItemsTransformer(
@@ -87,14 +92,11 @@ internal class OnrampTokenListModel @Inject constructor(
                     onItemClick = params.onTokenClick,
                     statuses = filterByQueryTokenList.filterByAvailability(),
                     isBalanceHidden = isBalanceHidden,
-                    hasSearchBar = params.hasSearchBar && currencies.isNotEmpty(),
                     unavailableTokensHeaderReference = when (params.filterOperation) {
                         OnrampOperation.BUY -> R.string.tokens_list_unavailable_to_purchase_header
                         OnrampOperation.SELL -> R.string.tokens_list_unavailable_to_sell_header
                         OnrampOperation.SWAP -> R.string.tokens_list_unavailable_to_swap_source_header
                     }.let(::resourceReference),
-                    onQueryChange = ::onSearchQueryChange,
-                    onActiveChange = ::onSearchBarActiveChange,
                 )
             }
         }
@@ -104,8 +106,8 @@ internal class OnrampTokenListModel @Inject constructor(
     }
 
     private fun onSearchQueryChange(newQuery: String) {
-        val searchBar = tokenListUMController.getSearchBar()
-        if (searchBar?.searchBarUM?.query == newQuery) return
+        val searchBar = state.value.searchBarUM
+        if (searchBar.query == newQuery) return
 
         modelScope.launch {
             tokenListUMController.update(transformer = UpdateSearchQueryTransformer(newQuery))
@@ -148,7 +150,11 @@ internal class OnrampTokenListModel @Inject constructor(
     private suspend fun checkAvailabilityByOperation(status: CryptoCurrencyStatus): Boolean {
         return when (params.filterOperation) {
             OnrampOperation.BUY -> {
-                rampStateManager.availableForBuy(scanResponse = scanResponse, cryptoCurrency = status.currency)
+                rampStateManager.availableForBuy(
+                    scanResponse = scanResponse,
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = status.currency,
+                )
             }
             OnrampOperation.SELL -> {
                 rampStateManager.availableForSell(userWalletId = params.userWalletId, status = status)

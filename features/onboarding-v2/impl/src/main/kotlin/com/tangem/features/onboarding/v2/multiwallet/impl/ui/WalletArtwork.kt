@@ -58,7 +58,13 @@ sealed class WalletArtworksState {
 }
 
 @Composable
-fun WalletArtworks(url: String?, state: WalletArtworksState, modifier: Modifier = Modifier) {
+fun WalletArtworks(
+    url1: String?,
+    url2: String?,
+    url3: String?,
+    state: WalletArtworksState,
+    modifier: Modifier = Modifier,
+) {
     if (state is WalletArtworksState.Hidden) return
 
     BoxWithConstraints(
@@ -116,7 +122,9 @@ fun WalletArtworks(url: String?, state: WalletArtworksState, modifier: Modifier 
         }
 
         AnimatedWalletCards(
-            url = url,
+            url1 = url1,
+            url2 = url2,
+            url3 = url3,
             modifier = Modifier
                 .widthIn(max = 450.dp)
                 .matchParentSize(),
@@ -143,9 +151,12 @@ private data class WalletCardTransitionState(
     val zIndex: Float = 0f,
 )
 
+@Suppress("LongParameterList")
 @Composable
 private fun AnimatedWalletCards(
-    url: String?,
+    url1: String?,
+    url2: String?,
+    url3: String?,
     transition1: Transition<WalletCardTransitionState>,
     transition2: Transition<WalletCardTransitionState>,
     transition3: Transition<WalletCardTransitionState>,
@@ -190,7 +201,7 @@ private fun AnimatedWalletCards(
                     scaleY = scaleY3
                     rotationZ = rotation3
                 },
-            url = url,
+            url = url3,
         )
 
         WalletCard(
@@ -208,7 +219,7 @@ private fun AnimatedWalletCards(
                     scaleX = scaleX2
                     scaleY = scaleY2
                 },
-            url = url,
+            url = url2,
         )
 
         WalletCard(
@@ -225,7 +236,7 @@ private fun AnimatedWalletCards(
                     translationY = translationY1
                     rotationZ = rotation1
                 },
-            url = url,
+            url = url1,
         )
     }
 }
@@ -450,7 +461,9 @@ private fun Preview() {
             var state: WalletArtworksState by remember { mutableStateOf(WalletArtworksState.Folded) }
 
             WalletArtworks(
-                url = null,
+                url1 = null,
+                url2 = null,
+                url3 = null,
                 state = state,
                 modifier = Modifier.fillMaxWidth(),
             )

@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.confirm
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -12,6 +13,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addExistentialWar
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeCoverageNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachableNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addMinimumAmountErrorNotification
+import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
@@ -22,7 +24,6 @@ import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
-import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -233,7 +234,7 @@ internal class SendNotificationFactory(
         addExistentialWarningNotification(
             existentialDeposit = currencyCheck.existentialDeposit,
             feeAmount = feeState.fee?.amount?.value.orZero(),
-            receivedAmount = sendingAmount,
+            sendingAmount = sendingAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onReduceClick = clickIntents::onAmountReduceByClick,
         )
@@ -246,7 +247,7 @@ internal class SendNotificationFactory(
         )
         addValidateTransactionNotifications(
             dustValue = currencyCheck.dustValue.orZero(),
-            fee = feeState.fee,
+            minAdaValue = (feeState.fee as? Fee.CardanoToken)?.minAdaValue,
             validationError = validationError,
             cryptoCurrency = currency,
             onReduceClick = clickIntents::onAmountReduceToClick,
@@ -311,10 +312,5 @@ internal class SendNotificationFactory(
         checkIfFeeTooHigh(feeSelectorState) { diff ->
             add(NotificationUM.Warning.TooHigh(diff))
         }
-    }
-
-    private fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
-        if (rentWarning == null) return
-        add(NotificationUM.Solana.RentInfo(rentWarning))
     }
 }

@@ -18,13 +18,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -86,7 +86,7 @@ private fun Content(
         item {
             Text(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-                text = stringResource(R.string.details_title),
+                text = stringResourceSafe(R.string.details_title),
                 style = TangemTheme.typography.h1,
                 color = TangemTheme.colors.text.primary1,
             )
@@ -127,7 +127,9 @@ private fun Block(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
     ) {
-        val itemModifier = Modifier.fillMaxWidth().testTag(TestTags.DETAILS_SCREEN_ITEM)
+        val itemModifier = Modifier
+            .fillMaxWidth()
+            .testTag(TestTags.DETAILS_SCREEN_ITEM)
 
         when (model) {
             is DetailsItemUM.Basic -> {
