@@ -12,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
@@ -21,6 +20,7 @@ import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.BlockItem
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -57,7 +57,9 @@ internal fun WalletSettingsScreen(
         },
         content = { paddingValues ->
             Content(
-                modifier = Modifier.padding(paddingValues).testTag(TestTags.WALLET_SETTINGS_SCREEN),
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .testTag(TestTags.WALLET_SETTINGS_SCREEN),
                 state = state,
             )
 
@@ -79,7 +81,7 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
         item {
             Text(
                 modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
-                text = stringResource(id = R.string.wallet_settings_title),
+                text = stringResourceSafe(id = R.string.wallet_settings_title),
                 style = TangemTheme.typography.h1,
                 color = TangemTheme.colors.text.primary1,
             )

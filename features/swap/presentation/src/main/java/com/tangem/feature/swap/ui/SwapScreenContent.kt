@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -24,13 +23,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.getActiveIconResByCoinId
-import com.tangem.core.ui.extensions.orMaskWithStars
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.ui.FeeType
@@ -38,7 +34,9 @@ import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
+import com.tangem.feature.swap.models.states.SwapNotificationUM
 import com.tangem.feature.swap.presentation.R
+import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongMethod")
 @Composable
@@ -69,7 +67,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
             FeeItemBlock(state = state.fee)
 
-            if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
+            if (state.notifications.isNotEmpty()) SwapNotifications(notifications = state.notifications)
 
             MainButton(state = state, onPermissionWarningClick = state.onShowPermissionBottomSheet)
 
@@ -84,7 +82,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, modifier: Modifier = Modi
 
         if (state.shouldShowMaxAmount && keyboard is Keyboard.Opened) {
             Text(
-                text = stringResource(id = R.string.send_max_amount_label),
+                text = stringResourceSafe(id = R.string.send_max_amount_label),
                 style = TangemTheme.typography.button,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier
@@ -206,7 +204,7 @@ private fun getAnnotatedStringForLegalsWithClick(
     return if (tos != null && policy != null) {
         val tosTitle = tos.title.resolveReference()
         val policyTitle = policy.title.resolveReference()
-        val fullString = stringResource(id = R.string.express_legal_two_placeholders, tosTitle, policyTitle)
+        val fullString = stringResourceSafe(id = R.string.express_legal_two_placeholders, tosTitle, policyTitle)
         val tosIndex = fullString.indexOf(tosTitle)
         val policyIndex = fullString.indexOf(policyTitle)
         val string = buildAnnotatedString {
@@ -238,7 +236,7 @@ private fun getAnnotatedStringForLegalsWithClick(
         val legal = requireNotNull(tos ?: policy) { "tos or policy must not be null" }
         val legalTitle = legal.title
             .resolveReference()
-        val fullString = stringResource(id = R.string.express_legal_one_placeholder, legal)
+        val fullString = stringResourceSafe(id = R.string.express_legal_one_placeholder, legal)
         val legalIndex = fullString.indexOf(legalTitle)
         val string = buildAnnotatedString {
             withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
@@ -302,69 +300,27 @@ private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
-private fun SwapWarnings(warnings: List<SwapWarning>) {
+private fun SwapNotifications(notifications: List<NotificationUM>) {
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
     ) {
-        warnings.forEach { warning ->
-            when (warning) {
-                is SwapWarning.PermissionNeeded -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                    )
-                }
-                is SwapWarning.GenericWarning -> {
-                    val message = warning.message?.resolveReference()
-                        ?: stringResource(id = R.string.common_unknown_error)
+        notifications.forEach { notification ->
+            when (notification) {
+                is SwapNotificationUM.Error.GenericError -> {
                     RefreshableWarningCard(
-                        title = stringResource(id = R.string.common_warning),
-                        description = message,
-                        onClick = warning.onClick,
+                        title = notification.title.resolveReference(),
+                        description = notification.config.subtitle.resolveReference(),
+                        onClick = notification.onConfirmClick,
                     )
                 }
-                is SwapWarning.NoAvailableTokensToSwap -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                    )
-                }
-                is SwapWarning.GeneralError -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                        iconTint = TangemTheme.colors.icon.warning,
-                    )
-                }
-                is SwapWarning.UnableToCoverFeeWarning -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                    )
-                }
-                is SwapWarning.GeneralWarning -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                    )
-                }
-                is SwapWarning.GeneralInformational -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                        iconTint = TangemTheme.colors.icon.accent,
-                    )
-                }
-                is SwapWarning.NeedReserveToCreateAccount -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                    )
-                }
-                is SwapWarning.ReduceAmount -> {
-                    Notification(
-                        config = warning.notificationConfig,
-                    )
-                }
-                is SwapWarning.TransactionInProgressWarning -> {
+                is SwapNotificationUM.Error.ApprovalInProgressWarning,
+                is SwapNotificationUM.Error.TransactionInProgressWarning,
+                -> {
                     CardWithIcon(
-                        title = warning.title.resolveReference(),
-                        description = warning.description.resolveReference(),
+                        title = notification.config.title?.resolveReference().orEmpty(),
+                        description = notification.config.subtitle.resolveReference(),
                         icon = {
                             CircularProgressIndicator(
                                 modifier = Modifier
@@ -375,8 +331,20 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
                         },
                     )
                 }
-                is SwapWarning.Cardano -> Notification(config = warning.notificationConfig)
-                SwapWarning.InsufficientFunds -> Unit
+                else -> {
+                    Notification(
+                        config = notification.config,
+                        iconTint = when (notification) {
+                            is SwapNotificationUM.Error.UnableToCoverFeeWarning,
+                            is NotificationUM.Error.TokenExceedsBalance,
+                            is NotificationUM.Error.ExceedsBalance,
+                            is NotificationUM.Info,
+                            is NotificationUM.Warning,
+                            -> null
+                            is NotificationUM.Error -> TangemTheme.colors.icon.warning
+                        },
+                    )
+                }
             }
             SpacerH8()
         }
@@ -387,18 +355,18 @@ private fun SwapWarnings(warnings: List<SwapWarning>) {
 private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
     // order is important
     when {
-        state.warnings.any { it is SwapWarning.InsufficientFunds } -> {
+        state.isInsufficientFunds -> {
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.swapping_insufficient_funds),
+                text = stringResourceSafe(id = R.string.swapping_insufficient_funds),
                 enabled = false,
                 onClick = state.swapButton.onClick,
             )
         }
-        state.warnings.any { it is SwapWarning.PermissionNeeded } -> {
+        state.notifications.any { it is SwapNotificationUM.Info.PermissionNeeded } -> {
             PrimaryButton(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.give_permission_title),
+                text = stringResourceSafe(id = R.string.give_permission_title),
                 enabled = true,
                 onClick = onPermissionWarningClick,
             )
@@ -406,7 +374,7 @@ private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> U
         else -> {
             PrimaryButtonIconEnd(
                 modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.swapping_swap_action),
+                text = stringResourceSafe(id = R.string.swapping_swap_action),
                 iconResId = R.drawable.ic_tangem_24,
                 enabled = state.swapButton.enabled,
                 onClick = state.swapButton.onClick,
@@ -459,21 +427,12 @@ private val state = SwapStateHolder(
         isClickable = true,
         onClick = {},
     ),
-    warnings = listOf(
-        SwapWarning.PermissionNeeded(
-            notificationConfig = NotificationConfig(
-                title = stringReference("Give Permission"),
-                subtitle = stringReference("To continue swapping you need to give permission to Tangem"),
-                iconResId = R.drawable.ic_locked_24,
-            ),
+    notifications = persistentListOf(
+        SwapNotificationUM.Info.PermissionNeeded(
+            providerName = "Provider",
+            fromTokenSymbol = "POL",
         ),
-        SwapWarning.NoAvailableTokensToSwap(
-            notificationConfig = NotificationConfig(
-                title = stringReference("No tokens"),
-                subtitle = stringReference("Swap tokens not available"),
-                iconResId = R.drawable.img_attention_20,
-            ),
-        ),
+        SwapNotificationUM.Warning.NoAvailableTokensToSwap("POLYGON"),
     ),
     swapButton = SwapButton(enabled = true, onClick = {}),
     onRefresh = {},
@@ -484,6 +443,7 @@ private val state = SwapStateHolder(
     providerState = ProviderState.Loading(),
     priceImpact = PriceImpact.Empty(),
     shouldShowMaxAmount = true,
+    isInsufficientFunds = false,
     tosState = TosState(
         tosLink = LegalState(
             title = stringReference("Terms of Use"),

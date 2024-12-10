@@ -7,12 +7,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -41,7 +41,7 @@ fun Wallet1ChooseOption(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(R.string.onboarding_wallet_info_title_first),
+                text = stringResourceSafe(R.string.onboarding_wallet_info_title_first),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -49,7 +49,7 @@ fun Wallet1ChooseOption(
             )
 
             Text(
-                text = stringResource(R.string.onboarding_wallet_info_subtitle_first),
+                text = stringResourceSafe(R.string.onboarding_wallet_info_subtitle_first),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -61,7 +61,7 @@ fun Wallet1ChooseOption(
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, bottom = 12.dp)
                 .fillMaxWidth(),
-            text = stringResource(R.string.onboarding_button_backup_now),
+            text = stringResourceSafe(R.string.onboarding_button_backup_now),
             onClick = onBackupClick,
         )
 
@@ -70,7 +70,7 @@ fun Wallet1ChooseOption(
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                     .fillMaxWidth(),
-                text = stringResource(R.string.onboarding_button_skip_backup),
+                text = stringResourceSafe(R.string.onboarding_button_skip_backup),
                 onClick = onSkipClick,
             )
         }
