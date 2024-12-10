@@ -55,49 +55,52 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .imePadding(),
         ) {
-            Text(
-                text = stringResource(id = R.string.onboarding_seed_import_message),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(start = 36.dp, end = 36.dp, top = 24.dp, bottom = 16.dp)
-                    .fillMaxWidth(),
-            )
-
-            PhraseBlock(
-                state = state,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-
-            OutlineTextFieldWithIcon(
-                modifier = modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-                value = state.passPhrase,
-                onValueChange = state.passPhraseChange,
-                iconResId = R.drawable.ic_information_24,
-                iconColor = TangemTheme.colors.icon.informative,
-                label = stringResource(id = R.string.common_passphrase),
-                placeholder = stringResource(id = R.string.send_optional_field),
-                onIconClick = state.onPassphraseInfoClick,
-            )
-
-            Box(Modifier.weight(1f)) {
-                PrimaryButtonIconEnd(
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .weight(1f),
+            ) {
+                Text(
+                    text = stringResource(id = R.string.onboarding_seed_import_message),
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.secondary,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
+                        .padding(start = 36.dp, end = 36.dp, top = 24.dp, bottom = 16.dp)
                         .fillMaxWidth(),
-                    text = stringResource(id = R.string.common_import),
-                    iconResId = R.drawable.ic_tangem_24,
-                    enabled = state.createWalletEnabled,
-                    showProgress = state.createWalletProgress,
-                    onClick = state.createWalletClick,
+                )
+
+                PhraseBlock(
+                    state = state,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+
+                OutlineTextFieldWithIcon(
+                    modifier = modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth(),
+                    value = state.passPhrase,
+                    onValueChange = state.passPhraseChange,
+                    iconResId = R.drawable.ic_information_24,
+                    iconColor = TangemTheme.colors.icon.informative,
+                    label = stringResource(id = R.string.common_passphrase),
+                    placeholder = stringResource(id = R.string.send_optional_field),
+                    onIconClick = state.onPassphraseInfoClick,
                 )
             }
+
+            PrimaryButtonIconEnd(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                text = stringResource(id = R.string.common_import),
+                iconResId = R.drawable.ic_tangem_24,
+                enabled = state.createWalletEnabled,
+                showProgress = state.createWalletProgress,
+                onClick = state.createWalletClick,
+            )
         }
 
         val keyboard by keyboardAsState()
