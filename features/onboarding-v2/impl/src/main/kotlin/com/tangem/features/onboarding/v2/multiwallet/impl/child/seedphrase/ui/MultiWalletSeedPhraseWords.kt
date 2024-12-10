@@ -31,20 +31,26 @@ internal fun MultiWalletSeedPhraseWords(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize()) {
-        SegmentSeedBlock(
-            modifier = Modifier.padding(vertical = 20.dp),
-            state = state,
-        )
-
-        TitleBlock(state)
-
-        SeedPhraseGridBlock(
-            mnemonicGridItems = state.words,
+        Column(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 32.dp),
-        )
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .weight(1f),
+        ) {
+            SegmentSeedBlock(
+                modifier = Modifier.padding(vertical = 20.dp),
+                state = state,
+            )
+
+            TitleBlock(state)
+
+            SeedPhraseGridBlock(
+                mnemonicGridItems = state.words,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp, bottom = 32.dp),
+            )
+        }
 
         PrimaryButton(
             modifier = Modifier
@@ -118,8 +124,7 @@ private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifi
 @Composable
 private fun SeedPhraseGridBlock(mnemonicGridItems: ImmutableList<MnemonicGridItem>, modifier: Modifier = Modifier) {
     VerticalGrid(
-        modifier = modifier
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier,
         items = mnemonicGridItems,
     ) { item ->
         Row(
