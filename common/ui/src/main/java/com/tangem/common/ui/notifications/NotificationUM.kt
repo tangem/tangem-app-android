@@ -227,6 +227,15 @@ sealed class NotificationUM(val config: NotificationConfig) {
                 wrappedList(cryptoAmount, fiatAmount),
             ),
         )
+
+        data class OnrampErrorNotification(val onRefresh: () -> Unit) : Warning(
+            title = resourceReference(R.string.common_error),
+            subtitle = resourceReference(R.string.common_unknown_error),
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.warning_button_refresh),
+                onClick = onRefresh,
+            ),
+        )
     }
 
     open class Info(
