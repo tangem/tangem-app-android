@@ -38,6 +38,7 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.PeriodicTask
 import com.tangem.utils.coroutines.SingleTaskScheduler
+import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -196,8 +197,17 @@ internal class OnrampMainComponentModel @Inject constructor(
                         quotes.filterIsInstance<OnrampQuote.Error>().forEach { errorState ->
                             sendOnrampErrorAnalytic(errorState.error)
                         }
-                        val isNoQuotes = quotes.none { it is OnrampQuote.Data }
                         val quote = quotes.firstOrNull() ?: return@onEach
+
+                        val bestProvider = quote as? OnrampQuote.Data
+                        val isMultipleQuotes = !quotes.isSingleItem()
+                        val isOtherQuotesHasData = quotes
+                            .filterNot { it == bestProvider }
+                            .any { it is OnrampQuote.Data }
+                        val hasBestProvider = isMultipleQuotes && isOtherQuotesHasData
+
+                        val isBestProvider = quote == bestProvider && hasBestProvider
+
                         if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
                             lastAmount.value = quote.fromAmount.value
                             analyticsEventHandler.send(
@@ -208,7 +218,12 @@ internal class OnrampMainComponentModel @Inject constructor(
                                 ),
                             )
                         }
-                        _state.update { amountStateFactory.getAmountSecondaryUpdatedState(quote, isNoQuotes) }
+                        _state.update {
+                            amountStateFactory.getAmountSecondaryUpdatedState(
+                                quote = quote,
+                                isBestRate = isBestProvider,
+                            )
+                        }
                     },
                 )
             }
