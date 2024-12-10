@@ -1,6 +1,9 @@
 name: Deploy to Firebase
 
 on:
+  push:
+    branches:
+      - 'develop'
   workflow_dispatch:
   workflow_call:
     secrets:
