@@ -61,6 +61,7 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
@@ -72,7 +73,6 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
-import com.tangem.google.GoogleServicesHelper
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
@@ -86,6 +86,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
@@ -208,6 +209,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var dispatchers: CoroutineDispatcherProvider
 
+    @Inject
+    internal lateinit var routingFeatureToggles: RoutingFeatureToggles
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -250,8 +254,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         installActivityDependencies()
         observeAppThemeModeUpdates()
 
-        setContentView(R.layout.activity_main)
-        installRouting()
+        if (routingFeatureToggles.isNavigationRefactoringEnabled) {
+            TODO(
+                "Will be implemented in https://tangem.atlassian.net/browse/AND-9408 " +
+                    "and in https://tangem.atlassian.net/browse/AND-9409",
+            )
+        } else {
+            setContentView(R.layout.activity_main)
+            installRouting()
+        }
+
         initContent()
 
         observeStateUpdates()
