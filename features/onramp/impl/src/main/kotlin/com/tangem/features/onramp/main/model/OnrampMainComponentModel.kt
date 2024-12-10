@@ -202,6 +202,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                         val bestProvider = quote as? OnrampQuote.Data
                         val isMultipleQuotes = !quotes.isSingleItem()
                         val isOtherQuotesHasData = quotes
+                            .filter { it.paymentMethod == quote.paymentMethod }
                             .filterNot { it == bestProvider }
                             .any { it is OnrampQuote.Data }
                         val hasBestProvider = isMultipleQuotes && isOtherQuotesHasData
