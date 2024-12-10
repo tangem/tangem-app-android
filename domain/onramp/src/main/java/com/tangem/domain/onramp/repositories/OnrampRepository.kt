@@ -10,10 +10,13 @@ import kotlinx.coroutines.flow.Flow
 @Suppress("TooManyFunctions")
 interface OnrampRepository {
     // api
-    suspend fun getCurrencies(): List<OnrampCurrency>
-    suspend fun getCountries(): List<OnrampCountry>
+    suspend fun getCurrencies(): Flow<List<OnrampCurrency>>
+    suspend fun getCountries(): Flow<List<OnrampCountry>>
+    suspend fun getCountriesSync(): List<OnrampCountry>?
     suspend fun getCountryByIp(): OnrampCountry
     suspend fun getStatus(txId: String): OnrampStatus
+    suspend fun fetchCurrencies()
+    suspend fun fetchCountries()
     suspend fun fetchPaymentMethodsIfAbsent()
     suspend fun fetchPairs(currency: OnrampCurrency, country: OnrampCountry, cryptoCurrency: CryptoCurrency)
     suspend fun fetchQuotes(cryptoCurrency: CryptoCurrency, amount: Amount)
