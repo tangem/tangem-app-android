@@ -10,7 +10,7 @@ import javax.inject.Inject
 
 @Stable
 @ComponentScoped
-class OnboardingVisaAccessCodeModel @Inject constructor(
+internal class OnboardingVisaAccessCodeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val paramsContainer: ParamsContainer,
 ) : Model() {
