@@ -95,6 +95,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.BSC || blockchain == Blockchain.BSCTestnet
     }
 
+    fun isBNB(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return blockchain == Blockchain.Binance || blockchain == Blockchain.BinanceTestnet
+    }
+
     data class BlockchainInfo(
         val blockchainId: String,
         val name: String,
