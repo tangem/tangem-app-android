@@ -184,23 +184,26 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available, modifier:
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,
             )
-            if (state.isBestRate) {
-                Text(
-                    text = stringResource(R.string.express_provider_best_rate),
-                    style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.constantWhite,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(TangemTheme.colors.icon.accent)
-                        .padding(vertical = 1.dp, horizontal = 6.dp),
-                )
-            } else {
-                Text(
-                    text = state.diffRate.resolveReference(),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.warning,
-                    modifier = Modifier.padding(vertical = 1.dp),
-                )
+            when {
+                state.isBestRate -> {
+                    Text(
+                        text = stringResource(R.string.express_provider_best_rate),
+                        style = TangemTheme.typography.caption1,
+                        color = TangemTheme.colors.text.constantWhite,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(TangemTheme.colors.icon.accent)
+                            .padding(vertical = 1.dp, horizontal = 6.dp),
+                    )
+                }
+                state.diffRate != null -> {
+                    Text(
+                        text = state.diffRate.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.warning,
+                        modifier = Modifier.padding(vertical = 1.dp),
+                    )
+                }
             }
         }
     }
