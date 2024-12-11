@@ -96,6 +96,27 @@ internal data class TokenDetailsDialogConfig(
             )
         }
 
+        data class RemoveIncompleteTransactionConfirmDialogConfig(
+            val onConfirmClick: () -> Unit,
+            val onCancelClick: () -> Unit,
+        ) : DialogContentConfig() {
+            override val title = null
+
+            override val message: TextReference = TextReference.Res(
+                id = R.string.warning_kaspa_unfinished_token_transaction_discard_message,
+            )
+
+            override val cancelButtonConfig: ButtonConfig = ButtonConfig(
+                text = TextReference.Res(R.string.common_cancel),
+                onClick = onCancelClick,
+            )
+
+            override val confirmButtonConfig: ButtonConfig = ButtonConfig(
+                text = TextReference.Res(R.string.common_yes),
+                onClick = onConfirmClick,
+            )
+        }
+
         data class ErrorDialogConfig(
             val text: TextReference,
             val onConfirmClick: () -> Unit,

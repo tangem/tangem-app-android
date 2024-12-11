@@ -25,6 +25,9 @@ import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -133,17 +136,25 @@ internal class OnrampTokenListModel @Inject constructor(
     }
 
     private suspend fun List<CryptoCurrencyStatus>.filterByAvailability(): Map<Boolean, List<CryptoCurrencyStatus>> {
-        return groupBy { status ->
-            val isAvailable = checkAvailabilityByOperation(status = status)
-            val isNotMissedDerivation = status.value !is CryptoCurrencyStatus.MissedDerivation
+        return coroutineScope {
+            map { status ->
+                async {
+                    val isAvailable = checkAvailabilityByOperation(status = status)
+                    val isNotMissedDerivation = status.value !is CryptoCurrencyStatus.MissedDerivation
+                    val isNotLoading = status.value !is CryptoCurrencyStatus.Loading
 
-            val isNotUnreachable = when (params.filterOperation) {
-                OnrampOperation.BUY -> true // unreachable state is available for Buy operation
-                OnrampOperation.SELL -> status.value !is CryptoCurrencyStatus.Unreachable
-                OnrampOperation.SWAP -> status.value !is CryptoCurrencyStatus.Unreachable
+                    val isNotUnreachable = when (params.filterOperation) {
+                        OnrampOperation.BUY -> true // unreachable state is available for Buy operation
+                        OnrampOperation.SELL -> status.value !is CryptoCurrencyStatus.Unreachable
+                        OnrampOperation.SWAP -> status.value !is CryptoCurrencyStatus.Unreachable
+                    }
+
+                    status to (isAvailable && isNotMissedDerivation && isNotLoading && isNotUnreachable)
+                }
             }
-
-            isAvailable && isNotMissedDerivation && isNotUnreachable
+                .awaitAll()
+                .groupBy(Pair<CryptoCurrencyStatus, Boolean>::second)
+                .mapValues { it.value.map(Pair<CryptoCurrencyStatus, Boolean>::first) }
         }
     }
 
