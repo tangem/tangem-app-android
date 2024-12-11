@@ -19,6 +19,11 @@ class GetCurrencyQuotesUseCase(
         return quotesRepository.getQuotesUpdates(
             currenciesIds = setOf(currencyID),
             refresh = refresh,
-        ).map { it.filterIsInstance<Quote.Value>().firstOrNull().toOption() }.catch { emit(None) }
+        )
+            .map { it.filterIsInstance<Quote.Value>().firstOrNull().toOption() }
+            .retryWhen { _, _ ->
+                emit(None)
+                true
+            }
     }
 }

@@ -10,8 +10,8 @@ import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 
 class GetOnrampQuotesUseCase(
     private val settingsRepository: SettingsRepository,
@@ -32,8 +32,9 @@ class GetOnrampQuotesUseCase(
                     .flatten()
                     .right()
             }
-            .catch {
-                emit(errorResolver.resolve(it).left())
+            .retryWhen { cause, _ ->
+                emit(errorResolver.resolve(cause).left())
+                true
             }
     }
 

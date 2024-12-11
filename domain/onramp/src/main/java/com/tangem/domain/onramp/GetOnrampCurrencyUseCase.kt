@@ -8,8 +8,8 @@ import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 
 class GetOnrampCurrencyUseCase(
     private val repository: OnrampRepository,
@@ -19,8 +19,9 @@ class GetOnrampCurrencyUseCase(
     operator fun invoke(): Flow<Either<OnrampError, OnrampCurrency?>> {
         return repository.getDefaultCurrency()
             .map<OnrampCurrency?, Either<OnrampError, OnrampCurrency?>> { it.right() }
-            .catch {
-                emit(errorResolver.resolve(it).left())
+            .retryWhen { cause, _ ->
+                emit(errorResolver.resolve(cause).left())
+                true
             }
     }
 }
