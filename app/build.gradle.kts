@@ -223,7 +223,6 @@ dependencies {
     implementation(deps.lottie)
     implementation(deps.compose.accompanist.appCompatTheme)
     implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.accompanist.webView)
     implementation(deps.xmlShimmer)
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
