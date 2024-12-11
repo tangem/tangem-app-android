@@ -93,11 +93,14 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         )
 
     val backButtonClickFlow = MutableSharedFlow<Unit>()
+
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = innerNavigationStateFlow
 
         override fun pop(onComplete: (Boolean) -> Unit) {
-            if (childStack.active.configuration == SeedPhrase) {
+            val config = childStack.active.configuration
+
+            if (config == SeedPhrase || config == Finalize) {
                 componentScope.launch { backButtonClickFlow.emit(Unit) }
             } else {
                 model.onBack()
@@ -160,6 +163,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             Finalize -> MultiWalletFinalizeComponent(
                 context = childContext,
                 params = childParams,
+                backButtonClickFlow = backButtonClickFlow,
+                onBack = { model.onBack() },
                 onEvent = ::handleFinalizeComponentEvent,
             )
             Done -> error("Unexpected Done state")
