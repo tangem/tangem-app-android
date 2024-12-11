@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui
 
 import androidx.compose.animation.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
