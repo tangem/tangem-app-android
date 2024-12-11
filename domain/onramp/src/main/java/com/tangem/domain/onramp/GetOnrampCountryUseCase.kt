@@ -10,6 +10,7 @@ import com.tangem.domain.onramp.repositories.OnrampRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 
 class GetOnrampCountryUseCase(
     private val repository: OnrampRepository,
@@ -19,8 +20,9 @@ class GetOnrampCountryUseCase(
     operator fun invoke(): Flow<Either<OnrampError, OnrampCountry?>> {
         return repository.getDefaultCountry()
             .map<OnrampCountry?, Either<OnrampError, OnrampCountry?>> { it.right() }
-            .catch {
-                emit(errorResolver.resolve(it).left())
+            .retryWhen { cause, _ ->
+                emit(errorResolver.resolve(cause).left())
+                true
             }
     }
 
