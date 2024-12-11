@@ -8,8 +8,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onboarding.v2.impl.R
-import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model.MultiWalletBackupModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui.MultiWalletBackup
 import kotlinx.coroutines.flow.update
