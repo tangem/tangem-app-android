@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
+@Stable
 @ComponentScoped
 internal class MultiWalletCreateWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
