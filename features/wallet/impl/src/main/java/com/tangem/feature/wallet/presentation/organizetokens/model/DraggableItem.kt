@@ -2,6 +2,10 @@ package com.tangem.feature.wallet.presentation.organizetokens.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem.RoundingMode
 
 /**
@@ -30,7 +34,16 @@ internal sealed class DraggableItem {
         val networkName: String,
         override val roundingMode: RoundingMode = RoundingMode.None,
         override val showShadow: Boolean = false,
-    ) : DraggableItem()
+    ) : DraggableItem() {
+
+        val groupTitle = TokensListItemUM.GroupTitle(
+            id = id,
+            text = resourceReference(
+                id = R.string.wallet_network_group_title,
+                formatArgs = wrappedList(networkName),
+            ),
+        )
+    }
 
     /**
      * Item for token.
