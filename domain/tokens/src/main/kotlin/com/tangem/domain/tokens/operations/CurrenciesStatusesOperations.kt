@@ -338,15 +338,19 @@ internal class CurrenciesStatusesOperations(
             .map<Set<Quote>, Either<Error, Set<Quote>>> { quotes ->
                 if (quotes.isEmpty()) Error.EmptyQuotes.left() else quotes.right()
             }
-            .catch {
-                emit(Error.DataError(it).left())
+            .retryWhen { cause, _ ->
+                emit(Error.DataError(cause).left())
+                true
             }
     }
 
     private fun getNetworksStatuses(networks: NonEmptySet<Network>): Flow<Either<Error, Set<NetworkStatus>>> {
         return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<Error, Set<NetworkStatus>>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(Error.DataError(cause).left())
+                true
+            }
             .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
     }
 
@@ -387,7 +391,10 @@ internal class CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
         ).map<YieldBalance, Either<Error, YieldBalance>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(Error.DataError(cause).left())
+                true
+            }
             .onEmpty { emit(Error.EmptyYieldBalances.left()) }
     }
 

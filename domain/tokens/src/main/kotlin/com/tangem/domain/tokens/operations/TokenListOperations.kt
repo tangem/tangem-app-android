@@ -114,7 +114,10 @@ internal class TokenListOperations(
     private fun getIsGrouped(): Flow<Either<Error, Boolean>> {
         return currenciesRepository.isTokensGrouped(userWalletId)
             .map<Boolean, Either<Error, Boolean>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(Error.DataError(cause).left())
+                true
+            }
             .onEmpty { emit(value = false.right()) }
             .cancellable()
     }
@@ -122,7 +125,10 @@ internal class TokenListOperations(
     private fun getIsSortedByBalance(): Flow<Either<Error, Boolean>> {
         return currenciesRepository.isTokensSortedByBalance(userWalletId)
             .map<Boolean, Either<Error, Boolean>> { it.right() }
-            .catch { emit(Error.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(Error.DataError(cause).left())
+                true
+            }
             .onEmpty { emit(value = false.right()) }
             .cancellable()
     }
