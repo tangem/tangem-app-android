@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.Network
@@ -24,6 +25,7 @@ internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val coroutineDispatchers: CoroutineDispatcherProvider,
 ) : CurrencyChecksRepository {
+
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
         val manager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -108,6 +110,7 @@ internal class DefaultCurrencyChecksRepository(
     override suspend fun checkUtxoAmountLimit(
         userWalletId: UserWalletId,
         network: Network,
+        currency: CryptoCurrency,
         amount: BigDecimal,
         fee: BigDecimal,
     ): UtxoAmountLimit? {
