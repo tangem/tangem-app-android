@@ -2,7 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers.convert
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -10,6 +11,7 @@ import com.tangem.domain.tokens.model.NetworkGroup
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.converter.Converter
@@ -60,9 +62,12 @@ internal class TokenListStateConverter(
     }
 
     private fun MutableList<TokensListItemUM>.addGroup(group: NetworkGroup): List<TokensListItemUM> {
-        val groupTitle = TokensListItemUM.NetworkGroupTitle(
+        val groupTitle = TokensListItemUM.GroupTitle(
             id = group.network.hashCode(),
-            name = stringReference(group.network.name),
+            text = resourceReference(
+                id = R.string.wallet_network_group_title,
+                formatArgs = wrappedList(group.network.name),
+            ),
         )
 
         add(groupTitle)
