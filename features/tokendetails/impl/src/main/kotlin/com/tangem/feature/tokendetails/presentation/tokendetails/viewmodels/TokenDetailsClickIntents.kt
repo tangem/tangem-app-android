@@ -59,6 +59,12 @@ interface TokenDetailsClickIntents {
 
     fun onAssociateClick()
 
+    fun onRetryIncompleteTransactionClick()
+
+    fun onDismissIncompleteTransactionClick()
+
+    fun onConfirmDismissIncompleteTransactionClick()
+
     fun onStakeBannerClick()
 
     fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig)
