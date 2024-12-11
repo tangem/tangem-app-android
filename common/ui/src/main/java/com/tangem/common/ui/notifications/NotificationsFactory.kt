@@ -185,7 +185,7 @@ object NotificationsFactory {
         if (dustValue == null) return
         val isExceedsLimit = checkDustLimits(
             feeAmount = feeValue,
-            receivedAmount = sendingAmount,
+            sendingAmount = sendingAmount,
             dustValue = dustValue,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             feeCurrencyStatus = feeCurrencyStatus,
@@ -352,7 +352,7 @@ object NotificationsFactory {
 
     private fun checkDustLimits(
         feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
+        sendingAmount: BigDecimal,
         dustValue: BigDecimal,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         feeCurrencyStatus: CryptoCurrencyStatus?,
@@ -360,7 +360,7 @@ object NotificationsFactory {
         val change = when (cryptoCurrencyStatus.currency) {
             is CryptoCurrency.Coin -> {
                 val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-                balance - (feeAmount + receivedAmount)
+                balance - (feeAmount + sendingAmount)
             }
             is CryptoCurrency.Token -> {
                 val balance = feeCurrencyStatus?.value?.amount ?: BigDecimal.ZERO
@@ -369,6 +369,9 @@ object NotificationsFactory {
         }
 
         val isChangeLowerThanDust = change < dustValue && change > BigDecimal.ZERO
-        return receivedAmount < dustValue || isChangeLowerThanDust
+        return when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> sendingAmount < dustValue || isChangeLowerThanDust
+            is CryptoCurrency.Token -> isChangeLowerThanDust
+        }
     }
 }
