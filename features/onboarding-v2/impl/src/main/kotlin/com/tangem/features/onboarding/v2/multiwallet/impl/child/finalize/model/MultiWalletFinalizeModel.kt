@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
+@Stable
 @ComponentScoped
 internal class MultiWalletFinalizeModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -59,6 +61,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private var walletHasBackupError = false
     val uiState = _uiState.asStateFlow()
+    val onBackFlow = MutableSharedFlow<Unit>()
 
     val onEvent = MutableSharedFlow<MultiWalletFinalizeComponent.Event>()
 
@@ -69,6 +72,12 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             onboardingRepository.saveUnfinishedFinalizeOnboarding(
                 scanResponse = multiWalletState.value.currentScanResponse,
             )
+        }
+    }
+
+    fun onBack() {
+        if (uiState.value.scanPrimary) {
+            modelScope.launch { onBackFlow.emit(Unit) }
         }
     }
 
