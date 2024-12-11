@@ -17,4 +17,16 @@ sealed class AssetRequirementsCondition {
         val feeCurrencySymbol: String,
         val decimals: Int,
     ) : AssetRequirementsCondition()
+
+    /**
+     * The exact value of the fee for this type of condition is stored in `feeAmount`.
+     */
+    data class IncompleteTransaction(
+        val amount: BigDecimal,
+        val currencySymbol: String,
+        val currencyDecimals: Int,
+        val feeAmount: BigDecimal,
+        val feeCurrencySymbol: String,
+        val feeCurrencyDecimals: Int,
+    ) : AssetRequirementsCondition()
 }

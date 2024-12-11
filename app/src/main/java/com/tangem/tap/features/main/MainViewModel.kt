@@ -212,7 +212,6 @@ internal class MainViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         listenToFlipsUseCase.changeUpdateEnabled(true)
-        router.pop()
         stateHolder.updateWithoutModalNotification()
         stateHolder.updateWithHiddenBalancesToast(true)
     }
