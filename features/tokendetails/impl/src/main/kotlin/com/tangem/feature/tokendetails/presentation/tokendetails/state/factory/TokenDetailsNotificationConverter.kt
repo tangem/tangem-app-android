@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.shorted
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
+import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification.*
@@ -38,6 +39,14 @@ internal class TokenDetailsNotificationConverter(
     fun removeHederaAssociateWarning(currentState: TokenDetailsState): ImmutableList<TokenDetailsNotification> {
         val newNotifications = currentState.notifications.toMutableList()
         newNotifications.removeBy { it is HederaAssociateWarning }
+        return newNotifications.toImmutableList()
+    }
+
+    fun removeKaspaIncompleteTransactionWarning(
+        currentState: TokenDetailsState,
+    ): ImmutableList<TokenDetailsNotification> {
+        val newNotifications = currentState.notifications.toMutableList()
+        newNotifications.removeBy { it is KaspaIncompleteTransactionWarning }
         return newNotifications.toImmutableList()
     }
 
@@ -108,6 +117,13 @@ internal class TokenDetailsNotificationConverter(
                 fee = warning.fee.format { crypto(symbol = "", decimals = warning.feeCurrencyDecimals) },
                 feeCurrencySymbol = warning.feeCurrencySymbol,
                 onAssociateClick = clickIntents::onAssociateClick,
+            )
+            is KaspaWarnings.IncompleteTransaction -> KaspaIncompleteTransactionWarning(
+                currency = warning.currency,
+                amount = warning.amount.format { crypto(symbol = "", decimals = warning.currencyDecimals) },
+                currencySymbol = warning.currencySymbol,
+                onRetryIncompleteTransactionClick = clickIntents::onRetryIncompleteTransactionClick,
+                onDismissIncompleteTransactionClick = clickIntents::onDismissIncompleteTransactionClick,
             )
             is CryptoCurrencyWarning.FeeResourceInfo -> KoinosMana(
                 manaBalanceAmount = formatMana(warning.amount),
