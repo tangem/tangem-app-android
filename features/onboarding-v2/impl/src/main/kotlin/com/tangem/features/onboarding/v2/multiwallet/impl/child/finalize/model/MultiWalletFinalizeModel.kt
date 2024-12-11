@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
@@ -37,6 +38,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
+@Stable
 @ComponentScoped
 internal class MultiWalletFinalizeModel @Inject constructor(
     paramsContainer: ParamsContainer,
