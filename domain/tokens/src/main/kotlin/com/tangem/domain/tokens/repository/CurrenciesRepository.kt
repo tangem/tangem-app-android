@@ -86,21 +86,29 @@ interface CurrenciesRepository {
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
+     * @param refresh Indicates whether to force a refresh of the status data.
      * @return The primary cryptocurrency associated with the user wallet.
      * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
-    suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
+    suspend fun getSingleCurrencyWalletPrimaryCurrency(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): CryptoCurrency
 
     /**
      * Retrieves the cryptocurrencies for a specific single-currency user wallet with tokens on the card.
      *
      * @param userWalletId The unique identifier of the user wallet.
+     * @param refresh Indicates whether to force a refresh of the status data.
      * @return The primary cryptocurrency associated with the user wallet.
      * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
-    suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>
+    suspend fun getSingleCurrencyWalletWithCardCurrencies(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): List<CryptoCurrency>
 
     /**
      * Retrieves the cryptocurrency for a specific single-currency user old wallet
