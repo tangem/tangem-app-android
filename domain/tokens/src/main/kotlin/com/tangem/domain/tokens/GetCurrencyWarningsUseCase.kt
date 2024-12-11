@@ -6,6 +6,7 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
+import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
@@ -20,7 +21,7 @@ import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 class GetCurrencyWarningsUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
@@ -79,7 +80,17 @@ class GetCurrencyWarningsUseCase(
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
                 getMigrationFromMaticToPolWarning(currency),
             )
-        }.flowOn(dispatchers.io)
+        }
+            .onEmpty {
+                setOfNotNull(
+                    getNetworkUnavailableWarning(currencyStatus),
+                    getNetworkNoAccountWarning(currencyStatus),
+                    getBeaconChainShutdownWarning(currency.network.id),
+                    getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
+                    getMigrationFromMaticToPolWarning(currency),
+                )
+            }
+            .flowOn(dispatchers.io)
     }
 
     private suspend fun getSwapPromoNotificationWarning(
@@ -298,12 +309,22 @@ class GetCurrencyWarningsUseCase(
     ): CryptoCurrencyWarning? {
         return when (val requirements = walletManagersFacade.getAssetRequirements(userWalletId, currency)) {
             is AssetRequirementsCondition.PaidTransaction -> HederaWarnings.AssociateWarning(currency = currency)
-            is AssetRequirementsCondition.PaidTransactionWithFee -> HederaWarnings.AssociateWarningWithFee(
-                currency = currency,
-                fee = requirements.feeAmount,
-                feeCurrencySymbol = requirements.feeCurrencySymbol,
-                feeCurrencyDecimals = requirements.decimals,
-            )
+            is AssetRequirementsCondition.PaidTransactionWithFee -> {
+                HederaWarnings.AssociateWarningWithFee(
+                    currency = currency,
+                    fee = requirements.feeAmount,
+                    feeCurrencySymbol = requirements.feeCurrencySymbol,
+                    feeCurrencyDecimals = requirements.decimals,
+                )
+            }
+            is AssetRequirementsCondition.IncompleteTransaction ->
+                KaspaWarnings.IncompleteTransaction(
+                    currency = currency,
+                    amount = requirements.amount,
+                    currencySymbol = requirements.currencySymbol,
+                    currencyDecimals = requirements.currencyDecimals,
+                )
+
             null -> null
         }
     }
