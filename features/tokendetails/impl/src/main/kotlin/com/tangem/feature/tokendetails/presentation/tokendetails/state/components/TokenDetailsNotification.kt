@@ -19,12 +19,14 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         subtitle: TextReference,
         iconResId: Int = R.drawable.img_attention_20,
         buttonsState: NotificationConfig.ButtonsState? = null,
+        onCloseClick: (() -> Unit)? = null,
     ) : TokenDetailsNotification(
         config = NotificationConfig(
             title = title,
             subtitle = subtitle,
             iconResId = iconResId,
             buttonsState = buttonsState,
+            onCloseClick = onCloseClick,
         ),
     )
 
@@ -189,6 +191,27 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
             text = resourceReference(R.string.warning_hedera_missing_token_association_button_title),
             onClick = onAssociateClick,
         ),
+    )
+
+    data class KaspaIncompleteTransactionWarning(
+        private val currency: CryptoCurrency,
+        private val amount: String,
+        private val currencySymbol: String,
+        private val onRetryIncompleteTransactionClick: () -> Unit,
+        private val onDismissIncompleteTransactionClick: () -> Unit,
+    ) : Warning(
+        title = resourceReference(R.string.warning_kaspa_unfinished_token_transaction_title),
+        subtitle = resourceReference(
+            id = R.string.warning_kaspa_unfinished_token_transaction_message,
+            formatArgs = wrappedList(amount, currencySymbol),
+        ),
+        iconResId = R.drawable.ic_alert_circle_red_20,
+        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+            text = resourceReference(R.string.alert_button_try_again),
+            onClick = onRetryIncompleteTransactionClick,
+            iconResId = R.drawable.ic_tangem_24,
+        ),
+        onCloseClick = onDismissIncompleteTransactionClick,
     )
 
     data class KoinosMana(
