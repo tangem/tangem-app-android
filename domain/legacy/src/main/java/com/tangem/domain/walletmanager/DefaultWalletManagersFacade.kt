@@ -594,7 +594,7 @@ class DefaultWalletManagersFacade(
         }
     }
 
-    override suspend fun associateAsset(
+    override suspend fun fulfillRequirements(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         signer: TransactionSigner,
@@ -610,6 +610,21 @@ class DefaultWalletManagersFacade(
             }
 
             walletManager.fulfillRequirements(currencyType, signer)
+        }
+    }
+
+    override suspend fun discardRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): SimpleResult {
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+            val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+
+            if (walletManager !is AssetRequirementsManager) {
+                return@withContext SimpleResult.Failure(
+                    BlockchainSdkError.CustomError("WalletManager is not implemented AssetRequirementsManager"),
+                )
+            }
+
+            walletManager.discardRequirements(currencyType)
         }
     }
 
