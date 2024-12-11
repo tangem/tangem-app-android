@@ -968,7 +968,7 @@
   <string name="warning_approval_in_progress_title">Approbation en cours</string>
   <string name="warning_backup_errors_message">Il semble que l\'activation de la carte ne se soit pas déroulée correctement. Cela peut être dû à un problème avec le module NFC de votre appareil ou à une mauvaise connexion de la carte sur votre appareil. Veuillez contacter notre équipe de support pour obtenir de l’aide.</string>
   <string name="warning_backup_errors_title">Erreur d\'activation</string>
-  <string name="warning_beacon_chain_retirement_content">Selon les développeurs du réseau BNB, le support de la norme BEP-2\nprendra fin en juin 2024. Pour éviter de perdre des actifs avec cette norme, veuillez les convertir à la norme BEP-20. Utilisez notre service de d\'échange pour les transférer sur le réseau BNB Smart Chain.</string>
+  <string name="warning_beacon_chain_retirement_content">Le 3 décembre 2024, le réseau BEP-2 a été désactivé par décision des développeurs du réseau et n\'est plus pris en charge</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain va s\'arrêter de fonctionner</string>
   <string name="warning_blocked_funds_for_fee_message">Veuillez déposer environ %1$s pour couvrir les frais de réseau</string>
   <string name="warning_blocked_funds_for_fee_title">Fonds insuffisants pour couvrir les frais de réseau</string>
