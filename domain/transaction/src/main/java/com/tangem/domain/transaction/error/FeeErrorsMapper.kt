@@ -8,6 +8,9 @@ fun Result.Failure.mapToFeeError(): GetFeeError {
         is BlockchainSdkError.Tron.AccountActivationError -> {
             GetFeeError.BlockchainErrors.TronActivationError
         }
+        is BlockchainSdkError.Kaspa.ZeroUtxoError -> {
+            GetFeeError.BlockchainErrors.KaspaZeroUtxo
+        }
         else -> GetFeeError.DataError(this.error)
     }
 }

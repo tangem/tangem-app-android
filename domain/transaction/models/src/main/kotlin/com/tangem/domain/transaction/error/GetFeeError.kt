@@ -6,5 +6,6 @@ sealed class GetFeeError {
 
     sealed class BlockchainErrors : GetFeeError() {
         data object TronActivationError : BlockchainErrors()
+        data object KaspaZeroUtxo : BlockchainErrors()
     }
 }
