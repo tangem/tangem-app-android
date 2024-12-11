@@ -1,6 +1,7 @@
 package com.tangem.data.markets.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
 
 sealed interface MarketsDataAnalyticsEvent {
 
@@ -12,11 +13,13 @@ sealed interface MarketsDataAnalyticsEvent {
         data class Error(
             val errorType: Type,
             val errorCode: Int? = null,
+            val errorMessage: String,
         ) : List(
             event = "Data Error",
             params = buildMap {
-                put("Error Type", errorType.value)
-                errorCode?.let { put("Error Code", it.toString()) }
+                put(AnalyticsParam.ERROR_TYPE, errorType.value)
+                put(AnalyticsParam.ERROR_CODE, errorCode?.toString() ?: IS_NOT_HTTP_ERROR)
+                put(AnalyticsParam.ERROR_MESSAGE, errorMessage)
             },
         )
     }
@@ -31,13 +34,15 @@ sealed interface MarketsDataAnalyticsEvent {
             val tokenSymbol: String,
             val errorType: Type,
             val errorCode: Int? = null,
+            val errorMessage: String,
         ) : Details(
             event = "Data Error",
             params = buildMap {
                 put("Source", request.source)
                 put("Token", tokenSymbol)
-                errorCode?.let { put("Error Code", it.toString()) }
-                put("Error Type", errorType.value)
+                put(AnalyticsParam.ERROR_TYPE, errorType.value)
+                put(AnalyticsParam.ERROR_CODE, errorCode?.toString() ?: IS_NOT_HTTP_ERROR)
+                put(AnalyticsParam.ERROR_MESSAGE, errorMessage)
             },
         ) {
 
@@ -63,9 +68,9 @@ sealed interface MarketsDataAnalyticsEvent {
         event = "Data Error",
         params = buildMap {
             put("Request path", requestPath)
-            errorCode?.let { put("Error Code", it.toString()) }
-            put("Error Type", errorType.value)
-            put("Error Description", "Chart data contains null values from the API")
+            put(AnalyticsParam.ERROR_TYPE, errorType.value)
+            put(AnalyticsParam.ERROR_CODE, errorCode?.toString() ?: IS_NOT_HTTP_ERROR)
+            put(AnalyticsParam.ERROR_MESSAGE, "Chart data contains null values from the API")
         },
     ),
         MarketsDataAnalyticsEvent
@@ -76,5 +81,9 @@ sealed interface MarketsDataAnalyticsEvent {
         Network("Network"),
         Custom("Custom"),
         Unknown("Unknown"),
+    }
+
+    private companion object {
+        const val IS_NOT_HTTP_ERROR = "Is not http error"
     }
 }
