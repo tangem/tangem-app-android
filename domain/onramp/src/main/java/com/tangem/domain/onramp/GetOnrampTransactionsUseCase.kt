@@ -10,8 +10,8 @@ import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 
 class GetOnrampTransactionsUseCase(
     private val onrampTransactionRepository: OnrampTransactionRepository,
@@ -26,6 +26,9 @@ class GetOnrampTransactionsUseCase(
             userWalletId = userWalletId,
             cryptoCurrencyId = cryptoCurrencyId,
         ).map { it.right() }
-            .catch { errorResolver.resolve(it).left() }
+            .retryWhen { cause, _ ->
+                errorResolver.resolve(cause).left()
+                true
+            }
     }
 }

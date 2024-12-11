@@ -17,7 +17,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
 internal class CurrenciesStatusesLceOperations(
@@ -34,7 +33,6 @@ internal class CurrenciesStatusesLceOperations(
         )
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun transformToCurrenciesStatuses(
         userWalletId: UserWalletId,
         currenciesFlow: EitherFlow<TokenListError, List<CryptoCurrency>>,
@@ -84,7 +82,10 @@ internal class CurrenciesStatusesLceOperations(
     private fun getWalletCurrencies(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrency>> {
         return currenciesRepository.getWalletCurrenciesUpdates(userWalletId)
             .map<List<CryptoCurrency>, Either<TokenListError, List<CryptoCurrency>>> { it.right() }
-            .catch { emit(TokenListError.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(TokenListError.DataError(cause).left())
+                true
+            }
             .distinctUntilChanged()
     }
 
@@ -167,7 +168,10 @@ internal class CurrenciesStatusesLceOperations(
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
         return quotesRepository.getQuotesUpdates(tokensIds)
             .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
-            .catch { emit(TokenListError.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(TokenListError.DataError(cause).left())
+                true
+            }
             .distinctUntilChanged()
     }
 
@@ -177,7 +181,10 @@ internal class CurrenciesStatusesLceOperations(
     ): EitherFlow<TokenListError, Set<NetworkStatus>> {
         return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<TokenListError, Set<NetworkStatus>>> { it.right() }
-            .catch { emit(TokenListError.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(TokenListError.DataError(cause).left())
+                true
+            }
             .distinctUntilChanged()
     }
 
@@ -187,7 +194,10 @@ internal class CurrenciesStatusesLceOperations(
     ): EitherFlow<TokenListError, YieldBalanceList> {
         return stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
             .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
-            .catch { emit(TokenListError.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(TokenListError.DataError(cause).left())
+                true
+            }
             .distinctUntilChanged()
     }
 

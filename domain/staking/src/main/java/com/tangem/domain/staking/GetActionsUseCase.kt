@@ -10,8 +10,8 @@ import com.tangem.domain.staking.repositories.StakingActionRepository
 import com.tangem.domain.staking.repositories.StakingErrorResolver
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 
 /**
  * Use case for getting pending actions list.
@@ -29,6 +29,9 @@ class GetActionsUseCase(
             userWalletId = userWalletId,
             cryptoCurrencyId = cryptoCurrencyId,
         ).map<List<StakingAction>, Either<StakingError, List<StakingAction>>> { it.right() }
-            .catch { emit(stakingErrorResolver.resolve(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(stakingErrorResolver.resolve(cause).left())
+                true
+            }
     }
 }

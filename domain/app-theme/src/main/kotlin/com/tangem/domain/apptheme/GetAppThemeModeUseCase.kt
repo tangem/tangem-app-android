@@ -7,8 +7,8 @@ import com.tangem.domain.apptheme.error.AppThemeModeError
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.retryWhen
 
 /**
  * Use case responsible for retrieving the current application theme mode.
@@ -28,6 +28,9 @@ class GetAppThemeModeUseCase(
     operator fun invoke(): Flow<Either<AppThemeModeError, AppThemeMode>> {
         return appThemeModeRepository.getAppThemeMode()
             .map<AppThemeMode, Either<AppThemeModeError, AppThemeMode>> { it.right() }
-            .catch { emit(AppThemeModeError.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(AppThemeModeError.DataError(cause).left())
+                true
+            }
     }
 }
