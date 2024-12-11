@@ -31,7 +31,7 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
 import com.tangem.core.ui.components.token.TokenItem
-import com.tangem.core.ui.components.tokenlist.internal.DraggableNetworkTitleItem
+import com.tangem.core.ui.components.tokenlist.internal.DraggableGroupTitleItem
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -176,10 +176,10 @@ private fun LazyItemScope.DraggableItem(
         val modifierWithBackground = itemModifier.background(color = TangemTheme.colors.background.primary)
 
         when (item) {
-            is DraggableItem.GroupHeader -> DraggableNetworkTitleItem(
-                modifier = modifierWithBackground,
-                networkName = item.networkName,
+            is DraggableItem.GroupHeader -> DraggableGroupTitleItem(
+                state = item.groupTitle,
                 reorderableTokenListState = reorderableState,
+                modifier = modifierWithBackground,
             )
             is DraggableItem.Token -> TokenItem(
                 modifier = modifierWithBackground,
