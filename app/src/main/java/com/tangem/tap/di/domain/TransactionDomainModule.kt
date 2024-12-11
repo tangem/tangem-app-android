@@ -60,6 +60,28 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideRetryTransactionUseCase(
+        cardSdkConfigRepository: CardSdkConfigRepository,
+        walletManagersFacade: WalletManagersFacade,
+    ): RetryIncompleteTransactionUseCase {
+        return RetryIncompleteTransactionUseCase(
+            cardSdkConfigRepository = cardSdkConfigRepository,
+            walletManagersFacade = walletManagersFacade,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideDismissIncompleteTransactionUseCase(
+        walletManagersFacade: WalletManagersFacade,
+    ): DismissIncompleteTransactionUseCase {
+        return DismissIncompleteTransactionUseCase(
+            walletManagersFacade = walletManagersFacade,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideCreateTransactionUseCase(transactionRepository: TransactionRepository): CreateTransactionUseCase {
         return CreateTransactionUseCase(transactionRepository)
     }
