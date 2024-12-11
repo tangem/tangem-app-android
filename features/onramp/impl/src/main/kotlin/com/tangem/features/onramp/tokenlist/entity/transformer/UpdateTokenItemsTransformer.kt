@@ -71,6 +71,7 @@ internal class UpdateTokenItemsTransformer(
     private fun createAvailableTokenItemStateConverter(): TokenItemStateConverter {
         return TokenItemStateConverter(
             appCurrency = appCurrency,
+            subtitleStateProvider = { createSubtitleState(status = it, isAvailable = true) },
             subtitle2StateProvider = ::createSubtitle2State,
             fiatAmountStateProvider = { createFiatAmountStateProvider(status = it, isAvailable = true) },
             onItemClick = onItemClick,
@@ -87,20 +88,22 @@ internal class UpdateTokenItemsTransformer(
                     isAvailable = false,
                 )
             },
-            subtitleStateProvider = {
-                when (it.value) {
-                    CryptoCurrencyStatus.Loading -> TokenItemState.SubtitleState.Loading
-                    else -> {
-                        TokenItemState.SubtitleState.TextContent(
-                            value = stringReference(value = it.currency.symbol),
-                            isAvailable = false,
-                        )
-                    }
-                }
-            },
+            subtitleStateProvider = { createSubtitleState(status = it, isAvailable = false) },
             subtitle2StateProvider = ::createSubtitle2State,
             fiatAmountStateProvider = { createFiatAmountStateProvider(status = it, isAvailable = false) },
         )
+    }
+
+    private fun createSubtitleState(status: CryptoCurrencyStatus, isAvailable: Boolean): TokenItemState.SubtitleState {
+        return when (status.value) {
+            CryptoCurrencyStatus.Loading -> TokenItemState.SubtitleState.Loading
+            else -> {
+                TokenItemState.SubtitleState.TextContent(
+                    value = stringReference(value = status.currency.symbol),
+                    isAvailable = isAvailable,
+                )
+            }
+        }
     }
 
     private fun createSubtitle2State(status: CryptoCurrencyStatus): TokenItemState.Subtitle2State? {
