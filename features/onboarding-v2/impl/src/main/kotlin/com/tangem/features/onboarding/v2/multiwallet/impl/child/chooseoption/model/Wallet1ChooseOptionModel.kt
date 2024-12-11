@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Stable
 @ComponentScoped
 internal class Wallet1ChooseOptionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
