@@ -42,6 +42,41 @@ object NotificationsFactory {
         }
     }
 
+    fun MutableList<NotificationUM>.addFeeUnreachableNotification(
+        tokenStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus,
+        feeError: GetFeeError?,
+        onReload: () -> Unit,
+        onClick: (currency: CryptoCurrency) -> Unit,
+    ) {
+        when (feeError) {
+            is GetFeeError.BlockchainErrors.TronActivationError -> add(
+                NotificationUM.Warning.TronAccountNotActivated(coinStatus.currency.name),
+            )
+            is GetFeeError.BlockchainErrors.KaspaZeroUtxo -> add(
+                NotificationUM.Error.TokenExceedsBalance(
+                    networkIconId = coinStatus.currency.networkIconResId,
+                    networkName = coinStatus.currency.name,
+                    currencyName = tokenStatus.currency.name,
+                    feeName = coinStatus.currency.name,
+                    feeSymbol = coinStatus.currency.symbol,
+                    mergeFeeNetworkName = false,
+                    onClick = {
+                        onClick(coinStatus.currency)
+                    },
+                ),
+            )
+            is GetFeeError.DataError,
+            is GetFeeError.UnknownError,
+            -> add(
+                NotificationUM.Warning.NetworkFeeUnreachable(onReload),
+            )
+            else -> {
+                /* do nothing */
+            }
+        }
+    }
+
     fun MutableList<NotificationUM>.addExceedBalanceNotification(
         feeAmount: BigDecimal,
         sendingAmount: BigDecimal,
