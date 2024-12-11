@@ -233,11 +233,13 @@ interface WalletManagersFacade {
      */
     suspend fun getAssetRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): AssetRequirementsCondition?
 
-    suspend fun associateAsset(
+    suspend fun fulfillRequirements(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         signer: TransactionSigner,
     ): SimpleResult
+
+    suspend fun discardRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): SimpleResult
 
     /**
      * Indicates UTXO consolidation availability
