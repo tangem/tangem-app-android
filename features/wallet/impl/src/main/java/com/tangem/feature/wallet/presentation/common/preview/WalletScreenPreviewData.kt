@@ -33,15 +33,9 @@ internal object WalletScreenPreviewData {
 
     private val textContentTokensState = WalletTokensListState.ContentState.Content(
         items = persistentListOf(
-            TokensListItemUM.NetworkGroupTitle(
-                id = 1,
-                name = stringReference("Bitcoin"),
-            ),
+            TokensListItemUM.GroupTitle(id = 1, text = stringReference("Network Bitcoin")),
             TokensListItemUM.Token(state = tokenItemState),
-            TokensListItemUM.NetworkGroupTitle(
-                id = 2,
-                name = stringReference("Ethereum"),
-            ),
+            TokensListItemUM.GroupTitle(id = 2, text = stringReference("Network Ethereum")),
             TokensListItemUM.Token(
                 state = tokenItemState.copy(
                     id = "2",
