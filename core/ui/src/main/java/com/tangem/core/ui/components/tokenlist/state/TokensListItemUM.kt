@@ -24,15 +24,6 @@ sealed interface TokensListItemUM {
     ) : TokensListItemUM
 
     /**
-     * Network group title
-     *
-     * @property id   id
-     * @property name network group name
-     */
-    @Deprecated("Use GroupTitle instead") // TODO: [REDACTED_JIRA]
-    data class NetworkGroupTitle(override val id: Int, val name: TextReference) : TokensListItemUM
-
-    /**
      * Group title
      *
      * @property id   id
