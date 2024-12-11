@@ -167,7 +167,10 @@ internal class CurrenciesStatusesLceOperations(
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
         return quotesRepository.getQuotesUpdates(tokensIds)
             .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
-            .catch { emit(TokenListError.DataError(it).left()) }
+            .retryWhen { cause, _ ->
+                emit(TokenListError.DataError(cause).left())
+                true
+            }
             .distinctUntilChanged()
     }
 
