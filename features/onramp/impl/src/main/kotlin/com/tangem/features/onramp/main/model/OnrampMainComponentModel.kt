@@ -54,7 +54,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val router: Router,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
-    private val getOnrampCurrencyUseCase: GetOnrampCurrencyUseCase,
+    private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
@@ -107,7 +107,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     fun handleOnrampAvailable(currency: OnrampCurrency) {
         _state.update { stateFactory.getReadyState(currency) }
-        subscribeToCurrencyUpdates()
+        subscribeToCountryAndCurrencyUpdates()
         subscribeToQuotesUpdate()
     }
 
@@ -132,14 +132,14 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
     }
 
-    private fun subscribeToCurrencyUpdates() {
-        getOnrampCurrencyUseCase.invoke()
-            .onEach { maybeCurrency ->
-                maybeCurrency.fold(
+    private fun subscribeToCountryAndCurrencyUpdates() {
+        getOnrampCountryUseCase.invoke()
+            .onEach { maybeCountry ->
+                maybeCountry.fold(
                     ifLeft = ::handleOnrampError,
-                    ifRight = { currency ->
-                        if (currency == null) return@onEach
-                        _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
+                    ifRight = { country ->
+                        if (country == null) return@onEach
+                        _state.update { amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency) }
                         updatePairsAndQuotes()
                     },
                 )
