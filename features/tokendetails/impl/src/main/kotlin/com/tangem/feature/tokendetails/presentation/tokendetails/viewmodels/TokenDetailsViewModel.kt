@@ -240,6 +240,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             currentCryptoCurrencyStatus?.let {
                 cryptoCurrencyStatus = it
                 updateButtons(it)
+                updateWarnings(it)
             }
         }
     }
