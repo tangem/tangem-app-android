@@ -11,6 +11,6 @@ class FetchOnrampCountriesUseCase(
 ) {
 
     suspend operator fun invoke(): Either<OnrampError, Unit> {
-        return Either.catch { repository.fetchCountries() }.mapLeft(errorResolver::resolve)
+        return Either.catch<Unit> { repository.fetchCountries() }.mapLeft(errorResolver::resolve)
     }
 }
