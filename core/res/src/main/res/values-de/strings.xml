@@ -3,10 +3,18 @@
   <string name="action_buttons_buy_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum kaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum verkaufen im Portfolio hinzu.</string>
   <string name="action_buttons_sell_navigation_bar_title">Verkaufen</string>
+  <string name="action_buttons_service_loading_alert_message">Einige Netzwerke sind derzeit nicht erreichbar. Bitte versuche es später erneut.</string>
+  <string name="action_buttons_service_loading_alert_title">Die Daten wurden noch nicht geladen.</string>
+  <string name="action_buttons_something_wrong_alert_message">Die Aktion ist derzeit nicht verfügbar. Bitte versuche es später erneut oder aktualisiere die Daten, indem Du auf dem Bildschirm nach unten wischst.</string>
+  <string name="action_buttons_something_wrong_alert_title">Schaltfläche ist nicht verfügbar</string>
   <string name="action_buttons_swap_choose_token">Wähle den Token</string>
   <string name="action_buttons_swap_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum tauschen im Portfolio hinzu.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Es gibt keine verfügbaren Token, die mit dem ausgewählten Token getauscht werden können. Bitte wähle einen anderen.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Kein verfügbares Paar</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_message">Um die Tauschfunktion zu nutzen, muss Dein Portfolio mindestens 2 Token enthalten.</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_title">Token hinzufügen</string>
+  <string name="action_buttons_swap_not_enough_tokens_alert_message">Du hast Deinem Portfolio nur 1 Token hinzugefügt. Um die Tauschfunktion zu verwenden, musst Du mindestens 2 Token hinzufügen.</string>
+  <string name="action_buttons_swap_not_enough_tokens_alert_title">Token hinzufügen</string>
   <string name="action_buttons_you_want_to_receive">Wähle den Token aus, den Du erhalten möchtest</string>
   <string name="action_buttons_you_want_to_swap">Wähle den Token, den Du tauschen möchtest</string>
   <string name="add_custom_token_choose_network">Netzwerk wählen</string>
@@ -263,6 +271,9 @@
   <string name="express_exchange_notification_refund_title">Der Betrag wurde in %1$s (%2$s Netzwerk) zurückerstattet.</string>
   <string name="express_exchange_notification_verification_text">Besuche die Website des Anbieters zur Überprüfung</string>
   <string name="express_exchange_notification_verification_title">KYC-Überprüfung durch den Anbieter erforderlich</string>
+  <string name="express_exchange_status_bought">Gekauft</string>
+  <string name="express_exchange_status_buying">Einkaufen</string>
+  <string name="express_exchange_status_buying_active">Einkaufen...</string>
   <string name="express_exchange_status_canceled">Abgebrochen</string>
   <string name="express_exchange_status_confirmed">Bestätigt</string>
   <string name="express_exchange_status_confirming">Bestätigen</string>
@@ -308,6 +319,7 @@
   <string name="feedback_preface_scan_failed">Bitte sag uns, welche Karte oder Ring du hast</string>
   <string name="feedback_preface_support">Hallo Support-Team,</string>
   <string name="feedback_preface_tx_failed">Bitte erzähle uns mehr über dein Problem. Jedes kleine Detail kann helfen.</string>
+  <string name="feedback_subject_pre_activated_wallet">Zuvor aktivierte Wallet</string>
   <string name="feedback_subject_rate_negative">Meine Vorschläge</string>
   <string name="feedback_subject_scan_failed">Kann eine Karte oder Ring nicht scannen</string>
   <string name="feedback_subject_support">Rückmeldung</string>
@@ -585,7 +597,7 @@
   <string name="onramp_settings_residence">Residenz</string>
   <string name="onramp_settings_residence_description">Bitte wähle das richtige Land aus, um korrekte Zahlungsoptionen und Dienstleistungen zu gewährleisten.</string>
   <string name="onramp_settings_title">Einstellungen</string>
-  <string name="onramp_statuses_view_footer">Du kannst den Transaktionsstatus auf der Token-Seite überprüfen.</string>
+  <string name="onramp_statuses_view_footer">Du kannst diesen Bildschirm schließen und den Transaktionsstatus auf dem Bildschirm mit den Token-Details überprüfen.</string>
   <string name="onramp_transaction_status_footer_text">Du kannst diesen Bildschirm schließen und den Transaktionsstatus auf dem Bildschirm mit den Token-Details überprüfen.</string>
   <string name="onramp_via">Über</string>
   <string name="organize_tokens_group">Gruppe erstellen</string>
@@ -600,6 +612,7 @@
   <string name="receive_bottom_sheet_warning_message">%1$s ( %2$s ) im %3$s Netzwerk</string>
   <string name="receive_bottom_sheet_warning_message_description">Das Senden einer anderen Währung führt zu deren irreversiblem Verlust.</string>
   <string name="receive_bottom_sheet_warning_message_full">Sende nur %s an diese Adresse. Der Versand einer anderen Währung führt zu ihrem unwiderruflichen Verlust.</string>
+  <string name="receive_bottom_sheet_warning_title">Senden nur %1$s im Netzwerk %2$s</string>
   <string name="receive_token_description">Überweise Geld von einem anderen Wallet oder einer anderen Börse</string>
   <string name="referral_button_participate">Teilnehmen</string>
   <string name="referral_error_failed_to_load_info">Die Informationen zum Empfehlungsprogramm konnten nicht geladen werden. Bitte versuche es später noch einmal.</string>
@@ -651,6 +664,7 @@
   <string name="scan_card_settings_button">Karte oder Ring scannen</string>
   <string name="scan_card_settings_message">Scanne die Karte oder Ring, um ihre Einstellungen zu ändern. Die Änderungen wirken sich nur auf die von dir gescannte Karte oder Ring aus und haben keine Auswirkungen auf andere mit deiner Wallet verknüpften Geräte.</string>
   <string name="scan_card_settings_title">Halte deine Karte oder Ring bereit!</string>
+  <string name="security_alert_title">Sicherheitswarnung</string>
   <string name="selling_insufficient_balance_alert_message">Dein Konto verfügt nicht über genügend Guthaben, um diese Kryptowährung zu verkaufen. Bitte zahle den gewünschten Vermögenswert ein, um fortzufahren.</string>
   <string name="selling_insufficient_balance_alert_title">Unzureichendes Guthaben</string>
   <string name="selling_regional_restriction_alert_message">Der Verkauf von Kryptowährung ist in Deiner Region derzeit nicht möglich. Wir arbeiten aktiv daran, Ihnen diese Option bald anzubieten – bleib dran!</string>
@@ -868,6 +882,7 @@
   <string name="swapping_to_title">Du erhältst</string>
   <string name="swapping_token_list_title">Token auswählen</string>
   <string name="swapping_token_not_available">Nicht verfügbar</string>
+  <string name="this_is_my_wallet_title">Das ist meine Wallet</string>
   <string name="toast_balances_hidden">Guthaben versteckt</string>
   <string name="toast_balances_shown">Angezeigte Salden</string>
   <string name="toast_undo">Rückgängig machen</string>
@@ -937,6 +952,7 @@
   <string name="user_wallet_list_unlock_all_with">Alle mit %s freischalten</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain ist nicht erreichbar. Versuche es später nochmal</string>
   <string name="wallet_balance_missing_derivation">Karte oder Ring scannen</string>
+  <string name="wallet_been_activated_message">Diese Wallet wurde bereits früher aktiviert.\nWenn es nicht von Dir durchgeführt wurde, wende Dich bitte an den Support.\nTangem verkauft niemals Wallets zusammen mit dem vorgenerierten Zugangscode.</string>
   <string name="wallet_connect_alert_sign_message">Aufforderung zum Signieren einer Nachricht. \n\n %s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, mit der Bitte um\nBNB-Transaktion zu unterzeichnen.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Handelsauftrag für %1$s\n Preis: %2$s\n Zu erhaltender Betrag: %3$s\n Zu zahlender Betrag: %4$s</string>
@@ -984,7 +1000,7 @@
   <string name="warning_approval_in_progress_title">Genehmigung läuft</string>
   <string name="warning_backup_errors_message">Es scheint, dass die Aktivierung der Karte oder des Rings nicht korrekt abgeschlossen wurde. Dies kann an einem Problem mit dem NFC-Modul deines Gerätes oder an einem falschen Tippen der Karte oder Ring auf dein Gerät liegen. Bitte wende dich an unser Support-Team, um Unterstützung zu erhalten.</string>
   <string name="warning_backup_errors_title">Aktivierungsfehler</string>
-  <string name="warning_beacon_chain_retirement_content">Laut den Entwicklern des BNB-Netzes wird die Unterstützung für den BEP-2-Standard im Juni 2024 enden. Um den Verlust von Vermögenswerten mit diesem Standard zu vermeiden, konvertiere bitte in den BEP-20 Standard. Nutze gerne unseren Swap-Service, um sie auf das BNB Smart Chain Netzwerk zu übertragen.</string>
+  <string name="warning_beacon_chain_retirement_content">Am 3. Dezember 2024 wurde das BEP-2-Netzwerk auf Entscheidung der Netzwerkentwickler deaktiviert und wird nicht mehr unterstützt</string>
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain wird abgeschaltet</string>
   <string name="warning_blocked_funds_for_fee_message">Bitte zahle ein paar %1$s ein, um die Netzwerkgebühr zu decken</string>
   <string name="warning_blocked_funds_for_fee_title">Unzureichende Mittel zur Deckung der Netzgebühr</string>
