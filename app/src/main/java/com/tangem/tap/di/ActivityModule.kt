@@ -1,7 +1,7 @@
 package com.tangem.tap.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
+import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -49,7 +49,7 @@ internal object ActivityModule {
     @Singleton
     fun provideDefaultRampManager(
         appStateHolder: AppStateHolder,
-        swapServiceLoader: SwapServiceLoader,
+        expressServiceLoader: ExpressServiceLoader,
         currenciesRepository: CurrenciesRepository,
         getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
         excludedBlockchains: ExcludedBlockchains,
@@ -61,7 +61,7 @@ internal object ActivityModule {
             exchangeService = appStateHolder.exchangeService,
             buyService = Provider { requireNotNull(appStateHolder.buyService) },
             sellService = Provider { requireNotNull(appStateHolder.sellService) },
-            swapServiceLoader = swapServiceLoader,
+            expressServiceLoader = expressServiceLoader,
             currenciesRepository = currenciesRepository,
             getNetworkCoinStatusUseCase = getNetworkCoinStatusUseCase,
             excludedBlockchains = excludedBlockchains,
