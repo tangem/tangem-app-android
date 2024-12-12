@@ -39,5 +39,5 @@ interface RampStateManager {
 
     fun getSellInitializationStatus(): Flow<Lce<Throwable, Any>>
 
-    fun getSwapInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, Any>>
+    fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, Any>>
 }
