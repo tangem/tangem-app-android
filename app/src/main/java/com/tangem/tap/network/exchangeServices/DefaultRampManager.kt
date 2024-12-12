@@ -3,7 +3,7 @@ package com.tangem.tap.network.exchangeServices
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
 import com.tangem.datasource.api.express.models.response.Asset
-import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
+import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.scan.ScanResponse
@@ -25,7 +25,7 @@ internal class DefaultRampManager(
     private val exchangeService: ExchangeService?,
     private val buyService: Provider<ExchangeService>,
     private val sellService: Provider<ExchangeService>,
-    private val swapServiceLoader: SwapServiceLoader,
+    private val expressServiceLoader: ExpressServiceLoader,
     private val currenciesRepository: CurrenciesRepository,
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -92,12 +92,12 @@ internal class DefaultRampManager(
     }
 
     override fun getSwapInitializationStatus(userWalletId: UserWalletId): Flow<ExchangeServiceInitializationStatus> {
-        return swapServiceLoader.getInitializationStatus(userWalletId)
+        return expressServiceLoader.getInitializationStatus(userWalletId)
     }
 
     private suspend fun getExchangeableFlag(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
         return withContext(dispatchers.io) {
-            val asset = swapServiceLoader.getInitializationStatus(userWalletId)
+            val asset = expressServiceLoader.getInitializationStatus(userWalletId)
                 .value
                 .getOrNull()
                 ?.find { cryptoCurrency.findAssetPredicate(it) }
