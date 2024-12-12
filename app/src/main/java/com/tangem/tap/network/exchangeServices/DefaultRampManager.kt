@@ -16,6 +16,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -37,9 +38,13 @@ internal class DefaultRampManager(
     private val cryptoCurrencyConverter = CryptoCurrencyConverter(excludedBlockchains)
 
     override fun isSellSupportedByService(cryptoCurrency: CryptoCurrency): Boolean {
-        return exchangeService?.availableForSell(
-            currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
-        ) ?: false
+        return runCatching {
+            exchangeService?.availableForSell(
+                currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
+            )
+        }
+            .getOrNull()
+            ?: false
     }
 
     override suspend fun availableForBuy(
@@ -47,28 +52,38 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Boolean {
-        return when {
-            onrampFeatureToggles.isFeatureEnabled -> getOnrampAvailable(userWalletId, cryptoCurrency)
-            exchangeService != null -> exchangeService.availableForBuy(
-                scanResponse = scanResponse,
-                currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
-            )
-            else -> false
+        return runCatching {
+            when {
+                onrampFeatureToggles.isFeatureEnabled -> getOnrampAvailable(userWalletId, cryptoCurrency)
+                exchangeService != null -> exchangeService.availableForBuy(
+                    scanResponse = scanResponse,
+                    currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
+                )
+                else -> false
+            }
         }
+            .getOrNull()
+            ?: false
     }
 
     override suspend fun availableForSell(userWalletId: UserWalletId, status: CryptoCurrencyStatus): Boolean {
-        val sellSupportedByService = isSellSupportedByService(cryptoCurrency = status.currency)
+        return runCatching {
+            val sellSupportedByService = isSellSupportedByService(cryptoCurrency = status.currency)
 
-        if (!sellSupportedByService) return false
+            if (!sellSupportedByService) return false
 
-        val reason = getSendUnavailabilityReason(userWalletId, status)
+            val reason = getSendUnavailabilityReason(userWalletId, status)
 
-        return reason == ScenarioUnavailabilityReason.None
+            reason == ScenarioUnavailabilityReason.None
+        }
+            .getOrNull()
+            ?: false
     }
 
     override suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
-        return getExchangeableFlag(userWalletId, cryptoCurrency) && !cryptoCurrency.isCustom
+        return runCatching { getExchangeableFlag(userWalletId, cryptoCurrency) && !cryptoCurrency.isCustom }
+            .getOrNull()
+            ?: false
     }
 
     override fun getBuyInitializationStatus(): Flow<ExchangeServiceInitializationStatus> {
@@ -76,7 +91,7 @@ internal class DefaultRampManager(
     }
 
     override suspend fun fetchBuyServiceData() {
-        withContext(dispatchers.io) {
+        runCatching(dispatchers.io) {
             buyService.invoke().update()
         }
     }
@@ -86,12 +101,12 @@ internal class DefaultRampManager(
     }
 
     override suspend fun fetchSellServiceData() {
-        withContext(dispatchers.io) {
+        runCatching(dispatchers.io) {
             sellService.invoke().update()
         }
     }
 
-    override fun getSwapInitializationStatus(userWalletId: UserWalletId): Flow<ExchangeServiceInitializationStatus> {
+    override fun getExpressInitializationStatus(userWalletId: UserWalletId): Flow<ExchangeServiceInitializationStatus> {
         return expressServiceLoader.getInitializationStatus(userWalletId)
     }
 
