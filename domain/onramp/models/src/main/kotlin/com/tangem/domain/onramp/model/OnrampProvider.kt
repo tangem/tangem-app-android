@@ -10,4 +10,9 @@ data class OnrampProvider(
 )
 
 @Serializable
-data class OnrampProviderInfo(val name: String, val imageLarge: String)
+data class OnrampProviderInfo(
+    val name: String,
+    val imageLarge: String,
+    val termsOfUseLink: String?,
+    val privacyPolicyLink: String?,
+)
