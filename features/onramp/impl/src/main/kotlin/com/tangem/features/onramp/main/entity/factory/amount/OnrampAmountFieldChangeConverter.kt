@@ -61,6 +61,7 @@ internal class OnrampAmountFieldChangeConverter(
                 amountFieldModel = amountFieldModel,
                 secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
             ),
+            buyButtonConfig = buyButtonConfig.copy(enabled = false),
             providerBlockState = OnrampProviderBlockUM.Empty,
         )
     }
