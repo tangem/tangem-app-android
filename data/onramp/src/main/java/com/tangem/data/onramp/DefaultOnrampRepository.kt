@@ -83,9 +83,7 @@ internal class DefaultOnrampRepository(
     private val onrampErrorAdapter = moshi.adapter(ExpressErrorResponse::class.java)
     private val onrampErrorConverter = OnrampErrorConverter(onrampErrorAdapter)
 
-    override suspend fun getCurrencies(): Flow<List<OnrampCurrency>> = withContext(dispatchers.io) {
-        currenciesStore.get(CURRENCIES_KEY)
-    }
+    override fun getCurrencies(): Flow<List<OnrampCurrency>> = currenciesStore.get(CURRENCIES_KEY)
 
     override suspend fun fetchCurrencies() = withContext(dispatchers.io) {
         if (!currenciesStore.getSyncOrNull(CURRENCIES_KEY).isNullOrEmpty()) return@withContext
@@ -97,9 +95,7 @@ internal class DefaultOnrampRepository(
         currenciesStore.store(CURRENCIES_KEY, result)
     }
 
-    override suspend fun getCountries(): Flow<List<OnrampCountry>> = withContext(dispatchers.io) {
-        countriesStore.get(COUNTRIES_KEY)
-    }
+    override fun getCountries(): Flow<List<OnrampCountry>> = countriesStore.get(COUNTRIES_KEY)
 
     override suspend fun getCountriesSync(): List<OnrampCountry>? {
         return countriesStore.getSyncOrNull(COUNTRIES_KEY)
