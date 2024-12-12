@@ -18,12 +18,19 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
     private val fbAnalytics = Firebase.analytics
     private val fbCrashlytics = Firebase.crashlytics
 
+    private val eventConverter = FirebaseAnalyticsEventConverter()
+
     override fun logEvent(event: String, params: Map<String, String>) {
-        fbAnalytics.logEvent(event, params.toBundle())
+        fbAnalytics.logEvent(
+            eventConverter.convertEventName(event),
+            eventConverter.convertEventParams(params).toBundle(),
+        )
     }
 
     override fun logErrorEvent(error: Throwable, params: Map<String, String>) {
-        params.forEach { fbCrashlytics.setCustomKey(it.key, it.value) }
+        eventConverter.convertEventParams(params)
+            .forEach { fbCrashlytics.setCustomKey(it.key, it.value) }
+
         fbCrashlytics.recordException(error)
     }
 
