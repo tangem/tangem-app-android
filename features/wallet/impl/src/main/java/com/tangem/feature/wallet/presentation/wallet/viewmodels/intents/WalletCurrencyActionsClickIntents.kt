@@ -48,6 +48,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
@@ -119,6 +120,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
     private val getUserCountryUseCase: GetUserCountryUseCase,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -493,7 +495,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
 
         onMultiWalletActionClick(
-            statusFlow = rampStateManager.getSwapInitializationStatus(userWalletId),
+            statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
             route = AppRoute.SwapCrypto(userWalletId = userWalletId),
             eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
         )
@@ -501,7 +503,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {
         onMultiWalletActionClick(
-            statusFlow = rampStateManager.getBuyInitializationStatus(),
+            statusFlow = if (onrampFeatureToggles.isFeatureEnabled) {
+                rampStateManager.getExpressInitializationStatus(userWalletId)
+            } else {
+                rampStateManager.getBuyInitializationStatus()
+            },
             route = AppRoute.BuyCrypto(userWalletId = userWalletId),
             eventCreator = MainScreenAnalyticsEvent::ButtonBuy,
         )
