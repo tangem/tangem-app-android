@@ -84,15 +84,6 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetOnrampCurrencyUseCase(
-        onrampRepository: OnrampRepository,
-        onrampErrorResolver: OnrampErrorResolver,
-    ): GetOnrampCurrencyUseCase {
-        return GetOnrampCurrencyUseCase(onrampRepository, onrampErrorResolver)
-    }
-
-    @Provides
-    @Singleton
     fun provideGetOnrampTransactionsUseCase(
         onrampTransactionRepository: OnrampTransactionRepository,
         onrampErrorResolver: OnrampErrorResolver,
