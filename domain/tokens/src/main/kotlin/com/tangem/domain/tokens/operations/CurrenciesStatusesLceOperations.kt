@@ -18,6 +18,7 @@ import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
 internal class CurrenciesStatusesLceOperations(
@@ -169,6 +170,8 @@ internal class CurrenciesStatusesLceOperations(
             .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
             .retryWhen { cause, _ ->
                 emit(TokenListError.DataError(cause).left())
+                // adding delay before retry to avoid spam when flow restarted
+                delay(RETRY_QUOTES_DELAY)
                 true
             }
             .distinctUntilChanged()
@@ -214,5 +217,9 @@ internal class CurrenciesStatusesLceOperations(
             is NetworkStatus.Verified -> value.address.defaultAddress.value
             else -> null
         }
+    }
+
+    companion object {
+        private const val RETRY_QUOTES_DELAY = 2000L
     }
 }
