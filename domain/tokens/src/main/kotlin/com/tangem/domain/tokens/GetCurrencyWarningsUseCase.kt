@@ -50,6 +50,7 @@ class GetCurrencyWarningsUseCase(
             stakingRepository = stakingRepository,
             userWalletId = userWalletId,
         )
+        // don't add here notifications that require async requests
         return combine(
             getCoinRelatedWarnings(
                 userWalletId = userWalletId,
@@ -62,14 +63,8 @@ class GetCurrencyWarningsUseCase(
             flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
             flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
-            getSwapPromoNotificationWarning(
-                operations = operations,
-                userWalletId = userWalletId,
-                currencyStatus = currencyStatus,
-            ).conflate(),
-        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource, maybeSwapPromo ->
+        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource ->
             setOfNotNull(
-                maybeSwapPromo,
                 maybeRentWarning,
                 maybeEdWarning?.let { getExistentialDepositWarning(currency, it) },
                 maybeFeeResource?.let { getFeeResourceWarning(it) },
@@ -80,19 +75,11 @@ class GetCurrencyWarningsUseCase(
                 getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
                 getMigrationFromMaticToPolWarning(currency),
             )
-        }
-            .onEmpty {
-                setOfNotNull(
-                    getNetworkUnavailableWarning(currencyStatus),
-                    getNetworkNoAccountWarning(currencyStatus),
-                    getBeaconChainShutdownWarning(currency.network.id),
-                    getAssetRequirementsWarning(userWalletId = userWalletId, currency = currency),
-                    getMigrationFromMaticToPolWarning(currency),
-                )
-            }
-            .flowOn(dispatchers.io)
+        }.flowOn(dispatchers.io)
     }
 
+    // disabled for now, don't use it directly in combine() to avoid blocking other notifications
+    @Suppress("UnusedPrivateMember")
     private suspend fun getSwapPromoNotificationWarning(
         operations: CurrenciesStatusesOperations,
         userWalletId: UserWalletId,
