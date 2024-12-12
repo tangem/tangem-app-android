@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resolveReference
@@ -60,6 +61,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
     private val amountInputManager: InputManager,
     private val messageSender: UiMessageSender,
+    private val urlOpener: UrlOpener,
     getWalletsUseCase: GetWalletsUseCase,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampIntents {
@@ -285,6 +287,8 @@ internal class OnrampMainComponentModel @Inject constructor(
             checkResidenceCountry()
         }
     }
+
+    override fun onLinkClick(link: String) = urlOpener.openUrl(link)
 
     override fun onDestroy() {
         modelScope.launch { clearOnrampCacheUseCase.invoke() }
