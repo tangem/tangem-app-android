@@ -9,4 +9,5 @@ interface OnrampIntents {
     fun onBuyClick(quote: OnrampProviderWithQuote.Data)
     fun openProviders()
     fun onRefresh()
+    fun onLinkClick(link: String)
 }
