@@ -100,14 +100,16 @@ internal class DefaultOnrampRepository(
         return countriesStore.getSyncOrNull(COUNTRIES_KEY)
     }
 
-    override suspend fun fetchCountries() = withContext(dispatchers.io) {
-        if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext
+    override suspend fun fetchCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
+        if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext emptyList()
 
         val result = onrampApi.getCountries()
             .getOrThrow()
             .map(countryConverter::convert)
 
         countriesStore.store(COUNTRIES_KEY, result)
+
+        result
     }
 
     override suspend fun getCountryByIp(): OnrampCountry = withContext(dispatchers.io) {
