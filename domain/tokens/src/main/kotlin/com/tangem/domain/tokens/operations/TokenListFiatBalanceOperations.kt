@@ -33,10 +33,10 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
                 -> {
-                    fiatBalance = if (BlockchainUtils.isIncludeToBalanceOnError(token.currency.network.id.value)) {
-                        recalculateNoAccountBalance(fiatBalance)
+                    if (BlockchainUtils.isIncludeToBalanceOnError(token.currency.network.id.value)) {
+                        fiatBalance = recalculateNoAccountBalance(fiatBalance)
                     } else {
-                        TotalFiatBalance.Failed
+                        fiatBalance = TotalFiatBalance.Failed
                         break
                     }
                 }
