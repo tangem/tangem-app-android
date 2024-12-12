@@ -376,7 +376,12 @@ internal class DefaultOnrampRepository(
 
                 OnrampProvider(
                     id = onrampProviderDTO.providerId,
-                    info = OnrampProviderInfo(name = providerInfo.name, imageLarge = providerInfo.imageLargeUrl),
+                    info = OnrampProviderInfo(
+                        name = providerInfo.name,
+                        imageLarge = providerInfo.imageLargeUrl,
+                        termsOfUseLink = providerInfo.termsOfUse,
+                        privacyPolicyLink = providerInfo.privacyPolicy,
+                    ),
                     paymentMethods = onrampPaymentMethods.filter { paymentMethod ->
                         onrampProviderDTO.paymentMethods.any { paymentMethod.id == it }
                     },
