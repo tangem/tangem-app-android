@@ -16,7 +16,7 @@ interface OnrampRepository {
     suspend fun getCountryByIp(): OnrampCountry
     suspend fun getStatus(txId: String): OnrampStatus
     suspend fun fetchCurrencies()
-    suspend fun fetchCountries()
+    suspend fun fetchCountries(): List<OnrampCountry>
     suspend fun fetchPaymentMethodsIfAbsent()
     suspend fun fetchPairs(currency: OnrampCurrency, country: OnrampCountry, cryptoCurrency: CryptoCurrency)
     suspend fun fetchQuotes(cryptoCurrency: CryptoCurrency, amount: Amount)
