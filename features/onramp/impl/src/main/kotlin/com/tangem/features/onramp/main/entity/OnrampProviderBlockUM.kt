@@ -9,7 +9,10 @@ sealed class OnrampProviderBlockUM {
         val providerId: String,
         val paymentMethod: OnrampPaymentMethod,
         val providerName: String,
+        val termsOfUseLink: String?,
+        val privacyPolicyLink: String?,
         val isBestRate: Boolean,
+        val onLinkClick: (String) -> Unit,
         val onClick: () -> Unit,
     ) : OnrampProviderBlockUM()
 }
