@@ -21,7 +21,6 @@ import com.tangem.datasource.api.onramp.models.common.OnrampDestinationDTO
 import com.tangem.datasource.api.onramp.models.request.OnrampPairsRequest
 import com.tangem.datasource.api.onramp.models.response.OnrampDataJson
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
-import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.datasource.crypto.DataSignatureVerifier
@@ -124,22 +123,23 @@ internal class DefaultOnrampRepository(
     }
 
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
-        appPreferencesStore.storeObject<OnrampCurrencyDTO>(
-            key = PreferencesKeys.ONRAMP_DEFAULT_CURRENCY,
-            value = currencyConverter.convertBack(currency),
+        val country = getDefaultCountrySync() ?: return@withContext
+        appPreferencesStore.storeObject<OnrampCountryDTO>(
+            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            value = countryConverter.convertBack(country.copy(defaultCurrency = currency)),
         )
     }
 
     override suspend fun getDefaultCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {
         appPreferencesStore
-            .getObjectSyncOrNull<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
-            ?.let(currencyConverter::convert)
+            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            ?.let(countryConverter::convert)?.defaultCurrency
     }
 
     override fun getDefaultCurrency(): Flow<OnrampCurrency?> {
         return appPreferencesStore
-            .getObject<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
-            .map { it?.let(currencyConverter::convert) }
+            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .map { it?.let(countryConverter::convert)?.defaultCurrency }
     }
 
     override suspend fun saveDefaultCountry(country: OnrampCountry) = withContext(dispatchers.io) {
