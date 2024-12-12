@@ -65,7 +65,7 @@ class FetchCurrencyStatusUseCase(
         refresh: Boolean = false,
     ): Either<CurrencyStatusError, Unit> {
         return either {
-            val currency = getPrimaryCurrency(userWalletId)
+            val currency = getPrimaryCurrency(userWalletId, refresh)
 
             fetchCurrencyStatus(userWalletId, currency, refresh)
         }
@@ -102,8 +102,11 @@ class FetchCurrencyStatusUseCase(
         }
     }
 
-    private suspend fun Raise<CurrencyStatusError>.getPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
-        return catch({ currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) }) {
+    private suspend fun Raise<CurrencyStatusError>.getPrimaryCurrency(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): CryptoCurrency {
+        return catch({ currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId, refresh) }) {
             raise(CurrencyStatusError.DataError(it))
         }
     }
