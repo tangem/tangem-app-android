@@ -13,7 +13,7 @@ class GetOnrampCurrenciesUseCase(
     private val errorResolver: OnrampErrorResolver,
 ) {
 
-    suspend operator fun invoke(): EitherFlow<OnrampError, OnrampCurrencies> {
+    operator fun invoke(): EitherFlow<OnrampError, OnrampCurrencies> {
         return onrampRepository.getCurrencies().map { currenciesList ->
             Either.catch {
                 val (populars, others) = currenciesList.toSet()
