@@ -22,7 +22,7 @@ concurrency:
 jobs:
   test:
     name: Test
-    runs-on: [ self-hosted, Linux, ARM64, test ]
+    runs-on: [ self-hosted, ARM64, active-android ]
     if: github.event.pull_request.draft == false
     steps:
       # temporary step, will be deleted soon
