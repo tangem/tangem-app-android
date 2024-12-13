@@ -122,6 +122,9 @@ internal class OnrampAmountStateFactory(
                 providerName = providerResult.provider.info.name,
                 isBestRate = isBestRate,
                 onClick = onrampIntents::openProviders,
+                termsOfUseLink = providerResult.provider.info.termsOfUseLink,
+                privacyPolicyLink = providerResult.provider.info.privacyPolicyLink,
+                onLinkClick = onrampIntents::onLinkClick,
             ),
             buyButtonConfig = currentState.buyButtonConfig.copy(
                 enabled = providerResult is SelectProviderResult.ProviderWithQuote,
@@ -148,6 +151,9 @@ internal class OnrampAmountStateFactory(
             providerName = provider.info.name,
             isBestRate = isBestRate,
             onClick = onrampIntents::openProviders,
+            termsOfUseLink = provider.info.termsOfUseLink,
+            privacyPolicyLink = provider.info.privacyPolicyLink,
+            onLinkClick = onrampIntents::onLinkClick,
         )
     }
 
