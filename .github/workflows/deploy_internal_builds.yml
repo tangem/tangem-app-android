@@ -21,7 +21,7 @@ env:
 jobs:
   build:
     name: Upload apk to Firebase
-    runs-on: [ self-hosted, macOS, ARM64, test ]
+    runs-on: [ self-hosted, ARM64, active-android ]
     environment: Alpha
     steps:
       - name: Checkout
@@ -50,8 +50,6 @@ jobs:
 
       - name: Run uploading
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
           app_id_internal: ${{ secrets.FIREBASE_APP_ID_INTERNAL }}
           firebase_cli_token: ${{ secrets.FIREBASE_CLI_TOKEN }}
           apk_path_internal: app/build/outputs/apk/internal/app-internal.apk
@@ -71,5 +69,5 @@ jobs:
           
               echo 'Deploying APK to Firebase...';
 
-              fastlane test;
+              fastlane publishToFirebase;
             "
