@@ -29,8 +29,7 @@ RUN mkdir -p $ANDROID_HOME/cmdline-tools/latest && \
 
 RUN wget https://github.com/lzhiyong/android-sdk-tools/releases/download/34.0.3/android-sdk-tools-static-aarch64.zip -O /tmp/android-sdk-tools-static-aarch64.zip && \
     unzip /tmp/android-sdk-tools-static-aarch64.zip -d /tmp/android-sdk-tools-static-arm && \
-    mkdir $ANDROID_HOME/build-tools/34.0.0_aarch64 && \
-    cp -r /tmp/android-sdk-tools-static-arm/build-tools/* $ANDROID_HOME/build-tools/34.0.0_aarch64/ && \
+    cp -r /tmp/android-sdk-tools-static-arm/build-tools/* $ANDROID_HOME/build-tools/34.0.0/ && \
     rm -rf /tmp/android-sdk-tools-static-arm /tmp/android-sdk-tools-static-aarch64.zip
 
 RUN gem install bundler:2.5.23
