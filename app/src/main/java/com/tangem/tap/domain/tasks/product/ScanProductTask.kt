@@ -33,12 +33,9 @@ import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.mainScope
-import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
-import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import kotlin.collections.set
 
@@ -191,13 +188,8 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         mainScope.launch {
-            val activationInProgress = store.inject(DaggerGraphState::cardRepository)
-                .isActivationInProgress(card.cardId)
-
             @Suppress("ComplexCondition")
-            if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
-                activationInProgress
-            ) {
+            if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty()) {
                 StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                     when (linkingResult) {
                         is CompletionResult.Success -> {
