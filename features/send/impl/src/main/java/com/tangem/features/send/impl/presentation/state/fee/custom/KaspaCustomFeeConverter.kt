@@ -95,6 +95,40 @@ internal class KaspaCustomFeeConverter(
         }.toImmutableList()
     }
 
+    fun tryAutoFixValue(
+        minimumFee: Fee.Kaspa,
+        customValues: ImmutableList<SendTextField.CustomFee>,
+    ): ImmutableList<SendTextField.CustomFee> {
+        val mutableCustomValues = customValues.toMutableList()
+        val minimumFeeAmountValue = minimumFee.amount.value
+
+        return mutableCustomValues.apply {
+            // check that there is reveal transaction info (= krc-20 token transfer)
+            // return without changes otherwise
+            if (minimumFee.revealTransactionFee != null && minimumFeeAmountValue != null) {
+                getOrNull(FEE_AMOUNT_INDEX)?.let {
+                    val valueDecimal = it.value.parseToBigDecimal(it.decimals)
+                    // krc-20 transaction will be failed if custom fee value is less than minimum,
+                    // so we set value to minimum in this case
+                    if (valueDecimal < minimumFee.amount.value) {
+                        val fixedValue = minimumFeeAmountValue.parseBigDecimal(it.decimals)
+                        set(
+                            FEE_AMOUNT_INDEX,
+                            it.copy(
+                                value = fixedValue,
+                                label = getFiatReference(
+                                    rate = feeCryptoCurrencyStatusProvider()?.value?.fiatRate,
+                                    value = valueDecimal,
+                                    appCurrency = appCurrencyProvider(),
+                                ),
+                            ),
+                        )
+                    }
+                }
+            }
+        }.toImmutableList()
+    }
+
     private companion object {
         private const val FEE_AMOUNT_INDEX = 0
     }

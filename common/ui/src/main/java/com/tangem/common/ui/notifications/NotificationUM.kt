@@ -240,6 +240,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
                 onClick = onRefresh,
             ),
         )
+
+        data object SwapNoAvailablePair : Warning(
+            title = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_title),
+            subtitle = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_message),
+        )
     }
 
     open class Info(
