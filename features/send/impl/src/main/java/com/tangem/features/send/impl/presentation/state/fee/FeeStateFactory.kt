@@ -166,6 +166,31 @@ internal class FeeStateFactory(
         )
     }
 
+    fun tryAutoFixCustomFeeValue(): SendUiState {
+        val state = currentStateProvider()
+        val isEditState = stateRouterProvider().isEditState
+        val feeState = state.getFeeState(isEditState) ?: return state
+        val feeSelectorState = feeState.feeSelectorState as? FeeSelectorState.Content ?: return state
+        return when (feeSelectorState.selectedFee) {
+            FeeType.Slow,
+            FeeType.Market,
+            FeeType.Fast,
+            -> state
+            FeeType.Custom -> {
+                val updatedFeeSelectorState = customFeeFieldConverter.tryAutoFixValue(feeSelectorState)
+
+                val fee = feeConverter.convert(updatedFeeSelectorState)
+                return state.copyWrapped(
+                    isEditState = isEditState,
+                    feeState = feeState.copy(
+                        feeSelectorState = updatedFeeSelectorState,
+                        fee = fee,
+                    ),
+                )
+            }
+        }
+    }
+
     private fun isPrimaryButtonEnabled(
         feeState: SendStates.FeeState,
         notifications: ImmutableList<NotificationUM>,
