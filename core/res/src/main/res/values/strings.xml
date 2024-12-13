@@ -3,8 +3,8 @@
   <string name="action_buttons_buy_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for purchase</string>
   <string name="action_buttons_sell_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for selling.</string>
   <string name="action_buttons_sell_navigation_bar_title">Sell</string>
-  <string name="action_buttons_service_loading_alert_message">Connection may take a few seconds. Please wait.</string>
-  <string name="action_buttons_service_loading_alert_title">Connection</string>
+  <string name="action_buttons_service_loading_alert_message">This may take a few seconds. Please try again later.</string>
+  <string name="action_buttons_service_loading_alert_title">The data has not loaded yet.</string>
   <string name="action_buttons_something_wrong_alert_message">The action is currently unavailable. Please try again later or refresh the data by swiping down on the screen.</string>
   <string name="action_buttons_something_wrong_alert_title">Button is unavailable</string>
   <string name="action_buttons_swap_choose_token">Choose the Token</string>
@@ -584,6 +584,7 @@
   <string name="onramp_country_search">Search by country</string>
   <string name="onramp_country_unavailable">Unavailable</string>
   <string name="onramp_currency_search">Search by currency</string>
+  <string name="onramp_legal">By using onramp functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
   <string name="onramp_min_amount_restriction">The amount to buy must be at least %s</string>
   <string name="onramp_no_available_providers">No available providers for this currency</string>
@@ -665,7 +666,7 @@
   <string name="scan_card_settings_message">Scan the card or ring to change its settings. The changes will impact only the card or ring you\'ve scanned and will not affect other devices tied to your wallet.</string>
   <string name="scan_card_settings_title">Get your Tangem ready!</string>
   <string name="security_alert_title">Security Alert</string>
-  <string name="selling_insufficient_balance_alert_message">You don’t have enough funds in your balance to sell this cryptocurrency. Please deposit the desired asset to proceed.</string>
+  <string name="selling_insufficient_balance_alert_message">You don’t have enough funds in your balance to sell cryptocurrency. Please deposit the desired asset to proceed.</string>
   <string name="selling_insufficient_balance_alert_title">Insufficient Balance</string>
   <string name="selling_regional_restriction_alert_message">Selling cryptocurrency is unavailable in your region at the moment. We’re actively working to bring this option to you soon—stay tuned!</string>
   <string name="selling_regional_restriction_alert_title">Regional Restriction</string>
@@ -1000,8 +1001,8 @@
   <string name="warning_approval_in_progress_title">Approval in Progress</string>
   <string name="warning_backup_errors_message">It seems that the card or ring activation was not completed correctly. This could be due to an issue with your device\'s NFC module or incorrect tapping of the card or ring to your device. Please contact our Support team for assistance.</string>
   <string name="warning_backup_errors_title">Activation error</string>
-  <string name="warning_beacon_chain_retirement_content">According to BNB network developers, support for the BEP-2 standard will end in June 2024. To avoid losing assets with this standard, please convert them to the BEP-20 standard. Use our swap service or third-party services to transfer funds to the BNB Smart Chain network.</string>
-  <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain will shut down</string>
+  <string name="warning_beacon_chain_retirement_content">On December 3, 2024, the BEP-2 network was disabled by decision of the network developers and is no longer supported</string>
+  <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain shut down</string>
   <string name="warning_blocked_funds_for_fee_message">Please deposit some %1$s to cover the network fee</string>
   <string name="warning_blocked_funds_for_fee_title">Insufficient funds to cover the network fee</string>
   <string name="warning_button_could_be_better">Could be better</string>

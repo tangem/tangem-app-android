@@ -16,7 +16,7 @@ class DismissIncompleteTransactionUseCase(
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
-    ): Either<IncompleteTransactionError, Unit> {
+    ): Either<IncompleteTransactionError.DataError, Unit> {
         return either {
             catch(
                 block = {
