@@ -78,6 +78,7 @@ dependencies {
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.transaction)
+    implementation(projects.domain.transaction.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp)
