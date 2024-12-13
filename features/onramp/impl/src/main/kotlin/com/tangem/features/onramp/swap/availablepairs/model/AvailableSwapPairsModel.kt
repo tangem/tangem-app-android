@@ -9,7 +9,11 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.getOrElse
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -19,9 +23,12 @@ import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.swap.availablepairs.AvailableSwapPairsComponent
+import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetErrorWarningTransformer
 import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetLoadingTokenItemsTransformer
+import com.tangem.features.onramp.swap.availablepairs.entity.transformers.SetNoAvailablePairsTransformer
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
 import com.tangem.features.onramp.utils.InputManager
@@ -33,11 +40,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private typealias AvailablePairsState = Lce<Throwable, List<SwapPairLeast>>
+
 @Suppress("LongParameterList")
 internal class AvailableSwapPairsModel @Inject constructor(
     paramsContainer: ParamsContainer,
-    getTokenListUseCase: GetTokenListUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val getTokenListUseCase: GetTokenListUseCase,
     private val tokenListUMController: TokenListUMController,
     private val searchManager: InputManager,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -49,29 +58,37 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
     private var params: AvailableSwapPairsComponent.Params = paramsContainer.require()
 
-    private val tokenListFlow = getTokenListUseCase.launch(userWalletId = params.userWalletId)
-        .distinctUntilChanged()
-        .map { maybeTokenList ->
-            maybeTokenList.getOrElse(
-                ifLoading = { it ?: TokenList.Empty },
-                ifError = { TokenList.Empty },
-            )
-                .flattenCurrencies()
-        }
-        .shareIn(scope = modelScope, started = SharingStarted.Eagerly, replay = 1)
+    private val tokenListFlow = getTokenListUseCaseFlow()
 
-    private val availablePairsByNetworkFlow = MutableStateFlow<Map<LeastTokenInfo, List<SwapPairLeast>>>(emptyMap())
+    private val availablePairsByNetworkFlow = MutableStateFlow<Map<LeastTokenInfo, AvailablePairsState>>(emptyMap())
 
     init {
+        initializeSearchBardCallbacks()
+
+        subscribeOnUpdateState()
+        subscribeOnAvailablePairsUpdates()
+    }
+
+    private fun getTokenListUseCaseFlow(): SharedFlow<List<CryptoCurrencyStatus>> {
+        return getTokenListUseCase.launch(userWalletId = params.userWalletId)
+            .distinctUntilChanged()
+            .map { maybeTokenList ->
+                maybeTokenList.getOrElse(
+                    ifLoading = { it ?: TokenList.Empty },
+                    ifError = { TokenList.Empty },
+                )
+                    .flattenCurrencies()
+            }
+            .shareIn(scope = modelScope, started = SharingStarted.Eagerly, replay = 1)
+    }
+
+    private fun initializeSearchBardCallbacks() {
         tokenListUMController.update(
             transformer = UpdateSearchBarCallbacksTransformer(
                 onQueryChange = ::onSearchQueryChange,
                 onActiveChange = ::onSearchBarActiveChange,
             ),
         )
-
-        subscribeOnUpdateState()
-        subscribeOnAvailablePairsUpdates()
     }
 
     private fun subscribeOnUpdateState() {
@@ -81,42 +98,96 @@ internal class AvailableSwapPairsModel @Inject constructor(
             flow3 = params.selectedStatus,
             flow4 = searchManager.query,
             flow5 = availablePairsByNetworkFlow
-                .map { it[params.selectedStatus.value?.toLeastTokenInfo()].orEmpty() }
+                .map { it[params.selectedStatus.value?.toLeastTokenInfo()] }
                 .distinctUntilChanged(),
-        ) { currencies, appCurrencyAndBalanceHiding, selectedStatus, query, availablePairs ->
-            if (availablePairs.isEmpty()) {
-                SetLoadingTokenItemsTransformer(currencies)
-            } else {
-                val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
-
-                val filterByQueryTokenList = currencies
-                    .filter { it.currency != selectedStatus?.currency }
-                    .filterByQuery(query = query)
-
-                if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
-                    SetNothingToFoundStateTransformer(
-                        isBalanceHidden = isBalanceHidden,
-                        emptySearchMessageReference = resourceReference(
-                            id = R.string.action_buttons_swap_empty_search_message,
-                        ),
+        ) { currencies, appCurrencyAndBalanceHiding, selectedStatus, query, availablePairsState ->
+            availablePairsState?.fold(
+                ifLoading = { SetLoadingTokenItemsTransformer(currencies) },
+                ifContent = { pairs ->
+                    handleContentState(
+                        appCurrencyAndBalanceHiding = appCurrencyAndBalanceHiding,
+                        currencies = currencies,
+                        selectedStatus = selectedStatus,
+                        query = query,
+                        availablePairs = pairs,
                     )
-                } else {
-                    UpdateTokenItemsTransformer(
-                        appCurrency = appCurrency,
-                        onItemClick = params.onTokenClick,
-                        statuses = filterByQueryTokenList.filterByAvailability(availablePairs = availablePairs),
-                        isBalanceHidden = isBalanceHidden,
-                        unavailableTokensHeaderReference = resourceReference(
-                            id = R.string.tokens_list_unavailable_to_swap_header,
-                            wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
-                        ),
+                },
+                ifError = {
+                    handleErrorState(
+                        cause = it,
+                        networkInfo = params.selectedStatus.value?.toLeastTokenInfo(),
+                        currencies = currencies,
                     )
-                }
-            }
+                },
+            )
+                ?: SetLoadingTokenItemsTransformer(currencies)
         }
             .onEach(tokenListUMController::update)
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
+    }
+
+    private fun handleContentState(
+        appCurrencyAndBalanceHiding: Pair<AppCurrency, Boolean>,
+        currencies: List<CryptoCurrencyStatus>,
+        selectedStatus: CryptoCurrencyStatus?,
+        query: String,
+        availablePairs: List<SwapPairLeast>,
+    ): TokenListUMTransformer {
+        val (appCurrency, isBalanceHidden) = appCurrencyAndBalanceHiding
+
+        if (availablePairs.isEmpty()) {
+            return SetNoAvailablePairsTransformer(
+                appCurrency = appCurrency,
+                unavailableStatuses = currencies,
+                isBalanceHidden = isBalanceHidden,
+                unavailableTokensHeaderReference = resourceReference(
+                    id = R.string.tokens_list_unavailable_to_swap_header,
+                    wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
+                ),
+            )
+        }
+
+        val filterByQueryTokenList = currencies
+            .filter { it.currency != selectedStatus?.currency }
+            .filterByQuery(query = query)
+
+        return if (query.isNotEmpty() && filterByQueryTokenList.isEmpty()) {
+            SetNothingToFoundStateTransformer(
+                isBalanceHidden = isBalanceHidden,
+                emptySearchMessageReference = resourceReference(
+                    id = R.string.action_buttons_swap_empty_search_message,
+                ),
+            )
+        } else {
+            UpdateTokenItemsTransformer(
+                appCurrency = appCurrency,
+                onItemClick = params.onTokenClick,
+                statuses = filterByQueryTokenList.filterByAvailability(availablePairs = availablePairs),
+                isBalanceHidden = isBalanceHidden,
+                unavailableTokensHeaderReference = resourceReference(
+                    id = R.string.tokens_list_unavailable_to_swap_header,
+                    wrappedList(selectedStatus?.currency?.name?.capitalize() ?: ""),
+                ),
+            )
+        }
+    }
+
+    private fun handleErrorState(
+        cause: Throwable,
+        networkInfo: LeastTokenInfo?,
+        currencies: List<CryptoCurrencyStatus>,
+    ): SetErrorWarningTransformer {
+        return SetErrorWarningTransformer(
+            cause = cause,
+            onRefresh = {
+                modelScope.launch {
+                    if (networkInfo != null) {
+                        updateAvailablePairs(networkInfo, currencies)
+                    }
+                }
+            },
+        )
     }
 
     private fun subscribeOnAvailablePairsUpdates() {
@@ -124,23 +195,43 @@ internal class AvailableSwapPairsModel @Inject constructor(
             params.selectedStatus
                 .filterNotNull()
                 .collectLatest { selectedStatus ->
-                    val initialCurrency = selectedStatus.toLeastTokenInfo()
-                    val tokenList = tokenListFlow.firstOrNull() ?: return@collectLatest
+                    val networkInfo = selectedStatus.toLeastTokenInfo()
 
-                    val availablePairs = availablePairsByNetworkFlow.value[initialCurrency]
-                    if (!availablePairs.isNullOrEmpty()) return@collectLatest
+                    val isAlreadyLoaded = availablePairsByNetworkFlow.value[networkInfo]?.isContent() ?: false
+                    if (isAlreadyLoaded) return@collectLatest
 
-                    val pairs = getAvailablePairsUseCase(
-                        initialCurrency = initialCurrency,
-                        currencies = tokenList.map(CryptoCurrencyStatus::currency),
-                    )
+                    val statuses = tokenListFlow.firstOrNull() ?: return@collectLatest
 
-                    availablePairsByNetworkFlow.update {
-                        it.toMutableMap().apply {
-                            put(initialCurrency, pairs)
-                        }
-                    }
+                    updateAvailablePairs(networkInfo = networkInfo, statuses = statuses)
                 }
+        }
+    }
+
+    private suspend fun updateAvailablePairs(networkInfo: LeastTokenInfo, statuses: List<CryptoCurrencyStatus>) {
+        runCatching {
+            availablePairsByNetworkFlow.update(networkInfo = networkInfo, state = lceLoading())
+
+            getAvailablePairsUseCase(
+                initialCurrency = networkInfo,
+                currencies = statuses.map(CryptoCurrencyStatus::currency),
+            )
+        }
+            .onSuccess { pairs ->
+                availablePairsByNetworkFlow.update(networkInfo = networkInfo, state = pairs.lceContent())
+            }
+            .onFailure { cause ->
+                availablePairsByNetworkFlow.update(networkInfo = networkInfo, state = cause.lceError())
+            }
+    }
+
+    private fun MutableStateFlow<Map<LeastTokenInfo, AvailablePairsState>>.update(
+        networkInfo: LeastTokenInfo,
+        state: AvailablePairsState,
+    ) {
+        update {
+            it.toMutableMap().apply {
+                put(networkInfo, state)
+            }
         }
     }
 
@@ -186,7 +277,8 @@ internal class AvailableSwapPairsModel @Inject constructor(
 
             isAvailable &&
                 status.value !is CryptoCurrencyStatus.MissedDerivation &&
-                status.value !is CryptoCurrencyStatus.Unreachable
+                status.value !is CryptoCurrencyStatus.Unreachable &&
+                !status.currency.isCustom
         }
     }
 
