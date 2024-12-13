@@ -228,7 +228,6 @@ dependencies {
     implementation(deps.xmlShimmer)
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
-    implementation(deps.mviCore.watcher)
     implementation(deps.kotlin.serialization)
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
