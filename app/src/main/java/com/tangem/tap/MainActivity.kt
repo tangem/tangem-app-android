@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
@@ -61,6 +62,7 @@ import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
@@ -72,7 +74,6 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.showFragmentAllowingStateLoss
-import com.tangem.google.GoogleServicesHelper
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
@@ -242,6 +243,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         // https://issuetracker.google.com/issues/266331465
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            window.setHideOverlayWindows(true)
         }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
@@ -515,6 +520,23 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onUserInteraction()
 
         lockUserWalletsTimer?.restart()
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        val isPartiallyObscured = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            event.flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED != 0
+        } else {
+            false
+        }
+
+        val isFullyObscured = event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
+
+        if (isPartiallyObscured || isFullyObscured) {
+            Timber.e("Window is partially or fully obscured")
+            return false
+        }
+
+        return super.dispatchTouchEvent(event)
     }
 
     private fun showSnackbar(text: String, length: Int, buttonTitle: String?, action: View.OnClickListener?) {

@@ -18,6 +18,7 @@ import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesSection
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyItemState
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyListController
+import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsErrorTransformer
 import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsLoadingTransformer
 import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsTransformer
 import com.tangem.features.onramp.utils.InputManager
@@ -27,8 +28,10 @@ import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -51,23 +54,15 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
         currencySearchBarUM = createSearchBarUM(),
         loadingSections = loadingSections,
     )
-    private val refreshTrigger = MutableSharedFlow<Unit>()
 
     init {
         updateCurrenciesList()
         subscribeOnUpdateState()
     }
 
-    private fun updateCurrenciesList() {
-        modelScope.launch {
-            fetchOnrampCurrenciesUseCase()
-        }
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun subscribeOnUpdateState() {
         combine(
-            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { getOnrampCurrenciesUseCase() },
+            flow = getOnrampCurrenciesUseCase(),
             flow2 = searchManager.query,
         ) { maybeCurrencies, query ->
             maybeCurrencies.onLeft {
@@ -97,8 +92,16 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     }
 
     private fun onRetry() {
-        modelScope.launch { refreshTrigger.emit(Unit) }
         controller.update(UpdateCurrencyItemsLoadingTransformer(loadingSections))
+        updateCurrenciesList()
+    }
+
+    private fun updateCurrenciesList() {
+        modelScope.launch {
+            fetchOnrampCurrenciesUseCase().onLeft {
+                controller.update(UpdateCurrencyItemsErrorTransformer(onRetry = ::onRetry))
+            }
+        }
     }
 
     private fun onSearchQueryChange(newQuery: String) {

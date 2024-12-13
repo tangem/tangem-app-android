@@ -21,7 +21,6 @@ import com.tangem.datasource.api.onramp.models.common.OnrampDestinationDTO
 import com.tangem.datasource.api.onramp.models.request.OnrampPairsRequest
 import com.tangem.datasource.api.onramp.models.response.OnrampDataJson
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
-import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.datasource.crypto.DataSignatureVerifier
@@ -83,9 +82,7 @@ internal class DefaultOnrampRepository(
     private val onrampErrorAdapter = moshi.adapter(ExpressErrorResponse::class.java)
     private val onrampErrorConverter = OnrampErrorConverter(onrampErrorAdapter)
 
-    override suspend fun getCurrencies(): Flow<List<OnrampCurrency>> = withContext(dispatchers.io) {
-        currenciesStore.get(CURRENCIES_KEY)
-    }
+    override fun getCurrencies(): Flow<List<OnrampCurrency>> = currenciesStore.get(CURRENCIES_KEY)
 
     override suspend fun fetchCurrencies() = withContext(dispatchers.io) {
         if (!currenciesStore.getSyncOrNull(CURRENCIES_KEY).isNullOrEmpty()) return@withContext
@@ -97,22 +94,22 @@ internal class DefaultOnrampRepository(
         currenciesStore.store(CURRENCIES_KEY, result)
     }
 
-    override suspend fun getCountries(): Flow<List<OnrampCountry>> = withContext(dispatchers.io) {
-        countriesStore.get(COUNTRIES_KEY)
-    }
+    override fun getCountries(): Flow<List<OnrampCountry>> = countriesStore.get(COUNTRIES_KEY)
 
     override suspend fun getCountriesSync(): List<OnrampCountry>? {
         return countriesStore.getSyncOrNull(COUNTRIES_KEY)
     }
 
-    override suspend fun fetchCountries() = withContext(dispatchers.io) {
-        if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext
+    override suspend fun fetchCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
+        if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext emptyList()
 
         val result = onrampApi.getCountries()
             .getOrThrow()
             .map(countryConverter::convert)
 
         countriesStore.store(COUNTRIES_KEY, result)
+
+        result
     }
 
     override suspend fun getCountryByIp(): OnrampCountry = withContext(dispatchers.io) {
@@ -128,22 +125,23 @@ internal class DefaultOnrampRepository(
     }
 
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
-        appPreferencesStore.storeObject<OnrampCurrencyDTO>(
-            key = PreferencesKeys.ONRAMP_DEFAULT_CURRENCY,
-            value = currencyConverter.convertBack(currency),
+        val country = getDefaultCountrySync() ?: return@withContext
+        appPreferencesStore.storeObject<OnrampCountryDTO>(
+            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            value = countryConverter.convertBack(country.copy(defaultCurrency = currency)),
         )
     }
 
     override suspend fun getDefaultCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {
         appPreferencesStore
-            .getObjectSyncOrNull<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
-            ?.let(currencyConverter::convert)
+            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            ?.let(countryConverter::convert)?.defaultCurrency
     }
 
     override fun getDefaultCurrency(): Flow<OnrampCurrency?> {
         return appPreferencesStore
-            .getObject<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
-            .map { it?.let(currencyConverter::convert) }
+            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .map { it?.let(countryConverter::convert)?.defaultCurrency }
     }
 
     override suspend fun saveDefaultCountry(country: OnrampCountry) = withContext(dispatchers.io) {
@@ -376,7 +374,12 @@ internal class DefaultOnrampRepository(
 
                 OnrampProvider(
                     id = onrampProviderDTO.providerId,
-                    info = OnrampProviderInfo(name = providerInfo.name, imageLarge = providerInfo.imageLargeUrl),
+                    info = OnrampProviderInfo(
+                        name = providerInfo.name,
+                        imageLarge = providerInfo.imageLargeUrl,
+                        termsOfUseLink = providerInfo.termsOfUse,
+                        privacyPolicyLink = providerInfo.privacyPolicy,
+                    ),
                     paymentMethods = onrampPaymentMethods.filter { paymentMethod ->
                         onrampProviderDTO.paymentMethods.any { paymentMethod.id == it }
                     },
