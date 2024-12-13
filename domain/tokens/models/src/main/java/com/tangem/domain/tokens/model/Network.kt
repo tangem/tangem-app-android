@@ -82,7 +82,7 @@ data class Network(
         data class Custom(override val value: String) : DerivationPath()
 
         /**
-         * Represents a lack of derivation path.
+         * Represents a lack of derivation path, which means the wallet does not support the HD wallet feature.
          */
         @Serializable
         data object None : DerivationPath() {
