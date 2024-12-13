@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resolveReference
@@ -53,13 +54,14 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val router: Router,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val checkOnrampAvailabilityUseCase: CheckOnrampAvailabilityUseCase,
-    private val getOnrampCurrencyUseCase: GetOnrampCurrencyUseCase,
+    private val getOnrampCountryUseCase: GetOnrampCountryUseCase,
     private val clearOnrampCacheUseCase: ClearOnrampCacheUseCase,
     private val fetchQuotesUseCase: OnrampFetchQuotesUseCase,
     private val getOnrampQuotesUseCase: GetOnrampQuotesUseCase,
     private val fetchPairsUseCase: OnrampFetchPairsUseCase,
     private val amountInputManager: InputManager,
     private val messageSender: UiMessageSender,
+    private val urlOpener: UrlOpener,
     getWalletsUseCase: GetWalletsUseCase,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampIntents {
@@ -105,7 +107,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     fun handleOnrampAvailable(currency: OnrampCurrency) {
         _state.update { stateFactory.getReadyState(currency) }
-        subscribeToCurrencyUpdates()
+        subscribeToCountryAndCurrencyUpdates()
         subscribeToQuotesUpdate()
     }
 
@@ -130,14 +132,14 @@ internal class OnrampMainComponentModel @Inject constructor(
         }
     }
 
-    private fun subscribeToCurrencyUpdates() {
-        getOnrampCurrencyUseCase.invoke()
-            .onEach { maybeCurrency ->
-                maybeCurrency.fold(
+    private fun subscribeToCountryAndCurrencyUpdates() {
+        getOnrampCountryUseCase.invoke()
+            .onEach { maybeCountry ->
+                maybeCountry.fold(
                     ifLeft = ::handleOnrampError,
-                    ifRight = { currency ->
-                        if (currency == null) return@onEach
-                        _state.update { amountStateFactory.getUpdatedCurrencyState(currency) }
+                    ifRight = { country ->
+                        if (country == null) return@onEach
+                        _state.update { amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency) }
                         updatePairsAndQuotes()
                     },
                 )
@@ -285,6 +287,8 @@ internal class OnrampMainComponentModel @Inject constructor(
             checkResidenceCountry()
         }
     }
+
+    override fun onLinkClick(link: String) = urlOpener.openUrl(link)
 
     override fun onDestroy() {
         modelScope.launch { clearOnrampCacheUseCase.invoke() }
