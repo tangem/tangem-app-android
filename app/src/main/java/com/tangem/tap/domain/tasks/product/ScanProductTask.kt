@@ -99,7 +99,6 @@ private class ScanWalletProcessor(
     private val derivationsFinder: DerivationsFinder?,
 ) : ProductCommandProcessor<ScanResponse> {
 
-    var primaryCard: PrimaryCard? = null
     override fun proceed(
         card: CardDTO,
         session: CardSession,
@@ -188,21 +187,34 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         mainScope.launch {
-            @Suppress("ComplexCondition")
             if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty()) {
                 StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                     when (linkingResult) {
                         is CompletionResult.Success -> {
-                            primaryCard = linkingResult.data
-                            deriveKeysIfNeeded(card, session, callback)
+                            deriveKeysIfNeeded(
+                                card = card,
+                                session = session,
+                                primaryCard = linkingResult.data,
+                                callback = callback,
+                            )
                         }
                         is CompletionResult.Failure -> {
-                            deriveKeysIfNeeded(card, session, callback)
+                            deriveKeysIfNeeded(
+                                card = card,
+                                session = session,
+                                primaryCard = null,
+                                callback = callback,
+                            )
                         }
                     }
                 }
             } else {
-                deriveKeysIfNeeded(card, session, callback)
+                deriveKeysIfNeeded(
+                    card = card,
+                    session = session,
+                    primaryCard = null,
+                    callback = callback,
+                )
             }
         }
     }
@@ -210,6 +222,7 @@ private class ScanWalletProcessor(
     private fun deriveKeysIfNeeded(
         card: CardDTO,
         session: CardSession,
+        primaryCard: PrimaryCard?,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         val productType = getWalletProductType(card)
