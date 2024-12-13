@@ -22,9 +22,12 @@ concurrency:
 jobs:
   test:
     name: Test
-    runs-on: [ self-hosted, ARM64, active-android ]
+    runs-on: [ self-hosted, Linux, ARM64, test ]
     if: github.event.pull_request.draft == false
     steps:
+      - name: Change user
+        run: sudo chown -R ubuntu:ubuntu /home/ubuntu/actions-runner/_work/tangem-app-android/tangem-app-android/
+
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -54,14 +57,14 @@ jobs:
               cd /workspace && fastlane test;
             "
 
-      - name: Build notification
-        if: failure()
-        uses: adamkdean/simple-slack-notify@master
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DVELOPMENT_ANDROID }}
-        with:
-          channel: '#development-android'
-          text: 'Tangem app tests #${{ github.run_number }} failed'
-          color: 'danger'
-          fields: |
-            [{ "title": "Action URL", "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
+#      - name: Build notification
+#        if: failure()
+#        uses: adamkdean/simple-slack-notify@master
+#        env:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DVELOPMENT_ANDROID }}
+#        with:
+#          channel: '#development-android'
+#          text: 'Tangem app tests #${{ github.run_number }} failed'
+#          color: 'danger'
+#          fields: |
+#            [{ "title": "Action URL", "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
