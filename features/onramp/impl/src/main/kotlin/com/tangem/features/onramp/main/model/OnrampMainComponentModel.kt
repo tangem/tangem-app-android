@@ -157,7 +157,11 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private suspend fun updatePairsAndQuotes() {
-        fetchPairsUseCase.invoke(params.cryptoCurrency).onLeft(::handleOnrampError)
+        _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
+        fetchPairsUseCase.invoke(params.cryptoCurrency).fold(
+            ifLeft = ::handleOnrampError,
+            ifRight = { _state.update { amountStateFactory.getAmountSecondaryResetState() } },
+        )
         startLoadingQuotes()
     }
 
