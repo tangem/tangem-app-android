@@ -89,15 +89,3 @@ private fun Preview() {
         )
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview() {
-    TangemThemePreview {
-        Wallet1ChooseOption(
-            onSkipClick = {},
-            onBackupClick = {},
-            modifier = Modifier.fillMaxSize(),
-        )
-    }
-}
