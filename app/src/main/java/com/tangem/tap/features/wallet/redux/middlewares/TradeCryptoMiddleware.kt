@@ -17,7 +17,6 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -26,7 +25,6 @@ import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 
-@Suppress("LargeClass")
 @Deprecated("Will be removed soon")
 object TradeCryptoMiddleware {
 
@@ -41,25 +39,24 @@ object TradeCryptoMiddleware {
         }
     }
 
-    @Suppress("LongMethod", "CyclomaticComplexMethod")
     private fun handle(state: () -> AppState?, action: TradeCryptoAction) {
         if (DemoHelper.tryHandle(state, action)) return
 
         when (action) {
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
-            is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
+            is TradeCryptoAction.Buy -> proceedBuyAction(action)
             is TradeCryptoAction.Sell -> proceedSellAction(action)
             is TradeCryptoAction.SendToken -> handleNewSendToken(action = action)
             is TradeCryptoAction.SendCoin -> handleNewSendCoin(action = action)
         }
     }
 
-    private fun proceedBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
+    private fun proceedBuyAction(action: TradeCryptoAction.Buy) {
         val isOnrampEnabled = store.inject(DaggerGraphState::onrampFeatureToggles).isFeatureEnabled
         if (isOnrampEnabled) {
             proceedWithOnramp(action.userWallet.walletId, action.cryptoCurrencyStatus.currency, action.source)
         } else {
-            proceedWithLegacyBuyAction(state, action)
+            proceedWithLegacyBuyAction(action)
         }
     }
 
@@ -75,7 +72,7 @@ object TradeCryptoMiddleware {
         }
     }
 
-    private fun proceedWithLegacyBuyAction(state: () -> AppState?, action: TradeCryptoAction.Buy) {
+    private fun proceedWithLegacyBuyAction(action: TradeCryptoAction.Buy) {
         val networkAddress = action.cryptoCurrencyStatus.value.networkAddress
             ?.defaultAddress
             ?.let(NetworkAddress.Address::value)
@@ -94,15 +91,9 @@ object TradeCryptoMiddleware {
         )
 
         scope.launch {
-            val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
+            val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
 
-            val isRussia = if (homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
-                val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
-
-                getUserCountryCodeUseCase().isRight { it is UserCountry.Russia }
-            } else {
-                state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE
-            }
+            val isRussia = getUserCountryCodeUseCase().isRight { it is UserCountry.Russia }
 
             if (action.checkUserLocation && isRussia) {
                 val dialogData = topUrl?.let {
