@@ -10,7 +10,7 @@ import kotlinx.collections.immutable.persistentMapOf
 
 internal data class CustomTokenFormUM(
     val networkName: ClickableFieldUM,
-    val derivationPath: ClickableFieldUM,
+    val derivationPath: ClickableFieldUM?,
     val tokenForm: TokenFormUM?,
     val notifications: PersistentList<NotificationUM> = persistentListOf(),
     val canAddToken: Boolean = false,
