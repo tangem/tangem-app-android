@@ -11,7 +11,6 @@ class OnrampSaveDefaultCountryUseCase(
 ) {
 
     suspend operator fun invoke(country: OnrampCountry) = Either.catch {
-        repository.saveDefaultCurrency(country.defaultCurrency)
         repository.saveDefaultCountry(country)
     }.mapLeft(errorResolver::resolve)
 }
