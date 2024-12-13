@@ -5,6 +5,7 @@ import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
@@ -51,6 +52,7 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Compan
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.transaction.error.AssociateAssetError
 import com.tangem.domain.transaction.error.IncompleteTransactionError
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.AssociateAssetUseCase
 import com.tangem.domain.transaction.usecase.DismissIncompleteTransactionUseCase
 import com.tangem.domain.transaction.usecase.RetryIncompleteTransactionUseCase
@@ -874,13 +876,25 @@ internal class TokenDetailsViewModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    when (e) {
-                        is IncompleteTransactionError.DataError -> {
-                            internalUiState.value = stateFactory.getStateWithErrorDialog(
-                                stringReference(e.message.orEmpty()),
-                            )
-                            Timber.e(e.message)
+                    val message = when (e) {
+                        is IncompleteTransactionError.DataError -> e.message.orEmpty()
+                        is IncompleteTransactionError.SendError -> {
+                            when (val error = e.error) {
+                                is SendTransactionError.UserCancelledError,
+                                is SendTransactionError.CreateAccountUnderfunded,
+                                is SendTransactionError.TangemSdkError,
+                                is SendTransactionError.DemoCardError,
+                                -> null
+                                is SendTransactionError.DataError -> error.message
+                                is SendTransactionError.BlockchainSdkError -> error.message
+                                is SendTransactionError.NetworkError -> error.message
+                                is SendTransactionError.UnknownError -> error.ex?.localizedMessage
+                            }
                         }
+                    }
+                    message?.let {
+                        internalUiState.value = stateFactory.getStateWithErrorDialog(stringReference(it))
+                        Timber.e(it)
                     }
                 },
                 ifRight = {
@@ -903,14 +917,10 @@ internal class TokenDetailsViewModel @Inject constructor(
                 currency = cryptoCurrency,
             ).fold(
                 ifLeft = { e ->
-                    when (e) {
-                        is IncompleteTransactionError.DataError -> {
-                            internalUiState.value = stateFactory.getStateWithErrorDialog(
-                                stringReference(e.message.orEmpty()),
-                            )
-                            Timber.e(e.message)
-                        }
-                    }
+                    internalUiState.value = stateFactory.getStateWithErrorDialog(
+                        stringReference(e.message.orEmpty()),
+                    )
+                    Timber.e(e.message)
                 },
                 ifRight = {
                     internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
