@@ -248,7 +248,6 @@ timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate-noreflection", version.ref = "viewBindingDelegate" }
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }
 zxing-qrCore = { module = "com.google.zxing:core", version.ref = "zxingQrCode" }
-mviCore-watcher = { module = "com.github.badoo.mvicore:mvicore-diff", version.ref = "mviCore" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
