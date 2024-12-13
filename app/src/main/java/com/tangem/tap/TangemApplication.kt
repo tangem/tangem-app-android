@@ -57,7 +57,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -177,9 +176,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val transactionSignerFactory: TransactionSignerFactory
         get() = entryPoint.getTransactionSignerFactory()
 
-    private val homeFeatureToggles: HomeFeatureToggles
-        get() = entryPoint.getHomeFeatureToggles()
-
     private val getUserCountryUseCase: GetUserCountryUseCase
         get() = entryPoint.getGetUserCountryCodeUseCase()
 
@@ -272,7 +268,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     shareManager = shareManager,
                     appRouter = appRouter,
                     transactionSignerFactory = transactionSignerFactory,
-                    homeFeatureToggles = homeFeatureToggles,
                     getUserCountryUseCase = getUserCountryUseCase,
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
