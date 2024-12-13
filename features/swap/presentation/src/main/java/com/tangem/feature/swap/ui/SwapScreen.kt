@@ -15,7 +15,6 @@ import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.states.ChooseFeeBottomSheetConfig
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
-import com.tangem.feature.swap.models.states.WebViewBottomSheetConfig
 import com.tangem.feature.swap.presentation.R
 
 @Composable
@@ -40,20 +39,13 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
             modifier = Modifier.padding(scaffoldPaddings),
         )
 
-        stateHolder.bottomSheetConfig?.let { config ->
+        if (stateHolder.bottomSheetConfig != null) {
+            val config = stateHolder.bottomSheetConfig
+
             when (config.content) {
-                is GiveTxPermissionBottomSheetConfig -> {
-                    GiveTxPermissionBottomSheet(config = config)
-                }
-                is ChooseProviderBottomSheetConfig -> {
-                    ChooseProviderBottomSheet(config = config)
-                }
-                is ChooseFeeBottomSheetConfig -> {
-                    ChooseFeeBottomSheet(config = config)
-                }
-                is WebViewBottomSheetConfig -> {
-                    WebViewBottomSheet(config = config)
-                }
+                is GiveTxPermissionBottomSheetConfig -> GiveTxPermissionBottomSheet(config = config)
+                is ChooseProviderBottomSheetConfig -> ChooseProviderBottomSheet(config = config)
+                is ChooseFeeBottomSheetConfig -> ChooseFeeBottomSheet(config = config)
             }
         }
     }
