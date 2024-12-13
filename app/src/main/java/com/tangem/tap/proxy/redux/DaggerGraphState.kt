@@ -34,7 +34,6 @@ import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -68,7 +67,6 @@ data class DaggerGraphState(
     val appRouter: AppRouter? = null,
     val pushNotificationsRouter: PushNotificationsRouter? = null,
     val transactionSignerFactory: TransactionSignerFactory? = null,
-    val homeFeatureToggles: HomeFeatureToggles? = null,
     val getUserCountryUseCase: GetUserCountryUseCase? = null,
     val onrampFeatureToggles: OnrampFeatureToggles? = null,
     val environmentConfigStorage: EnvironmentConfigStorage? = null,
