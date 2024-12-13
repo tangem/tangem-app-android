@@ -117,12 +117,13 @@ private fun FormContent(model: CustomTokenFormUM, modifier: Modifier = Modifier)
 
         val tokenForm = model.tokenForm
         if (tokenForm != null) {
-            TokenForm(tokenForm)
+            TokenForm(tokenForm = tokenForm)
         }
 
-        ClickableField(
-            model = model.derivationPath,
-        )
+        val derivationPath = model.derivationPath
+        if (derivationPath != null) {
+            ClickableField(model = derivationPath)
+        }
 
         model.notifications.fastForEach { notification ->
             Notification(
@@ -277,6 +278,13 @@ private class PreviewCustomTokenFormComponentProvider :
             ),
             PreviewCustomTokenFormComponent(
                 tokenForm = null,
+            ),
+            PreviewCustomTokenFormComponent(
+                derivationPath = null,
+            ),
+            PreviewCustomTokenFormComponent(
+                tokenForm = null,
+                derivationPath = null,
             ),
         )
 }
