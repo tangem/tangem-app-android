@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.tokenlist.entity
 
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import kotlinx.collections.immutable.ImmutableList
@@ -19,4 +20,5 @@ internal data class TokenListUM(
     val availableItems: ImmutableList<TokensListItemUM>,
     val unavailableItems: ImmutableList<TokensListItemUM>,
     val isBalanceHidden: Boolean,
+    val warning: NotificationUM? = null,
 )
