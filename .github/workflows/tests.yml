@@ -25,7 +25,9 @@ jobs:
     runs-on: [ self-hosted, Linux, ARM64, test ]
     if: github.event.pull_request.draft == false
     steps:
+      # temporary step, will be deleted soon
       - name: Change user
+        if: startsWith(runner.os, 'Linux')
         run: sudo chown -R ubuntu:ubuntu /home/ubuntu/actions-runner/_work/tangem-app-android/tangem-app-android/
 
       - name: Checkout

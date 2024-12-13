@@ -33,23 +33,6 @@ RUN wget https://github.com/lzhiyong/android-sdk-tools/releases/download/34.0.3/
     cp -r /tmp/android-sdk-tools-static-arm/build-tools/* $ANDROID_HOME/build-tools/34.0.0_aarch64/ && \
     rm -rf /tmp/android-sdk-tools-static-arm /tmp/android-sdk-tools-static-aarch64.zip
 
-#RUN mkdir $ANDROID_HOME/build-tools/39.0.0/
-#RUN wget https://github.com/lzhiyong/android-sdk-tools/releases/download/34.0.3/android-sdk-tools-static-arm.zip -O /tmp/android-sdk-tools-static-arm.zip && \
-#    unzip /tmp/android-sdk-tools-static-arm.zip -d /tmp/android-sdk-tools-static-arm && \
-#    cp -r /tmp/android-sdk-tools-static-arm/build-tools/* $ANDROID_HOME/build-tools/39.0.0/ && \
-#    rm -rf /tmp/android-sdk-tools-static-arm /tmp/android-sdk-tools-static-arm.zip
-
-# aapt2 requires libs that are not provided in arm64 ubuntu image
-#RUN  mkdir                                          /lib/x86_64-linux-gnu
-#COPY ci_resources/x86_64_libs/libc.so.6             /lib/x86_64-linux-gnu/libc.so.6
-#COPY ci_resources/x86_64_libs/libdl.so.2            /lib/x86_64-linux-gnu/libdl.so.2
-#COPY ci_resources/x86_64_libs/libgcc_s.so.1         /lib/x86_64-linux-gnu/libgcc_s.so.1
-#COPY ci_resources/x86_64_libs/libm.so.6             /lib/x86_64-linux-gnu/libm.so.6
-#COPY ci_resources/x86_64_libs/libpthread.so.0       /lib/x86_64-linux-gnu/libpthread.so.0
-#COPY ci_resources/x86_64_libs/librt.so.1            /lib/x86_64-linux-gnu/librt.so.1
-#RUN  mkdir                                          /lib64
-#COPY ci_resources/x86_64_libs/ld-linux-x86-64.so.2  /lib64/ld-linux-x86-64.so.2
-
 RUN gem install bundler:2.5.23
 RUN gem install fastlane -v 2.211.0 -N -V
 RUN gem install fastlane-plugin-firebase_app_distribution -v 0.9.1 -N -V
