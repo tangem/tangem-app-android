@@ -4,6 +4,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.utils.parseBigDecimalOrNull
 import com.tangem.features.onramp.main.entity.OnrampAmountSecondaryFieldUM
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
@@ -24,7 +25,7 @@ internal class OnrampAmountFieldChangeConverter(
 
         val amountState = state.amountBlockState
         val amountTextField = amountState.amountFieldModel
-        val fiatDecimal = value.toBigDecimalOrNull() ?: BigDecimal.ZERO
+        val fiatDecimal = value.parseBigDecimalOrNull() ?: BigDecimal.ZERO
         val isDoneActionEnabled = !fiatDecimal.isNullOrZero()
         val amountFieldModel = amountState.amountFieldModel.copy(
             fiatValue = value,
