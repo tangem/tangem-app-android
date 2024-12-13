@@ -11,16 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
-import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 
 @Composable
@@ -49,15 +46,7 @@ internal fun OnrampMainComponentContent(state: OnrampMainComponentUM, modifier: 
             }
         },
         floatingActionButton = {
-            PrimaryButton(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .fillMaxWidth(),
-                text = stringResource(id = R.string.common_buy),
-                onClick = state.buyButtonConfig.onClick,
-                enabled = state.buyButtonConfig.enabled,
-            )
+            OnrampButtonComponent(state)
         },
         floatingActionButtonPosition = FabPosition.Center,
     )
