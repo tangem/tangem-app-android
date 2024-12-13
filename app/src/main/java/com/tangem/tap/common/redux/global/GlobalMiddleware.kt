@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
-import java.util.Locale
 
 object GlobalMiddleware {
     val handler = globalMiddlewareHandler
@@ -86,27 +85,6 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                 return
             }
             scope.launch { exchangeManager.update() }
-        }
-        is GlobalAction.FetchUserCountry -> {
-            val homeFeatureToggles = store.inject(DaggerGraphState::homeFeatureToggles)
-
-            if (!homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
-                scope.launch {
-                    runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
-                        .onSuccess {
-                            store.dispatchOnMain(
-                                GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
-                            )
-                        }
-                        .onFailure {
-                            store.dispatchOnMain(
-                                GlobalAction.FetchUserCountry.Success(
-                                    countryCode = Locale.getDefault().country.lowercase(),
-                                ),
-                            )
-                        }
-                }
-            }
         }
     }
 }
