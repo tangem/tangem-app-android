@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -67,7 +68,7 @@ class GetCryptoCurrencyActionsUseCase(
                     userWallet = userWallet,
                     coinStatus = maybeCoinStatus.getOrNull(),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    needAssociateAsset = requirements != null,
+                    requirements = requirements,
                 )
             }
 
@@ -79,7 +80,7 @@ class GetCryptoCurrencyActionsUseCase(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        needAssociateAsset: Boolean,
+        requirements: AssetRequirementsCondition?,
     ): TokenActionsState {
         return TokenActionsState(
             walletId = userWallet.walletId,
@@ -88,7 +89,7 @@ class GetCryptoCurrencyActionsUseCase(
                 userWallet = userWallet,
                 coinStatus = coinStatus,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
-                needAssociateAsset = needAssociateAsset,
+                requirements = requirements,
             ),
         )
     }
@@ -102,14 +103,14 @@ class GetCryptoCurrencyActionsUseCase(
         userWallet: UserWallet,
         coinStatus: CryptoCurrencyStatus?,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        needAssociateAsset: Boolean,
+        requirements: AssetRequirementsCondition?,
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
             return listOf(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
         }
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
-            return getActionsForUnreachableCurrency(userWallet, cryptoCurrencyStatus, needAssociateAsset)
+            return getActionsForUnreachableCurrency(userWallet, cryptoCurrencyStatus, requirements)
         }
 
         val activeList = mutableListOf<TokenActionsState.ActionState>()
@@ -128,11 +129,7 @@ class GetCryptoCurrencyActionsUseCase(
 
         // receive
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            val scenario = if (needAssociateAsset) {
-                ScenarioUnavailabilityReason.UnassociatedAsset
-            } else {
-                ScenarioUnavailabilityReason.None
-            }
+            val scenario = getReceiveScenario(requirements)
             activeList.add(TokenActionsState.ActionState.Receive(scenario))
         }
 
@@ -243,7 +240,7 @@ class GetCryptoCurrencyActionsUseCase(
     private suspend fun getActionsForUnreachableCurrency(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
-        needAssociateAsset: Boolean,
+        requirements: AssetRequirementsCondition?,
     ): List<TokenActionsState.ActionState> {
         val actionsList = mutableListOf<TokenActionsState.ActionState>()
 
@@ -265,17 +262,23 @@ class GetCryptoCurrencyActionsUseCase(
         actionsList.add(TokenActionsState.ActionState.Swap(ScenarioUnavailabilityReason.Unreachable))
         actionsList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.Unreachable))
         if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
-            val scenario = if (needAssociateAsset) {
-                ScenarioUnavailabilityReason.UnassociatedAsset
-            } else {
-                ScenarioUnavailabilityReason.None
-            }
+            val scenario = getReceiveScenario(requirements)
             actionsList.add(TokenActionsState.ActionState.Receive(scenario))
         }
         actionsList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.Unreachable, null))
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
 
         return actionsList
+    }
+
+    private fun getReceiveScenario(requirements: AssetRequirementsCondition?): ScenarioUnavailabilityReason {
+        return if (requirements is AssetRequirementsCondition.PaidTransaction ||
+            requirements is AssetRequirementsCondition.PaidTransactionWithFee
+        ) {
+            ScenarioUnavailabilityReason.UnassociatedAsset
+        } else {
+            ScenarioUnavailabilityReason.None
+        }
     }
 
     private fun getSendUnavailabilityReason(
