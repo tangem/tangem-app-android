@@ -59,14 +59,14 @@ jobs:
               cd /workspace && fastlane test;
             "
 
-#      - name: Build notification
-#        if: failure()
-#        uses: adamkdean/simple-slack-notify@master
-#        env:
-#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DVELOPMENT_ANDROID }}
-#        with:
-#          channel: '#development-android'
-#          text: 'Tangem app tests #${{ github.run_number }} failed'
-#          color: 'danger'
-#          fields: |
-#            [{ "title": "Action URL", "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
+      - name: Build notification
+        if: failure()
+        uses: adamkdean/simple-slack-notify@master
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DVELOPMENT_ANDROID }}
+        with:
+          channel: '#development-android'
+          text: 'Tangem app tests #${{ github.run_number }} failed'
+          color: 'danger'
+          fields: |
+            [{ "title": "Action URL", "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
