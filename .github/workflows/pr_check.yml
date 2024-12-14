@@ -1,4 +1,4 @@
-name: Tests
+name: PR check
 
 on:
   pull_request:
@@ -20,10 +20,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test
-    runs-on: [ self-hosted, ARM64, active-android ]
+  checks:
+    name: ${{ matrix.task }}
+    runs-on: [ self-hosted, ARM64, macOS, active-android ]
     if: github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        task: [detekt, test]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -35,7 +38,7 @@ jobs:
         run: |
           docker build --platform linux/arm64 -t tangem_ci_android_environment .
 
-      - name: Run tests
+      - name: Run ${{ matrix.task }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
@@ -49,9 +52,8 @@ jobs:
             -v ${{ github.workspace }}:/workspace \
             tangem_ci_android_environment \
             sh -c "
-              echo 'Running tests...';
-          
-              cd /workspace && fastlane test;
+              echo 'Running ${{ matrix.task }}...';
+              cd /workspace && fastlane ${{ matrix.task }};
             "
 
       - name: Build notification
@@ -61,7 +63,7 @@ jobs:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_DVELOPMENT_ANDROID }}
         with:
           channel: '#development-android'
-          text: 'Tangem app tests #${{ github.run_number }} failed'
+          text: '${{ matrix.task }} #${{ github.run_number }} failed'
           color: 'danger'
           fields: |
             [{ "title": "Action URL", "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}]
