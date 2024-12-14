@@ -35,7 +35,6 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
@@ -111,8 +110,6 @@ interface ApplicationEntryPoint {
     fun getTangemAppLogger(): TangemAppLoggerInitializer
 
     fun getTransactionSignerFactory(): TransactionSignerFactory
-
-    fun getHomeFeatureToggles(): HomeFeatureToggles
 
     fun getGetUserCountryCodeUseCase(): GetUserCountryUseCase
 

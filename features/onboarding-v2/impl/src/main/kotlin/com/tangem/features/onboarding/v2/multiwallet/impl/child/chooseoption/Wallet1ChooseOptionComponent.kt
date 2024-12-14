@@ -45,6 +45,7 @@ class Wallet1ChooseOptionComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         Wallet1ChooseOption(
+            canSkipBackup = model.canSkipBackup,
             onBackupClick = {
                 onNextStep(OnboardingMultiWalletState.Step.AddBackupDevice)
             },
