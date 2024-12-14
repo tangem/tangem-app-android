@@ -21,7 +21,7 @@ platform :android do
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
   end
 
-desc "Run detekt"
+  desc "Run detekt"
   lane :detekt do
     FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")

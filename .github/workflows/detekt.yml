@@ -1,4 +1,4 @@
-name: Tests
+name: Detekt
 
 on:
   pull_request:
@@ -20,8 +20,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test
+  detekt:
+    name: Detekt
     runs-on: [ self-hosted, ARM64, active-android ]
     if: github.event.pull_request.draft == false
     steps:
