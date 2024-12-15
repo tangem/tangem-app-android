@@ -68,7 +68,7 @@ object OnboardingHelper {
     fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
         val newOnboardingSupportTypes = scanResponse.productType == ProductType.Wallet2 ||
             scanResponse.productType == ProductType.Ring ||
-            scanResponse.productType == ProductType.Wallet
+            scanResponse.productType == ProductType.Wallet // AppRoute.OnboardingOther is also supported
         if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled &&
             newOnboardingSupportTypes
         ) {
