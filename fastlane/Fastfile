@@ -23,7 +23,7 @@ platform :android do
 
   desc "Runs all the tests"
   lane :test do
-    FileUtils.cp("../ci_resources/8gb_ram_ci_gradle.properties", "../gradle.properties")
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "detekt")
     gradle(task: "testDebugUnitTest")
@@ -87,19 +87,22 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
+    FileUtils.cp("../ci_resources/build_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(
       task: "clean assemble",
       build_type: "Internal",
       properties: {
-        'versionCode' => ENV['versionCode'],
-        'versionName' => ENV['versionName'],
+        'versionCode' => ENV['version_code'],
+        'versionName' => ENV['version_name'],
       }
     )
     firebase_app_distribution(
+      firebase_cli_token: ENV['firebase_cli_token'],
       app: ENV['app_id_internal'],
       apk_path: ENV['apk_path_internal'],
       groups: ENV['groups'],
-      release_notes: ENV['releaseNotes']
+      release_notes: ENV['release_notes'],
     )
   end
 end
