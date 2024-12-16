@@ -50,6 +50,13 @@ internal class DefaultTokenDetailsRouter(
     }
 
     override fun openOnrampSuccess(externalTxId: String) {
-        router.push(AppRoute.OnrampSuccess(externalTxId))
+        // finish current onramp flow and show onramp success screen
+        val replaceOnrampScreens = router.stack
+            .filterNot { it is AppRoute.Onramp }
+            .toMutableList()
+
+        replaceOnrampScreens.add(AppRoute.OnrampSuccess(externalTxId))
+
+        router.replaceAll(*replaceOnrampScreens.toTypedArray())
     }
 }
