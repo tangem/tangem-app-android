@@ -325,6 +325,7 @@
   <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта или кольцо?</string>
   <string name="feedback_preface_support">Привет, команда поддержки,</string>
   <string name="feedback_preface_tx_failed">Пожалуйста, расскажите нам больше о вашей проблеме. Каждая маленькая деталь может помочь.</string>
+  <string name="feedback_subject_pre_activated_wallet">Ранее активированный кошелек</string>
   <string name="feedback_subject_rate_negative">Мои предложения</string>
   <string name="feedback_subject_scan_failed">Не могу отсканировать карту/кольцо</string>
   <string name="feedback_subject_support">Обращение в поддержку</string>
@@ -597,6 +598,7 @@
   <string name="onramp_country_search">Поиск по стране</string>
   <string name="onramp_country_unavailable">Недоступно</string>
   <string name="onramp_currency_search">Поиск по валюте</string>
+  <string name="onramp_legal">Пользуясь сервисом покупки, вы соглашаетесь с %1$s и %2$s</string>
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
