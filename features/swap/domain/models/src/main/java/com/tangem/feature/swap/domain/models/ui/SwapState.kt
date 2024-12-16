@@ -96,7 +96,15 @@ sealed class TxFeeState {
     data class MultipleFeeState(
         val normalFee: TxFee,
         val priorityFee: TxFee,
-    ) : TxFeeState()
+    ) : TxFeeState() {
+
+        fun getFeeByType(feeType: FeeType): TxFee {
+            return when (feeType) {
+                FeeType.NORMAL -> normalFee
+                FeeType.PRIORITY -> priorityFee
+            }
+        }
+    }
 
     data class SingleFeeState(
         val fee: TxFee,
