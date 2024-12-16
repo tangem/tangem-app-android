@@ -1,6 +1,5 @@
 package com.tangem.features.onramp.selecttoken.model
 
-import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM
@@ -14,6 +13,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -141,7 +141,7 @@ internal class OnrampOperationModel @Inject constructor(
                     )
 
                     val dismissButton = DialogButtonUM(
-                        title = stringResource(id = R.string.common_cancel),
+                        title = stringResourceSafe(id = R.string.common_cancel),
                         onClick = onDismiss,
                     )
 
