@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.Network
@@ -38,6 +39,7 @@ interface CurrencyChecksRepository {
     suspend fun checkUtxoAmountLimit(
         userWalletId: UserWalletId,
         network: Network,
+        currency: CryptoCurrency,
         amount: BigDecimal,
         fee: BigDecimal,
     ): UtxoAmountLimit?
