@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.main.entity.factory.amount
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -140,6 +141,23 @@ internal class OnrampAmountStateFactory(
                         )
                     }
                 },
+            ),
+        )
+    }
+
+    fun getAmountSecondaryResetState(): OnrampMainComponentUM {
+        val currentState = currentStateProvider()
+        if (currentState !is OnrampMainComponentUM.Content) return currentState
+
+        val amountState = currentState.amountBlockState
+
+        if (amountState.secondaryFieldModel is OnrampAmountSecondaryFieldUM.Content) return currentState
+
+        return currentState.copy(
+            amountBlockState = amountState.copy(
+                secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(
+                    amount = TextReference.EMPTY,
+                ),
             ),
         )
     }
