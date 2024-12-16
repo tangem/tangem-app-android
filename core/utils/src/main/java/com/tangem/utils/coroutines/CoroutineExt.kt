@@ -25,11 +25,12 @@ class Debouncer {
         coroutineScope: CoroutineScope,
         waitMs: Long = 300L,
         context: CoroutineContext = EmptyCoroutineContext,
+        forceUpdate: Boolean = false,
         destinationFunction: suspend () -> Unit,
     ) {
         debounceJob?.cancel()
         debounceJob = coroutineScope.launch(context) {
-            delay(waitMs)
+            if (!forceUpdate) delay(waitMs)
             destinationFunction.invoke()
         }
     }
