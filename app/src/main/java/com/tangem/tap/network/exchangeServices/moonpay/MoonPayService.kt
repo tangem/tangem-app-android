@@ -7,13 +7,20 @@ import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.domain.common.extensions.withIOContext
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
+import com.tangem.tap.network.exchangeServices.ExchangeServiceInitializationStatus
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SCHEME
 import com.tangem.tap.network.exchangeServices.moonpay.models.MoonPayAvailableCurrency
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import timber.log.Timber
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -22,6 +29,12 @@ class MoonPayService(
     private val secretKey: String,
     private val logEnabled: Boolean,
 ) : ExchangeService {
+
+    override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
+        get() = _initializationStatus
+
+    private val _initializationStatus: MutableStateFlow<ExchangeServiceInitializationStatus> =
+        MutableStateFlow(value = lceLoading())
 
     private val api: MoonPayApi by lazy {
         createRetrofitInstance(
@@ -34,14 +47,25 @@ class MoonPayService(
 
     override suspend fun update() {
         withIOContext {
+            Timber.i("Start updating")
+            _initializationStatus.value = lceLoading()
+
             performRequest {
                 val userStatus = when (val result = performRequest { api.getUserStatus(apiKey) }) {
-                    is Result.Failure -> return@performRequest
+                    is Result.Failure -> {
+                        Timber.e("Failed to load user status", result.error)
+                        _initializationStatus.value = result.error.lceError()
+                        return@performRequest
+                    }
                     is Result.Success -> result.data
                 }
 
                 val currencies = when (val result = performRequest { api.getCurrencies(apiKey) }) {
-                    is Result.Failure -> return@performRequest
+                    is Result.Failure -> {
+                        Timber.e("Failed to load currencies", result.error)
+                        _initializationStatus.value = result.error.lceError()
+                        return@performRequest
+                    }
                     is Result.Success -> result.data
                 }
 
@@ -58,6 +82,8 @@ class MoonPayService(
                         )
                     }
 
+                Timber.i("Successfully updated")
+                _initializationStatus.value = lceContent()
                 status = MoonPayStatus(currenciesToSell, userStatus, currencies)
             }
         }

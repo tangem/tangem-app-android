@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.common)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.core)
     implementation(projects.domain.demo)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)

@@ -18,6 +18,7 @@ import com.google.firebase.messaging.RemoteMessage
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.wallet.R
 import timber.log.Timber
 
@@ -36,6 +37,7 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID
 // [REDACTED_TODO_COMMENT]
         val intent = Intent(applicationContext, MainActivity::class.java)
+        intent.putExtra(OnPushClickedIntentHandler.IS_OPENED_FROM_PUSH, true)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(
             /* context = */ this,

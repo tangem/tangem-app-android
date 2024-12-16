@@ -34,6 +34,8 @@ internal interface WalletContentClickIntents {
 
     fun onOrganizeTokensClick()
 
+    fun onOnrampSuccessClick(externalTxId: String)
+
     fun onDismissMarketsOnboarding()
 
     fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus)
@@ -95,6 +97,10 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onOrganizeTokensClick() {
         router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
+    }
+
+    override fun onOnrampSuccessClick(externalTxId: String) {
+        router.openOnrampSuccessScreen(externalTxId = externalTxId)
     }
 
     override fun onDismissMarketsOnboarding() {

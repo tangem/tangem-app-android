@@ -87,12 +87,18 @@ internal class SwapViewModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver {
 
-    private val initialCryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_BUNDLE_KEY)
+    private val initialCurrencyFrom: CryptoCurrency
+        get() {
+            return savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_FROM_KEY)
+                ?.unbundle(CryptoCurrency.serializer())
+                ?: error("no expected parameter CryptoCurrency (from) found")
+        }
+
+    private val initialCurrencyTo: CryptoCurrency? = savedStateHandle.get<Bundle>(AppRoute.Swap.CURRENCY_TO_KEY)
         ?.unbundle(CryptoCurrency.serializer())
-        ?: error("no expected parameter CryptoCurrency found")
 
     private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Swap.USER_WALLET_ID_KEY)
         ?.unbundle(UserWalletId.serializer())
@@ -103,7 +109,8 @@ internal class SwapViewModel @Inject constructor(
 
     private val swapInteractor = swapInteractorFactory.create(userWalletId)
 
-    private lateinit var initialCryptoCurrencyStatus: CryptoCurrencyStatus
+    private lateinit var initialFromStatus: CryptoCurrencyStatus
+    private var initialToStatus: CryptoCurrencyStatus? = null
     private var userWallet: UserWallet by Delegates.notNull()
 
     private var isBalanceHidden = true
@@ -125,8 +132,9 @@ internal class SwapViewModel @Inject constructor(
 
     var uiState: SwapStateHolder by mutableStateOf(
         stateBuilder.createInitialLoadingState(
-            initialCurrency = initialCryptoCurrency,
-            networkInfo = blockchainInteractor.getBlockchainInfo(initialCryptoCurrency.network.backendId),
+            initialCurrencyFrom = initialCurrencyFrom,
+            initialCurrencyTo = initialCurrencyTo,
+            fromNetworkInfo = blockchainInteractor.getBlockchainInfo(initialCurrencyFrom.network.backendId),
         ),
     )
         private set
@@ -154,14 +162,15 @@ internal class SwapViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(dispatchers.io) {
-            val cryptoCurrencyStatus =
-                getCryptoCurrencyStatusUseCase(userWalletId, initialCryptoCurrency.id).getOrNull()
+            val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
+            val toStatus = initialCurrencyTo?.let { getCryptoCurrencyStatusUseCase(userWalletId, it.id).getOrNull() }
             val wallet = getUserWalletUseCase(userWalletId).getOrNull()
-            if (cryptoCurrencyStatus == null || wallet == null) {
+            if (fromStatus == null || wallet == null) {
                 uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
             } else {
                 userWallet = wallet
-                initialCryptoCurrencyStatus = cryptoCurrencyStatus
+                initialFromStatus = fromStatus
+                initialToStatus = toStatus
                 initTokens(isInitiallyReversed)
             }
         }
@@ -182,7 +191,7 @@ internal class SwapViewModel @Inject constructor(
     }
 
     fun onScreenOpened() {
-        analyticsEventHandler.send(SwapEvents.SwapScreenOpened(initialCryptoCurrency.symbol))
+        analyticsEventHandler.send(SwapEvents.SwapScreenOpened(initialCurrencyFrom.symbol))
     }
 
     fun setRouter(router: SwapRouter) {
@@ -208,14 +217,15 @@ internal class SwapViewModel @Inject constructor(
     private fun initTokens(isReverseFromTo: Boolean) {
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                swapInteractor.getTokensDataState(initialCryptoCurrency)
+                swapInteractor.getTokensDataState(initialCurrencyFrom)
             }.onSuccess { state ->
                 updateTokensState(state)
-                val selectedCurrency = swapInteractor.getInitialCurrencyToSwap(
-                    initialCryptoCurrency = initialCryptoCurrency,
+                val selectedCurrency = initialToStatus ?: swapInteractor.getInitialCurrencyToSwap(
+                    initialCryptoCurrency = initialCurrencyFrom,
                     state = state,
                     isReverseFromTo = isReverseFromTo,
                 )
+
                 applyInitialTokenChoice(
                     state = state,
                     selectedCurrency = selectedCurrency,
@@ -251,9 +261,10 @@ internal class SwapViewModel @Inject constructor(
                     (it as? ExpressException)?.expressDataError?.code ?: ExpressDataError.UnknownError.code,
                 ) {
                     uiState = stateBuilder.createInitialLoadingState(
-                        initialCurrency = initialCryptoCurrency,
-                        networkInfo = blockchainInteractor.getBlockchainInfo(
-                            initialCryptoCurrency.network.backendId,
+                        initialCurrencyFrom = initialCurrencyFrom,
+                        initialCurrencyTo = initialCurrencyTo,
+                        fromNetworkInfo = blockchainInteractor.getBlockchainInfo(
+                            initialCurrencyFrom.network.backendId,
                         ),
                     )
                     initTokens(isReverseFromTo)
@@ -272,15 +283,15 @@ internal class SwapViewModel @Inject constructor(
             analyticsEventHandler.send(SwapEvents.NoticeNoAvailableTokensToSwap)
             uiState = stateBuilder.createNoAvailableTokensToSwapState(
                 uiStateHolder = uiState,
-                fromToken = initialCryptoCurrencyStatus,
+                fromToken = initialFromStatus,
             )
             return
         }
         isOrderReversed = isReverseFromTo
         val (fromCurrencyStatus, toCurrencyStatus) = if (isOrderReversed) {
-            selectedCurrency to initialCryptoCurrencyStatus
+            selectedCurrency to initialFromStatus
         } else {
-            initialCryptoCurrencyStatus to selectedCurrency
+            initialFromStatus to selectedCurrency
         }
         dataState = dataState.copy(
             fromCryptoCurrency = fromCurrencyStatus,
@@ -300,7 +311,7 @@ internal class SwapViewModel @Inject constructor(
         uiState = stateBuilder.addTokensToState(
             uiState = uiState,
             tokensDataState = tokensDataState,
-            fromToken = dataState.fromCryptoCurrency?.currency ?: initialCryptoCurrency,
+            fromToken = dataState.fromCryptoCurrency?.currency ?: initialCurrencyFrom,
         )
     }
 
@@ -317,7 +328,7 @@ internal class SwapViewModel @Inject constructor(
                 uiState,
                 fromToken.currency,
                 toToken.currency,
-                initialCryptoCurrency.id.value,
+                initialCurrencyFrom.id.value,
             )
         }
         singleTaskScheduler.scheduleTask(
@@ -413,7 +424,7 @@ internal class SwapViewModel @Inject constructor(
                 if (uiState.warnings.any { it is SwapWarning.UnableToCoverFeeWarning }) {
                     analyticsEventHandler.send(
                         SwapEvents.NoticeNotEnoughFee(
-                            token = initialCryptoCurrency.symbol,
+                            token = initialCurrencyFrom.symbol,
                             blockchain = fromToken.currency.network.name,
                         ),
                     )
@@ -451,7 +462,7 @@ internal class SwapViewModel @Inject constructor(
         }
         analyticsEventHandler.send(
             SwapEvents.NoticeProviderError(
-                sendToken = "${initialCryptoCurrency.network.backendId}:${initialCryptoCurrency.symbol}",
+                sendToken = "${initialCurrencyFrom.network.backendId}:${initialCurrencyFrom.symbol}",
                 receiveToken = receiveToken ?: "",
                 provider = provider,
                 errorCode = error.code,
@@ -586,7 +597,7 @@ internal class SwapViewModel @Inject constructor(
                                     swapRouter.openUrl(url)
                                 }
                                 analyticsEventHandler.send(
-                                    event = SwapEvents.ButtonExplore(initialCryptoCurrency.symbol),
+                                    event = SwapEvents.ButtonExplore(initialCurrencyFrom.symbol),
                                 )
                             },
                             onStatusClick = {
@@ -594,7 +605,7 @@ internal class SwapViewModel @Inject constructor(
                                 if (!txExternalUrl.isNullOrBlank()) {
                                     swapRouter.openUrl(txExternalUrl)
                                     analyticsEventHandler.send(
-                                        event = SwapEvents.ButtonStatus(initialCryptoCurrency.symbol),
+                                        event = SwapEvents.ButtonStatus(initialCurrencyFrom.symbol),
                                     )
                                 }
                             },
@@ -766,7 +777,7 @@ internal class SwapViewModel @Inject constructor(
             val toToken: CryptoCurrencyStatus
             if (isOrderReversed) {
                 fromToken = foundToken.currencyStatus
-                toToken = initialCryptoCurrencyStatus
+                toToken = initialFromStatus
 
                 val newToken = fromToken.currency as? CryptoCurrency.Coin
                 if (newToken != null) {
@@ -777,7 +788,7 @@ internal class SwapViewModel @Inject constructor(
                     )
                 }
             } else {
-                fromToken = initialCryptoCurrencyStatus
+                fromToken = initialFromStatus
                 toToken = foundToken.currencyStatus
 
                 val newToken = toToken.currency as? CryptoCurrency.Coin
@@ -1282,7 +1293,7 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onFailedTxEmailClick(errorMessage: String) {
         viewModelScope.launch {
-            val network = initialCryptoCurrencyStatus.currency.network
+            val network = initialFromStatus.currency.network
             val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
 
             saveBlockchainErrorUseCase(
@@ -1291,7 +1302,7 @@ internal class SwapViewModel @Inject constructor(
                     blockchainId = network.id.value,
                     derivationPath = network.derivationPath.value,
                     destinationAddress = dataState.swapDataModel?.transaction?.txTo.orEmpty(),
-                    tokenSymbol = initialCryptoCurrency.symbol,
+                    tokenSymbol = initialCurrencyFrom.symbol,
                     amount = dataState.amount.orEmpty(),
                     fee = dataState.selectedFee?.feeCryptoFormatted.orEmpty(),
                 ),
