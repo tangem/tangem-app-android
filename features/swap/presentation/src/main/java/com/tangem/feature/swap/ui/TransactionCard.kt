@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,6 +37,7 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.ImageBackgroundContrastChecker
@@ -74,7 +74,7 @@ fun TransactionCard(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start,
         ) {
-            Header(balance = stringResource(R.string.common_balance, balance), type = type)
+            Header(balance = stringResourceSafe(R.string.common_balance, balance), type = type)
 
             Content(
                 type = type,
@@ -134,7 +134,7 @@ fun TransactionCardEmpty(
             horizontalAlignment = Alignment.Start,
         ) {
             Header(
-                balance = stringResource(id = R.string.swapping_token_not_available),
+                balance = stringResourceSafe(id = R.string.swapping_token_not_available),
                 type = type,
             )
 
