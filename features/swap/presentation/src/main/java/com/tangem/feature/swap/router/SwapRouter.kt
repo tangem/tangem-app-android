@@ -30,9 +30,7 @@ internal class SwapRouter(
              * If select token screen is not in stack, then just pop to previous screen.
              * Otherwise, pop to previous screen that was before select token screen.
              */
-            if (selectTokensIndex == null) {
-                router.pop()
-            } else {
+            if (currentScreen == SwapNavScreen.Success && selectTokensIndex != null) {
                 // find previous screen that was before select token
                 val prevRoute = router.stack.getOrNull(index = selectTokensIndex - 1)
 
@@ -41,6 +39,8 @@ internal class SwapRouter(
                 } else {
                     router.pop()
                 }
+            } else {
+                router.pop()
             }
         }
     }

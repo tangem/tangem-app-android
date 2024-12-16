@@ -154,9 +154,11 @@ internal class SendNotificationFactory(
         ).getOrNull()
 
         addFeeUnreachableNotification(
+            tokenStatus = cryptoCurrencyStatus,
+            coinStatus = feeCryptoCurrencyStatusProvider() ?: cryptoCurrencyStatus,
             feeError = feeError,
-            tokenName = currency.name,
             onReload = clickIntents::feeReload,
+            onClick = clickIntents::onTokenDetailsClick,
         )
         addExceedBalanceNotification(
             feeAmount = feeValue,
