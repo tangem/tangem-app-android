@@ -178,7 +178,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 }
 
                 expressTransactionsItems(
-                    expressTxs = state.expressTxs,
+                    expressTxs = state.expressTxsToDisplay,
                     modifier = itemModifier,
                 )
 
