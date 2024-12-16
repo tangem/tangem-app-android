@@ -10,9 +10,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.features.onramp.impl.R
@@ -39,7 +39,7 @@ internal fun OnrampSelectToken(
         stickyHeader(key = "header") {
             AppBarWithBackButton(
                 onBackClick = state.onBackClick,
-                text = stringResource(id = state.titleResId),
+                text = stringResourceSafe(id = state.titleResId),
                 iconRes = R.drawable.ic_close_24,
                 containerColor = TangemTheme.colors.background.secondary,
             )
