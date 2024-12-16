@@ -222,13 +222,23 @@ private fun Buttons(state: NotificationButtonsState?, isEnabled: Boolean = true)
 
 @Composable
 private fun SingleSecondaryButton(config: NotificationButtonsState.SecondaryButtonConfig, isEnabled: Boolean = true) {
-    SecondaryButton(
-        text = config.text.resolveReference(),
-        onClick = config.onClick,
-        modifier = Modifier.fillMaxWidth(),
-        size = TangemButtonSize.WideAction,
-        enabled = isEnabled,
-    )
+    if (config.iconResId != null) {
+        SecondaryButtonIconEnd(
+            text = config.text.resolveReference(),
+            onClick = config.onClick,
+            modifier = Modifier.fillMaxWidth(),
+            iconResId = config.iconResId,
+            enabled = isEnabled,
+        )
+    } else {
+        SecondaryButton(
+            text = config.text.resolveReference(),
+            onClick = config.onClick,
+            modifier = Modifier.fillMaxWidth(),
+            size = TangemButtonSize.WideAction,
+            enabled = isEnabled,
+        )
+    }
 }
 
 @Composable
