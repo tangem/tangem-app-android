@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.presentation.R
@@ -23,7 +23,7 @@ internal fun NonParticipateBottomBlock(onAgreementClick: () -> Unit, onParticipa
         )
 
         PrimaryButtonIconEnd(
-            text = stringResource(id = R.string.referral_button_participate),
+            text = stringResourceSafe(id = R.string.referral_button_participate),
             iconResId = R.drawable.ic_tangem_24,
             onClick = onParticipateClick,
             modifier = Modifier

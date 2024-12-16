@@ -10,7 +10,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -18,6 +17,7 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -61,7 +61,7 @@ private fun Title(currencyName: String, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.CenterStart,
     ) {
         Text(
-            text = stringResource(id = R.string.wallet_marketplace_block_title, currencyName),
+            text = stringResourceSafe(id = R.string.wallet_marketplace_block_title, currencyName),
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.subtitle2,
         )
@@ -157,7 +157,7 @@ private fun LoadingContent() {
 @Composable
 private fun QuoteTimeStatus() {
     Text(
-        text = stringResource(id = R.string.wallet_marketprice_block_update_time),
+        text = stringResourceSafe(id = R.string.wallet_marketprice_block_update_time),
         color = TangemTheme.colors.text.tertiary,
         style = TangemTheme.typography.body2,
     )
