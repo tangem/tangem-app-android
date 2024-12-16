@@ -31,6 +31,7 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -69,6 +70,7 @@ internal class WalletViewModel @Inject constructor(
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
+    private val walletFeatureToggles: WalletFeatureToggles,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -300,6 +302,7 @@ internal class WalletViewModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -334,6 +337,7 @@ internal class WalletViewModel @Inject constructor(
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
     }
@@ -350,6 +354,7 @@ internal class WalletViewModel @Inject constructor(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -401,6 +406,7 @@ internal class WalletViewModel @Inject constructor(
                 unlockedWallets = action.unlockedWallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 

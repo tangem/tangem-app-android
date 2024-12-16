@@ -20,6 +20,7 @@ import com.google.accompanist.web.rememberWebViewState
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.webview.applySafeSettings
 import com.tangem.feature.referral.presentation.R
 
 /**
@@ -50,12 +51,7 @@ private fun AgreementHtmlView(url: String) {
         modifier = Modifier.background(TangemTheme.colors.background.primary),
         captureBackPresses = false,
         onCreated = {
-            if (!isInPreviewMode) {
-                it.settings.apply {
-                    javaScriptEnabled = false
-                    allowFileAccess = false
-                }
-            }
+            if (!isInPreviewMode) it.applySafeSettings()
         },
     )
 }
