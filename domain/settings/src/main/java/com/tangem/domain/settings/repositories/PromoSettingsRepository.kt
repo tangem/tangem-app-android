@@ -12,10 +12,6 @@ interface PromoSettingsRepository {
 
     suspend fun setNeverToShowTokenSwapPromo()
 
-    fun isReadyToShowWalletTravalaPromo(): Flow<Boolean>
-
-    suspend fun setNeverToShowWalletTravalaPromo()
-
     fun isReadyToShowRingPromo(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun setNeverToShowRingPromo()
