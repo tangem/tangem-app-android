@@ -3,9 +3,9 @@
   <string name="action_buttons_buy_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для покупки.</string>
   <string name="action_buttons_sell_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для продажи.</string>
   <string name="action_buttons_sell_navigation_bar_title">Продать</string>
-  <string name="action_buttons_service_loading_alert_message">Подключение может занять несколько секунд. Пожалуйста, подождите.</string>
-  <string name="action_buttons_service_loading_alert_title">Соединение</string>
-  <string name="action_buttons_something_wrong_alert_message">Действие в данный момент недоступно, пожалуйста попробуйте позже или обновить данные, сделав свайп экрана вниз.</string>
+  <string name="action_buttons_service_loading_alert_message">Это может занять несколько секунд. Пожалуйста, попробуйте позже.</string>
+  <string name="action_buttons_service_loading_alert_title">Данные ещё не загрузились</string>
+  <string name="action_buttons_something_wrong_alert_message">Это действие в данный момент недоступно, пожалуйста попробуйте позже или обновите данные, сделав свайп экрана вниз.</string>
   <string name="action_buttons_something_wrong_alert_title">Кнопка недоступна</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
@@ -264,7 +264,7 @@
   <string name="express_by_provider">Предоставлено</string>
   <string name="express_cex_status_button_title">Статус</string>
   <string name="express_choose_providers_subtitle">Tangem предоставляет доступ к обмену через сторонних поставщиков в соответствии с их правилами</string>
-  <string name="express_choose_providers_title">Выберите провайдера</string>
+  <string name="express_choose_providers_title">Провайдер</string>
   <string name="express_error_code">Произошла ошибка. Код: %s</string>
   <string name="express_error_provider_amount_roundup">Ошибка %1$s. Выбранный провайдер не может обработать указанную транзакцию. Округлите значение до %2$s или измените его.</string>
   <string name="express_error_swap_pair_unavailable">Выбранный провайдер недоступен для обмена. Попробуйте позже. (Код: %s)</string>
@@ -325,6 +325,7 @@
   <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта или кольцо?</string>
   <string name="feedback_preface_support">Привет, команда поддержки,</string>
   <string name="feedback_preface_tx_failed">Пожалуйста, расскажите нам больше о вашей проблеме. Каждая маленькая деталь может помочь.</string>
+  <string name="feedback_subject_pre_activated_wallet">Ранее активированный кошелек</string>
   <string name="feedback_subject_rate_negative">Мои предложения</string>
   <string name="feedback_subject_scan_failed">Не могу отсканировать карту/кольцо</string>
   <string name="feedback_subject_support">Обращение в поддержку</string>
@@ -597,16 +598,17 @@
   <string name="onramp_country_search">Поиск по стране</string>
   <string name="onramp_country_unavailable">Недоступно</string>
   <string name="onramp_currency_search">Поиск по валюте</string>
+  <string name="onramp_legal">Пользуясь сервисом покупки, вы соглашаетесь с %1$s и %2$s</string>
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
   <string name="onramp_pay_with">Оплата с</string>
   <string name="onramp_provider_max_amount">Доступно до %s</string>
-  <string name="onramp_provider_min_amount">Доступно с %s</string>
+  <string name="onramp_provider_min_amount">Доступно от %s</string>
   <string name="onramp_redirecting_to_provider_subtitle">Вы сможете продолжить транзакцию через сервис стороннего провайдера, %s</string>
   <string name="onramp_redirecting_to_provider_title">Переход к %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Наши сервисы недоступны в данной стране</string>
-  <string name="onramp_residency_bottomsheet_title">Ваше местоположение определено как</string>
+  <string name="onramp_residency_bottomsheet_title">Ваше место жительства определено как</string>
   <string name="onramp_settings_residence">Страна проживания</string>
   <string name="onramp_settings_residence_description">Пожалуйста, укажите правильную страну, чтобы обеспечить точность доступных способов оплаты и услуг.</string>
   <string name="onramp_settings_title">Настройки</string>
@@ -681,7 +683,8 @@
   <string name="scan_card_settings_button">Сканировать</string>
   <string name="scan_card_settings_message">Отсканируйте карту или кольцо, чтобы изменить ее настройки. Изменения затронут только ту карту или кольцо, которые вы отсканировали, и не повлияют на другие устройства, привязанные к вашему кошельку.</string>
   <string name="scan_card_settings_title">Приготовьте свой Tangem!</string>
-  <string name="selling_insufficient_balance_alert_message">На вашем балансе недостаточно средств для продажи этой криптовалюты. Пожалуйста, пополните нужный актив, чтобы продолжить.</string>
+  <string name="security_alert_title">Уведомление безопасности</string>
+  <string name="selling_insufficient_balance_alert_message">На вашем балансе недостаточно средств для продажи криптовалюты. Пожалуйста, пополните нужный актив, чтобы продолжить.</string>
   <string name="selling_insufficient_balance_alert_title">Недостаточно средств</string>
   <string name="selling_regional_restriction_alert_message">Продажа криптовалюты в вашем регионе временно недоступна. Мы активно работаем над тем, чтобы добавить эту возможность. Следите за нашими новостями!</string>
   <string name="selling_regional_restriction_alert_title">Региональные ограничения</string>
@@ -897,6 +900,7 @@
   <string name="swapping_to_title">Вы получите</string>
   <string name="swapping_token_list_title">Выберите токен</string>
   <string name="swapping_token_not_available">не доступен</string>
+  <string name="this_is_my_wallet_title">Это мой кошелек</string>
   <string name="toast_balances_hidden">Балансы скрыты</string>
   <string name="toast_balances_shown">Балансы показаны</string>
   <string name="toast_undo">Отменить</string>
@@ -966,6 +970,7 @@
   <string name="user_wallet_list_unlock_all_with">Разблокировать все с %s</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуйте позже.</string>
   <string name="wallet_balance_missing_derivation">Отсканируйте карту или кольцо</string>
+  <string name="wallet_been_activated_message">Этот кошелек уже был активирован ранее.\nЕсли это сделали не вы, свяжитесь со службой поддержки.\nTangem никогда не продает кошелек вместе с предустановленным кодом доступа.</string>
   <string name="wallet_connect_alert_sign_message">Запрос на подпись сообщения.\n\n%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, запрос на\nподпись транзакции с BNB.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Торговый ордер на %1$s\nЦена: %2$s\nСумма к получению: %3$s\nСумма к оплате: %4$s</string>
@@ -1013,7 +1018,7 @@
   <string name="warning_approval_in_progress_title">Выдача разрешения</string>
   <string name="warning_backup_errors_message">Похоже, что процесс активации карт или кольца не был завершен корректно. Это могло быть вызвано проблемой взаимодействия с модулем NFC либо некорректным прикладыванием карты или кольца к телефону. Пожалуйста, обратитесь в нашу службу поддержки для уточнения деталей.</string>
   <string name="warning_backup_errors_title">Ошибка активации</string>
-  <string name="warning_beacon_chain_retirement_content">По решению разработчиков сети BNB стандарт BEP-2 перестанет поддерживаться в июне 2024 года. Чтобы не потерять активы, их необходимо преобразовать в стандарт BEP-20. Используйте функцию обмена в приложении или сторонние сервисы, чтобы перевести средства в cеть BNB Smart Chain.</string>
+  <string name="warning_beacon_chain_retirement_content">С 3 декабря 2024 года сеть BEP-2 была отключена по решению разработчиков сети и более не поддерживается</string>
   <string name="warning_beacon_chain_retirement_title">Отключение сети BNB Beacon Chain</string>
   <string name="warning_blocked_funds_for_fee_message">Внесите немного %1$s, чтобы покрыть комиссию сети</string>
   <string name="warning_blocked_funds_for_fee_title">Недостаточно средств для оплаты комиссии сети</string>
