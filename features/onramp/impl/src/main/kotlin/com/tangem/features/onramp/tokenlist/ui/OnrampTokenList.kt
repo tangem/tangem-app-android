@@ -14,9 +14,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.tokenlist.TokenListItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
@@ -37,15 +39,29 @@ import kotlinx.collections.immutable.ImmutableList
 @Composable
 internal fun TokenList(state: TokenListUM, modifier: Modifier = Modifier) {
     Column(modifier) {
-        SearchBar(searchBarUM = state.searchBarUM)
+        if (state.warning == null) {
+            SearchBar(searchBarUM = state.searchBarUM)
+        } else {
+            when (state.warning) {
+                is NotificationUM.Warning.OnrampErrorNotification -> {
+                    Notification(config = state.warning.config, containerColor = TangemTheme.colors.background.primary)
+                }
+                is NotificationUM.Warning.SwapNoAvailablePair -> {
+                    Notification(config = state.warning.config, containerColor = TangemTheme.colors.button.disabled)
+                }
+                else -> Unit
+            }
+        }
 
-        SpacerH12()
+        if (state.availableItems.isNotEmpty()) {
+            SpacerH12()
+            ItemsBlock(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
+        }
 
-        ItemsBlock(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
-
-        SpacerH12()
-
-        ItemsBlock(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
+        if (state.unavailableItems.isNotEmpty()) {
+            SpacerH12()
+            ItemsBlock(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
+        }
     }
 }
 

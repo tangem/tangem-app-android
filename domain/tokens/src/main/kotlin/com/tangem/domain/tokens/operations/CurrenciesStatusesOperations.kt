@@ -143,13 +143,14 @@ internal class CurrenciesStatusesOperations(
     suspend fun getNetworkCoinFlow(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
+        includeQuotes: Boolean = true,
     ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
             block = { getNetworkCoin(networkId, derivationPath) },
             recover = { return flowOf(it.left()) },
         )
 
-        return getCurrencyStatusFlow(currency)
+        return getCurrencyStatusFlow(currency, includeQuotes)
     }
 
     suspend fun getNetworkCoinForSingleWalletWithTokenFlow(
@@ -163,25 +164,34 @@ internal class CurrenciesStatusesOperations(
         return getCurrencyStatusFlow(currency)
     }
 
-    suspend fun getPrimaryCurrencyStatusFlow(): Flow<Either<Error, CryptoCurrencyStatus>> {
+    suspend fun getPrimaryCurrencyStatusFlow(includeQuotes: Boolean = true): Flow<Either<Error, CryptoCurrencyStatus>> {
         val currency = recover(
             block = { getPrimaryCurrency() },
             recover = { return flowOf(it.left()) },
         )
 
-        return getCurrencyStatusFlow(currency)
+        return getCurrencyStatusFlow(currency, includeQuotes)
     }
 
-    fun getCurrencyStatusFlow(currency: CryptoCurrency): Flow<Either<Error, CryptoCurrencyStatus>> {
+    fun getCurrencyStatusFlow(
+        currency: CryptoCurrency,
+        includeQuotes: Boolean = true,
+    ): Flow<Either<Error,
+            CryptoCurrencyStatus,>,> {
         val (networks, currenciesIds) = getIds(nonEmptyListOf(currency))
 
-        val quoteFlow = getQuotes(currenciesIds)
-            .map { maybeQuotes ->
-                maybeQuotes.flatMap { quotes ->
-                    quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }?.right()
-                        ?: Error.EmptyQuotes.left()
+        val quoteFlow = if (includeQuotes) {
+            getQuotes(currenciesIds)
+                .map { maybeQuotes ->
+                    maybeQuotes.flatMap { quotes ->
+                        quotes.singleOrNull { it.rawCurrencyId == currency.id.rawCurrencyId }?.right()
+                            ?: Error.EmptyQuotes.left()
+                    }
                 }
-            }
+        } else {
+            // don't use emptyFlow()
+            flow { emit(Error.EmptyQuotes.left()) }
+        }
 
         val statusFlow = getNetworksStatuses(networks)
             .map { maybeStatuses ->
@@ -338,8 +348,9 @@ internal class CurrenciesStatusesOperations(
             .map<Set<Quote>, Either<Error, Set<Quote>>> { quotes ->
                 if (quotes.isEmpty()) Error.EmptyQuotes.left() else quotes.right()
             }
-            .catch {
-                emit(Error.DataError(it).left())
+            .retryWhen { cause, _ ->
+                emit(Error.DataError(cause).left())
+                true
             }
     }
 
