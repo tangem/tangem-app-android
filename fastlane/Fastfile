@@ -21,11 +21,17 @@ platform :android do
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
   end
 
-  desc "Runs all the tests"
-  lane :test do
+  desc "Run detekt"
+  lane :detekt do
     FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
     puts File.read("../gradle.properties")
     gradle(task: "detekt")
+  end
+
+  desc "Run tests"
+  lane :test do
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(task: "testDebugUnitTest")
   end
 
