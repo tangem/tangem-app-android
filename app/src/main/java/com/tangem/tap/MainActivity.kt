@@ -87,6 +87,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
@@ -209,6 +210,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var dispatchers: CoroutineDispatcherProvider
 
+    @Inject
+    internal lateinit var routingFeatureToggles: RoutingFeatureToggles
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -255,8 +259,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         installActivityDependencies()
         observeAppThemeModeUpdates()
 
-        setContentView(R.layout.activity_main)
-        installRouting()
+        if (routingFeatureToggles.isNavigationRefactoringEnabled) {
+            TODO(
+                "Will be implemented in [REDACTED_JIRA] " +
+                    "and in [REDACTED_JIRA]",
+            )
+        } else {
+            setContentView(R.layout.activity_main)
+            installRouting()
+        }
+
         initContent()
 
         observeStateUpdates()
