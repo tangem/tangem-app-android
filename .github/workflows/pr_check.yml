@@ -22,7 +22,7 @@ concurrency:
 jobs:
   checks:
     name: ${{ matrix.task }}
-    runs-on: [ self-hosted, ARM64, macOS, active-android ]
+    runs-on: [ self-hosted, ARM64, active-android ]
     if: github.event.pull_request.draft == false
     strategy:
       matrix:
