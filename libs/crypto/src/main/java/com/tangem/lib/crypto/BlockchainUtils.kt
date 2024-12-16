@@ -120,6 +120,17 @@ object BlockchainUtils {
 
     fun getTezosThreshold(): BigDecimal = Blockchain.Tezos.minimalAmount()
 
+    /**
+     * Blockchains not affecting total balance counting on errors
+     */
+    fun isIncludeToBalanceOnError(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return when (blockchain) {
+            Blockchain.Binance, Blockchain.BinanceTestnet -> true
+            else -> false
+        }
+    }
+
     private fun getNetworkStandardName(blockchain: Blockchain): String {
         return when (blockchain) {
             Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ERC20"
