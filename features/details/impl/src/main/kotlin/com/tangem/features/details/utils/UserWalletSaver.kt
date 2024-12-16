@@ -1,5 +1,6 @@
 package com.tangem.features.details.utils
 
+import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.fold
@@ -24,7 +25,11 @@ import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
 import com.tangem.features.details.impl.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
+import kotlin.coroutines.resume
 
 @ComponentScoped
 @Suppress("LongParameterList")
@@ -38,21 +43,31 @@ internal class UserWalletSaver @Inject constructor(
     private val router: Router,
 ) {
 
-    suspend fun scanAndSaveUserWallet() = recover(
-        block = {
-            val response = scanCard() ?: return@recover
-            val userWallet = createUserWallet(response)
+    suspend fun scanAndSaveUserWallet(scope: CoroutineScope) {
+        val response = scanCard(scope)
+        response.fold(
+            ifLeft = {
+                val message = it.message
 
-            saveWallet(userWallet)
-        },
-        recover = { error ->
-            val message = error.message
+                if (!message.isNullOrEmpty()) {
+                    messageSender.send(SnackbarMessage(message))
+                }
+            },
+            ifRight = { scanResponse ->
+                recover(block = {
+                    scanResponse ?: return
+                    val userWallet = createUserWallet(scanResponse)
+                    saveWallet(userWallet)
+                }, recover = {
+                        val message = it.message
 
-            if (!message.isNullOrEmpty()) {
-                messageSender.send(SnackbarMessage(message))
-            }
-        },
-    )
+                        if (!message.isNullOrEmpty()) {
+                            messageSender.send(SnackbarMessage(message))
+                        }
+                    },)
+            },
+        )
+    }
 
     private suspend fun Raise<Error>.saveWallet(userWallet: UserWallet) {
         fold(
@@ -101,36 +116,37 @@ internal class UserWalletSaver @Inject constructor(
         return ensureNotNull(userWallet) { Error.Unknown }
     }
 
-    private suspend fun Raise<Error>.scanCard(): ScanResponse? {
-        var response: ScanResponse? = null
+    private suspend fun scanCard(scope: CoroutineScope) = suspendCancellableCoroutine { continuation ->
+        scope.launch {
+            scanCardProcessor.scan(
+                analyticsSource = AnalyticsParam.ScreensSources.Settings,
+                onWalletNotCreated = {
+                    /* no-op */
+                },
+                disclaimerWillShow = {
+                    continuation.resume(Either.Right(null))
+                    router.pop()
+                },
+                onSuccess = {
+                    continuation.resume(Either.Right(it))
+                },
+                onCancel = {
+                    continuation.resume(Either.Right(null))
+                },
+                onFailure = { tangemError ->
+                    val error = if (!tangemError.silent) {
+                        val message = tangemError.messageResId
+                            ?.let(::resourceReference)
+                            ?: stringReference(tangemError.customMessage)
 
-        scanCardProcessor.scan(
-            analyticsSource = AnalyticsParam.ScreensSources.Settings,
-            onWalletNotCreated = {
-                /* no-op */
-            },
-            disclaimerWillShow = {
-                router.pop()
-            },
-            onSuccess = {
-                response = it
-            },
-            onFailure = { tangemError ->
-                val error = if (!tangemError.silent) {
-                    val message = tangemError.messageResId
-                        ?.let(::resourceReference)
-                        ?: stringReference(tangemError.customMessage)
-
-                    Error.Message(message)
-                } else {
-                    Error.Silent
-                }
-
-                raise(error)
-            },
-        )
-
-        return response
+                        Error.Message(message)
+                    } else {
+                        Error.Silent
+                    }
+                    continuation.resume(Either.Left(error))
+                },
+            )
+        }
     }
 
     sealed class Error {

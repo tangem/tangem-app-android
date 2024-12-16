@@ -170,6 +170,12 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 ),
                 context = context,
             )
+            is AppDialog.WalletAlreadyWasUsedDialog -> WalletAlreadyWasUsedDialog.create(
+                context = context,
+                onOk = state.dialog.onOk,
+                onSupport = state.dialog.onSupportClick,
+                onCancel = state.dialog.onCancel,
+            )
             is AppDialog.RemoveWalletDialog -> SimpleCancelableAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencyTitle),
                 messageRes = state.dialog.messageRes,
