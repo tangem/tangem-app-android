@@ -28,6 +28,11 @@ jobs:
       matrix:
         task: [detekt, test]
     steps:
+      # temporary step, will be deleted soon
+      - name: Change user
+        if: startsWith(runner.os, 'Linux')
+        run: sudo chown -R ubuntu:ubuntu /home/ubuntu/actions-runner/_work/tangem-app-android/tangem-app-android/
+
       - name: Checkout
         uses: actions/checkout@v3
         with:

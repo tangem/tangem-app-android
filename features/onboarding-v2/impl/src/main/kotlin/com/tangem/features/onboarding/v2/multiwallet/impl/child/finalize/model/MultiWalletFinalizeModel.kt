@@ -30,10 +30,7 @@ import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -202,18 +199,24 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private fun finishBackup() {
         modelScope.launch {
             val scanResponse = params.multiWalletState.value.currentScanResponse
-            val userWallet = createUserWallet(scanResponse)
 
-            when (params.parentParams.mode) {
+            val userWalletCreated = createUserWallet(scanResponse)
+
+            val userWallet = when (params.parentParams.mode) {
                 OnboardingMultiWalletComponent.Mode.Onboarding -> {
                     userWalletsListManager.save(
-                        userWallet = userWallet.copy(
+                        userWallet = userWalletCreated.copy(
                             scanResponse = scanResponse.updateScanResponseAfterBackup(),
                         ),
                         canOverride = true,
                     )
+                    userWalletCreated
                 }
                 OnboardingMultiWalletComponent.Mode.AddBackup -> {
+                    val userWallet = userWalletsListManager.userWallets.first()
+                        .firstOrNull { it.scanResponse.primaryCard?.cardId == scanResponse.primaryCard?.cardId }
+                        ?: userWalletCreated
+
                     userWalletsListManager.update(
                         userWalletId = userWallet.walletId,
                         update = { wallet ->
@@ -222,6 +225,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                             )
                         },
                     )
+
+                    userWallet
                 }
             }
 
