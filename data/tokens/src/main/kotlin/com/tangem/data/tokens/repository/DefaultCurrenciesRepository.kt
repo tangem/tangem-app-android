@@ -2,10 +2,7 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.toCoinId
-import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.blockchainsdk.utils.*
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.*
@@ -360,7 +357,9 @@ internal class DefaultCurrenciesRepository(
 
             val storedCoin = storedTokens.tokens
                 .find {
-                    it.networkId == blockchainNetworkId && it.id == coinId && it.derivationPath == derivationPath.value
+                    it.networkId == blockchainNetworkId &&
+                        compareIdWithMigrations(it, coinId) &&
+                        it.derivationPath == derivationPath.value
                 } ?: error("Coin in this network $networkId not found")
 
             val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
@@ -546,6 +545,13 @@ internal class DefaultCurrenciesRepository(
             skipCache = refresh,
             block = { fetchTokens(userWallet) },
         )
+    }
+
+    private fun compareIdWithMigrations(token: UserTokensResponse.Token, coinId: String): Boolean {
+        return when {
+            token.id == OLD_POLYGON_NAME -> NEW_POLYGON_NAME == coinId
+            else -> token.id == coinId
+        }
     }
 
     private suspend fun fetchTokens(userWallet: UserWallet) {
