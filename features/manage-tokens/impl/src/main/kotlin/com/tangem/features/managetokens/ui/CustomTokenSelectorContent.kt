@@ -17,7 +17,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -28,6 +27,7 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.rows.ChainRow
 import com.tangem.core.ui.components.rows.model.ChainRowUM
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.tokens.model.Network
@@ -137,7 +137,7 @@ private fun Header(header: CustomTokenSelectorUM.HeaderUM, modifier: Modifier = 
                         modifier = Modifier
                             .padding(top = TangemTheme.dimens.spacing12)
                             .padding(horizontal = TangemTheme.dimens.spacing12),
-                        text = stringResource(R.string.add_custom_token_choose_network),
+                        text = stringResourceSafe(R.string.add_custom_token_choose_network),
                         style = TangemTheme.typography.subtitle2,
                         color = TangemTheme.colors.text.tertiary,
                     )
@@ -189,13 +189,14 @@ private fun CustomDerivationButton(
                 verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
             ) {
                 Text(
-                    text = stringResource(id = R.string.custom_token_custom_derivation),
+                    text = stringResourceSafe(id = R.string.custom_token_custom_derivation),
                     style = TangemTheme.typography.caption2,
                     color = TangemTheme.colors.text.secondary,
                 )
                 Text(
                     modifier = Modifier.padding(bottom = TangemTheme.dimens.spacing12),
-                    text = enteredDerivationPath ?: stringResource(id = R.string.custom_token_custom_derivation_title),
+                    text = enteredDerivationPath
+                        ?: stringResourceSafe(id = R.string.custom_token_custom_derivation_title),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.primary1,
                 )
