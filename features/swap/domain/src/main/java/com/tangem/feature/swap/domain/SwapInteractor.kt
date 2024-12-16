@@ -67,13 +67,13 @@ interface SwapInteractor {
         fee: TxFee,
     ): SwapTransactionState
 
-    suspend fun updateQuotesStateWithSelectedFee(
-        state: SwapState.QuotesLoadedState,
-        selectedFee: FeeType,
-        fromToken: CryptoCurrencyStatus,
-        amountToSwap: String,
-        reduceBalanceBy: BigDecimal,
-    ): SwapState.QuotesLoadedState
+    // suspend fun updateQuotesStateWithSelectedFee(
+    //     state: SwapState.QuotesLoadedState,
+    //     selectedFee: FeeType,
+    //     fromToken: CryptoCurrencyStatus,
+    //     amountToSwap: String,
+    //     reduceBalanceBy: BigDecimal,
+    // ): SwapState.QuotesLoadedState
 
     /**
      * Returns token in wallet balance
