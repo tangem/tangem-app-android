@@ -10,7 +10,7 @@ import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
-import com.tangem.blockchainsdk.utils.toMigratedCointId
+import com.tangem.blockchainsdk.utils.toMigratedCoinId
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
 import com.tangem.data.common.api.safeApiCall
@@ -555,7 +555,7 @@ internal class DefaultStakingRepository(
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval {
         return when (getIntegrationKey(cryptoCurrency.id)) {
             Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId(),
-            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCointId(),
+            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCoinId(),
             -> StakingApproval.Needed(ETHEREUM_POLYGON_APPROVE_SPENDER)
             else -> StakingApproval.Empty
         }
@@ -644,7 +644,7 @@ internal class DefaultStakingRepository(
             Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
-            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCointId() to ETHEREUM_POLYGON_INTEGRATION_ID,
+            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
             // Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
             Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
             // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
