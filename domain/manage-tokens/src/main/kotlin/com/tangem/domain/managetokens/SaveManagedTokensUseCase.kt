@@ -24,32 +24,32 @@ class SaveManagedTokensUseCase(
         userWalletId: UserWalletId,
         currenciesToAdd: Map<ManagedCryptoCurrency.Token, Set<Network>>,
         currenciesToRemove: Map<ManagedCryptoCurrency.Token, Set<Network>>,
-    ): Either<Throwable, Unit> {
-        return Either.catch {
-            val removingCurrencies = currenciesToRemove.mapToCryptoCurrencies(userWalletId)
-            val addingCurrencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
-            derivationsRepository.derivePublicKeysByNetworks(
-                userWalletId = userWalletId,
-                networks = currenciesToAdd.values.flatten(),
-            )
-            val newCurrenciesList = currenciesRepository
-                .getMultiCurrencyWalletCurrenciesSync(userWalletId)
-                .filterNot(removingCurrencies::contains)
-                .toMutableList()
-                .also { it.addAll(addingCurrencies) }
-            currenciesRepository.saveNewCurrenciesList(userWalletId, newCurrenciesList)
+    ): Either<Throwable, Unit> = Either.catch {
+        val removingCurrencies = currenciesToRemove.mapToCryptoCurrencies(userWalletId)
+        val addingCurrencies = currenciesToAdd.mapToCryptoCurrencies(userWalletId)
 
-            val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
-            removeCurrenciesFromWalletManager(
-                userWalletId = userWalletId,
-                currencies = removingCurrencies.filterNot(existingCurrencies::contains),
-            )
-            refreshUpdatedNetworks(
-                userWalletId = userWalletId,
-                existingCurrencies = existingCurrencies,
-                currenciesToAdd = addingCurrencies,
-            )
-        }
+        derivationsRepository.derivePublicKeysByNetworks(
+            userWalletId = userWalletId,
+            networks = currenciesToAdd.values.flatten(),
+        )
+        val newCurrenciesList = currenciesRepository
+            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+            .filterNot(removingCurrencies::contains)
+            .toMutableList()
+            .also { it.addAll(addingCurrencies) }
+
+        currenciesRepository.saveNewCurrenciesList(userWalletId, newCurrenciesList)
+
+        val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+        removeCurrenciesFromWalletManager(
+            userWalletId = userWalletId,
+            currencies = removingCurrencies.filterNot(existingCurrencies::contains),
+        )
+        refreshUpdatedNetworks(
+            userWalletId = userWalletId,
+            existingCurrencies = existingCurrencies,
+            currenciesToAdd = addingCurrencies,
+        )
     }
 
     private suspend fun removeCurrenciesFromWalletManager(
