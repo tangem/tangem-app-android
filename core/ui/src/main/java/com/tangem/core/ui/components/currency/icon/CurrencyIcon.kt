@@ -39,6 +39,7 @@ fun CurrencyIcon(state: CurrencyIconState, modifier: Modifier = Modifier, should
             is CurrencyIconState.Locked -> LockedIcon(modifier = iconModifier)
             is CurrencyIconState.Empty -> EmptyIcon(resId = state.resId, modifier = iconModifier)
             is CurrencyIconState.CoinIcon,
+            is CurrencyIconState.FiatIcon,
             is CurrencyIconState.CustomTokenIcon,
             is CurrencyIconState.TokenIcon,
             -> {
