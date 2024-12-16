@@ -294,6 +294,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         amount = amount,
                         reduceBalanceBy = reduceBalanceBy,
                         isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
+                        selectedFee = selectedFee,
                     )
                 }
             }
@@ -373,6 +374,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         amount: SwapAmount,
         reduceBalanceBy: BigDecimal,
         isBalanceWithoutFeeEnough: Boolean,
+        selectedFee: FeeType,
     ): Pair<SwapProvider, SwapState> {
         return provider to loadCexQuoteData(
             networkId = networkId,
@@ -383,6 +385,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             isAllowedToSpend = true,
             isBalanceWithoutFeeEnough = isBalanceWithoutFeeEnough,
             provider = provider,
+            selectedFee = selectedFee,
         )
     }
 
@@ -496,45 +499,46 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
     }
 
-    override suspend fun updateQuotesStateWithSelectedFee(
-        state: SwapState.QuotesLoadedState,
-        selectedFee: FeeType,
-        fromToken: CryptoCurrencyStatus,
-        amountToSwap: String,
-        reduceBalanceBy: BigDecimal,
-    ): SwapState.QuotesLoadedState {
-        val amountDecimal = toBigDecimalOrNull(amountToSwap)
-        if (amountDecimal == null || amountDecimal.signum() == 0) {
-            return state
-        }
-        val amount = SwapAmount(amountDecimal, fromToken.currency.decimals)
-        val includeFeeInAmount = getIncludeFeeInAmount(
-            networkId = fromToken.currency.network.backendId,
-            txFee = state.txFee,
-            amount = amount,
-            reduceBalanceBy = reduceBalanceBy,
-            fromToken = fromToken.currency,
-        )
-        val fee = when (val txFee = state.txFee) {
-            TxFeeState.Empty -> BigDecimal.ZERO
-            is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeIncludeOtherNativeFee
-            is TxFeeState.SingleFeeState -> txFee.fee.feeIncludeOtherNativeFee
-        }
-        val feeState = getFeeState(
-            fee = fee,
-            spendAmount = amount,
-            networkId = fromToken.currency.network.backendId,
-            fromTokenStatus = fromToken,
-        )
-        return state.copy(
-            permissionState = PermissionDataState.Empty,
-            preparedSwapConfigState = state.preparedSwapConfigState.copy(
-                feeState = feeState,
-                isBalanceEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
-                includeFeeInAmount = includeFeeInAmount,
-            ),
-        )
-    }
+    // override suspend fun updateQuotesStateWithSelectedFee(
+    //     state: SwapState.QuotesLoadedState,
+    //     selectedFee: FeeType,
+    //     fromToken: CryptoCurrencyStatus,
+    //     amountToSwap: String,
+    //     reduceBalanceBy: BigDecimal,
+    // ): SwapState.QuotesLoadedState {
+    //     val amountDecimal = toBigDecimalOrNull(amountToSwap)
+    //     if (amountDecimal == null || amountDecimal.signum() == 0) {
+    //         return state
+    //     }
+    //     val amount = SwapAmount(amountDecimal, fromToken.currency.decimals)
+    //     val includeFeeInAmount = getIncludeFeeInAmount(
+    //         networkId = fromToken.currency.network.backendId,
+    //         txFee = state.txFee,
+    //         amount = amount,
+    //         reduceBalanceBy = reduceBalanceBy,
+    //         fromToken = fromToken.currency,
+    //         selectedFee = selectedFee,
+    //     )
+    //     val fee = when (val txFee = state.txFee) {
+    //         TxFeeState.Empty -> BigDecimal.ZERO
+    //         is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeIncludeOtherNativeFee
+    //         is TxFeeState.SingleFeeState -> txFee.fee.feeIncludeOtherNativeFee
+    //     }
+    //     val feeState = getFeeState(
+    //         fee = fee,
+    //         spendAmount = amount,
+    //         networkId = fromToken.currency.network.backendId,
+    //         fromTokenStatus = fromToken,
+    //     )
+    //     return state.copy(
+    //         permissionState = PermissionDataState.Empty,
+    //         preparedSwapConfigState = state.preparedSwapConfigState.copy(
+    //             feeState = feeState,
+    //             isBalanceEnough = includeFeeInAmount !is IncludeFeeInAmount.BalanceNotEnough,
+    //             includeFeeInAmount = includeFeeInAmount,
+    //         ),
+    //     )
+    // }
 
     private suspend fun onSwapDex(
         provider: SwapProvider,
@@ -1039,6 +1043,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         provider: SwapProvider,
         isAllowedToSpend: Boolean,
         isBalanceWithoutFeeEnough: Boolean,
+        selectedFee: FeeType,
     ): SwapState {
         val fromToken = fromTokenStatus.currency
         val toToken = toTokenStatus.currency
@@ -1061,6 +1066,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 amount = amount,
                 reduceBalanceBy = reduceBalanceBy,
                 fromToken = fromToken,
+                selectedFee = selectedFee,
             )
             val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmount.Included) {
                 includeFeeInAmount.amountSubtractFee
@@ -1214,10 +1220,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         amount: SwapAmount,
         reduceBalanceBy: BigDecimal,
         fromToken: CryptoCurrency,
+        selectedFee: FeeType,
     ): IncludeFeeInAmount {
         val feeValue = when (txFee) {
             TxFeeState.Empty -> BigDecimal.ZERO
-            is TxFeeState.MultipleFeeState -> txFee.priorityFee.feeIncludeOtherNativeFee
+            is TxFeeState.MultipleFeeState -> txFee.getFeeByType(selectedFee).feeIncludeOtherNativeFee
             is TxFeeState.SingleFeeState -> txFee.fee.feeIncludeOtherNativeFee
         }
         val feePaidCurrency = getFeePaidCurrency(
@@ -1506,20 +1513,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amount = amount,
             userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
-        ).mapFeeToForceSingleFeeIfNeeded(cryptoCurrency)
-    }
-
-    private fun Either<GetFeeError, TransactionFee>.mapFeeToForceSingleFeeIfNeeded(
-        cryptoCurrency: CryptoCurrency,
-    ): Either<GetFeeError, TransactionFee> {
-        return this.map {
-            val blockchain = Blockchain.fromNetworkId(cryptoCurrency.network.backendId)
-            if (it is TransactionFee.Choosable && forceSingleFeeBlockchains.contains(blockchain)) {
-                TransactionFee.Single(normal = it.normal)
-            } else {
-                it
-            }
-        }
+        )
     }
 
     @Suppress("LongParameterList", "LongMethod")
@@ -2133,17 +2127,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         private val minDemoFee = "0.0001".toBigDecimal()
         private val normalDemoFee = "0.0002".toBigDecimal()
         private val priorityDemoFee = "0.0003".toBigDecimal()
-
-        private val forceSingleFeeBlockchains = listOf(
-            Bitcoin, BitcoinTestnet,
-            BitcoinCash, BitcoinCashTestnet,
-            Litecoin,
-            Dogecoin,
-            Dash,
-            Kaspa,
-            Ravencoin, RavencoinTestnet,
-            Ducatus,
-        )
     }
 
     @AssistedFactory
