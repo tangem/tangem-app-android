@@ -1,6 +1,7 @@
 package com.tangem.domain.feedback.utils
 
 import android.content.res.Resources
+import com.tangem.core.res.getStringSafe
 import com.tangem.domain.feedback.R
 import com.tangem.domain.feedback.models.FeedbackEmailType
 
@@ -32,6 +33,6 @@ internal class EmailSubjectResolver(private val resources: Resources) {
             is FeedbackEmailType.PreActivatedWallet -> R.string.feedback_subject_pre_activated_wallet
             is FeedbackEmailType.CurrencyDescriptionError -> R.string.feedback_token_description_error
         }
-            .let(resources::getString)
+            .let(resources::getStringSafe)
     }
 }
