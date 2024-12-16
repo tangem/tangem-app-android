@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @Suppress("UnusedPrivateMember")
-class DefaultOnboardingVisaComponent @AssistedInject constructor(
+internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: OnboardingVisaComponent.Params,
 ) : OnboardingVisaComponent, AppComponentContext by appComponentContext {
