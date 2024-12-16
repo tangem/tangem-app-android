@@ -30,6 +30,13 @@
         </intent>
     </queries>
 
+    <queries>
+        <intent>
+            <action android:name=
+                "android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
+
     <application
         android:name="com.tangem.tap.TangemHiltApplication"
         android:allowBackup="false"
@@ -53,7 +60,7 @@
             android:name="com.tangem.tap.MainActivity"
             android:configChanges="uiMode"
             android:exported="true"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme"
             android:windowSoftInputMode="adjustResize">
