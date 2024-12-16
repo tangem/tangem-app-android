@@ -74,7 +74,7 @@ internal class OnrampStateFactory(
         )
     }
 
-    private fun getErrorState(errorCode: String? = null): OnrampMainComponentUM {
+    fun getErrorState(errorCode: String? = null): OnrampMainComponentUM {
         val state = currentStateProvider()
         val endButton = state.topBarConfig.endButtonUM.copy(enabled = true)
 
@@ -84,6 +84,7 @@ internal class OnrampStateFactory(
                 buyButtonConfig = state.buyButtonConfig.copy(enabled = false),
                 amountBlockState = state.amountBlockState.copy(
                     amountFieldModel = state.amountBlockState.amountFieldModel.copy(isError = true),
+                    secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(TextReference.EMPTY),
                 ),
                 providerBlockState = OnrampProviderBlockUM.Empty,
                 errorNotification = NotificationUM.Warning.OnrampErrorNotification(
