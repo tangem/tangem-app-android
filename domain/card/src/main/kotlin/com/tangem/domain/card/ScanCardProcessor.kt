@@ -18,6 +18,7 @@ interface ScanCardProcessor {
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
         onWalletNotCreated: suspend () -> Unit = {},
         disclaimerWillShow: () -> Unit = {},
+        onCancel: suspend () -> Unit = {},
         onFailure: suspend (error: TangemError) -> Unit = {},
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit = {},
     )

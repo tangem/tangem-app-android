@@ -18,6 +18,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.core.ui.components.TextShimmer
@@ -30,7 +31,6 @@ import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampAmountBlockUM
 import com.tangem.features.onramp.main.entity.OnrampAmountSecondaryFieldUM
 import com.tangem.features.onramp.main.entity.OnrampCurrencyUM
-import kotlinx.coroutines.delay
 
 @Composable
 internal fun OnrampAmountContent(state: OnrampAmountBlockUM, modifier: Modifier = Modifier) {
@@ -41,10 +41,7 @@ internal fun OnrampAmountContent(state: OnrampAmountBlockUM, modifier: Modifier 
             .padding(vertical = TangemTheme.dimens.spacing28),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        OnrampCurrencyIcon(
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing24),
-            currencyUM = state.currencyUM,
-        )
+        OnrampCurrencyIcon(currencyUM = state.currencyUM)
         OnrampAmountField(amountField = state.amountFieldModel)
         OnrampAmountSecondary(state = state.secondaryFieldModel)
     }
@@ -85,7 +82,6 @@ private fun OnrampAmountField(amountField: AmountFieldModel) {
     )
 
     LaunchedEffect(key1 = Unit) {
-        delay(timeMillis = 200)
         requester.requestFocus()
     }
 }
@@ -126,7 +122,10 @@ private fun OnrampAmountSecondary(state: OnrampAmountSecondaryFieldUM) {
 @Composable
 private fun OnrampCurrencyIcon(currencyUM: OnrampCurrencyUM, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.clickable(onClick = currencyUM.onClick),
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = currencyUM.onClick)
+            .padding(start = TangemTheme.dimens.spacing24),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
