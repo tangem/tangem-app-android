@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui
 
 import androidx.compose.animation.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
@@ -14,7 +15,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,49 +55,52 @@ internal fun MultiWalletSeedPhraseImport(state: MultiWalletSeedPhraseUM.Import, 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
+                .imePadding(),
         ) {
-            Text(
-                text = stringResource(id = R.string.onboarding_seed_import_message),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(start = 36.dp, end = 36.dp, top = 24.dp, bottom = 16.dp)
-                    .fillMaxWidth(),
-            )
-
-            PhraseBlock(
-                state = state,
-                modifier = Modifier.padding(horizontal = 16.dp),
-            )
-
-            OutlineTextFieldWithIcon(
-                modifier = modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth(),
-                value = state.passPhrase,
-                onValueChange = state.passPhraseChange,
-                iconResId = R.drawable.ic_information_24,
-                iconColor = TangemTheme.colors.icon.informative,
-                label = stringResource(id = R.string.common_passphrase),
-                placeholder = stringResource(id = R.string.send_optional_field),
-                onIconClick = state.onPassphraseInfoClick,
-            )
-
-            Box(Modifier.weight(1f)) {
-                PrimaryButtonIconEnd(
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .weight(1f),
+            ) {
+                Text(
+                    text = stringResourceSafe(id = R.string.onboarding_seed_import_message),
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.secondary,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(16.dp)
+                        .padding(start = 36.dp, end = 36.dp, top = 24.dp, bottom = 16.dp)
                         .fillMaxWidth(),
-                    text = stringResource(id = R.string.common_import),
-                    iconResId = R.drawable.ic_tangem_24,
-                    enabled = state.createWalletEnabled,
-                    showProgress = state.createWalletProgress,
-                    onClick = state.createWalletClick,
+                )
+
+                PhraseBlock(
+                    state = state,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+
+                OutlineTextFieldWithIcon(
+                    modifier = modifier
+                        .padding(horizontal = 16.dp)
+                        .fillMaxWidth(),
+                    value = state.passPhrase,
+                    onValueChange = state.passPhraseChange,
+                    iconResId = R.drawable.ic_information_24,
+                    iconColor = TangemTheme.colors.icon.informative,
+                    label = stringResourceSafe(id = R.string.common_passphrase),
+                    placeholder = stringResourceSafe(id = R.string.send_optional_field),
+                    onIconClick = state.onPassphraseInfoClick,
                 )
             }
+
+            PrimaryButtonIconEnd(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                text = stringResourceSafe(id = R.string.common_import),
+                iconResId = R.drawable.ic_tangem_24,
+                enabled = state.createWalletEnabled,
+                showProgress = state.createWalletProgress,
+                onClick = state.createWalletClick,
+            )
         }
 
         val keyboard by keyboardAsState()

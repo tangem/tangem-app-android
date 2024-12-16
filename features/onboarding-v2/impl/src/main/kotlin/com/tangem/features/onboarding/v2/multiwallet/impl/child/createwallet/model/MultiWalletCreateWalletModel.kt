@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -11,12 +12,17 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.ui.state.MultiWalletCreateWalletUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
-import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
+import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.Step
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -27,6 +33,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
+@Stable
 @ComponentScoped
 internal class MultiWalletCreateWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -36,6 +43,8 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val cardRepository: CardRepository,
     private val analyticsHandler: AnalyticsEventHandler,
+    private val generateWalletNameUseCase: GenerateWalletNameUseCase,
+    private val saveWalletUseCase: SaveWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -61,7 +70,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
             showOtherOptionsButton = params.parentParams.withSeedPhraseFlow,
             onOtherOptionsClick = {
                 modelScope.launch {
-                    onDone.emit(OnboardingMultiWalletState.Step.SeedPhrase)
+                    onDone.emit(Step.SeedPhrase)
                 }
             },
             dialog = null,
@@ -69,7 +78,7 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
     )
 
     val uiState: StateFlow<MultiWalletCreateWalletUM> = _uiState
-    val onDone = MutableSharedFlow<OnboardingMultiWalletState.Step>()
+    val onDone = MutableSharedFlow<Step>()
 
     init {
         analyticsHandler.send(OnboardingEvent.CreateWallet.ScreenOpened)
@@ -96,13 +105,14 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
 
                     cardRepository.startCardActivation(cardId = result.data.card.cardId)
 
-                    if (params.parentParams.withSeedPhraseFlow) {
-                        onDone.emit(OnboardingMultiWalletState.Step.AddBackupDevice)
-                    } else {
-                        onDone.emit(OnboardingMultiWalletState.Step.ChooseBackupOption)
-                    }
-
                     analyticsHandler.send(OnboardingEvent.CreateWallet.WalletCreatedSuccessfully())
+
+                    val cardDoesNotSupportBackup = result.data.card.settings.isBackupAllowed.not()
+                    when {
+                        cardDoesNotSupportBackup -> createWalletAndNavigateBackWithDone()
+                        params.parentParams.withSeedPhraseFlow -> onDone.emit(Step.AddBackupDevice)
+                        else -> onDone.emit(Step.ChooseBackupOption)
+                    }
                 }
 
                 is CompletionResult.Failure -> {
@@ -113,6 +123,32 @@ internal class MultiWalletCreateWalletModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun createWalletAndNavigateBackWithDone() {
+        modelScope.launch {
+            val scanResponse = params.multiWalletState.value.currentScanResponse
+
+            val userWallet = createUserWallet(scanResponse)
+            saveWalletUseCase(userWallet, canOverride = true)
+                .onRight {
+                    cardRepository.finishCardActivation(scanResponse.card.cardId)
+
+                    // save user wallet for manage tokens screen
+                    params.multiWalletState.update {
+                        it.copy(resultUserWallet = userWallet)
+                    }
+
+                    onDone.emit(Step.Done)
+                }
+        }
+    }
+
+    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
+        return requireNotNull(
+            value = UserWalletBuilder(scanResponse, generateWalletNameUseCase).build(),
+            lazyMessage = { "User wallet not created" },
+        )
     }
 
     private fun handleActivationError() {

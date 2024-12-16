@@ -3,7 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.mode
 import android.net.Uri
 import com.tangem.utils.SupportedLanguages
 import java.util.Locale
-
+// [REDACTED_TODO_COMMENT]
 internal fun seedPhraseLearnMoreUrl(): String {
     val language = Locale.getDefault().language
 

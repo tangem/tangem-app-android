@@ -4,10 +4,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.presentation.wallet2.model.CheckSeedPhraseState
 import com.tangem.feature.onboarding.presentation.wallet2.ui.components.Description
@@ -29,26 +29,6 @@ fun CheckSeedPhraseScreen(state: CheckSeedPhraseState, modifier: Modifier = Modi
                 .weight(1f)
                 .fillMaxWidth(),
         ) {
-            /**
-* [REDACTED_TODO_COMMENT]
-
-             @kozarezvlad kozarezvlad 5 days ago
-             Кажется LazyColumn тут не нужен, ведь всего 2 элемента и они статичны без динамического наполнения, можно просто Column, он полегче в отрисовке
-
-             Member
-             Author
-             @gbixahue gbixahue 4 days ago
-             LazyColumn дает возможность списку скролиться, для удобного ввода, когда открывается клавиатура
-
-             Member
-             @MamaLemon MamaLemon 4 days ago
-             В принципе можно заюзать verticalScroll() у модифаера
-
-             Member
-             Author
-             @gbixahue gbixahue 2 days ago
-             C verticalScroll не работает так, как нужно
-             */
             item {
                 OnboardingDescriptionBlock(
                     modifier = Modifier
@@ -78,7 +58,7 @@ fun CheckSeedPhraseScreen(state: CheckSeedPhraseState, modifier: Modifier = Modi
                 PrimaryButtonIconEnd(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
+                    text = stringResourceSafe(id = R.string.onboarding_create_wallet_button_create_wallet),
                     iconResId = R.drawable.ic_tangem_24,
                     enabled = state.buttonCreateWallet.enabled,
                     showProgress = state.buttonCreateWallet.showProgress,

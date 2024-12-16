@@ -30,7 +30,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -48,6 +47,7 @@ import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -252,7 +252,7 @@ private fun ManageWalletContextMenu(
 @Composable
 private fun MenuItem(@StringRes textResId: Int, imageVector: ImageVector, onClick: () -> Unit) {
     DropdownMenuItem(
-        text = { Text(text = stringResource(id = textResId), style = TangemTheme.typography.subtitle2) },
+        text = { Text(text = stringResourceSafe(id = textResId), style = TangemTheme.typography.subtitle2) },
         modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
         trailingIcon = { Icon(imageVector = imageVector, contentDescription = null) },
         onClick = onClick,
