@@ -2,6 +2,7 @@ package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.tap.common.extensions.inject
@@ -10,9 +11,11 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.utils.converter.TwoWayConverter
 
-internal class CryptoCurrencyConverter : TwoWayConverter<Currency, CryptoCurrency> {
+internal class CryptoCurrencyConverter(
+    private val excludedBlockchains: ExcludedBlockchains,
+) : TwoWayConverter<Currency, CryptoCurrency> {
 
-    private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory() }
+    private val cryptoCurrencyFactory by lazy { CryptoCurrencyFactory(excludedBlockchains) }
 
     override fun convert(value: Currency): CryptoCurrency {
         return when (value) {
