@@ -51,7 +51,7 @@ internal fun OnboardingMultiWallet(
                 modifier = Modifier
                     .padding(horizontal = 34.dp)
                     .padding(top = 20.dp)
-                    .weight(.36f)
+                    .weight(.4f)
                     .fillMaxWidth(),
                 state = artworksState,
             )
