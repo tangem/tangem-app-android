@@ -9,6 +9,7 @@ import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.ParamsInterceptor
@@ -17,7 +18,8 @@ import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
-import com.tangem.core.featuretoggle.manager.FeatureTogglesManager
+import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -36,6 +38,7 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -57,9 +60,11 @@ import com.tangem.tap.domain.tasks.product.DerivationsFinder
 import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
@@ -87,6 +92,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val featureTogglesManager: FeatureTogglesManager
         get() = entryPoint.getFeatureTogglesManager()
+
+    private val excludedBlockchainsManager: ExcludedBlockchainsManager
+        get() = entryPoint.getExcludedBlockchainsManager()
 
     private val networkConnectionManager: NetworkConnectionManager
         get() = entryPoint.getNetworkConnectionManager()
@@ -180,6 +188,15 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles
         get() = entryPoint.getOnboardingV2FeatureToggles()
+
+    private val onboardingRepository: OnboardingRepository
+        get() = entryPoint.getOnboardingRepository()
+
+    private val dispatchers: CoroutineDispatcherProvider
+        get() = entryPoint.getCoroutineDispatcherProvider()
+
+    private val excludedBlockchains: ExcludedBlockchains
+        get() = entryPoint.getExcludedBlockchains()
     // endregion
 
     override fun onCreate() {
@@ -200,9 +217,11 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         // TODO: Try to performance and user experience.
         //  [REDACTED_JIRA]
         runBlocking {
-            featureTogglesManager.init()
-
-            initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
+            awaitAll(
+                async { featureTogglesManager.init() },
+                async { excludedBlockchainsManager.init() },
+                async { initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize()) },
+            )
         }
 
         loadNativeLibraries()
@@ -216,7 +235,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
         derivationsFinder = DerivationsFinder(
             appPreferencesStore = appPreferencesStore,
-            dispatchers = AppCoroutineDispatcherProvider(),
+            dispatchers = dispatchers,
         )
         appStateHolder.mainStore = store
 
@@ -258,6 +277,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                    onboardingRepository = onboardingRepository,
+                    excludedBlockchains = excludedBlockchains,
                     appPreferencesStore = appPreferencesStore,
                 ),
             ),
