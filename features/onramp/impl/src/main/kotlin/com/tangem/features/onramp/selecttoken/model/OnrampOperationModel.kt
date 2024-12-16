@@ -23,6 +23,7 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.OnrampOperationComponent.Params
 import com.tangem.features.onramp.selecttoken.entity.OnrampOperationUM
@@ -44,6 +45,7 @@ internal class OnrampOperationModel @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : Model() {
 
     val state: StateFlow<OnrampOperationUM> get() = _state
@@ -72,7 +74,7 @@ internal class OnrampOperationModel @Inject constructor(
             },
         )
 
-        if (params is Params.Sell) {
+        if (params is Params.Sell || !onrampFeatureToggles.isFeatureEnabled) {
             showErrorIfDemoModeOrElse { selectToken(status) }
         } else {
             selectToken(status)
