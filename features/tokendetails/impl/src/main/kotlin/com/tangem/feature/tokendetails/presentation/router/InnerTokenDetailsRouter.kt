@@ -19,4 +19,6 @@ internal interface InnerTokenDetailsRouter : TokenDetailsRouter {
     fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency)
 
     fun openStaking(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, yield: Yield)
+
+    fun openOnrampSuccess(externalTxId: String)
 }
