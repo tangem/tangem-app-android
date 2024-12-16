@@ -84,15 +84,6 @@ internal object OnrampDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetOnrampCurrencyUseCase(
-        onrampRepository: OnrampRepository,
-        onrampErrorResolver: OnrampErrorResolver,
-    ): GetOnrampCurrencyUseCase {
-        return GetOnrampCurrencyUseCase(onrampRepository, onrampErrorResolver)
-    }
-
-    @Provides
-    @Singleton
     fun provideGetOnrampTransactionsUseCase(
         onrampTransactionRepository: OnrampTransactionRepository,
         onrampErrorResolver: OnrampErrorResolver,
@@ -140,9 +131,10 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideGetOnrampPaymentMethodsUseCase(
         onrampRepository: OnrampRepository,
+        settingsRepository: SettingsRepository,
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampPaymentMethodsUseCase {
-        return GetOnrampPaymentMethodsUseCase(onrampRepository, onrampErrorResolver)
+        return GetOnrampPaymentMethodsUseCase(onrampRepository, settingsRepository, onrampErrorResolver)
     }
 
     @Provides
@@ -218,5 +210,23 @@ internal object OnrampDomainModule {
         onrampErrorResolver: OnrampErrorResolver,
     ): GetOnrampRedirectUrlUseCase {
         return GetOnrampRedirectUrlUseCase(onrampRepository, transactionRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchOnrampCurrenciesUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): FetchOnrampCurrenciesUseCase {
+        return FetchOnrampCurrenciesUseCase(onrampRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFetchOnrampCountriesUseCase(
+        onrampRepository: OnrampRepository,
+        onrampErrorResolver: OnrampErrorResolver,
+    ): FetchOnrampCountriesUseCase {
+        return FetchOnrampCountriesUseCase(onrampRepository, onrampErrorResolver)
     }
 }
