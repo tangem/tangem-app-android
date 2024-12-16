@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-interface QrScanningClickIntents {
+internal interface QrScanningClickIntents {
 
-    val launchGallery: SharedFlow<GalleryRequest>
+    val launchGallery: SharedFlow<Unit>
 
     fun onBackClick()
 
@@ -21,11 +21,6 @@ interface QrScanningClickIntents {
 
     fun onGalleryClicked()
 }
-
-@JvmInline
-value class GalleryRequest(
-    val imageFilter: String,
-)
 
 @ViewModelScoped
 internal class QrScanningClickIntentsImplementor @Inject constructor(
@@ -36,7 +31,7 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
 
     private var isScanned = false
 
-    override val launchGallery = MutableSharedFlow<GalleryRequest>(
+    override val launchGallery = MutableSharedFlow<Unit>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_LATEST,
     )
@@ -56,13 +51,9 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
     }
 
     override fun onGalleryClicked() {
-        launchGallery.tryEmit(GalleryRequest(imageFilter = GALLERY_IMAGE_FILTER))
+        launchGallery.tryEmit(Unit)
         if (stateHolder.value.bottomSheetConfig != null) {
             stateHolder.update(DismissBottomSheetTransformer())
         }
-    }
-
-    companion object {
-        private const val GALLERY_IMAGE_FILTER = "image/*"
     }
 }
