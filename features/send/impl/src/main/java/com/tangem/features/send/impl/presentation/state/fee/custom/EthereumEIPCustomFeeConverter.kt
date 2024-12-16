@@ -61,8 +61,14 @@ internal class EthereumEIPCustomFeeConverter(
         value: ImmutableList<SendTextField.CustomFee>,
     ): Fee.Ethereum.EIP1559 {
         val feeAmount = value[FEE_AMOUNT].value.parseToBigDecimal(value[FEE_AMOUNT].decimals)
-        val maxFee = value[MAX_FEE].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
-        val priorityFee = value[PRIORITY_FEE].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
+        val maxFeeDecimals = value[MAX_FEE].decimals
+        val maxFee = value[MAX_FEE].value.parseToBigDecimal(maxFeeDecimals)
+            .movePointRight(maxFeeDecimals)
+            .toBigInteger()
+        val priorityFeeDecimals = value[PRIORITY_FEE].decimals
+        val priorityFee = value[PRIORITY_FEE].value.parseToBigDecimal(priorityFeeDecimals)
+            .movePointRight(priorityFeeDecimals)
+            .toBigInteger()
         val gasLimit = value[GAS_LIMIT].value.parseToBigDecimal(GAS_DECIMALS).toBigInteger()
 
         return normalFee.copy(
