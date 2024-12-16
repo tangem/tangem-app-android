@@ -157,7 +157,11 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private suspend fun updatePairsAndQuotes() {
-        fetchPairsUseCase.invoke(params.cryptoCurrency).onLeft(::handleOnrampError)
+        _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
+        fetchPairsUseCase.invoke(params.cryptoCurrency).fold(
+            ifLeft = ::handleOnrampError,
+            ifRight = { _state.update { amountStateFactory.getAmountSecondaryResetState() } },
+        )
         startLoadingQuotes()
     }
 
@@ -195,39 +199,7 @@ internal class OnrampMainComponentModel @Inject constructor(
             .onEach { maybeQuotes ->
                 maybeQuotes.fold(
                     ifLeft = ::handleOnrampError,
-                    ifRight = { quotes ->
-                        quotes.filterIsInstance<OnrampQuote.Error>().forEach { errorState ->
-                            sendOnrampErrorAnalytic(errorState.error)
-                        }
-                        val quote = quotes.firstOrNull() ?: return@onEach
-
-                        val bestProvider = quote as? OnrampQuote.Data
-                        val isMultipleQuotes = !quotes.isSingleItem()
-                        val isOtherQuotesHasData = quotes
-                            .filter { it.paymentMethod == quote.paymentMethod }
-                            .filterNot { it == bestProvider }
-                            .any { it is OnrampQuote.Data }
-                        val hasBestProvider = isMultipleQuotes && isOtherQuotesHasData
-
-                        val isBestProvider = quote == bestProvider && hasBestProvider
-
-                        if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
-                            lastAmount.value = quote.fromAmount.value
-                            analyticsEventHandler.send(
-                                OnrampAnalyticsEvent.ProviderCalculated(
-                                    providerName = quote.provider.info.name,
-                                    tokenSymbol = params.cryptoCurrency.symbol,
-                                    paymentMethod = quote.paymentMethod.name,
-                                ),
-                            )
-                        }
-                        _state.update {
-                            amountStateFactory.getAmountSecondaryUpdatedState(
-                                quote = quote,
-                                isBestRate = isBestProvider,
-                            )
-                        }
-                    },
+                    ifRight = ::handleQuoteResult,
                 )
             }
             .launchIn(modelScope)
@@ -294,6 +266,46 @@ internal class OnrampMainComponentModel @Inject constructor(
         modelScope.launch { clearOnrampCacheUseCase.invoke() }
         quotesTaskScheduler.cancelTask()
         super.onDestroy()
+    }
+
+    private fun handleQuoteResult(quotes: List<OnrampQuote>) {
+        quotes.filterIsInstance<OnrampQuote.Error>().forEach { errorState ->
+            sendOnrampErrorAnalytic(errorState.error)
+        }
+
+        val quote = quotes.firstOrNull()
+
+        if (quote == null) {
+            _state.update { stateFactory.getErrorState() }
+            return
+        }
+
+        val bestProvider = quote as? OnrampQuote.Data
+        val isMultipleQuotes = !quotes.isSingleItem()
+        val isOtherQuotesHasData = quotes
+            .filter { it.paymentMethod == quote.paymentMethod }
+            .filterNot { it == bestProvider }
+            .any { it is OnrampQuote.Data }
+        val hasBestProvider = isMultipleQuotes && isOtherQuotesHasData
+
+        val isBestProvider = quote == bestProvider && hasBestProvider
+
+        if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
+            lastAmount.value = quote.fromAmount.value
+            analyticsEventHandler.send(
+                OnrampAnalyticsEvent.ProviderCalculated(
+                    providerName = quote.provider.info.name,
+                    tokenSymbol = params.cryptoCurrency.symbol,
+                    paymentMethod = quote.paymentMethod.name,
+                ),
+            )
+        }
+        _state.update {
+            amountStateFactory.getAmountSecondaryUpdatedState(
+                quote = quote,
+                isBestRate = isBestProvider,
+            )
+        }
     }
 
     private fun showDemoWarning() {
