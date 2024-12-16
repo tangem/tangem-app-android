@@ -1,7 +1,7 @@
 package com.tangem.datasource.di.exchangeservice
 
-import com.tangem.datasource.exchangeservice.swap.DefaultSwapServiceLoader
-import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
+import com.tangem.datasource.exchangeservice.swap.DefaultExpressServiceLoader
+import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -14,5 +14,5 @@ internal interface ExchangeServiceLoaderModule {
 
     @Binds
     @Singleton
-    fun bindSwapServiceLoader(defaultSwapServiceLoader: DefaultSwapServiceLoader): SwapServiceLoader
+    fun bindExpressServiceLoader(defaultExpressServiceLoader: DefaultExpressServiceLoader): ExpressServiceLoader
 }

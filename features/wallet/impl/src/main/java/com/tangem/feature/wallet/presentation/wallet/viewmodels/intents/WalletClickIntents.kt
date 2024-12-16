@@ -18,6 +18,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefreshStateTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
@@ -46,6 +47,7 @@ internal class WalletClickIntents @Inject constructor(
     private val neverToShowWalletsScrollPreview: NeverToShowWalletsScrollPreview,
     private val rampStateManager: RampStateManager,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -120,10 +122,13 @@ internal class WalletClickIntents @Inject constructor(
                 fetchTokenListUseCase(userWalletId = userWallet.walletId, mode = RefreshMode.FULL)
             }
 
-            listOf(
-                async { rampStateManager.fetchBuyServiceData() },
-                async { rampStateManager.fetchSellServiceData() },
-            )
+            buildList {
+                if (!onrampFeatureToggles.isFeatureEnabled) {
+                    async { rampStateManager.fetchBuyServiceData() }.let(::add)
+                }
+
+                async { rampStateManager.fetchSellServiceData() }.let(::add)
+            }
                 .awaitAll()
 
             maybeFetchResult.onLeft {

@@ -31,34 +31,23 @@ class GetOnrampProviderWithQuoteUseCase(
     private fun List<OnrampQuote>.quoteWithProvider(
         provider: OnrampProvider,
         selectedPaymentMethod: OnrampPaymentMethod,
-    ): OnrampProviderWithQuote? {
-        val quoteData = this.filterIsInstance<OnrampQuote.Data>()
-        val matchedPaymentMethodQuote = quoteData.firstOrNull { it.paymentMethod == selectedPaymentMethod }
-        val paymentMethodNotSupported = quoteData.filterNot { it.paymentMethod == selectedPaymentMethod }
-        val amountError =
-            filterIsInstance<OnrampQuote.Error>().firstOrNull { it.paymentMethod == selectedPaymentMethod }
-        return when {
-            matchedPaymentMethodQuote != null -> {
-                OnrampProviderWithQuote.Data(
-                    provider = matchedPaymentMethodQuote.provider,
-                    paymentMethod = matchedPaymentMethodQuote.paymentMethod,
-                    toAmount = matchedPaymentMethodQuote.toAmount,
-                    fromAmount = matchedPaymentMethodQuote.fromAmount,
-                )
-            }
-            paymentMethodNotSupported.isNotEmpty() -> {
-                Unavailable.NotSupportedPaymentMethod(
-                    provider = provider,
-                    availablePaymentMethods = paymentMethodNotSupported.map(OnrampQuote.Data::paymentMethod),
-                )
-            }
-            amountError != null -> {
-                Unavailable.Error(
-                    amountError.provider,
-                    amountError,
-                )
-            }
-            else -> null
+    ): OnrampProviderWithQuote {
+        val matchedQuote = firstOrNull { it.paymentMethod == selectedPaymentMethod }
+        return when (matchedQuote) {
+            is OnrampQuote.Data -> OnrampProviderWithQuote.Data(
+                provider = matchedQuote.provider,
+                paymentMethod = matchedQuote.paymentMethod,
+                toAmount = matchedQuote.toAmount,
+                fromAmount = matchedQuote.fromAmount,
+            )
+            is OnrampQuote.Error -> Unavailable.Error(
+                provider = matchedQuote.provider,
+                quoteError = matchedQuote,
+            )
+            null -> Unavailable.NotSupportedPaymentMethod(
+                provider = provider,
+                availablePaymentMethods = provider.paymentMethods,
+            )
         }
     }
 }

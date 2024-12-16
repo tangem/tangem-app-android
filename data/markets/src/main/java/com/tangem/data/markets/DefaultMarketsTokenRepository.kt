@@ -304,10 +304,11 @@ internal class DefaultMarketsTokenRepository(
     }
 
     private fun createListErrorEvent(error: ApiResponseError): MarketsDataAnalyticsEvent.List.Error {
-        return createErrorEvent(error) { errorType, errorCode ->
+        return createErrorEvent(error) { errorType, errorCode, errorMessage ->
             MarketsDataAnalyticsEvent.List.Error(
                 errorType = errorType,
                 errorCode = errorCode,
+                errorMessage = errorMessage,
             )
         }
     }
@@ -317,10 +318,11 @@ internal class DefaultMarketsTokenRepository(
         request: MarketsDataAnalyticsEvent.Details.Error.Request,
         tokenSymbol: String,
     ): MarketsDataAnalyticsEvent.Details.Error {
-        return createErrorEvent(error) { errorType, errorCode ->
+        return createErrorEvent(error) { errorType, errorCode, errorMessage ->
             MarketsDataAnalyticsEvent.Details.Error(
                 errorType = errorType,
                 errorCode = errorCode,
+                errorMessage = errorMessage,
                 request = request,
                 tokenSymbol = tokenSymbol,
             )
@@ -329,20 +331,20 @@ internal class DefaultMarketsTokenRepository(
 
     private inline fun <T> createErrorEvent(
         error: ApiResponseError,
-        createEvent: (MarketsDataAnalyticsEvent.Type, Int?) -> T,
+        createEvent: (MarketsDataAnalyticsEvent.Type, Int?, String) -> T,
     ): T {
         return when (error) {
             is ApiResponseError.HttpException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Http, error.code.code)
+                createEvent(MarketsDataAnalyticsEvent.Type.Http, error.code.code, error.message.orEmpty())
             }
             is ApiResponseError.TimeoutException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Timeout, null)
+                createEvent(MarketsDataAnalyticsEvent.Type.Timeout, null, error.message.orEmpty())
             }
             is ApiResponseError.NetworkException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Network, null)
+                createEvent(MarketsDataAnalyticsEvent.Type.Network, null, error.message.orEmpty())
             }
             is ApiResponseError.UnknownException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Unknown, null)
+                createEvent(MarketsDataAnalyticsEvent.Type.Unknown, null, error.message.orEmpty())
             }
         }
     }
