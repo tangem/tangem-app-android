@@ -5,7 +5,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.onramp.component.SellCryptoComponent
-import com.tangem.features.onramp.entity.OnrampOperation
 import com.tangem.features.onramp.selecttoken.OnrampOperationComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -20,7 +19,7 @@ internal class DefaultSellCryptoComponent @AssistedInject constructor(
 
     private val selectTokenComponent: OnrampOperationComponent = onrampOperationComponentFactory.create(
         context = appComponentContext,
-        params = OnrampOperationComponent.Params(operation = OnrampOperation.SELL, userWalletId = params.userWalletId),
+        params = OnrampOperationComponent.Params.Sell(userWalletId = params.userWalletId),
     )
 
     @Composable
