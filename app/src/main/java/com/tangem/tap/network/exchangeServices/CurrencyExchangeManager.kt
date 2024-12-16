@@ -43,7 +43,10 @@ class CurrencyExchangeManager(
     override suspend fun update() {
         _initializationStatus.value = lceLoading()
 
-        buyService.update()
+        if (!store.inject(DaggerGraphState::onrampFeatureToggles).isFeatureEnabled) {
+            buyService.update()
+        }
+
         sellService.update()
 
         _initializationStatus.value = lceContent()
