@@ -4,6 +4,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.feature.wallet.presentation.router.DefaultWalletRouter
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.wallet.navigation.WalletRouter
 import dagger.Module
 import dagger.Provides
@@ -21,7 +22,8 @@ internal object WalletRouterModule {
         appRouter: AppRouter,
         urlOpener: UrlOpener,
         reduxStateHolder: ReduxStateHolder,
+        onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     ): WalletRouter {
-        return DefaultWalletRouter(appRouter, urlOpener, reduxStateHolder)
+        return DefaultWalletRouter(appRouter, urlOpener, reduxStateHolder, onboardingV2FeatureToggles)
     }
 }

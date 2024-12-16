@@ -78,6 +78,12 @@ class WalletConnectMiddleware {
                 val index = action.wcUri.indexOf("@")
                 when (action.wcUri[index + 1]) {
                     '2' -> walletConnectRepository.pair(uri = action.wcUri)
+                    '1' -> {
+                        store.dispatchOnMain(WalletConnectAction.UnsupportedDappRequest)
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedWcVersion),
+                        )
+                    }
                 }
             }
             is WalletConnectAction.RejectRequest -> {
