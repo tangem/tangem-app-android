@@ -1,6 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.fee
 
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.impl.presentation.state.StateRouter
@@ -76,6 +77,21 @@ internal class SendFeeCustomFieldConverter(
                 value = value,
             )
             else -> feeSelectorState.customValues
+        },
+    )
+
+    fun tryAutoFixValue(feeSelectorState: FeeSelectorState.Content) = feeSelectorState.copy(
+        customValues = when (feeSelectorState.fees) {
+            is TransactionFee.Choosable -> feeSelectorState.fees.minimum
+            is TransactionFee.Single -> feeSelectorState.fees.normal
+        }.let {
+            when (it) {
+                is Fee.Kaspa -> kaspaCustomFeeConverter.tryAutoFixValue(
+                    minimumFee = it,
+                    customValues = feeSelectorState.customValues,
+                )
+                else -> feeSelectorState.customValues
+            }
         },
     )
 }

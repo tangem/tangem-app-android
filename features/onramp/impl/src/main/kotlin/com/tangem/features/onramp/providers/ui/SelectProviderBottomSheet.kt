@@ -12,8 +12,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -32,11 +35,11 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.onramp.model.OnrampPaymentMethod
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.paymentmethod.ui.PaymentMethodIcon
 import com.tangem.features.onramp.providers.entity.ProviderListItemUM
-import com.tangem.features.onramp.providers.entity.ProviderListPaymentMethodUM
-import com.tangem.features.onramp.providers.entity.ProviderListUM
+import com.tangem.features.onramp.providers.entity.SelectPaymentAndProviderUM
 import com.tangem.features.onramp.providers.model.previewData.SelectProviderPreviewData
 import com.tangem.features.onramp.utils.selectedBorder
 
@@ -50,7 +53,7 @@ internal fun SelectProviderBottomSheet(config: TangemBottomSheetConfig, content:
 }
 
 @Composable
-internal fun SelectProviderBottomSheetContent(state: ProviderListUM, modifier: Modifier = Modifier) {
+internal fun SelectProviderBottomSheetContent(state: SelectPaymentAndProviderUM, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -65,16 +68,24 @@ internal fun SelectProviderBottomSheetContent(state: ProviderListUM, modifier: M
         )
         PaymentMethodBlock(
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing20, bottom = TangemTheme.dimens.spacing16),
-            state = state.paymentMethod,
+            state = state.selectedPaymentMethod.paymentMethod,
+            isClickEnabled = state.isPaymentMethodClickEnabled,
+            onPaymentMethodClick = state.onPaymentMethodClick,
         )
-        state.providers.fastForEach { provider ->
+        state.selectedPaymentMethod.providers.fastForEach { provider ->
             key(provider.providerId) { ProviderItem(state = provider) }
         }
+        OnrampMoreProviders()
     }
 }
 
 @Composable
-private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Modifier = Modifier) {
+private fun PaymentMethodBlock(
+    state: OnrampPaymentMethod,
+    isClickEnabled: Boolean,
+    onPaymentMethodClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier
             .clip(RoundedCornerShape(TangemTheme.dimens.radius16))
@@ -83,7 +94,7 @@ private fun PaymentMethodBlock(state: ProviderListPaymentMethodUM, modifier: Mod
                 color = TangemTheme.colors.stroke.secondary,
                 shape = RoundedCornerShape(TangemTheme.dimens.radius16),
             )
-            .clickable(enabled = state.enabled, onClick = state.onClick)
+            .clickable(enabled = isClickEnabled, onClick = onPaymentMethodClick)
             .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
@@ -177,23 +188,26 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available, modifier:
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.primary1,
             )
-            if (state.isBestRate) {
-                Text(
-                    text = stringResourceSafe(R.string.express_provider_best_rate),
-                    style = TangemTheme.typography.caption1,
-                    color = TangemTheme.colors.text.constantWhite,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(TangemTheme.colors.icon.accent)
-                        .padding(vertical = 1.dp, horizontal = 6.dp),
-                )
-            } else {
-                Text(
-                    text = state.diffRate.resolveReference(),
-                    style = TangemTheme.typography.caption2,
-                    color = TangemTheme.colors.text.warning,
-                    modifier = Modifier.padding(vertical = 1.dp),
-                )
+            when {
+                state.isBestRate -> {
+                    Text(
+                        text = stringResourceSafe(R.string.express_provider_best_rate),
+                        style = TangemTheme.typography.caption1,
+                        color = TangemTheme.colors.text.constantWhite,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(TangemTheme.colors.icon.accent)
+                            .padding(vertical = 1.dp, horizontal = 6.dp),
+                    )
+                }
+                state.diffRate != null -> {
+                    Text(
+                        text = state.diffRate.resolveReference(),
+                        style = TangemTheme.typography.caption2,
+                        color = TangemTheme.colors.text.warning,
+                        modifier = Modifier.padding(vertical = 1.dp),
+                    )
+                }
             }
         }
     }
@@ -241,13 +255,35 @@ private fun UnavailableProviderItem(
     }
 }
 
+@Composable
+private fun OnrampMoreProviders() {
+    Icon(
+        painter = rememberVectorPainter(
+            ImageVector.vectorResource(R.drawable.ic_lightning_16),
+        ),
+        contentDescription = null,
+        tint = TangemTheme.colors.icon.informative,
+        modifier = Modifier
+            .padding(top = 16.dp),
+    )
+    Text(
+        text = stringResourceSafe(R.string.express_more_providers_soon),
+        style = TangemTheme.typography.caption2,
+        color = TangemTheme.colors.icon.informative,
+        modifier = Modifier
+            .padding(top = 4.dp, bottom = 24.dp)
+            .padding(horizontal = TangemTheme.dimens.spacing56),
+        textAlign = TextAlign.Center,
+    )
+}
+
 // region Preview
 @Preview(showBackground = true, widthDp = 360)
 @Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun SelectProviderBottomSheetContent_Preview(
     @PreviewParameter(SelectProviderBottomSheetContentPreviewProvider::class)
-    data: ProviderListUM,
+    data: SelectPaymentAndProviderUM,
 ) {
     TangemThemePreview {
         SelectProviderBottomSheetContent(data)
@@ -255,8 +291,8 @@ private fun SelectProviderBottomSheetContent_Preview(
 }
 
 private class SelectProviderBottomSheetContentPreviewProvider :
-    PreviewParameterProvider<ProviderListUM> {
-    override val values: Sequence<ProviderListUM>
+    PreviewParameterProvider<SelectPaymentAndProviderUM> {
+    override val values: Sequence<SelectPaymentAndProviderUM>
         get() = sequenceOf(
             SelectProviderPreviewData.state,
         )
