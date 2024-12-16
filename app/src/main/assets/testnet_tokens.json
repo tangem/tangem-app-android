@@ -750,6 +750,16 @@
             ]
         },
         {
+            "id": "chiliz",
+            "name": "Chiliz",
+            "symbol": "CHZ",
+            "networks": [
+                {
+                    "networkId": "chiliz/test"
+                }
+            ]
+        },
+        {
             "id": "casper-network",
             "name": "Casper",
             "symbol": "CSPR",
