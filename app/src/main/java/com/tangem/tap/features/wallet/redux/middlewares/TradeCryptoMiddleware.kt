@@ -92,10 +92,11 @@ object TradeCryptoMiddleware {
 
         scope.launch {
             val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
+            val onrampFeatureToggles = store.inject(DaggerGraphState::onrampFeatureToggles)
 
             val isRussia = getUserCountryCodeUseCase().isRight { it is UserCountry.Russia }
 
-            if (action.checkUserLocation && isRussia) {
+            if (action.checkUserLocation && isRussia && !onrampFeatureToggles.isFeatureEnabled) {
                 val dialogData = topUrl?.let {
                     AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl = it)
                 }
