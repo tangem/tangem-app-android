@@ -37,7 +37,8 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+// TODO: Divide to sub-components: [REDACTED_JIRA]
+@Suppress("LongParameterList", "LargeClass")
 @ComponentScoped
 internal class CustomTokenFormModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -83,16 +84,23 @@ internal class CustomTokenFormModel @Inject constructor(
             } else {
                 null
             },
-            derivationPath = ClickableFieldUM(
-                label = resourceReference(R.string.custom_token_derivation_path),
-                value = if (params.derivationPath == null || params.derivationPath.isDefault) {
-                    resourceReference(R.string.custom_token_derivation_path_default)
-                } else {
-                    stringReference(params.derivationPath.name)
-                },
-                onClick = ::selectDerivationPath,
-            ),
+            derivationPath = getDerivationPathFormIfSupported(),
             saveToken = ::addCurrency,
+        )
+    }
+
+    private fun getDerivationPathFormIfSupported(): ClickableFieldUM? {
+        // If network doesn't support derivation path, return null
+        if (params.network.derivationPath is Network.DerivationPath.None) return null
+
+        return ClickableFieldUM(
+            label = resourceReference(R.string.custom_token_derivation_path),
+            value = if (params.derivationPath == null || params.derivationPath.isDefault) {
+                resourceReference(R.string.custom_token_derivation_path_default)
+            } else {
+                stringReference(params.derivationPath.name)
+            },
+            onClick = ::selectDerivationPath,
         )
     }
 
