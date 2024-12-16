@@ -16,13 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.SpacerH
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.home.compose.StoriesTextAnimation
@@ -66,7 +66,7 @@ fun FirstStoriesContent(isPaused: Boolean, duration: Int) {
         ) { modifier ->
             Text(
                 modifier = modifier,
-                text = stringResource(R.string.story_meet_title),
+                text = stringResourceSafe(R.string.story_meet_title),
                 style = style,
                 color = TangemColorPalette.White,
                 textAlign = TextAlign.Center,
