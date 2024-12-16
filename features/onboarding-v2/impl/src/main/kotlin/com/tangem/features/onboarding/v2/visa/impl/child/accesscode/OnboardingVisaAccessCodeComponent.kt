@@ -9,7 +9,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.model.OnboardingVisaAccessCodeModel
 import kotlinx.coroutines.flow.SharedFlow
 
-class OnboardingVisaAccessCodeComponent(
+internal class OnboardingVisaAccessCodeComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
