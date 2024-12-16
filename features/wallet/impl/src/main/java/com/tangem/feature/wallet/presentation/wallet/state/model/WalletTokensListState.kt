@@ -3,7 +3,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -30,7 +31,13 @@ internal sealed class WalletTokensListState {
 
         data object Locked : ContentState() {
             override val items = persistentListOf(
-                TokensListItemUM.NetworkGroupTitle(id = 42, name = TextReference.Res(id = R.string.main_tokens)),
+                TokensListItemUM.GroupTitle(
+                    id = 42,
+                    text = resourceReference(
+                        id = R.string.wallet_network_group_title,
+                        formatArgs = wrappedList(resourceReference(id = R.string.main_tokens)),
+                    ),
+                ),
                 TokensListItemUM.Token(state = TokenItemState.Locked(id = "Locked#1")),
             )
             override val organizeTokensButtonConfig = null
