@@ -5,7 +5,7 @@
   <string name="action_buttons_sell_navigation_bar_title">Продать</string>
   <string name="action_buttons_service_loading_alert_message">Это может занять несколько секунд. Пожалуйста, попробуйте позже.</string>
   <string name="action_buttons_service_loading_alert_title">Данные ещё не загрузились</string>
-  <string name="action_buttons_something_wrong_alert_message">Действие в данный момент недоступно, пожалуйста попробуйте позже или обновить данные, сделав свайп экрана вниз.</string>
+  <string name="action_buttons_something_wrong_alert_message">Это действие в данный момент недоступно, пожалуйста попробуйте позже или обновите данные, сделав свайп экрана вниз.</string>
   <string name="action_buttons_something_wrong_alert_title">Кнопка недоступна</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
@@ -264,7 +264,7 @@
   <string name="express_by_provider">Предоставлено</string>
   <string name="express_cex_status_button_title">Статус</string>
   <string name="express_choose_providers_subtitle">Tangem предоставляет доступ к обмену через сторонних поставщиков в соответствии с их правилами</string>
-  <string name="express_choose_providers_title">Выберите провайдера</string>
+  <string name="express_choose_providers_title">Провайдер</string>
   <string name="express_error_code">Произошла ошибка. Код: %s</string>
   <string name="express_error_provider_amount_roundup">Ошибка %1$s. Выбранный провайдер не может обработать указанную транзакцию. Округлите значение до %2$s или измените его.</string>
   <string name="express_error_swap_pair_unavailable">Выбранный провайдер недоступен для обмена. Попробуйте позже. (Код: %s)</string>
@@ -325,6 +325,7 @@
   <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у вас карта или кольцо?</string>
   <string name="feedback_preface_support">Привет, команда поддержки,</string>
   <string name="feedback_preface_tx_failed">Пожалуйста, расскажите нам больше о вашей проблеме. Каждая маленькая деталь может помочь.</string>
+  <string name="feedback_subject_pre_activated_wallet">Ранее активированный кошелек</string>
   <string name="feedback_subject_rate_negative">Мои предложения</string>
   <string name="feedback_subject_scan_failed">Не могу отсканировать карту/кольцо</string>
   <string name="feedback_subject_support">Обращение в поддержку</string>
@@ -597,16 +598,17 @@
   <string name="onramp_country_search">Поиск по стране</string>
   <string name="onramp_country_unavailable">Недоступно</string>
   <string name="onramp_currency_search">Поиск по валюте</string>
+  <string name="onramp_legal">Пользуясь сервисом покупки, вы соглашаетесь с %1$s и %2$s</string>
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>
   <string name="onramp_min_amount_restriction">Сумма покупки должна составлять минимум %s</string>
   <string name="onramp_no_available_providers">Нет доступных провайдеров для выбранной валюты</string>
   <string name="onramp_pay_with">Оплата с</string>
   <string name="onramp_provider_max_amount">Доступно до %s</string>
-  <string name="onramp_provider_min_amount">Доступно с %s</string>
+  <string name="onramp_provider_min_amount">Доступно от %s</string>
   <string name="onramp_redirecting_to_provider_subtitle">Вы сможете продолжить транзакцию через сервис стороннего провайдера, %s</string>
   <string name="onramp_redirecting_to_provider_title">Переход к %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Наши сервисы недоступны в данной стране</string>
-  <string name="onramp_residency_bottomsheet_title">Ваше местоположение определено как</string>
+  <string name="onramp_residency_bottomsheet_title">Ваше место жительства определено как</string>
   <string name="onramp_settings_residence">Страна проживания</string>
   <string name="onramp_settings_residence_description">Пожалуйста, укажите правильную страну, чтобы обеспечить точность доступных способов оплаты и услуг.</string>
   <string name="onramp_settings_title">Настройки</string>
