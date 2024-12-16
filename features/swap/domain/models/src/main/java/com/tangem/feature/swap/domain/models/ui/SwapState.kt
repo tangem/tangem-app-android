@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain.models.ui
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.*
@@ -26,7 +27,9 @@ sealed interface SwapState {
         val permissionState: PermissionDataState = PermissionDataState.Empty,
         val swapDataModel: SwapDataModel? = null,
         val txFee: TxFeeState,
-        val warnings: List<Warning> = emptyList(),
+        val currencyCheck: CryptoCurrencyCheck? = null,
+        val validationResult: Throwable? = null,
+        val minAdaValue: BigDecimal?,
         val swapProvider: SwapProvider,
     ) : SwapState
 
