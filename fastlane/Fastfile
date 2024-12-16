@@ -21,9 +21,17 @@ platform :android do
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
   end
 
-  desc "Runs all the tests"
-  lane :test do
+  desc "Run detekt"
+  lane :detekt do
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(task: "detekt")
+  end
+
+  desc "Run tests"
+  lane :test do
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(task: "testDebugUnitTest")
   end
 
@@ -79,19 +87,22 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
+    FileUtils.cp("../ci_resources/build_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(
       task: "clean assemble",
       build_type: "Internal",
       properties: {
-        'versionCode' => ENV['versionCode'],
-        'versionName' => ENV['versionName'],
+        'versionCode' => ENV['version_code'],
+        'versionName' => ENV['version_name'],
       }
     )
     firebase_app_distribution(
+      firebase_cli_token: ENV['firebase_cli_token'],
       app: ENV['app_id_internal'],
       apk_path: ENV['apk_path_internal'],
       groups: ENV['groups'],
-      release_notes: ENV['releaseNotes']
+      release_notes: ENV['release_notes'],
     )
   end
 end
