@@ -27,6 +27,9 @@ internal object WelcomeReducer {
                 error = action.error,
                 isUnlockWithCardInProgress = false,
             )
+            is WelcomeAction.ProceedWithCard.ChangeProgress -> state.copy(
+                isUnlockWithCardInProgress = action.showProgress,
+            )
             is WelcomeAction.ProceedWithBiometrics.Success -> state.copy(isUnlockWithBiometricsInProgress = false)
             is WelcomeAction.ProceedWithCard.Success -> state.copy(isUnlockWithCardInProgress = false)
             is WelcomeAction.CloseError -> state.copy(error = null)
