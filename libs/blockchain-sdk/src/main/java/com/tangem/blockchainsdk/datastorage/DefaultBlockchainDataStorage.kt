@@ -26,4 +26,10 @@ internal class DefaultBlockchainDataStorage(
             it[stringPreferencesKey(key)] = value
         }
     }
+
+    override suspend fun remove(key: String) {
+        appPreferencesStore.edit {
+            it.remove(stringPreferencesKey(key))
+        }
+    }
 }
