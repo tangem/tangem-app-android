@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.main.entity.factory.amount
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -122,6 +123,9 @@ internal class OnrampAmountStateFactory(
                 providerName = providerResult.provider.info.name,
                 isBestRate = isBestRate,
                 onClick = onrampIntents::openProviders,
+                termsOfUseLink = providerResult.provider.info.termsOfUseLink,
+                privacyPolicyLink = providerResult.provider.info.privacyPolicyLink,
+                onLinkClick = onrampIntents::onLinkClick,
             ),
             buyButtonConfig = currentState.buyButtonConfig.copy(
                 enabled = providerResult is SelectProviderResult.ProviderWithQuote,
@@ -141,6 +145,23 @@ internal class OnrampAmountStateFactory(
         )
     }
 
+    fun getAmountSecondaryResetState(): OnrampMainComponentUM {
+        val currentState = currentStateProvider()
+        if (currentState !is OnrampMainComponentUM.Content) return currentState
+
+        val amountState = currentState.amountBlockState
+
+        if (amountState.secondaryFieldModel is OnrampAmountSecondaryFieldUM.Content) return currentState
+
+        return currentState.copy(
+            amountBlockState = amountState.copy(
+                secondaryFieldModel = OnrampAmountSecondaryFieldUM.Content(
+                    amount = TextReference.EMPTY,
+                ),
+            ),
+        )
+    }
+
     private fun OnrampQuote.toProviderBlockState(isBestRate: Boolean): OnrampProviderBlockUM {
         return OnrampProviderBlockUM.Content(
             paymentMethod = paymentMethod,
@@ -148,6 +169,9 @@ internal class OnrampAmountStateFactory(
             providerName = provider.info.name,
             isBestRate = isBestRate,
             onClick = onrampIntents::openProviders,
+            termsOfUseLink = provider.info.termsOfUseLink,
+            privacyPolicyLink = provider.info.privacyPolicyLink,
+            onLinkClick = onrampIntents::onLinkClick,
         )
     }
 
