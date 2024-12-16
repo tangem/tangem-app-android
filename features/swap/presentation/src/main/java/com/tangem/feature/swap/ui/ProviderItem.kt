@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -25,6 +24,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.GRAY_SCALE_ALPHA
@@ -122,7 +122,7 @@ private fun ProviderContentState(
                 Row {
                     if (state.namePrefix == ProviderState.PrefixType.PROVIDED_BY) {
                         Text(
-                            text = stringResource(id = R.string.express_by_provider),
+                            text = stringResourceSafe(id = R.string.express_by_provider),
                             style = TangemTheme.typography.caption2,
                             color = TangemTheme.colors.text.tertiary,
                             modifier = Modifier.padding(end = TangemTheme.dimens.spacing4),
@@ -262,7 +262,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
     Box(modifier = modifier.fillMaxWidth()) {
         Column {
             Text(
-                text = stringResource(R.string.express_provider),
+                text = stringResourceSafe(R.string.express_provider),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.secondary,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing12),
@@ -282,7 +282,7 @@ private fun ProviderLoadingState(modifier: Modifier = Modifier) {
                     strokeWidth = TangemTheme.dimens.size2,
                 )
                 Text(
-                    text = stringResource(R.string.express_fetch_best_rates),
+                    text = stringResourceSafe(R.string.express_fetch_best_rates),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.tertiary,
                     modifier = Modifier.padding(start = TangemTheme.dimens.spacing4),
@@ -357,7 +357,7 @@ private fun BestTradeItem(modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = stringResource(R.string.express_provider_best_rate),
+            text = stringResourceSafe(R.string.express_provider_best_rate),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
@@ -374,7 +374,7 @@ private fun PermissionBadgeItem(modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = stringResource(id = R.string.express_provider_permission_needed),
+            text = stringResourceSafe(id = R.string.express_provider_permission_needed),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),
@@ -391,7 +391,7 @@ private fun RecommendedItem(modifier: Modifier = Modifier) {
         ),
     ) {
         Text(
-            text = stringResource(id = R.string.express_provider_recommended),
+            text = stringResourceSafe(id = R.string.express_provider_recommended),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.icon.accent,
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing6),

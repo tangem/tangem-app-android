@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -17,6 +16,7 @@ import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.BigDecimalFormatter
@@ -49,7 +49,7 @@ internal fun TokenDetailsBalanceBlock(
             val (balanceTitle, toggleButtons, fiatBalance, cryptoBalance, actionChips) = createRefs()
 
             Text(
-                text = stringResource(id = R.string.common_balance_title),
+                text = stringResourceSafe(id = R.string.common_balance_title),
                 color = TangemTheme.colors.text.tertiary,
                 style = TangemTheme.typography.subtitle2,
                 modifier = Modifier.constrainAs(balanceTitle) {
