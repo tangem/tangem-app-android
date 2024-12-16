@@ -66,7 +66,7 @@ internal class TokenDetailsSkeletonStateConverter(
             stakingBlocksState = StakingBlockUM.Loading(iconState).takeIf { isSupportedInMobileApp },
             notifications = persistentListOf(),
             pendingTxs = persistentListOf(),
-            swapTxs = persistentListOf(),
+            expressTxs = persistentListOf(),
             txHistoryState = TxHistoryState.Content(
                 contentItems = MutableStateFlow(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
