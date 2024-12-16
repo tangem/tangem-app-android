@@ -8,7 +8,6 @@ import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
@@ -19,6 +18,7 @@ import com.tangem.core.ui.components.inputrow.InputRowImage
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -135,7 +135,7 @@ private fun SwapSuccessScreenButtons(
         if (txUrl.isNotBlank()) {
             Row {
                 SecondaryButtonIconStart(
-                    text = stringResource(id = R.string.common_explore),
+                    text = stringResourceSafe(id = R.string.common_explore),
                     iconResId = R.drawable.ic_web_24,
                     onClick = onExploreClick,
                     modifier = Modifier.weight(1f),
@@ -143,7 +143,7 @@ private fun SwapSuccessScreenButtons(
                 if (showStatusButton) {
                     SpacerW12()
                     SecondaryButtonIconStart(
-                        text = stringResource(id = R.string.express_cex_status_button_title),
+                        text = stringResourceSafe(id = R.string.express_cex_status_button_title),
                         iconResId = R.drawable.ic_arrow_top_right_24,
                         onClick = onStatusClick,
                         modifier = Modifier.weight(1f),
@@ -153,7 +153,7 @@ private fun SwapSuccessScreenButtons(
             SpacerH12()
         }
         PrimaryButton(
-            text = stringResource(id = textRes),
+            text = stringResourceSafe(id = textRes),
             enabled = true,
             onClick = onDoneClick,
             modifier = Modifier.fillMaxWidth(),
