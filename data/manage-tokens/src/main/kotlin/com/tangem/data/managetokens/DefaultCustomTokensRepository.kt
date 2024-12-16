@@ -1,6 +1,7 @@
 package com.tangem.data.managetokens
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.data.common.api.safeApiCall
@@ -36,10 +37,11 @@ internal class DefaultCustomTokensRepository(
     private val userWalletsStore: UserWalletsStore,
     private val appPreferencesStore: AppPreferencesStore,
     private val walletManagersFacade: WalletManagersFacade,
+    private val excludedBlockchains: ExcludedBlockchains,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : CustomTokensRepository {
 
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val userTokensResponseFactory = UserTokensResponseFactory()
     private val tokenAddressConverter = TokenAddressesConverter()
     private val userTokensBackwardCompatibility = UserTokensBackwardCompatibility()
@@ -50,6 +52,7 @@ internal class DefaultCustomTokensRepository(
                 Blockchain.Unknown,
                 Blockchain.Binance,
                 Blockchain.BinanceTestnet,
+                Blockchain.Kaspa,
                 -> true
                 Blockchain.Cardano -> blockchain.validateContractAddress(contractAddress)
                 else -> blockchain.validateAddress(contractAddress)
@@ -87,7 +90,9 @@ internal class DefaultCustomTokensRepository(
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "User wallet [$userWalletId] not found while finding token"
         }
-        val network = requireNotNull(getNetwork(networkId, derivationPath, userWallet.scanResponse)) {
+        val network = requireNotNull(
+            getNetwork(networkId, derivationPath, userWallet.scanResponse, excludedBlockchains),
+        ) {
             "Network [$networkId] not found while finding token"
         }
         val tokenAddress = tokenAddressConverter.convertTokenAddress(
@@ -97,7 +102,7 @@ internal class DefaultCustomTokensRepository(
         )
 
         val supportedTokenNetworkIds = userWallet.scanResponse.card
-            .supportedBlockchains(userWallet.scanResponse.cardTypesResolver)
+            .supportedBlockchains(userWallet.scanResponse.cardTypesResolver, excludedBlockchains)
             .filter(Blockchain::canHandleTokens)
             .map(Blockchain::toNetworkId)
 
@@ -137,7 +142,9 @@ internal class DefaultCustomTokensRepository(
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "User wallet [$userWalletId] not found while creating coin"
         }
-        val network = requireNotNull(getNetwork(networkId, derivationPath, userWallet.scanResponse)) {
+        val network = requireNotNull(
+            getNetwork(networkId, derivationPath, userWallet.scanResponse, excludedBlockchains),
+        ) {
             "Network [$networkId] not found while creating coin"
         }
 
@@ -168,7 +175,9 @@ internal class DefaultCustomTokensRepository(
         val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "User wallet [$userWalletId] not found while creating custom token"
         }
-        val network = requireNotNull(getNetwork(networkId, derivationPath, userWallet.scanResponse)) {
+        val network = requireNotNull(
+            getNetwork(networkId, derivationPath, userWallet.scanResponse, excludedBlockchains),
+        ) {
             "Network [$networkId] not found while creating custom token"
         }
         val tokenAddress = tokenAddressConverter.convertTokenAddress(
@@ -230,11 +239,18 @@ internal class DefaultCustomTokensRepository(
 
         Blockchain.entries
             .mapNotNull { blockchain ->
-                if (scanResponse.card.canHandleBlockchain(blockchain, scanResponse.cardTypesResolver)) {
+                val canHandleBlockchain = scanResponse.card.canHandleBlockchain(
+                    blockchain,
+                    scanResponse.cardTypesResolver,
+                    excludedBlockchains,
+                )
+
+                if (canHandleBlockchain) {
                     getNetwork(
                         blockchain = blockchain,
                         extraDerivationPath = null,
                         scanResponse = scanResponse,
+                        excludedBlockchains = excludedBlockchains,
                     )
                 } else {
                     null
