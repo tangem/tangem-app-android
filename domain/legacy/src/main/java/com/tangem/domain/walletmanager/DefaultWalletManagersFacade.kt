@@ -25,11 +25,11 @@ import com.tangem.domain.common.util.hasDerivation
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.SmartContractMethod
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
@@ -413,7 +413,7 @@ class DefaultWalletManagersFacade(
         return manager?.wallet?.addresses.orEmpty()
     }
 
-    override suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): CryptoCurrencyWarning.Rent? {
+    override suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): RentData? {
         val manager = getOrCreateWalletManager(
             userWalletId = userWalletId,
             network = network,
@@ -422,24 +422,7 @@ class DefaultWalletManagersFacade(
 
         return when (val result = manager.minimalBalanceForRentExemption()) {
             is Result.Success -> {
-                val balance = manager.wallet.fundsAvailable(AmountType.Coin)
-                val outgoingTxs = manager.wallet.recentTransactions
-                    .filter {
-                        it.sourceAddress == manager.wallet.address &&
-                            it.amount.type == AmountType.Coin &&
-                            it.status != TransactionStatus.Confirmed
-                    }
-
-                val rentExempt = result.data
-                val setRent = if (outgoingTxs.isEmpty()) {
-                    balance < rentExempt
-                } else {
-                    val outgoingAmount = outgoingTxs.sumOf { it.amount.value ?: BigDecimal.ZERO }
-                    val rest = balance.minus(outgoingAmount)
-                    balance < rest
-                }
-
-                if (setRent) CryptoCurrencyWarning.Rent(manager.rentAmount(), rentExempt) else null
+                RentData(manager.rentAmount(), result.data)
             }
             is Result.Failure -> null
         }
@@ -602,7 +585,7 @@ class DefaultWalletManagersFacade(
         return withContext(dispatchers.io) {
             val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
             val currencyType = cryptoCurrencyTypeConverter.convert(currency)
-            if (walletManager !is AssetRequirementsManager || !walletManager.hasRequirements(currencyType)) {
+            if (walletManager !is AssetRequirementsManager) {
                 return@withContext null
             }
 
@@ -611,7 +594,7 @@ class DefaultWalletManagersFacade(
         }
     }
 
-    override suspend fun associateAsset(
+    override suspend fun fulfillRequirements(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         signer: TransactionSigner,
@@ -627,6 +610,21 @@ class DefaultWalletManagersFacade(
             }
 
             walletManager.fulfillRequirements(currencyType, signer)
+        }
+    }
+
+    override suspend fun discardRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): SimpleResult {
+        return withContext(dispatchers.io) {
+            val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = currency.network)
+            val currencyType = cryptoCurrencyTypeConverter.convert(currency)
+
+            if (walletManager !is AssetRequirementsManager) {
+                return@withContext SimpleResult.Failure(
+                    BlockchainSdkError.CustomError("WalletManager is not implemented AssetRequirementsManager"),
+                )
+            }
+
+            walletManager.discardRequirements(currencyType)
         }
     }
 

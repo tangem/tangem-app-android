@@ -2,10 +2,16 @@
 <resources>
   <string name="action_buttons_buy_empty_search_message">¿No encuentra el token en su billetera? Consulte los mercados para encontrarlo y añadirlo a la compra</string>
   <string name="action_buttons_sell_empty_search_message">¿No encuentra el token en su billetera? Consulte los mercados para encontrarlo y añadirlo a la venta</string>
+  <string name="action_buttons_sell_navigation_bar_title">Vender</string>
+  <string name="action_buttons_service_loading_alert_message">Esto puede tardar unos segundos. Inténtelo de nuevo más tarde.</string>
+  <string name="action_buttons_service_loading_alert_title">Los datos aún no se han cargado.</string>
+  <string name="action_buttons_something_wrong_alert_message">La acción no está disponible actualmente. Inténtalo de nuevo más tarde o actualiza los datos deslizando el dedo hacia abajo en la pantalla.</string>
   <string name="action_buttons_swap_choose_token">Elige el token</string>
   <string name="action_buttons_swap_empty_search_message">¿No encuentras el token en tu billetera? Consulte los mercados para encontrarlo y agregarlo al intercambio</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">No hay tokens disponibles para intercambiar con el token seleccionado. Por favor elige otro.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">No hay par disponible</string>
+  <string name="action_buttons_you_want_to_receive">Seleccione el token que desea recibir</string>
+  <string name="action_buttons_you_want_to_swap">Seleccione el token que desea intercambiar</string>
   <string name="add_custom_token_choose_network">Elige red</string>
   <string name="add_custom_token_title">Agregue un token personalizado</string>
   <string name="add_tokens_title">Gestionar tokens</string>
@@ -124,7 +130,7 @@
   <string name="common_fee_selector_option_market">Mercado</string>
   <string name="common_fee_selector_option_slow">Lento</string>
   <string name="common_fee_selector_title">Velocidad y tarifa</string>
-  <string name="common_generate_addresses">Obtener direcciones</string>
+  <string name="common_generate_addresses">Sincronizar direcciones</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
   <string name="common_hour">hora</string>
@@ -173,7 +179,7 @@
   <string name="common_submit">Enviar</string>
   <string name="common_success">Con éxito</string>
   <string name="common_support">Soporte</string>
-  <string name="common_swap">Intercambiar</string>
+  <string name="common_swap">Swap</string>
   <string name="common_terms_and_conditions">términos y condiciones</string>
   <string name="common_terms_of_use">Condiciones de uso</string>
   <string name="common_today">Hoy</string>
@@ -249,6 +255,7 @@
   <string name="express_choose_providers_subtitle">Tangem ofrece swaps de tokens a través de proveedores externos según los términos de cada proveedor</string>
   <string name="express_choose_providers_title">Elige un proveedor</string>
   <string name="express_error_code">Ha ocurrido un error. Código: %s</string>
+  <string name="express_error_provider_amount_roundup">Error %1$s. El proveedor seleccionado no puede procesar la transacción especificada. Por favor, redondee el valor a %2$s o cámbielo</string>
   <string name="express_error_swap_pair_unavailable">El proveedor seleccionado no está disponible actualmente. Inténtelo de nuevo más tarde. (Código: %s)</string>
   <string name="express_error_swap_unavailable">Los cambios no están disponibles en este momento. Inténtelo de nuevo más tarde. (Código: %s)</string>
   <string name="express_estimated_amount">Cantidad estimada</string>
@@ -304,6 +311,7 @@
   <string name="feedback_preface_scan_failed">Por favor, díganos qué tarjeta tiene</string>
   <string name="feedback_preface_support">Hola equipo de soporte,</string>
   <string name="feedback_preface_tx_failed">Por favor, cuéntenos más sobre tu problema. Cada pequeño detalle puede ayudar.</string>
+  <string name="feedback_subject_pre_activated_wallet">Billetera previamente activada</string>
   <string name="feedback_subject_rate_negative">Mis recomendaciones</string>
   <string name="feedback_subject_scan_failed">No se puede escanear una tarjeta</string>
   <string name="feedback_subject_support">Comentarios</string>
@@ -563,21 +571,25 @@
   <string name="onboarding_wallet_info_title_fourth">Restaurar código de acceso</string>
   <string name="onboarding_wallet_info_title_second">Tarjetas idénticas</string>
   <string name="onboarding_wallet_info_title_third">Código de acceso</string>
+  <string name="onramp_avaiable_with_payment_methods">Disponible con %s</string>
   <string name="onramp_country_search">Buscar por país</string>
   <string name="onramp_country_unavailable">Indisponible</string>
   <string name="onramp_currency_search">Buscar por moneda</string>
+  <string name="onramp_legal">Al utilizar la funcionalidad onramp, acepta %1$s y %2$s del proveedor.</string>
   <string name="onramp_max_amount_restriction">El monto de la compra no debe ser mayor a %s</string>
   <string name="onramp_min_amount_restriction">La cantidad a comprar debe ser como mínimo %s</string>
   <string name="onramp_no_available_providers">No hay proveedores disponibles para esta moneda</string>
   <string name="onramp_pay_with">Pagar con</string>
+  <string name="onramp_provider_max_amount">Disponible hasta %s</string>
+  <string name="onramp_provider_min_amount">Disponible desde %s</string>
   <string name="onramp_redirecting_to_provider_subtitle">Podrá completar su transacción en el proveedor externo, %s</string>
   <string name="onramp_redirecting_to_provider_title">Redirigiendo a %s...</string>
   <string name="onramp_residency_bottomsheet_country_not_supported">Nuestros servicios no están disponibles en este país</string>
-  <string name="onramp_residency_bottomsheet_country_subtitle">Cámbielo o confírmelo</string>
   <string name="onramp_residency_bottomsheet_title">Su residencia ha sido identificada como</string>
   <string name="onramp_settings_residence">Residencia</string>
   <string name="onramp_settings_residence_description">Seleccione el país correcto para garantizar opciones de pago y servicios precisos.</string>
   <string name="onramp_settings_title">Ajustes</string>
+  <string name="onramp_statuses_view_footer">Puede comprobar el estado de la transacción desde la página del token.</string>
   <string name="onramp_transaction_status_footer_text">Puede comprobar el estado de la transacción desde la página del token</string>
   <string name="onramp_via">Vía</string>
   <string name="organize_tokens_group">Agrupar</string>
@@ -588,7 +600,9 @@
   <string name="qr_scanner_camera_denied_settings_button">Ajustes</string>
   <string name="qr_scanner_camera_denied_text">No ha dado acceso a su cámara</string>
   <string name="qr_scanner_camera_denied_title">Acceso a la cámara denegado</string>
+  <string name="receive_bottom_sheet_no_memo_required_message">No se requiere nota</string>
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) en la red %3$s</string>
+  <string name="receive_bottom_sheet_warning_message_description">El envío de cualquier otra moneda supondrá una pérdida irreversible.</string>
   <string name="receive_bottom_sheet_warning_message_full">Envíe solo %s a esta dirección. Enviar cualquier otra moneda resultará en su pérdida irreversible.</string>
   <string name="receive_token_description">Transfiera fondos desde otra billetera o intercambio</string>
   <string name="referral_button_participate">Participar</string>
@@ -641,6 +655,11 @@
   <string name="scan_card_settings_button">Escanee su tarjeta</string>
   <string name="scan_card_settings_message">Escanee la tarjeta para cambiar sus ajustes. Los cambios afectarán solo a la tarjeta que has escaneado y no afectarán a otras tarjetas vinculadas a su billetera.</string>
   <string name="scan_card_settings_title">¡Prepare su tarjeta!</string>
+  <string name="security_alert_title">Alerta de seguridad</string>
+  <string name="selling_insufficient_balance_alert_message">No tiene fondos suficientes en su saldo para vender esta criptomoneda. Deposite el activo deseado para continuar.</string>
+  <string name="selling_insufficient_balance_alert_title">Saldo insuficiente</string>
+  <string name="selling_regional_restriction_alert_message">La venta de criptomonedas no está disponible en su región en este momento. Estamos trabajando activamente para ofrecerle esta opción pronto. ¡Manténgase conectado!</string>
+  <string name="selling_regional_restriction_alert_title">Restricción Regional</string>
   <string name="send_additional_field_already_included">Ya incluido en la dirección ingresada</string>
   <string name="send_alert_fee_too_high_text">El monto de la comisión es %s veces el monto recomendado. Asegúrese de que la configuración personalizada sea correcta.</string>
   <string name="send_alert_fee_too_low_text">Ha especificado una comisión inferior a la cantidad recomendada, lo que podría provocar un retraso en su transacción. ¿Continuar?</string>
@@ -681,6 +700,7 @@
   <string name="send_notification_fee_too_high_title">Los aranceles aduaneros son altos</string>
   <string name="send_notification_high_fee_text">Debido a las peculiaridades de la red %1$s, la tarifa por transferir el saldo completo es más alta. Para reducir la comisión, puedes dejar %2$s.</string>
   <string name="send_notification_high_fee_title">La tarifa es más alta</string>
+  <string name="send_notification_invalid_amount_rent_fee">Su saldo no puede ser inferior al monto del alquiler. Mantenga al menos %1$s en su cuenta o retire todos los fondos.</string>
   <string name="send_notification_invalid_amount_text">La comisión incluida excede el monto de la transferencia, lo que resulta en un valor negativo</string>
   <string name="send_notification_invalid_amount_title">Cantidad no válida</string>
   <string name="send_notification_invalid_minimum_amount_text">La cantidad mínima de envío es %1$s. Asegúrate de que el saldo restante después del envío no sea menor que %2$s.</string>
@@ -853,6 +873,7 @@
   <string name="swapping_to_title">Usted recibe</string>
   <string name="swapping_token_list_title">Elige token</string>
   <string name="swapping_token_not_available">no disponible</string>
+  <string name="this_is_my_wallet_title">Esta es mi billetera</string>
   <string name="toast_balances_hidden">Saldos ocultos</string>
   <string name="toast_balances_shown">Saldos mostrados</string>
   <string name="toast_undo">Cancelar</string>
@@ -882,6 +903,7 @@
   <string name="tokens_list_unavailable_to_purchase_header">No disponible para compra</string>
   <string name="tokens_list_unavailable_to_sell_header">No disponible para vender</string>
   <string name="tokens_list_unavailable_to_swap_header">No disponible para cambio desde %s</string>
+  <string name="tokens_list_unavailable_to_swap_source_header">No disponible para intercambio</string>
   <string name="transaction_history_contract_address">contacto: %s</string>
   <string name="transaction_history_empty_transactions">Aún no tiene ninguna transacción</string>
   <string name="transaction_history_error_failed_to_load">Error al cargar el historial de transacciones.\nHaga clic en el botón de recarga para actualizar la información.</string>
@@ -921,6 +943,7 @@
   <string name="user_wallet_list_unlock_all_with">Desbloquear todo con %s</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">La blockchain está Inaccesible. Inténtelo más tarde</string>
   <string name="wallet_balance_missing_derivation">Escanee la tarjeta o el anillo</string>
+  <string name="wallet_been_activated_message">Esta billetera ya ha sido activada anteriormente.\nSi no fue usted quien lo hizo, comuníquese con el servicio de asistencia.\nTangem nunca vende billeteras junto con el código de acceso generado previamente.</string>
   <string name="wallet_connect_alert_sign_message">Solicitud para firmar un mensaje.\n\n%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, solicitando\nfirmar transacción BNB.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Orden de intercambio por %1$s\nPrecio: %2$s\nCantidad a recibir: %3$s\nCantidad a pagar: %4$s</string>
@@ -1002,12 +1025,12 @@
   <string name="warning_failed_to_verify_card_message">Esta tarjeta podría ser una muestra de producción o una falsificación</string>
   <string name="warning_failed_to_verify_card_title">La verificación de autenticidad falló</string>
   <string name="warning_hedera_missing_token_association_button_title">Asociar</string>
-  <string name="warning_hedera_missing_token_association_message">Este token debe estar asociado a tu cuenta de Hedera antes de que pueda recibirlo. Tarifa de asociación ~%1$s %2$s</string>
+  <string name="warning_hedera_missing_token_association_message">Este token debe estar asociado a tu cuenta de Hedera antes de que pueda recibirlo. Tarifa de asociación ~%1$s %2$s</string>
   <string name="warning_hedera_missing_token_association_message_brief">Este token debe estar asociado con su cuenta de Hedera antes de poder recibirlo.</string>
   <string name="warning_hedera_missing_token_association_title">Asocie su token</string>
   <string name="warning_hedera_token_association_not_enough_hbar_message">No hay suficiente %s. Recargue su cuenta de Hedera para asociar este token</string>
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">¿Está seguro(a) de que desea cancelar la transacción? No podrá volver a intentar realizarla.</string>
-  <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
+  <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
   <string name="warning_low_signatures_message">Solo quedan %s firmas en esta tarjeta. Deba retirar todos sus fondos.</string>
   <string name="warning_low_signatures_title">Recuento de firmas bajo</string>

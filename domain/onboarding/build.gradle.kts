@@ -6,4 +6,6 @@ plugins {
 dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
+
+    implementation(projects.domain.models)
 }

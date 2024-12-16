@@ -1,7 +1,7 @@
 package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchainsdk.utils.isSupportedInApp
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.CardTypesResolver
@@ -15,7 +15,10 @@ import com.tangem.domain.models.scan.CardDTO
 val FirmwareVersion.Companion.SolanaTokensAvailable
     get() = FirmwareVersion(4, 52)
 
-fun CardDTO.supportedBlockchains(cardTypesResolver: CardTypesResolver): List<Blockchain> {
+fun CardDTO.supportedBlockchains(
+    cardTypesResolver: CardTypesResolver,
+    excludedBlockchains: ExcludedBlockchains,
+): List<Blockchain> {
     val supportedBlockchains = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
         Blockchain.fromCurve(EllipticCurve.Secp256k1).toMutableList()
     } else if (!cardTypesResolver.isWallet2() && !cardTypesResolver.isTangemWallet()) {
@@ -27,11 +30,14 @@ fun CardDTO.supportedBlockchains(cardTypesResolver: CardTypesResolver): List<Blo
     }
     return supportedBlockchains
         .filter { isTestCard == it.isTestnet() }
-        .filter { it.isSupportedInApp() }
+        .filter { it !in excludedBlockchains }
 }
 
-fun CardDTO.supportedTokens(cardTypesResolver: CardTypesResolver): List<Blockchain> {
-    val tokensSupportedByBlockchain = supportedBlockchains(cardTypesResolver)
+fun CardDTO.supportedTokens(
+    cardTypesResolver: CardTypesResolver,
+    excludedBlockchains: ExcludedBlockchains,
+): List<Blockchain> {
+    val tokensSupportedByBlockchain = supportedBlockchains(cardTypesResolver, excludedBlockchains)
         .filter { it.canHandleTokens() }
         .toMutableList()
     val tokensSupportedByCard = when {
@@ -68,10 +74,14 @@ fun CardDTO.canHandleToken(
     }
 }
 
-fun CardDTO.canHandleToken(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
+fun CardDTO.canHandleToken(
+    blockchain: Blockchain,
+    cardTypesResolver: CardTypesResolver,
+    excludedBlockchains: ExcludedBlockchains,
+): Boolean {
     val cardConfig = CardConfig.createConfig(this)
     val primaryCurveForBlockchain = cardConfig.primaryCurve(blockchain)
-    val isContainsBlockchain = this.supportedTokens(cardTypesResolver).contains(blockchain)
+    val isContainsBlockchain = blockchain in supportedTokens(cardTypesResolver, excludedBlockchains)
     val isWalletForCurveExists = wallets.any { it.curve == primaryCurveForBlockchain }
     // fixme: check for first wallets with 1 curve and remove condition
     return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {
@@ -82,10 +92,14 @@ fun CardDTO.canHandleToken(blockchain: Blockchain, cardTypesResolver: CardTypesR
     }
 }
 
-fun CardDTO.canHandleBlockchain(blockchain: Blockchain, cardTypesResolver: CardTypesResolver): Boolean {
+fun CardDTO.canHandleBlockchain(
+    blockchain: Blockchain,
+    cardTypesResolver: CardTypesResolver,
+    excludedBlockchains: ExcludedBlockchains,
+): Boolean {
     val cardConfig = CardConfig.createConfig(this)
     val primaryCurveForBlockchain = cardConfig.primaryCurve(blockchain)
-    val isContainsBlockchain = this.supportedBlockchains(cardTypesResolver).contains(blockchain)
+    val isContainsBlockchain = blockchain in supportedBlockchains(cardTypesResolver, excludedBlockchains)
     val isWalletForCurveExists = wallets.any { it.curve == primaryCurveForBlockchain }
     // fixme: check for first wallets with 1 curve and remove condition
     return if (cardTypesResolver.isTangemWallet() || cardTypesResolver.isWallet2()) {
