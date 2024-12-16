@@ -44,6 +44,7 @@ fun OutlineTextField(
     isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     TangemTextField(
@@ -58,6 +59,7 @@ fun OutlineTextField(
         isError = isError,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        visualTransformation = visualTransformation,
         interactionSource = interactionSource,
     )
 }
@@ -76,6 +78,8 @@ fun OutlineTextFieldWithIcon(
     isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    caption: String? = null,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     TangemTextFieldWithIcon(
@@ -91,6 +95,8 @@ fun OutlineTextFieldWithIcon(
         isError = isError,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        visualTransformation = visualTransformation,
+        caption = caption,
         interactionSource = interactionSource,
         onIconClick = onIconClick,
     )
@@ -189,15 +195,16 @@ private fun TangemTextField(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            if (caption.isNullOrEmpty()) return@AnimatedVisibility
+            val captionWrapped = remember(this) { requireNotNull(caption) }
+
             Column {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    text = caption,
-                    style = TangemTheme.typography.body1,
+                    text = captionWrapped,
+                    style = TangemTheme.typography.caption2,
                     color = colors.captionColor(enabled = enabled, isError = isError).value,
                 )
             }
@@ -218,6 +225,7 @@ private fun TangemTextFieldWithIcon(
     placeholder: String? = null,
     enabled: Boolean = true,
     isError: Boolean = false,
+    caption: String? = null,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
@@ -280,6 +288,26 @@ private fun TangemTextFieldWithIcon(
                 }
             },
         )
+
+        AnimatedVisibility(
+            visible = !caption.isNullOrEmpty(),
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            val captionWrapped = remember(this) { requireNotNull(caption) }
+
+            Column {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    text = captionWrapped,
+                    style = TangemTheme.typography.caption2,
+                    color = colors.captionColor(enabled = enabled, isError = isError).value,
+                )
+            }
+        }
     }
 }
 
