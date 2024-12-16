@@ -31,7 +31,7 @@ internal class QrScanningViewModel @Inject constructor(
     private val network: String? = savedStateHandle[AppRoute.QrScanning.NETWORK_KEY]
 
     val uiState: StateFlow<QrScanningState> = stateHolder.uiState
-    val launchGalleryEvent: SharedFlow<GalleryRequest> = clickIntents.launchGallery
+    val launchGalleryEvent: SharedFlow<Unit> = clickIntents.launchGallery
 
     init {
         // samsung for some reason disables reader mode, and then it works unstable
