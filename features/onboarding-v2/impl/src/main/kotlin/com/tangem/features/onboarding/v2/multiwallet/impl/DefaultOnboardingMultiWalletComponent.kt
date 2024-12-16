@@ -33,6 +33,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWall
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.Wallet1ChooseOptionComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.MultiWalletCreateWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWalletFinalizeComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.Wallet1ScanPrimaryComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.MultiWalletSeedPhraseComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
@@ -59,6 +60,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 CreateWallet -> WalletArtworksState.Folded
                 ChooseBackupOption -> WalletArtworksState.Fan
                 SeedPhrase -> WalletArtworksState.Folded
+                ScanPrimary -> WalletArtworksState.Folded
                 AddBackupDevice -> WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
                 Finalize -> WalletArtworksState.Stack()
                 Done -> error("Done state should not be used as starting state")
@@ -93,11 +95,14 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         )
 
     val backButtonClickFlow = MutableSharedFlow<Unit>()
+
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = innerNavigationStateFlow
 
         override fun pop(onComplete: (Boolean) -> Unit) {
-            if (childStack.active.configuration == SeedPhrase) {
+            val config = childStack.active.configuration
+
+            if (config == SeedPhrase || config == Finalize) {
                 componentScope.launch { backButtonClickFlow.emit(Unit) }
             } else {
                 model.onBack()
@@ -152,6 +157,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 backButtonClickFlow = backButtonClickFlow,
                 onBack = { stackNavigation.pop() },
             )
+            ScanPrimary -> Wallet1ScanPrimaryComponent(
+                context = childContext,
+                params = childParams,
+                onDone = { handleNavigationEvent(AddBackupDevice) },
+            )
             AddBackupDevice -> MultiWalletBackupComponent(
                 context = childContext,
                 params = childParams,
@@ -160,6 +170,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
             Finalize -> MultiWalletFinalizeComponent(
                 context = childContext,
                 params = childParams,
+                backButtonClickFlow = backButtonClickFlow,
+                onBack = { model.onBack() },
                 onEvent = ::handleFinalizeComponentEvent,
             )
             Done -> error("Unexpected Done state")
