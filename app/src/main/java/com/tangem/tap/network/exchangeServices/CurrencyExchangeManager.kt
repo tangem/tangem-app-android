@@ -8,6 +8,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -19,6 +21,8 @@ import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
 
 /**
@@ -30,9 +34,22 @@ class CurrencyExchangeManager(
     private val primaryRules: ExchangeRules,
 ) : ExchangeService {
 
+    override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
+        get() = _initializationStatus
+
+    private val _initializationStatus: MutableStateFlow<ExchangeServiceInitializationStatus> =
+        MutableStateFlow(value = lceLoading())
+
     override suspend fun update() {
-        buyService.update()
+        _initializationStatus.value = lceLoading()
+
+        if (!store.inject(DaggerGraphState::onrampFeatureToggles).isFeatureEnabled) {
+            buyService.update()
+        }
+
         sellService.update()
+
+        _initializationStatus.value = lceContent()
     }
 
     override fun isBuyAllowed(): Boolean = primaryRules.isBuyAllowed() && buyService.isBuyAllowed()
