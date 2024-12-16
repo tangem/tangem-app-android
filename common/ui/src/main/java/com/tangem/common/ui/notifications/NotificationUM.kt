@@ -9,6 +9,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.shorted
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import java.math.BigDecimal
 
 sealed class NotificationUM(val config: NotificationConfig) {
@@ -226,6 +227,24 @@ sealed class NotificationUM(val config: NotificationConfig) {
                 wrappedList(cryptoAmount, fiatAmount),
             ),
         )
+
+        data class OnrampErrorNotification(val errorCode: String?, val onRefresh: () -> Unit) : Warning(
+            title = resourceReference(R.string.common_error),
+            subtitle = if (errorCode != null) {
+                resourceReference(R.string.express_error_code, wrappedList(errorCode))
+            } else {
+                resourceReference(R.string.common_unknown_error)
+            },
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.warning_button_refresh),
+                onClick = onRefresh,
+            ),
+        )
+
+        data object SwapNoAvailablePair : Warning(
+            title = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_title),
+            subtitle = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_message),
+        )
     }
 
     open class Info(
@@ -304,6 +323,19 @@ sealed class NotificationUM(val config: NotificationConfig) {
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(R.string.send_notification_reduce_to, wrappedList(availableKoinForTransfer)),
                 onClick = onReduceClick,
+            ),
+        )
+    }
+
+    sealed interface Solana {
+
+        data class RentInfo(
+            private val rentInfo: CryptoCurrencyWarning.Rent,
+        ) : Error(
+            title = TextReference.Res(R.string.send_notification_invalid_amount_title),
+            subtitle = TextReference.Res(
+                id = R.string.send_notification_invalid_amount_rent_fee,
+                formatArgs = wrappedList(rentInfo.exemptionAmount),
             ),
         )
     }
