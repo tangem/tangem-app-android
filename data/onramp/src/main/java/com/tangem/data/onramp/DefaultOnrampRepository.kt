@@ -21,10 +21,11 @@ import com.tangem.datasource.api.onramp.models.common.OnrampDestinationDTO
 import com.tangem.datasource.api.onramp.models.request.OnrampPairsRequest
 import com.tangem.datasource.api.onramp.models.response.OnrampDataJson
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
-import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
 import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
+import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
@@ -38,6 +39,7 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.onramp.model.error.OnrampPairsError
 import com.tangem.domain.onramp.model.error.OnrampRedirectError
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.tokens.model.Amount
@@ -65,6 +67,8 @@ internal class DefaultOnrampRepository(
     private val paymentMethodsStore: OnrampPaymentMethodsStore,
     private val pairsStore: OnrampPairsStore,
     private val quotesStore: OnrampQuotesStore,
+    private val countriesStore: OnrampCountriesStore,
+    private val currenciesStore: OnrampCurrenciesStore,
     private val walletManagersFacade: WalletManagersFacade,
     private val dataSignatureVerifier: DataSignatureVerifier,
     moshi: Moshi,
@@ -78,16 +82,34 @@ internal class DefaultOnrampRepository(
     private val onrampErrorAdapter = moshi.adapter(ExpressErrorResponse::class.java)
     private val onrampErrorConverter = OnrampErrorConverter(onrampErrorAdapter)
 
-    override suspend fun getCurrencies(): List<OnrampCurrency> = withContext(dispatchers.io) {
-        onrampApi.getCurrencies()
+    override fun getCurrencies(): Flow<List<OnrampCurrency>> = currenciesStore.get(CURRENCIES_KEY)
+
+    override suspend fun fetchCurrencies() = withContext(dispatchers.io) {
+        if (!currenciesStore.getSyncOrNull(CURRENCIES_KEY).isNullOrEmpty()) return@withContext
+
+        val result = onrampApi.getCurrencies()
             .getOrThrow()
             .map(currencyConverter::convert)
+
+        currenciesStore.store(CURRENCIES_KEY, result)
     }
 
-    override suspend fun getCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
-        onrampApi.getCountries()
+    override fun getCountries(): Flow<List<OnrampCountry>> = countriesStore.get(COUNTRIES_KEY)
+
+    override suspend fun getCountriesSync(): List<OnrampCountry>? {
+        return countriesStore.getSyncOrNull(COUNTRIES_KEY)
+    }
+
+    override suspend fun fetchCountries(): List<OnrampCountry> = withContext(dispatchers.io) {
+        if (!countriesStore.getSyncOrNull(COUNTRIES_KEY).isNullOrEmpty()) return@withContext emptyList()
+
+        val result = onrampApi.getCountries()
             .getOrThrow()
             .map(countryConverter::convert)
+
+        countriesStore.store(COUNTRIES_KEY, result)
+
+        result
     }
 
     override suspend fun getCountryByIp(): OnrampCountry = withContext(dispatchers.io) {
@@ -103,22 +125,23 @@ internal class DefaultOnrampRepository(
     }
 
     override suspend fun saveDefaultCurrency(currency: OnrampCurrency) = withContext(dispatchers.io) {
-        appPreferencesStore.storeObject<OnrampCurrencyDTO>(
-            key = PreferencesKeys.ONRAMP_DEFAULT_CURRENCY,
-            value = currencyConverter.convertBack(currency),
+        val country = getDefaultCountrySync() ?: return@withContext
+        appPreferencesStore.storeObject<OnrampCountryDTO>(
+            key = PreferencesKeys.ONRAMP_DEFAULT_COUNTRY,
+            value = countryConverter.convertBack(country.copy(defaultCurrency = currency)),
         )
     }
 
     override suspend fun getDefaultCurrencySync(): OnrampCurrency? = withContext(dispatchers.io) {
         appPreferencesStore
-            .getObjectSyncOrNull<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
-            ?.let(currencyConverter::convert)
+            .getObjectSyncOrNull<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            ?.let(countryConverter::convert)?.defaultCurrency
     }
 
     override fun getDefaultCurrency(): Flow<OnrampCurrency?> {
         return appPreferencesStore
-            .getObject<OnrampCurrencyDTO>(PreferencesKeys.ONRAMP_DEFAULT_CURRENCY)
-            .map { it?.let(currencyConverter::convert) }
+            .getObject<OnrampCountryDTO>(PreferencesKeys.ONRAMP_DEFAULT_COUNTRY)
+            .map { it?.let(countryConverter::convert)?.defaultCurrency }
     }
 
     override suspend fun saveDefaultCountry(country: OnrampCountry) = withContext(dispatchers.io) {
@@ -318,9 +341,7 @@ internal class DefaultOnrampRepository(
 
     override suspend fun getAvailablePaymentMethods(): Set<OnrampPaymentMethod> {
         val quotes = requireNotNull(quotesStore.getSyncOrNull(QUOTES_KEY)) { "Quotes must not be null" }
-        return quotes
-            .filterIsInstance<OnrampQuote.Data>()
-            .mapTo(hashSetOf(), OnrampQuote.Data::paymentMethod)
+        return quotes.mapTo(hashSetOf(), OnrampQuote::paymentMethod)
     }
 
     override suspend fun saveSelectedPaymentMethod(paymentMethod: OnrampPaymentMethod) {
@@ -338,9 +359,12 @@ internal class DefaultOnrampRepository(
         paymentMethodsStore.clear()
         pairsStore.clear()
         quotesStore.clear()
+        countriesStore.clear()
+        currenciesStore.clear()
     }
 
     private suspend fun storeOnrampPairs(pairs: List<OnrampPairDTO>, providers: List<ExchangeProvider>) {
+        if (pairs.isEmpty() || providers.isEmpty()) throw OnrampPairsError.PairsNotFound
         val onrampPaymentMethods = getPaymentMethods()
         val onrampPairs = pairs.map { pair ->
             val onrampProviders = pair.providers.mapNotNull { onrampProviderDTO ->
@@ -350,12 +374,20 @@ internal class DefaultOnrampRepository(
 
                 OnrampProvider(
                     id = onrampProviderDTO.providerId,
-                    info = OnrampProviderInfo(name = providerInfo.name, imageLarge = providerInfo.imageLargeUrl),
+                    info = OnrampProviderInfo(
+                        name = providerInfo.name,
+                        imageLarge = providerInfo.imageLargeUrl,
+                        termsOfUseLink = providerInfo.termsOfUse,
+                        privacyPolicyLink = providerInfo.privacyPolicy,
+                    ),
                     paymentMethods = onrampPaymentMethods.filter { paymentMethod ->
                         onrampProviderDTO.paymentMethods.any { paymentMethod.id == it }
                     },
                 )
             }
+
+            if (onrampProviders.isEmpty()) throw OnrampPairsError.PairsNotFound
+
             OnrampPair(onrampProviders)
         }
         pairsStore.store(PAIRS_KEY, onrampPairs)
@@ -453,6 +485,8 @@ internal class DefaultOnrampRepository(
         const val SELECTED_PAYMENT_METHOD_KEY = "onramp_selected_payment_method"
         const val PAIRS_KEY = "onramp_pairs"
         const val QUOTES_KEY = "onramp_quotes"
+        const val COUNTRIES_KEY = "onramp_countries"
+        const val CURRENCIES_KEY = "onramp_currencies"
         const val PROVIDER_THEME_DARK = "dark"
         const val PROVIDER_THEME_LIGHT = "light"
     }
