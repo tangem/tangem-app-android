@@ -8,11 +8,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.onboarding.R
 import com.tangem.feature.onboarding.presentation.wallet2.model.IntroState
@@ -49,7 +49,7 @@ fun IntroScreen(state: IntroState, modifier: Modifier = Modifier) {
                     PrimaryButtonIconEnd(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
+                        text = stringResourceSafe(id = R.string.onboarding_create_wallet_button_create_wallet),
                         iconResId = R.drawable.ic_tangem_24,
                         enabled = state.buttonCreateWallet.enabled,
                         showProgress = state.buttonCreateWallet.showProgress,
@@ -60,7 +60,7 @@ fun IntroScreen(state: IntroState, modifier: Modifier = Modifier) {
                     SecondaryButton(
                         modifier = Modifier
                             .fillMaxWidth(),
-                        text = stringResource(id = R.string.onboarding_create_wallet_options_button_options),
+                        text = stringResourceSafe(id = R.string.onboarding_create_wallet_options_button_options),
                         enabled = state.buttonOtherOptions.enabled,
                         showProgress = state.buttonOtherOptions.showProgress,
                         onClick = state.buttonOtherOptions.onClick,
