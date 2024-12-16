@@ -28,5 +28,6 @@ internal fun AnalyticsEventHandler.sendOnrampErrorEvent(
     is OnrampError.AmountError.TooSmallError,
     OnrampError.RedirectError.VerificationFailed,
     OnrampError.RedirectError.WrongRequestId,
+    OnrampError.PairsNotFound,
     -> { /* no-op */ }
 }
