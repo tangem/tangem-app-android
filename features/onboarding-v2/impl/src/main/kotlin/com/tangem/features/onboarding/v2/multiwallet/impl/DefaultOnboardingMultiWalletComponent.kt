@@ -33,6 +33,7 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.MultiWall
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.Wallet1ChooseOptionComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.createwallet.MultiWalletCreateWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.MultiWalletFinalizeComponent
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.Wallet1ScanPrimaryComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.MultiWalletSeedPhraseComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState
@@ -59,6 +60,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 CreateWallet -> WalletArtworksState.Folded
                 ChooseBackupOption -> WalletArtworksState.Fan
                 SeedPhrase -> WalletArtworksState.Folded
+                ScanPrimary -> WalletArtworksState.Folded
                 AddBackupDevice -> WalletArtworksState.Unfold(WalletArtworksState.Unfold.Step.First)
                 Finalize -> WalletArtworksState.Stack()
                 Done -> error("Done state should not be used as starting state")
@@ -154,6 +156,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 onNextStep = ::handleNavigationEvent,
                 backButtonClickFlow = backButtonClickFlow,
                 onBack = { stackNavigation.pop() },
+            )
+            ScanPrimary -> Wallet1ScanPrimaryComponent(
+                context = childContext,
+                params = childParams,
+                onDone = { handleNavigationEvent(AddBackupDevice) },
             )
             AddBackupDevice -> MultiWalletBackupComponent(
                 context = childContext,
