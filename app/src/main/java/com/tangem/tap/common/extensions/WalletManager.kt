@@ -43,7 +43,7 @@ suspend fun WalletManager.safeUpdate(isDemoCard: Boolean): Result<Wallet> = try 
         Result.Failure(TapError.NoInternetConnection)
     } else {
         val blockchain = wallet.blockchain
-        val amountToCreateAccount = blockchain.amountToCreateAccount(wallet.getFirstToken())
+        val amountToCreateAccount = blockchain.amountToCreateAccount(this, wallet.getFirstToken())
 
         if (exception is BlockchainSdkError.AccountNotFound && amountToCreateAccount != null) {
             Result.Failure(TapError.WalletManager.NoAccountError(amountToCreateAccount.toString()))
