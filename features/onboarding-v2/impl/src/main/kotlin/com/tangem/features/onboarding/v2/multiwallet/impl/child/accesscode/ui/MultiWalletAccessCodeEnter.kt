@@ -1,6 +1,9 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -9,12 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.OutlineTextFieldWithIcon
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -35,17 +38,17 @@ internal fun MultiWalletAccessCodeEnter(
     ) {
         Text(
             text = if (reEnterAccessCodeState) {
-                stringResource(R.string.onboarding_access_code_repeat_code_title)
+                stringResourceSafe(R.string.onboarding_access_code_repeat_code_title)
             } else {
-                stringResource(R.string.onboarding_access_code_intro_title)
+                stringResourceSafe(R.string.onboarding_access_code_intro_title)
             },
             style = TangemTheme.typography.subtitle1,
         )
         Text(
             text = if (reEnterAccessCodeState) {
-                stringResource(R.string.onboarding_access_code_repeat_code_hint)
+                stringResourceSafe(R.string.onboarding_access_code_repeat_code_hint)
             } else {
-                stringResource(R.string.onboarding_access_code_hint)
+                stringResourceSafe(R.string.onboarding_access_code_hint)
             },
             style = TangemTheme.typography.body1,
         )
@@ -73,7 +76,7 @@ internal fun MultiWalletAccessCodeEnter(
             } else {
                 state.onAccessCodeFirstChange
             },
-            label = stringResource(id = R.string.onboarding_wallet_info_title_third),
+            label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third),
             isError = state.codesNotMatchError || state.atLeast4CharError,
             visualTransformation = if (state.accessCodeHidden) {
                 PasswordVisualTransformation()
@@ -82,9 +85,9 @@ internal fun MultiWalletAccessCodeEnter(
             },
             caption = when {
                 state.codesNotMatchError && reEnterAccessCodeState ->
-                    stringResource(R.string.onboarding_access_codes_doesnt_match)
+                    stringResourceSafe(R.string.onboarding_access_codes_doesnt_match)
                 state.atLeast4CharError && !reEnterAccessCodeState ->
-                    stringResource(R.string.onboarding_access_code_too_short)
+                    stringResourceSafe(R.string.onboarding_access_code_too_short)
                 else -> null
             },
         )
