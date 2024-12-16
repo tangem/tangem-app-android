@@ -29,4 +29,6 @@ sealed class OnrampError {
     data class DomainError(
         val description: String?,
     ) : OnrampError()
+
+    data object PairsNotFound : OnrampError()
 }
