@@ -64,12 +64,16 @@ private fun handleAction(action: Action, appState: () -> AppState?) {
                 }
                 val cardProvider: () -> CardDTO? = { scanResponseProvider.invoke()?.card }
 
+                val buyService = makeBuyExchangeService(config)
+                val sellService = makeSellExchangeService(config)
                 val exchangeManager = CurrencyExchangeManager(
-                    buyService = makeBuyExchangeService(config),
-                    sellService = makeSellExchangeService(config),
+                    buyService = buyService,
+                    sellService = sellService,
                     primaryRules = CardExchangeRules(cardProvider),
                 )
                 // TODO: for refactoring (after remove old design refactor CurrencyExchangeManager and use 1 instance)
+                store.inject(DaggerGraphState::appStateHolder).buyService = buyService
+                store.inject(DaggerGraphState::appStateHolder).sellService = sellService
                 store.inject(DaggerGraphState::appStateHolder).exchangeService = exchangeManager
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
                 store.dispatchOnMain(GlobalAction.ExchangeManager.Update)

@@ -17,7 +17,6 @@ import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.features.main.model.MainScreenState
@@ -40,7 +39,6 @@ internal class MainViewModel @Inject constructor(
     private val blockchainSDKFactory: BlockchainSDKFactory,
     private val userWalletsListManager: UserWalletsListManager,
     private val dispatchers: CoroutineDispatcherProvider,
-    stakingFeatureToggles: StakingFeatureToggles,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val apiConfigsManager: ApiConfigsManager,
     homeFeatureToggles: HomeFeatureToggles,
@@ -78,9 +76,7 @@ internal class MainViewModel @Inject constructor(
         displayBalancesHidingStatusToast()
         displayHiddenBalancesModalNotification()
 
-        if (stakingFeatureToggles.isStakingEnabled) {
-            fetchStakingTokens()
-        }
+        fetchStakingTokens()
 
         deleteDeprecatedLogsUseCase()
     }
@@ -216,7 +212,6 @@ internal class MainViewModel @Inject constructor(
 
     override fun onDismissBottomSheet() {
         listenToFlipsUseCase.changeUpdateEnabled(true)
-        router.pop()
         stateHolder.updateWithoutModalNotification()
         stateHolder.updateWithHiddenBalancesToast(true)
     }

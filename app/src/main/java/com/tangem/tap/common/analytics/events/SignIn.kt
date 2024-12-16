@@ -11,7 +11,7 @@ sealed class SignIn(
     error: Throwable? = null,
 ) : AnalyticsEvent("Sign In", event, params, error) {
 
-    class ScreenOpened : SignIn(event = "Sing In Screen Opened")
+    class ScreenOpened : SignIn(event = "Sign In Screen Opened")
 
     class ButtonBiometricSignIn : SignIn(event = "Button - Biometric Sign In")
     class ButtonCardSignIn : SignIn(event = "Button - Card Sign In")
