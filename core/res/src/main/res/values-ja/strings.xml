@@ -255,7 +255,7 @@
   <string name="express_by_provider">提供元</string>
   <string name="express_cex_status_button_title">ステータス</string>
   <string name="express_choose_providers_subtitle">Tangemは、各プロバイダーの条件に従って、サードパーティプロバイダーを介してトークンスワップを提供します。</string>
-  <string name="express_choose_providers_title">プロバイダーを選択</string>
+  <string name="express_choose_providers_title">プロバイダー</string>
   <string name="express_error_code">エラーが発生しました。コード: %s</string>
   <string name="express_error_provider_amount_roundup">エラー%1$s 。選択したプロバイダーは指定された取引を処理できません。値を%2$sに切り上げるか、変更してください。</string>
   <string name="express_error_swap_pair_unavailable">選択したプロバイダーは現在利用できません。しばらくしてからもう一度お試しください。(コード: %s )</string>
@@ -576,6 +576,7 @@
   <string name="onramp_country_search">国で検索</string>
   <string name="onramp_country_unavailable">利用不可</string>
   <string name="onramp_currency_search">通貨で検索</string>
+  <string name="onramp_legal">オンランプ機能を使用することにより、プロバイダの%1$sおよび%2$sに同意するものとします</string>
   <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>
   <string name="onramp_min_amount_restriction">買付金額は少なくとも%sである必要があります</string>
   <string name="onramp_no_available_providers">この通貨で利用可能なプロバイダーはありません</string>
