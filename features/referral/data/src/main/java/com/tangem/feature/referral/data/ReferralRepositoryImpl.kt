@@ -2,6 +2,7 @@ package com.tangem.feature.referral.data
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
@@ -18,13 +19,17 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class ReferralRepositoryImpl @Inject constructor(
     private val referralApi: TangemTechApi,
     private val referralConverter: ReferralConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
     private val demoModeDatasource: DemoModeDatasource,
     private val userWalletsStore: UserWalletsStore,
+    excludedBlockchains: ExcludedBlockchains,
 ) : ReferralRepository {
+
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
     override val isDemoMode: Boolean
         get() = demoModeDatasource.isDemoModeActive
@@ -64,8 +69,6 @@ internal class ReferralRepositoryImpl @Inject constructor(
 
         val blockchain = Blockchain.fromNetworkId(tokenData.networkId)
             ?: error("Blockchain ${tokenData.networkId} not found")
-
-        val cryptoCurrencyFactory = CryptoCurrencyFactory()
 
         val contractAddress = tokenData.contractAddress
         val decimalCount = tokenData.decimalCount

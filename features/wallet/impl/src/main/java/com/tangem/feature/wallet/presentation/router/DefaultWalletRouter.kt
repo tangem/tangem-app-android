@@ -17,6 +17,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -27,6 +28,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewM
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
 import com.tangem.features.markets.entry.MarketsEntryComponent
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
@@ -34,6 +36,7 @@ internal class DefaultWalletRouter(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
     private val reduxStateHolder: ReduxStateHolder,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
@@ -106,10 +109,28 @@ internal class DefaultWalletRouter(
         )
     }
 
-    override fun openOnboardingScreen() {
-        router.push(
-            AppRoute.OnboardingWallet(canSkipBackup = false),
-        )
+    override fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean) {
+        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
+            router.push(
+                AppRoute.Onboarding(
+                    scanResponse = scanResponse,
+                    startFromBackup = true,
+                    mode = if (continueBackup) {
+                        AppRoute.Onboarding.Mode.AddBackup
+                    } else {
+                        AppRoute.Onboarding.Mode.Onboarding
+                    },
+                ),
+            )
+        } else {
+            router.push(
+                AppRoute.OnboardingWallet(canSkipBackup = false),
+            )
+        }
+    }
+
+    override fun openOnrampSuccessScreen(externalTxId: String) {
+        router.push(AppRoute.OnrampSuccess(externalTxId))
     }
 
     override fun openUrl(url: String) {
