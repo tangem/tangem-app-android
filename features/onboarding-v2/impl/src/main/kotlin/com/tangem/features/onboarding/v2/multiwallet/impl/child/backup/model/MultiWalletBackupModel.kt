@@ -84,15 +84,16 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun startBackupWallet() {
-        if (state.value.numberOfBackupCards == 0) {
+        if (state.value.numberOfBackupCards == 0 && scanResponse.primaryCard != null) {
             backupService.discardSavedBackup()
         }
-        val primaryCard = scanResponse.primaryCard
 
+        val primaryCard = scanResponse.primaryCard
         if (primaryCard != null) {
             backupService.setPrimaryCard(primaryCard)
-            addBackupCardWithService()
         }
+
+        addBackupCardWithService()
     }
 
     private fun setNumberOfBackupCards(number: Int) {
