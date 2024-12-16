@@ -1,7 +1,7 @@
 package com.tangem.features.disclaimer.impl.ui
 
-import android.annotation.SuppressLint
 import android.content.res.Configuration
+import android.webkit.WebView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -37,29 +36,22 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_ACCEPT_BUTTON
 import com.tangem.core.ui.test.TestTags.DISCLAIMER_SCREEN_CONTAINER
+import com.tangem.core.ui.webview.applySafeSettings
 import com.tangem.features.disclaimer.impl.R
 import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
 import com.tangem.features.disclaimer.impl.entity.DummyDisclaimer
 import com.tangem.features.disclaimer.impl.local.localTermsOfServices
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import java.nio.charset.StandardCharsets
 
 @Composable
 internal fun DisclaimerScreen(state: DisclaimerUM) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-    val bottomPadding = if (state.isTosAccepted) {
-        bottomBarHeight + TangemTheme.dimens.size16
-    } else {
-        bottomBarHeight + TangemTheme.dimens.size64
-    }
-    val backgroundColor = if (state.isTosAccepted) TangemTheme.colors.background.primary else TangemColorPalette.Dark6
-    val (textColor, iconColor) = if (state.isTosAccepted) {
-        TangemTheme.colors.text.primary1 to TangemTheme.colors.icon.primary1
-    } else {
-        TangemColorPalette.Light4 to TangemColorPalette.Light4
-    }
+    val bottomPadding = bottomBarHeight + TangemTheme.dimens.size16
+
     Box(
         modifier = Modifier
-            .background(backgroundColor)
+            .background(TangemTheme.colors.background.primary)
             .statusBarsPadding()
             .testTag(DISCLAIMER_SCREEN_CONTAINER),
     ) {
@@ -75,14 +67,15 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
                     onIconClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
                 titleAlignment = Alignment.CenterHorizontally,
-                textColor = textColor,
-                iconTint = iconColor,
             )
-            DisclaimerContent(state.url, state.isTosAccepted)
+            DisclaimerContent(state.url)
         }
 
         if (!state.isTosAccepted) {
-            BottomFade(Modifier.align(Alignment.BottomCenter), backgroundColor = backgroundColor)
+            BottomFade(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                backgroundColor = TangemTheme.colors.background.primary,
+            )
             DisclaimerButton(state.onAccept)
         } else {
             NavigationBar3ButtonsScrim()
@@ -90,14 +83,14 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
-    val backgroundColor = if (isTosAccepted) TangemTheme.colors.background.primary else TangemColorPalette.Dark6
-
+private fun DisclaimerContent(url: String) {
     val webViewStateUrl = rememberWebViewState(url)
-    val webViewStateData =
-        rememberWebViewStateWithHTMLData(data = localTermsOfServices, mimeType = "text/html", encoding = "UTF-8")
+    val webViewStateData = rememberWebViewStateWithHTMLData(
+        data = localTermsOfServices,
+        mimeType = "text/html",
+        encoding = StandardCharsets.UTF_8.name(),
+    )
 
     val webViewState by remember {
         derivedStateOf {
@@ -113,12 +106,10 @@ private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
         WebView(
             state = webViewState,
             captureBackPresses = false,
-            onCreated = {
-                it.settings.javaScriptEnabled = !isTosAccepted
-                it.setBackgroundColor(backgroundColor.toArgb())
-            },
-            client = remember { DisclaimerWebViewClient() },
-            modifier = Modifier.fillMaxSize(),
+            onCreated = WebView::applySafeSettings,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(TangemTheme.colors.background.primary),
         )
 
         AnimatedVisibility(
@@ -128,12 +119,12 @@ private fun DisclaimerContent(url: String, isTosAccepted: Boolean) {
             exit = fadeOut(),
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundColor),
+                .background(TangemTheme.colors.background.primary),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(backgroundColor),
+                    .background(TangemTheme.colors.background.primary),
             ) {
                 CircularProgressIndicator(
                     color = TangemTheme.colors.icon.informative,
