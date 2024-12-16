@@ -5,9 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,6 +16,7 @@ import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
@@ -48,48 +47,50 @@ internal fun MultiWalletSeedPhraseWordsCheck(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .imePadding(),
     ) {
-        Text(
-            text = stringResource(R.string.onboarding_seed_user_validation_title),
-            style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(top = 48.dp, start = 36.dp, end = 36.dp, bottom = 16.dp)
-                .fillMaxWidth(),
-        )
-        Text(
-            text = stringResource(R.string.onboarding_seed_user_validation_message),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(horizontal = 36.dp)
-                .fillMaxWidth(),
-        )
-
-        Fields(
-            state = state,
-            modifier = Modifier
-                .padding(vertical = 30.dp, horizontal = 16.dp),
-        )
-
-        Box(
-            Modifier.weight(1f),
+        Column(
+            Modifier
+                .verticalScroll(rememberScrollState())
+                .weight(1f),
         ) {
-            PrimaryButtonIconEnd(
+            Text(
+                text = stringResourceSafe(R.string.onboarding_seed_user_validation_title),
+                style = TangemTheme.typography.h2,
+                color = TangemTheme.colors.text.primary1,
+                textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(16.dp)
+                    .padding(top = 48.dp, start = 36.dp, end = 36.dp, bottom = 16.dp)
                     .fillMaxWidth(),
-                text = stringResource(id = R.string.onboarding_create_wallet_button_create_wallet),
-                iconResId = R.drawable.ic_tangem_24,
-                enabled = state.createWalletButtonEnabled,
-                showProgress = state.createWalletButtonProgress,
-                onClick = state.onCreateWalletButtonClick,
+            )
+            Text(
+                text = stringResourceSafe(R.string.onboarding_seed_user_validation_message),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.secondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .padding(horizontal = 36.dp)
+                    .fillMaxWidth(),
+            )
+
+            Fields(
+                state = state,
+                modifier = Modifier
+                    .padding(vertical = 30.dp, horizontal = 16.dp),
             )
         }
+
+        PrimaryButtonIconEnd(
+            modifier = Modifier
+                .padding(16.dp)
+                .imePadding()
+                .fillMaxWidth(),
+            text = stringResourceSafe(id = R.string.onboarding_create_wallet_button_create_wallet),
+            iconResId = R.drawable.ic_tangem_24,
+            enabled = state.createWalletButtonEnabled,
+            showProgress = state.createWalletButtonProgress,
+            onClick = state.onCreateWalletButtonClick,
+        )
     }
 }
 
