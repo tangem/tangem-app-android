@@ -37,5 +37,7 @@ sealed class WalletConnectAction : Action {
     data class PerformRequestedAction(val sessionRequest: WcPreparedRequest) : WalletConnectAction()
 
     data class PairConnectErrorAction(val throwable: Throwable) : WalletConnectAction()
+
+    data object UnsupportedDappRequest : WalletConnectAction()
     //endregion WalletConnect 2.0
 }

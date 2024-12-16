@@ -1,21 +1,10 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.ui.state
 
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.OnboardingDialogUM
 
 internal data class OnboardingMultiWalletUM(
-    val onCreateWalletClick: () -> Unit,
-    val showSeedPhraseOption: Boolean,
-    val onOtherOptionsClick: () -> Unit,
-    val onBack: () -> Unit,
-    val dialog: Dialog?,
-) {
-    data class Dialog(
-        val title: TextReference,
-        val description: TextReference,
-        val dismissButtonText: TextReference,
-        val confirmButtonText: TextReference,
-        val onConfirm: () -> Unit,
-        val onDismissButtonClick: () -> Unit,
-        val onDismiss: () -> Unit,
-    )
-}
+    val artwork1Url: String? = null,
+    val artwork2Url: String? = null,
+    val artwork3Url: String? = null,
+    val dialog: OnboardingDialogUM? = null,
+)
