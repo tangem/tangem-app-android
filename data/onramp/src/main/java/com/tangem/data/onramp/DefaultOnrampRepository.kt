@@ -415,7 +415,7 @@ internal class DefaultOnrampRepository(
             fromCurrency = currency,
             toAmount = quote.toAmount.value,
             toCurrencyId = cryptoCurrency.id.value,
-            status = OnrampStatus.Status.Expired,
+            status = OnrampStatus.Status.Created,
             externalTxUrl = onrampDataJson.externalTxUrl,
             externalTxId = onrampDataJson.externalTxId,
             timestamp = DateTime.now().millis,
