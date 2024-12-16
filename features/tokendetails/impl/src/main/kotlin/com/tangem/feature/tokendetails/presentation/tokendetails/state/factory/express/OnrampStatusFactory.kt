@@ -61,7 +61,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
                 ifRight = { onrampTxs ->
                     val transactions = onrampTransactionStateConverter.convertList(onrampTxs)
                     transactions.clearHiddenTerminal()
-                    transactions.filterNot { it.activeStatus.isHidden }
+                    transactions
                 },
                 ifLeft = { persistentListOf() },
             )
