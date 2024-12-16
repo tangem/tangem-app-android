@@ -5,12 +5,15 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
 import com.tangem.core.ui.extensions.resourceReference
@@ -19,16 +22,19 @@ import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -39,14 +45,16 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
@@ -81,6 +89,12 @@ interface WalletCurrencyActionsClickIntents {
     fun onExploreClick()
 
     fun onAnalyticsClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
+
+    fun onMultiWalletBuyClick(userWalletId: UserWalletId)
+
+    fun onMultiWalletSellClick(userWalletId: UserWalletId)
+
+    fun onMultiWalletSwapClick(userWalletId: UserWalletId)
 }
 
 @Suppress("LongParameterList", "LargeClass")
@@ -104,6 +118,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
     private val appRouter: AppRouter,
+    private val rampStateManager: RampStateManager,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -219,6 +236,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             symbol = currency.symbol,
             network = currency.network.name,
             addresses = addresses.mapToAddressModels(currency).toImmutableList(),
+            showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
             },
@@ -353,6 +371,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
                         userWallet = userWallet,
+                        source = OnrampSource.TOKEN_LONG_TAP,
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
                     ),
@@ -374,7 +393,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         appRouter.push(
             AppRoute.Swap(
-                currency = cryptoCurrencyStatus.currency,
+                currencyFrom = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
             ),
         )
@@ -430,6 +449,68 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 ),
             )
         }
+    }
+
+    override fun onMultiWalletSellClick(userWalletId: UserWalletId) {
+        viewModelScope.launch {
+            val userCountry = getUserCountryUseCase().getOrNull()
+            if (userCountry is UserCountry.Russia) {
+                handleError(
+                    alertState = WalletAlertState.SellingRegionalRestriction,
+                    eventCreator = MainScreenAnalyticsEvent::ButtonSell,
+                )
+
+                return@launch
+            }
+
+            val selectedWallet = stateHolder.getSelectedWallet().walletCardState as? WalletCardState.Content
+            if (selectedWallet?.isZeroBalance == true) {
+                handleError(
+                    alertState = WalletAlertState.InsufficientBalanceForSelling,
+                    eventCreator = MainScreenAnalyticsEvent::ButtonSell,
+                )
+
+                return@launch
+            }
+
+            onMultiWalletActionClick(
+                statusFlow = rampStateManager.getSellInitializationStatus(),
+                route = AppRoute.SellCrypto(userWalletId = userWalletId),
+                eventCreator = MainScreenAnalyticsEvent::ButtonSell,
+            )
+        }
+    }
+
+    override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
+        val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
+        val tokenListState = selectedWallet.tokensListState as? WalletTokensListState.ContentState.Content ?: return
+
+        if (tokenListState.items.count { it is TokensListItemUM.Token } < 2) {
+            handleError(
+                alertState = WalletAlertState.InsufficientTokensCountForSwapping,
+                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+            )
+
+            return
+        }
+
+        onMultiWalletActionClick(
+            statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
+            route = AppRoute.SwapCrypto(userWalletId = userWalletId),
+            eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+        )
+    }
+
+    override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {
+        onMultiWalletActionClick(
+            statusFlow = if (onrampFeatureToggles.isFeatureEnabled) {
+                rampStateManager.getExpressInitializationStatus(userWalletId)
+            } else {
+                rampStateManager.getBuyInitializationStatus()
+            },
+            route = AppRoute.BuyCrypto(userWalletId = userWalletId),
+            eventCreator = MainScreenAnalyticsEvent::ButtonBuy,
+        )
     }
 
     private fun openExplorer() {
@@ -528,5 +609,56 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         }
 
         return true
+    }
+
+    private fun onMultiWalletActionClick(
+        statusFlow: Flow<Lce<Throwable, Any>>,
+        route: AppRoute,
+        eventCreator: (AnalyticsParam.Status) -> MainScreenAnalyticsEvent,
+    ) {
+        viewModelScope.launch {
+            statusFlow.foldStatus(
+                onContent = { handleContent(route, eventCreator) },
+                onError = { handleError(eventCreator = eventCreator) },
+                onLoading = { handleLoading(eventCreator) },
+            )
+        }
+    }
+
+    private suspend fun Flow<Lce<Throwable, Any>>.foldStatus(
+        onContent: () -> Unit,
+        onError: () -> Unit,
+        onLoading: () -> Unit,
+    ) {
+        val status = firstOrNull() ?: IllegalStateException("Status is null").lceError()
+
+        when (status) {
+            is Lce.Content -> onContent()
+            is Lce.Error -> onError()
+            is Lce.Loading -> onLoading()
+        }
+    }
+
+    private fun handleContent(route: AppRoute, eventCreator: (AnalyticsParam.Status) -> MainScreenAnalyticsEvent) {
+        analyticsEventHandler.send(event = eventCreator(AnalyticsParam.Status.Success))
+
+        appRouter.push(route = route)
+    }
+
+    private fun handleError(
+        alertState: WalletAlertState = WalletAlertState.UnavailableOperation,
+        eventCreator: (AnalyticsParam.Status) -> MainScreenAnalyticsEvent,
+    ) {
+        analyticsEventHandler.send(event = eventCreator(AnalyticsParam.Status.Error))
+
+        walletEventSender.send(event = WalletEvent.ShowAlert(state = alertState))
+    }
+
+    private fun handleLoading(eventCreator: (AnalyticsParam.Status) -> MainScreenAnalyticsEvent) {
+        analyticsEventHandler.send(event = eventCreator(AnalyticsParam.Status.Pending))
+
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(state = WalletAlertState.ProvidersStillLoading),
+        )
     }
 }

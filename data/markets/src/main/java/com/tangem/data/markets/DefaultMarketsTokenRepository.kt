@@ -3,8 +3,10 @@ package com.tangem.data.markets
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.applyL2Compatibility
 import com.tangem.blockchainsdk.compatibility.getTokenIdIfL2Network
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.data.common.utils.retryOnError
@@ -13,8 +15,10 @@ import com.tangem.data.markets.converters.*
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
+import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
+import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
@@ -27,13 +31,20 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
+@Suppress("LongParameterList")
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val excludedBlockchains: ExcludedBlockchains,
+    private val cacheRegistry: CacheRegistry,
+    private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
 ) : MarketsTokenRepository {
+
+    private val tokenMarketInfoConverter: TokenMarketInfoConverter = TokenMarketInfoConverter(excludedBlockchains)
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
     private fun createTokenMarketsFetcher(firstBatchSize: Int, nextBatchSize: Int) = LimitOffsetBatchFetcher(
         prefetchDistance = firstBatchSize,
@@ -198,7 +209,7 @@ internal class DefaultMarketsTokenRepository(
         }
 
         val resultResponse = result.applyL2Compatibility(tokenId)
-        return@withContext TokenMarketInfoConverter.convert(resultResponse)
+        return@withContext tokenMarketInfoConverter.convert(resultResponse)
     }
 
     override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String) =
@@ -228,7 +239,7 @@ internal class DefaultMarketsTokenRepository(
         val blockchain = Blockchain.fromNetworkId(network.networkId) ?: error("Unknown network [${network.networkId}]")
 
         return if (network.contractAddress == null) {
-            CryptoCurrencyFactory().createCoin(
+            cryptoCurrencyFactory.createCoin(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 scanResponse = userWallet.scanResponse,
@@ -238,9 +249,10 @@ internal class DefaultMarketsTokenRepository(
                 blockchain = blockchain,
                 extraDerivationPath = null,
                 scanResponse = userWallet.scanResponse,
+                excludedBlockchains = excludedBlockchains,
             ) ?: return null
 
-            CryptoCurrencyFactory().createToken(
+            cryptoCurrencyFactory.createToken(
                 network = currencyNetwork,
                 rawId = token.id,
                 name = token.name,
@@ -253,9 +265,13 @@ internal class DefaultMarketsTokenRepository(
 
     override suspend fun getTokenExchanges(tokenId: String): List<TokenMarketExchange> {
         return withContext(dispatcherProvider.io) {
-            val response = marketsApi.getCoinExchanges(coinId = tokenId).getOrThrow()
+            cacheRegistry.invokeOnExpire(key = "coins/$tokenId/exchanges", skipCache = false) {
+                val response = marketsApi.getCoinExchanges(coinId = tokenId).getOrThrow()
 
-            TokenMarketExchangeConverter.convertList(input = response.exchanges)
+                tokenExchangesStore.store(value = response.exchanges)
+            }
+
+            TokenMarketExchangeConverter.convertList(input = tokenExchangesStore.get().value)
         }
     }
 
@@ -288,10 +304,11 @@ internal class DefaultMarketsTokenRepository(
     }
 
     private fun createListErrorEvent(error: ApiResponseError): MarketsDataAnalyticsEvent.List.Error {
-        return createErrorEvent(error) { errorType, errorCode ->
+        return createErrorEvent(error) { errorType, errorCode, errorMessage ->
             MarketsDataAnalyticsEvent.List.Error(
                 errorType = errorType,
                 errorCode = errorCode,
+                errorMessage = errorMessage,
             )
         }
     }
@@ -301,10 +318,11 @@ internal class DefaultMarketsTokenRepository(
         request: MarketsDataAnalyticsEvent.Details.Error.Request,
         tokenSymbol: String,
     ): MarketsDataAnalyticsEvent.Details.Error {
-        return createErrorEvent(error) { errorType, errorCode ->
+        return createErrorEvent(error) { errorType, errorCode, errorMessage ->
             MarketsDataAnalyticsEvent.Details.Error(
                 errorType = errorType,
                 errorCode = errorCode,
+                errorMessage = errorMessage,
                 request = request,
                 tokenSymbol = tokenSymbol,
             )
@@ -313,20 +331,20 @@ internal class DefaultMarketsTokenRepository(
 
     private inline fun <T> createErrorEvent(
         error: ApiResponseError,
-        createEvent: (MarketsDataAnalyticsEvent.Type, Int?) -> T,
+        createEvent: (MarketsDataAnalyticsEvent.Type, Int?, String) -> T,
     ): T {
         return when (error) {
             is ApiResponseError.HttpException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Http, error.code.code)
+                createEvent(MarketsDataAnalyticsEvent.Type.Http, error.code.code, error.message.orEmpty())
             }
             is ApiResponseError.TimeoutException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Timeout, null)
+                createEvent(MarketsDataAnalyticsEvent.Type.Timeout, null, error.message.orEmpty())
             }
             is ApiResponseError.NetworkException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Network, null)
+                createEvent(MarketsDataAnalyticsEvent.Type.Network, null, error.message.orEmpty())
             }
             is ApiResponseError.UnknownException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Unknown, null)
+                createEvent(MarketsDataAnalyticsEvent.Type.Unknown, null, error.message.orEmpty())
             }
         }
     }

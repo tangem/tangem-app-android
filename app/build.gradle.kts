@@ -74,13 +74,15 @@ dependencies {
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
+    implementation(projects.domain.onramp)
 
     implementation(projects.common)
     implementation(projects.common.routing)
+    implementation(projects.common.google)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.res)
     implementation(projects.core.ui)
     implementation(projects.core.datasource)
@@ -112,6 +114,7 @@ dependencies {
     implementation(projects.data.walletConnect)
     implementation(projects.data.markets)
     implementation(projects.data.manageTokens)
+    implementation(projects.data.onramp)
 
     /** Features */
     implementation(projects.features.onboarding)
@@ -220,14 +223,13 @@ dependencies {
     implementation(deps.lottie)
     implementation(deps.compose.accompanist.appCompatTheme)
     implementation(deps.compose.accompanist.systemUiController)
-    implementation(deps.compose.accompanist.webView)
     implementation(deps.xmlShimmer)
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
     implementation(deps.mviCore.watcher)
     implementation(deps.kotlin.serialization)
-    implementation(deps.walletConnectCore)
-    implementation(deps.walletConnectWeb3)
+    implementation(deps.reownCore)
+    implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
 
     /** Testing libraries */

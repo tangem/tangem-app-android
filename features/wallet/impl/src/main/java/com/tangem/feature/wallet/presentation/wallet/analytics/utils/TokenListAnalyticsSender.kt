@@ -50,7 +50,12 @@ internal class TokenListAnalyticsSender @Inject constructor(
         currenciesStatuses: List<CryptoCurrencyStatus>,
     ) {
         createCardBalanceState(fiatBalance, currenciesStatuses)?.let { balanceState ->
-            analyticsEventHandler.send(Basic.BalanceLoaded(balanceState))
+            analyticsEventHandler.send(
+                Basic.BalanceLoaded(
+                    balance = balanceState,
+                    tokensCount = currenciesStatuses.size,
+                ),
+            )
         }
     }
 
