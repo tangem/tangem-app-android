@@ -65,7 +65,6 @@ internal class WalletDeepLinksHandler @Inject constructor(
             if (onrampFeatureToggles.isFeatureEnabled || !userWallet.isMultiCurrency) {
                 add(
                     BuyCurrencyDeepLink(
-                        isOnrampFeatureEnabled = onrampFeatureToggles.isFeatureEnabled,
                         onReceive = { externalTxId ->
                             scope.launch { onBuyCurrencyDeepLink(externalTxId, userWallet) }
                         },
