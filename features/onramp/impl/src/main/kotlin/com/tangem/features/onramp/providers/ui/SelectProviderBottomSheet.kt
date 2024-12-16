@@ -12,9 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -72,6 +75,7 @@ internal fun SelectProviderBottomSheetContent(state: SelectPaymentAndProviderUM,
         state.selectedPaymentMethod.providers.fastForEach { provider ->
             key(provider.providerId) { ProviderItem(state = provider) }
         }
+        OnrampMoreProviders()
     }
 }
 
@@ -249,6 +253,28 @@ private fun UnavailableProviderItem(
             )
         }
     }
+}
+
+@Composable
+private fun OnrampMoreProviders() {
+    Icon(
+        painter = rememberVectorPainter(
+            ImageVector.vectorResource(R.drawable.ic_lightning_16),
+        ),
+        contentDescription = null,
+        tint = TangemTheme.colors.icon.informative,
+        modifier = Modifier
+            .padding(top = 16.dp),
+    )
+    Text(
+        text = stringResource(R.string.express_more_providers_soon),
+        style = TangemTheme.typography.caption2,
+        color = TangemTheme.colors.icon.informative,
+        modifier = Modifier
+            .padding(top = 4.dp, bottom = 24.dp)
+            .padding(horizontal = TangemTheme.dimens.spacing56),
+        textAlign = TextAlign.Center,
+    )
 }
 
 // region Preview
