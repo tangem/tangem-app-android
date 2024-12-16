@@ -385,6 +385,9 @@ internal class DefaultOnrampRepository(
                     },
                 )
             }
+
+            if (onrampProviders.isEmpty()) throw OnrampPairsError.PairsNotFound
+
             OnrampPair(onrampProviders)
         }
         pairsStore.store(PAIRS_KEY, onrampPairs)
