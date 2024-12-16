@@ -12,11 +12,11 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.txhistory.models.PaginationWrapper
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryState
+import com.tangem.domain.walletmanager.model.RentData
 import com.tangem.domain.walletmanager.model.TokenInfo
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
@@ -140,7 +140,7 @@ interface WalletManagersFacade {
      * @param userWalletId selected wallet id
      * @param network network of currency
      */
-    suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): CryptoCurrencyWarning.Rent?
+    suspend fun getRentInfo(userWalletId: UserWalletId, network: Network): RentData?
 
     @Deprecated("Will be removed in future")
     fun getAll(userWalletId: UserWalletId): Flow<List<WalletManager>>
@@ -233,11 +233,13 @@ interface WalletManagersFacade {
      */
     suspend fun getAssetRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): AssetRequirementsCondition?
 
-    suspend fun associateAsset(
+    suspend fun fulfillRequirements(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         signer: TransactionSigner,
     ): SimpleResult
+
+    suspend fun discardRequirements(userWalletId: UserWalletId, currency: CryptoCurrency): SimpleResult
 
     /**
      * Indicates UTXO consolidation availability
