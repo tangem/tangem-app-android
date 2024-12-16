@@ -2,10 +2,7 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.getL2CompatibilityTokenComparison
-import com.tangem.blockchainsdk.utils.ExcludedBlockchains
-import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.toCoinId
-import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.blockchainsdk.utils.*
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.*
@@ -14,9 +11,11 @@ import com.tangem.data.tokens.utils.CustomTokensMerger
 import com.tangem.data.tokens.utils.UserTokensBackwardCompatibility
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
+import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.exchangeservice.swap.SwapServiceLoader
+import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
@@ -48,7 +47,7 @@ internal class DefaultCurrenciesRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val cacheRegistry: CacheRegistry,
     private val appPreferencesStore: AppPreferencesStore,
-    private val swapServiceLoader: SwapServiceLoader,
+    private val expressServiceLoader: ExpressServiceLoader,
     private val dispatchers: CoroutineDispatcherProvider,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
@@ -95,7 +94,7 @@ internal class DefaultCurrenciesRepository(
                 response = updatedResponse,
             )
 
-            fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
+            fetchExpressAssetsByNetworkIds(userWalletId, updatedResponse)
         }
     }
 
@@ -117,7 +116,7 @@ internal class DefaultCurrenciesRepository(
                 userWalletId = userWalletId,
                 response = updatedResponse,
             )
-            fetchExchangeableUserMarketCoinsByIds(userWalletId, updatedResponse)
+            fetchExpressAssetsByNetworkIds(userWalletId, updatedResponse)
         }
     }
 
@@ -214,21 +213,33 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
+    override suspend fun getSingleCurrencyWalletPrimaryCurrency(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): CryptoCurrency {
         return withContext(dispatchers.io) {
             val userWallet = getUserWallet(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
-            cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+            val currency = cardCurrenciesFactory.createPrimaryCurrencyForSingleCurrencyCard(userWallet.scanResponse)
+            fetchExpressAssetsByNetworkIds(userWalletId, listOf(currency), refresh)
+            currency
         }
     }
 
-    override suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
+    override suspend fun getSingleCurrencyWalletWithCardCurrencies(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): List<CryptoCurrency> {
         return withContext(dispatchers.io) {
             val userWallet = getUserWallet(userWalletId)
             ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected = false)
 
-            cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
+            val currencies = cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(
+                userWallet.scanResponse,
+            )
+            fetchExpressAssetsByNetworkIds(userWalletId, currencies, refresh)
+            currencies
         }
     }
 
@@ -243,6 +254,8 @@ internal class DefaultCurrenciesRepository(
             val currency = cardCurrenciesFactory.createCurrenciesForSingleCurrencyCardWithToken(userWallet.scanResponse)
                 .find { it.id == id }
             requireNotNull(currency) { "Unable to find currency with provided ID: $id" }
+            fetchExpressAssetsByNetworkIds(userWalletId, listOf(currency))
+            currency
         }
     }
 
@@ -344,7 +357,9 @@ internal class DefaultCurrenciesRepository(
 
             val storedCoin = storedTokens.tokens
                 .find {
-                    it.networkId == blockchainNetworkId && it.id == coinId && it.derivationPath == derivationPath.value
+                    it.networkId == blockchainNetworkId &&
+                        compareIdWithMigrations(it, coinId) &&
+                        it.derivationPath == derivationPath.value
                 } ?: error("Coin in this network $networkId not found")
 
             val coin = responseCurrenciesFactory.createCurrency(storedCoin, userWallet.scanResponse)
@@ -532,6 +547,13 @@ internal class DefaultCurrenciesRepository(
         )
     }
 
+    private fun compareIdWithMigrations(token: UserTokensResponse.Token, coinId: String): Boolean {
+        return when {
+            token.id == OLD_POLYGON_NAME -> NEW_POLYGON_NAME == coinId
+            else -> token.id == coinId
+        }
+    }
+
     private suspend fun fetchTokens(userWallet: UserWallet) {
         val userWalletId = userWallet.walletId
 
@@ -553,7 +575,7 @@ internal class DefaultCurrenciesRepository(
             value = compatibleUserTokensResponse,
         )
 
-        fetchExchangeableUserMarketCoinsByIds(userWalletId, compatibleUserTokensResponse)
+        fetchExpressAssetsByNetworkIds(userWalletId, compatibleUserTokensResponse)
     }
 
     private suspend fun checkIsEmptyDemoWallet(userWallet: UserWallet): Boolean {
@@ -572,12 +594,36 @@ internal class DefaultCurrenciesRepository(
         pushTokens(userWalletId, response)
     }
 
-    private suspend fun fetchExchangeableUserMarketCoinsByIds(
-        userWalletId: UserWalletId,
-        userTokens: UserTokensResponse,
-    ) {
-        swapServiceLoader.update(userWalletId, userTokens)
+    private suspend fun fetchExpressAssetsByNetworkIds(userWalletId: UserWalletId, userTokens: UserTokensResponse) {
+        val tokens = userTokens.tokens.map { token ->
+            LeastTokenInfo(
+                contractAddress = token.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
+                network = token.networkId,
+            )
+        }
+        expressServiceLoader.update(userWalletId, tokens)
     }
+
+    private suspend fun fetchExpressAssetsByNetworkIds(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+        refresh: Boolean = false,
+    ) {
+        val tokens = cryptoCurrencies.map { currency ->
+            val tokenCurrency = currency as? CryptoCurrency.Token
+            LeastTokenInfo(
+                contractAddress = tokenCurrency?.contractAddress ?: EMPTY_CONTRACT_ADDRESS_VALUE,
+                network = currency.network.backendId,
+            )
+        }
+        cacheRegistry.invokeOnExpire(
+            key = getAssetsCacheKey(userWalletId),
+            skipCache = refresh,
+            block = { expressServiceLoader.update(userWalletId, tokens) },
+        )
+    }
+
+    private fun getAssetsCacheKey(userWalletId: UserWalletId): String = "assets_cache_key_${userWalletId.stringValue}"
 
     private suspend fun handleFetchTokensError(userWallet: UserWallet, e: ApiResponseError): UserTokensResponse {
         val userWalletId = userWallet.walletId
