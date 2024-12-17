@@ -476,6 +476,7 @@ internal class DefaultOnrampRepository(
             OnrampQuote.Error(
                 paymentMethod = paymentMethod,
                 provider = provider,
+                error = onrampError,
             )
         }
     } else {
