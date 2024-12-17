@@ -24,14 +24,15 @@ env:
   INITIAL_VERSION_CODE: ${{ 1000 }}
 
 jobs:
-  build:
+  build_and_upload:
     name: Upload apk to Firebase
-    runs-on: [ self-hosted, ARM64, active-android ]
+    runs-on: [ self-hosted, ARM64, active-android, Linux ]
     environment: Alpha
     outputs:
       version_name: ${{ steps.get_version_name.outputs.versionName }}
       version_code: ${{ steps.get_version_code.outputs.versionCode }}
       jira_summary: ${{ steps.jira.outputs.summary }}
+      encoded_release_url: ${{ steps.uploading.outputs.encoded_release_url }}
     steps:
       - name: Change user
         if: startsWith(runner.os, 'Linux')
@@ -78,20 +79,23 @@ jobs:
           default: 0.0.1
 
       - name: Run uploading
+        id: uploading
         env:
           app_id_internal: ${{ secrets.FIREBASE_APP_ID_INTERNAL }}
           firebase_cli_token: ${{ secrets.FIREBASE_CLI_TOKEN }}
           apk_path_internal: app/build/outputs/apk/internal/app-internal.apk
-          version_code: ${{ env.VERSION_CODE }}
-          version_name: ${{ steps.version.outputs.versionName }}
+          version_code: ${{ steps.get_version_code.outputs.versionCode }}
+          version_name:  ${{ steps.get_version_name.outputs.versionName }}
           release_notes: ${{ github.ref_name }} - ${{ github.sha }}
           groups: testers
         run: |
           env > .env
+          
           docker run --rm \
             --env-file .env \
             -v ~/.gradle:/root/.gradle \
             -v ${{ github.workspace }}:/workspace \
+            -v $GITHUB_OUTPUT:/workspace/github_output.txt \
             tangem_ci_android_environment \
             sh -c "
               cd /workspace;
@@ -101,25 +105,26 @@ jobs:
               fastlane publishToFirebase;
             "
 
-
   notification:
     name: Send Notification
-    needs: build
+    needs: build_and_upload
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
       channel: 'development-android-test'
       status: 'success'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase app distribution'
-      version: ${{ needs.build.outputs.version_name }}
-      build_number: ${{ needs.build.outputs.version_code }}
-      changelog: ${{ needs.build.outputs.jira_summary }}
+      version: ${{ needs.build_and_upload.outputs.version_name }}
+      build_number: ${{ needs.build_and_upload.outputs.version_code }}
+      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
       build_description: ${{ inputs.build_description }}
+      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
   error_notification:
     name: Error Notification
+    needs: build_and_upload
     if: failure()
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
@@ -127,9 +132,10 @@ jobs:
       status: 'error'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase App Distribution'
-      version: ${{ needs.build.outputs.version_name }}
-      build_number: ${{ needs.build.outputs.version_code }}
-      changelog: ${{ needs.build.outputs.jira_summary }}
+      version: ${{ needs.build_and_upload.outputs.version_name }}
+      build_number: ${{ needs.build_and_upload.outputs.version_code }}
+      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
       build_description: ${{ inputs.build_description }}
+      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
     secrets:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
