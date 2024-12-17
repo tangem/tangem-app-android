@@ -8,11 +8,13 @@ internal fun AnalyticsEventHandler.sendOnrampErrorEvent(
     error: OnrampError,
     tokenSymbol: String,
     providerName: String? = null,
+    paymentMethod: String? = null,
 ) = when (error) {
     is OnrampError.DataError -> send(
         OnrampAnalyticsEvent.Errors(
             tokenSymbol = tokenSymbol,
             providerName = providerName,
+            paymentMethod = paymentMethod,
             errorCode = error.code,
         ),
     )
