@@ -31,8 +31,8 @@ class GetOnrampProviderWithQuoteUseCase(
     private fun List<OnrampQuote>.quoteWithProvider(
         provider: OnrampProvider,
         selectedPaymentMethod: OnrampPaymentMethod,
-    ): OnrampProviderWithQuote {
-        val matchedQuote = firstOrNull { it.paymentMethod == selectedPaymentMethod }
+    ): OnrampProviderWithQuote? {
+        val matchedQuote = firstOrNull { it.paymentMethod.id == selectedPaymentMethod.id }
         return when (matchedQuote) {
             is OnrampQuote.Data -> OnrampProviderWithQuote.Data(
                 provider = matchedQuote.provider,
@@ -40,14 +40,23 @@ class GetOnrampProviderWithQuoteUseCase(
                 toAmount = matchedQuote.toAmount,
                 fromAmount = matchedQuote.fromAmount,
             )
-            is OnrampQuote.Error -> Unavailable.Error(
+            is OnrampQuote.AmountError -> Unavailable.Error(
                 provider = matchedQuote.provider,
                 quoteError = matchedQuote,
             )
-            null -> Unavailable.NotSupportedPaymentMethod(
-                provider = provider,
-                availablePaymentMethods = provider.paymentMethods,
-            )
+            is OnrampQuote.Error -> null
+            null -> {
+                val availablePaymentMethods = getAvailablePaymentMethods(provider)
+                Unavailable.NotSupportedPaymentMethod(
+                    provider = provider,
+                    availablePaymentMethods = availablePaymentMethods,
+                ).takeIf { availablePaymentMethods.isNotEmpty() }
+            }
         }
     }
+
+    private fun List<OnrampQuote>.getAvailablePaymentMethods(provider: OnrampProvider) = provider.paymentMethods
+        .filter { pm ->
+            filter { it !is OnrampQuote.Error }.any { it.paymentMethod.id == pm.id }
+        }
 }
