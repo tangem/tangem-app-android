@@ -21,6 +21,7 @@ internal data class TokenDetailsState(
     val stakingBlocksState: StakingBlockUM?,
     val notifications: ImmutableList<TokenDetailsNotification>,
     val pendingTxs: PersistentList<TransactionState>,
+    val expressTxsToDisplay: PersistentList<ExpressTransactionStateUM>,
     val expressTxs: PersistentList<ExpressTransactionStateUM>,
     val txHistoryState: TxHistoryState,
     val dialogConfig: TokenDetailsDialogConfig?,
