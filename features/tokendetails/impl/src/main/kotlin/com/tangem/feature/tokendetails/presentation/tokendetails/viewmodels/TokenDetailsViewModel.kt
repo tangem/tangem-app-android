@@ -462,9 +462,8 @@ internal class TokenDetailsViewModel @Inject constructor(
             return
         }
 
-        showErrorIfDemoModeOrElse {
-            val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
-
+        val status = cryptoCurrencyStatus ?: return
+        if (onrampFeatureToggles.isFeatureEnabled) {
             viewModelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
@@ -474,6 +473,19 @@ internal class TokenDetailsViewModel @Inject constructor(
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
                     ),
                 )
+            }
+        } else {
+            showErrorIfDemoModeOrElse {
+                viewModelScope.launch(dispatchers.main) {
+                    reduxStateHolder.dispatch(
+                        TradeCryptoAction.Buy(
+                            userWallet = userWallet,
+                            source = OnrampSource.TOKEN_DETAILS,
+                            cryptoCurrencyStatus = status,
+                            appCurrencyCode = selectedAppCurrencyFlow.value.code,
+                        ),
+                    )
+                }
             }
         }
     }
