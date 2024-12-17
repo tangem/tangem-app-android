@@ -77,6 +77,31 @@ jobs:
           property: versionName
           default: 0.0.1
 
+      - name: Run uploading
+        env:
+          app_id_internal: ${{ secrets.FIREBASE_APP_ID_INTERNAL }}
+          firebase_cli_token: ${{ secrets.FIREBASE_CLI_TOKEN }}
+          apk_path_internal: app/build/outputs/apk/internal/app-internal.apk
+          version_code: ${{ env.VERSION_CODE }}
+          version_name: ${{ steps.version.outputs.versionName }}
+          release_notes: ${{ github.ref_name }} - ${{ github.sha }}
+          groups: testers
+        run: |
+          env > .env
+          docker run --rm \
+            --env-file .env \
+            -v ~/.gradle:/root/.gradle \
+            -v ${{ github.workspace }}:/workspace \
+            tangem_ci_android_environment \
+            sh -c "
+              cd /workspace;
+          
+              echo 'Deploying APK to Firebase...';
+          
+              fastlane publishToFirebase;
+            "
+
+
   notification:
     name: Send Notification
     needs: build
