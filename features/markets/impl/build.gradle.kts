@@ -14,6 +14,7 @@ android {
 dependencies {
     /* Project - API */
     api(projects.features.markets.api)
+    api(projects.features.onramp.api)
     implementation(projects.core.navigation)
 
     /* Domain */
