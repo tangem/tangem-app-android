@@ -465,7 +465,7 @@ internal class DefaultOnrampRepository(
     ) = if (error is ApiResponseError.HttpException) {
         val onrampError = onrampErrorConverter.convert(value = error.errorBody.orEmpty())
         if (onrampError is OnrampError.AmountError) {
-            OnrampQuote.Error(
+            OnrampQuote.AmountError(
                 paymentMethod = paymentMethod,
                 provider = provider,
                 fromAmount = fromOnrampAmount,
@@ -473,7 +473,10 @@ internal class DefaultOnrampRepository(
             )
         } else {
             Timber.w(error, "Unable to fetch onramp quotes for ${provider.id}. $error")
-            null
+            OnrampQuote.Error(
+                paymentMethod = paymentMethod,
+                provider = provider,
+            )
         }
     } else {
         Timber.w(error, "Unable to fetch onramp quotes for ${provider.id}. $error")

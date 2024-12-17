@@ -10,7 +10,12 @@ internal data class OnrampAmountBlockUM(
     val secondaryFieldModel: OnrampAmountSecondaryFieldUM,
 )
 
-internal data class OnrampCurrencyUM(val code: String, val iconUrl: String, val precision: Int, val onClick: () -> Unit)
+internal data class OnrampCurrencyUM(
+    val code: String,
+    val iconUrl: String?,
+    val precision: Int,
+    val onClick: () -> Unit,
+)
 
 @Immutable
 internal sealed interface OnrampAmountSecondaryFieldUM {
