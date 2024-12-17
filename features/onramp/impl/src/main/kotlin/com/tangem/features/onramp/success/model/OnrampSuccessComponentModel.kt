@@ -81,6 +81,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                         error = error,
                         tokenSymbol = cryptoCurrency.symbol,
                         providerName = transaction.providerName,
+                        paymentMethod = transaction.paymentMethod,
                     )
                     Timber.e(error.toString())
                 },
@@ -101,7 +102,12 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                             goToProviderClick = ::goToProviderClick,
                         ).convert(status)
                     }
-                    removeTransactionIfTerminalStatus(cryptoCurrency, transaction.providerName, status)
+                    removeTransactionIfTerminalStatus(
+                        cryptoCurrency = cryptoCurrency,
+                        providerName = transaction.providerName,
+                        paymentMethod = transaction.paymentMethod,
+                        status = status,
+                    )
                 },
             )
     }
@@ -109,6 +115,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private fun removeTransactionIfTerminalStatus(
         cryptoCurrency: CryptoCurrency,
         providerName: String,
+        paymentMethod: String,
         status: OnrampStatus,
     ) {
         modelScope.launch {
@@ -118,6 +125,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                         error = error,
                         tokenSymbol = cryptoCurrency.symbol,
                         providerName = providerName,
+                        paymentMethod = paymentMethod,
                     )
                 }
             }
