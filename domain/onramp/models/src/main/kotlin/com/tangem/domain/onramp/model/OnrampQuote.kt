@@ -16,10 +16,15 @@ sealed class OnrampQuote {
         val maxFromAmount: OnrampAmount,
     ) : OnrampQuote()
 
-    data class Error(
+    data class AmountError(
         override val paymentMethod: OnrampPaymentMethod,
         override val provider: OnrampProvider,
         val fromAmount: OnrampAmount,
         val error: OnrampError.AmountError,
+    ) : OnrampQuote()
+
+    data class Error(
+        override val paymentMethod: OnrampPaymentMethod,
+        override val provider: OnrampProvider,
     ) : OnrampQuote()
 }
