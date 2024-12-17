@@ -26,5 +26,6 @@ sealed class OnrampQuote {
     data class Error(
         override val paymentMethod: OnrampPaymentMethod,
         override val provider: OnrampProvider,
+        val error: OnrampError,
     ) : OnrampQuote()
 }
