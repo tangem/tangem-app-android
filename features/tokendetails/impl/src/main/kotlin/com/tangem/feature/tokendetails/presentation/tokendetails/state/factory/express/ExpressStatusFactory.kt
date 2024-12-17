@@ -98,8 +98,15 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         if (currentTx is ExpressTransactionStateUM.ExchangeUM && currentTx.activeStatus == ExchangeStatus.Finished) {
             updateBalance(currentTx.toCryptoCurrency)
         }
+        val expressTxsToDisplay = expressTxs.filterNot {
+            when (it) {
+                is ExpressTransactionStateUM.ExchangeUM -> false
+                is ExpressTransactionStateUM.OnrampUM -> it.activeStatus.isHidden
+            }
+        }.toPersistentList()
         return state.copy(
             expressTxs = expressTxs,
+            expressTxsToDisplay = expressTxsToDisplay,
             bottomSheetConfig = currentTx?.let(
                 ::updateStateWithExpressStatusBottomSheet,
             ) ?: config,
