@@ -81,7 +81,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     private val _state: MutableStateFlow<OnrampMainComponentUM> = MutableStateFlow(
         value = stateFactory.getInitialState(
             currency = params.cryptoCurrency.name,
-            onClose = router::pop,
+            onClose = ::onCloseClick,
         ),
     )
     private val quotesTaskScheduler = SingleTaskScheduler<Unit>()
@@ -270,10 +270,13 @@ internal class OnrampMainComponentModel @Inject constructor(
         super.onDestroy()
     }
 
+    private fun onCloseClick() {
+        analyticsEventHandler.send(OnrampAnalyticsEvent.CloseOnramp)
+        router.pop()
+    }
+
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
-        quotes.filterIsInstance<OnrampQuote.AmountError>().forEach { errorState ->
-            sendOnrampErrorAnalytic(errorState.error)
-        }
+        sendOnrampQuotesErrorAnalytic(quotes)
 
         val quote = quotes.firstOrNull()
 
@@ -346,7 +349,28 @@ internal class OnrampMainComponentModel @Inject constructor(
             error = error,
             tokenSymbol = params.cryptoCurrency.symbol,
             providerName = providerContent?.providerName,
+            paymentMethod = providerContent?.paymentMethod?.name,
         )
+    }
+
+    private fun sendOnrampQuotesErrorAnalytic(quotes: List<OnrampQuote>) {
+        quotes.forEach { errorState ->
+            when (errorState) {
+                is OnrampQuote.Error -> analyticsEventHandler.sendOnrampErrorEvent(
+                    error = errorState.error,
+                    tokenSymbol = params.cryptoCurrency.symbol,
+                    providerName = errorState.provider.info.name,
+                    paymentMethod = errorState.paymentMethod.name,
+                )
+                is OnrampQuote.AmountError -> analyticsEventHandler.sendOnrampErrorEvent(
+                    error = errorState.error,
+                    tokenSymbol = params.cryptoCurrency.symbol,
+                    providerName = errorState.provider.info.name,
+                    paymentMethod = errorState.paymentMethod.name,
+                )
+                else -> { /* no-op */ }
+            }
+        }
     }
 
     private companion object {
