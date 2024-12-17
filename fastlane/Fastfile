@@ -93,8 +93,6 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
-    FileUtils.cp("../ci_resources/build_8gb_ram_ci_gradle.properties", "../gradle.properties")
-    puts File.read("../gradle.properties")
     gradle(
       task: "clean assemble",
       build_type: "Internal",
@@ -103,12 +101,12 @@ platform :android do
         'versionName' => ENV['version_name'],
       }
     )
-    firebase_app_distribution(
-      firebase_cli_token: ENV['firebase_cli_token'],
-      app: ENV['app_id_internal'],
-      apk_path: ENV['apk_path_internal'],
-      groups: ENV['groups'],
-      release_notes: ENV['release_notes'],
-    )
+#     firebase_app_distribution(
+#       firebase_cli_token: ENV['firebase_cli_token'],
+#       app: ENV['app_id_internal'],
+#       apk_path: ENV['apk_path_internal'],
+#       groups: ENV['groups'],
+#       release_notes: ENV['release_notes'],
+#     )
   end
 end
