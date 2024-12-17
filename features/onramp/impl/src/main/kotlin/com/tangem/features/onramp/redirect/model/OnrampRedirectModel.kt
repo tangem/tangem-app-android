@@ -62,16 +62,13 @@ internal class OnrampRedirectModel @Inject constructor(
         ),
     )
 
-    init {
-        getRedirectUrl()
-    }
-
-    private fun getRedirectUrl() {
+    fun getRedirectUrl(isDarkTheme: Boolean) {
         modelScope.launch {
             getOnrampRedirectUrlUseCase.invoke(
                 userWalletId = params.userWalletId,
                 quote = params.onrampProviderWithQuote,
                 cryptoCurrency = params.cryptoCurrency,
+                isDarkTheme = isDarkTheme,
             )
                 .onLeft(::handleError)
                 .onRight {
