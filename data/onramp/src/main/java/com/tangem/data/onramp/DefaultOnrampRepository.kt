@@ -32,10 +32,8 @@ import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
-import com.tangem.datasource.local.preferences.utils.getObjectSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.storeObject
-import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.onramp.model.*
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -281,6 +279,7 @@ internal class DefaultOnrampRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
         quote: OnrampProviderWithQuote.Data,
+        isDarkTheme: Boolean,
     ): OnrampTransaction = withContext(dispatchers.io) {
         try {
             val address = requireNotNull(
@@ -306,7 +305,7 @@ internal class DefaultOnrampRepository(
                         toAddress = address,
                         redirectUrl = BuyCurrencyDeepLink.ONRAMP_REDIRECT_DEEPLINK,
                         language = null,
-                        theme = getTheme(),
+                        theme = getTheme(isDarkTheme),
                         requestId = requestId,
                     ).bind()
                 },
@@ -442,17 +441,10 @@ internal class DefaultOnrampRepository(
         )
     }
 
-    private suspend fun getTheme(): String {
-        val appTheme = appPreferencesStore.getObjectSyncOrDefault(
-            key = PreferencesKeys.APP_THEME_MODE_KEY,
-            default = AppThemeMode.DEFAULT,
-        )
-        return when (appTheme) {
-            AppThemeMode.FORCE_DARK -> PROVIDER_THEME_DARK
-            AppThemeMode.FORCE_LIGHT,
-            AppThemeMode.FOLLOW_SYSTEM,
-            -> PROVIDER_THEME_LIGHT
-        }
+    private fun getTheme(isDarkTheme: Boolean): String = if (isDarkTheme) {
+        PROVIDER_THEME_DARK
+    } else {
+        PROVIDER_THEME_LIGHT
     }
 
     private fun List<PaymentMethodDTO>.removeApplePay(): List<PaymentMethodDTO> = filterNot { it.id == "apple-pay" }
