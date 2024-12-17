@@ -87,6 +87,19 @@ internal object BlockchainSDKConfigConverter : Converter<EnvironmentConfigModel,
                 base = GetBlockAccessToken(jsonRpc = accessTokens.base?.jsonRPC),
                 blast = GetBlockAccessToken(jsonRpc = accessTokens.blast?.jsonRPC),
                 filecoin = GetBlockAccessToken(jsonRpc = accessTokens.filecoin?.jsonRPC),
+                arbitrum = GetBlockAccessToken(jsonRpc = accessTokens.arbitrum?.jsonRPC),
+                bitcoinCash = GetBlockAccessToken(
+                    jsonRpc = accessTokens.bitcoinCash?.jsonRPC,
+                    blockBookRest = accessTokens.bitcoinCash?.blockBookRest,
+                ),
+                kusama = GetBlockAccessToken(jsonRpc = accessTokens.kusama?.jsonRPC),
+                moonbeam = GetBlockAccessToken(jsonRpc = accessTokens.moonbeam?.jsonRPC),
+                optimism = GetBlockAccessToken(jsonRpc = accessTokens.optimism?.jsonRPC),
+                polkadot = GetBlockAccessToken(jsonRpc = accessTokens.polkadot?.jsonRPC),
+                shibarium = GetBlockAccessToken(jsonRpc = accessTokens.shibarium?.jsonRPC),
+                sui = GetBlockAccessToken(jsonRpc = accessTokens.sui?.jsonRPC),
+                telos = GetBlockAccessToken(jsonRpc = accessTokens.telos?.jsonRPC),
+                tezos = GetBlockAccessToken(rest = accessTokens.tezos?.rest),
             )
         }
     }
