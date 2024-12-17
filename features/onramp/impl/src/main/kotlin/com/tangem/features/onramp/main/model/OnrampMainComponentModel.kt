@@ -196,6 +196,8 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun subscribeToQuotesUpdate() {
         getOnrampQuotesUseCase.invoke()
+            .distinctUntilChanged()
+            .conflate()
             .onEach { maybeQuotes ->
                 maybeQuotes.fold(
                     ifLeft = ::handleOnrampError,
@@ -269,7 +271,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
-        quotes.filterIsInstance<OnrampQuote.Error>().forEach { errorState ->
+        quotes.filterIsInstance<OnrampQuote.AmountError>().forEach { errorState ->
             sendOnrampErrorAnalytic(errorState.error)
         }
 
@@ -299,12 +301,12 @@ internal class OnrampMainComponentModel @Inject constructor(
                     paymentMethod = quote.paymentMethod.name,
                 ),
             )
-        }
-        _state.update {
-            amountStateFactory.getAmountSecondaryUpdatedState(
-                quote = quote,
-                isBestRate = isBestProvider,
-            )
+            _state.update {
+                amountStateFactory.getAmountSecondaryUpdatedState(
+                    quote = quote,
+                    isBestRate = isBestProvider,
+                )
+            }
         }
     }
 
