@@ -24,6 +24,7 @@ interface OnrampRepository {
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
         quote: OnrampProviderWithQuote.Data,
+        isDarkTheme: Boolean,
     ): OnrampTransaction
 
     // cache
