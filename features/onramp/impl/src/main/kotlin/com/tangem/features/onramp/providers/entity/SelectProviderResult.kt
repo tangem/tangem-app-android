@@ -20,6 +20,6 @@ sealed class SelectProviderResult {
     data class ProviderWithError(
         override val paymentMethod: OnrampPaymentMethod,
         override val provider: OnrampProvider,
-        val quoteError: OnrampQuote.Error,
+        val quoteError: OnrampQuote.AmountError,
     ) : SelectProviderResult()
 }
