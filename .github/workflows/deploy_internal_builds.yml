@@ -40,16 +40,16 @@ jobs:
       - name: Jira Login
         uses: atlassian/gajira-login@master
         env:
-          JIRA_BASE_URL: '${{ secrets.JIRA_URL }}'
-          JIRA_USER_EMAIL: '${{ secrets.JIRA_USER }}'
-          JIRA_API_TOKEN: '${{ secrets.JIRA_TOKEN }}'
+          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
 
       - name: Get Jira Issue Number from Branch Name
         id: jira
         uses: tangem/jira-action@master
         with:
           action: getBranchSummary
-          branch-name: '${{ github.ref_name }}'
+          branch-name: ${{ github.ref_name }}
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -97,13 +97,11 @@ jobs:
     name: Error Notification
     if: failure()
     uses: tangem/actions/.github/workflows/notification.yml@main
-    needs:
-      - build
     with:
       channel: 'development-android-test'
       status: 'error'
       app_name: 'Tangem Internal'
-      deploy_to: 'Firebase app distribution'
+      deploy_to: 'Firebase App Distribution'
       version: ${{ needs.build.outputs.version_name }}
       build_number: ${{ needs.build.outputs.version_code }}
       changelog: ${{ needs.build.outputs.jira_summary }}
