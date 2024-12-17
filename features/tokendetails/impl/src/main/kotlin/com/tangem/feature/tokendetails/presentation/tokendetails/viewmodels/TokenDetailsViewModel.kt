@@ -198,7 +198,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             viewModel = this,
             deepLinks = listOf(
                 BuyCurrencyDeepLink(
-                    isOnrampFeatureEnabled = onrampFeatureToggles.isFeatureEnabled,
                     onReceive = ::onBuyCurrencyDeepLink,
                 ),
             ),
@@ -336,6 +335,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                     expressTxStatusTaskScheduler.scheduleTask(
                         viewModelScope,
                         PeriodicTask(
+                            isDelayFirst = false,
                             delay = EXPRESS_STATUS_UPDATE_DELAY,
                             task = {
                                 runCatching {
@@ -462,9 +462,8 @@ internal class TokenDetailsViewModel @Inject constructor(
             return
         }
 
-        showErrorIfDemoModeOrElse {
-            val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
-
+        val status = cryptoCurrencyStatus ?: return
+        if (onrampFeatureToggles.isFeatureEnabled) {
             viewModelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
@@ -474,6 +473,19 @@ internal class TokenDetailsViewModel @Inject constructor(
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
                     ),
                 )
+            }
+        } else {
+            showErrorIfDemoModeOrElse {
+                viewModelScope.launch(dispatchers.main) {
+                    reduxStateHolder.dispatch(
+                        TradeCryptoAction.Buy(
+                            userWallet = userWallet,
+                            source = OnrampSource.TOKEN_DETAILS,
+                            cryptoCurrencyStatus = status,
+                            appCurrencyCode = selectedAppCurrencyFlow.value.code,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -805,7 +817,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onExpressTransactionClick(txId: String) {
-        val expressTxState = internalUiState.value.expressTxs.first { it.info.txId == txId }
+        val expressTxState = internalUiState.value.expressTxsToDisplay.first { it.info.txId == txId }
         internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
     }
 
