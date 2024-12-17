@@ -259,6 +259,7 @@ internal class SelectProviderModel @Inject constructor(
             error = error,
             tokenSymbol = params.cryptoCurrency.symbol,
             providerName = selectedProvider?.name,
+            paymentMethod = state.value.selectedPaymentMethod.paymentMethod.name,
         )
     }
 
