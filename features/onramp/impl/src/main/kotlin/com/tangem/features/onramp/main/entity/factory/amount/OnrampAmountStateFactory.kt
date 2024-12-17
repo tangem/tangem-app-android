@@ -204,7 +204,7 @@ internal class OnrampAmountStateFactory(
                 R.string.onramp_max_amount_restriction
             }
             is OnrampError.AmountError.TooSmallError -> {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MinAmountError)
                 R.string.onramp_min_amount_restriction
             }
         }

@@ -84,6 +84,7 @@ internal class OnrampRedirectModel @Inject constructor(
             error = error,
             tokenSymbol = params.cryptoCurrency.symbol,
             providerName = params.onrampProviderWithQuote.provider.info.name,
+            paymentMethod = params.onrampProviderWithQuote.paymentMethod.name,
         )
         val contentMessage = ContentMessage { onDismiss ->
             BasicDialog(
