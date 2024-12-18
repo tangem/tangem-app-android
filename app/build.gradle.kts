@@ -231,6 +231,7 @@ dependencies {
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
+    implementation(deps.decompose.ext.compose)
 
     /** Testing libraries */
     testImplementation(deps.test.coroutine)
