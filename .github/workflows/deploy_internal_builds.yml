@@ -110,7 +110,7 @@ jobs:
     needs: build_and_upload
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
-      channel: 'development-android-test'
+      channel: 'deployments-android'
       status: 'success'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase app distribution'
@@ -128,7 +128,7 @@ jobs:
     if: failure()
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
-      channel: 'development-android-test'
+      channel: 'deployments-android'
       status: 'error'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase App Distribution'
