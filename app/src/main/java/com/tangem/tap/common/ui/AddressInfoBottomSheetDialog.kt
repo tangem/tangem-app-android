@@ -10,6 +10,7 @@ import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.model.WalletAddressData
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.DialogOnboardingAddressInfoBinding
@@ -51,7 +52,7 @@ internal class AddressInfoBottomSheetDialog(
         tvAddress.text = data.address
         btnFlCopyAddress.setOnClickListener {
             Analytics.send(Token.Receive.ButtonCopyAddress())
-            context.copyToClipboard(data.address)
+            store.inject(DaggerGraphState::clipboardManager).setText(text = data.address, isSensitive = true)
         }
         btnFlShare.setOnClickListener {
             Analytics.send(Token.Receive.ButtonShareAddress())

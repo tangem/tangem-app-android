@@ -9,6 +9,12 @@ import androidx.compose.runtime.Stable
 @Stable
 interface ClipboardManager {
 
-    /** Copies to clipboard [text] with optional [label] */
-    fun setText(label: String = "", text: String)
+    /**
+     * Copies to clipboard [text] with optional [label]
+     *
+     * @param text        text
+     * @param isSensitive flag that determines whether the text is sensitive
+     * @param label       label
+     */
+    fun setText(text: String, isSensitive: Boolean, label: String = "")
 }
