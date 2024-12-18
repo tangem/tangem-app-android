@@ -66,11 +66,17 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
         config: ConfirmResidencyBottomSheetConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent = when (config) {
-        ConfirmResidencyBottomSheetConfig.SelectCountry -> selectCountryComponentFactory.create(
+        is ConfirmResidencyBottomSheetConfig.SelectCountry -> selectCountryComponentFactory.create(
             context = childByContext(componentContext),
             params = SelectCountryComponent.Params(
                 cryptoCurrency = params.cryptoCurrency,
-                onDismiss = model.bottomSheetNavigation::dismiss,
+                onDismiss = {
+                    // Dismiss country select sheet
+                    model.bottomSheetNavigation.dismiss()
+
+                    // Dismiss confirm residency sheet
+                    config.onDismiss()
+                },
             ),
         )
     }
