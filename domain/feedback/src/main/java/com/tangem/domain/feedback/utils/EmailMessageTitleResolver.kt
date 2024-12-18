@@ -26,6 +26,7 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
             -> R.string.feedback_preface_tx_failed
+            is FeedbackEmailType.PreActivatedWallet -> R.string.feedback_preface_support
         }
             .let(resources::getStringSafe)
     }

@@ -4,6 +4,7 @@ import arrow.core.NonEmptyList
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
@@ -12,6 +13,7 @@ internal class TokenListFiatBalanceOperations(
     private val isAnyTokenLoading: Boolean,
 ) {
 
+    @Suppress("LoopWithTooManyJumpStatements")
     fun calculateFiatBalance(): TotalFiatBalance {
         var fiatBalance: TotalFiatBalance = TotalFiatBalance.Loading
         if (isAnyTokenLoading) return fiatBalance
@@ -22,13 +24,21 @@ internal class TokenListFiatBalanceOperations(
                     fiatBalance = TotalFiatBalance.Loading
                     break
                 }
-                is CryptoCurrencyStatus.MissedDerivation,
-                is CryptoCurrencyStatus.Unreachable,
-                is CryptoCurrencyStatus.NoAmount,
                 is CryptoCurrencyStatus.NoQuote,
+                is CryptoCurrencyStatus.MissedDerivation,
                 -> {
                     fiatBalance = TotalFiatBalance.Failed
                     break
+                }
+                is CryptoCurrencyStatus.Unreachable,
+                is CryptoCurrencyStatus.NoAmount,
+                -> {
+                    if (BlockchainUtils.isIncludeToBalanceOnError(token.currency.network.id.value)) {
+                        fiatBalance = recalculateNoAccountBalance(fiatBalance)
+                    } else {
+                        fiatBalance = TotalFiatBalance.Failed
+                        break
+                    }
                 }
                 is CryptoCurrencyStatus.NoAccount -> {
                     fiatBalance = recalculateNoAccountBalance(fiatBalance)

@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.onramp.FetchOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.GetOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCurrencyUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
@@ -17,6 +18,7 @@ import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesSection
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyItemState
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyListController
+import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsErrorTransformer
 import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsLoadingTransformer
 import com.tangem.features.onramp.selectcurrency.entity.transformer.UpdateCurrencyItemsTransformer
 import com.tangem.features.onramp.utils.InputManager
@@ -26,11 +28,14 @@ import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ComponentScoped
 internal class OnrampSelectCurrencyModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -38,6 +43,7 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     private val searchManager: InputManager,
     private val getOnrampCurrenciesUseCase: GetOnrampCurrenciesUseCase,
     private val saveDefaultCurrencyUseCase: OnrampSaveDefaultCurrencyUseCase,
+    private val fetchOnrampCurrenciesUseCase: FetchOnrampCurrenciesUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -48,16 +54,15 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
         currencySearchBarUM = createSearchBarUM(),
         loadingSections = loadingSections,
     )
-    private val refreshTrigger = MutableSharedFlow<Unit>()
 
     init {
+        updateCurrenciesList()
         subscribeOnUpdateState()
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun subscribeOnUpdateState() {
         combine(
-            flow = refreshTrigger.onStart { emit(Unit) }.flatMapLatest { flowOf(getOnrampCurrenciesUseCase.invoke()) },
+            flow = getOnrampCurrenciesUseCase(),
             flow2 = searchManager.query,
         ) { maybeCurrencies, query ->
             maybeCurrencies.onLeft {
@@ -87,8 +92,16 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
     }
 
     private fun onRetry() {
-        modelScope.launch { refreshTrigger.emit(Unit) }
         controller.update(UpdateCurrencyItemsLoadingTransformer(loadingSections))
+        updateCurrenciesList()
+    }
+
+    private fun updateCurrenciesList() {
+        modelScope.launch {
+            fetchOnrampCurrenciesUseCase().onLeft {
+                controller.update(UpdateCurrencyItemsErrorTransformer(onRetry = ::onRetry))
+            }
+        }
     }
 
     private fun onSearchQueryChange(newQuery: String) {

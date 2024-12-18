@@ -106,6 +106,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "nexa" -> Blockchain.Nexa // FIXME
         "nexa/test" -> Blockchain.NexaTestnet // FIXME
         "radiant" -> Blockchain.Radiant
+        "fact0rn" -> Blockchain.Fact0rn
         "moonriver" -> Blockchain.Moonriver
         "moonriver/test" -> Blockchain.MoonriverTestnet
         "mantle" -> Blockchain.Mantle
@@ -250,6 +251,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Nexa -> "nexa" // FIXME
         Blockchain.NexaTestnet -> "nexa/test" // FIXME
         Blockchain.Radiant -> "radiant"
+        Blockchain.Fact0rn -> "fact0rn"
         Blockchain.Moonriver -> "moonriver"
         Blockchain.MoonriverTestnet -> "moonriver/test"
         Blockchain.Mantle -> "mantle"
@@ -303,7 +305,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> "ethereum-classic"
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano -> "cardano"
-        Blockchain.Polygon, Blockchain.PolygonTestnet -> "polygon-ecosystem-token"
+        Blockchain.Polygon, Blockchain.PolygonTestnet -> NEW_POLYGON_NAME
         Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "arbitrum-one"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
@@ -358,6 +360,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm-ethereum"
         Blockchain.Nexa, Blockchain.NexaTestnet -> "nexa" // FIXME
         Blockchain.Radiant -> "radiant"
+        Blockchain.Fact0rn -> "fact0rn"
         Blockchain.Moonriver, Blockchain.MoonriverTestnet -> "moonriver"
         Blockchain.Mantle, Blockchain.MantleTestnet -> "mantle"
         Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
@@ -387,8 +390,8 @@ fun Blockchain.toCoinId(): String {
  * New CoinId to existing coin "id" field.
  * To support both old and new coin id.
  */
-fun Blockchain.toMigratedCointId(): String = when (this) {
-    Blockchain.Polygon, Blockchain.PolygonTestnet -> "polygon-ecosystem-token"
+fun Blockchain.toMigratedCoinId(): String = when (this) {
+    Blockchain.Polygon, Blockchain.PolygonTestnet -> NEW_POLYGON_NAME
     else -> toCoinId()
 }
 
@@ -421,6 +424,9 @@ fun Blockchain.amountToCreateAccount(walletManager: WalletManager, token: Token?
 fun Blockchain.minimalAmount(): BigDecimal {
     return BigDecimal.ONE.movePointLeft(decimals())
 }
+
+const val OLD_POLYGON_NAME = "matic-network"
+const val NEW_POLYGON_NAME = "polygon-ecosystem-token"
 
 private const val NODL = "NODL"
 private const val NODL_AMOUNT_TO_CREATE_ACCOUNT = 1.5

@@ -25,7 +25,7 @@ class FetchCardTokenListUseCase(
 
     suspend operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = false): Either<TokenListError, Unit> {
         return either {
-            val currencies = fetchCurrencies(userWalletId = userWalletId)
+            val currencies = fetchCurrencies(userWalletId = userWalletId, refresh = refresh)
 
             coroutineScope {
                 val fetchStatuses = async {
@@ -53,9 +53,17 @@ class FetchCardTokenListUseCase(
         }
     }
 
-    private suspend fun Raise<TokenListError>.fetchCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
+    private suspend fun Raise<TokenListError>.fetchCurrencies(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): List<CryptoCurrency> {
         return catch(
-            block = { currenciesRepository.getSingleCurrencyWalletWithCardCurrencies(userWalletId = userWalletId) },
+            block = {
+                currenciesRepository.getSingleCurrencyWalletWithCardCurrencies(
+                    userWalletId = userWalletId,
+                    refresh = refresh,
+                )
+            },
             catch = { raise(TokenListError.DataError(it)) },
         )
     }

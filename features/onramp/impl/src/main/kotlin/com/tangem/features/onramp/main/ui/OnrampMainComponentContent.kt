@@ -12,14 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import com.tangem.core.ui.components.CircleShimmer
-import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
-import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampMainComponentUM
 
 @Composable
@@ -43,28 +41,33 @@ internal fun OnrampMainComponentContent(state: OnrampMainComponentUM, modifier: 
                 .fillMaxWidth()
                 .wrapContentHeight()
             when (state) {
-                is OnrampMainComponentUM.InitialLoading -> InitialLoading(modifier = contentModifier)
+                is OnrampMainComponentUM.InitialLoading -> InitialLoading(modifier = contentModifier, state = state)
                 is OnrampMainComponentUM.Content -> Content(modifier = contentModifier, state = state)
             }
         },
         floatingActionButton = {
-            BuyButton(
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .fillMaxWidth(),
-                onClick = state.buyButtonConfig.onClick,
-                enabled = state.buyButtonConfig.enabled,
-            )
+            OnrampButtonComponent(state)
         },
         floatingActionButtonPosition = FabPosition.Center,
     )
 }
 
 @Composable
-private fun InitialLoading(modifier: Modifier = Modifier) {
+private fun InitialLoading(state: OnrampMainComponentUM.InitialLoading, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
+    ) {
+        OnrampAmountContentLoading()
+        if (state.errorNotification != null) Notification(config = state.errorNotification.config)
+    }
+}
+
+@Composable
+private fun OnrampAmountContentLoading(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
+            .fillMaxWidth()
             .clip(shape = RoundedCornerShape(size = TangemTheme.dimens.radius16))
             .background(TangemTheme.colors.background.action)
             .padding(vertical = TangemTheme.dimens.spacing28),
@@ -97,15 +100,6 @@ private fun Content(state: OnrampMainComponentUM.Content, modifier: Modifier = M
     ) {
         OnrampAmountContent(state = state.amountBlockState)
         OnrampProviderContent(state = state.providerBlockState, modifier = Modifier.fillMaxWidth())
+        if (state.errorNotification != null) Notification(config = state.errorNotification.config)
     }
-}
-
-@Composable
-private fun BuyButton(onClick: () -> Unit, enabled: Boolean, modifier: Modifier = Modifier) {
-    PrimaryButton(
-        modifier = modifier,
-        text = stringResourceSafe(id = R.string.common_buy),
-        onClick = onClick,
-        enabled = enabled,
-    )
 }

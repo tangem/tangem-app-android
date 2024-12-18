@@ -227,6 +227,24 @@ sealed class NotificationUM(val config: NotificationConfig) {
                 wrappedList(cryptoAmount, fiatAmount),
             ),
         )
+
+        data class OnrampErrorNotification(val errorCode: String?, val onRefresh: () -> Unit) : Warning(
+            title = resourceReference(R.string.common_error),
+            subtitle = if (errorCode != null) {
+                resourceReference(R.string.express_error_code, wrappedList(errorCode))
+            } else {
+                resourceReference(R.string.common_unknown_error)
+            },
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.warning_button_refresh),
+                onClick = onRefresh,
+            ),
+        )
+
+        data object SwapNoAvailablePair : Warning(
+            title = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_title),
+            subtitle = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_message),
+        )
     }
 
     open class Info(

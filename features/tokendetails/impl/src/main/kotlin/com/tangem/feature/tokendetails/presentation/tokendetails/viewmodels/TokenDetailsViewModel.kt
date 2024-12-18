@@ -5,6 +5,7 @@ import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
@@ -50,7 +51,11 @@ import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.transaction.error.AssociateAssetError
+import com.tangem.domain.transaction.error.IncompleteTransactionError
+import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.domain.transaction.usecase.AssociateAssetUseCase
+import com.tangem.domain.transaction.usecase.DismissIncompleteTransactionUseCase
+import com.tangem.domain.transaction.usecase.RetryIncompleteTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
@@ -108,12 +113,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val associateAssetUseCase: AssociateAssetUseCase,
+    private val retryIncompleteTransactionUseCase: RetryIncompleteTransactionUseCase,
+    private val dismissIncompleteTransactionUseCase: DismissIncompleteTransactionUseCase,
     private val reduxStateHolder: ReduxStateHolder,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
-    expressStatusFactory: ExpressStatusFactory.Factory,
+    private val getCryptoCurrencySyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
     deepLinksRegistry: DeepLinksRegistry,
@@ -212,6 +220,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             event = TokenScreenAnalyticsEvent.DetailsScreenOpened(token = cryptoCurrency.symbol),
         )
         updateTopBarMenu()
+        initButtons()
         updateContent()
         handleBalanceHiding(owner)
     }
@@ -220,6 +229,22 @@ internal class TokenDetailsViewModel @Inject constructor(
         expressTxStatusTaskScheduler.cancelTask()
         expressTxJobHolder.cancel()
         super.onCleared()
+    }
+
+    private fun initButtons() {
+        // we need also init buttons before start all loading to avoid buttons blocking
+        viewModelScope.launch {
+            val currentCryptoCurrencyStatus = getCryptoCurrencySyncUseCase.invoke(
+                userWalletId = userWalletId,
+                cryptoCurrencyId = cryptoCurrency.id,
+                isSingleWalletWithTokens = false,
+            ).getOrNull()
+            currentCryptoCurrencyStatus?.let {
+                cryptoCurrencyStatus = it
+                updateButtons(it)
+                updateWarnings(it)
+            }
+        }
     }
 
     private fun updateContent() {
@@ -842,6 +867,66 @@ internal class TokenDetailsViewModel @Inject constructor(
         clipboardManager.setText(text = defaultAddress)
         analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
+    }
+
+    override fun onRetryIncompleteTransactionClick() {
+        viewModelScope.launch {
+            retryIncompleteTransactionUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ).fold(
+                ifLeft = { e ->
+                    val message = when (e) {
+                        is IncompleteTransactionError.DataError -> e.message.orEmpty()
+                        is IncompleteTransactionError.SendError -> {
+                            when (val error = e.error) {
+                                is SendTransactionError.UserCancelledError,
+                                is SendTransactionError.CreateAccountUnderfunded,
+                                is SendTransactionError.TangemSdkError,
+                                is SendTransactionError.DemoCardError,
+                                -> null
+                                is SendTransactionError.DataError -> error.message
+                                is SendTransactionError.BlockchainSdkError -> error.message
+                                is SendTransactionError.NetworkError -> error.message
+                                is SendTransactionError.UnknownError -> error.ex?.localizedMessage
+                            }
+                        }
+                    }
+                    message?.let {
+                        internalUiState.value = stateFactory.getStateWithErrorDialog(stringReference(it))
+                        Timber.e(it)
+                    }
+                },
+                ifRight = {
+                    internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
+                },
+            )
+        }
+    }
+
+    override fun onDismissIncompleteTransactionClick() {
+        viewModelScope.launch {
+            internalUiState.value = stateFactory.getStateWithDismissIncompleteTransactionConfirmDialog()
+        }
+    }
+
+    override fun onConfirmDismissIncompleteTransactionClick() {
+        viewModelScope.launch {
+            dismissIncompleteTransactionUseCase(
+                userWalletId = userWalletId,
+                currency = cryptoCurrency,
+            ).fold(
+                ifLeft = { e ->
+                    internalUiState.value = stateFactory.getStateWithErrorDialog(
+                        stringReference(e.message.orEmpty()),
+                    )
+                    Timber.e(e.message)
+                },
+                ifRight = {
+                    internalUiState.value = stateFactory.getStateWithRemovedKaspaIncompleteTransactionNotification()
+                },
+            )
+        }
     }
 
     override fun onAssociateClick() {

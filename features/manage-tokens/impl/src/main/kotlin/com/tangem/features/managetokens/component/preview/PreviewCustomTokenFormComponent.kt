@@ -18,7 +18,7 @@ import kotlinx.collections.immutable.toPersistentMap
 
 internal class PreviewCustomTokenFormComponent(
     networkName: ClickableFieldUM = PreviewCustomTokenFormComponent.networkName,
-    derivationPath: ClickableFieldUM = PreviewCustomTokenFormComponent.derivationPath,
+    derivationPath: ClickableFieldUM? = PreviewCustomTokenFormComponent.derivationPath,
     canAddToken: Boolean = false,
     tokenForm: CustomTokenFormUM.TokenFormUM? = PreviewCustomTokenFormComponent.tokenForm,
     notifications: PersistentList<CustomTokenFormUM.NotificationUM> = PreviewCustomTokenFormComponent.notifications,

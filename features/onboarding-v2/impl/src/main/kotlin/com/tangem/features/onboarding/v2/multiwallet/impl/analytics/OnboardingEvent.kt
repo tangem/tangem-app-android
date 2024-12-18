@@ -64,5 +64,15 @@ sealed class OnboardingEvent(
             event = "Reset Card Notification",
             params = mapOf("Option" to "Reset"),
         )
+
+        data object ResumeInterruptedBackup : Backup(
+            event = "Notice - Backup Canceled",
+            params = mapOf("Action" to "Resume"),
+        )
+
+        data object CancelInterruptedBackup : Backup(
+            event = "Notice - Backup Canceled",
+            params = mapOf("Action" to "Cancel"),
+        )
     }
 }
