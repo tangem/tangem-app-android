@@ -5,13 +5,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -19,7 +18,6 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 import kotlinx.collections.immutable.persistentListOf
@@ -30,8 +28,6 @@ internal fun WalletConnectScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-
     SettingsScreensScaffold(
         modifier = modifier,
         content = {
@@ -46,7 +42,7 @@ internal fun WalletConnectScreen(
                 AddSessionFab(
                     onAddSession = {
                         Analytics.send(Settings.ButtonStartWalletConnectSession())
-                        state.onAddSession(context.getFromClipboard()?.toString())
+                        state.onAddSession()
                     },
                 )
             }
@@ -60,7 +56,7 @@ internal fun WalletConnectScreen(
 private fun AddSessionFab(onAddSession: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
         onClick = onAddSession,
-        backgroundColor = TangemTheme.colors.button.primary,
+        containerColor = TangemTheme.colors.button.primary,
         contentColor = TangemTheme.colors.icon.primary2,
         shape = RoundedCornerShape(16.dp),
         modifier = modifier,

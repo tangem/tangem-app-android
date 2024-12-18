@@ -17,4 +17,11 @@ interface ClipboardManager {
      * @param label       label
      */
     fun setText(text: String, isSensitive: Boolean, label: String = "")
+
+    /**
+     * Get text (text/plain) from clipboard
+     *
+     * @param default default value
+     */
+    fun getText(default: String? = null): String?
 }
