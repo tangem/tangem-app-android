@@ -222,7 +222,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val defaultAddress = addresses.firstOrNull()?.value ?: return null
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-        clipboardManager.setText(text = defaultAddress)
+        clipboardManager.setText(text = defaultAddress, isSensitive = true)
         analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
     }
@@ -239,6 +239,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+                clipboardManager.setText(text = it, isSensitive = true)
             },
             onShareClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
@@ -255,12 +256,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             walletManagersFacade.getDefaultAddress(
                 userWalletId = stateHolder.getSelectedWalletId(),
                 network = cryptoCurrencyStatus.currency.network,
-            )?.let {
+            )?.let { address ->
                 stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
 
-                walletEventSender.send(
-                    event = WalletEvent.CopyAddress(address = it),
-                )
+                clipboardManager.setText(text = address, isSensitive = true)
+                walletEventSender.send(event = WalletEvent.CopyAddress)
             }
         }
     }
