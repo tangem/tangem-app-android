@@ -24,6 +24,7 @@ internal sealed interface StakingBlockUM {
         val iconState: IconState,
         val titleText: TextReference,
         val subtitleText: TextReference,
+        val isEnabled: Boolean,
         val onStakeClicked: () -> Unit,
     ) : StakingBlockUM
 }
