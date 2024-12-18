@@ -12,7 +12,7 @@ internal sealed class WalletEvent {
 
     data class ShowAlert(val state: WalletAlertState) : WalletEvent()
 
-    data class CopyAddress(val address: String) : WalletEvent()
+    data object CopyAddress : WalletEvent()
 
     data class RateApp(val onDismissClick: () -> Unit) : WalletEvent()
 
