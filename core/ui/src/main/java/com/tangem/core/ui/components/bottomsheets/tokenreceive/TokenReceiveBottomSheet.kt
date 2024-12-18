@@ -20,10 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -78,7 +76,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
                 address = selectedAddress.value,
                 snackbarHostState = snackbarHostState,
                 onShareClick = content.onShareClick,
-                onCopyClick = content.onCopyClick,
+                onCopyClick = { content.onCopyClick(selectedAddress.value) },
             )
         }
     }
@@ -236,7 +234,6 @@ private fun Buttons(
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val resources = context.resources
@@ -253,7 +250,6 @@ private fun Buttons(
                 onCopyClick()
 
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                clipboardManager.setText(AnnotatedString(address))
 
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
