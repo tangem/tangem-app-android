@@ -20,6 +20,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -193,6 +194,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val excludedBlockchains: ExcludedBlockchains
         get() = entryPoint.getExcludedBlockchains()
+
+    private val clipboardManager: ClipboardManager
+        get() = entryPoint.getClipboardManager()
     // endregion
 
     override fun onCreate() {
@@ -275,6 +279,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onboardingRepository = onboardingRepository,
                     excludedBlockchains = excludedBlockchains,
                     appPreferencesStore = appPreferencesStore,
+                    clipboardManager = clipboardManager,
                 ),
             ),
         )
