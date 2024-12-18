@@ -2,8 +2,10 @@ package com.tangem.tap.routing.component.impl
 
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
@@ -15,10 +17,12 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.getOrCreateTyped
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
@@ -32,6 +36,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     private val childFactory: ChildFactory,
     private val appRouterConfig: AppRouterConfig,
+    private val uiDependencies: UiDependencies,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -68,7 +73,13 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        // TODO: Implement in [REDACTED_JIRA]
+        val stack by this.stack.subscribeAsState()
+
+        RootContent(
+            modifier = modifier,
+            stack = stack,
+            uiDependencies = uiDependencies,
+        )
     }
 
     override fun showSnackbar(text: Int, length: Int, buttonTitle: Int?, action: (() -> Unit)?) {

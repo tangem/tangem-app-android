@@ -10,12 +10,15 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -260,10 +263,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         observeAppThemeModeUpdates()
 
         if (routingFeatureToggles.isNavigationRefactoringEnabled) {
-            TODO(
-                "Will be implemented in [REDACTED_JIRA] " +
-                    "and in [REDACTED_JIRA]",
-            )
+            setRootContent()
         } else {
             setContentView(R.layout.activity_main)
             installRouting()
@@ -278,6 +278,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
+        }
+    }
+
+    private fun setRootContent() {
+        val routingComponent = routingComponentFactory.create(
+            context = rootComponentContext,
+        )
+
+        setContent {
+            routingComponent.Content(Modifier.fillMaxSize())
         }
     }
 
