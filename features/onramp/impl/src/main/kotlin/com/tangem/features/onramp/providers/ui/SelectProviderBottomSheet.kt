@@ -124,16 +124,17 @@ private fun PaymentMethodBlock(
 @Composable
 private fun ProviderItem(state: ProviderListItemUM, modifier: Modifier = Modifier) {
     when (state) {
-        is ProviderListItemUM.Available -> AvailableProviderItem(
+        is ProviderListItemUM.Available.Content -> AvailableProviderItem(
             modifier = modifier,
             state = state,
         )
-        is ProviderListItemUM.AvailableWithError -> {
+        is ProviderListItemUM.Available.WithError -> {
             UnavailableProviderItem(
                 modifier = modifier.clickable(onClick = state.onClick),
                 imageUrl = state.imageUrl,
                 providerName = state.name,
                 subtitle = state.subtitle,
+                isSelected = state.isSelected,
             )
         }
         is ProviderListItemUM.Unavailable -> UnavailableProviderItem(
@@ -141,12 +142,13 @@ private fun ProviderItem(state: ProviderListItemUM, modifier: Modifier = Modifie
             imageUrl = state.imageUrl,
             providerName = state.name,
             subtitle = state.subtitle,
+            isSelected = false,
         )
     }
 }
 
 @Composable
-private fun AvailableProviderItem(state: ProviderListItemUM.Available, modifier: Modifier = Modifier) {
+private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .then(
@@ -220,10 +222,19 @@ private fun UnavailableProviderItem(
     imageUrl: String,
     providerName: String,
     subtitle: TextReference,
+    isSelected: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier.padding(all = TangemTheme.dimens.spacing12),
+        modifier = modifier
+            .then(
+                if (isSelected) {
+                    Modifier.selectedBorder()
+                } else {
+                    Modifier.clip(RoundedCornerShape(16.dp))
+                },
+            )
+            .padding(all = TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
