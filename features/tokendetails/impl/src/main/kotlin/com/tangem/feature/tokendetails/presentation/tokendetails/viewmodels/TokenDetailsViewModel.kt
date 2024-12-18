@@ -5,7 +5,6 @@ import androidx.lifecycle.*
 import androidx.paging.cachedIn
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
@@ -589,8 +588,9 @@ internal class TokenDetailsViewModel @Inject constructor(
             internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
                 currency = cryptoCurrency,
                 networkAddress = networkAddress,
-                sendCopyAnalyticsEvent = {
+                onCopyClick = {
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+                    clipboardManager.setText(text = it, isSensitive = true)
                 },
                 sendShareAnalyticsEvent = {
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
@@ -626,7 +626,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
             if (extendedKey.isNotBlank()) {
                 vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-                clipboardManager.setText(text = extendedKey)
+                clipboardManager.setText(text = extendedKey, isSensitive = true)
                 internalUiState.value = stateFactory.getStateAndTriggerEvent(
                     state = internalUiState.value,
                     errorMessage = resourceReference(R.string.wallet_notification_address_copied),
@@ -864,7 +864,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         val defaultAddress = addresses.firstOrNull()?.value ?: return null
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-        clipboardManager.setText(text = defaultAddress)
+        clipboardManager.setText(text = defaultAddress, isSensitive = true)
         analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
     }

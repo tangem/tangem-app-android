@@ -249,7 +249,7 @@ internal class TokenDetailsStateFactory(
     fun getStateWithReceiveBottomSheet(
         currency: CryptoCurrency,
         networkAddress: NetworkAddress,
-        sendCopyAnalyticsEvent: () -> Unit,
+        onCopyClick: (String) -> Unit,
         sendShareAnalyticsEvent: () -> Unit,
     ): TokenDetailsState {
         return currentStateProvider().copy(
@@ -262,7 +262,7 @@ internal class TokenDetailsStateFactory(
                     network = currency.network.name,
                     addresses = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
                     showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                    onCopyClick = sendCopyAnalyticsEvent,
+                    onCopyClick = onCopyClick,
                     onShareClick = sendShareAnalyticsEvent,
                 ),
             ),

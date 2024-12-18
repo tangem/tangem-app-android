@@ -5,9 +5,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
@@ -32,7 +30,6 @@ internal fun WalletEventEffect(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val resources = LocalContext.current.resources
-    val clipboardManager = LocalClipboardManager.current
     EventEffect(
         event = event,
         onTrigger = { value ->
@@ -45,7 +42,6 @@ internal fun WalletEventEffect(
                     snackbarHostState.showSnackbar(message = value.text.resolveReference(resources))
                 }
                 is WalletEvent.CopyAddress -> {
-                    clipboardManager.setText(AnnotatedString(value.address))
                     snackbarHostState.showSnackbar(
                         message = resources.getStringSafe(R.string.wallet_notification_address_copied),
                         duration = SnackbarDuration.Short,
