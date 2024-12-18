@@ -2,17 +2,13 @@ package com.tangem.core.ui.screen
 
 import android.app.Activity
 import android.content.Context
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.windowsize.rememberWindowSize
-import com.tangem.domain.apptheme.model.AppThemeMode
 
 /**
  * Interface representing a Compose screen with common theming and content composition properties.
@@ -60,34 +56,13 @@ internal fun ComposeScreen.createComposeView(
 ): ComposeView {
     return ComposeView(context).apply {
         setContent {
-            val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
-            val windowSize = rememberWindowSize(activity = activity)
-
             TangemTheme(
-                isDark = shouldUseDarkTheme(appThemeMode),
-                windowSize = windowSize,
-                vibratorHapticManager = uiDependencies.vibratorHapticManager,
-                snackbarHostState = uiDependencies.globalSnackbarHostState,
+                activity = activity,
+                uiDependencies = uiDependencies,
                 overrideSystemBarColors = overrideSystemBarColors,
             ) {
                 ScreenContent(modifier = screenModifier)
             }
         }
-    }
-}
-
-/**
- * Determines whether the dark theme should be used based on the given [AppThemeMode].
- *
- * @param appThemeMode The application theme mode.
- * @return `true` if the dark theme should be used, `false` otherwise.
- */
-@Composable
-@ReadOnlyComposable
-private fun shouldUseDarkTheme(appThemeMode: AppThemeMode): Boolean {
-    return when (appThemeMode) {
-        AppThemeMode.FORCE_DARK -> true
-        AppThemeMode.FORCE_LIGHT -> false
-        AppThemeMode.FOLLOW_SYSTEM -> isSystemInDarkTheme()
     }
 }
