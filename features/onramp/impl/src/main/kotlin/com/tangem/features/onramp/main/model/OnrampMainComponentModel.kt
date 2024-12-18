@@ -19,7 +19,6 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampAvailability
-import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
@@ -105,8 +104,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         )
     }
 
-    fun handleOnrampAvailable(currency: OnrampCurrency) {
-        _state.update { stateFactory.getReadyState(currency) }
+    fun handleOnrampAvailable() {
         subscribeToCountryAndCurrencyUpdates()
         subscribeToQuotesUpdate()
     }
@@ -125,7 +123,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun handleOnrampAvailability(availability: OnrampAvailability) {
         when (availability) {
-            is OnrampAvailability.Available -> handleOnrampAvailable(availability.currency)
+            is OnrampAvailability.Available -> handleOnrampAvailable()
             is OnrampAvailability.ConfirmResidency,
             is OnrampAvailability.NotSupported,
             -> bottomSheetNavigation.activate(OnrampMainBottomSheetConfig.ConfirmResidency(availability.country))
@@ -139,7 +137,13 @@ internal class OnrampMainComponentModel @Inject constructor(
                     ifLeft = ::handleOnrampError,
                     ifRight = { country ->
                         if (country == null) return@onEach
-                        _state.update { amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency) }
+                        _state.update {
+                            if (it is OnrampMainComponentUM.InitialLoading) {
+                                stateFactory.getReadyState(country.defaultCurrency)
+                            } else {
+                                amountStateFactory.getUpdatedCurrencyState(country.defaultCurrency)
+                            }
+                        }
                         updatePairsAndQuotes()
                     },
                 )
@@ -278,10 +282,11 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
         sendOnrampQuotesErrorAnalytic(quotes)
 
-        val quote = quotes.firstOrNull()
+        val quote = quotes.firstOrNull { it !is OnrampQuote.Error }
 
         if (quote == null) {
             _state.update { stateFactory.getErrorState() }
+            lastAmount.value = BigDecimal.ZERO
             return
         }
 
@@ -295,15 +300,17 @@ internal class OnrampMainComponentModel @Inject constructor(
 
         val isBestProvider = quote == bestProvider && hasBestProvider
 
-        if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
+        if (lastAmount.value != quote.fromAmount.value) {
             lastAmount.value = quote.fromAmount.value
-            analyticsEventHandler.send(
-                OnrampAnalyticsEvent.ProviderCalculated(
-                    providerName = quote.provider.info.name,
-                    tokenSymbol = params.cryptoCurrency.symbol,
-                    paymentMethod = quote.paymentMethod.name,
-                ),
-            )
+            if (quote is OnrampQuote.Data) {
+                analyticsEventHandler.send(
+                    OnrampAnalyticsEvent.ProviderCalculated(
+                        providerName = quote.provider.info.name,
+                        tokenSymbol = params.cryptoCurrency.symbol,
+                        paymentMethod = quote.paymentMethod.name,
+                    ),
+                )
+            }
             _state.update {
                 amountStateFactory.getAmountSecondaryUpdatedState(
                     quote = quote,
