@@ -87,8 +87,9 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
-    FileUtils.cp("../ci_resources/build_8gb_ram_ci_gradle.properties", "../gradle.properties")
-    puts File.read("../gradle.properties")
+      FileUtils.cp("../ci_resources/build_8gb_ram_ci_gradle.properties", "../gradle.properties")
+      puts File.read("../gradle.properties")
+
     gradle(
       task: "clean assemble",
       build_type: "Internal",
@@ -97,12 +98,18 @@ platform :android do
         'versionName' => ENV['version_name'],
       }
     )
-    firebase_app_distribution(
+    uploaded_release = firebase_app_distribution(
       firebase_cli_token: ENV['firebase_cli_token'],
       app: ENV['app_id_internal'],
       apk_path: ENV['apk_path_internal'],
       groups: ENV['groups'],
       release_notes: ENV['release_notes'],
     )
+    release_url = uploaded_release[:testingUri]
+
+    # Applying base64 encoding twice to prevent GA bug "Skip output 'output' since it may contain secret."
+    # See https://github.com/orgs/community/discussions/13082#discussioncomment-6776428 for details
+    encoded_release_url = Base64.strict_encode64(Base64.strict_encode64(release_url))
+    sh("echo 'encoded_release_url=#{encoded_release_url}' >> /workspace/github_output.txt")
   end
 end
