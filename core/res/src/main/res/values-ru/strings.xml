@@ -5,7 +5,7 @@
   <string name="action_buttons_sell_navigation_bar_title">Продать</string>
   <string name="action_buttons_service_loading_alert_message">Это может занять несколько секунд. Пожалуйста, попробуйте позже.</string>
   <string name="action_buttons_service_loading_alert_title">Данные ещё не загрузились</string>
-  <string name="action_buttons_something_wrong_alert_message">Это действие в данный момент недоступно, пожалуйста попробуйте позже или обновите данные, сделав свайп экрана вниз.</string>
+  <string name="action_buttons_something_wrong_alert_message">Это действие в данный момент недоступно, пожалуйста, попробуйте позже или обновите данные, сделав свайп экрана вниз.</string>
   <string name="action_buttons_something_wrong_alert_title">Кнопка недоступна</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
