@@ -900,6 +900,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 PolygonZkEVM,
                 PolygonZkEVMTestnet,
                 Radiant,
+                Fact0rn,
                 Base,
                 BaseTestnet,
                 Moonriver,
