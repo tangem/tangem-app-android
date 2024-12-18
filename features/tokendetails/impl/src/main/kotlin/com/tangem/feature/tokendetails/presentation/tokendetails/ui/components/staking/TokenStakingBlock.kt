@@ -112,6 +112,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(id = R.string.common_stake),
+            enabled = state.isEnabled,
             onClick = state.onStakeClicked,
         )
     }
