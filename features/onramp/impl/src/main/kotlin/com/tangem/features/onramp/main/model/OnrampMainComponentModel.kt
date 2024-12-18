@@ -278,10 +278,11 @@ internal class OnrampMainComponentModel @Inject constructor(
     private fun handleQuoteResult(quotes: List<OnrampQuote>) {
         sendOnrampQuotesErrorAnalytic(quotes)
 
-        val quote = quotes.firstOrNull()
+        val quote = quotes.firstOrNull { it !is OnrampQuote.Error }
 
         if (quote == null) {
             _state.update { stateFactory.getErrorState() }
+            lastAmount.value = BigDecimal.ZERO
             return
         }
 
@@ -295,15 +296,17 @@ internal class OnrampMainComponentModel @Inject constructor(
 
         val isBestProvider = quote == bestProvider && hasBestProvider
 
-        if (quote is OnrampQuote.Data && lastAmount.value != quote.fromAmount.value) {
+        if (lastAmount.value != quote.fromAmount.value) {
             lastAmount.value = quote.fromAmount.value
-            analyticsEventHandler.send(
-                OnrampAnalyticsEvent.ProviderCalculated(
-                    providerName = quote.provider.info.name,
-                    tokenSymbol = params.cryptoCurrency.symbol,
-                    paymentMethod = quote.paymentMethod.name,
-                ),
-            )
+            if (quote is OnrampQuote.Data) {
+                analyticsEventHandler.send(
+                    OnrampAnalyticsEvent.ProviderCalculated(
+                        providerName = quote.provider.info.name,
+                        tokenSymbol = params.cryptoCurrency.symbol,
+                        paymentMethod = quote.paymentMethod.name,
+                    ),
+                )
+            }
             _state.update {
                 amountStateFactory.getAmountSecondaryUpdatedState(
                     quote = quote,
