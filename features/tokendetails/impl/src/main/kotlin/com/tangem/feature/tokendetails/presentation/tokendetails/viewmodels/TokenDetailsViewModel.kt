@@ -592,7 +592,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
                     clipboardManager.setText(text = it, isSensitive = true)
                 },
-                sendShareAnalyticsEvent = {
+                onShareClick = {
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
                 },
             )
