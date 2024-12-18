@@ -152,7 +152,7 @@ internal class ManageTokensUiManager(
 
     private fun copyContractAddress(source: ManagedCryptoCurrency.SourceNetwork) {
         if (source is ManagedCryptoCurrency.SourceNetwork.Default) {
-            clipboardManager.setText(text = source.contractAddress)
+            clipboardManager.setText(text = source.contractAddress, isSensitive = false)
             showSnackbarMessage(resourceReference(R.string.contract_address_copied_message))
         }
     }
