@@ -152,6 +152,7 @@ internal object TokenDetailsPreviewData {
             formatArgs = wrappedList("Solana"),
         ),
         iconState = iconState,
+        isEnabled = true,
         onStakeClicked = {},
     )
 
