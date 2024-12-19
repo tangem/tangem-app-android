@@ -49,8 +49,11 @@ internal class OnrampStateFactory(
     fun getOnrampErrorState(onrampError: OnrampError): OnrampMainComponentUM {
         return when (onrampError) {
             OnrampError.PairsNotFound -> getNoPairsErrorState()
-            is OnrampError.DataError -> getErrorState(onrampError.code)
-            is OnrampError.DomainError -> getErrorState()
+            is OnrampError.DataError -> getErrorState(
+                errorCode = onrampError.code,
+                onRefresh = onrampIntents::onRefresh,
+            )
+            is OnrampError.DomainError -> getErrorState(onRefresh = onrampIntents::onRefresh)
             is OnrampError.AmountError.TooBigError,
             is OnrampError.AmountError.TooSmallError,
             OnrampError.RedirectError.VerificationFailed,
@@ -74,7 +77,7 @@ internal class OnrampStateFactory(
         )
     }
 
-    fun getErrorState(errorCode: String? = null): OnrampMainComponentUM {
+    fun getErrorState(errorCode: String? = null, onRefresh: () -> Unit): OnrampMainComponentUM {
         val state = currentStateProvider()
         val endButton = state.topBarConfig.endButtonUM.copy(enabled = true)
 
@@ -89,13 +92,13 @@ internal class OnrampStateFactory(
                 providerBlockState = OnrampProviderBlockUM.Empty,
                 errorNotification = NotificationUM.Warning.OnrampErrorNotification(
                     errorCode = errorCode,
-                    onRefresh = onrampIntents::onRefresh,
+                    onRefresh = onRefresh,
                 ),
             )
             is OnrampMainComponentUM.InitialLoading -> state.copy(
                 errorNotification = NotificationUM.Warning.OnrampErrorNotification(
                     errorCode = errorCode,
-                    onRefresh = onrampIntents::onRefresh,
+                    onRefresh = onRefresh,
                 ),
             )
         }
