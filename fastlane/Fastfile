@@ -87,7 +87,7 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
-      FileUtils.cp("../ci_resources/build_8gb_ram_ci_gradle.properties", "../gradle.properties")
+      FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
       puts File.read("../gradle.properties")
 
     gradle(
