@@ -24,8 +24,12 @@ internal fun WelcomeScreenContent(
     showScanCardProgress: Boolean,
     onUnlockClick: () -> Unit,
     onScanCardClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         SpacerHMax()
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size96),
