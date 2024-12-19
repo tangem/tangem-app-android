@@ -583,6 +583,8 @@
   <string name="onramp_choose_provider_title_hint">Der Kauf von Kryptowährungen bei Tangem wird von Drittanbietern zu deren Bedingungen durchgeführt.</string>
   <string name="onramp_country_search">Suche nach Land</string>
   <string name="onramp_country_unavailable">Nicht verfügbar</string>
+  <string name="onramp_currency_other">Andere Währungen</string>
+  <string name="onramp_currency_popular">Beliebte Fiats</string>
   <string name="onramp_currency_search">Suche nach Währung</string>
   <string name="onramp_legal">Durch die Nutzung der Onramp-Funktionalität stimmst Du den %1$s und %2$s des Anbieters zu.</string>
   <string name="onramp_max_amount_restriction">Der Kaufbetrag sollte nicht höher sein als %s</string>
