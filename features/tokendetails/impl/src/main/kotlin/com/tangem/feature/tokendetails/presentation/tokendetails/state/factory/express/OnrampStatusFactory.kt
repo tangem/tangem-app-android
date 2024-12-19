@@ -1,5 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -14,9 +16,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsOnrampTransactionStateConverter
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
