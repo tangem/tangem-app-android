@@ -49,8 +49,6 @@ object TradeCryptoMiddleware {
             is TradeCryptoAction.FinishSelling -> openReceiptUrl(action.transactionId)
             is TradeCryptoAction.Buy -> proceedBuyAction(state, action)
             is TradeCryptoAction.Sell -> proceedSellAction(action)
-            is TradeCryptoAction.SendToken -> handleNewSendToken(action = action)
-            is TradeCryptoAction.SendCoin -> handleNewSendCoin(action = action)
         }
     }
 
@@ -165,38 +163,5 @@ object TradeCryptoMiddleware {
             action = CurrencyExchangeManager.Action.Sell,
             transactionId = transactionId,
         )?.let { store.dispatchOpenUrl(it) }
-    }
-
-    private fun handleNewSendToken(action: TradeCryptoAction.SendToken) {
-        handleNewSend(
-            userWalletId = action.userWallet.walletId,
-            txInfo = action.transactionInfo,
-            currency = action.tokenCurrency,
-        )
-    }
-
-    private fun handleNewSendCoin(action: TradeCryptoAction.SendCoin) {
-        handleNewSend(
-            userWalletId = action.userWallet.walletId,
-            txInfo = action.transactionInfo,
-            currency = action.coinStatus.currency,
-        )
-    }
-
-    private fun handleNewSend(
-        userWalletId: UserWalletId,
-        txInfo: TradeCryptoAction.TransactionInfo?,
-        currency: CryptoCurrency,
-    ) {
-        val route = AppRoute.Send(
-            currency = currency,
-            userWalletId = userWalletId,
-            transactionId = txInfo?.transactionId,
-            destinationAddress = txInfo?.destinationAddress,
-            amount = txInfo?.amount,
-            tag = txInfo?.tag,
-        )
-
-        store.dispatchNavigationAction { push(route) }
     }
 }
