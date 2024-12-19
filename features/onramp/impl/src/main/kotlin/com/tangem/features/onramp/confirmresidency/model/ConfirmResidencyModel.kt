@@ -52,8 +52,10 @@ internal class ConfirmResidencyModel @Inject constructor(
         ConfirmResidencyUM.ActionButtonConfig(
             onClick = {
                 analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceConfirm(country.name))
-                modelScope.launch { saveDefaultCountryUseCase.invoke(country) }
-                params.onDismiss()
+                modelScope.launch {
+                    saveDefaultCountryUseCase.invoke(country)
+                    params.onDismiss()
+                }
             },
             text = resourceReference(R.string.common_confirm),
         )
