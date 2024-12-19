@@ -1,19 +1,28 @@
 package com.tangem.features.onramp.success.model
 
+import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButtonUM
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.ContentMessage
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
+import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.onramp.component.OnrampSuccessComponent
+import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessClickIntents
 import com.tangem.features.onramp.success.entity.OnrampSuccessComponentUM
 import com.tangem.features.onramp.success.entity.conterter.SetOnrampSuccessContentConverter
@@ -36,6 +45,8 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val messageSender: UiMessageSender,
+    private val router: Router,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampSuccessClickIntents {
 
@@ -58,8 +69,9 @@ internal class OnrampSuccessComponentModel @Inject constructor(
         modelScope.launch {
             getOnrampTransactionUseCase(externalTxId = params.externalTxId)
                 .fold(
-                    ifLeft = {
-                        Timber.e(it.toString())
+                    ifLeft = { error ->
+                        Timber.e(error.toString())
+                        showErrorAlert(error)
                     },
                     ifRight = { transaction ->
                         loadTransactionStatus(transaction)
@@ -74,7 +86,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
             transaction.toCurrencyId,
         ).getOrElse { error("Crypto currency not found") }
 
-        getOnrampStatusUseCase(externalTxId = params.externalTxId)
+        getOnrampStatusUseCase(txId = transaction.txId)
             .fold(
                 ifLeft = { error ->
                     analyticsEventHandler.sendOnrampErrorEvent(
@@ -84,6 +96,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                         paymentMethod = transaction.paymentMethod,
                     )
                     Timber.e(error.toString())
+                    showErrorAlert(error)
                 },
                 ifRight = { status ->
                     analyticsEventHandler.send(
@@ -110,6 +123,32 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                     )
                 },
             )
+    }
+
+    private fun showErrorAlert(error: OnrampError) {
+        val contentMessage = ContentMessage { onDismiss ->
+            val errorCode = (error as? OnrampError.DataError)?.code
+            val message = if (errorCode.isNullOrBlank()) {
+                stringResource(R.string.common_unknown_error)
+            } else {
+                stringResource(R.string.express_error_code, wrappedList(errorCode))
+            }
+            BasicDialog(
+                message = message,
+                confirmButton = DialogButtonUM(
+                    title = stringResource(id = R.string.common_ok),
+                    onClick = {
+                        router.pop()
+                        onDismiss()
+                    },
+                ),
+                onDismissDialog = {
+                    router.pop()
+                    onDismiss()
+                },
+            )
+        }
+        messageSender.send(contentMessage)
     }
 
     private fun removeTransactionIfTerminalStatus(
