@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
+import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
@@ -26,6 +28,8 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val txHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val txHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
+    private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) {
@@ -45,6 +49,8 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             analyticsEventHandler = analyticsEventHandler,
             walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
+            getOnrampTransactionsUseCase = getOnrampTransactionsUseCase,
+            onrampRemoveTransactionUseCase = onrampRemoveTransactionUseCase,
         )
     }
 }
