@@ -1,5 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -10,8 +12,7 @@ import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -79,11 +80,13 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             expressTxs.map { tx ->
                 async {
                     when (tx) {
-                        is ExpressTransactionStateUM.ExchangeUM -> exchangeStatusFactory.updateSwapTxStatus(tx)
+                        is ExchangeUM -> exchangeStatusFactory.updateSwapTxStatus(tx)
                         is ExpressTransactionStateUM.OnrampUM -> onrampStatusFactory.updateOnrmapTxStatus(tx)
+                        else -> null
                     }
                 }
             }.awaitAll()
+                .filterNotNull()
                 .toPersistentList()
         }
 
@@ -95,13 +98,13 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         val config = state.bottomSheetConfig
         val expressBottomSheet = config?.content as? ExpressStatusBottomSheetConfig
         val currentTx = expressTxs.firstOrNull { it.info.txId == expressBottomSheet?.value?.info?.txId }
-        if (currentTx is ExpressTransactionStateUM.ExchangeUM && currentTx.activeStatus == ExchangeStatus.Finished) {
+        if (currentTx is ExchangeUM && currentTx.activeStatus == ExchangeStatus.Finished) {
             updateBalance(currentTx.toCryptoCurrency)
         }
         val expressTxsToDisplay = expressTxs.filterNot {
             when (it) {
-                is ExpressTransactionStateUM.ExchangeUM -> false
                 is ExpressTransactionStateUM.OnrampUM -> it.activeStatus.isHidden
+                else -> false
             }
         }.toPersistentList()
         return state.copy(
@@ -115,7 +118,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
 
     fun getStateWithExpressStatusBottomSheet(expressState: ExpressTransactionStateUM): TokenDetailsState {
         val analyticEvent = when (expressState) {
-            is ExpressTransactionStateUM.ExchangeUM -> TokenExchangeAnalyticsEvent.CexTxStatusOpened(
+            is ExchangeUM -> TokenExchangeAnalyticsEvent.CexTxStatusOpened(
                 cryptoCurrency.symbol,
             )
             is ExpressTransactionStateUM.OnrampUM -> TokenOnrampAnalyticsEvent.OnrampStatusOpened(
@@ -123,6 +126,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
                 provider = expressState.providerName,
                 fiatCurrency = expressState.fromCurrencyCode,
             )
+            else -> return currentStateProvider()
         }
 
         analyticsEventsHandler.send(analyticEvent)
@@ -156,9 +160,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         isForceTerminal: Boolean = false,
     ) {
         when (expressState) {
-            is ExpressTransactionStateUM.ExchangeUM -> exchangeStatusFactory.removeTransactionOnBottomSheetClosed(
-                isForceTerminal,
-            )
+            is ExchangeUM -> exchangeStatusFactory.removeTransactionOnBottomSheetClosed(isForceTerminal)
             is ExpressTransactionStateUM.OnrampUM -> onrampStatusFactory.removeTransactionOnBottomSheetClosed()
         }
     }
