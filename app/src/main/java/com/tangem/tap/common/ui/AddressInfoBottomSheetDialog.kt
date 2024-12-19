@@ -3,6 +3,7 @@ package com.tangem.tap.common.ui
 import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.core.analytics.Analytics
@@ -52,6 +53,11 @@ internal class AddressInfoBottomSheetDialog(
         tvAddress.text = data.address
         btnFlCopyAddress.setOnClickListener {
             Analytics.send(Token.Receive.ButtonCopyAddress())
+
+            Toast
+                .makeText(context, R.string.wallet_notification_address_copied, Toast.LENGTH_SHORT)
+                .show()
+
             store.inject(DaggerGraphState::clipboardManager).setText(text = data.address, isSensitive = true)
         }
         btnFlShare.setOnClickListener {
