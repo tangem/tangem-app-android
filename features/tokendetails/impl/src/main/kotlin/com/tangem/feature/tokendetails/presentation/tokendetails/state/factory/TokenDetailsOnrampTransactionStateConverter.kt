@@ -23,9 +23,9 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateIconUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateInfoUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
