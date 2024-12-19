@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
+package com.tangem.common.ui.expressStatus
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.constraintlayout.compose.*
+import com.tangem.common.ui.R
 import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
@@ -27,7 +28,6 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.tokendetails.impl.R
 
 @Suppress("DestructuringDeclarationWithTooManyEntries", "LongMethod", "LongParameterList")
 @Composable
