@@ -249,6 +249,7 @@ internal class DefaultOnrampRepository(
                                     maxFromAmount = convertToAmount(response.maxFromAmount, cryptoCurrency),
                                     paymentMethod = paymentMethod,
                                     provider = provider,
+                                    countryCode = response.countryCode,
                                 )
                             },
                             onError = { error ->
@@ -257,6 +258,7 @@ internal class DefaultOnrampRepository(
                                     paymentMethod = paymentMethod,
                                     provider = provider,
                                     fromOnrampAmount = fromOnrampAmount,
+                                    countryCode = country.code,
                                 )
                             },
                         )
@@ -454,6 +456,7 @@ internal class DefaultOnrampRepository(
         paymentMethod: OnrampPaymentMethod,
         provider: OnrampProvider,
         fromOnrampAmount: OnrampAmount,
+        countryCode: String,
     ) = if (error is ApiResponseError.HttpException) {
         val onrampError = onrampErrorConverter.convert(value = error.errorBody.orEmpty())
         if (onrampError is OnrampError.AmountError) {
@@ -462,6 +465,7 @@ internal class DefaultOnrampRepository(
                 provider = provider,
                 fromAmount = fromOnrampAmount,
                 error = onrampError,
+                countryCode = countryCode,
             )
         } else {
             Timber.w(error, "Unable to fetch onramp quotes for ${provider.id}. $error")
@@ -470,6 +474,7 @@ internal class DefaultOnrampRepository(
                 provider = provider,
                 fromAmount = fromOnrampAmount,
                 error = onrampError,
+                countryCode = countryCode,
             )
         }
     } else {
