@@ -599,6 +599,8 @@
   <string name="onramp_choose_provider_title_hint">Tangem забезпечує доступ к покупці через сторонніх провайдерів згідно з їхніми умовами</string>
   <string name="onramp_country_search">Пошук за країною</string>
   <string name="onramp_country_unavailable">Недоступно</string>
+  <string name="onramp_currency_other">Інші валюти</string>
+  <string name="onramp_currency_popular">Популярні фіати</string>
   <string name="onramp_currency_search">Пошук по валюті</string>
   <string name="onramp_legal">Використовуючи сервіс покупки, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="onramp_max_amount_restriction">Сума покупки не може бути більше ніж %s</string>
