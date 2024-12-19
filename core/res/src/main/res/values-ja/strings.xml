@@ -575,6 +575,8 @@
   <string name="onramp_choose_provider_title_hint">Tangemでの暗号通貨の買付は、サードパーティプロバイダーの条件に基づいて行われます。</string>
   <string name="onramp_country_search">国で検索</string>
   <string name="onramp_country_unavailable">利用不可</string>
+  <string name="onramp_currency_other">その他の通貨</string>
+  <string name="onramp_currency_popular">人気の法定通貨</string>
   <string name="onramp_currency_search">通貨で検索</string>
   <string name="onramp_legal">オンランプ機能を使用することにより、プロバイダの%1$sおよび%2$sに同意するものとします</string>
   <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>
