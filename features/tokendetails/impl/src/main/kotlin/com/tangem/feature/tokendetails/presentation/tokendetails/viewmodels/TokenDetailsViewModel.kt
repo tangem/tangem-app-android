@@ -40,7 +40,6 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -83,7 +82,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
@@ -98,8 +96,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
-    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
-    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -517,68 +513,16 @@ internal class TokenDetailsViewModel @Inject constructor(
             return
         }
 
-        sendCurrency(status = cryptoCurrencyStatus ?: return)
+        sendCurrency()
     }
 
-    private fun sendCurrency(status: CryptoCurrencyStatus, transactionInfo: TransactionInfo? = null) {
-        viewModelScope.launch(dispatchers.main) {
-            val maybeFeeCurrencyStatus =
-                getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
+    private fun sendCurrency() {
+        val route = AppRoute.Send(
+            currency = cryptoCurrency,
+            userWalletId = userWallet.walletId,
+        )
 
-            when (val currency = status.currency) {
-                is CryptoCurrency.Coin -> {
-                    reduxStateHolder.dispatch(
-                        action = TradeCryptoAction.SendCoin(
-                            userWallet = userWallet,
-                            coinStatus = status,
-                            feeCurrencyStatus = maybeFeeCurrencyStatus,
-                            transactionInfo = transactionInfo,
-                        ),
-                    )
-                }
-                is CryptoCurrency.Token -> {
-                    sendToken(
-                        tokenCurrency = currency,
-                        tokenFiatRate = status.value.fiatRate,
-                        feeCurrencyStatus = maybeFeeCurrencyStatus,
-                        transactionInfo = transactionInfo,
-                    )
-                }
-            }
-        }
-    }
-
-    private fun sendToken(
-        tokenCurrency: CryptoCurrency.Token,
-        tokenFiatRate: BigDecimal?,
-        feeCurrencyStatus: CryptoCurrencyStatus?,
-        transactionInfo: TransactionInfo?,
-    ) {
-        viewModelScope.launch(dispatchers.main) {
-            val maybeCoinStatus = getNetworkCoinStatusUseCase(
-                userWalletId = userWalletId,
-                networkId = tokenCurrency.network.id,
-                derivationPath = tokenCurrency.network.derivationPath,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-            )
-                .conflate()
-                .distinctUntilChanged()
-                .firstOrNull()
-
-            reduxStateHolder.dispatchWithMain(
-                action = TradeCryptoAction.SendToken(
-                    userWallet = userWallet,
-                    tokenCurrency = tokenCurrency,
-                    tokenFiatRate = tokenFiatRate,
-                    coinFiatRate = maybeCoinStatus?.fold(
-                        ifLeft = { null },
-                        ifRight = { it.value.fiatRate },
-                    ),
-                    feeCurrencyStatus = feeCurrencyStatus,
-                    transactionInfo = transactionInfo,
-                ),
-            )
-        }
+        appRouter.push(route)
     }
 
     override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) {
