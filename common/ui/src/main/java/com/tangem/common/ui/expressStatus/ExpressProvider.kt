@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
+package com.tangem.common.ui.expressStatus
 
 import android.content.res.Configuration
 import android.widget.Toast
@@ -29,7 +29,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-internal fun ExpressProvider(
+fun ExpressProvider(
     providerName: TextReference,
     providerType: TextReference,
     providerTxId: String?,
