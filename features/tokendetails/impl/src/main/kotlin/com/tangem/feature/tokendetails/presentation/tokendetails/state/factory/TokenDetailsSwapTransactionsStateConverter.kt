@@ -23,9 +23,9 @@ import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListMode
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateIconUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateInfoUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -45,20 +45,20 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private val cryptoCurrency: CryptoCurrency,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     appCurrencyProvider: Provider<AppCurrency>,
-) : Converter<Unit, PersistentList<ExpressTransactionStateUM.ExchangeUM>> {
+) : Converter<Unit, PersistentList<ExchangeUM>> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
     private val appCurrency = appCurrencyProvider()
 
-    override fun convert(value: Unit): PersistentList<ExpressTransactionStateUM.ExchangeUM> {
+    override fun convert(value: Unit): PersistentList<ExchangeUM> {
         return persistentListOf()
     }
 
     fun convert(
         savedTransactions: List<SavedSwapTransactionListModel>,
         quotes: Set<Quote>,
-    ): PersistentList<ExpressTransactionStateUM.ExchangeUM> {
-        val result = mutableListOf<ExpressTransactionStateUM.ExchangeUM>()
+    ): PersistentList<ExchangeUM> {
+        val result = mutableListOf<ExchangeUM>()
 
         savedTransactions
             .forEach { swapTransaction ->
@@ -84,7 +84,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         getNotification(transaction.status?.status, transaction.status?.txExternalUrl, null)
                     val showProviderLink = getShowProviderLink(notifications, transaction.status)
                     result.add(
-                        ExpressTransactionStateUM.ExchangeUM(
+                        ExchangeUM(
                             provider = transaction.provider,
                             statuses = getStatuses(transaction.status?.status),
                             notification = notifications,
@@ -108,11 +108,11 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     }
 
     fun updateTxStatus(
-        tx: ExpressTransactionStateUM.ExchangeUM,
+        tx: ExchangeUM,
         statusModel: ExchangeStatusModel?,
         refundToken: CryptoCurrency?,
         isRefundTerminalStatus: Boolean,
-    ): ExpressTransactionStateUM.ExchangeUM {
+    ): ExchangeUM {
         if (statusModel == null || tx.activeStatus == statusModel.status) {
             Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
