@@ -583,6 +583,8 @@
   <string name="onramp_choose_provider_title_hint">Buying crypto in Tangem is powered by third-party providers on their terms.</string>
   <string name="onramp_country_search">Search by country</string>
   <string name="onramp_country_unavailable">Unavailable</string>
+  <string name="onramp_currency_other">Other currencies</string>
+  <string name="onramp_currency_popular">Popular Fiats</string>
   <string name="onramp_currency_search">Search by currency</string>
   <string name="onramp_legal">By using onramp functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="onramp_max_amount_restriction">The purchase amount should be no more than %s</string>
