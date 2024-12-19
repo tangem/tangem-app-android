@@ -103,7 +103,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         }
         val expressTxsToDisplay = expressTxs.filterNot {
             when (it) {
-                is ExpressTransactionStateUM.OnrampUM -> false // it.activeStatus.isHidden
+                is ExpressTransactionStateUM.OnrampUM -> it.activeStatus.isHidden
                 else -> false
             }
         }.toPersistentList()
