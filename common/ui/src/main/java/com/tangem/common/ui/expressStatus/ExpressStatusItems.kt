@@ -1,14 +1,14 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
+package com.tangem.common.ui.expressStatus
 
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.ui.Modifier
+import com.tangem.common.ui.R
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateIconUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
-import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.PersistentList
 
-internal fun LazyListScope.expressTransactionsItems(
+fun LazyListScope.expressTransactionsItems(
     expressTxs: PersistentList<ExpressTransactionStateUM>,
     modifier: Modifier = Modifier,
 ) {
