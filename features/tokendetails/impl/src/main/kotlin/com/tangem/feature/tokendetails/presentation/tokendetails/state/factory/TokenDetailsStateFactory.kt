@@ -250,7 +250,7 @@ internal class TokenDetailsStateFactory(
         currency: CryptoCurrency,
         networkAddress: NetworkAddress,
         onCopyClick: (String) -> Unit,
-        onShareClick: () -> Unit,
+        onShareClick: (String) -> Unit,
     ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
