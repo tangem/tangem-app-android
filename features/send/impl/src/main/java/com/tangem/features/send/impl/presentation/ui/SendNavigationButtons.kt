@@ -68,7 +68,7 @@ internal fun SendNavigationButtons(
         SendDoneButtons(
             txUrl = sendState.txUrl,
             onExploreClick = uiState.clickIntents::onExploreClick,
-            onShareClick = uiState.clickIntents::onShareClick,
+            onShareClick = { uiState.clickIntents.onShareClick(it) },
             isVisible = isSentState,
         )
         SendNavigationButton(
