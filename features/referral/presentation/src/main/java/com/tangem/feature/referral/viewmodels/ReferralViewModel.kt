@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.referral.analytics.ReferralEvents
 import com.tangem.feature.referral.domain.ReferralInteractor
@@ -34,6 +35,7 @@ internal class ReferralViewModel @Inject constructor(
     private val referralInteractor: ReferralInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val shareManager: ShareManager,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -125,8 +127,10 @@ internal class ReferralViewModel @Inject constructor(
         analyticsEventHandler.send(ReferralEvents.ClickCopy)
     }
 
-    private fun onShareClicked() {
+    private fun onShareClicked(text: String) {
         analyticsEventHandler.send(ReferralEvents.ClickShare)
+
+        shareManager.shareText(text = text)
     }
 
     private fun ReferralData.convertToReferralInfoState(): ReferralInfoState = when (this) {

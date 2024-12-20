@@ -50,6 +50,6 @@ internal data class ReferralStateHolder(
     data class Analytics(
         val onAgreementClicked: () -> Unit,
         val onCopyClicked: () -> Unit,
-        val onShareClicked: () -> Unit,
+        val onShareClicked: (String) -> Unit,
     )
 }
