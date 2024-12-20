@@ -1,9 +1,6 @@
 package com.tangem.feature.qrscanning.presentation
 
-import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
-import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -11,9 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.content.ContextCompat
 import com.tangem.core.ui.components.SimpleSettingsRow
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -36,18 +31,11 @@ fun CameraDeniedBottomSheet(config: TangemBottomSheetConfig) {
 
 @Composable
 private fun CameraDeniedBottomSheet(content: CameraDeniedBottomSheetConfig) {
-    val context = LocalContext.current
     Column {
         SimpleSettingsRow(
             title = stringResourceSafe(id = R.string.qr_scanner_camera_denied_settings_button),
             icon = R.drawable.ic_settings_24,
-            onItemsClick = {
-                val intent = Intent(
-                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                    Uri.fromParts("package", context.packageName, null),
-                )
-                ContextCompat.startActivity(context, intent, null)
-            },
+            onItemsClick = content.onSettingsClick,
         )
         SimpleSettingsRow(
             title = stringResourceSafe(id = R.string.qr_scanner_camera_denied_gallery_button),
@@ -98,6 +86,7 @@ private fun Preview_CameraDeniedBottomSheet() {
                 isShow = true,
                 onDismissRequest = {},
                 content = CameraDeniedBottomSheetConfig(
+                    onSettingsClick = {},
                     onCancelClick = {},
                     onGalleryClick = {},
                 ),
