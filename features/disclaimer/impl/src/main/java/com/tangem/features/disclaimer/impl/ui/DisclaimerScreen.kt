@@ -47,11 +47,16 @@ import java.nio.charset.StandardCharsets
 @Composable
 internal fun DisclaimerScreen(state: DisclaimerUM) {
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-    val bottomPadding = bottomBarHeight + TangemTheme.dimens.size16
-
+    val bottomPadding = if (state.isTosAccepted) {
+        bottomBarHeight + TangemTheme.dimens.size16
+    } else {
+        bottomBarHeight + TangemTheme.dimens.size64
+    }
+    val backgroundColor = TangemTheme.colors.background.primary
+    val (textColor, iconColor) = TangemTheme.colors.text.primary1 to TangemTheme.colors.icon.primary1
     Box(
         modifier = Modifier
-            .background(TangemTheme.colors.background.primary)
+            .background(backgroundColor)
             .statusBarsPadding()
             .testTag(DISCLAIMER_SCREEN_CONTAINER),
     ) {
@@ -67,6 +72,8 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
                     onIconClicked = state.popBack,
                 ).takeIf { state.isTosAccepted },
                 titleAlignment = Alignment.CenterHorizontally,
+                textColor = textColor,
+                iconTint = iconColor,
             )
             DisclaimerContent(state.url)
         }
@@ -74,7 +81,7 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
         if (!state.isTosAccepted) {
             BottomFade(
                 modifier = Modifier.align(Alignment.BottomCenter),
-                backgroundColor = TangemTheme.colors.background.primary,
+                backgroundColor = backgroundColor,
             )
             DisclaimerButton(state.onAccept)
         } else {
@@ -85,6 +92,8 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
 
 @Composable
 private fun DisclaimerContent(url: String) {
+    val backgroundColor = TangemTheme.colors.background.primary
+
     val webViewStateUrl = rememberWebViewState(url)
     val webViewStateData = rememberWebViewStateWithHTMLData(
         data = localTermsOfServices,
@@ -119,12 +128,12 @@ private fun DisclaimerContent(url: String) {
             exit = fadeOut(),
             modifier = Modifier
                 .fillMaxSize()
-                .background(TangemTheme.colors.background.primary),
+                .background(backgroundColor),
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(TangemTheme.colors.background.primary),
+                    .background(backgroundColor),
             ) {
                 CircularProgressIndicator(
                     color = TangemTheme.colors.icon.informative,
