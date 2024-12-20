@@ -32,6 +32,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.TechAnalyticsEvent
+import com.tangem.core.analytics.models.event.TechAnalyticsEvent.WindowObscured.ObscuredState
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
@@ -222,6 +224,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
+    private var isWindowPartiallyObscuredAlreadySent: Boolean = false
+    private var isWindowFullyObscuredAlreadySent: Boolean = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
@@ -246,9 +251,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            window.setHideOverlayWindows(true)
-        }
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        //     window.setHideOverlayWindows(true)
+        // }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
@@ -530,10 +535,31 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             false
         }
 
+        if (isPartiallyObscured) {
+            Timber.d("Window is partially obscured")
+
+            if (!isWindowPartiallyObscuredAlreadySent) {
+                analyticsEventsHandler.send(
+                    event = TechAnalyticsEvent.WindowObscured(state = ObscuredState.PARTIALLY),
+                )
+
+                isWindowPartiallyObscuredAlreadySent = true
+            }
+        }
+
         val isFullyObscured = event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
 
-        if (isPartiallyObscured || isFullyObscured) {
-            Timber.e("Window is partially or fully obscured")
+        if (isFullyObscured) {
+            Timber.d("Window is partially or fully obscured")
+
+            if (!isWindowFullyObscuredAlreadySent) {
+                analyticsEventsHandler.send(
+                    event = TechAnalyticsEvent.WindowObscured(state = ObscuredState.FULLY),
+                )
+
+                isWindowFullyObscuredAlreadySent = true
+            }
+
             return false
         }
 
