@@ -1,5 +1,6 @@
 package com.tangem.feature.qrscanning.viewmodel
 
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.feature.qrscanning.presentation.QrScanningStateController
 import com.tangem.feature.qrscanning.presentation.transformers.DismissBottomSheetTransformer
@@ -20,12 +21,15 @@ internal interface QrScanningClickIntents {
     fun onQrScanned(qrCode: String)
 
     fun onGalleryClicked()
+
+    fun onSettingsClick()
 }
 
 @ViewModelScoped
 internal class QrScanningClickIntentsImplementor @Inject constructor(
     private val stateHolder: QrScanningStateController,
     private val emitQrScannedEventUseCase: EmitQrScannedEventUseCase,
+    private val settingsManager: SettingsManager,
     private val dispatcher: CoroutineDispatcherProvider,
 ) : BaseQrScanningClickIntents(), QrScanningClickIntents {
 
@@ -55,5 +59,9 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
         if (stateHolder.value.bottomSheetConfig != null) {
             stateHolder.update(DismissBottomSheetTransformer())
         }
+    }
+
+    override fun onSettingsClick() {
+        settingsManager.openSettings()
     }
 }
