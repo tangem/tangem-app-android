@@ -10,6 +10,4 @@ internal sealed class StakingEvent {
     data class ShowSnackBar(val text: TextReference) : StakingEvent()
 
     data class ShowAlert(val alert: AlertUM) : StakingEvent()
-
-    data class ShowShareDialog(val txUrl: String) : StakingEvent()
 }
