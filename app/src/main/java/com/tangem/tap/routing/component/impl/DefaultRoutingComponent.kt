@@ -37,8 +37,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     private val childFactory: ChildFactory,
     private val appRouterConfig: AppRouterConfig,
-    private val routingFeatureToggles: RoutingFeatureToggles,
     private val uiDependencies: UiDependencies,
+    routingFeatureToggles: RoutingFeatureToggles,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
@@ -47,7 +47,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     override val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
-        serializer = AppRoute.serializer(), // TODO Maybe set this to null for AppRoute.Onboarding case. Need to check
+        serializer = AppRoute.serializer(),
         initialConfiguration = getInitialRoute(),
         handleBackButton = false,
         childFactory = ::child,
