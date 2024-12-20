@@ -85,7 +85,7 @@ import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
-import com.tangem.tap.routing.RoutingComponent
+import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
 import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -307,6 +307,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 is RoutingComponent.Child.LegacyIntent -> {
                     startActivity(child.intent)
                 }
+                is RoutingComponent.Child.ComposableComponent -> error("Unsupported child: $child")
             }
         }
     }
@@ -410,8 +411,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onResume() {
         super.onResume()
-        // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
-        notificationsHandler = NotificationsHandler(binding.fragmentContainer)
+
+        if (!routingFeatureToggles.isNavigationRefactoringEnabled) {
+            // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
+            notificationsHandler = NotificationsHandler(binding.fragmentContainer)
+        }
 
         navigateToInitialScreenIfNeeded(intent)
     }
@@ -491,22 +495,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
     }
 
-    override fun showSnackbar(
-        @StringRes text: Int,
-        length: Int,
-        @StringRes buttonTitle: Int?,
-        action: View.OnClickListener?,
-    ) {
-        showSnackbar(getString(text), length, buttonTitle?.let(::getString), action)
+    override fun showSnackbar(@StringRes text: Int, length: Int, @StringRes buttonTitle: Int?, action: (() -> Unit)?) {
+        showSnackbar(
+            getString(text),
+            length,
+            buttonTitle?.let(::getString),
+            action = { action?.invoke() },
+        )
     }
 
-    override fun showSnackbar(
-        text: TextReference,
-        length: Int,
-        buttonTitle: TextReference?,
-        action: View.OnClickListener?,
-    ) {
-        showSnackbar(text.resolveReference(resources), length, buttonTitle?.resolveReference(resources), action)
+    override fun showSnackbar(text: TextReference, length: Int, buttonTitle: TextReference?, action: (() -> Unit)?) {
+        showSnackbar(
+            text = text.resolveReference(resources),
+            length = length,
+            buttonTitle = buttonTitle?.resolveReference(resources),
+            action = { action?.invoke() },
+        )
     }
 
     override fun dismissSnackbar() {
