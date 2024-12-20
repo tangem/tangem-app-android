@@ -1,7 +1,5 @@
 package com.tangem.feature.referral.ui
 
-import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -22,7 +20,6 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.core.content.ContextCompat.startActivity
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.components.rows.RoundableCornersRow
@@ -45,7 +42,7 @@ internal fun ParticipateBottomBlock(
     snackbarHostState: SnackbarHostState,
     onAgreementClick: () -> Unit,
     onCopyClick: () -> Unit,
-    onShareClick: () -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -282,7 +279,7 @@ private fun AdditionalButtons(
     shareLink: String,
     snackbarHostState: SnackbarHostState,
     onCopyClick: () -> Unit,
-    onShareClick: () -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -317,9 +314,8 @@ private fun AdditionalButtons(
             text = stringResourceSafe(id = R.string.common_share),
             iconResId = R.drawable.ic_share_24,
             onClick = {
-                onShareClick.invoke()
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                context.shareText(context.getString(R.string.referral_share_link, shareLink))
+                onShareClick(context.getString(R.string.referral_share_link, shareLink))
             },
             modifier = Modifier.weight(1f),
         )
@@ -340,16 +336,6 @@ private fun calculateOverallItemsCount(expectedAwards: ExpectedAwards?, isExpand
 
     val counterItems = 1
     return counterItems + awardItems
-}
-
-private fun Context.shareText(text: String) {
-    val sendIntent: Intent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, text)
-        type = "text/plain"
-    }
-    val shareIntent = Intent.createChooser(sendIntent, null)
-    startActivity(this, shareIntent, null)
 }
 
 @Preview(widthDp = 360, showBackground = true)
@@ -435,5 +421,5 @@ private data class ParticipateBottomBlockData(
     val onAgreementClick: () -> Unit = {},
     val onShowCopySnackbar: () -> Unit = {},
     val onCopyClick: () -> Unit = {},
-    val onShareClick: () -> Unit = {},
+    val onShareClick: (String) -> Unit = {},
 )
