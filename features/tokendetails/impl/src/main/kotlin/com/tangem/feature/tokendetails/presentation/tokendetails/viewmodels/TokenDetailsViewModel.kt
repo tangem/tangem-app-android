@@ -12,6 +12,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
@@ -120,6 +121,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val getCryptoCurrencySyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    private val shareManager: ShareManager,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
@@ -594,6 +596,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                 },
                 onShareClick = {
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
+                    shareManager.shareText(text = it)
                 },
             )
         }
