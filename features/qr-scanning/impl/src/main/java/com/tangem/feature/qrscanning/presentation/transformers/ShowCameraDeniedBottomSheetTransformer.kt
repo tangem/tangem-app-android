@@ -15,6 +15,7 @@ internal class ShowCameraDeniedBottomSheetTransformer(
                 isShow = true,
                 onDismissRequest = clickIntents::onBackClick,
                 content = CameraDeniedBottomSheetConfig(
+                    onSettingsClick = clickIntents::onSettingsClick,
                     onCancelClick = clickIntents::onBackClick,
                     onGalleryClick = clickIntents::onGalleryClicked,
                 ),
