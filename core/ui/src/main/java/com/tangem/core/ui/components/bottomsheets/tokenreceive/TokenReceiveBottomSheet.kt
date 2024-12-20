@@ -73,9 +73,8 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
             )
 
             Buttons(
-                address = selectedAddress.value,
                 snackbarHostState = snackbarHostState,
-                onShareClick = content.onShareClick,
+                onShareClick = { content.onShareClick(selectedAddress.value) },
                 onCopyClick = { content.onCopyClick(selectedAddress.value) },
             )
         }
@@ -227,7 +226,6 @@ private fun getName(content: TokenReceiveBottomSheetConfig, index: Int): String 
 
 @Composable
 private fun Buttons(
-    address: String,
     snackbarHostState: SnackbarHostState,
     onShareClick: () -> Unit,
     onCopyClick: () -> Unit,
@@ -264,10 +262,9 @@ private fun Buttons(
             text = stringResourceSafe(id = R.string.common_share),
             iconResId = R.drawable.ic_share_24,
             onClick = {
-                onShareClick()
-
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                context.shareText(address)
+
+                onShareClick()
             },
         )
     }
