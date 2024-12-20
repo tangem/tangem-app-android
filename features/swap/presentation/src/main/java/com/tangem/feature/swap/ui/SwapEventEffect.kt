@@ -1,7 +1,6 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.components.BasicDialog
@@ -9,14 +8,12 @@ import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.shareText
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.feature.swap.models.states.events.SwapEvent
 import com.tangem.feature.swap.presentation.R
 
 @Composable
 internal fun SwapEventEffect(event: StateEvent<SwapEvent>) {
-    val context = LocalContext.current
     var alertConfig by remember { mutableStateOf<AlertUM?>(value = null) }
 
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -34,9 +31,6 @@ internal fun SwapEventEffect(event: StateEvent<SwapEvent>) {
             when (value) {
                 is SwapEvent.ShowAlert -> {
                     alertConfig = value.alert
-                }
-                is SwapEvent.ShowShareDialog -> {
-                    context.shareText(value.txUrl)
                 }
             }
         },
