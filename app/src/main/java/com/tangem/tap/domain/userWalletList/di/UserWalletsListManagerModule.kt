@@ -7,6 +7,7 @@ import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
@@ -19,7 +20,6 @@ import com.tangem.tap.domain.userWalletList.repository.implementation.BiometricU
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
-import com.tangem.tap.domain.userWalletList.utils.json.*
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
