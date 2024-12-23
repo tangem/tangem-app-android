@@ -12,8 +12,11 @@ data class OnrampCurrencyDTO(
     val code: String,
 
     @Json(name = "image")
-    val image: String,
+    val image: String?,
 
     @Json(name = "precision")
     val precision: Int,
+
+    @Json(name = "unit")
+    val unit: String?,
 )
