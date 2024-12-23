@@ -1,48 +1,52 @@
 package com.tangem.features.onramp.tokenlist.entity.transformer
 
 import com.tangem.common.ui.tokens.TokenItemStateConverter
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
-import kotlinx.collections.immutable.toImmutableList
+import com.tangem.features.onramp.tokenlist.entity.utils.OnrampTokenItemStateConverterFactory
+import com.tangem.features.onramp.tokenlist.entity.utils.addHeader
 
 internal class UpdateTokenItemsTransformer(
-    private val tokenItemStateConverter: TokenItemStateConverter,
-    private val statuses: List<CryptoCurrencyStatus>,
+    private val appCurrency: AppCurrency,
+    private val onItemClick: (TokenItemState, CryptoCurrencyStatus) -> Unit,
+    private val statuses: Map<Boolean, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
-    private val hasSearchBar: Boolean,
-    private val onQueryChange: (String) -> Unit,
-    private val onActiveChange: (Boolean) -> Unit,
+    private val unavailableTokensHeaderReference: TextReference,
 ) : TokenListUMTransformer {
 
     override fun transform(prevState: TokenListUM): TokenListUM {
-        val items = tokenItemStateConverter.convertList(input = statuses).map(TokensListItemUM::Token)
+        val availableItems = convertStatuses(
+            converter = OnrampTokenItemStateConverterFactory.createAvailableItemConverter(appCurrency, onItemClick),
+            statuses = statuses[true].orEmpty(),
+        )
 
-        val searchBarItem = if (hasSearchBar) {
-            prevState.getSearchBar() ?: createSearchBarItem()
-        } else {
-            null
-        }
+        val unavailableItems = convertStatuses(
+            converter = OnrampTokenItemStateConverterFactory.createUnavailableItemConverter(appCurrency),
+            statuses = statuses[false].orEmpty(),
+        )
 
         return prevState.copy(
-            items = (listOfNotNull(searchBarItem) + items).toImmutableList(),
+            availableItems = availableItems.addHeader(
+                textReference = resourceReference(id = R.string.exchange_tokens_available_tokens_header),
+            ),
+            unavailableItems = unavailableItems.addHeader(textReference = unavailableTokensHeaderReference),
             isBalanceHidden = isBalanceHidden,
+            warning = null,
         )
     }
 
-    private fun createSearchBarItem(): TokensListItemUM.SearchBar {
-        return TokensListItemUM.SearchBar(
-            searchBarUM = SearchBarUM(
-                placeholderText = resourceReference(id = R.string.common_search),
-                query = "",
-                onQueryChange = onQueryChange,
-                isActive = false,
-                onActiveChange = onActiveChange,
-            ),
-        )
+    private fun convertStatuses(
+        converter: TokenItemStateConverter,
+        statuses: List<CryptoCurrencyStatus>,
+    ): List<TokensListItemUM.Token> {
+        return converter.convertList(statuses)
+            .map(TokensListItemUM::Token)
     }
 }
