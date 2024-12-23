@@ -1,21 +1,32 @@
 package com.tangem.features.onramp.tokenlist.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.fields.SearchBar
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.tokenlist.TokenListItem
+import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.ui.preview.PreviewTokenListUMProvider
+import kotlinx.collections.immutable.ImmutableList
 
 /**
  * Token list
@@ -26,40 +37,81 @@ import com.tangem.features.onramp.tokenlist.ui.preview.PreviewTokenListUMProvide
 [REDACTED_AUTHOR]
  */
 @Composable
-internal fun TokenList(state: TokenListUM, contentPadding: PaddingValues, modifier: Modifier = Modifier) {
-    LazyColumn(modifier = modifier, contentPadding = contentPadding) {
-        itemsIndexed(
-            items = state.items,
-            key = { _, item -> item.id },
-            contentType = { _, item -> item::class.java },
-            itemContent = { index, item ->
-                TokenListItem(
-                    state = item,
-                    isBalanceHidden = state.isBalanceHidden,
-                    modifier = Modifier
-                        .animateItem()
-                        .roundedShapeItemDecoration(
-                            currentIndex = index,
-                            lastIndex = state.items.lastIndex,
-                            addDefaultPadding = false,
-                            backgroundColor = TangemTheme.colors.background.primary,
-                        ),
-                )
-            },
-        )
+internal fun TokenList(state: TokenListUM, modifier: Modifier = Modifier) {
+    Column(modifier) {
+        if (state.warning == null) {
+            SearchBar(searchBarUM = state.searchBarUM)
+        } else {
+            when (state.warning) {
+                is NotificationUM.Warning.OnrampErrorNotification -> {
+                    Notification(config = state.warning.config, containerColor = TangemTheme.colors.background.primary)
+                }
+                is NotificationUM.Warning.SwapNoAvailablePair -> {
+                    Notification(config = state.warning.config, containerColor = TangemTheme.colors.button.disabled)
+                }
+                else -> Unit
+            }
+        }
+
+        if (state.availableItems.isNotEmpty()) {
+            SpacerH12()
+            ItemsBlock(items = state.availableItems, isBalanceHidden = state.isBalanceHidden)
+        }
+
+        if (state.unavailableItems.isNotEmpty()) {
+            SpacerH12()
+            ItemsBlock(items = state.unavailableItems, isBalanceHidden = state.isBalanceHidden)
+        }
     }
 }
 
-@Preview
+@Composable
+private fun SearchBar(searchBarUM: SearchBarUM) {
+    SearchBar(
+        state = searchBarUM,
+        colors = TextFieldDefaults.colors().copy(
+            focusedContainerColor = TangemTheme.colors.field.focused,
+            unfocusedContainerColor = TangemTheme.colors.field.focused,
+            focusedTextColor = TangemTheme.colors.text.primary1,
+            unfocusedTextColor = TangemTheme.colors.text.primary1,
+            cursorColor = TangemTheme.colors.icon.primary1,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+        ),
+    )
+}
+
+@Composable
+private fun ItemsBlock(items: ImmutableList<TokensListItemUM>, isBalanceHidden: Boolean) {
+    items.fastForEachIndexed { index, item ->
+        key(item.id) {
+            TokenListItem(
+                state = item,
+                isBalanceHidden = isBalanceHidden,
+                modifier = Modifier
+                    .roundedShapeItemDecoration(
+                        currentIndex = index,
+                        lastIndex = items.lastIndex,
+                        addDefaultPadding = false,
+                        backgroundColor = TangemTheme.colors.background.primary,
+                    ),
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_TokenList(@PreviewParameter(PreviewTokenListUMProvider::class) state: TokenListUM) {
     TangemThemePreview {
         TokenList(
             state = state,
-            contentPadding = PaddingValues(all = 16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = TangemTheme.colors.background.secondary),
+                .background(color = TangemTheme.colors.background.secondary)
+                .padding(16.dp),
         )
     }
 }
