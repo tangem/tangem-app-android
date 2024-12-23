@@ -45,7 +45,7 @@ interface TokenDetailsClickIntents {
 
     fun onCloseRentInfoNotification()
 
-    fun onSwapTransactionClick(txId: String)
+    fun onExpressTransactionClick(txId: String)
 
     fun onGoToProviderClick(url: String)
 
@@ -58,6 +58,12 @@ interface TokenDetailsClickIntents {
     fun onCopyAddress(): TextReference?
 
     fun onAssociateClick()
+
+    fun onRetryIncompleteTransactionClick()
+
+    fun onDismissIncompleteTransactionClick()
+
+    fun onConfirmDismissIncompleteTransactionClick()
 
     fun onStakeBannerClick()
 
