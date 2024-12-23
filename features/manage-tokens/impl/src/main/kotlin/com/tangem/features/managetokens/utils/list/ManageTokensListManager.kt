@@ -1,5 +1,7 @@
 package com.tangem.features.managetokens.utils.list
 
+import androidx.compose.ui.util.fastForEachIndexed
+import androidx.compose.ui.util.fastMap
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
@@ -165,7 +167,7 @@ internal class ManageTokensListManager @Inject constructor(
         }
 
         state.update { state ->
-            val newBatches = batchListState.data
+            val newBatches = distinctCurrencies(batchListState.data)
             val currentBatches = state.currencyBatches
 
             // Distinct until changed
@@ -183,6 +185,28 @@ internal class ManageTokensListManager @Inject constructor(
                 uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems),
                 canEditItems = canEditItems,
             )
+        }
+    }
+
+    // FIXME: Add interception functionality to BatchFlow state and do this on domain
+    //  [REDACTED_JIRA]
+    private fun distinctCurrencies(
+        batches: List<Batch<Int, List<ManagedCryptoCurrency>>>,
+    ): List<Batch<Int, List<ManagedCryptoCurrency>>> {
+        val allCurrenciesIds = mutableListOf<ManagedCryptoCurrency.ID>()
+
+        return batches.fastMap { batch ->
+            val batchCurrencies = batch.data.toMutableList()
+
+            batch.data.fastForEachIndexed { index, currency ->
+                if (currency.id in allCurrenciesIds) {
+                    batchCurrencies.removeAt(index)
+                } else {
+                    allCurrenciesIds.add(currency.id)
+                }
+            }
+
+            batch.copy(data = batchCurrencies)
         }
     }
 
