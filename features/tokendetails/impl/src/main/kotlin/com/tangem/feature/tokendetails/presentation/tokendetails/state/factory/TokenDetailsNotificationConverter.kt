@@ -135,6 +135,7 @@ internal class TokenDetailsNotificationConverter(
                 },
             )
             is CryptoCurrencyWarning.MigrationMaticToPol -> MigrationMaticToPol
+            is CryptoCurrencyWarning.TokensInBetaWarning -> TokensInBeta
         }
     }
 
