@@ -39,13 +39,16 @@ dependencies {
 
     /** Core modules */
     implementation(projects.core.datasource)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.ui)
     implementation(projects.core.utils)
     implementation(projects.core.navigation)
 
     /** Feature Apis */
     implementation(projects.features.tester.api)
+
+    /* SDK */
+    implementation(deps.tangem.blockchain)
 
     /** Other modules */
     implementation(projects.common.routing)

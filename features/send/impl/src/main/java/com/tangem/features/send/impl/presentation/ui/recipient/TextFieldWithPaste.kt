@@ -27,7 +27,7 @@ internal fun TextFieldWithPaste(
     onValueChange: (String) -> Unit,
     onPasteClick: (String) -> Unit,
     modifier: Modifier = Modifier,
-    footer: String? = null,
+    footer: TextReference? = null,
     labelStyle: TextStyle = TangemTheme.typography.body2,
     error: TextReference? = null,
     isError: Boolean = false,
