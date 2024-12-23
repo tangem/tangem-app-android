@@ -71,6 +71,21 @@ sealed class CurrencyIconState {
         override val showCustomBadge: Boolean = true,
     ) : CurrencyIconState()
 
+    /**
+     * Represents a fiat icon.
+     *
+     * @property url The URL where the fiat icon can be fetched from. May be `null` if not found.
+     * @property fallbackResId The drawable resource ID to be used as a fallback if the URL is not available.
+     */
+    data class FiatIcon(
+        val url: String?,
+        @DrawableRes val fallbackResId: Int,
+    ) : CurrencyIconState() {
+        override val isGrayscale: Boolean = false
+        override val showCustomBadge: Boolean = false
+        override val topBadgeIconResId: Int? = null
+    }
+
     data object Loading : CurrencyIconState() {
         override val isGrayscale: Boolean = false
         override val showCustomBadge: Boolean = false
@@ -113,6 +128,7 @@ sealed class CurrencyIconState {
         is Loading,
         is Locked,
         is Empty,
+        is FiatIcon,
         -> this
     }
 }

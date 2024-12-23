@@ -31,9 +31,13 @@ import com.tangem.domain.staking.GetActionsUseCase
 import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
 import com.tangem.domain.staking.IsAnyTokenStakedUseCase
 import com.tangem.domain.staking.IsApproveNeededUseCase
+import com.tangem.domain.staking.analytics.StakeScreenSource
+import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.StakingApproval
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -47,10 +51,6 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
-import com.tangem.domain.staking.analytics.StakeScreenSource
-import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
-import com.tangem.domain.staking.model.stakekit.*
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -69,6 +69,7 @@ import com.tangem.features.staking.impl.presentation.state.transformers.confirma
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.AddStakingNotificationsTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.notifications.DismissStakingNotificationsStateTransformer
 import com.tangem.features.staking.impl.presentation.state.transformers.validator.ValidatorSelectChangeTransformer
+import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
 import com.tangem.utils.Provider
@@ -309,6 +310,22 @@ internal class StakingViewModel @Inject constructor(
                         analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer)
+                    },
+                    onFeeIncreased = { increasedFee ->
+                        stateController.updateAll(
+                            SetConfirmationStateResetAssentTransformer,
+                            SetConfirmationStateAssentTransformer(
+                                appCurrencyProvider = Provider { appCurrency },
+                                feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                                fee = increasedFee,
+                            ),
+                        )
+                        stateController.updateEvent(
+                            StakingEvent.ShowAlert(
+                                StakingAlertUM.FeeIncreased(stateController::dismissAlert),
+                            ),
+                        )
+                        updateNotifications()
                     },
                 )
             }.saveIn(sendTransactionJobHolder)
@@ -617,11 +634,17 @@ internal class StakingViewModel @Inject constructor(
                 ).leftOrNull()
             }
 
+            val balanceAfterTransaction = calculateBalanceAfterTransaction(
+                amount = amount.orZero(),
+                fee = fee.orZero(),
+                reduceAmountBy = confirmationState?.reduceAmountBy.orZero(),
+            )
             val currencyStatus = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 amount = amount,
                 fee = fee,
+                balanceAfterTransaction = balanceAfterTransaction,
             )
             stateController.update(
                 AddStakingNotificationsTransformer(
@@ -668,6 +691,22 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onNotificationCancel(notification: Class<out NotificationUM>) {
         stateController.update(DismissStakingNotificationsStateTransformer(notification))
+    }
+
+    private fun calculateBalanceAfterTransaction(
+        amount: BigDecimal,
+        fee: BigDecimal,
+        reduceAmountBy: BigDecimal,
+    ): BigDecimal? {
+        val subtractedBalanceAmount = checkAndCalculateSubtractedAmount(
+            isAmountSubtractAvailable = isAmountSubtractAvailable,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            amountValue = amount.orZero(),
+            feeValue = fee.orZero(),
+            reduceAmountBy = reduceAmountBy,
+        )
+        val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
+        return statusValue?.let { it.amount - subtractedBalanceAmount - fee.orZero() }
     }
 
     private fun awaitForAllowance() {
