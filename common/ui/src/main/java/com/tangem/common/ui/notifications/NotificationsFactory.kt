@@ -42,6 +42,41 @@ object NotificationsFactory {
         }
     }
 
+    fun MutableList<NotificationUM>.addFeeUnreachableNotification(
+        tokenStatus: CryptoCurrencyStatus,
+        coinStatus: CryptoCurrencyStatus,
+        feeError: GetFeeError?,
+        onReload: () -> Unit,
+        onClick: (currency: CryptoCurrency) -> Unit,
+    ) {
+        when (feeError) {
+            is GetFeeError.BlockchainErrors.TronActivationError -> add(
+                NotificationUM.Warning.TronAccountNotActivated(coinStatus.currency.name),
+            )
+            is GetFeeError.BlockchainErrors.KaspaZeroUtxo -> add(
+                NotificationUM.Error.TokenExceedsBalance(
+                    networkIconId = coinStatus.currency.networkIconResId,
+                    networkName = coinStatus.currency.name,
+                    currencyName = tokenStatus.currency.name,
+                    feeName = coinStatus.currency.name,
+                    feeSymbol = coinStatus.currency.symbol,
+                    mergeFeeNetworkName = false,
+                    onClick = {
+                        onClick(coinStatus.currency)
+                    },
+                ),
+            )
+            is GetFeeError.DataError,
+            is GetFeeError.UnknownError,
+            -> add(
+                NotificationUM.Warning.NetworkFeeUnreachable(onReload),
+            )
+            else -> {
+                /* do nothing */
+            }
+        }
+    }
+
     fun MutableList<NotificationUM>.addExceedBalanceNotification(
         feeAmount: BigDecimal,
         sendingAmount: BigDecimal,
@@ -185,7 +220,7 @@ object NotificationsFactory {
         if (dustValue == null) return
         val isExceedsLimit = checkDustLimits(
             feeAmount = feeValue,
-            receivedAmount = sendingAmount,
+            sendingAmount = sendingAmount,
             dustValue = dustValue,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             feeCurrencyStatus = feeCurrencyStatus,
@@ -345,9 +380,14 @@ object NotificationsFactory {
         }
     }
 
+    fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
+        if (rentWarning == null) return
+        add(NotificationUM.Solana.RentInfo(rentWarning))
+    }
+
     private fun checkDustLimits(
         feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
+        sendingAmount: BigDecimal,
         dustValue: BigDecimal,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         feeCurrencyStatus: CryptoCurrencyStatus?,
@@ -355,7 +395,7 @@ object NotificationsFactory {
         val change = when (cryptoCurrencyStatus.currency) {
             is CryptoCurrency.Coin -> {
                 val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
-                balance - (feeAmount + receivedAmount)
+                balance - (feeAmount + sendingAmount)
             }
             is CryptoCurrency.Token -> {
                 val balance = feeCurrencyStatus?.value?.amount ?: BigDecimal.ZERO
@@ -364,6 +404,9 @@ object NotificationsFactory {
         }
 
         val isChangeLowerThanDust = change < dustValue && change > BigDecimal.ZERO
-        return receivedAmount < dustValue || isChangeLowerThanDust
+        return when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> sendingAmount < dustValue || isChangeLowerThanDust
+            is CryptoCurrency.Token -> isChangeLowerThanDust
+        }
     }
 }
