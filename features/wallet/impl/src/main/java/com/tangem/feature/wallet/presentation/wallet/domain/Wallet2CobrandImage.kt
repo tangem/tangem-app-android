@@ -49,6 +49,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF33"),
     ),
 
+    BTC365(
+        cards2ResId = R.drawable.ill_btc365_card2_120_106,
+        cards3ResId = R.drawable.ill_btc365_card3_120_106,
+        batchIds = setOf("AF97"),
+    ),
+
     CoinMetrica(
         cards2ResId = R.drawable.ill_coin_metrica_card2_120_106,
         cards3ResId = R.drawable.ill_coin_metrica_card3_120_106,
@@ -115,10 +121,34 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF73"),
     ),
 
+    Kasper(
+        cards2ResId = R.drawable.ill_kasper_card2_120_106,
+        cards3ResId = R.drawable.ill_kasper_card3_120_106,
+        batchIds = setOf("AF96"),
+    ),
+
+    Kaspy(
+        cards2ResId = R.drawable.ill_kaspy_card2_120_106,
+        cards3ResId = R.drawable.ill_kaspy_card3_120_106,
+        batchIds = setOf("AF95"),
+    ),
+
     KishuInu(
         cards2ResId = R.drawable.ill_kishu_inu_card2_120_106,
         cards3ResId = R.drawable.ill_kishu_inu_card3_120_106,
         batchIds = setOf("AF52"),
+    ),
+
+    Konan(
+        cards2ResId = R.drawable.ill_konan_card2_120_106,
+        cards3ResId = R.drawable.ill_konan_card3_120_106,
+        batchIds = setOf("AF93"),
+    ),
+
+    Neiro(
+        cards2ResId = R.drawable.ill_neiro_card2_120_106,
+        cards3ResId = R.drawable.ill_neiro_card3_120_106,
+        batchIds = setOf("AF98"),
     ),
 
     NewWorldElite(
@@ -131,7 +161,7 @@ internal enum class Wallet2CobrandImage(
     Pastel(
         cards2ResId = R.drawable.ill_pastel_cards3_120_106,
         cards3ResId = R.drawable.ill_pastel_cards3_120_106,
-        batchIds = setOf("AF43", "AF44", "AF45"),
+        batchIds = setOf("AF43", "AF44", "AF45", "AF78", "AF79", "AF80"),
     ),
 
     RedPanda(
@@ -174,7 +204,7 @@ internal enum class Wallet2CobrandImage(
     Vivid(
         cards2ResId = R.drawable.ill_vivid_cards3_120_106,
         cards3ResId = R.drawable.ill_vivid_cards3_120_106,
-        batchIds = setOf("AF40", "AF41", "AF42"),
+        batchIds = setOf("AF40", "AF41", "AF42", "AF75", "AF76", "AF77"),
     ),
 
     VoltInu(

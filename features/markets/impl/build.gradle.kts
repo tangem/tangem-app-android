@@ -14,6 +14,7 @@ android {
 dependencies {
     /* Project - API */
     api(projects.features.markets.api)
+    api(projects.features.onramp.api)
     implementation(projects.core.navigation)
 
     /* Domain */
@@ -26,6 +27,7 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.markets)
+    implementation(projects.domain.onramp.models)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
@@ -62,7 +64,7 @@ dependencies {
     /* Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
-    implementation(projects.core.featuretoggles)
+    implementation(projects.core.configToggles)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
 

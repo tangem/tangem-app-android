@@ -86,21 +86,29 @@ interface CurrenciesRepository {
      * Retrieves the primary cryptocurrency for a specific single-currency user wallet.
      *
      * @param userWalletId The unique identifier of the user wallet.
+     * @param refresh Indicates whether to force a refresh of the status data.
      * @return The primary cryptocurrency associated with the user wallet.
      * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
-    suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency
+    suspend fun getSingleCurrencyWalletPrimaryCurrency(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): CryptoCurrency
 
     /**
      * Retrieves the cryptocurrencies for a specific single-currency user wallet with tokens on the card.
      *
      * @param userWalletId The unique identifier of the user wallet.
+     * @param refresh Indicates whether to force a refresh of the status data.
      * @return The primary cryptocurrency associated with the user wallet.
      * @throws DataError.UserWalletError.WrongUserWallet If multi-currency user wallet
      * ID provided.
      */
-    suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency>
+    suspend fun getSingleCurrencyWalletWithCardCurrencies(
+        userWalletId: UserWalletId,
+        refresh: Boolean = false,
+    ): List<CryptoCurrency>
 
     /**
      * Retrieves the cryptocurrency for a specific single-currency user old wallet
@@ -168,6 +176,17 @@ interface CurrenciesRepository {
     suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: CryptoCurrency.ID): CryptoCurrency
 
     /**
+     * Retrieves the cryptocurrency for a specific multi-currency user wallet.
+     *
+     * @param userWalletId The unique identifier of the user wallet.
+     * @param id The unique identifier of the cryptocurrency to be retrieved.
+     * @return The cryptocurrency associated with the user wallet and ID.
+     * @throws DataError.UserWalletError.WrongUserWallet If single-currency user wallet
+     * ID provided.
+     */
+    suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency
+
+    /**
      * Get the coin for a specific network.
      *
      * @param userWalletId The unique identifier of the user wallet.
@@ -230,4 +249,6 @@ interface CurrenciesRepository {
 
     /** Get crypto currencies by [currencyRawId] from all user wallets */
     fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>>
+
+    fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean
 }

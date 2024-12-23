@@ -3,6 +3,7 @@ package com.tangem.features.markets.details.impl.model
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.ui.charts.state.MarketChartData
 import com.tangem.common.ui.charts.state.MarketChartDataProducer
 import com.tangem.common.ui.charts.state.sorted
@@ -64,6 +65,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val excludedBlockchains: ExcludedBlockchains,
 ) : Model() {
 
     private var quotesJob = JobHolder()
@@ -87,6 +89,20 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             urlOpener.openUrl(link.url)
             // === Analytics ===
             analyticsEventHandler.send(analyticsEventBuilder.linkClicked(linkTitle = link.title))
+        },
+        onSecurityScoreInfoClick = {
+            showBottomSheet(it)
+
+            // === Analytics ===
+            analyticsEventHandler.send(analyticsEventBuilder.securityScoreOpened())
+        },
+        onSecurityScoreProviderLinkClick = {
+            it.urlData?.fullUrl?.let { url ->
+                urlOpener.openUrl(url)
+            }
+
+            // === Analytics ===
+            analyticsEventHandler.send(analyticsEventBuilder.securityScoreProviderClicked(it.name))
         },
         // === Analytics ===
         onPricePerformanceIntervalChanged = {
@@ -386,7 +402,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
 
         val networks = newInfo.networks?.filter {
-            BlockchainUtils.isSupportedNetworkId(it.networkId)
+            BlockchainUtils.isSupportedNetworkId(it.networkId, excludedBlockchains)
         }
 
         networksState.value = if (networks.isNullOrEmpty()) {
@@ -531,10 +547,10 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
             showBottomSheet(content = ExchangesBottomSheetContent.Loading(exchangesCount))
 
-            // Delay to show the bottom sheet
-            delay(timeMillis = 800L)
-
             val maybeExchanges = getTokenExchangesUseCase(tokenId = params.token.id)
+
+            // Delay to show the bottom sheet
+            delay(timeMillis = 400L)
 
             updateExchangeBSContent(maybeExchanges = maybeExchanges, exchangesCount = exchangesCount)
         }
