@@ -14,12 +14,16 @@ dependencies {
     /** Core modules */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.deepLinks.global)
+    implementation(projects.core.analytics)
 
     /** Common modules */
     implementation(projects.data.common)
 
     /** Domain modules */
     implementation(projects.domain.onramp)
+    implementation(projects.domain.legacy)
+    implementation(projects.domain.appTheme.models)
 
     // region DI
 
