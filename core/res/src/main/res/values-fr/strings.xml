@@ -580,6 +580,7 @@
   <string name="onboarding_wallet_info_title_second">Cartes identiques</string>
   <string name="onboarding_wallet_info_title_third">Code d\'accès</string>
   <string name="onramp_avaiable_with_payment_methods">Disponible avec %s</string>
+  <string name="onramp_choose_provider_title_hint">L\'achat de crypto-monnaies sur Tangem est assuré par des fournisseurs tiers selon leurs conditions.</string>
   <string name="onramp_country_search">Recherche par pays</string>
   <string name="onramp_country_unavailable">Indisponible</string>
   <string name="onramp_currency_other">Autres devises</string>
