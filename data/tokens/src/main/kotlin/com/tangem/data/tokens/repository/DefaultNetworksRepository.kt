@@ -2,6 +2,7 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
@@ -39,12 +40,13 @@ internal class DefaultNetworksRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
+    excludedBlockchains: ExcludedBlockchains,
 ) : NetworksRepository {
 
-    private val demoConfig by lazy { DemoConfig() }
-    private val cardCurrenciesFactory by lazy { CardCryptoCurrenciesFactory(demoConfig) }
-    private val responseCurrenciesFactory by lazy { ResponseCryptoCurrenciesFactory() }
-    private val networkStatusFactory by lazy { NetworkStatusFactory() }
+    private val demoConfig = DemoConfig()
+    private val cardCurrenciesFactory = CardCryptoCurrenciesFactory(demoConfig, excludedBlockchains)
+    private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
+    private val networkStatusFactory = NetworkStatusFactory()
 
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
