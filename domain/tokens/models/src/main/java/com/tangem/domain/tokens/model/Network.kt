@@ -18,6 +18,8 @@ import kotlinx.serialization.Serializable
  * @property hasFiatFeeRate Indicates whether there is a fee in the network
  * that cannot be represented in a fiat currency.
  * (For those blockchains that have FeeResource instead of a standard type of fee)
+ * @property canHandleTokens Indicates whether the network can handle tokens.
+ * @property transactionExtrasType The type of extras supported for sending a transaction.
  */
 @Serializable
 data class Network(
@@ -30,6 +32,7 @@ data class Network(
     val standardType: StandardType,
     val hasFiatFeeRate: Boolean,
     val canHandleTokens: Boolean,
+    val transactionExtrasType: TransactionExtrasType,
 ) {
 
     init {
@@ -79,7 +82,7 @@ data class Network(
         data class Custom(override val value: String) : DerivationPath()
 
         /**
-         * Represents a lack of derivation path.
+         * Represents a lack of derivation path, which means the wallet does not support the HD wallet feature.
          */
         @Serializable
         data object None : DerivationPath() {
@@ -127,5 +130,20 @@ data class Network(
         /** Represents a network that does not adhere to a predefined standard type. */
         @Serializable
         data class Unspecified(override val name: String) : StandardType()
+    }
+
+    /**
+     * Represents the supported type of extras for sending a transaction.
+     * */
+    enum class TransactionExtrasType {
+
+        /** No transaction extras supported */
+        NONE,
+
+        /** Memo supported */
+        MEMO,
+
+        /** Destination tag supported */
+        DESTINATION_TAG,
     }
 }
