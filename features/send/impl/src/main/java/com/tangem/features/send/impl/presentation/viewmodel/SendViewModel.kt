@@ -378,10 +378,9 @@ internal class SendViewModel @Inject constructor(
         when {
             uiState.value.sendState?.isSuccess == true -> return
             transactionId != null && amount != null && destinationAddress != null -> {
-                loadFee()
                 uiState.value = stateFactory.getReadyState(amount, destinationAddress, memo)
                 stateRouter.showSend()
-                updateNotifications()
+                loadFee()
             }
             else -> {
                 uiState.value = stateFactory.getReadyState()
@@ -513,13 +512,12 @@ internal class SendViewModel @Inject constructor(
         when (currentState.type) {
             SendUiStateType.Fee,
             SendUiStateType.EditFee,
-            -> if (onFeeNext()) return
+            -> if (onFeeNextIntercept(isFromEdit)) return
             SendUiStateType.Amount,
             SendUiStateType.EditAmount,
             -> loadFee()
             else -> Unit
         }
-
         stateRouter.onNextClick()
     }
 
@@ -580,9 +578,23 @@ internal class SendViewModel @Inject constructor(
 
     override fun onTokenDetailsClick(currency: CryptoCurrency) = innerRouter.openTokenDetails(userWalletId, currency)
 
-    private fun onFeeNext(): Boolean {
+    private fun onFeeNextIntercept(isFromEdit: Boolean): Boolean {
         val feeState = uiState.value.getFeeState(stateRouter.isEditState)
         val feeSelectorState = feeState?.feeSelectorState as? FeeSelectorState.Content ?: return false
+
+        if (isFromEdit) {
+            // in some cases, if it's possible to fix incorrect fee automatically,
+            // do it, update current state and go let continue the flow
+            val fixedState = feeStateFactory.tryAutoFixCustomFeeValue()
+            if (fixedState.editFeeState != feeState) {
+                uiState.value = fixedState
+                val currentState = stateRouter.currentState.value
+                uiState.value = stateFactory.syncEditStates(isFromEdit = isFromEdit)
+                sendScreenAnalyticSender.send(currentState.type, uiState.value)
+                return false
+            }
+        }
+
         if (checkIfFeeTooLow(feeSelectorState)) {
             uiState.value = eventStateFactory.getFeeTooLowAlert(
                 onConsume = { uiState.value = eventStateFactory.onConsumeEventState() },
