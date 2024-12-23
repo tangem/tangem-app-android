@@ -1,10 +1,12 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
+import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
@@ -19,14 +21,14 @@ import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 class GetCurrencyWarningsUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val swapRepository: SwapRepository,
-    private val marketCryptoCurrencyRepository: MarketCryptoCurrencyRepository,
+    private val rampStateManager: RampStateManager,
     private val stakingRepository: StakingRepository,
     private val promoRepository: PromoRepository,
     private val showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
@@ -48,6 +50,7 @@ class GetCurrencyWarningsUseCase(
             stakingRepository = stakingRepository,
             userWalletId = userWalletId,
         )
+        // don't add here notifications that require async requests
         return combine(
             getCoinRelatedWarnings(
                 userWalletId = userWalletId,
@@ -57,17 +60,11 @@ class GetCurrencyWarningsUseCase(
                 derivationPath = derivationPath,
                 isSingleWalletWithTokens = isSingleWalletWithTokens,
             ),
-            flowOf(walletManagersFacade.getRentInfo(userWalletId, currency.network)),
+            flowOf(currencyChecksRepository.getRentInfoWarning(userWalletId, currencyStatus)),
             flowOf(currencyChecksRepository.getExistentialDeposit(userWalletId, currency.network)),
             flowOf(currencyChecksRepository.getFeeResourceAmount(userWalletId, currency.network)),
-            getSwapPromoNotificationWarning(
-                operations = operations,
-                userWalletId = userWalletId,
-                currencyStatus = currencyStatus,
-            ).conflate(),
-        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource, maybeSwapPromo ->
+        ) { coinRelatedWarnings, maybeRentWarning, maybeEdWarning, maybeFeeResource ->
             setOfNotNull(
-                maybeSwapPromo,
                 maybeRentWarning,
                 maybeEdWarning?.let { getExistentialDepositWarning(currency, it) },
                 maybeFeeResource?.let { getFeeResourceWarning(it) },
@@ -81,6 +78,8 @@ class GetCurrencyWarningsUseCase(
         }.flowOn(dispatchers.io)
     }
 
+    // disabled for now, don't use it directly in combine() to avoid blocking other notifications
+    @Suppress("UnusedPrivateMember")
     private suspend fun getSwapPromoNotificationWarning(
         operations: CurrenciesStatusesOperations,
         userWalletId: UserWalletId,
@@ -90,10 +89,10 @@ class GetCurrencyWarningsUseCase(
         val cryptoStatuses = operations.getCurrenciesStatusesSync()
         val promoBanner = promoRepository.getOkxPromoBanner()
         return combine(
-            showSwapPromoTokenUseCase()
+            flow = showSwapPromoTokenUseCase()
                 .conflate()
                 .distinctUntilChanged(),
-            flowOf(marketCryptoCurrencyRepository.isExchangeable(userWalletId, currency))
+            flow2 = flowOf(rampStateManager.availableForSwap(userWalletId, currency))
                 .conflate()
                 .distinctUntilChanged(),
         ) { shouldShowSwapPromo, isExchangeable ->
@@ -192,10 +191,12 @@ class GetCurrencyWarningsUseCase(
         tokenStatus: CryptoCurrencyStatus,
     ): CryptoCurrencyWarning? {
         val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
+        val isNetworkFeeZero = currenciesRepository.isNetworkFeeZero(userWalletId, tokenStatus.currency.network)
         return when {
             feePaidCurrency is FeePaidCurrency.Coin &&
                 !tokenStatus.value.amount.isZero() &&
-                coinStatus.value.amount.isZero() -> {
+                coinStatus.value.amount.isZero() &&
+                !isNetworkFeeZero -> {
                 CryptoCurrencyWarning.BalanceNotEnoughForFee(
                     tokenCurrency = tokenStatus.currency,
                     coinCurrency = coinStatus.currency,
@@ -204,7 +205,7 @@ class GetCurrencyWarningsUseCase(
             feePaidCurrency is FeePaidCurrency.Token -> {
                 val feePaidTokenBalance = feePaidCurrency.balance
                 val amount = tokenStatus.value.amount ?: return null
-                if (!amount.isZero() && feePaidTokenBalance.isZero()) {
+                if (!amount.isZero() && feePaidTokenBalance.isZero() && !isNetworkFeeZero) {
                     constructTokenBalanceNotEnoughWarning(
                         userWalletId = userWalletId,
                         tokenStatus = tokenStatus,
@@ -295,12 +296,22 @@ class GetCurrencyWarningsUseCase(
     ): CryptoCurrencyWarning? {
         return when (val requirements = walletManagersFacade.getAssetRequirements(userWalletId, currency)) {
             is AssetRequirementsCondition.PaidTransaction -> HederaWarnings.AssociateWarning(currency = currency)
-            is AssetRequirementsCondition.PaidTransactionWithFee -> HederaWarnings.AssociateWarningWithFee(
-                currency = currency,
-                fee = requirements.feeAmount,
-                feeCurrencySymbol = requirements.feeCurrencySymbol,
-                feeCurrencyDecimals = requirements.decimals,
-            )
+            is AssetRequirementsCondition.PaidTransactionWithFee -> {
+                HederaWarnings.AssociateWarningWithFee(
+                    currency = currency,
+                    fee = requirements.feeAmount,
+                    feeCurrencySymbol = requirements.feeCurrencySymbol,
+                    feeCurrencyDecimals = requirements.decimals,
+                )
+            }
+            is AssetRequirementsCondition.IncompleteTransaction ->
+                KaspaWarnings.IncompleteTransaction(
+                    currency = currency,
+                    amount = requirements.amount,
+                    currencySymbol = requirements.currencySymbol,
+                    currencyDecimals = requirements.currencyDecimals,
+                )
+
             null -> null
         }
     }

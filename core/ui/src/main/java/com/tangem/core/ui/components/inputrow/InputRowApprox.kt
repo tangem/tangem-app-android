@@ -37,10 +37,10 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun InputRowApprox(
     leftIcon: CurrencyIconState,
     leftTitle: TextReference,
-    leftSubtitle: TextReference,
+    leftSubtitle: TextReference?,
     rightIcon: CurrencyIconState,
     rightTitle: TextReference,
-    rightSubtitle: TextReference,
+    rightSubtitle: TextReference?,
     modifier: Modifier = Modifier,
     leftTitleEllipsisOffset: Int = 0,
     rightTitleEllipsisOffset: Int = 0,
@@ -69,7 +69,7 @@ fun InputRowApprox(
                 tint = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing4,
+                        horizontal = TangemTheme.dimens.spacing8,
                         vertical = TangemTheme.dimens.spacing10,
                     ),
             )
@@ -88,12 +88,13 @@ fun InputRowApprox(
 private fun InputRowApproxItem(
     iconState: CurrencyIconState,
     title: TextReference,
-    subtitle: TextReference,
+    subtitle: TextReference?,
     modifier: Modifier = Modifier,
     titleEllipsisOffset: Int = 0,
 ) {
     Row(
         modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         CurrencyIcon(
             state = iconState,
@@ -112,13 +113,15 @@ private fun InputRowApproxItem(
                 color = TangemTheme.colors.text.primary1,
                 ellipsis = TextEllipsis.OffsetEnd(titleEllipsisOffset),
             )
-            EllipsisText(
-                text = subtitle.resolveReference(),
-                style = TangemTheme.typography.caption2,
-                color = TangemTheme.colors.text.tertiary,
-                modifier = Modifier
-                    .padding(top = TangemTheme.dimens.spacing2),
-            )
+            if (subtitle != null) {
+                EllipsisText(
+                    text = subtitle.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.tertiary,
+                    modifier = Modifier
+                        .padding(top = TangemTheme.dimens.spacing2),
+                )
+            }
         }
     }
 }
@@ -150,6 +153,18 @@ private fun InputRowApproxPreview() {
                 rightIcon = CurrencyIconState.Loading,
                 rightTitle = TextReference.Str("Right title USD"),
                 rightSubtitle = TextReference.Str("Right subtitle USD"),
+                rightTitleEllipsisOffset = 3,
+                modifier = Modifier
+                    .background(TangemTheme.colors.background.action),
+            )
+            InputRowApprox(
+                leftIcon = CurrencyIconState.Loading,
+                leftTitle = TextReference.Str("Left title Left title Left title Left title Left title USD"),
+                leftSubtitle = null,
+                leftTitleEllipsisOffset = 3,
+                rightIcon = CurrencyIconState.Loading,
+                rightTitle = TextReference.Str("Right title USD"),
+                rightSubtitle = null,
                 rightTitleEllipsisOffset = 3,
                 modifier = Modifier
                     .background(TangemTheme.colors.background.action),

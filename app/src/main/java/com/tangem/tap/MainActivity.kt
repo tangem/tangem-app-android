@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
@@ -44,6 +45,8 @@ import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.domain.settings.SetGooglePayAvailabilityUseCase
+import com.tangem.domain.settings.SetGoogleServicesAvailabilityUseCase
 import com.tangem.domain.settings.ShouldInitiallyAskPermissionUseCase
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
@@ -52,13 +55,16 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
+import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
@@ -72,6 +78,7 @@ import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
 import com.tangem.tap.features.intentHandler.IntentProcessor
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
+import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
 import com.tangem.tap.features.main.model.Toast
@@ -80,6 +87,7 @@ import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -186,6 +194,21 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var shouldInitiallyAskPermissionUseCase: ShouldInitiallyAskPermissionUseCase
 
+    @Inject
+    lateinit var backupServiceHolder: BackupServiceHolder
+
+    @Inject
+    lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
+
+    @Inject
+    lateinit var setGoogleServicesAvailabilityUseCase: SetGoogleServicesAvailabilityUseCase
+
+    @Inject
+    lateinit var setGooglePayAvailabilityUseCase: SetGooglePayAvailabilityUseCase
+
+    @Inject
+    lateinit var dispatchers: CoroutineDispatcherProvider
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -223,6 +246,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         }
 
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        //     window.setHideOverlayWindows(true)
+        // }
+
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
         installActivityDependencies()
@@ -235,10 +262,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         observeStateUpdates()
         observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
+        checkGoogleServicesAvailability()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
         }
+
+        lifecycle.addObserver(WindowObscurationObserver)
     }
 
     private fun installRouting() {
@@ -295,7 +325,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
         appStateHolder.tangemSdkManager = tangemSdkManager
-        backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
+
+        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
+            backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
+            backupService = backupServiceHolder.backupService.get()!! // will be deleted eventually
+        } else {
+            backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
+        }
+
         lockUserWalletsTimer = LockUserWalletsTimer(
             owner = this,
             settingsRepository = settingsRepository,
@@ -382,6 +419,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private fun initIntentHandlers() {
         val hasSavedWalletsProvider = { userWalletsListManager.hasUserWallets }
+        intentProcessor.addHandler(OnPushClickedIntentHandler(analyticsEventsHandler))
         intentProcessor.addHandler(BackgroundScanIntentHandler(hasSavedWalletsProvider, lifecycleScope))
         intentProcessor.addHandler(WalletConnectLinkIntentHandler())
     }
@@ -487,6 +525,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         lockUserWalletsTimer?.restart()
     }
 
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
+
+        return if (result) super.dispatchTouchEvent(event) else false
+    }
+
     private fun showSnackbar(text: String, length: Int, buttonTitle: String?, action: View.OnClickListener?) {
         if (snackbar != null) return
 
@@ -584,6 +628,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             sendUnsubmittedHashesUseCase.invoke()
                 .onLeft { Timber.e(it.toString()) }
                 .onRight { Timber.d("Submitting hashes succeeded") }
+        }
+    }
+
+    private fun checkGoogleServicesAvailability() {
+        val isGoogleServicesAvailable = GoogleServicesHelper.checkGoogleServicesAvailability(this)
+
+        lifecycleScope.launch {
+            setGoogleServicesAvailabilityUseCase(isGoogleServicesAvailable)
+
+            if (isGoogleServicesAvailable) {
+                val paymentsClient = GoogleServicesHelper.createPaymentsClient(this@MainActivity)
+                val isGooglePayAvailable = GoogleServicesHelper.checkGooglePayAvailability(paymentsClient)
+                setGooglePayAvailabilityUseCase(isGooglePayAvailable)
+            } else {
+                setGooglePayAvailabilityUseCase(false)
+            }
         }
     }
 
