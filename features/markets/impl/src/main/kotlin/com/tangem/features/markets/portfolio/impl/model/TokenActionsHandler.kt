@@ -13,14 +13,17 @@ import com.tangem.core.ui.message.ContentMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -39,12 +42,15 @@ internal class TokenActionsHandler @AssistedInject constructor(
     @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) {
 
-    private val disabledActionsInDemoMode = setOf(
-        TokenActionsBSContentUM.Action.Buy,
-        TokenActionsBSContentUM.Action.Sell,
-    )
+    private val disabledActionsInDemoMode = buildSet {
+        if (!onrampFeatureToggles.isFeatureEnabled) {
+            add(TokenActionsBSContentUM.Action.Buy)
+        }
+        add(TokenActionsBSContentUM.Action.Sell)
+    }
 
     fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
         onHandleQuickAction(
@@ -108,6 +114,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
                     addresses = networkAddress.availableAddresses
                         .mapToAddressModels(currency)
                         .toImmutableList(),
+                    showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                     onCopyClick = {},
                     onShareClick = {},
                 ),
@@ -131,6 +138,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
         reduxStateHolder.dispatch(
             TradeCryptoAction.Buy(
                 userWallet = cryptoCurrencyData.userWallet,
+                source = OnrampSource.MARKETS,
                 cryptoCurrencyStatus = cryptoCurrencyData.status,
                 appCurrencyCode = currentAppCurrency().code,
             ),
@@ -149,7 +157,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private fun onExchangeClick(cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
         router.push(
             AppRoute.Swap(
-                currency = cryptoCurrencyData.status.currency,
+                currencyFrom = cryptoCurrencyData.status.currency,
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 isInitialReverseOrder = true,
             ),

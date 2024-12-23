@@ -17,6 +17,7 @@ import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.SelectedWalletAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
+import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
@@ -31,10 +32,9 @@ import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvid
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.JobHolder
-import com.tangem.utils.coroutines.saveIn
+import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.indexOfFirstOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -69,6 +69,8 @@ internal class WalletViewModel @Inject constructor(
     private val shouldAskPermissionUseCase: ShouldAskPermissionUseCase,
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
+    private val onrampStatusFactory: OnrampStatusFactory,
+    private val walletFeatureToggles: WalletFeatureToggles,
     analyticsEventsHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
@@ -78,6 +80,8 @@ internal class WalletViewModel @Inject constructor(
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
     private var needToRefreshWallet = false
+
+    private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
 
     init {
         analyticsEventsHandler.send(WalletScreenAnalyticsEvent.MainScreen.ScreenOpened)
@@ -91,6 +95,7 @@ internal class WalletViewModel @Inject constructor(
         subscribeOnSelectedWalletFlow()
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
+        subscribeOnExpressTransactionsUpdates()
     }
 
     private fun maybeMigrateNames() {
@@ -237,6 +242,24 @@ internal class WalletViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
+    private fun subscribeOnExpressTransactionsUpdates() {
+        viewModelScope.launch(dispatchers.main) {
+            expressTxStatusTaskScheduler.cancelTask()
+            expressTxStatusTaskScheduler.scheduleTask(
+                viewModelScope,
+                PeriodicTask(
+                    isDelayFirst = false,
+                    delay = EXPRESS_STATUS_UPDATE_DELAY,
+                    task = {
+                        runCatching { onrampStatusFactory.updateOnrmapTransactionStatuses() }
+                    },
+                    onSuccess = { /* no-op */ },
+                    onError = { /* no-op */ },
+                ),
+            )
+        }
+    }
+
     private fun needToRefreshTimer() {
         viewModelScope.launch {
             delay(REFRESH_WALLET_BACKGROUND_TIMER_MILLIS)
@@ -300,6 +323,7 @@ internal class WalletViewModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -334,6 +358,7 @@ internal class WalletViewModel @Inject constructor(
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
     }
@@ -350,6 +375,7 @@ internal class WalletViewModel @Inject constructor(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -401,6 +427,7 @@ internal class WalletViewModel @Inject constructor(
                 unlockedWallets = action.unlockedWallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
+                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -424,5 +451,6 @@ internal class WalletViewModel @Inject constructor(
 
     private companion object {
         const val REFRESH_WALLET_BACKGROUND_TIMER_MILLIS = 10000L
+        const val EXPRESS_STATUS_UPDATE_DELAY = 10000L
     }
 }
