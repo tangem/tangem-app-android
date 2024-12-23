@@ -32,8 +32,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.models.event.TechAnalyticsEvent
-import com.tangem.core.analytics.models.event.TechAnalyticsEvent.WindowObscured.ObscuredState
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
@@ -224,9 +222,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
-    private var isWindowPartiallyObscuredAlreadySent: Boolean = false
-    private var isWindowFullyObscuredAlreadySent: Boolean = false
-
     override fun onCreate(savedInstanceState: Bundle?) {
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
@@ -272,6 +267,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         if (intent != null) {
             deepLinksRegistry.launch(intent)
         }
+
+        lifecycle.addObserver(WindowObscurationObserver)
     }
 
     private fun installRouting() {
@@ -529,41 +526,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        val isPartiallyObscured = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            event.flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED != 0
-        } else {
-            false
-        }
+        val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
 
-        if (isPartiallyObscured) {
-            Timber.d("Window is partially obscured")
-
-            if (!isWindowPartiallyObscuredAlreadySent) {
-                analyticsEventsHandler.send(
-                    event = TechAnalyticsEvent.WindowObscured(state = ObscuredState.PARTIALLY),
-                )
-
-                isWindowPartiallyObscuredAlreadySent = true
-            }
-        }
-
-        val isFullyObscured = event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
-
-        if (isFullyObscured) {
-            Timber.d("Window is partially or fully obscured")
-
-            if (!isWindowFullyObscuredAlreadySent) {
-                analyticsEventsHandler.send(
-                    event = TechAnalyticsEvent.WindowObscured(state = ObscuredState.FULLY),
-                )
-
-                isWindowFullyObscuredAlreadySent = true
-            }
-
-            return false
-        }
-
-        return super.dispatchTouchEvent(event)
+        return if (result) super.dispatchTouchEvent(event) else false
     }
 
     private fun showSnackbar(text: String, length: Int, buttonTitle: String?, action: View.OnClickListener?) {
