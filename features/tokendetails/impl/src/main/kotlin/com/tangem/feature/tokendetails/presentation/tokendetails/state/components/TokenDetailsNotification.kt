@@ -229,4 +229,9 @@ internal sealed class TokenDetailsNotification(val config: NotificationConfig) {
         title = resourceReference(id = R.string.warning_matic_migration_title),
         subtitle = resourceReference(id = R.string.warning_matic_migration_message),
     )
+
+    data object TokensInBeta : Warning(
+        title = resourceReference(id = R.string.beta_mode_warning_title),
+        subtitle = resourceReference(id = R.string.beta_mode_warning_message),
+    )
 }
