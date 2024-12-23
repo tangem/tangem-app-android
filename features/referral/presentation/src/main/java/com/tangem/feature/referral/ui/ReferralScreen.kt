@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,12 +47,8 @@ import kotlinx.coroutines.launch
  *
  * @param stateHolder state holder
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
-    var isBottomSheetVisible by remember { mutableStateOf(value = false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
     val snackbarHostState = remember(::SnackbarHostState)
 
     Scaffold(
@@ -80,10 +79,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
         ReferralContent(
             stateHolder = stateHolder,
             snackbarHostState = snackbarHostState,
-            onAgreementClick = {
-                stateHolder.analytics.onAgreementClicked.invoke()
-                isBottomSheetVisible = true
-            },
+            onAgreementClick = stateHolder.analytics.onAgreementClicked,
             modifier = Modifier.padding(it),
         )
     }
@@ -107,13 +103,6 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
             }
         }
     }
-
-    ReferralBottomSheet(
-        sheetState = sheetState,
-        isVisible = isBottomSheetVisible,
-        onDismissRequest = { isBottomSheetVisible = false },
-        config = stateHolder.referralInfoState,
-    )
 }
 
 @Composable
