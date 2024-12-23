@@ -185,7 +185,7 @@ private fun UnavailableCountryItem(state: CountryItemState.WithContent.Unavailab
             color = TangemTheme.colors.text.disabled,
         )
         Text(
-            text = "Unavailable",
+            text = stringResource(R.string.onramp_country_unavailable),
             maxLines = 1,
             style = TangemTheme.typography.body2,
             color = TangemTheme.colors.text.tertiary,
