@@ -23,7 +23,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.component
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
-import com.tangem.features.staking.api.featuretoggles.StakingFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBSC
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
@@ -44,7 +43,6 @@ internal class TokenDetailsLoadedBalanceConverter(
     private val symbol: String,
     private val decimals: Int,
     private val clickIntents: TokenDetailsClickIntents,
-    private val stakingFeatureToggles: StakingFeatureToggles,
 ) : Converter<Either<CurrencyStatusError, CryptoCurrencyStatus>, TokenDetailsState> {
 
     private val txHistoryItemConverter by lazy {
@@ -98,7 +96,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     ): TokenDetailsBalanceBlockState {
         val stakingCryptoAmount = (status.value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance()
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
-        val isBalanceSelectorEnabled = stakingFeatureToggles.isStakingEnabled && !stakingCryptoAmount.isNullOrZero()
+        val isBalanceSelectorEnabled = !stakingCryptoAmount.isNullOrZero()
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
@@ -160,7 +158,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         return when {
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
                 if (pendingBalances.isEmpty()) {
-                    getStakeAvailableState(stakingEntryInfo, iconState)
+                    getStakeAvailableState(stakingEntryInfo, iconState, isStakingButtonEnabled(status))
                 } else {
                     getStakedBlockWithFiatAmount(status, pendingBalances.sumOf { it.amount }, null)
                 }
@@ -170,6 +168,12 @@ internal class TokenDetailsLoadedBalanceConverter(
             }
             else -> getStakedBlockWithFiatAmount(status, stakingCryptoAmount, yieldBalance?.getRewardStakingBalance())
         }
+    }
+
+    private fun isStakingButtonEnabled(status: CryptoCurrencyStatus): Boolean {
+        return status.value is CryptoCurrencyStatus.Loaded ||
+            status.value is CryptoCurrencyStatus.NoQuote ||
+            status.value is CryptoCurrencyStatus.Custom
     }
 
     private fun getStakedBlockWithFiatAmount(
@@ -212,6 +216,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun getStakeAvailableState(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
+        isEnabled: Boolean,
     ): StakingBlockUM.StakeAvailable {
         val apr = stakingEntryInfo.apr.format { percent() }
         return StakingBlockUM.StakeAvailable(
@@ -224,6 +229,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
             ),
             iconState = iconState,
+            isEnabled = isEnabled,
             onStakeClicked = clickIntents::onStakeBannerClick,
         )
     }
