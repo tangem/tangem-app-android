@@ -18,8 +18,7 @@ class ForegroundActivityObserver : ActivityResultCaller {
 
     val foregroundActivity: AppCompatActivity?
         get() = activities.entries
-            .filterNot { it.value.isDestroyed }
-            .firstOrNull()
+            .firstOrNull { it.value?.isDestroyed == false }
             ?.value
 
     internal val callbacks: ActivityLifecycleCallbacks

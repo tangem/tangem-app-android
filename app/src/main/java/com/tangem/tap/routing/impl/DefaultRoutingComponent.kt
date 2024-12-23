@@ -27,7 +27,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     override val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
-        serializer = AppRoute.serializer(),
+        serializer = AppRoute.serializer(), // TODO Maybe set this to null for AppRoute.Onboarding case. Need to check
         initialConfiguration = getInitialRoute(),
         handleBackButton = false,
         childFactory = ::child,
