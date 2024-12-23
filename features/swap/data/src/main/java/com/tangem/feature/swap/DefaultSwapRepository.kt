@@ -7,6 +7,7 @@ import arrow.core.raise.either
 import arrow.core.right
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.*
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.common.response.ApiResponse
@@ -48,12 +49,13 @@ internal class DefaultSwapRepository(
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
     moshi: Moshi,
+    excludedBlockchains: ExcludedBlockchains,
 ) : SwapRepository {
 
     private val expressDataConverter = ExpressDataConverter()
     private val leastTokenInfoConverter = LeastTokenInfoConverter()
     private val swapPairInfoConverter = SwapPairInfoConverter()
-    private val cryptoCurrencyFactory = CryptoCurrencyFactory()
+    private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
     private val exchangeStatusConverter = ExchangeStatusConverter()
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
