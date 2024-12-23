@@ -1,5 +1,6 @@
 package com.tangem.feature.swap
 
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
@@ -18,12 +19,13 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
-class DefaultSwapTransactionRepository(
+internal class DefaultSwapTransactionRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    excludedBlockchains: ExcludedBlockchains,
 ) : SwapTransactionRepository {
 
-    private val converter = SavedSwapTransactionListConverter()
+    private val converter = SavedSwapTransactionListConverter(excludedBlockchains)
 
     override suspend fun storeTransaction(
         userWalletId: UserWalletId,
