@@ -348,8 +348,9 @@ internal class CurrenciesStatusesOperations(
             .map<Set<Quote>, Either<Error, Set<Quote>>> { quotes ->
                 if (quotes.isEmpty()) Error.EmptyQuotes.left() else quotes.right()
             }
-            .catch {
-                emit(Error.DataError(it).left())
+            .retryWhen { cause, _ ->
+                emit(Error.DataError(cause).left())
+                true
             }
     }
 

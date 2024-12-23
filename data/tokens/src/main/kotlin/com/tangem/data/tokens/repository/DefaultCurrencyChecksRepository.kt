@@ -6,13 +6,18 @@ import com.tangem.blockchain.common.MinimumSendAmountProvider
 import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
 import com.tangem.data.tokens.converters.UtxoConverter
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.isZero
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
@@ -20,6 +25,7 @@ internal class DefaultCurrencyChecksRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val coroutineDispatchers: CoroutineDispatcherProvider,
 ) : CurrencyChecksRepository {
+
     override suspend fun getExistentialDeposit(userWalletId: UserWalletId, network: Network): BigDecimal? {
         val manager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
@@ -104,6 +110,7 @@ internal class DefaultCurrencyChecksRepository(
     override suspend fun checkUtxoAmountLimit(
         userWalletId: UserWalletId,
         network: Network,
+        currency: CryptoCurrency,
         amount: BigDecimal,
         fee: BigDecimal,
     ): UtxoAmountLimit? {
@@ -117,5 +124,37 @@ internal class DefaultCurrencyChecksRepository(
             null
         }
         return utxoAmount?.let(UtxoConverter()::convert)
+    }
+
+    override suspend fun getRentInfoWarning(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+    ): CryptoCurrencyWarning.Rent? {
+        val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
+        val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
+        val stakingTotalBalance =
+            (balanceValue.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance() ?: BigDecimal.ZERO
+        return when {
+            balanceValue.amount.isZero() && stakingTotalBalance.isZero() -> null
+            balanceValue.amount < rentData.exemptionAmount && stakingTotalBalance.isZero() -> {
+                CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
+            }
+            else -> null
+        }
+    }
+
+    override suspend fun getRentExemptionError(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        balanceAfterTransaction: BigDecimal,
+    ): CryptoCurrencyWarning.Rent? {
+        val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
+        return when {
+            balanceAfterTransaction.isZero() -> null
+            balanceAfterTransaction < rentData.exemptionAmount -> {
+                CryptoCurrencyWarning.Rent(rentData.rent, rentData.exemptionAmount)
+            }
+            else -> null
+        }
     }
 }
