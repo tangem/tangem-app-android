@@ -222,7 +222,7 @@ class GetCurrencyWarningsUseCase(
 
     private fun getIsBetaTokensWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
         val isTokenBetaFunctionality = BlockchainUtils.isTokenBetaFunctionality(currency.network.id.value)
-        return if (isTokenBetaFunctionality) {
+        return if (currency is CryptoCurrency.Coin && isTokenBetaFunctionality) {
             CryptoCurrencyWarning.TokensInBetaWarning
         } else {
             null
