@@ -135,14 +135,6 @@ internal object SettingsDomainModule {
 
     @Provides
     @Singleton
-    fun provideShouldShowTravalaPromoWalletUseCase(
-        promoSettingsRepository: PromoSettingsRepository,
-    ): ShouldShowTravalaPromoWalletUseCase {
-        return ShouldShowTravalaPromoWalletUseCase(promoSettingsRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideShouldShowSwapPromoTokenUseCase(
         promoSettingsRepository: PromoSettingsRepository,
     ): ShouldShowSwapPromoTokenUseCase {
@@ -234,4 +226,36 @@ internal object SettingsDomainModule {
     fun provideGetUserCountryCodeUseCase(settingsRepository: SettingsRepository): GetUserCountryUseCase {
         return GetUserCountryUseCase(settingsRepository)
     }
+
+    // region Google services availability
+    @Provides
+    @Singleton
+    fun provideSetGoogleServicesAvailabilityUseCase(
+        settingsRepository: SettingsRepository,
+    ): SetGoogleServicesAvailabilityUseCase {
+        return SetGoogleServicesAvailabilityUseCase(settingsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsGoogleServicesAvailableUseCase(
+        settingsRepository: SettingsRepository,
+    ): IsGoogleServicesAvailableUseCase {
+        return IsGoogleServicesAvailableUseCase(settingsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSetGooglePayAvailabilityUseCase(
+        settingsRepository: SettingsRepository,
+    ): SetGooglePayAvailabilityUseCase {
+        return SetGooglePayAvailabilityUseCase(settingsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideIsGooglePayAvailableUseCase(settingsRepository: SettingsRepository): IsGooglePayAvailableUseCase {
+        return IsGooglePayAvailableUseCase(settingsRepository)
+    }
+    // endregion
 }
