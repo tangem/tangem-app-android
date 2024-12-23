@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">Don\'t show again</string>
   <string name="balance_hidden_got_it_button">Got it</string>
   <string name="balance_hidden_title">Balances are hidden</string>
+  <string name="beta_mode_warning_message">According to the blockchain developers, Kaspa tokens are currently in beta. Stay tuned for updates!</string>
+  <string name="beta_mode_warning_title">Beta Mode </string>
   <string name="biometric_lockout_permanent_warning_description">Please scan the card or ring</string>
   <string name="biometric_lockout_warning_description">Please try again in 30 seconds or scan the card or ring</string>
   <string name="biometric_lockout_warning_title">Too many attempts</string>
