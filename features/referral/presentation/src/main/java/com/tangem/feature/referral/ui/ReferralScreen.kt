@@ -2,6 +2,7 @@ package com.tangem.feature.referral.ui
 
 import android.content.res.Configuration
 import android.content.res.Resources
+import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -51,6 +52,8 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val snackbarHostState = remember(::SnackbarHostState)
+
+    BackHandler(onBack = stateHolder.headerState.onBackClicked)
 
     Scaffold(
         topBar = {
