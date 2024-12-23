@@ -70,11 +70,17 @@ internal class MockCurrenciesRepository(
         return tokens.first().getOrElse { e -> throw e }
     }
 
-    override suspend fun getSingleCurrencyWalletPrimaryCurrency(userWalletId: UserWalletId): CryptoCurrency {
+    override suspend fun getSingleCurrencyWalletPrimaryCurrency(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): CryptoCurrency {
         return token.getOrElse { e -> throw e }
     }
 
-    override suspend fun getSingleCurrencyWalletWithCardCurrencies(userWalletId: UserWalletId): List<CryptoCurrency> {
+    override suspend fun getSingleCurrencyWalletWithCardCurrencies(
+        userWalletId: UserWalletId,
+        refresh: Boolean,
+    ): List<CryptoCurrency> {
         return tokens.first().getOrElse { e -> throw e }
     }
 
@@ -96,6 +102,14 @@ internal class MockCurrenciesRepository(
         val token = token.getOrElse { e -> throw e }
 
         require(token.id == id)
+
+        return token
+    }
+
+    override suspend fun getMultiCurrencyWalletCurrency(userWalletId: UserWalletId, id: String): CryptoCurrency {
+        val token = token.getOrElse { e -> throw e }
+
+        require(token.id.value == id)
 
         return token
     }
@@ -141,5 +155,9 @@ internal class MockCurrenciesRepository(
 
     override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return emptyFlow()
+    }
+
+    override fun isNetworkFeeZero(userWalletId: UserWalletId, network: Network): Boolean {
+        return false
     }
 }
