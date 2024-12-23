@@ -1,8 +1,11 @@
 package com.tangem.domain.tokens.repository
 
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.wallets.models.UserWalletId
 import java.math.BigDecimal
 
@@ -36,7 +39,26 @@ interface CurrencyChecksRepository {
     suspend fun checkUtxoAmountLimit(
         userWalletId: UserWalletId,
         network: Network,
+        currency: CryptoCurrency,
         amount: BigDecimal,
         fee: BigDecimal,
     ): UtxoAmountLimit?
+
+    /**
+     * Checks if need warning for Solana rent
+     */
+    suspend fun getRentInfoWarning(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+    ): CryptoCurrencyWarning.Rent?
+
+    /**
+     * Checks if need error before Solana tx about rent exemption
+     * @param balanceAfterTransaction if non null, checks with balance remains after transaction
+     */
+    suspend fun getRentExemptionError(
+        userWalletId: UserWalletId,
+        currencyStatus: CryptoCurrencyStatus,
+        balanceAfterTransaction: BigDecimal,
+    ): CryptoCurrencyWarning.Rent?
 }
