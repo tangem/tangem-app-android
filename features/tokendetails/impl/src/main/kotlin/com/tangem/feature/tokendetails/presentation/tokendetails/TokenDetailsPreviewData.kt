@@ -152,6 +152,7 @@ internal object TokenDetailsPreviewData {
             formatArgs = wrappedList("Solana"),
         ),
         iconState = iconState,
+        isEnabled = true,
         onStakeClicked = {},
     )
 
@@ -307,7 +308,8 @@ internal object TokenDetailsPreviewData {
         ),
         dialogConfig = null,
         pendingTxs = persistentListOf(),
-        swapTxs = persistentListOf(),
+        expressTxs = persistentListOf(),
+        expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
         bottomSheetConfig = null,
         isBalanceHidden = false,
@@ -337,7 +339,8 @@ internal object TokenDetailsPreviewData {
         ),
         dialogConfig = null,
         pendingTxs = persistentListOf(),
-        swapTxs = persistentListOf(),
+        expressTxs = persistentListOf(),
+        expressTxsToDisplay = persistentListOf(),
         pullToRefreshConfig = pullToRefreshConfig,
         bottomSheetConfig = null,
         isBalanceHidden = false,
