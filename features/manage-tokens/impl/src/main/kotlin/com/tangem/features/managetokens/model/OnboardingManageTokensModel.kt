@@ -51,6 +51,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
 
     private val params: OnboardingManageTokensComponent.Params = paramsContainer.require()
     val state: MutableStateFlow<OnboardingManageTokensUM> = MutableStateFlow(getInitialState())
+    val returnToParentComponentFlow = MutableSharedFlow<Unit>()
 
     init {
         manageTokensListManager.uiItems
@@ -62,9 +63,9 @@ internal class OnboardingManageTokensModel @Inject constructor(
             .launchIn(modelScope)
 
         combine(
-            manageTokensListManager.currenciesToAdd,
-            manageTokensListManager.currenciesToRemove,
-            ::handleChangedCurrencies,
+            flow = manageTokensListManager.currenciesToAdd,
+            flow2 = manageTokensListManager.currenciesToRemove,
+            transform = ::handleChangedCurrencies,
         ).launchIn(modelScope)
 
         observeSearchQueryChanges()
@@ -261,7 +262,7 @@ internal class OnboardingManageTokensModel @Inject constructor(
             return@resource
         }
 
-        reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
+        returnToParentComponent()
     }
 
     private fun onLaterClick() = resource(
@@ -287,7 +288,17 @@ internal class OnboardingManageTokensModel @Inject constructor(
             return@resource
         }
 
+        returnToParentComponent()
+    }
+
+    private fun returnToParentComponent() {
+        // old onboarding
         reduxStateHolder.dispatch(OnboardingManageTokensAction.CurrenciesSaved)
+
+        // new one
+        modelScope.launch {
+            returnToParentComponentFlow.emit(Unit)
+        }
     }
 
     private fun searchCurrencies(query: String) {
