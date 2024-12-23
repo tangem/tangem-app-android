@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">Больше не показывать</string>
   <string name="balance_hidden_got_it_button">Понятно</string>
   <string name="balance_hidden_title">Балансы скрыты</string>
+  <string name="beta_mode_warning_message">Согласно информации от разработчиков сети, токены Kaspa находятся в режиме бета. Следите за обновлениями!</string>
+  <string name="beta_mode_warning_title">Бета режим</string>
   <string name="biometric_lockout_permanent_warning_description">Пожалуйста, отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_warning_title">Слишком много попыток</string>
@@ -227,7 +229,7 @@
   <string name="custom_token_network_input_not_selected">Не выбрано</string>
   <string name="custom_token_network_input_title">Сеть</string>
   <string name="custom_token_network_selector_title">Сеть</string>
-  <string name="custom_token_subtitle">Вы можете добавить токен в ручную, если он не поддерживается Tangem</string>
+  <string name="custom_token_subtitle">Вы можете добавить токен вручную, если он не поддерживается Tangem</string>
   <string name="custom_token_token_symbol_input_placeholder">Например, USDC</string>
   <string name="custom_token_token_symbol_input_title">Символ</string>
   <string name="custom_token_token_symbol_input_title_old">Символ токена</string>
