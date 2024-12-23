@@ -132,32 +132,32 @@ class SendTransactionUseCase(
             }
         }
     }
+}
 
-    private fun parseWrappedError(error: BlockchainSdkError.WrappedTangemError): SendTransactionError {
-        return if (error.code == USER_CANCELLED_ERROR_CODE) {
-            SendTransactionError.UserCancelledError
-        } else {
-            when (val tangemError = error.tangemError) {
-                is TangemSdkError -> {
-                    val resource = tangemError.localizedDescriptionRes()
-                    val resId = resource.resId ?: R.string.common_unknown_error
-                    val resArgs = resource.args.map { it.value }
-                    SendTransactionError.TangemSdkError(tangemError.code, resId, wrappedList(resArgs))
+fun parseWrappedError(error: BlockchainSdkError.WrappedTangemError): SendTransactionError {
+    return if (error.code == USER_CANCELLED_ERROR_CODE) {
+        SendTransactionError.UserCancelledError
+    } else {
+        when (val tangemError = error.tangemError) {
+            is TangemSdkError -> {
+                val resource = tangemError.localizedDescriptionRes()
+                val resId = resource.resId ?: R.string.common_unknown_error
+                val resArgs = resource.args.map { it.value }
+                SendTransactionError.TangemSdkError(tangemError.code, resId, wrappedList(resArgs))
+            }
+            is BlockchainSdkError.WrappedTangemError -> {
+                parseWrappedError(tangemError) // todo remove when sdk errors are revised
+            }
+            is BlockchainSdkError.WrappedThrowable -> {
+                val causeError = tangemError.cause
+                if (causeError is BlockchainSdkError) {
+                    SendTransactionError.BlockchainSdkError(causeError.code, causeError.customMessage)
+                } else {
+                    SendTransactionError.BlockchainSdkError(tangemError.code, tangemError.customMessage)
                 }
-                is BlockchainSdkError.WrappedTangemError -> {
-                    parseWrappedError(tangemError) // todo remove when sdk errors are revised
-                }
-                is BlockchainSdkError.WrappedThrowable -> {
-                    val causeError = tangemError.cause
-                    if (causeError is BlockchainSdkError) {
-                        SendTransactionError.BlockchainSdkError(causeError.code, causeError.customMessage)
-                    } else {
-                        SendTransactionError.BlockchainSdkError(tangemError.code, tangemError.customMessage)
-                    }
-                }
-                else -> {
-                    SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
-                }
+            }
+            else -> {
+                SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
             }
         }
     }

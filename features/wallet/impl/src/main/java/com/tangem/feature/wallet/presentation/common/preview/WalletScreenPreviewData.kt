@@ -19,7 +19,7 @@ internal object WalletScreenPreviewData {
     private val tokenItemState = TokenItemState.Content(
         id = "1",
         iconState = CurrencyIconState.Locked,
-        titleState = TokenItemState.TitleState.Content(text = "Bitcoin"),
+        titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Bitcoin")),
         fiatAmountState = TokenItemState.FiatAmountState.Content(text = "12 368,14 \$"),
         subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "0,35853044 BTC"),
         subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
@@ -45,7 +45,7 @@ internal object WalletScreenPreviewData {
             TokensListItemUM.Token(
                 state = tokenItemState.copy(
                     id = "2",
-                    titleState = TokenItemState.TitleState.Content(text = "Ethereum"),
+                    titleState = TokenItemState.TitleState.Content(text = stringReference("Ethereum")),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "3 340,79 \$"),
                     subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "1,856660295 ETH"),
                     subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
@@ -59,7 +59,7 @@ internal object WalletScreenPreviewData {
                 state = TokenItemState.Unreachable(
                     id = "3",
                     iconState = CurrencyIconState.Locked,
-                    titleState = TokenItemState.TitleState.Content(text = "Polygon"),
+                    titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
                     onItemClick = {},
                     onItemLongClick = {},
                 ),
@@ -67,7 +67,7 @@ internal object WalletScreenPreviewData {
             TokensListItemUM.Token(
                 state = tokenItemState.copy(
                     id = "4",
-                    titleState = TokenItemState.TitleState.Content(text = "Shiba Inu"),
+                    titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Shiba Inu")),
                     fiatAmountState = TokenItemState.FiatAmountState.Content(text = "48,64 \$"),
                     subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "6 200 220,00 SHIB"),
                     subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
@@ -110,6 +110,7 @@ internal object WalletScreenPreviewData {
             balance = DASH_SIGN,
             onRenameClick = { _ -> },
             onDeleteClick = {},
+            isZeroBalance = false,
         )
     }
     private val multiWalletState by lazy {
@@ -119,6 +120,7 @@ internal object WalletScreenPreviewData {
                 onRefresh = {},
             ),
             walletCardState = miltiUnreachableCard,
+            buttons = persistentListOf(buyButton),
             warnings = persistentListOf(
                 WalletNotification.Warning.SomeNetworksUnreachable,
             ),
