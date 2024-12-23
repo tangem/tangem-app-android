@@ -6,8 +6,12 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,13 +41,11 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.features.markets.details.impl.ui.components.ExchangesBottomSheet
-import com.tangem.features.markets.details.impl.ui.components.InfoBottomSheet
-import com.tangem.features.markets.details.impl.ui.components.MarketTokenDetailsChart
-import com.tangem.features.markets.details.impl.ui.components.tokenMarketDetailsBody
+import com.tangem.features.markets.details.impl.ui.components.*
 import com.tangem.features.markets.details.impl.ui.state.ExchangesBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
+import com.tangem.features.markets.details.impl.ui.state.SecurityScoreBottomSheetContent
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -72,6 +74,7 @@ internal fun MarketsTokenDetailsContent(
 
     when (state.bottomSheetConfig.content) {
         is InfoBottomSheetContent -> InfoBottomSheet(config = state.bottomSheetConfig)
+        is SecurityScoreBottomSheetContent -> SecurityScoreBottomSheet(config = state.bottomSheetConfig)
         is ExchangesBottomSheetContent -> ExchangesBottomSheet(config = state.bottomSheetConfig)
     }
 }
@@ -90,6 +93,7 @@ private fun Content(
 ) {
     val density = LocalDensity.current
     val bottomBarHeight = with(density) { WindowInsets.systemBars.getBottom(this).toDp() }
+    val lazyListState = rememberLazyListState()
 
     Column(
         modifier = modifier
@@ -97,25 +101,25 @@ private fun Content(
             .let { if (addTopBarStatusBarInsets) it.statusBarsPadding() else it }
             .fillMaxSize(),
     ) {
-        TangemTopAppBar(
-            modifier = Modifier
-                .onGloballyPositioned {
-                    if (it.size.height > 0) {
-                        with(density) {
-                            onHeaderSizeChange(it.size.height.toDp())
-                        }
+        TopBar(
+            modifier = Modifier.onGloballyPositioned {
+                if (it.size.height > 0) {
+                    with(density) {
+                        onHeaderSizeChange(it.size.height.toDp())
                     }
-                },
-            title = state.tokenName,
-            startButton = TopAppBarButtonUM.Back(
-                onBackClicked = onBackClick,
-                enabled = backButtonEnabled,
-            ),
+                }
+            },
+            lazyListState = lazyListState,
+            tokenName = state.tokenName,
+            tokenPrice = state.priceText,
+            isBackButtonEnabled = backButtonEnabled,
+            onBackClick = onBackClick,
         )
 
         SpacerH4()
 
         LazyColumn(
+            state = lazyListState,
             contentPadding = PaddingValues(bottom = bottomBarHeight),
         ) {
             item("header") {
@@ -153,6 +157,32 @@ private fun Content(
             )
         }
     }
+}
+
+@Composable
+private fun TopBar(
+    lazyListState: LazyListState,
+    tokenName: String,
+    tokenPrice: String,
+    isBackButtonEnabled: Boolean,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val showPriceSubtitle by remember {
+        derivedStateOf {
+            lazyListState.firstVisibleItemIndex > 1
+        }
+    }
+
+    TangemTopAppBar(
+        modifier = modifier,
+        title = tokenName,
+        subtitle = if (showPriceSubtitle) tokenPrice else null,
+        startButton = TopAppBarButtonUM.Back(
+            onBackClicked = onBackClick,
+            enabled = isBackButtonEnabled,
+        ),
+    )
 }
 
 @Composable

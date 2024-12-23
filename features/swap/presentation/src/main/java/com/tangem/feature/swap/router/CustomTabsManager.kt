@@ -8,6 +8,7 @@ import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import java.lang.ref.WeakReference
 
+@Deprecated("Replace with CustomTabsUrlOpener")
 class CustomTabsManager(private val context: WeakReference<Context>) {
 
     fun openUrl(url: String) {

@@ -63,7 +63,7 @@ internal class StakingStateController @Inject constructor(
         }
     }
 
-    private fun dismissAlert() {
+    fun dismissAlert() {
         mutableUiState.update { it.copy(event = consumedEvent()) }
     }
 
