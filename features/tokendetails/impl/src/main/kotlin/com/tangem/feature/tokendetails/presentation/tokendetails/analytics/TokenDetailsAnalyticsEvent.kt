@@ -25,7 +25,7 @@ internal open class TokenDetailsAnalyticsEvent(
         )
 
         class Reveal(currency: CryptoCurrency) : Notice(
-            event = "Notice - Reveal Transaction",
+            event = "Reveal Transaction",
             params = currency.toAnalyticsParams(),
         )
     }
