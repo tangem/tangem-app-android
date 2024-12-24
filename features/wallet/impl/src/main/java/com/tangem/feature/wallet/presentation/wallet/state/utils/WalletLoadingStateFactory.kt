@@ -58,6 +58,8 @@ internal class WalletLoadingStateFactory(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
+            expressTxsToDisplay = persistentListOf(),
+            expressTxs = persistentListOf(),
         )
     }
 
