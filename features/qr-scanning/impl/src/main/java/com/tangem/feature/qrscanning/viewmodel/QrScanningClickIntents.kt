@@ -1,5 +1,6 @@
 package com.tangem.feature.qrscanning.viewmodel
 
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.feature.qrscanning.presentation.QrScanningStateController
 import com.tangem.feature.qrscanning.presentation.transformers.DismissBottomSheetTransformer
@@ -11,32 +12,30 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-interface QrScanningClickIntents {
+internal interface QrScanningClickIntents {
 
-    val launchGallery: SharedFlow<GalleryRequest>
+    val launchGallery: SharedFlow<Unit>
 
     fun onBackClick()
 
     fun onQrScanned(qrCode: String)
 
     fun onGalleryClicked()
-}
 
-@JvmInline
-value class GalleryRequest(
-    val imageFilter: String,
-)
+    fun onSettingsClick()
+}
 
 @ViewModelScoped
 internal class QrScanningClickIntentsImplementor @Inject constructor(
     private val stateHolder: QrScanningStateController,
     private val emitQrScannedEventUseCase: EmitQrScannedEventUseCase,
+    private val settingsManager: SettingsManager,
     private val dispatcher: CoroutineDispatcherProvider,
 ) : BaseQrScanningClickIntents(), QrScanningClickIntents {
 
     private var isScanned = false
 
-    override val launchGallery = MutableSharedFlow<GalleryRequest>(
+    override val launchGallery = MutableSharedFlow<Unit>(
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_LATEST,
     )
@@ -56,13 +55,13 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
     }
 
     override fun onGalleryClicked() {
-        launchGallery.tryEmit(GalleryRequest(imageFilter = GALLERY_IMAGE_FILTER))
+        launchGallery.tryEmit(Unit)
         if (stateHolder.value.bottomSheetConfig != null) {
             stateHolder.update(DismissBottomSheetTransformer())
         }
     }
 
-    companion object {
-        private const val GALLERY_IMAGE_FILTER = "image/*"
+    override fun onSettingsClick() {
+        settingsManager.openSettings()
     }
 }
