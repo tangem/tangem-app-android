@@ -14,15 +14,18 @@ import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.model.AmountType
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.providers.entity.SelectProviderResult
 import com.tangem.utils.Provider
+import com.tangem.utils.extensions.isSingleItem
 
 internal class OnrampAmountStateFactory(
     private val currentStateProvider: Provider<OnrampMainComponentUM>,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val onrampIntents: OnrampIntents,
+    private val cryptoCurrency: CryptoCurrency,
 ) {
 
     private val onrampAmountFieldChangeConverter = OnrampAmountFieldChangeConverter(
@@ -62,11 +65,12 @@ internal class OnrampAmountStateFactory(
 
         return currentState.copy(
             amountBlockState = amountState.copy(secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading),
+            providerBlockState = OnrampProviderBlockUM.Loading,
             buyButtonConfig = currentState.buyButtonConfig.copy(enabled = false),
         )
     }
 
-    fun getAmountSecondaryUpdatedState(quote: OnrampQuote, isBestRate: Boolean): OnrampMainComponentUM {
+    fun getAmountSecondaryUpdatedState(quote: OnrampQuote): OnrampMainComponentUM {
         val currentState = currentStateProvider()
         if (currentState !is OnrampMainComponentUM.Content) return currentState
 
@@ -75,9 +79,9 @@ internal class OnrampAmountStateFactory(
 
         return currentState.copy(
             amountBlockState = amountState.copy(
-                secondaryFieldModel = quote.toSecondaryFieldUiModel(amountState),
+                amountFieldModel = amountState.amountFieldModel.copy(isError = false),
+                secondaryFieldModel = quote.toSecondaryFieldUiModel(amountState) ?: amountState.secondaryFieldModel,
             ),
-            providerBlockState = quote.toProviderBlockState(isBestRate),
             buyButtonConfig = currentState.buyButtonConfig.copy(
                 enabled = quote is OnrampQuote.Data,
                 onClick = {
@@ -93,6 +97,32 @@ internal class OnrampAmountStateFactory(
                     }
                 },
             ),
+        )
+    }
+
+    fun getUpdatedProviderState(selectedQuote: OnrampQuote, quotes: List<OnrampQuote>): OnrampMainComponentUM {
+        val currentState = currentStateProvider()
+        if (currentState !is OnrampMainComponentUM.Content) return currentState
+
+        analyticsEventHandler.send(
+            OnrampAnalyticsEvent.ProviderCalculated(
+                providerName = selectedQuote.provider.info.name,
+                tokenSymbol = cryptoCurrency.symbol,
+                paymentMethod = selectedQuote.paymentMethod.name,
+            ),
+        )
+
+        val bestProvider = selectedQuote as? OnrampQuote.Data
+        val isMultipleQuotes = !quotes.isSingleItem()
+        val isOtherQuotesHasData = quotes
+            .filter { it.paymentMethod == selectedQuote.paymentMethod }
+            .filterNot { it == bestProvider }
+            .any { it is OnrampQuote.Data }
+
+        val isBestProvider = selectedQuote == bestProvider && isMultipleQuotes && isOtherQuotesHasData
+
+        return currentState.copy(
+            providerBlockState = selectedQuote.toProviderBlockState(isBestProvider),
         )
     }
 
@@ -175,19 +205,20 @@ internal class OnrampAmountStateFactory(
         )
     }
 
-    private fun OnrampQuote.toSecondaryFieldUiModel(amountState: OnrampAmountBlockUM): OnrampAmountSecondaryFieldUM {
+    private fun OnrampQuote.toSecondaryFieldUiModel(amountState: OnrampAmountBlockUM): OnrampAmountSecondaryFieldUM? {
         return when (this) {
+            is OnrampQuote.Error -> null
             is OnrampQuote.Data -> {
                 val amount = toAmount.value.format {
                     crypto(symbol = toAmount.symbol, decimals = toAmount.decimals)
                 }
                 OnrampAmountSecondaryFieldUM.Content(stringReference(amount))
             }
-            is OnrampQuote.Error -> this.toSecondaryFieldUiModel(amountState)
+            is OnrampQuote.AmountError -> this.toSecondaryFieldUiModel(amountState)
         }
     }
 
-    private fun OnrampQuote.Error.toSecondaryFieldUiModel(
+    private fun OnrampQuote.AmountError.toSecondaryFieldUiModel(
         amountState: OnrampAmountBlockUM,
     ): OnrampAmountSecondaryFieldUM.Error {
         val amount = error.requiredAmount.format {
@@ -203,7 +234,7 @@ internal class OnrampAmountStateFactory(
                 R.string.onramp_max_amount_restriction
             }
             is OnrampError.AmountError.TooSmallError -> {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.MaxAmountError)
+                analyticsEventHandler.send(OnrampAnalyticsEvent.MinAmountError)
                 R.string.onramp_min_amount_restriction
             }
         }
