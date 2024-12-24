@@ -176,7 +176,6 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             OnboardingHelper.handleTopUpAction(
                 walletManager = walletManager,
                 scanResponse = scanResponse,
-                globalState = globalState,
             )
         }
         is OnboardingNoteAction.Done -> {
