@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express
+package com.tangem.common.ui.expressStatus
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -7,17 +7,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.inputrow.InputRowApprox
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.tokendetails.impl.R
 
 @Suppress("LongParameterList")
 @Composable
-internal fun ExpressEstimate(
+fun ExpressEstimate(
     timestamp: TextReference,
     fromTokenIconState: CurrencyIconState,
     toTokenIconState: CurrencyIconState,

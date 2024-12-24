@@ -1,5 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express
 
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
 import com.tangem.datasource.local.swaptx.SwapTransactionStatusStore
@@ -15,9 +16,8 @@ import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsSwapTransactionsStateConverter
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
@@ -55,7 +55,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         )
     }
 
-    suspend operator fun invoke(): Flow<PersistentList<ExpressTransactionStateUM.ExchangeUM>> {
+    suspend operator fun invoke(): Flow<PersistentList<ExchangeUM>> {
         val selectedWallet = getSelectedWalletSyncUseCase().fold(
             ifLeft = { return emptyFlow() },
             ifRight = { it },
@@ -82,7 +82,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     suspend fun removeTransactionOnBottomSheetClosed(isForceTerminal: Boolean = false) {
         val state = currentStateProvider()
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
-        val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.ExchangeUM ?: return
+        val selectedTx = bottomSheetConfig.value as? ExchangeUM ?: return
 
         val shouldTerminate = selectedTx.activeStatus.isTerminal(selectedTx.isRefundTerminalStatus) || isForceTerminal
         if (shouldTerminate) {
@@ -95,7 +95,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         }
     }
 
-    suspend fun updateSwapTxStatus(swapTx: ExpressTransactionStateUM.ExchangeUM): ExpressTransactionStateUM.ExchangeUM {
+    suspend fun updateSwapTxStatus(swapTx: ExchangeUM): ExchangeUM {
         return if (swapTx.activeStatus.isTerminal(swapTx.isRefundTerminalStatus)) {
             swapTx
         } else {
@@ -163,7 +163,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private fun getExchangeStatusState(
         savedTransactions: List<SavedSwapTransactionListModel>?,
         quotes: Set<Quote>,
-    ): PersistentList<ExpressTransactionStateUM.ExchangeUM> {
+    ): PersistentList<ExchangeUM> {
         if (savedTransactions == null) {
             return persistentListOf()
         }
