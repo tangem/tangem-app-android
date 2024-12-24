@@ -5,7 +5,7 @@
   <string name="action_buttons_sell_navigation_bar_title">Продать</string>
   <string name="action_buttons_service_loading_alert_message">Это может занять несколько секунд. Пожалуйста, попробуйте позже.</string>
   <string name="action_buttons_service_loading_alert_title">Данные ещё не загрузились</string>
-  <string name="action_buttons_something_wrong_alert_message">Это действие в данный момент недоступно, пожалуйста попробуйте позже или обновите данные, сделав свайп экрана вниз.</string>
+  <string name="action_buttons_something_wrong_alert_message">Это действие в данный момент недоступно, пожалуйста, попробуйте позже или обновите данные, сделав свайп экрана вниз.</string>
   <string name="action_buttons_something_wrong_alert_title">Кнопка недоступна</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">Больше не показывать</string>
   <string name="balance_hidden_got_it_button">Понятно</string>
   <string name="balance_hidden_title">Балансы скрыты</string>
+  <string name="beta_mode_warning_message">Согласно информации от разработчиков сети, токены Kaspa находятся в режиме бета. Следите за обновлениями!</string>
+  <string name="beta_mode_warning_title">Бета режим</string>
   <string name="biometric_lockout_permanent_warning_description">Пожалуйста, отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_warning_description">Пожалуйста, попробуйте снова через 30 секунд или отсканируйте карту или кольцо</string>
   <string name="biometric_lockout_warning_title">Слишком много попыток</string>
@@ -227,7 +229,7 @@
   <string name="custom_token_network_input_not_selected">Не выбрано</string>
   <string name="custom_token_network_input_title">Сеть</string>
   <string name="custom_token_network_selector_title">Сеть</string>
-  <string name="custom_token_subtitle">Вы можете добавить токен в ручную, если он не поддерживается Tangem</string>
+  <string name="custom_token_subtitle">Вы можете добавить токен вручную, если он не поддерживается Tangem</string>
   <string name="custom_token_token_symbol_input_placeholder">Например, USDC</string>
   <string name="custom_token_token_symbol_input_title">Символ</string>
   <string name="custom_token_token_symbol_input_title_old">Символ токена</string>
@@ -597,6 +599,8 @@
   <string name="onramp_choose_provider_title_hint">Tangem предоставляет доступ к покупке через сторонних провайдеров в соответствии с их правилами</string>
   <string name="onramp_country_search">Поиск по стране</string>
   <string name="onramp_country_unavailable">Недоступно</string>
+  <string name="onramp_currency_other">Другие валюты</string>
+  <string name="onramp_currency_popular">Популярные фиаты</string>
   <string name="onramp_currency_search">Поиск по валюте</string>
   <string name="onramp_legal">Пользуясь сервисом покупки, вы соглашаетесь с %1$s и %2$s</string>
   <string name="onramp_max_amount_restriction">Сумма покупки не может быть больше, чем %s</string>

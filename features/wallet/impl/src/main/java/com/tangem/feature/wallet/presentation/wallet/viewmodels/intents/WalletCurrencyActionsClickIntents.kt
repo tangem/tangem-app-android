@@ -22,7 +22,6 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
-import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -33,13 +32,14 @@ import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.staking.model.stakekit.Yield
-import com.tangem.domain.tokens.*
+import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
+import com.tangem.domain.tokens.RemoveCurrencyUseCase
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
@@ -54,9 +54,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
@@ -109,8 +107,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val isCryptoCurrencyCoinCouldHide: IsCryptoCurrencyCoinCouldHideUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
-    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
-    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -138,63 +134,12 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
-        viewModelScope.launch(dispatchers.main) {
-            val maybeFeeCurrencyStatus =
-                getFeePaidCryptoCurrencyStatusSyncUseCase(userWallet.walletId, cryptoCurrencyStatus).getOrNull()
-            when (val currency = cryptoCurrencyStatus.currency) {
-                is CryptoCurrency.Coin -> sendCoin(cryptoCurrencyStatus, userWallet, maybeFeeCurrencyStatus)
-                is CryptoCurrency.Token -> sendToken(
-                    cryptoCurrency = currency,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus.value,
-                    feeCurrencyStatus = maybeFeeCurrencyStatus,
-                    userWallet = userWallet,
-                )
-            }
-        }
-    }
-
-    private fun sendCoin(
-        cryptoCurrencyStatus: CryptoCurrencyStatus,
-        userWallet: UserWallet,
-        feeCurrencyStatus: CryptoCurrencyStatus?,
-    ) {
-        reduxStateHolder.dispatch(
-            action = TradeCryptoAction.SendCoin(
-                userWallet = userWallet,
-                coinStatus = cryptoCurrencyStatus,
-                feeCurrencyStatus = feeCurrencyStatus,
-            ),
+        val route = AppRoute.Send(
+            currency = cryptoCurrencyStatus.currency,
+            userWalletId = userWallet.walletId,
         )
-    }
 
-    private fun sendToken(
-        cryptoCurrency: CryptoCurrency.Token,
-        cryptoCurrencyStatus: CryptoCurrencyStatus.Value,
-        feeCurrencyStatus: CryptoCurrencyStatus?,
-        userWallet: UserWallet,
-    ) {
-        viewModelScope.launch(dispatchers.main) {
-            getNetworkCoinStatusUseCase(
-                userWalletId = userWallet.walletId,
-                networkId = cryptoCurrency.network.id,
-                derivationPath = cryptoCurrency.network.derivationPath,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-            )
-                .take(count = 1)
-                .collectLatest {
-                    it.onRight { coinStatus ->
-                        reduxStateHolder.dispatch(
-                            action = TradeCryptoAction.SendToken(
-                                userWallet = userWallet,
-                                tokenCurrency = cryptoCurrency,
-                                tokenFiatRate = cryptoCurrencyStatus.fiatRate,
-                                coinFiatRate = coinStatus.value.fiatRate,
-                                feeCurrencyStatus = feeCurrencyStatus,
-                            ),
-                        )
-                    }
-                }
-        }
+        appRouter.push(route)
     }
 
     override fun onReceiveClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {

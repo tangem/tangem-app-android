@@ -5,6 +5,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 internal fun CryptoCurrency.toAnalyticsParams(): Map<String, String> {
     return mapOf(
         "Token" to symbol,
-        "Blockchain" to network.currencySymbol,
+        "Blockchain" to network.name,
     )
 }
