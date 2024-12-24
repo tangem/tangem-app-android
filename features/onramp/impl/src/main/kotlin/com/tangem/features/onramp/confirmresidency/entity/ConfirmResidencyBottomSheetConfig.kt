@@ -6,5 +6,5 @@ import kotlinx.serialization.Serializable
 internal sealed class ConfirmResidencyBottomSheetConfig {
 
     @Serializable
-    data object SelectCountry : ConfirmResidencyBottomSheetConfig()
+    data class SelectCountry(val onDismiss: () -> Unit) : ConfirmResidencyBottomSheetConfig()
 }
