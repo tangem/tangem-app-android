@@ -9,13 +9,13 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.extensions.pluralStringResourceSafe
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.onboarding.R
@@ -60,7 +60,7 @@ fun YourSeedPhraseScreen(state: YourSeedPhraseState, modifier: Modifier = Modifi
             firstActionContent = {
                 PrimaryButton(
                     modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(id = R.string.common_continue),
+                    text = stringResourceSafe(id = R.string.common_continue),
                     onClick = state.buttonContinue.onClick,
                 )
             },
@@ -77,10 +77,10 @@ private fun TitleBlock(state: SegmentSeedState) {
             .fillMaxWidth(),
     ) {
         Column {
-            DescriptionTitleText(text = stringResource(id = R.string.onboarding_seed_generate_title))
+            DescriptionTitleText(text = stringResourceSafe(id = R.string.onboarding_seed_generate_title))
             SpacerH16()
             DescriptionSubTitleText(
-                text = pluralStringResource(
+                text = pluralStringResourceSafe(
                     id = R.plurals.onboarding_seed_generate_message_words_count,
                     count = state.selectedSeedType.count,
                     state.selectedSeedType.count,
@@ -101,7 +101,7 @@ private fun SegmentSeedBlock(state: SegmentSeedState, modifier: Modifier = Modif
         },
     ) {
         Text(
-            text = pluralStringResource(
+            text = pluralStringResourceSafe(
                 id = R.plurals.onboarding_seed_generate_words_count,
                 count = it.count,
                 it.count,
