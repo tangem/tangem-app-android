@@ -52,19 +52,19 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
-    implementation(projects.common.routing)
     implementation(projects.core.deepLinks)
     implementation(projects.core.deepLinks.global)
     implementation(projects.core.decompose)
+    implementation(projects.core.datasource)
     implementation(projects.core.res)
 
     implementation(projects.libs.crypto)
+    implementation(projects.libs.blockchainSdk)
 
     /** Domain modules */
     implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
-    implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.models)
     implementation(projects.domain.settings)
     implementation(projects.domain.tokens)
@@ -83,6 +83,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.onramp.models)
+    implementation(projects.domain.onramp)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)
@@ -101,6 +102,7 @@ dependencies {
 
     /** Common modules */
     implementation(projects.common.ui)
+    implementation(projects.common.routing)
 
     /** Test libraries */
     implementation(deps.test.junit)
