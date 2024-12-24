@@ -173,6 +173,7 @@ class GetCurrencyWarningsUseCase(
             when {
                 tokenStatus != null && coinStatus != null -> {
                     buildList {
+                        getIsBetaTokensWarning(tokenStatus.currency)?.let(::add)
                         getFeeWarning(
                             userWalletId = userWalletId,
                             coinStatus = coinStatus,
@@ -216,6 +217,15 @@ class GetCurrencyWarningsUseCase(
                 }
             }
             else -> null
+        }
+    }
+
+    private fun getIsBetaTokensWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
+        val isTokenBetaFunctionality = BlockchainUtils.isTokenBetaFunctionality(currency.network.id.value)
+        return if (currency is CryptoCurrency.Token && isTokenBetaFunctionality) {
+            CryptoCurrencyWarning.TokensInBetaWarning
+        } else {
+            null
         }
     }
 
