@@ -12,6 +12,7 @@
   <string name="action_buttons_swap_no_available_pair_notification_message">Немає доступних токенів для обміну з обраним токеном. Будь ласка, оберіть інший.</string>
   <string name="action_buttons_swap_no_available_pair_notification_title">Немає вільної пари</string>
   <string name="action_buttons_swap_no_tokens_added_alert_message">Щоб скористатися функцією обміну, у вашому портфелі має бути щонайменше 2 токени.</string>
+  <string name="action_buttons_swap_no_tokens_added_alert_title">Додайте токени</string>
   <string name="action_buttons_swap_not_enough_tokens_alert_message">У вас додано лише 1 токен. Щоб скористатися функцією обміну, потрібно додати мінімум 2 токени.</string>
   <string name="action_buttons_swap_not_enough_tokens_alert_title">Додайте токени</string>
   <string name="action_buttons_you_want_to_receive">Оберіть токен для отримання</string>
@@ -324,6 +325,7 @@
   <string name="feedback_preface_scan_failed">Розкажіть, будь ласка, яку картку або кільце ви маєте?</string>
   <string name="feedback_preface_support">Привіт, команда підтримки,</string>
   <string name="feedback_preface_tx_failed">Будь ласка, розкажіть нам більше про вашу проблему. Кожна дрібниця може допомогти.</string>
+  <string name="feedback_subject_pre_activated_wallet">Раніше активований гаманець</string>
   <string name="feedback_subject_rate_negative">Мої пропозиції</string>
   <string name="feedback_subject_scan_failed">Не вдається відсканувати картку/кільце</string>
   <string name="feedback_subject_support">Звернення в підтримку</string>
@@ -597,7 +599,10 @@
   <string name="onramp_choose_provider_title_hint">Tangem забезпечує доступ к покупці через сторонніх провайдерів згідно з їхніми умовами</string>
   <string name="onramp_country_search">Пошук за країною</string>
   <string name="onramp_country_unavailable">Недоступно</string>
+  <string name="onramp_currency_other">Інші валюти</string>
+  <string name="onramp_currency_popular">Популярні фіати</string>
   <string name="onramp_currency_search">Пошук по валюті</string>
+  <string name="onramp_legal">Використовуючи сервіс покупки, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="onramp_max_amount_restriction">Сума покупки не може бути більше ніж %s</string>
   <string name="onramp_min_amount_restriction">Сума покупки повинна бути не менше %s</string>
   <string name="onramp_no_available_providers">Для данної валюти немає доступних провайдерів</string>

@@ -19,12 +19,14 @@ class GetOnrampRedirectUrlUseCase(
         userWalletId: UserWalletId,
         quote: OnrampProviderWithQuote.Data,
         cryptoCurrency: CryptoCurrency,
+        isDarkTheme: Boolean,
     ): Either<OnrampError, String> {
         return Either.catch {
             val transaction = repository.getOnrampData(
                 userWalletId = userWalletId,
                 cryptoCurrency = cryptoCurrency,
                 quote = quote,
+                isDarkTheme = isDarkTheme,
             )
             transactionRepository.storeTransaction(transaction)
             transaction.redirectUrl

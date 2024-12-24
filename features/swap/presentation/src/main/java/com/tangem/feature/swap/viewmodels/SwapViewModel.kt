@@ -184,6 +184,14 @@ internal class SwapViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
+    override fun onStart(owner: LifecycleOwner) {
+        startLoadingQuotesFromLastState(true)
+    }
+
+    override fun onStop(owner: LifecycleOwner) {
+        singleTaskScheduler.cancelTask()
+    }
+
     override fun onCleared() {
         singleTaskScheduler.cancelTask()
         super.onCleared()
