@@ -23,5 +23,10 @@ internal open class TokenDetailsAnalyticsEvent(
             event = "Not Enough Fee",
             params = currency.toAnalyticsParams(),
         )
+
+        class Reveal(currency: CryptoCurrency) : Notice(
+            event = "Reveal Transaction",
+            params = currency.toAnalyticsParams(),
+        )
     }
 }
