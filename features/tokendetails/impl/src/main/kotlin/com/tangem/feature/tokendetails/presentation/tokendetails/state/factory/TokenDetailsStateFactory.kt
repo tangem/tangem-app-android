@@ -249,8 +249,8 @@ internal class TokenDetailsStateFactory(
     fun getStateWithReceiveBottomSheet(
         currency: CryptoCurrency,
         networkAddress: NetworkAddress,
-        sendCopyAnalyticsEvent: () -> Unit,
-        sendShareAnalyticsEvent: () -> Unit,
+        onCopyClick: (String) -> Unit,
+        onShareClick: (String) -> Unit,
     ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
@@ -262,8 +262,8 @@ internal class TokenDetailsStateFactory(
                     network = currency.network.name,
                     addresses = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
                     showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                    onCopyClick = sendCopyAnalyticsEvent,
-                    onShareClick = sendShareAnalyticsEvent,
+                    onCopyClick = onCopyClick,
+                    onShareClick = onShareClick,
                 ),
             ),
         )
