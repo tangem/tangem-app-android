@@ -25,7 +25,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -144,7 +143,7 @@ private fun LazyListScope.activeStakingBlock(
     if (innerYieldBalanceState.balances.isNotEmpty()) {
         item(ACTIVE_STAKING_BLOCK_KEY) {
             Text(
-                text = stringResource(id = R.string.staking_your_stakes),
+                text = stringResourceSafe(id = R.string.staking_your_stakes),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 modifier = Modifier
@@ -214,7 +213,7 @@ private fun BannerBlock(onClick: () -> Unit) {
                 .padding(TangemTheme.dimens.spacing16),
             text = buildAnnotatedString {
                 withStyle(SpanStyle(Brush.linearGradient(textGradientColors))) {
-                    append(stringResource(R.string.staking_details_banner_text))
+                    append(stringResourceSafe(R.string.staking_details_banner_text))
                 }
             },
             style = TangemTheme.typography.h2,
