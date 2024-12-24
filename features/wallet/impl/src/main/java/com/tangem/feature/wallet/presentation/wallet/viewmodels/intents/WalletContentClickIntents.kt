@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import arrow.core.getOrElse
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -11,10 +12,14 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -43,6 +48,12 @@ internal interface WalletContentClickIntents {
     fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus)
 
     fun onTransactionClick(txHash: String)
+
+    fun onDissmissBottomSheet()
+
+    fun onGoToProviderClick(externalTxId: String)
+
+    fun onExpressTransactionClick(txId: String)
 }
 
 @Suppress("LongParameterList")
@@ -51,6 +62,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val currencyActionsClickIntents: WalletCurrencyActionsClickIntentsImplementor,
     private val walletWarningsClickIntents: WalletWarningsClickIntentsImplementor,
+    private val onrampStatusFactory: OnrampStatusFactory,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
@@ -162,6 +174,41 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                     ifLeft = { Timber.e(it.toString()) },
                     ifRight = { router.openUrl(url = it) },
                 )
+        }
+    }
+
+    override fun onGoToProviderClick(externalTxUrl: String) {
+        router.openUrl(externalTxUrl)
+    }
+
+    override fun onDissmissBottomSheet() {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        if (stateHolder.getSelectedWallet().bottomSheetConfig?.content is ExpressStatusBottomSheetConfig) {
+            viewModelScope.launch(dispatchers.main) {
+                onrampStatusFactory.removeTransactionOnBottomSheetClosed()
+            }
+        }
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId))
+    }
+
+    override fun onExpressTransactionClick(txId: String) {
+        viewModelScope.launch {
+            val userWalletId = stateHolder.getSelectedWalletId()
+            val singleWalletState = stateHolder.getSelectedWallet() as? WalletState.SingleCurrency.Content
+                ?: return@launch
+
+            val expressTransaction = singleWalletState.expressTxsToDisplay.firstOrNull { it.info.txId == txId }
+                ?: return@launch
+
+            stateHolder.update(
+                OpenBottomSheetTransformer(
+                    userWalletId = userWalletId,
+                    content = ExpressStatusBottomSheetConfig(
+                        value = expressTransaction,
+                    ),
+                    onDismissBottomSheet = ::onDissmissBottomSheet,
+                ),
+            )
         }
     }
 }
