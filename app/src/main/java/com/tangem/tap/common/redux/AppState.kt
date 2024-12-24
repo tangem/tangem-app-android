@@ -1,8 +1,5 @@
 package com.tangem.tap.common.redux
 
-import com.tangem.domain.redux.DomainState
-import com.tangem.domain.redux.domainStore
-import com.tangem.domain.redux.global.NetworkServices
 import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.legacy.LegacyMiddleware
@@ -28,7 +25,6 @@ import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
 import com.tangem.tap.proxy.redux.DaggerGraphMiddleware
 import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import org.rekotlin.Middleware
 import org.rekotlin.StateType
 
@@ -45,18 +41,6 @@ data class AppState(
     val saveWalletState: SaveWalletState = SaveWalletState(),
     val daggerGraphState: DaggerGraphState = DaggerGraphState(),
 ) : StateType {
-
-    private val domainState: DomainState
-        get() = domainStore.state
-
-    private val domainNetworks: NetworkServices
-        get() = domainState.globalState.networkServices
-
-    val featureRepositoryProvider: FeatureRepositoryProvider
-        get() = FeatureRepositoryProvider(
-            tangemTechApi = domainNetworks.tangemTechService.api,
-            dispatchers = AppCoroutineDispatcherProvider(),
-        )
 
     companion object {
         fun getMiddleware(): List<Middleware<AppState>> {
