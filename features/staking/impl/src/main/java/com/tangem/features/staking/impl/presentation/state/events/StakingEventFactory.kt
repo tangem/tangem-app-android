@@ -41,9 +41,4 @@ internal class StakingEventFactory(
         )
         stateController.updateEvent(alert)
     }
-
-    fun createShareDialog(txUrl: String) {
-        val event = StakingEvent.ShowShareDialog(txUrl)
-        stateController.updateEvent(event)
-    }
 }
