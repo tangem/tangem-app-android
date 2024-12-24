@@ -253,9 +253,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            window.setHideOverlayWindows(true)
-        }
+        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+        //     window.setHideOverlayWindows(true)
+        // }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
@@ -279,6 +279,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         if (intent != null) {
             deepLinksRegistry.launch(intent)
         }
+
+        lifecycle.addObserver(WindowObscurationObserver)
     }
 
     private fun setRootContent() {
@@ -550,20 +552,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        val isPartiallyObscured = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            event.flags and MotionEvent.FLAG_WINDOW_IS_PARTIALLY_OBSCURED != 0
-        } else {
-            false
-        }
+        val result = WindowObscurationObserver.dispatchTouchEvent(event, analyticsEventsHandler)
 
-        val isFullyObscured = event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0
-
-        if (isPartiallyObscured || isFullyObscured) {
-            Timber.e("Window is partially or fully obscured")
-            return false
-        }
-
-        return super.dispatchTouchEvent(event)
+        return if (result) super.dispatchTouchEvent(event) else false
     }
 
     private fun showSnackbar(text: String, length: Int, buttonTitle: String?, action: View.OnClickListener?) {

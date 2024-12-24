@@ -6,30 +6,42 @@ internal sealed interface ProviderListItemUM {
 
     val providerId: String
     val name: String
+    val imageUrl: String
 
-    data class Available(
-        override val providerId: String,
-        override val name: String,
-        val imageUrl: String,
-        val rate: String,
-        val isBestRate: Boolean,
-        val diffRate: TextReference?,
-        val isSelected: Boolean,
-        val onClick: () -> Unit,
-    ) : ProviderListItemUM
+    sealed interface Available : ProviderListItemUM {
+        val onClick: () -> Unit
+        val providerResult: SelectProviderResult
+        val isBestRate: Boolean
+        val isSelected: Boolean
 
-    data class AvailableWithError(
-        override val providerId: String,
-        override val name: String,
-        val imageUrl: String,
-        val subtitle: TextReference,
-        val onClick: () -> Unit,
-    ) : ProviderListItemUM
+        data class Content(
+            override val providerId: String,
+            override val name: String,
+            override val onClick: () -> Unit,
+            override val imageUrl: String,
+            override val providerResult: SelectProviderResult,
+            override val isBestRate: Boolean,
+            override val isSelected: Boolean,
+            val rate: String,
+            val diffRate: TextReference?,
+        ) : Available
+
+        data class WithError(
+            override val providerId: String,
+            override val name: String,
+            override val onClick: () -> Unit,
+            override val imageUrl: String,
+            override val providerResult: SelectProviderResult,
+            override val isBestRate: Boolean,
+            override val isSelected: Boolean,
+            val subtitle: TextReference,
+        ) : Available
+    }
 
     data class Unavailable(
         override val providerId: String,
         override val name: String,
-        val imageUrl: String,
+        override val imageUrl: String,
         val subtitle: TextReference,
     ) : ProviderListItemUM
 }

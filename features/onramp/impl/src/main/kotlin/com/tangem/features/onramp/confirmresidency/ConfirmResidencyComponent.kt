@@ -10,7 +10,7 @@ internal interface ConfirmResidencyComponent : ComposableBottomSheetComponent {
     data class Params(
         val cryptoCurrency: CryptoCurrency,
         val country: OnrampCountry,
-        val onDismiss: (OnrampCountry) -> Unit,
+        val onDismiss: () -> Unit,
     )
 
     interface Factory : ComponentFactory<Params, ConfirmResidencyComponent>
