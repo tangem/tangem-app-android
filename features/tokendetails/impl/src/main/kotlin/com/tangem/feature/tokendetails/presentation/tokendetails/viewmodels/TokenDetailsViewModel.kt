@@ -12,6 +12,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
@@ -116,6 +117,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val getCryptoCurrencySyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    private val shareManager: ShareManager,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
@@ -544,11 +546,13 @@ internal class TokenDetailsViewModel @Inject constructor(
             internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
                 currency = cryptoCurrency,
                 networkAddress = networkAddress,
-                sendCopyAnalyticsEvent = {
+                onCopyClick = {
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
+                    clipboardManager.setText(text = it, isSensitive = true)
                 },
-                sendShareAnalyticsEvent = {
+                onShareClick = {
                     analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(cryptoCurrency.symbol))
+                    shareManager.shareText(text = it)
                 },
             )
         }
@@ -581,7 +585,7 @@ internal class TokenDetailsViewModel @Inject constructor(
             )
             if (extendedKey.isNotBlank()) {
                 vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-                clipboardManager.setText(text = extendedKey)
+                clipboardManager.setText(text = extendedKey, isSensitive = true)
                 internalUiState.value = stateFactory.getStateAndTriggerEvent(
                     state = internalUiState.value,
                     errorMessage = resourceReference(R.string.wallet_notification_address_copied),
@@ -819,7 +823,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         val defaultAddress = addresses.firstOrNull()?.value ?: return null
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-        clipboardManager.setText(text = defaultAddress)
+        clipboardManager.setText(text = defaultAddress, isSensitive = true)
         analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
     }
