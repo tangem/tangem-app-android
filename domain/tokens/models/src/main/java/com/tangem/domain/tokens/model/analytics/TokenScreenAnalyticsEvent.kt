@@ -74,6 +74,16 @@ sealed class TokenScreenAnalyticsEvent(
         params = mapOf("Token" to tokenSymbol, "Blockchain" to blockchain),
     )
 
+    class RevealTryAgain(tokenSymbol: String, blockchain: String) : TokenScreenAnalyticsEvent(
+        event = "Button - Reveal Try Again",
+        params = mapOf("Token" to tokenSymbol, "Blockchain" to blockchain),
+    )
+
+    class RevealCancel(tokenSymbol: String, blockchain: String) : TokenScreenAnalyticsEvent(
+        event = "Button - Reveal Cancel",
+        params = mapOf("Token" to tokenSymbol, "Blockchain" to blockchain),
+    )
+
     data class StakingClicked(val token: String) : TokenScreenAnalyticsEvent(
         event = "Staking Clicked",
         params = mapOf("Token" to token),
