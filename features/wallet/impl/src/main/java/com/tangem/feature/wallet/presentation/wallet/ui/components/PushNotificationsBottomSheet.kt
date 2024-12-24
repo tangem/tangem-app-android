@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
@@ -19,6 +18,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.showcase.ShowcaseContent
 import com.tangem.core.ui.components.showcase.model.ShowcaseItemModel
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.requestPushPermission
@@ -76,7 +76,7 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
             ),
         ) {
             SecondaryButton(
-                text = stringResource(R.string.common_later),
+                text = stringResourceSafe(R.string.common_later),
                 onClick = {
                     content.onNeverRequest()
                     onDismiss()
@@ -84,7 +84,7 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
                 modifier = Modifier.weight(1f),
             )
             PrimaryButton(
-                text = stringResource(R.string.common_allow),
+                text = stringResourceSafe(R.string.common_allow),
                 onClick = {
                     isClicked.value = true
                     content.onRequest()
