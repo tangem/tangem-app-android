@@ -3,15 +3,10 @@ package com.tangem.core.deeplink.global
 import com.tangem.core.deeplink.DeepLink
 
 class BuyCurrencyDeepLink(
-    isOnrampFeatureEnabled: Boolean,
     val onReceive: (externalTxId: String) -> Unit,
 ) : DeepLink {
 
-    override val uri: String = if (isOnrampFeatureEnabled) {
-        ONRAMP_REDIRECT_DEEPLINK
-    } else {
-        BUY_REDIRECT_DEEPLINK
-    }
+    override val uri = BUY_REDIRECT_DEEPLINK
 
     override fun onReceive(params: Map<String, String>) {
         onReceive(
@@ -20,7 +15,7 @@ class BuyCurrencyDeepLink(
     }
 
     companion object {
-        const val ONRAMP_REDIRECT_DEEPLINK = "tangem://onramp-success?"
+        const val ONRAMP_REDIRECT_DEEPLINK = "https://tangem.com/success?action=dismissBrowser"
         private const val BUY_REDIRECT_DEEPLINK = "tangem://redirect?action=dismissBrowser"
     }
 }
