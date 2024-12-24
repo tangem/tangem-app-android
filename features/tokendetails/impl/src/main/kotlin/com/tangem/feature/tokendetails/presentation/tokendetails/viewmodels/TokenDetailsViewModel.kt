@@ -41,7 +41,6 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.legacy.TradeCryptoAction.TransactionInfo
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -68,10 +67,10 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.Token
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -84,7 +83,6 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
@@ -99,8 +97,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
-    private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
-    private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -199,7 +195,6 @@ internal class TokenDetailsViewModel @Inject constructor(
             viewModel = this,
             deepLinks = listOf(
                 BuyCurrencyDeepLink(
-                    isOnrampFeatureEnabled = onrampFeatureToggles.isFeatureEnabled,
                     onReceive = ::onBuyCurrencyDeepLink,
                 ),
             ),
@@ -337,6 +332,7 @@ internal class TokenDetailsViewModel @Inject constructor(
                     expressTxStatusTaskScheduler.scheduleTask(
                         viewModelScope,
                         PeriodicTask(
+                            isDelayFirst = false,
                             delay = EXPRESS_STATUS_UPDATE_DELAY,
                             task = {
                                 runCatching {
@@ -463,9 +459,8 @@ internal class TokenDetailsViewModel @Inject constructor(
             return
         }
 
-        showErrorIfDemoModeOrElse {
-            val status = cryptoCurrencyStatus ?: return@showErrorIfDemoModeOrElse
-
+        val status = cryptoCurrencyStatus ?: return
+        if (onrampFeatureToggles.isFeatureEnabled) {
             viewModelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
                     TradeCryptoAction.Buy(
@@ -475,6 +470,19 @@ internal class TokenDetailsViewModel @Inject constructor(
                         appCurrencyCode = selectedAppCurrencyFlow.value.code,
                     ),
                 )
+            }
+        } else {
+            showErrorIfDemoModeOrElse {
+                viewModelScope.launch(dispatchers.main) {
+                    reduxStateHolder.dispatch(
+                        TradeCryptoAction.Buy(
+                            userWallet = userWallet,
+                            source = OnrampSource.TOKEN_DETAILS,
+                            cryptoCurrencyStatus = status,
+                            appCurrencyCode = selectedAppCurrencyFlow.value.code,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -507,68 +515,16 @@ internal class TokenDetailsViewModel @Inject constructor(
             return
         }
 
-        sendCurrency(status = cryptoCurrencyStatus ?: return)
+        sendCurrency()
     }
 
-    private fun sendCurrency(status: CryptoCurrencyStatus, transactionInfo: TransactionInfo? = null) {
-        viewModelScope.launch(dispatchers.main) {
-            val maybeFeeCurrencyStatus =
-                getFeePaidCryptoCurrencyStatusSyncUseCase(userWalletId, status).getOrNull()
+    private fun sendCurrency() {
+        val route = AppRoute.Send(
+            currency = cryptoCurrency,
+            userWalletId = userWallet.walletId,
+        )
 
-            when (val currency = status.currency) {
-                is CryptoCurrency.Coin -> {
-                    reduxStateHolder.dispatch(
-                        action = TradeCryptoAction.SendCoin(
-                            userWallet = userWallet,
-                            coinStatus = status,
-                            feeCurrencyStatus = maybeFeeCurrencyStatus,
-                            transactionInfo = transactionInfo,
-                        ),
-                    )
-                }
-                is CryptoCurrency.Token -> {
-                    sendToken(
-                        tokenCurrency = currency,
-                        tokenFiatRate = status.value.fiatRate,
-                        feeCurrencyStatus = maybeFeeCurrencyStatus,
-                        transactionInfo = transactionInfo,
-                    )
-                }
-            }
-        }
-    }
-
-    private fun sendToken(
-        tokenCurrency: CryptoCurrency.Token,
-        tokenFiatRate: BigDecimal?,
-        feeCurrencyStatus: CryptoCurrencyStatus?,
-        transactionInfo: TransactionInfo?,
-    ) {
-        viewModelScope.launch(dispatchers.main) {
-            val maybeCoinStatus = getNetworkCoinStatusUseCase(
-                userWalletId = userWalletId,
-                networkId = tokenCurrency.network.id,
-                derivationPath = tokenCurrency.network.derivationPath,
-                isSingleWalletWithTokens = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
-            )
-                .conflate()
-                .distinctUntilChanged()
-                .firstOrNull()
-
-            reduxStateHolder.dispatchWithMain(
-                action = TradeCryptoAction.SendToken(
-                    userWallet = userWallet,
-                    tokenCurrency = tokenCurrency,
-                    tokenFiatRate = tokenFiatRate,
-                    coinFiatRate = maybeCoinStatus?.fold(
-                        ifLeft = { null },
-                        ifRight = { it.value.fiatRate },
-                    ),
-                    feeCurrencyStatus = feeCurrencyStatus,
-                    transactionInfo = transactionInfo,
-                ),
-            )
-        }
+        appRouter.push(route)
     }
 
     override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) {
@@ -808,7 +764,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onExpressTransactionClick(txId: String) {
-        val expressTxState = internalUiState.value.expressTxs.first { it.info.txId == txId }
+        val expressTxState = internalUiState.value.expressTxsToDisplay.first { it.info.txId == txId }
         internalUiState.value = expressStatusFactory.getStateWithExpressStatusBottomSheet(expressTxState)
     }
 
@@ -873,6 +829,12 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onRetryIncompleteTransactionClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.RevealTryAgain(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         viewModelScope.launch {
             retryIncompleteTransactionUseCase(
                 userWalletId = userWalletId,
@@ -908,6 +870,12 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onDismissIncompleteTransactionClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.RevealCancel(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         viewModelScope.launch {
             internalUiState.value = stateFactory.getStateWithDismissIncompleteTransactionConfirmDialog()
         }
