@@ -8,7 +8,6 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.tokenlist.internal.GroupTitleItem
-import com.tangem.core.ui.components.tokenlist.internal.NetworkTitleItem
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
@@ -25,9 +24,6 @@ import com.tangem.core.ui.res.TangemTheme
 @Composable
 fun TokenListItem(state: TokensListItemUM, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     when (state) {
-        is TokensListItemUM.NetworkGroupTitle -> {
-            NetworkTitleItem(networkName = state.name.resolveReference(), modifier = modifier)
-        }
         is TokensListItemUM.GroupTitle -> {
             GroupTitleItem(state, modifier)
         }
