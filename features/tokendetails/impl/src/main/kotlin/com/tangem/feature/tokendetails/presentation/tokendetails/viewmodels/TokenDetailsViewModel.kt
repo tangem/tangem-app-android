@@ -825,6 +825,12 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onRetryIncompleteTransactionClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.RevealTryAgain(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         viewModelScope.launch {
             retryIncompleteTransactionUseCase(
                 userWalletId = userWalletId,
@@ -860,6 +866,12 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onDismissIncompleteTransactionClick() {
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.RevealCancel(
+                tokenSymbol = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+            ),
+        )
         viewModelScope.launch {
             internalUiState.value = stateFactory.getStateWithDismissIncompleteTransactionConfirmDialog()
         }
