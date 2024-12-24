@@ -18,7 +18,6 @@ import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.extensions.setContext
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -41,7 +40,6 @@ internal class MainViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val apiConfigsManager: ApiConfigsManager,
-    homeFeatureToggles: HomeFeatureToggles,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel(), MainIntents {
@@ -63,11 +61,9 @@ internal class MainViewModel @Inject constructor(
 
         viewModelScope.launch(dispatchers.main) { incrementAppLaunchCounterUseCase() }
 
-        if (homeFeatureToggles.isMigrateUserCountryCodeEnabled) {
-            viewModelScope.launch {
-                fetchUserCountryUseCase().onLeft {
-                    Timber.e("Unable to fetch the user country code $it")
-                }
+        viewModelScope.launch {
+            fetchUserCountryUseCase().onLeft {
+                Timber.e("Unable to fetch the user country code $it")
             }
         }
 

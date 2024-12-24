@@ -1,7 +1,5 @@
 package com.tangem.feature.referral.ui
 
-import android.content.Context
-import android.content.Intent
 import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
@@ -18,15 +16,15 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import androidx.core.content.ContextCompat.startActivity
+import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.PrimaryButtonIconStart
 import com.tangem.core.ui.components.rows.RoundableCornersRow
+import com.tangem.core.ui.extensions.pluralStringResourceSafe
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.domain.models.ExpectedAward
@@ -44,7 +42,7 @@ internal fun ParticipateBottomBlock(
     snackbarHostState: SnackbarHostState,
     onAgreementClick: () -> Unit,
     onCopyClick: () -> Unit,
-    onShareClick: () -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -98,10 +96,10 @@ private fun CounterAndAwards(purchasedWalletCount: Int, expectedAwards: Expected
 @Composable
 private fun Counter(purchasedWalletCount: Int, overallItemsLastIndex: Int) {
     RoundableCornersRow(
-        startText = stringResource(id = R.string.referral_friends_bought_title),
+        startText = stringResourceSafe(id = R.string.referral_friends_bought_title),
         startTextColor = TangemTheme.colors.text.tertiary,
         startTextStyle = TangemTheme.typography.subtitle2,
-        endText = pluralStringResource(
+        endText = pluralStringResourceSafe(
             id = R.plurals.referral_wallets_purchased_count,
             count = purchasedWalletCount,
             purchasedWalletCount,
@@ -122,14 +120,14 @@ private fun Awards(expectedAwards: ExpectedAwards, overallItemsLastIndex: Int, i
     )
     RoundableCornersRow(
         startText = if (expectedAwards.expectedAwards.isNotEmpty()) {
-            stringResource(id = R.string.referral_expected_awards)
+            stringResourceSafe(id = R.string.referral_expected_awards)
         } else {
-            stringResource(id = R.string.referral_no_expected_awards)
+            stringResourceSafe(id = R.string.referral_no_expected_awards)
         },
         startTextColor = TangemTheme.colors.text.tertiary,
         startTextStyle = TangemTheme.typography.subtitle2,
         endText = if (expectedAwards.expectedAwards.isNotEmpty()) {
-            pluralStringResource(
+            pluralStringResourceSafe(
                 id = R.plurals.referral_number_of_wallets,
                 count = expectedAwards.numberOfWallets,
                 expectedAwards.numberOfWallets,
@@ -201,9 +199,9 @@ private fun LessMoreButton(isExpanded: MutableState<Boolean>) {
             ) {
                 Text(
                     text = if (isExpanded.value) {
-                        stringResource(id = R.string.referral_less)
+                        stringResourceSafe(id = R.string.referral_less)
                     } else {
-                        stringResource(id = R.string.referral_more)
+                        stringResourceSafe(id = R.string.referral_more)
                     },
                     color = TangemTheme.colors.text.tertiary,
                     style = TangemTheme.typography.subtitle2,
@@ -261,7 +259,7 @@ private fun PersonalCodeCard(code: String) {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         Text(
-            text = stringResource(id = R.string.referral_promo_code_title),
+            text = stringResourceSafe(id = R.string.referral_promo_code_title),
             color = TangemTheme.colors.text.tertiary,
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
@@ -281,7 +279,7 @@ private fun AdditionalButtons(
     shareLink: String,
     snackbarHostState: SnackbarHostState,
     onCopyClick: () -> Unit,
-    onShareClick: () -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -294,7 +292,7 @@ private fun AdditionalButtons(
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
         PrimaryButtonIconStart(
-            text = stringResource(id = R.string.common_copy),
+            text = stringResourceSafe(id = R.string.common_copy),
             iconResId = R.drawable.ic_copy_24,
             onClick = {
                 onCopyClick.invoke()
@@ -303,7 +301,7 @@ private fun AdditionalButtons(
 
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
-                        message = resources.getString(R.string.referral_promo_code_copied),
+                        message = resources.getStringSafe(R.string.referral_promo_code_copied),
                         duration = SnackbarDuration.Short,
                     )
                 }
@@ -313,12 +311,11 @@ private fun AdditionalButtons(
 
         val context = LocalContext.current
         PrimaryButtonIconStart(
-            text = stringResource(id = R.string.common_share),
+            text = stringResourceSafe(id = R.string.common_share),
             iconResId = R.drawable.ic_share_24,
             onClick = {
-                onShareClick.invoke()
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                context.shareText(context.getString(R.string.referral_share_link, shareLink))
+                onShareClick(context.getString(R.string.referral_share_link, shareLink))
             },
             modifier = Modifier.weight(1f),
         )
@@ -339,16 +336,6 @@ private fun calculateOverallItemsCount(expectedAwards: ExpectedAwards?, isExpand
 
     val counterItems = 1
     return counterItems + awardItems
-}
-
-private fun Context.shareText(text: String) {
-    val sendIntent: Intent = Intent().apply {
-        action = Intent.ACTION_SEND
-        putExtra(Intent.EXTRA_TEXT, text)
-        type = "text/plain"
-    }
-    val shareIntent = Intent.createChooser(sendIntent, null)
-    startActivity(this, shareIntent, null)
 }
 
 @Preview(widthDp = 360, showBackground = true)
@@ -434,5 +421,5 @@ private data class ParticipateBottomBlockData(
     val onAgreementClick: () -> Unit = {},
     val onShowCopySnackbar: () -> Unit = {},
     val onCopyClick: () -> Unit = {},
-    val onShareClick: () -> Unit = {},
+    val onShareClick: (String) -> Unit = {},
 )

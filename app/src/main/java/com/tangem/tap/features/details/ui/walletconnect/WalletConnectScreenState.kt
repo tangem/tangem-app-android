@@ -6,7 +6,7 @@ internal data class WalletConnectScreenState(
     val sessions: ImmutableList<WcSessionForScreen>,
     val isLoading: Boolean = false,
     val onRemoveSession: (String) -> Unit = {},
-    val onAddSession: (String?) -> Unit = {},
+    val onAddSession: () -> Unit = {},
 )
 
 data class WcSessionForScreen(

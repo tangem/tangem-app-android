@@ -9,6 +9,6 @@ data class TokenReceiveBottomSheetConfig(
     val network: String,
     val addresses: ImmutableList<AddressModel>,
     val showMemoDisclaimer: Boolean,
-    val onCopyClick: () -> Unit,
-    val onShareClick: () -> Unit,
+    val onCopyClick: (String) -> Unit,
+    val onShareClick: (String) -> Unit,
 ) : TangemBottomSheetConfigContent

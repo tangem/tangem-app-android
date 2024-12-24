@@ -1,6 +1,5 @@
 package com.tangem.feature.walletsettings.model
 
-import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -15,6 +14,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.message.ContentMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.util.cardTypesResolver
@@ -96,10 +96,10 @@ internal class WalletSettingsModel @Inject constructor(
             messageSender.send(
                 ContentMessage { onDismiss ->
                     BasicDialog(
-                        message = stringResource(R.string.user_wallet_list_delete_prompt),
+                        message = stringResourceSafe(R.string.user_wallet_list_delete_prompt),
                         onDismissDialog = onDismiss,
                         confirmButton = DialogButtonUM(
-                            title = stringResource(R.string.common_delete),
+                            title = stringResourceSafe(R.string.common_delete),
                             warning = true,
                             onClick = {
                                 forgetWallet()
@@ -107,7 +107,7 @@ internal class WalletSettingsModel @Inject constructor(
                             },
                         ),
                         dismissButton = DialogButtonUM(
-                            title = stringResource(R.string.common_cancel),
+                            title = stringResourceSafe(R.string.common_cancel),
                             onClick = onDismiss,
                         ),
                     )
