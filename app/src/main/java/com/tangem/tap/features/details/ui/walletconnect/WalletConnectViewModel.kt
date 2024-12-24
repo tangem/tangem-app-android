@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.ui.walletconnect
 
 import androidx.lifecycle.*
 import arrow.core.getOrElse
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -17,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class WalletConnectViewModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val clipboardManager: ClipboardManager,
 ) : ViewModel(), DefaultLifecycleObserver {
 
     override fun onCreate(owner: LifecycleOwner) {
@@ -35,7 +37,11 @@ internal class WalletConnectViewModel @Inject constructor(
             sessions.toImmutableList(),
             isLoading = state.loading,
             onRemoveSession = { sessionUri -> onRemoveSession(sessionUri, sessions) },
-            onAddSession = { copiedUri -> store.dispatch(WalletConnectAction.StartWalletConnect(copiedUri)) },
+            onAddSession = {
+                store.dispatch(
+                    WalletConnectAction.StartWalletConnect(copiedUri = clipboardManager.getText()),
+                )
+            },
         )
     }
 
