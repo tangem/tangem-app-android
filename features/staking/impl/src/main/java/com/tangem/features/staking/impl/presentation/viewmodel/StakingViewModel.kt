@@ -17,6 +17,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomS
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -119,6 +120,7 @@ internal class StakingViewModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getActionsUseCase: GetActionsUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
+    private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -757,7 +759,7 @@ internal class StakingViewModel @Inject constructor(
         analyticsEventHandler.send(StakingAnalyticsEvent.ButtonShare)
         if (txUrl != null) {
             vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-            stakingEventFactory.createShareDialog(txUrl = txUrl)
+            shareManager.shareText(txUrl)
         }
     }
 
