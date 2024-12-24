@@ -1,17 +1,22 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.BasicDialog
+import com.tangem.core.ui.components.DialogButtonUM
+import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.core.ui.components.SecondaryButtonIconEnd
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -55,7 +60,8 @@ private fun ColumnScope.Content(state: MultiWalletBackupUM) {
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(start = 32.dp, end = 32.dp, bottom = 74.dp)
+            .verticalScroll(rememberScrollState())
+            .padding(start = 32.dp, end = 32.dp, bottom = 16.dp)
             .weight(1f),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -83,7 +89,7 @@ private fun ColumnScope.Content(state: MultiWalletBackupUM) {
         iconResId = R.drawable.ic_tangem_24,
         enabled = state.addBackupButtonEnabled,
         showProgress = state.addBackupButtonLoading,
-        text = stringResource(R.string.onboarding_button_add_backup_card),
+        text = stringResourceSafe(R.string.onboarding_button_add_backup_card),
         onClick = state.onAddBackupClick,
     )
 
@@ -91,7 +97,7 @@ private fun ColumnScope.Content(state: MultiWalletBackupUM) {
         modifier = Modifier
             .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             .fillMaxWidth(),
-        text = stringResource(R.string.onboarding_button_finalize_backup),
+        text = stringResourceSafe(R.string.onboarding_button_finalize_backup),
         enabled = state.finalizeButtonEnabled,
         onClick = state.onFinalizeButtonClick,
     )
