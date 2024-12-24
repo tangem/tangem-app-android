@@ -4,11 +4,11 @@ import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.AdditionalTextInputDialogUM
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.TextInputDialog
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.walletsettings.component.preview.PreviewRenameWalletComponent
 import com.tangem.feature.walletsettings.entity.RenameWalletUM
@@ -19,21 +19,21 @@ internal fun RenameWalletDialog(model: RenameWalletUM, onDismiss: () -> Unit) {
     val value by rememberUpdatedState(newValue = model.walletNameValue)
 
     TextInputDialog(
-        title = stringResource(id = R.string.user_wallet_list_rename_popup_title),
+        title = stringResourceSafe(id = R.string.user_wallet_list_rename_popup_title),
         fieldValue = value,
         confirmButton = DialogButtonUM(
-            title = stringResource(id = R.string.common_ok),
+            title = stringResourceSafe(id = R.string.common_ok),
             enabled = model.isConfirmEnabled,
             onClick = model.onConfirm,
         ),
         dismissButton = DialogButtonUM(
-            title = stringResource(id = R.string.common_cancel),
+            title = stringResourceSafe(id = R.string.common_cancel),
             onClick = onDismiss,
         ),
         onDismissDialog = onDismiss,
         onValueChange = model.updateValue,
         textFieldParams = AdditionalTextInputDialogUM(
-            label = stringResource(id = R.string.user_wallet_list_rename_popup_placeholder),
+            label = stringResourceSafe(id = R.string.user_wallet_list_rename_popup_placeholder),
         ),
     )
 }
