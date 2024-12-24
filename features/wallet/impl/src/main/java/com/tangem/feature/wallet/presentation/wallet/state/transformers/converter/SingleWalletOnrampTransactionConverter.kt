@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
+package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
 import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
@@ -20,34 +20,35 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
-import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
+import com.tangem.feature.wallet.impl.R
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
-import com.tangem.features.tokendetails.impl.R
-import com.tangem.utils.Provider
+import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
-internal class TokenDetailsOnrampTransactionStateConverter(
-    private val clickIntents: TokenDetailsClickIntents,
-    private val cryptoCurrency: CryptoCurrency,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
-    private val appCurrencyProvider: Provider<AppCurrency>,
+internal class SingleWalletOnrampTransactionConverter(
+    private val clickIntents: WalletClickIntents,
+    cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val appCurrency: AppCurrency,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Converter<OnrampTransaction, ExpressTransactionStateUM.OnrampUM> {
 
     private val iconStateConverter = CryptoCurrencyToIconStateConverter()
 
+    private val currency = cryptoCurrencyStatus.currency
+    private val status = cryptoCurrencyStatus.value
+
     override fun convert(value: OnrampTransaction): ExpressTransactionStateUM.OnrampUM {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-        val appCurrency = appCurrencyProvider()
         return ExpressTransactionStateUM.OnrampUM(
             info = ExpressTransactionStateInfoUM(
-                title = resourceReference(id = R.string.express_status_buying, wrappedList(cryptoCurrency.name)),
+                title = resourceReference(
+                    id = R.string.express_status_buying,
+                    wrappedList(currency.name),
+                ),
                 status = convertStatuses(value.status, value.externalTxUrl),
                 notification = getNotification(value.status, value.externalTxUrl, value.providerName),
                 txId = value.txId,
@@ -62,18 +63,18 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     ),
                 ),
                 toAmount = stringReference(
-                    value.toAmount.format { crypto(cryptoCurrency) },
+                    value.toAmount.format { crypto(currency) },
                 ),
                 toFiatAmount = stringReference(
-                    cryptoCurrencyStatus?.value?.fiatRate?.multiply(value.toAmount).format {
+                    status.fiatRate?.multiply(value.toAmount).format {
                         fiat(
                             fiatCurrencyCode = appCurrency.code,
                             fiatCurrencySymbol = appCurrency.symbol,
                         )
                     },
                 ),
-                toAmountSymbol = cryptoCurrency.symbol,
-                toCurrencyIcon = iconStateConverter.convert(cryptoCurrency),
+                toAmountSymbol = currency.symbol,
+                toCurrencyIcon = iconStateConverter.convert(currency),
                 fromAmount = stringReference(
                     value.fromAmount.format {
                         fiat(
@@ -93,7 +94,15 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
                     clickIntents.onGoToProviderClick(it)
                 },
-                onClick = { clickIntents.onExpressTransactionClick(value.txId) },
+                onClick = {
+                    val analyticEvent = TokenOnrampAnalyticsEvent.OnrampStatusOpened(
+                        tokenSymbol = currency.symbol,
+                        provider = value.providerName,
+                        fiatCurrency = value.fromCurrency.code,
+                    )
+                    analyticsEventHandler.send(analyticEvent)
+                    clickIntents.onExpressTransactionClick(value.txId)
+                },
             ),
             providerName = value.providerName,
             providerImageUrl = value.providerImageUrl,
@@ -111,7 +120,9 @@ internal class TokenDetailsOnrampTransactionStateConverter(
         if (externalTxUrl == null) return null
         return when (status) {
             OnrampStatus.Status.Verifying -> {
-                analyticsEventHandler.send(TokenOnrampAnalyticsEvent.NoticeKYC(cryptoCurrency.symbol, providerName))
+                analyticsEventHandler.send(
+                    TokenOnrampAnalyticsEvent.NoticeKYC(currency.symbol, providerName),
+                )
                 ExpressNotificationsUM.NeedVerification {
                     clickIntents.onGoToProviderClick(externalTxUrl)
                 }
@@ -203,16 +214,16 @@ internal class TokenDetailsOnrampTransactionStateConverter(
     private fun OnrampStatus.Status.getBuyingItem() = ExpressStatusItemUM(
         text = when {
             order < OnrampStatus.Status.Paid.order -> {
-                resourceReference(R.string.express_status_buying, wrappedList(cryptoCurrency.name))
+                resourceReference(R.string.express_status_buying, wrappedList(currency.name))
             }
             this == OnrampStatus.Status.Paid -> {
                 resourceReference(
                     R.string.express_status_buying_active,
-                    wrappedList(cryptoCurrency.name),
+                    wrappedList(currency.name),
                 )
             }
             else -> {
-                resourceReference(R.string.express_status_bought, wrappedList(cryptoCurrency.name))
+                resourceReference(R.string.express_status_bought, wrappedList(currency.name))
             }
         },
         state = getStatusState(OnrampStatus.Status.Paid),
@@ -223,19 +234,19 @@ internal class TokenDetailsOnrampTransactionStateConverter(
             order < OnrampStatus.Status.Sending.order -> {
                 resourceReference(
                     R.string.express_exchange_status_sending,
-                    wrappedList(cryptoCurrency.name),
+                    wrappedList(currency.name),
                 )
             }
             this == OnrampStatus.Status.Sending -> {
                 resourceReference(
                     R.string.express_exchange_status_sending_active,
-                    wrappedList(cryptoCurrency.name),
+                    wrappedList(currency.name),
                 )
             }
             else -> {
                 resourceReference(
                     R.string.express_exchange_status_sent,
-                    wrappedList(cryptoCurrency.name),
+                    wrappedList(currency.name),
                 )
             }
         },
