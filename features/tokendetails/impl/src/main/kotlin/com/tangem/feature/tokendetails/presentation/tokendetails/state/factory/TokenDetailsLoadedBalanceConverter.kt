@@ -158,7 +158,7 @@ internal class TokenDetailsLoadedBalanceConverter(
         return when {
             stakingCryptoAmount.isNullOrZero() && stakingEntryInfo != null -> {
                 if (pendingBalances.isEmpty()) {
-                    getStakeAvailableState(stakingEntryInfo, iconState)
+                    getStakeAvailableState(stakingEntryInfo, iconState, isStakingButtonEnabled(status))
                 } else {
                     getStakedBlockWithFiatAmount(status, pendingBalances.sumOf { it.amount }, null)
                 }
@@ -168,6 +168,12 @@ internal class TokenDetailsLoadedBalanceConverter(
             }
             else -> getStakedBlockWithFiatAmount(status, stakingCryptoAmount, yieldBalance?.getRewardStakingBalance())
         }
+    }
+
+    private fun isStakingButtonEnabled(status: CryptoCurrencyStatus): Boolean {
+        return status.value is CryptoCurrencyStatus.Loaded ||
+            status.value is CryptoCurrencyStatus.NoQuote ||
+            status.value is CryptoCurrencyStatus.Custom
     }
 
     private fun getStakedBlockWithFiatAmount(
@@ -210,6 +216,7 @@ internal class TokenDetailsLoadedBalanceConverter(
     private fun getStakeAvailableState(
         stakingEntryInfo: StakingEntryInfo,
         iconState: IconState,
+        isEnabled: Boolean,
     ): StakingBlockUM.StakeAvailable {
         val apr = stakingEntryInfo.apr.format { percent() }
         return StakingBlockUM.StakeAvailable(
@@ -222,6 +229,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 formatArgs = wrappedList(stakingEntryInfo.tokenSymbol),
             ),
             iconState = iconState,
+            isEnabled = isEnabled,
             onStakeClicked = clickIntents::onStakeBannerClick,
         )
     }
