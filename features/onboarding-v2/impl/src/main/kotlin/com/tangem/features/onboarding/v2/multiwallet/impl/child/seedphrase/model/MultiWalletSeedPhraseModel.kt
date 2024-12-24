@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -33,6 +34,7 @@ import javax.inject.Inject
 // | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
 // =============================================
 @Suppress("LongParameterList")
+@Stable
 @ComponentScoped
 internal class MultiWalletSeedPhraseModel @Inject constructor(
     paramsContainer: ParamsContainer,

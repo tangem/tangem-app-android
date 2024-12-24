@@ -56,7 +56,7 @@ dependencies {
     implementation(projects.core.deepLinks.global)
     implementation(projects.core.decompose)
     implementation(projects.core.datasource)
-
+    implementation(projects.core.res)
 
     implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
