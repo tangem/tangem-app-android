@@ -23,6 +23,7 @@ import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
 import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.Provider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -41,12 +42,15 @@ internal class TokenActionsHandler @AssistedInject constructor(
     @Assisted private val onHandleQuickAction: (HandledQuickAction) -> Unit,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
+    private val onrampFeatureToggles: OnrampFeatureToggles,
 ) {
 
-    private val disabledActionsInDemoMode = setOf(
-        TokenActionsBSContentUM.Action.Buy,
-        TokenActionsBSContentUM.Action.Sell,
-    )
+    private val disabledActionsInDemoMode = buildSet {
+        if (!onrampFeatureToggles.isFeatureEnabled) {
+            add(TokenActionsBSContentUM.Action.Buy)
+        }
+        add(TokenActionsBSContentUM.Action.Sell)
+    }
 
     fun handle(action: TokenActionsBSContentUM.Action, cryptoCurrencyData: PortfolioData.CryptoCurrencyData) {
         onHandleQuickAction(
