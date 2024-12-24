@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 data class OnrampCurrency(
     val name: String,
     val code: String,
-    val image: String,
+    val image: String?,
     val precision: Int,
     val unit: String,
 )

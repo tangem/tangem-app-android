@@ -145,4 +145,9 @@ object BlockchainUtils {
     private fun getNetworkNameWithoutTestnet(blockchain: Blockchain): String {
         return blockchain.getNetworkName().replace(oldValue = " Testnet", newValue = "")
     }
+
+    fun isTokenBetaFunctionality(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return blockchain == Blockchain.Kaspa
+    }
 }
