@@ -30,7 +30,7 @@ internal class LockUserWalletsTimer(
         lifecycle.addObserver(this)
     }
 
-    override fun onResume(owner: LifecycleOwner) {
+    override fun onStart(owner: LifecycleOwner) {
         owner.lifecycleScope.launch {
             val wasApplicationStopped = settingsRepository.wasApplicationStopped()
             val shouldOpenWelcomeScreenOnResume = settingsRepository.shouldOpenWelcomeScreenOnResume()
@@ -45,13 +45,15 @@ internal class LockUserWalletsTimer(
 
             settingsRepository.setWasApplicationStopped(value = false)
 
-            start()
-
             if (shouldOpenWelcomeScreenOnResume) {
                 store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
                 settingsRepository.setShouldOpenWelcomeScreenOnResume(value = false)
             }
         }
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        start()
     }
 
     override fun onStop(owner: LifecycleOwner) {
