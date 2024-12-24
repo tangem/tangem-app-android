@@ -580,8 +580,11 @@
   <string name="onboarding_wallet_info_title_second">Cartes identiques</string>
   <string name="onboarding_wallet_info_title_third">Code d\'accès</string>
   <string name="onramp_avaiable_with_payment_methods">Disponible avec %s</string>
+  <string name="onramp_choose_provider_title_hint">L\'achat de crypto-monnaies sur Tangem est assuré par des fournisseurs tiers selon leurs conditions.</string>
   <string name="onramp_country_search">Recherche par pays</string>
   <string name="onramp_country_unavailable">Indisponible</string>
+  <string name="onramp_currency_other">Autres devises</string>
+  <string name="onramp_currency_popular">Devises Fiats Populaires</string>
   <string name="onramp_currency_search">Recherche par devise</string>
   <string name="onramp_legal">En utilisant la fonctionnalité onramp, vous acceptez %1$s et %2$s du fournisseur</string>
   <string name="onramp_max_amount_restriction">Le montant de l\'achat ne doit pas dépasser %s</string>
