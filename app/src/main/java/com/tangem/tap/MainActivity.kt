@@ -10,12 +10,15 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -85,8 +88,9 @@ import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
-import com.tangem.tap.routing.RoutingComponent
+import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
@@ -209,6 +213,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var dispatchers: CoroutineDispatcherProvider
 
+    @Inject
+    internal lateinit var routingFeatureToggles: RoutingFeatureToggles
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -255,8 +262,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         installActivityDependencies()
         observeAppThemeModeUpdates()
 
-        setContentView(R.layout.activity_main)
-        installRouting()
+        if (routingFeatureToggles.isNavigationRefactoringEnabled) {
+            setRootContent()
+        } else {
+            setContentView(R.layout.activity_main)
+            installRouting()
+        }
+
         initContent()
 
         observeStateUpdates()
@@ -269,6 +281,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
+    }
+
+    private fun setRootContent() {
+        val routingComponent = routingComponentFactory.create(
+            context = rootComponentContext,
+        )
+
+        setContent {
+            routingComponent.Content(Modifier.fillMaxSize())
+        }
     }
 
     private fun installRouting() {
@@ -297,6 +319,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 is RoutingComponent.Child.LegacyIntent -> {
                     startActivity(child.intent)
                 }
+                is RoutingComponent.Child.ComposableComponent -> error("Unsupported child: $child")
             }
         }
     }
@@ -400,8 +423,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onResume() {
         super.onResume()
-        // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
-        notificationsHandler = NotificationsHandler(binding.fragmentContainer)
+
+        if (!routingFeatureToggles.isNavigationRefactoringEnabled) {
+            // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
+            notificationsHandler = NotificationsHandler(binding.fragmentContainer)
+        }
 
         navigateToInitialScreenIfNeeded(intent)
     }
@@ -481,22 +507,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
     }
 
-    override fun showSnackbar(
-        @StringRes text: Int,
-        length: Int,
-        @StringRes buttonTitle: Int?,
-        action: View.OnClickListener?,
-    ) {
-        showSnackbar(getString(text), length, buttonTitle?.let(::getString), action)
+    override fun showSnackbar(@StringRes text: Int, length: Int, @StringRes buttonTitle: Int?, action: (() -> Unit)?) {
+        showSnackbar(
+            getString(text),
+            length,
+            buttonTitle?.let(::getString),
+            action = { action?.invoke() },
+        )
     }
 
-    override fun showSnackbar(
-        text: TextReference,
-        length: Int,
-        buttonTitle: TextReference?,
-        action: View.OnClickListener?,
-    ) {
-        showSnackbar(text.resolveReference(resources), length, buttonTitle?.resolveReference(resources), action)
+    override fun showSnackbar(text: TextReference, length: Int, buttonTitle: TextReference?, action: (() -> Unit)?) {
+        showSnackbar(
+            text = text.resolveReference(resources),
+            length = length,
+            buttonTitle = buttonTitle?.resolveReference(resources),
+            action = { action?.invoke() },
+        )
     }
 
     override fun dismissSnackbar() {
