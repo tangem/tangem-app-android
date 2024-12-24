@@ -13,6 +13,7 @@ internal class AddWalletTransformer(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
     private val walletFeatureToggles: WalletFeatureToggles,
+    private val selectedWalletIndex: Int,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
@@ -26,6 +27,7 @@ internal class AddWalletTransformer(
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
             wallets = (prevState.wallets + walletLoadingStateFactory.create(userWallet)).toImmutableList(),
+            selectedWalletIndex = selectedWalletIndex,
         )
     }
 }
