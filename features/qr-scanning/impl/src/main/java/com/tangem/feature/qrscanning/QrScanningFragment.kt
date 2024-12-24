@@ -25,6 +25,8 @@ import com.tangem.feature.qrscanning.viewmodel.QrScanningViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import java.io.IOException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.inject.Inject
@@ -62,8 +64,15 @@ internal class QrScanningFragment : ComposeFragment() {
     private val galleryLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) {
         val selectedImage = it ?: Uri.EMPTY
         if (selectedImage != Uri.EMPTY) {
-            val image = InputImage.fromFilePath(requireContext(), selectedImage)
-            analyzer.analyze(image)
+            val mimeType = requireContext().contentResolver.getType(selectedImage)
+            if (mimeType.isImageMimeType()) {
+                try {
+                    val image = InputImage.fromFilePath(requireContext(), selectedImage)
+                    analyzer.analyze(image)
+                } catch (e: IOException) {
+                    Timber.e(e, "Unable to get image $selectedImage from gallery")
+                }
+            }
         }
     }
 
@@ -80,7 +89,7 @@ internal class QrScanningFragment : ComposeFragment() {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.launchGalleryEvent
                     .collect {
-                        galleryLauncher.launch(it.imageFilter)
+                        galleryLauncher.launch(GALLERY_IMAGE_FILTER)
                         delay(timeMillis = 2000)
                     }
             }
@@ -137,7 +146,12 @@ internal class QrScanningFragment : ComposeFragment() {
         }
     }
 
+    private fun String?.isImageMimeType() = this?.startsWith(prefix = "$IMAGE_MIME_TYPE/") == true
+
     companion object {
+
+        private const val IMAGE_MIME_TYPE = "image"
+        private const val GALLERY_IMAGE_FILTER = "$IMAGE_MIME_TYPE/*"
 
         fun create() = QrScanningFragment()
     }
