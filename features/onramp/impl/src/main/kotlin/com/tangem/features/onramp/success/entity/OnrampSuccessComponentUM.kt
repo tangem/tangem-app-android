@@ -11,7 +11,7 @@ sealed class OnrampSuccessComponentUM {
     data class Content(
         val txId: String,
         val timestamp: Long,
-        val currencyImageUrl: String,
+        val currencyImageUrl: String?,
         val fromAmount: TextReference,
         val toAmount: TextReference,
         val statusBlock: ExpressStatusUM,
