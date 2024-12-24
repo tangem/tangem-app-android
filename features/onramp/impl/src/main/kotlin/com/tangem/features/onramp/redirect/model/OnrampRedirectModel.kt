@@ -58,16 +58,13 @@ internal class OnrampRedirectModel @Inject constructor(
         ),
     )
 
-    init {
-        getRedirectUrl()
-    }
-
-    private fun getRedirectUrl() {
+    fun getRedirectUrl(isDarkTheme: Boolean) {
         modelScope.launch {
             getOnrampRedirectUrlUseCase.invoke(
                 userWalletId = params.userWalletId,
                 quote = params.onrampProviderWithQuote,
                 cryptoCurrency = params.cryptoCurrency,
+                isDarkTheme = isDarkTheme,
             )
                 .onLeft(::handleError)
                 .onRight {
@@ -83,6 +80,7 @@ internal class OnrampRedirectModel @Inject constructor(
             error = error,
             tokenSymbol = params.cryptoCurrency.symbol,
             providerName = params.onrampProviderWithQuote.provider.info.name,
+            paymentMethod = params.onrampProviderWithQuote.paymentMethod.name,
         )
         val contentMessage = ContentMessage { onDismiss ->
             BasicDialog(
