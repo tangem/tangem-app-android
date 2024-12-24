@@ -8,6 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import com.tangem.common.ui.expressStatus.ExpressEstimate
+import com.tangem.common.ui.expressStatus.ExpressProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
@@ -19,12 +21,10 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressEstimate
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressProvider
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 
 @Composable
-internal fun ExchangeStatusBottomSheetContent(state: ExpressTransactionStateUM.ExchangeUM) {
+internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM) {
     Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
         SpacerH10()
         Text(
