@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 
 /**
@@ -31,9 +31,9 @@ fun OnboardingDescriptionBlock(modifier: Modifier = Modifier, content: @Composab
 @Composable
 fun Description(@StringRes titleRes: Int, @StringRes subTitleRes: Int) {
     Column {
-        DescriptionTitleText(text = stringResource(id = titleRes))
+        DescriptionTitleText(text = stringResourceSafe(id = titleRes))
         SpacerH16()
-        DescriptionSubTitleText(text = stringResource(id = subTitleRes))
+        DescriptionSubTitleText(text = stringResourceSafe(id = subTitleRes))
     }
 }
 
