@@ -55,7 +55,7 @@ internal interface SendClickIntents : AmountScreenClickIntents {
 
     fun onExploreClick()
 
-    fun onShareClick()
+    fun onShareClick(txUrl: String)
 
     fun onAmountReduceByClick(
         reduceAmountBy: BigDecimal,
