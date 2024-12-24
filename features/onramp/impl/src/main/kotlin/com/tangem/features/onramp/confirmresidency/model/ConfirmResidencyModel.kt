@@ -10,6 +10,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.onramp.OnrampSaveDefaultCountryUseCase
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
+import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.features.onramp.confirmresidency.ConfirmResidencyComponent
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyBottomSheetConfig
 import com.tangem.features.onramp.confirmresidency.entity.ConfirmResidencyUM
@@ -35,7 +36,7 @@ internal class ConfirmResidencyModel @Inject constructor(
             country = params.country.name,
             countryFlagUrl = params.country.image,
             isCountrySupported = params.country.onrampAvailable,
-            primaryButtonConfig = getPrimaryButtonConfig(),
+            primaryButtonConfig = getPrimaryButtonConfig(params.country),
             secondaryButtonConfig = ConfirmResidencyUM.ActionButtonConfig(
                 onClick = ::onChangeClick,
                 text = resourceReference(R.string.common_change),
@@ -47,11 +48,14 @@ internal class ConfirmResidencyModel @Inject constructor(
         analyticsEventHandler.send(OnrampAnalyticsEvent.ResidenceConfirmScreenOpened(params.country.name))
     }
 
-    private fun getPrimaryButtonConfig() = if (params.country.onrampAvailable) {
+    private fun getPrimaryButtonConfig(country: OnrampCountry) = if (country.onrampAvailable) {
         ConfirmResidencyUM.ActionButtonConfig(
             onClick = {
-                analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceConfirm(params.country.name))
-                modelScope.launch { saveDefaultCountryUseCase.invoke(params.country) }
+                analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceConfirm(country.name))
+                modelScope.launch {
+                    saveDefaultCountryUseCase.invoke(country)
+                    params.onDismiss()
+                }
             },
             text = resourceReference(R.string.common_confirm),
         )
@@ -67,6 +71,6 @@ internal class ConfirmResidencyModel @Inject constructor(
 
     private fun onChangeClick() {
         analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceChange)
-        bottomSheetNavigation.activate(ConfirmResidencyBottomSheetConfig.SelectCountry)
+        bottomSheetNavigation.activate(ConfirmResidencyBottomSheetConfig.SelectCountry(params.onDismiss))
     }
 }
