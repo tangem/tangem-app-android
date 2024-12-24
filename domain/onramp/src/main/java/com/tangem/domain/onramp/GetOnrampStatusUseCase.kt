@@ -11,9 +11,9 @@ class GetOnrampStatusUseCase(
     private val errorResolver: OnrampErrorResolver,
 ) {
 
-    suspend operator fun invoke(externalTxId: String): Either<OnrampError, OnrampStatus> {
+    suspend operator fun invoke(txId: String): Either<OnrampError, OnrampStatus> {
         return Either.catch {
-            onrampRepository.getStatus(externalTxId)
+            onrampRepository.getStatus(txId)
         }.mapLeft(errorResolver::resolve)
     }
 }
