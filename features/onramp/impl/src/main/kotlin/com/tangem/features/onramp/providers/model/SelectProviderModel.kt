@@ -72,9 +72,21 @@ internal class SelectProviderModel @Inject constructor(
                 },
                 ifRight = { it },
             )
+
+            val filteredEmptyMethods = methods.mapNotNull { method ->
+                val providers = getOnrampProviderWithQuoteUseCase(method).getOrNull()
+                if (!providers.isNullOrEmpty()) {
+                    PaymentProviderUM(
+                        paymentMethod = method,
+                        providers = providers.toProvidersListItems(),
+                    )
+                } else {
+                    null
+                }
+            }
             _state.value = state.value.copy(
-                paymentMethods = methods.toPersistentList(),
-                isPaymentMethodClickEnabled = methods.isNotEmpty(),
+                paymentMethods = filteredEmptyMethods.toPersistentList(),
+                isPaymentMethodClickEnabled = filteredEmptyMethods.isNotEmpty(),
             )
         }
     }
@@ -111,13 +123,19 @@ internal class SelectProviderModel @Inject constructor(
 
     private fun getInitialState(): SelectPaymentAndProviderUM {
         return SelectPaymentAndProviderUM(
-            paymentMethods = persistentListOf(params.selectedPaymentMethod),
+            paymentMethods = persistentListOf(
+                PaymentProviderUM(
+                    paymentMethod = params.selectedPaymentMethod,
+                    providers = emptyList<ProviderListItemUM>().toImmutableList(),
+                ),
+            ),
             isPaymentMethodClickEnabled = false,
             onPaymentMethodClick = ::openPaymentMethods,
-            selectedPaymentMethod = SelectProviderUM(
+            selectedPaymentMethod = PaymentProviderUM(
                 paymentMethod = params.selectedPaymentMethod,
                 providers = emptyList<ProviderListItemUM>().toImmutableList(),
             ),
+            selectedProviderId = params.selectedProviderId,
         )
     }
 
@@ -131,16 +149,18 @@ internal class SelectProviderModel @Inject constructor(
         )
     }
 
-    private fun ImmutableList<OnrampPaymentMethod>.toPaymentUMList(): ImmutableList<PaymentMethodUM> = map { method ->
+    private fun ImmutableList<PaymentProviderUM>.toPaymentUMList(): ImmutableList<PaymentMethodUM> = map { method ->
         PaymentMethodUM(
-            id = method.id,
-            imageUrl = method.imageUrl,
-            name = method.name,
+            id = method.paymentMethod.id,
+            imageUrl = method.paymentMethod.imageUrl,
+            name = method.paymentMethod.name,
             onSelect = { onPaymentMethodSelected(method) },
         )
     }.toPersistentList()
 
-    private fun onPaymentMethodSelected(paymentMethod: OnrampPaymentMethod) {
+    private fun onPaymentMethodSelected(methodContainer: PaymentProviderUM) {
+        val paymentMethod = methodContainer.paymentMethod
+        val firstProvider = methodContainer.providers.firstOrNull()
         analyticsEventHandler.send(OnrampAnalyticsEvent.OnPaymentMethodChosen(paymentMethod = paymentMethod.name))
         modelScope.launch {
             saveSelectedPaymentMethod.invoke(paymentMethod)
@@ -151,6 +171,10 @@ internal class SelectProviderModel @Inject constructor(
                     ),
                 )
             }
+            if (firstProvider is ProviderListItemUM.Available) {
+                onProviderSelected(firstProvider.providerResult, firstProvider.isBestRate)
+            }
+
             bottomSheetNavigation.dismiss()
         }
     }
@@ -165,6 +189,8 @@ internal class SelectProviderModel @Inject constructor(
         val hasBestProvider = isMultipleQuotes && isOtherQuotesHasData
 
         return sorted.map { quote ->
+            val isSelectedProvider = state.value.selectedProviderId == quote.provider.id
+
             when (quote) {
                 is OnrampProviderWithQuote.Data -> {
                     val rate = quote.toAmount.value.format {
@@ -173,28 +199,29 @@ internal class SelectProviderModel @Inject constructor(
                     val rateDiff = bestProvider?.toAmount?.value?.let { bestRate ->
                         BigDecimal.ONE - quote.toAmount.value / bestRate
                     }
-                    val isSelectedProvider = quote.provider.id == params.selectedProviderId
-                    val isSelectedPayment = quote.paymentMethod.id == params.selectedPaymentMethod.id
                     val isBestProvider = quote == bestProvider && hasBestProvider
-                    ProviderListItemUM.Available(
+                    val providerResult = SelectProviderResult.ProviderWithQuote(
+                        paymentMethod = quote.paymentMethod,
+                        provider = quote.provider,
+                        fromAmount = quote.fromAmount,
+                        toAmount = quote.toAmount,
+                    )
+                    ProviderListItemUM.Available.Content(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
                         rate = rate,
-                        isSelected = isSelectedProvider && isSelectedPayment,
                         isBestRate = isBestProvider,
                         diffRate = stringReference("$MINUS${rateDiff.format { percent() }}")
                             .takeIf { hasBestProvider },
+                        providerResult = providerResult,
+                        isSelected = isSelectedProvider,
                         onClick = {
                             onProviderSelected(
-                                result = SelectProviderResult.ProviderWithQuote(
-                                    paymentMethod = quote.paymentMethod,
-                                    provider = quote.provider,
-                                    fromAmount = quote.fromAmount,
-                                    toAmount = quote.toAmount,
-                                ),
+                                result = providerResult,
                                 isBestRate = isBestProvider,
                             )
+                            params.onDismiss()
                         },
                     )
                 }
@@ -207,21 +234,25 @@ internal class SelectProviderModel @Inject constructor(
                         is OnrampError.AmountError.TooBigError -> R.string.express_provider_max_amount
                         is OnrampError.AmountError.TooSmallError -> R.string.express_provider_min_amount
                     }
-
-                    ProviderListItemUM.AvailableWithError(
+                    val providerResult = SelectProviderResult.ProviderWithError(
+                        paymentMethod = quoteError.paymentMethod,
+                        provider = quote.provider,
+                        quoteError = quote.quoteError,
+                    )
+                    ProviderListItemUM.Available.WithError(
                         providerId = quote.provider.id,
                         imageUrl = quote.provider.info.imageLarge,
                         name = quote.provider.info.name,
                         subtitle = resourceReference(errorSubtitleRes, wrappedList(amount)),
+                        providerResult = providerResult,
+                        isBestRate = false,
+                        isSelected = isSelectedProvider,
                         onClick = {
                             onProviderSelected(
-                                result = SelectProviderResult.ProviderWithError(
-                                    paymentMethod = quoteError.paymentMethod,
-                                    provider = quote.provider,
-                                    quoteError = quote.quoteError,
-                                ),
+                                result = providerResult,
                                 isBestRate = bestProvider == quote,
                             )
+                            params.onDismiss()
                         },
                     )
                 }
@@ -247,8 +278,10 @@ internal class SelectProviderModel @Inject constructor(
                 tokenSymbol = params.cryptoCurrency.symbol,
             ),
         )
+        _state.update {
+            it.copy(selectedProviderId = result.provider.id)
+        }
         params.onProviderClick(result, isBestRate)
-        params.onDismiss()
     }
 
     private fun sendOnrampErrorEvent(error: OnrampError) {
@@ -259,6 +292,7 @@ internal class SelectProviderModel @Inject constructor(
             error = error,
             tokenSymbol = params.cryptoCurrency.symbol,
             providerName = selectedProvider?.name,
+            paymentMethod = state.value.selectedPaymentMethod.paymentMethod.name,
         )
     }
 
