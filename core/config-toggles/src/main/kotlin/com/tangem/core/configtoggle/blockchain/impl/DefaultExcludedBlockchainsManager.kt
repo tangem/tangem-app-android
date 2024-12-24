@@ -6,8 +6,8 @@ import com.tangem.core.configtoggle.utils.associateToggles
 import com.tangem.core.configtoggle.version.VersionProvider
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
-import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
-import com.tangem.datasource.local.preferences.utils.store
+import com.tangem.datasource.local.preferences.utils.getObjectMapSync
+import com.tangem.datasource.local.preferences.utils.storeObjectMap
 
 internal class DefaultExcludedBlockchainsManager(
     private val localTogglesStorage: TogglesStorage,
@@ -17,62 +17,64 @@ internal class DefaultExcludedBlockchainsManager(
 
     private var isInitialized: Boolean = false
 
-    private lateinit var currentExcludedBlockchainsIds: Set<String>
-    private lateinit var localExcludedBlockchainsIds: Set<String>
+    private lateinit var currentExcludedBlockchains: MutableMap<String, Boolean>
+    private lateinit var localExcludedBlockchains: Map<String, Boolean>
 
     override val excludedBlockchainsIds: Set<String>
         get() {
             if (!isInitialized) error("ExcludedBlockchainsManager is not initialized")
 
-            return currentExcludedBlockchainsIds
+            return currentExcludedBlockchains
+                .filterValues { it }
+                .keys
         }
 
     override suspend fun init() {
         localTogglesStorage.populate(path = "configs/excluded_blockchains_config")
 
-        val storedExcludedBlockchainsIds = appPreferencesStore.getSyncOrDefault(
+        val storedExcludedBlockchainsIds = appPreferencesStore.getObjectMapSync<Boolean>(
             key = PreferencesKeys.EXCLUDED_BLOCKCHAINS_KEY,
-            default = emptySet(),
         )
 
-        localExcludedBlockchainsIds = localTogglesStorage.toggles
+        localExcludedBlockchains = localTogglesStorage.toggles
             .associateToggles(currentVersion = versionProvider.get().orEmpty())
-            .filterValues { isIncluded -> !isIncluded }
-            .keys
+            .mapValues { (_, isIncluded) -> !isIncluded }
 
-        if (storedExcludedBlockchainsIds.isEmpty()) {
-            recoverLocalConfig()
-        } else {
-            currentExcludedBlockchainsIds = storedExcludedBlockchainsIds
-        }
+        currentExcludedBlockchains = (localExcludedBlockchains.keys + storedExcludedBlockchainsIds.keys)
+            .fold(mutableMapOf()) { acc, blockchainId ->
+                val isExcluded = storedExcludedBlockchainsIds[blockchainId] ?: localExcludedBlockchains[blockchainId]
+
+                requireNotNull(isExcluded) {
+                    "Unable to find $blockchainId in local or stored excluded blockchains"
+                }
+
+                acc[blockchainId] = isExcluded
+                acc
+            }
 
         isInitialized = true
     }
 
     override suspend fun excludeBlockchain(mainnetId: String, isExcluded: Boolean) {
-        if (isExcluded) {
-            currentExcludedBlockchainsIds += mainnetId
-        } else {
-            currentExcludedBlockchainsIds -= mainnetId
-        }
+        currentExcludedBlockchains[mainnetId] = isExcluded
 
         storeCurrent()
     }
 
     override fun isMatchLocalConfig(): Boolean {
-        return currentExcludedBlockchainsIds == localExcludedBlockchainsIds
+        return currentExcludedBlockchains == localExcludedBlockchains
     }
 
     override suspend fun recoverLocalConfig() {
-        currentExcludedBlockchainsIds = localExcludedBlockchainsIds
+        currentExcludedBlockchains = localExcludedBlockchains.toMutableMap()
 
         storeCurrent()
     }
 
     private suspend fun storeCurrent() {
-        appPreferencesStore.store(
-            PreferencesKeys.EXCLUDED_BLOCKCHAINS_KEY,
-            currentExcludedBlockchainsIds,
+        appPreferencesStore.storeObjectMap(
+            key = PreferencesKeys.EXCLUDED_BLOCKCHAINS_KEY,
+            value = currentExcludedBlockchains,
         )
     }
 }
