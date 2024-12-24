@@ -138,32 +138,32 @@ internal class DefaultCurrenciesRepository(
     }
 
     private fun populateCurrenciesWithMissedCoins(currencies: List<CryptoCurrency>): List<CryptoCurrency> {
-        val networkToCoin = mutableMapOf<Network, CryptoCurrency.Coin>()
-        val networkToTokens = mutableMapOf<Network, List<CryptoCurrency.Token>>()
+        val currenciesSequence = currencies.asSequence()
 
-        currencies.forEach { currency ->
-            when (currency) {
-                is CryptoCurrency.Coin -> {
-                    networkToCoin[currency.network] = currency
-                }
-                is CryptoCurrency.Token -> {
-                    val tokens = networkToTokens.getOrElse(currency.network, ::emptyList)
-                    networkToTokens[currency.network] = tokens + currency
-                }
-            }
-        }
+        val networksWithTokens = currenciesSequence
+            .filterIsInstance<CryptoCurrency.Token>()
+            .map { it.network }
+            .distinct()
+
+        val networksWithCoins = currenciesSequence
+            .filterIsInstance<CryptoCurrency.Coin>()
+            .map { it.network }
+            .distinct()
+
+        val networksNeedingCoins = (networksWithTokens - networksWithCoins.toSet()).toMutableList()
+
+        if (networksNeedingCoins.isEmpty()) return currencies
 
         return buildList {
-            if (networkToTokens.isEmpty()) {
-                // add only coin here
-                addAll(networkToCoin.values)
-            } else {
-                networkToTokens.forEach { (network, networkTokens) ->
-                    val networkCoin = networkToCoin[network] ?: cryptoCurrencyFactory.createCoin(network)
+            currencies.forEach { currency ->
+                if (currency is CryptoCurrency.Token && currency.network in networksNeedingCoins) {
+                    val coin = cryptoCurrencyFactory.createCoin(currency.network)
+                    add(coin)
 
-                    add(networkCoin)
-                    addAll(networkTokens)
+                    networksNeedingCoins.remove(currency.network)
                 }
+
+                add(currency)
             }
         }
     }

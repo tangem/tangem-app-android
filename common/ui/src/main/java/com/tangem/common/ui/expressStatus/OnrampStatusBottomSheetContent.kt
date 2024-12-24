@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.onramp
+package com.tangem.common.ui.expressStatus
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -7,8 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import com.tangem.common.ui.expressStatus.ExpressStatusBlock
-import com.tangem.common.ui.expressStatus.ExpressStatusNotificationBlock
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
@@ -17,12 +16,9 @@ import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressEstimate
-import com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.express.ExpressProvider
 
 @Composable
-internal fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM) {
+fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM) {
     Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
         SpacerH10()
         Text(

@@ -23,7 +23,7 @@ sealed interface OnrampProviderWithQuote {
 
         data class Error(
             override val provider: OnrampProvider,
-            val quoteError: OnrampQuote.Error,
+            val quoteError: OnrampQuote.AmountError,
         ) : Unavailable
     }
 }
