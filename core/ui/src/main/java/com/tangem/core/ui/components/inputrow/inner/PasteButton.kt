@@ -18,9 +18,9 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DEFAULT_ANIMATION_DURATION
@@ -51,7 +51,7 @@ fun PasteButton(isPasteButtonVisible: Boolean, onClick: (String) -> Unit, modifi
         modifier = modifier,
     ) {
         Text(
-            text = stringResource(R.string.common_paste),
+            text = stringResourceSafe(R.string.common_paste),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.primary2,
             modifier = Modifier
@@ -86,7 +86,7 @@ fun CrossIcon(onClick: (String) -> Unit, modifier: Modifier = Modifier) {
     Icon(
         painter = painterResource(id = R.drawable.ic_close_24),
         tint = TangemTheme.colors.icon.informative,
-        contentDescription = stringResource(R.string.common_close),
+        contentDescription = stringResourceSafe(R.string.common_close),
         modifier = modifier
             .size(TangemTheme.dimens.size24)
             .clickable(
