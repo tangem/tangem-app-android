@@ -380,10 +380,9 @@ internal class SendViewModel @Inject constructor(
         when {
             uiState.value.sendState?.isSuccess == true -> return
             transactionId != null && amount != null && destinationAddress != null -> {
-                loadFee()
                 uiState.value = stateFactory.getReadyState(amount, destinationAddress, memo)
                 stateRouter.showSend()
-                updateNotifications()
+                loadFee()
             }
             else -> {
                 uiState.value = stateFactory.getReadyState()

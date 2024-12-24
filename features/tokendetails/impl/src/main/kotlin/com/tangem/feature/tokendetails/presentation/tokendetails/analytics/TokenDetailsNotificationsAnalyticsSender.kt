@@ -41,6 +41,9 @@ internal class TokenDetailsNotificationsAnalyticsSender(
                 programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
                 source = AnalyticsParam.ScreensSources.Token,
             )
+            is TokenDetailsNotification.KaspaIncompleteTransactionWarning -> TokenDetailsAnalyticsEvent.Notice.Reveal(
+                currency = cryptoCurrency,
+            )
             is TokenDetailsNotification.NetworksUnreachable,
             is TokenDetailsNotification.ExistentialDeposit,
             is TokenDetailsNotification.NetworksNoAccount,
@@ -48,9 +51,9 @@ internal class TokenDetailsNotificationsAnalyticsSender(
             is TokenDetailsNotification.RentInfo,
             is TokenDetailsNotification.NetworkShutdown,
             is TokenDetailsNotification.HederaAssociateWarning,
-            is TokenDetailsNotification.KaspaIncompleteTransactionWarning,
             is TokenDetailsNotification.KoinosMana,
             is TokenDetailsNotification.MigrationMaticToPol,
+            is TokenDetailsNotification.TokensInBeta,
             -> null
         }
     }

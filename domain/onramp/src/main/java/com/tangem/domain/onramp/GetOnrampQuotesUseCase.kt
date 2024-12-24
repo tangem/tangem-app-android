@@ -47,9 +47,9 @@ class GetOnrampQuotesUseCase(
         grouped.value.sortedByDescending {
             when (it) {
                 is OnrampQuote.Data -> it.toAmount.value
-
+                is OnrampQuote.Error -> null
                 // negative difference to sort both when data and unavailable is present
-                is OnrampQuote.Error -> {
+                is OnrampQuote.AmountError -> {
                     when (val error = it.error) {
                         is OnrampError.AmountError.TooSmallError -> it.fromAmount.value - error.requiredAmount
                         is OnrampError.AmountError.TooBigError -> error.requiredAmount - it.fromAmount.value
