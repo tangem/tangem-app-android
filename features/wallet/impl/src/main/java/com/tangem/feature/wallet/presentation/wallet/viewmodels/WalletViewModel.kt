@@ -363,7 +363,7 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private suspend fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
+    private fun addWallet(action: WalletsUpdateActionResolver.Action.AddWallet) {
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
@@ -378,8 +378,6 @@ internal class WalletViewModel @Inject constructor(
                 walletFeatureToggles = walletFeatureToggles,
             ),
         )
-
-        withContext(dispatchers.io) { delay(timeMillis = 1000) }
 
         scrollToWallet(index = action.selectedWalletIndex)
     }
