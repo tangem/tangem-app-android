@@ -6,7 +6,6 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.onramp.FetchOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.GetOnrampCurrenciesUseCase
 import com.tangem.domain.onramp.OnrampSaveDefaultCurrencyUseCase
@@ -136,8 +135,11 @@ internal class OnrampSelectCurrencyModel @Inject constructor(
 
     private companion object {
         val loadingSections = listOf(
-            CurrenciesSection(stringReference("Popular fiats"), items = createLoadingItems("popular")),
-            CurrenciesSection(stringReference("Other currencies"), items = createLoadingItems("other")),
+            CurrenciesSection(
+                resourceReference(R.string.onramp_currency_popular),
+                items = createLoadingItems("popular"),
+            ),
+            CurrenciesSection(resourceReference(R.string.onramp_currency_other), items = createLoadingItems("other")),
         ).toImmutableList()
 
         private fun createLoadingItems(prefix: String, size: Int = 5): ImmutableList<CurrencyItemState.Loading> =
