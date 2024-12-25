@@ -221,6 +221,17 @@ internal class TokenDetailsViewModel @Inject constructor(
         handleBalanceHiding(owner)
     }
 
+    override fun onPause(owner: LifecycleOwner) {
+        expressTxStatusTaskScheduler.cancelTask()
+        expressTxJobHolder.cancel()
+        super.onPause(owner)
+    }
+
+    override fun onResume(owner: LifecycleOwner) {
+        subscribeOnExpressTransactionsUpdates()
+        super.onResume(owner)
+    }
+
     override fun onCleared() {
         expressTxStatusTaskScheduler.cancelTask()
         expressTxJobHolder.cancel()
