@@ -3,10 +3,9 @@ package com.tangem.feature.tokendetails.presentation
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.defaultComponentContext
+import androidx.fragment.app.viewModels
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
@@ -47,6 +46,8 @@ internal class TokenDetailsFragment : ComposeFragment() {
     @Inject
     internal lateinit var appRouter: AppRouter
 
+    private val viewModel by viewModels<TokenDetailsViewModel>()
+
     private var tokenMarketBlockComponent: TokenMarketBlockComponent? = null
 
     private val internalTokenDetailsRouter: InnerTokenDetailsRouter
@@ -56,6 +57,9 @@ internal class TokenDetailsFragment : ComposeFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        viewModel.router = internalTokenDetailsRouter
+        lifecycle.addObserver(viewModel)
 
         val cryptoCurrency: CryptoCurrency = arguments
             ?.getBundle(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
@@ -86,9 +90,6 @@ internal class TokenDetailsFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val viewModel = hiltViewModel<TokenDetailsViewModel>()
-        viewModel.router = this@TokenDetailsFragment.internalTokenDetailsRouter
-        LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
         NavigationBar3ButtonsScrim()
         TokenDetailsScreen(
             state = viewModel.uiState.collectAsStateWithLifecycle().value,
