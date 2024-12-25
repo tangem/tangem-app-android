@@ -15,6 +15,7 @@ dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.androidx.fragment.ktx)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
