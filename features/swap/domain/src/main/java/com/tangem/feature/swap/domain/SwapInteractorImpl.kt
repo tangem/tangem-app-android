@@ -362,6 +362,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 txFee = TxFeeState.Empty,
                 transactionFee = null,
                 includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
+                selectedFee = selectedFee,
             )
         }
     }
@@ -393,14 +394,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         fromTokenStatus: CryptoCurrencyStatus,
         amount: SwapAmount,
         feeState: TxFeeState,
+        selectedFee: FeeType,
+        includeFeeInAmount: IncludeFeeInAmount,
     ): CryptoCurrencyCheck {
         val fee = when (feeState) {
             TxFeeState.Empty -> BigDecimal.ZERO
-            is TxFeeState.MultipleFeeState -> feeState.priorityFee.feeValue
+            is TxFeeState.MultipleFeeState -> feeState.getFeeByType(selectedFee).feeValue
             is TxFeeState.SingleFeeState -> feeState.fee.feeValue
         }
-        val statusValue = fromTokenStatus.value as? CryptoCurrencyStatus.Loaded
-        val balanceAfterTransaction = statusValue?.let { it.amount - amount.value - fee }
+        val balanceAfterTransaction = getCoinBalanceAfterTransaction(fromTokenStatus, amount, includeFeeInAmount, fee)
 
         val currencyCheck = getCurrencyCheckUseCase(
             userWalletId = userWalletId,
@@ -411,6 +413,43 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         )
 
         return currencyCheck
+    }
+
+    private suspend fun getCoinBalanceAfterTransaction(
+        fromTokenStatus: CryptoCurrencyStatus,
+        amount: SwapAmount,
+        includeFeeInAmount: IncludeFeeInAmount,
+        fee: BigDecimal,
+    ): BigDecimal? {
+        return when (fromTokenStatus.currency) {
+            is CryptoCurrency.Coin -> {
+                val statusValue = fromTokenStatus.value as? CryptoCurrencyStatus.Loaded
+                when (includeFeeInAmount) {
+                    is IncludeFeeInAmount.Included -> {
+                        statusValue?.let { it.amount - includeFeeInAmount.amountSubtractFee.value - fee }
+                    }
+                    is IncludeFeeInAmount.Excluded -> {
+                        statusValue?.let { it.amount - amount.value - fee }
+                    }
+                    else -> null
+                }
+            }
+            is CryptoCurrency.Token -> {
+                val feePaidCurrency = getFeePaidCurrency(
+                    currency = fromTokenStatus.currency,
+                )
+                when (feePaidCurrency) {
+                    FeePaidCurrency.Coin -> {
+                        val nativeBalance = userWalletManager.getNativeTokenBalance(
+                            networkId = fromTokenStatus.currency.network.backendId,
+                            derivationPath = fromTokenStatus.currency.network.derivationPath.value,
+                        )
+                        nativeBalance?.let { it.value - fee }
+                    }
+                    else -> null // it doesnt matter for this fun
+                }
+            }
+        }
     }
 
     private suspend fun manageTransactionValidationWarnings(
@@ -1101,6 +1140,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 txFee = txFee,
                 transactionFee = txFeeResult.getOrNull(),
                 includeFeeInAmount = includeFeeInAmount,
+                selectedFee = selectedFee,
             )
         }
     }
@@ -1118,6 +1158,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         txFee: TxFeeState,
         transactionFee: TransactionFee?,
         includeFeeInAmount: IncludeFeeInAmount,
+        selectedFee: FeeType,
     ): SwapState {
         return quoteDataModel.fold(
             ifRight = { quoteModel ->
@@ -1135,6 +1176,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         fromTokenStatus = fromToken,
                         amount = amount,
                         feeState = txFee,
+                        selectedFee = selectedFee,
+                        includeFeeInAmount = includeFeeInAmount,
                     ),
                     validationResult = manageTransactionValidationWarnings(
                         fromToken = fromToken,
@@ -1359,6 +1402,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     is ProxyFees.MultipleFees -> feeData.proxyFeesToFeeState(fromToken.currency, otherNativeFee)
                     is ProxyFees.SingleFee -> feeData.proxyFeesToFeeState(fromToken.currency, otherNativeFee)
                 }
+                val includeFeeInAmount = IncludeFeeInAmount.Excluded // exclude for dex
                 val feeByPriority = selectFeeByType(feeType = selectedFee, txFeeState = txFeeState)
                 val feeToCheckFunds = feeByPriority + (otherNativeFee ?: BigDecimal.ZERO)
                 val isBalanceIncludeFeeEnough = isBalanceEnough(fromToken, amount, feeToCheckFunds)
@@ -1373,7 +1417,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     isBalanceEnough = isBalanceIncludeFeeEnough,
                     feeState = feeState,
                     hasOutgoingTransaction = hasOutgoingTransaction(fromToken),
-                    includeFeeInAmount = IncludeFeeInAmount.Excluded, // exclude for dex
+                    includeFeeInAmount = includeFeeInAmount,
                 )
                 val swapState = updateBalances(
                     networkId = networkId,
@@ -1391,6 +1435,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         fromTokenStatus = fromToken,
                         amount = amount,
                         feeState = txFeeState,
+                        selectedFee = selectedFee,
+                        includeFeeInAmount = includeFeeInAmount,
                     ),
                     validationResult = manageTransactionValidationWarnings(
                         fromToken = fromToken,

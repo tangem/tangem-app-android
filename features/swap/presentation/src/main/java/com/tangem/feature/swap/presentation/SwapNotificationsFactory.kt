@@ -103,6 +103,7 @@ internal class SwapNotificationsFactory(
         providerName: String,
     ): ImmutableList<NotificationUM> {
         val warnings = buildList {
+            maybeAddRentExemptionError(quoteModel)
             maybeAddDomainWarnings(quoteModel, feeCryptoCurrencyStatus, selectedFeeType)
             maybeAddNeedReserveToCreateAccountWarning(quoteModel)
             maybeAddPermissionNeededWarning(quoteModel, fromToken, providerName)
@@ -111,6 +112,12 @@ internal class SwapNotificationsFactory(
             maybeAddTransactionInProgressWarning(quoteModel)
         }
         return warnings.toPersistentList()
+    }
+
+    private fun MutableList<NotificationUM>.maybeAddRentExemptionError(quoteModel: SwapState.QuotesLoadedState) {
+        quoteModel.currencyCheck?.rentWarning?.let {
+            add(NotificationUM.Solana.RentInfo(it))
+        }
     }
 
     private fun MutableList<NotificationUM>.maybeAddTransactionInProgressWarning(
