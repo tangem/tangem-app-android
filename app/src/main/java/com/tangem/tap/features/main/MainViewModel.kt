@@ -3,9 +3,14 @@ package com.tangem.tap.features.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.message.BottomSheetMessage
+import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.domain.appcurrency.FetchAppCurrenciesUseCase
 import com.tangem.domain.balancehiding.BalanceHidingSettings
@@ -18,7 +23,6 @@ import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.common.extensions.setContext
-import com.tangem.tap.features.main.model.MainScreenState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -31,7 +35,6 @@ import javax.inject.Inject
 internal class MainViewModel @Inject constructor(
     private val updateBalanceHidingSettingsUseCase: UpdateBalanceHidingSettingsUseCase,
     private val listenToFlipsUseCase: ListenToFlipsUseCase,
-    private val router: AppRouter,
     private val fetchAppCurrenciesUseCase: FetchAppCurrenciesUseCase,
     deleteDeprecatedLogsUseCase: DeleteDeprecatedLogsUseCase,
     private val incrementAppLaunchCounterUseCase: IncrementAppLaunchCounterUseCase,
@@ -41,17 +44,13 @@ internal class MainViewModel @Inject constructor(
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val apiConfigsManager: ApiConfigsManager,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
+    @GlobalUiMessageSender
+    private val messageSender: UiMessageSender,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-) : ViewModel(), MainIntents {
-
-    private val stateHolder = MainScreenStateHolder(
-        intents = this,
-    )
+) : ViewModel() {
 
     private val balanceHidingSettingsFlow: SharedFlow<BalanceHidingSettings> = getBalanceHidingSettingsUseCase()
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed())
-
-    val state: StateFlow<MainScreenState> = stateHolder.stateFlow
 
     var isSplashScreenShown: Boolean = true
         private set
@@ -125,10 +124,34 @@ internal class MainViewModel @Inject constructor(
                 it.isBalanceHidingNotificationEnabled && it.isBalanceHidden
             }
             .onEach {
-                if (state.value.modalNotification?.isShown != true && !it.isUpdateFromToast) {
+                if (!it.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
-                    stateHolder.updateWithHiddenBalancesNotification()
-                    router.push(AppRoute.ModalNotification)
+
+                    val message = BottomSheetMessage.invoke(
+                        iconResId = R.drawable.ic_eye_off_outline_24,
+                        title = resourceReference(R.string.balance_hidden_title),
+                        message = resourceReference(R.string.balance_hidden_description),
+                        onDismissRequest = ::onBottomSheetDismissed,
+                        firstActionBuilder = {
+                            EventMessageAction(
+                                title = resourceReference(R.string.balance_hidden_got_it_button),
+                                onClick = {
+                                    onHiddenBalanceNotificationAction(isPermanent = false)
+                                    onDismissRequest()
+                                },
+                            )
+                        },
+                        secondActionBuilder = {
+                            EventMessageAction(
+                                title = resourceReference(R.string.balance_hidden_do_not_show_button),
+                                onClick = {
+                                    onHiddenBalanceNotificationAction(isPermanent = true)
+                                    onDismissRequest()
+                                },
+                            )
+                        },
+                    )
+                    messageSender.send(message)
                 }
             }
             .launchIn(viewModelScope)
@@ -167,11 +190,27 @@ internal class MainViewModel @Inject constructor(
     private fun displayBalancesHiddenStatusToast(settings: BalanceHidingSettings) {
         // If modal notification is enabled and balances are hidden, the toast will not show
         if (!settings.isBalanceHidingNotificationEnabled || !settings.isBalanceHidden) {
-            stateHolder.updateWithHiddenBalancesToast(settings.isBalanceHidden)
+            val message = SnackbarMessage(
+                message = if (settings.isBalanceHidden) {
+                    resourceReference(R.string.toast_balances_hidden)
+                } else {
+                    resourceReference(R.string.toast_balances_shown)
+                },
+                actionLabel = resourceReference(R.string.toast_undo),
+                action = {
+                    if (settings.isBalanceHidden) {
+                        onHiddenBalanceToastAction()
+                    } else {
+                        onShownBalanceToastAction()
+                    }
+                },
+            )
+
+            messageSender.send(message)
         }
     }
 
-    override fun onHiddenBalanceToastAction() {
+    private fun onHiddenBalanceToastAction() {
         viewModelScope.launch {
             updateBalanceHidingSettingsUseCase.invoke {
                 copy(
@@ -182,7 +221,7 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
-    override fun onShownBalanceToastAction() {
+    private fun onShownBalanceToastAction() {
         viewModelScope.launch {
             updateBalanceHidingSettingsUseCase.invoke {
                 copy(
@@ -193,10 +232,14 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
-    override fun onHiddenBalanceNotificationAction(isPermanent: Boolean) {
-        onDismissBottomSheet()
+    private fun onHiddenBalanceNotificationAction(isPermanent: Boolean) {
+        val message = SnackbarMessage(
+            message = resourceReference(R.string.toast_balances_hidden),
+            actionLabel = resourceReference(R.string.toast_undo),
+            action = ::onHiddenBalanceToastAction,
+        )
+        messageSender.send(message)
 
-        stateHolder.updateWithHiddenBalancesToast(true)
         if (isPermanent) {
             viewModelScope.launch {
                 updateBalanceHidingSettingsUseCase.invoke {
@@ -206,10 +249,7 @@ internal class MainViewModel @Inject constructor(
         }
     }
 
-    override fun onDismissBottomSheet() {
-        listenToFlipsUseCase.changeUpdateEnabled(true)
-        router.pop()
-        stateHolder.updateWithoutModalNotification()
-        stateHolder.updateWithHiddenBalancesToast(true)
+    private fun onBottomSheetDismissed() {
+        listenToFlipsUseCase.changeUpdateEnabled(isUpdateEnabled = true)
     }
 }
