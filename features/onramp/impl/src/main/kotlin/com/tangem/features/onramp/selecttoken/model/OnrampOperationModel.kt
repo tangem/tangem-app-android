@@ -10,11 +10,8 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButtonUM
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -130,30 +127,19 @@ internal class OnrampOperationModel @Inject constructor(
         if (isDemoCardUseCase(cardId = selectedUserWallet.cardId)) {
             val alertUM = AlertDemoModeUM(onConfirmClick = {})
 
-            messageSender.send(
-                message = ContentMessage { onDismiss ->
-                    val confirmButton = DialogButtonUM(
-                        title = alertUM.confirmButtonText.resolveReference(),
-                        onClick = {
-                            alertUM.onConfirmClick()
-                            onDismiss()
-                        },
-                    )
-
-                    val dismissButton = DialogButtonUM(
-                        title = stringResourceSafe(id = R.string.common_cancel),
-                        onClick = onDismiss,
-                    )
-
-                    BasicDialog(
-                        message = alertUM.message.resolveReference(),
-                        confirmButton = confirmButton,
-                        onDismissDialog = onDismiss,
-                        title = alertUM.title.resolveReference(),
-                        dismissButton = dismissButton,
+            val message = DialogMessage(
+                title = alertUM.title,
+                message = alertUM.message,
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = alertUM.confirmButtonText,
+                        onClick = alertUM.onConfirmClick,
                     )
                 },
+                secondActionBuilder = { cancelAction() },
             )
+
+            messageSender.send(message)
         } else {
             action()
         }
