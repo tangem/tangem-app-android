@@ -339,4 +339,7 @@ sealed class AppRoute(val path: String) : Route {
             AddBackup, // continue backup process for existing wallet 1
         }
     }
+
+    @Serializable
+    data object Stories : AppRoute(path = "/stories")
 }

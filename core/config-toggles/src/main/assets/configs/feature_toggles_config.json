@@ -26,5 +26,9 @@
     {
         "name": "NAVIGATION_REFACTORING",
         "version": "undefined"
+    },
+    {
+        "name": "STORIES_ENABLED",
+        "version": "undefined"
     }
 ]
