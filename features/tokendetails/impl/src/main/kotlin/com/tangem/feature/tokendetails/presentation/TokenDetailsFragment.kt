@@ -3,15 +3,17 @@ package com.tangem.feature.tokendetails.presentation
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.defaultComponentContext
-import androidx.fragment.app.viewModels
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.routing.utils.asRouter
 import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.screen.ComposeFragment
@@ -32,7 +34,11 @@ internal class TokenDetailsFragment : ComposeFragment() {
     override lateinit var uiDependencies: UiDependencies
 
     @Inject
-    lateinit var tokenDetailsRouter: TokenDetailsRouter
+    @GlobalUiMessageSender
+    internal lateinit var messageSender: UiMessageSender
+
+    @Inject
+    internal lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     @Inject
     internal lateinit var coroutineDispatcherProvider: CoroutineDispatcherProvider
@@ -70,7 +76,7 @@ internal class TokenDetailsFragment : ComposeFragment() {
 
         val appContext = DefaultAppComponentContext(
             componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
-            messageHandler = uiDependencies.eventMessageHandler,
+            messageSender = messageSender,
             dispatchers = coroutineDispatcherProvider,
             hiltComponentBuilder = componentBuilder,
             replaceRouter = appRouter.asRouter(),
