@@ -638,6 +638,7 @@ internal class StakingViewModel @Inject constructor(
                 amount = amount.orZero(),
                 fee = fee.orZero(),
                 reduceAmountBy = confirmationState?.reduceAmountBy.orZero(),
+                actionType = value.actionType,
             )
             val currencyStatus = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
@@ -697,14 +698,21 @@ internal class StakingViewModel @Inject constructor(
         amount: BigDecimal,
         fee: BigDecimal,
         reduceAmountBy: BigDecimal,
+        actionType: StakingActionCommonType,
     ): BigDecimal? {
-        val subtractedBalanceAmount = checkAndCalculateSubtractedAmount(
-            isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
-            amountValue = amount.orZero(),
-            feeValue = fee.orZero(),
-            reduceAmountBy = reduceAmountBy,
-        )
+        // TODO split for different networks
+        val subtractedBalanceAmount = when (actionType) {
+            StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isAmountSubtractAvailable,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                amountValue = amount.orZero(),
+                feeValue = fee.orZero(),
+                reduceAmountBy = reduceAmountBy,
+            )
+            StakingActionCommonType.Exit,
+            is StakingActionCommonType.Pending,
+            -> BigDecimal.ZERO
+        }
         val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
         return statusValue?.let { it.amount - subtractedBalanceAmount - fee.orZero() }
     }
