@@ -9,7 +9,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -21,7 +21,6 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioData
-import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.TokenActionsBSContentUM
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.Provider
@@ -84,13 +83,9 @@ internal class TokenActionsHandler @AssistedInject constructor(
     }
 
     private fun showDemoModeWarning() {
-        val message = ContentMessage { onDismiss ->
-            WarningDialog(
-                message = resourceReference(R.string.alert_demo_feature_disabled),
-                onDismiss = onDismiss,
-            )
-        }
-
+        val message = DialogMessage(
+            message = resourceReference(R.string.alert_demo_feature_disabled),
+        )
         messageSender.send(message)
     }
 
