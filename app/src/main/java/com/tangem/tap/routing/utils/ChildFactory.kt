@@ -27,7 +27,6 @@ import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
 import com.tangem.tap.features.home.HomeFragment
-import com.tangem.tap.features.main.ui.ModalNotificationBottomSheetFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragment
@@ -202,7 +201,6 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.AccessCodeRecovery,
             is AppRoute.AppCurrencySelector,
-            is AppRoute.ModalNotification,
             is AppRoute.SaveWallet,
             is AppRoute.Send,
             is AppRoute.AppSettings,
@@ -241,9 +239,6 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.AppCurrencySelector -> {
                 route.asFragmentChild(Provider { AppCurrencySelectorFragment() })
-            }
-            is AppRoute.ModalNotification -> {
-                route.asFragmentChild(Provider { ModalNotificationBottomSheetFragment() })
             }
             is AppRoute.SaveWallet -> {
                 route.asFragmentChild(Provider { SaveWalletBottomSheetFragment() })
