@@ -1,6 +1,5 @@
 package com.tangem.features.onramp.success.model
 
-import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.model.Model
@@ -8,10 +7,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButtonUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
@@ -126,29 +124,17 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     private fun showErrorAlert(error: OnrampError) {
-        val contentMessage = ContentMessage { onDismiss ->
-            val errorCode = (error as? OnrampError.DataError)?.code
-            val message = if (errorCode.isNullOrBlank()) {
-                stringResource(R.string.common_unknown_error)
+        val errorCode = (error as? OnrampError.DataError)?.code
+        val message = DialogMessage(
+            message = if (errorCode.isNullOrBlank()) {
+                resourceReference(R.string.common_unknown_error)
             } else {
-                stringResource(R.string.express_error_code, wrappedList(errorCode))
-            }
-            BasicDialog(
-                message = message,
-                confirmButton = DialogButtonUM(
-                    title = stringResource(id = R.string.common_ok),
-                    onClick = {
-                        router.pop()
-                        onDismiss()
-                    },
-                ),
-                onDismissDialog = {
-                    router.pop()
-                    onDismiss()
-                },
-            )
-        }
-        messageSender.send(contentMessage)
+                resourceReference(R.string.express_error_code, wrappedList(errorCode))
+            },
+            onDismissRequest = router::pop,
+        )
+
+        messageSender.send(message)
     }
 
     private fun removeTransactionIfTerminalStatus(
