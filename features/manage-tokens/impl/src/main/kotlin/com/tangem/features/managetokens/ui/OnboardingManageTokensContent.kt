@@ -17,10 +17,8 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -51,14 +49,6 @@ internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modi
                     .padding(innerPadding)
                     .fillMaxSize(),
                 state = state,
-            )
-        },
-        snackbarHost = {
-            TangemSnackbarHost(
-                modifier = Modifier
-                    .padding(all = TangemTheme.dimens.spacing16)
-                    .navigationBarsPadding(),
-                hostState = LocalSnackbarHostState.current,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
