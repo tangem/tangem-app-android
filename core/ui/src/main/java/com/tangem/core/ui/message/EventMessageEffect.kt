@@ -27,7 +27,6 @@ fun EventMessageEffect(
     val messageEvent by messageHandler.collectAsState()
     val context = LocalContext.current
 
-    var contentMessage: ContentMessage? by remember { mutableStateOf(value = null) }
     var dialogMessage: DialogMessage? by remember { mutableStateOf(value = null) }
     var bottomSheetMessage: BottomSheetMessage? by remember { mutableStateOf(value = null) }
 
@@ -35,9 +34,6 @@ fun EventMessageEffect(
         when (message) {
             is SnackbarMessage -> {
                 onShowSnackbar(message, context)
-            }
-            is ContentMessage -> {
-                contentMessage = message
             }
             is DialogMessage -> {
                 dialogMessage = message
@@ -47,10 +43,6 @@ fun EventMessageEffect(
             }
         }
     }
-
-    contentMessage?.content?.invoke(
-        onDismiss = { contentMessage = null },
-    )
 
     dialogMessage?.let { message ->
         MessageDialog(
