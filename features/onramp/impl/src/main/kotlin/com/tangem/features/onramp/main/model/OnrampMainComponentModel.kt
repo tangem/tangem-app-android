@@ -10,11 +10,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButtonUM
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.analytics.OnrampAnalyticsEvent
@@ -23,7 +20,6 @@ import com.tangem.domain.onramp.model.OnrampProviderWithQuote
 import com.tangem.domain.onramp.model.OnrampQuote
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
-import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.OnrampMainComponent
 import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
@@ -346,31 +342,19 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun showDemoWarning() {
         val alertUM = AlertDemoModeUM(onConfirmClick = {})
-
-        messageSender.send(
-            message = ContentMessage { onDismiss ->
-                val confirmButton = DialogButtonUM(
-                    title = alertUM.confirmButtonText.resolveReference(),
-                    onClick = {
-                        alertUM.onConfirmClick()
-                        onDismiss()
-                    },
-                )
-
-                val dismissButton = DialogButtonUM(
-                    title = stringResourceSafe(id = R.string.common_cancel),
-                    onClick = onDismiss,
-                )
-
-                BasicDialog(
-                    message = alertUM.message.resolveReference(),
-                    confirmButton = confirmButton,
-                    onDismissDialog = onDismiss,
-                    title = alertUM.title.resolveReference(),
-                    dismissButton = dismissButton,
+        val message = DialogMessage(
+            title = alertUM.title,
+            message = alertUM.message,
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = alertUM.confirmButtonText,
+                    onClick = alertUM.onConfirmClick,
                 )
             },
+            secondActionBuilder = { cancelAction() },
         )
+
+        messageSender.send(message)
     }
 
     private fun sendOnrampErrorAnalytic(error: OnrampError) {
