@@ -1,9 +1,7 @@
 package com.tangem.core.ui.message
 
 import androidx.annotation.DrawableRes
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.ui.UiMessage
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
@@ -54,22 +52,6 @@ data class SnackbarMessage(
          * Shows the snackbar indefinitely, until dismissed or action performed.
          * */
         Indefinite,
-    }
-}
-
-/**
- * Shows a [content] in the UI.
- *
- * @param content The content to show.
- * */
-data class ContentMessage(val content: Content) : EventMessage {
-
-    @Stable
-    fun interface Content {
-
-        @Suppress("ComposableFunctionName", "TopLevelComposableFunctions")
-        @Composable
-        operator fun invoke(onDismiss: () -> Unit)
     }
 }
 
