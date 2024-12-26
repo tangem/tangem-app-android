@@ -16,6 +16,7 @@ import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
 import com.tangem.features.staking.api.navigation.StakingRouter
+import com.tangem.features.stories.api.component.StoriesComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -57,6 +58,7 @@ internal class ChildFactory @Inject constructor(
     private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val welcomeComponentFactory: WelcomeComponent.Factory,
+    private val storiesComponentFactory: StoriesComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -198,6 +200,13 @@ internal class ChildFactory @Inject constructor(
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
+                )
+            }
+            is AppRoute.Stories -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = StoriesComponent.Params,
+                    componentFactory = storiesComponentFactory,
                 )
             }
             is AppRoute.AccessCodeRecovery,
@@ -410,6 +419,13 @@ internal class ChildFactory @Inject constructor(
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
+                )
+            }
+            is AppRoute.Stories -> {
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = StoriesComponent.Params,
+                    componentFactory = storiesComponentFactory,
                 )
             }
         }
