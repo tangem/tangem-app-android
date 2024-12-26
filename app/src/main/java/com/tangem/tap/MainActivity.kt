@@ -40,7 +40,6 @@ import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.email.EmailSender
 import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.message.EventMessageEffect
@@ -88,7 +87,6 @@ import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandle
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
-import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
@@ -279,7 +277,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         initContent()
 
-        observeStateUpdates()
         observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
@@ -356,26 +353,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 }
                 is RoutingComponent.Child.ComposableComponent -> error("Unsupported child: $child")
             }
-        }
-    }
-
-    private fun observeStateUpdates() {
-        viewModel.state
-            .flowWithLifecycle(lifecycle)
-            .onEach { state ->
-                if (state.toast is StateEvent.Triggered) {
-                    showToast(state.toast.data)
-                    state.toast.onConsume()
-                }
-            }
-            .launchIn(lifecycleScope)
-    }
-
-    private fun showToast(toast: Toast) {
-        dismissSnackbar()
-        showSnackbar(toast.message, Snackbar.LENGTH_LONG, toast.action.text) {
-            toast.action.onClick()
-            dismissSnackbar()
         }
     }
 
