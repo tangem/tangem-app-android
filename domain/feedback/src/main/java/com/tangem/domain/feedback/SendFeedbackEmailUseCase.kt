@@ -60,6 +60,7 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.ScanningProblem,
             is FeedbackEmailType.CurrencyDescriptionError,
             is FeedbackEmailType.PreActivatedWallet,
+            is FeedbackEmailType.CardAttestationFailed,
             -> this
             is FeedbackEmailType.DirectUserRequest,
             is FeedbackEmailType.RateCanBeBetter,
