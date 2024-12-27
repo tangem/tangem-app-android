@@ -1,37 +1,30 @@
 package com.tangem.domain.tokens
 
-import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
-import com.tangem.domain.tokens.repository.*
+import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.CurrencyChecksRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.swap.domain.api.SwapRepository
-import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runCatching
-import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
 import java.math.BigDecimal
 
-@Suppress("LongParameterList", "LargeClass")
+@Suppress("LongParameterList")
 class GetCurrencyWarningsUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
-    private val swapRepository: SwapRepository,
-    private val rampStateManager: RampStateManager,
     private val stakingRepository: StakingRepository,
-    private val promoRepository: PromoRepository,
-    private val showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
 ) {
@@ -76,75 +69,6 @@ class GetCurrencyWarningsUseCase(
                 getMigrationFromMaticToPolWarning(currency),
             )
         }.flowOn(dispatchers.io)
-    }
-
-    // disabled for now, don't use it directly in combine() to avoid blocking other notifications
-    @Suppress("UnusedPrivateMember")
-    private suspend fun getSwapPromoNotificationWarning(
-        operations: CurrenciesStatusesOperations,
-        userWalletId: UserWalletId,
-        currencyStatus: CryptoCurrencyStatus,
-    ): Flow<CryptoCurrencyWarning?> {
-        val currency = currencyStatus.currency
-        val cryptoStatuses = operations.getCurrenciesStatusesSync()
-        val promoBanner = promoRepository.getOkxPromoBanner()
-        return combine(
-            flow = showSwapPromoTokenUseCase()
-                .conflate()
-                .distinctUntilChanged(),
-            flow2 = flowOf(rampStateManager.availableForSwap(userWalletId, currency))
-                .conflate()
-                .distinctUntilChanged(),
-        ) { shouldShowSwapPromo, isExchangeable ->
-            promoBanner ?: return@combine null
-            val showPromoBanner = promoBanner.isActive && shouldShowSwapPromo
-            if (showPromoBanner && isExchangeable && currencyStatus.value !is CryptoCurrencyStatus.Unreachable) {
-                cryptoStatuses.fold(
-                    ifLeft = { null },
-                    ifRight = { cryptoCurrencyStatuses ->
-                        val pairs = runCatching(dispatchers.io) {
-                            swapRepository.getPairsOnly(
-                                LeastTokenInfo(
-                                    contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
-                                    network = currency.network.backendId,
-                                ),
-                                cryptoCurrencyStatuses.map { it.currency },
-                            )
-                        }.getOrNull()?.pairs ?: emptyList()
-
-                        val filteredCurrencies = cryptoCurrencyStatuses.filterNot {
-                            it.currency.id == currency.id
-                        }
-                        val currencyPairs = pairs.filter {
-                            it.from.network == currency.network.backendId ||
-                                it.to.network == currency.network.backendId
-                        }
-                        val showPromo = currencyPairs.any { pair ->
-                            val availablePair = if (currencyStatus.value.amount.isNullOrZero()) {
-                                filteredCurrencies.filterNot { it.value.amount.isNullOrZero() }
-                            } else {
-                                filteredCurrencies
-                            }
-                            availablePair
-                                .any {
-                                    it.currency.network.backendId == pair.to.network ||
-                                        it.currency.network.backendId == pair.from.network
-                                }
-                        }
-                        if (showPromo) {
-                            CryptoCurrencyWarning.SwapPromo(
-                                startDateTime = promoBanner.bannerState.timeline.start,
-                                endDateTime = promoBanner.bannerState.timeline.end,
-                            )
-                        } else {
-                            null
-                        }
-                    },
-                )
-            } else {
-                null
-            }
-        }
     }
 
     @Suppress("LongParameterList")
