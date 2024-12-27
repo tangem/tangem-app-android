@@ -8,7 +8,6 @@ import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import com.tangem.domain.settings.*
 import com.tangem.domain.settings.repositories.AppRatingRepository
 import com.tangem.domain.settings.repositories.PermissionRepository
-import com.tangem.domain.settings.repositories.PromoSettingsRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
@@ -115,30 +114,6 @@ internal object SettingsDomainModule {
     @Singleton
     fun provideIsWalletsScrollPreviewEnabled(settingsRepository: SettingsRepository): IsWalletsScrollPreviewEnabled {
         return IsWalletsScrollPreviewEnabled(settingsRepository = settingsRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideShouldShowSwapPromoWalletUseCase(
-        promoSettingsRepository: PromoSettingsRepository,
-    ): ShouldShowSwapPromoWalletUseCase {
-        return ShouldShowSwapPromoWalletUseCase(promoSettingsRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideShouldShowRingPromoUseCase(
-        promoSettingsRepository: PromoSettingsRepository,
-    ): ShouldShowRingPromoUseCase {
-        return ShouldShowRingPromoUseCase(promoSettingsRepository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideShouldShowSwapPromoTokenUseCase(
-        promoSettingsRepository: PromoSettingsRepository,
-    ): ShouldShowSwapPromoTokenUseCase {
-        return ShouldShowSwapPromoTokenUseCase(promoSettingsRepository)
     }
 
     @Provides
