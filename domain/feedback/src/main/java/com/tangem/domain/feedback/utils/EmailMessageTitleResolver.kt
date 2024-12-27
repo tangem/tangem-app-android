@@ -19,6 +19,7 @@ internal class EmailMessageTitleResolver(private val resources: Resources) {
         return when (type) {
             is FeedbackEmailType.DirectUserRequest,
             is FeedbackEmailType.CurrencyDescriptionError,
+            is FeedbackEmailType.CardAttestationFailed,
             -> R.string.feedback_preface_support
             is FeedbackEmailType.RateCanBeBetter -> R.string.feedback_preface_rate_negative
             is FeedbackEmailType.ScanningProblem -> R.string.feedback_preface_scan_failed
