@@ -658,6 +658,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
                 var userWallet: UserWallet? = null
                 if (scanResponse != null) {
+                    scanResponse = updateScanResponseAfterBackup(scanResponse!!, backupState)
                     userWallet = createUserWallet(
                         scanResponse = requireNotNull(value = scanResponse, lazyMessage = { "ScanResponse is null" }),
                         backupState = backupState,
