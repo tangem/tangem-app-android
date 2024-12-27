@@ -1,4 +1,4 @@
-package com.tangem.domain.promo
+package com.tangem.domain.promo.models
 
 import org.joda.time.DateTime
 
