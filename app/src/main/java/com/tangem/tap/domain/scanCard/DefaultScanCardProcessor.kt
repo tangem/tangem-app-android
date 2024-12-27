@@ -10,7 +10,9 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 
 // TODO: Remove this object after feature toggle was removed and use ScanCardUseCase instead
-internal class DefaultScanCardProcessor : ScanCardProcessor {
+internal class DefaultScanCardProcessor(
+    private val legacyScanProcessor: LegacyScanProcessor,
+) : ScanCardProcessor {
     private val isNewCardScanningEnabled: Boolean
         get() = store.inject(DaggerGraphState::cardScanningFeatureToggles).isNewCardScanningEnabled
 
@@ -21,7 +23,10 @@ internal class DefaultScanCardProcessor : ScanCardProcessor {
         return if (isNewCardScanningEnabled) {
             UseCaseScanProcessor.scan(cardId, allowsRequestAccessCodeFromRepository)
         } else {
-            LegacyScanProcessor.scan(cardId, allowsRequestAccessCodeFromRepository)
+            legacyScanProcessor.scan(
+                cardId = cardId,
+                allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+            )
         }
     }
 
@@ -38,24 +43,24 @@ internal class DefaultScanCardProcessor : ScanCardProcessor {
     ) {
         if (isNewCardScanningEnabled) {
             UseCaseScanProcessor.scan(
-                analyticsSource,
-                cardId,
-                onProgressStateChange,
-                onWalletNotCreated,
-                disclaimerWillShow,
-                onFailure,
-                onSuccess,
+                analyticsSource = analyticsSource,
+                cardId = cardId,
+                onProgressStateChange = onProgressStateChange,
+                onWalletNotCreated = onWalletNotCreated,
+                disclaimerWillShow = disclaimerWillShow,
+                onFailure = onFailure,
+                onSuccess = onSuccess,
             )
         } else {
-            LegacyScanProcessor.scan(
-                analyticsSource,
-                cardId,
-                onProgressStateChange,
-                onWalletNotCreated,
-                disclaimerWillShow,
-                onCancel,
-                onFailure,
-                onSuccess,
+            legacyScanProcessor.scan(
+                analyticsSource = analyticsSource,
+                cardId = cardId,
+                onProgressStateChange = onProgressStateChange,
+                onWalletNotCreated = onWalletNotCreated,
+                disclaimerWillShow = disclaimerWillShow,
+                onCancel = onCancel,
+                onFailure = onFailure,
+                onSuccess = onSuccess,
             )
         }
     }
