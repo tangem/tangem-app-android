@@ -19,20 +19,24 @@ internal class EmailSubjectResolver(private val resources: Resources) {
         return when (type) {
             is FeedbackEmailType.DirectUserRequest -> {
                 if (type.cardInfo.isStart2Coin) {
-                    R.string.feedback_subject_support
+                    resources.getStringSafe(R.string.feedback_subject_support)
                 } else {
-                    R.string.feedback_subject_support_tangem
+                    resources.getStringSafe(R.string.feedback_subject_support_tangem)
                 }
             }
-            is FeedbackEmailType.RateCanBeBetter -> R.string.feedback_subject_rate_negative
-            is FeedbackEmailType.ScanningProblem -> R.string.feedback_subject_scan_failed
+            is FeedbackEmailType.RateCanBeBetter -> resources.getStringSafe(R.string.feedback_subject_rate_negative)
+            is FeedbackEmailType.ScanningProblem -> resources.getStringSafe(R.string.feedback_subject_scan_failed)
             is FeedbackEmailType.TransactionSendingProblem,
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
-            -> R.string.feedback_subject_tx_failed
-            is FeedbackEmailType.PreActivatedWallet -> R.string.feedback_subject_pre_activated_wallet
-            is FeedbackEmailType.CurrencyDescriptionError -> R.string.feedback_token_description_error
+            -> resources.getStringSafe(R.string.feedback_subject_tx_failed)
+            is FeedbackEmailType.PreActivatedWallet -> {
+                resources.getStringSafe(R.string.feedback_subject_pre_activated_wallet)
+            }
+            is FeedbackEmailType.CurrencyDescriptionError -> {
+                resources.getStringSafe(R.string.feedback_token_description_error)
+            }
+            FeedbackEmailType.CardAttestationFailed -> "Card attestation failed"
         }
-            .let(resources::getStringSafe)
     }
 }
