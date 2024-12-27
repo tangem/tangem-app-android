@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
+    implementation(projects.domain.promo)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)

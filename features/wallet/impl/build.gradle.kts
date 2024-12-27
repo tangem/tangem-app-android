@@ -84,6 +84,8 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.onramp)
+    implementation(projects.domain.promo)
+    implementation(projects.domain.promo.models)
 // [REDACTED_TODO_COMMENT]
     implementation(projects.features.onboarding)
 
