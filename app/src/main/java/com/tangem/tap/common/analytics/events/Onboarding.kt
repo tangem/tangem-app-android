@@ -13,6 +13,7 @@ sealed class Onboarding(
 
     class Started : Onboarding("Onboarding", "Onboarding Started")
     class Finished : Onboarding("Onboarding", "Onboarding Finished")
+    data object OfflineAttestationFailed : Onboarding(category = "Onboarding", event = "Offline Attestation Failed")
 
     sealed class CreateWallet(
         event: String,
