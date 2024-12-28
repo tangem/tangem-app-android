@@ -1,9 +1,17 @@
-package com.tangem.domain.settings.repositories
+package com.tangem.domain.promo
 
+import com.tangem.domain.promo.models.PromoBanner
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
-interface PromoSettingsRepository {
+interface PromoRepository {
+
+    suspend fun getChangellyPromoBanner(): PromoBanner?
+
+    suspend fun getOkxPromoBanner(): PromoBanner?
+
+    suspend fun getRingPromoBanner(): PromoBanner?
+
     fun isReadyToShowWalletSwapPromo(): Flow<Boolean>
 
     fun isReadyToShowTokenSwapPromo(): Flow<Boolean>
