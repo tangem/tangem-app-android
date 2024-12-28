@@ -75,6 +75,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.onramp)
+    implementation(projects.domain.promo)
 
     implementation(projects.common)
     implementation(projects.common.routing)
