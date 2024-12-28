@@ -3,7 +3,7 @@ package com.tangem.tap.features.home.redux
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.StateType
-
+// [REDACTED_TODO_COMMENT]
 data class HomeState(
     val scanInProgress: Boolean = false,
     val stories: ImmutableList<Stories> = Stories.entries.toImmutableList(),
