@@ -66,9 +66,6 @@ internal fun RootContent(
             },
         )
 
-        EventMessageEffect(
-            messageHandler = uiDependencies.eventMessageHandler,
-            snackbarHostState = snackbarHostState,
-        )
+        EventMessageEffect()
     }
 }
