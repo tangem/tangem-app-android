@@ -1,6 +1,5 @@
 package com.tangem.tap.routing.component.impl
 
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -99,10 +98,10 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         val message = SnackbarMessage(
             message = text,
             duration = when (length) {
-                Snackbar.LENGTH_SHORT -> SnackbarDuration.Short
-                Snackbar.LENGTH_LONG -> SnackbarDuration.Long
-                Snackbar.LENGTH_INDEFINITE -> SnackbarDuration.Indefinite
-                else -> SnackbarDuration.Short
+                Snackbar.LENGTH_SHORT -> SnackbarMessage.Duration.Short
+                Snackbar.LENGTH_LONG -> SnackbarMessage.Duration.Long
+                Snackbar.LENGTH_INDEFINITE -> SnackbarMessage.Duration.Indefinite
+                else -> SnackbarMessage.Duration.Short
             },
             actionLabel = buttonTitle,
             action = action,
