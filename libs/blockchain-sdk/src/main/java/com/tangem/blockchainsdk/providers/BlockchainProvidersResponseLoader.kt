@@ -1,4 +1,4 @@
-package com.tangem.blockchainsdk.loader
+package com.tangem.blockchainsdk.providers
 
 import androidx.core.util.PatternsCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
