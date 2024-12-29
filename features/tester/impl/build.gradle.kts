@@ -15,14 +15,15 @@ dependencies {
     implementation(deps.androidx.activity.compose)
 
     /** Compose */
+    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.foundation)
     implementation(deps.compose.material)
     implementation(deps.compose.material3)
-    implementation(deps.compose.foundation)
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
-    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.ui.utils)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -52,5 +53,6 @@ dependencies {
 
     /** Other modules */
     implementation(projects.common.routing)
+    implementation(projects.libs.blockchainSdk)
     implementation(projects.libs.crypto)
 }
