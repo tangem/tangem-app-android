@@ -1,11 +1,9 @@
 package com.tangem.blockchainsdk
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
-import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
-import com.tangem.blockchainsdk.store.RuntimeStore
+import com.tangem.blockchainsdk.providers.BlockchainProviderTypesStore
+import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseLoader
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -16,7 +14,6 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 internal typealias BlockchainProvidersResponse = Map<String, List<ProviderModel>>
-internal typealias BlockchainProviderTypes = Map<Blockchain, List<ProviderType>>
 
 /**
  * Implementation of Blockchain SDK components factory
@@ -31,7 +28,7 @@ internal typealias BlockchainProviderTypes = Map<Blockchain, List<ProviderType>>
 internal class DefaultBlockchainSDKFactory(
     private val blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
     private val environmentConfigStorage: EnvironmentConfigStorage,
-    private val blockchainProviderTypesStore: RuntimeStore<BlockchainProviderTypes>,
+    private val blockchainProviderTypesStore: BlockchainProviderTypesStore,
     private val walletManagerFactoryCreator: WalletManagerFactoryCreator,
     dispatchers: CoroutineDispatcherProvider,
 ) : BlockchainSDKFactory {

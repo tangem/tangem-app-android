@@ -2,8 +2,8 @@ package com.tangem.blockchainsdk.converters
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.network.providers.ProviderType
-import com.tangem.blockchainsdk.BlockchainProviderTypes
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
+import com.tangem.blockchainsdk.providers.BlockchainProviderTypes
 import com.tangem.blockchainsdk.utils.createPrivateProviderType
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.local.config.providers.models.ProviderModel

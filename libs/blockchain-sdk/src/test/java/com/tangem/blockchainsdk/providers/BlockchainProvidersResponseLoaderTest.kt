@@ -1,4 +1,4 @@
-package com.tangem.blockchainsdk.loader
+package com.tangem.blockchainsdk.providers
 
 import com.google.common.truth.Truth
 import com.google.firebase.crashlytics.FirebaseCrashlytics
