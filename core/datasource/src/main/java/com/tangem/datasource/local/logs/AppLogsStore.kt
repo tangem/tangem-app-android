@@ -90,6 +90,12 @@ class AppLogsStore @Inject constructor(
         if (file.exists()) file.delete()
     }
 
+    fun deleteLastLogFile() {
+        val file = File(applicationContext.filesDir, NEW_LOG_FILE_NAME)
+
+        if (file.exists()) file.delete()
+    }
+
     private fun writeMessage(vararg messages: String) {
         BufferedWriter(FileWriter(file, true)).use { writer ->
             writer.append(formatter.print(DateTime.now()))
