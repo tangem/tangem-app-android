@@ -28,6 +28,9 @@ import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_LOG_FILE_CLEARED
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
+import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.repository.AppThemeModeRepository
@@ -66,8 +69,12 @@ import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.rekotlin.Store
+import kotlin.collections.MutableMap
+import kotlin.collections.listOf
+import kotlin.collections.set
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
 
 lateinit var store: Store<AppState>
@@ -208,7 +215,17 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
         init()
 
+        updateLogFiles()
+    }
+
+    private fun updateLogFiles() {
         appLogsStore.deleteOldLogsFile()
+        scope.launch {
+            if (!appPreferencesStore.getSyncOrDefault(WAS_LOG_FILE_CLEARED, false)) {
+                appLogsStore.deleteLastLogFile()
+                appPreferencesStore.store(WAS_LOG_FILE_CLEARED, true)
+            }
+        }
     }
 
     fun init() {
