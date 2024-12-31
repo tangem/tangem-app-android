@@ -62,6 +62,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
                 source = AnalyticsParam.ScreensSources.Main,
                 programName = TokenSwapPromoAnalyticsEvent.ProgramName.Ring,
             )
+            is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
         }
     }
 }
