@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">Ne plus afficher</string>
   <string name="balance_hidden_got_it_button">Compris</string>
   <string name="balance_hidden_title">Les soldes sont masqués</string>
+  <string name="beta_mode_warning_message">Selon les développeurs de la blockchain, les jetons Kaspa sont actuellement en version bêta. Restez à l\'écoute des mises à jour !</string>
+  <string name="beta_mode_warning_title">Mode bêta</string>
   <string name="biometric_lockout_permanent_warning_description">Veuillez scanner la carte/bague</string>
   <string name="biometric_lockout_warning_description">Veuillez réessayer dans 30 secondes ou scannez la carte/bague</string>
   <string name="biometric_lockout_warning_title">Trop de tentatives</string>
@@ -1065,6 +1067,8 @@
   <string name="warning_rate_app_title">Vous appréciez Tangem ?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Vous devez associer votre jeton avant de recevoir des jetons</string>
   <string name="warning_rent_fee_title">Frais de location de réseau requis</string>
+  <string name="warning_seedphrase_issue_message">Avez-vous déjà contacté notre équipe d\'assistance via l\'application ?</string>
+  <string name="warning_seedphrase_issue_title">Nous avons trouvé un problème dans le système de support de Tangem</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s s\'agit d\'un actif du réseau %2$s. Pour effectuer une transaction %3$s, vous devez déposer une certaine quantité de %4$s (%5$s) pour couvrir les frais de réseau.</string>
   <string name="warning_send_blocked_funds_for_fee_title">%1$s insuffisant pour couvrir les frais de réseau</string>
   <string name="warning_solana_fee_message">Le réseau Solana est encombré. Si votre transaction n\'est pas traitée dans les 2 minutes, veuillez répéter la transaction.</string>
