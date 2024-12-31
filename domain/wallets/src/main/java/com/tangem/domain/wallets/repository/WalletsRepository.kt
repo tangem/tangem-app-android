@@ -14,4 +14,14 @@ interface WalletsRepository {
     suspend fun isWalletWithRing(userWalletId: UserWalletId): Boolean
 
     suspend fun setHasWalletsWithRing(userWalletId: UserWalletId)
+
+    fun seedPhraseNotificationStatus(userWalletId: UserWalletId): Flow<Boolean>
+
+    suspend fun notifiedSeedPhraseNotification(userWalletId: UserWalletId)
+
+    suspend fun confirmSeedPhraseNotification(userWalletId: UserWalletId)
+
+    suspend fun declineSeedPhraseNotification(userWalletId: UserWalletId)
+
+    suspend fun markWallet2WasCreated(userWalletId: UserWalletId)
 }
