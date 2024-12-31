@@ -692,6 +692,14 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     )
                 }
 
+                scope.launch {
+                    userWallet?.let {
+                        if (it.scanResponse.cardTypesResolver.isWallet2() && it.isImported) {
+                            store.inject(DaggerGraphState::walletsRepository).markWallet2WasCreated(it.walletId)
+                        }
+                    }
+                }
+
                 val notActivatedCardIds = gatherCardIds(backupState, card).mapNotNull {
                     if (store.state.globalState.onboardingState.onboardingManager?.isActivationFinished(it) == true) {
                         null
