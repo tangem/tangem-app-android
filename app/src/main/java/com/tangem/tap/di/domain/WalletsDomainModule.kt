@@ -159,4 +159,10 @@ internal object WalletsDomainModule {
             dispatchers = dispatchers,
         )
     }
+
+    @Provides
+    @Singleton
+    fun providesSeedPhraseNotificationUseCase(walletsRepository: WalletsRepository): SeedPhraseNotificationUseCase {
+        return SeedPhraseNotificationUseCase(walletsRepository = walletsRepository)
+    }
 }
