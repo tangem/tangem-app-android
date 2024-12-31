@@ -16,6 +16,19 @@ internal fun WalletAlert(state: WalletAlertState, onDismiss: () -> Unit) {
     when (state) {
         is WalletAlertState.Basic -> BasicAlert(state, onDismiss)
         is WalletAlertState.TextInput -> TextInputAlert(state, onDismiss)
+        is WalletAlertState.SimpleOkAlert -> {
+            BasicDialog(
+                message = state.message.resolveReference(),
+                confirmButton = DialogButtonUM(
+                    onClick = {
+                        state.onOkClick()
+                        onDismiss()
+                    },
+                ),
+                onDismissDialog = onDismiss,
+                isDismissable = false,
+            )
+        }
     }
 }
 
