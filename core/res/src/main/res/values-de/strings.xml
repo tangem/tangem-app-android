@@ -1067,8 +1067,10 @@
   <string name="warning_rate_app_title">Gefällt dir Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>
   <string name="warning_rent_fee_title">Netzmietgebühr erforderlich</string>
-  <string name="warning_seedphrase_issue_message">Haben Sie schon einmal unser Support-Team über die App kontaktiert?</string>
-  <string name="warning_seedphrase_issue_title">Wir haben ein Problem im Support-System von Tangem festgestellt</string>
+  <string name="warning_seedphrase_issue_answer_no">Vielen Dank! Alles erledigt! Keine weiteren Maßnahmen erforderlich.</string>
+  <string name="warning_seedphrase_issue_answer_yes">Sie werden jetzt auf die offizielle Tangem-Website weitergeleitet. Bitte lesen und befolgen Sie dort die Anweisungen.</string>
+  <string name="warning_seedphrase_issue_message">Haben Sie jemals das Support-Team von Tangem direkt über diese Anwendung kontaktiert?</string>
+  <string name="warning_seedphrase_issue_title">Verpflichtendes Sicherheitsupdate</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s ist ein Vermögenswert im %2$s Netzwerk. Um eine %3$s Transaktion durchzuführen, musst du etwas %4$s (%5$s) einzahlen, um die Netzwerkgebühr zu decken.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Unzureichende %1$s zur Deckung der Netzgebühr</string>
   <string name="warning_solana_fee_message">Das Solana-Netz ist überlastet. Wenn deine Transaktion nicht innerhalb von 2 Minuten bearbeitet wird, wiederhole bitte die Transaktion.</string>
