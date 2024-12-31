@@ -1086,6 +1086,8 @@
   <string name="warning_rate_app_title">Нравится Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Вам необходимо провести ассоциацию токена для того, чтобы иметь возможность принимать его</string>
   <string name="warning_rent_fee_title">Необходима плата за аренду сети</string>
+  <string name="warning_seedphrase_issue_message">Вы когда-либо связывались с нашей службой поддержки через приложение?</string>
+  <string name="warning_seedphrase_issue_title">Мы обнаружили проблему в системе поддержки Tangem</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s - это монета в сети %2$s. Для совершения транзакции %3$s, вам необходимо внести немного %4$s (%5$s), чтобы покрыть комиссию сети.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Недостаточно %1$s для оплаты комиссии сети</string>
   <string name="warning_solana_fee_message">Сеть Солана испытывает высокую нагрузку. Если Ваша транзакция не прошла в течение 2 минут, повторите её отправку.</string>
