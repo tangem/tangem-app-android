@@ -5,6 +5,7 @@ import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
@@ -22,6 +23,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
+    private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
 ) {
 
@@ -36,6 +38,7 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             tokenListStore = tokenListStore,
             getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
             walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
+            walletWarningsSingleEventSender = walletWarningsSingleEventSender,
             runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
         )
     }
