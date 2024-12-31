@@ -293,11 +293,22 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes)
 
-        viewModelScope.launch {
-            seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.SimpleOkAlert(
+                    message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
+                    onOkClick = {
+                        viewModelScope.launch {
+                            seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
 
-            urlOpener.openUrl(url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify))
-        }
+                            urlOpener.openUrl(
+                                url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
+                            )
+                        }
+                    },
+                ),
+            ),
+        )
     }
 
     override fun onSeedPhraseNotificationDecline() {
@@ -305,9 +316,18 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo)
 
-        viewModelScope.launch {
-            seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
-        }
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.SimpleOkAlert(
+                    message = resourceReference(R.string.warning_seedphrase_issue_answer_no),
+                    onOkClick = {
+                        viewModelScope.launch {
+                            seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
+                        }
+                    },
+                ),
+            ),
+        )
     }
 
     private fun getSelectedUserWallet(): UserWallet? {
