@@ -5,6 +5,7 @@ import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
@@ -21,6 +22,7 @@ internal class SingleWalletWithTokenContentLoader(
     private val stateHolder: WalletStateController,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
+    private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val tokenListStore: MultiWalletTokenListStore,
@@ -46,6 +48,7 @@ internal class SingleWalletWithTokenContentLoader(
                 clickIntents = clickIntents,
                 getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,
                 walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
+                walletWarningsSingleEventSender = walletWarningsSingleEventSender,
             ),
         )
     }
