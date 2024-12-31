@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">Nicht mehr anzeigen</string>
   <string name="balance_hidden_got_it_button">Verstanden</string>
   <string name="balance_hidden_title">Guthaben sind ausgeblendet</string>
+  <string name="beta_mode_warning_message">Laut den Blockchain-Entwicklern befinden sich der Kaspa-Token derzeit in der Betaphase. Bleibe dran für Updates!</string>
+  <string name="beta_mode_warning_title">Beta-Phase</string>
   <string name="biometric_lockout_permanent_warning_description">Bitte Karte oder Ring scannen</string>
   <string name="biometric_lockout_warning_description">Bitte versuche es in 30 Sekunden erneut oder scanne die Karte oder Ring</string>
   <string name="biometric_lockout_warning_title">Zu viele Versuche</string>
@@ -1065,6 +1067,8 @@
   <string name="warning_rate_app_title">Gefällt dir Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>
   <string name="warning_rent_fee_title">Netzmietgebühr erforderlich</string>
+  <string name="warning_seedphrase_issue_message">Haben Sie schon einmal unser Support-Team über die App kontaktiert?</string>
+  <string name="warning_seedphrase_issue_title">Wir haben ein Problem im Support-System von Tangem festgestellt</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s ist ein Vermögenswert im %2$s Netzwerk. Um eine %3$s Transaktion durchzuführen, musst du etwas %4$s (%5$s) einzahlen, um die Netzwerkgebühr zu decken.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Unzureichende %1$s zur Deckung der Netzgebühr</string>
   <string name="warning_solana_fee_message">Das Solana-Netz ist überlastet. Wenn deine Transaktion nicht innerhalb von 2 Minuten bearbeitet wird, wiederhole bitte die Transaktion.</string>
