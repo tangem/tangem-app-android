@@ -29,7 +29,8 @@ class SendFeedbackEmailUseCase(
             address = getAddress(type.cardInfo),
             subject = emailSubjectResolver.resolve(type),
             message = createMessage(type),
-            file = feedbackRepository.getLogFile(),
+            // Temporally user data is not sent
+            file = null, // feedbackRepository.getLogFile(),
         )
 
         feedbackRepository.sendEmail(email)
