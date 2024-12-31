@@ -59,6 +59,9 @@ class AppLogsStore @Inject constructor(
 
     /** Save log [message] */
     fun saveLogMessage(message: String) {
+        // Temporally logs are not saved
+        return
+
         launchWithLock {
             createFileIfNotExist()
 
@@ -68,6 +71,9 @@ class AppLogsStore @Inject constructor(
 
     /** Save log that consists from [messages] */
     fun saveLogMessage(vararg messages: String) {
+        // Temporally logs are not saved
+        return
+
         launchWithLock {
             createFileIfNotExist()
 
