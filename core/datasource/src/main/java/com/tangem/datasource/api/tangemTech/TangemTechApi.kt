@@ -49,6 +49,9 @@ interface TangemTechApi {
         @Body userTokens: UserTokensResponse,
     ): ApiResponse<Unit>
 
+    @POST("user-tokens")
+    suspend fun markUserWallerWasCreated(@Body body: MarkUserWalletWasCreatedBody): ApiResponse<Unit>
+
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
     suspend fun getReferralStatus(@Path("walletId") walletId: String): ReferralResponse
@@ -107,6 +110,17 @@ interface TangemTechApi {
     @ReadTimeout(duration = 5, unit = TimeUnit.SECONDS)
     @GET("networks/providers")
     suspend fun getBlockchainProviders(): Map<String, List<ProviderModel>>
+
+    @GET("seedphrase-notification/{wallet_id}")
+    suspend fun getSeedPhraseNotificationStatus(
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<SeedPhraseNotificationDTO>
+
+    @PUT("seedphrase-notification/{wallet_id}")
+    suspend fun updateSeedPhraseNotificationStatus(
+        @Path("wallet_id") walletId: String,
+        @Body body: SeedPhraseNotificationDTO,
+    ): ApiResponse<Unit>
 
     companion object {
         val marketsQuoteFields = listOf(
