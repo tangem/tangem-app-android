@@ -14,6 +14,7 @@ import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.repository.PromoRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
+import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import dagger.hilt.android.scopes.ViewModelScoped
@@ -35,23 +36,33 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val promoRepository: PromoRepository,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
+    private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
 ) {
 
+    @Suppress("MagicNumber", "MaximumLineLength")
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
         val promoFlow = flow { emit(promoRepository.getRingPromoBanner()) }
         return combine(
-            flow = tokenListStore.getOrThrow(userWallet.walletId),
-            flow2 = isReadyToShowRateAppUseCase(),
-            flow3 = isNeedToBackupUseCase(userWallet.walletId),
-            flow4 = shouldShowRingPromoUseCase(userWalletId = userWallet.walletId),
-            flow5 = promoFlow,
-        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, shouldShowPromo, promoBanner ->
+            tokenListStore.getOrThrow(userWallet.walletId),
+            isReadyToShowRateAppUseCase(),
+            isNeedToBackupUseCase(userWallet.walletId),
+            shouldShowRingPromoUseCase(userWalletId = userWallet.walletId),
+            promoFlow,
+            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
+        ) {
+            val maybeTokenList = it[0] as Lce<TokenListError, TokenList>
+            val isReadyToShowRating = it[1] as Boolean
+            val isNeedToBackup = it[2] as Boolean
+            val shouldShowPromo = it[3] as Boolean
+            val promoBanner = it[4] as? PromoBanner
+            val seedPhraseIssueStatus = it[5] as Boolean
+
             buildList {
                 addRingPromoNotification(shouldShowPromo, promoBanner, clickIntents)
 
-                addCriticalNotifications(userWallet, clickIntents)
+                addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
 
@@ -83,8 +94,22 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(
         userWallet: UserWallet,
+        seedPhraseIssueStatus: Boolean,
         clickIntents: WalletClickIntents,
     ) {
+        addIf(
+            element = WalletNotification.Critical.SeedPhraseNotification(
+                onDeclineClick = clickIntents::onSeedPhraseNotificationDecline,
+                onConfirmClick = clickIntents::onSeedPhraseNotificationConfirm,
+            ),
+            condition = with(userWallet) {
+                val isDemo = isDemoCardUseCase(cardId = userWallet.cardId)
+                val isWalletWithSeedPhrase = scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported
+
+                !isDemo && isWalletWithSeedPhrase && seedPhraseIssueStatus
+            },
+        )
+
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
             element = WalletNotification.Critical.BackupError { clickIntents.onSupportClick() },
