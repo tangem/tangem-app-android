@@ -2,6 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
+import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
@@ -20,6 +21,7 @@ internal class MultiWalletWarningsSubscriber(
     private val clickIntents: WalletClickIntents,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
+    private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
 ) : WalletSubscriber() {
 
     override fun create(coroutineScope: CoroutineScope): Flow<ImmutableList<WalletNotification>> {
@@ -31,6 +33,11 @@ internal class MultiWalletWarningsSubscriber(
 
                 stateHolder.update(SetWarningsTransformer(userWallet.walletId, warnings))
                 walletWarningsAnalyticsSender.send(displayedState, warnings)
+                walletWarningsSingleEventSender.send(
+                    userWalletId = userWallet.walletId,
+                    displayedUiState = displayedState,
+                    newWarnings = warnings,
+                )
             }
     }
 }
