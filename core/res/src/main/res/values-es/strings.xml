@@ -1065,6 +1065,8 @@
   <string name="warning_rate_app_title">¿Disfrutando de Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Deba asociar su token antes de recibir tokens</string>
   <string name="warning_rent_fee_title">Se requiere tarifa de alquiler de red</string>
+  <string name="warning_seedphrase_issue_message">¿Alguna vez te has puesto en contacto con nuestro equipo de soporte a través de la aplicación?</string>
+  <string name="warning_seedphrase_issue_title">Hemos encontrado un problema en el sistema de soporte de Tangem</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s un activo en la red %2$s. Para realizar una transacción %3$s, deposite %4$s (%5$s) para cubrir la tarifa de red.</string>
   <string name="warning_send_blocked_funds_for_fee_title">%1$s insuficiente para cubrir la tarifa de red</string>
   <string name="warning_solana_fee_message">La red Solana está congestionada. Si su transacción no se procesa dentro de 2 minutos, repita la transacción.</string>
