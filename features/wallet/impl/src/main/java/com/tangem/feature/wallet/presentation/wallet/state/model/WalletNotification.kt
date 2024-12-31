@@ -2,7 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.notifications.NotificationConfig
-import com.tangem.core.ui.extensions.*
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.pluralReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.feature.wallet.impl.R
 import org.joda.time.DateTime
 
@@ -45,6 +48,17 @@ sealed class WalletNotification(val config: NotificationConfig) {
             buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
                 text = resourceReference(id = R.string.details_row_title_contact_to_support),
                 onClick = onSupportClick,
+            ),
+        )
+
+        data class SeedPhraseNotification(val onDeclineClick: () -> Unit, val onConfirmClick: () -> Unit) : Critical(
+            title = resourceReference(R.string.warning_seedphrase_issue_title),
+            subtitle = resourceReference(R.string.warning_seedphrase_issue_message),
+            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
+                primaryText = resourceReference(R.string.common_yes),
+                onPrimaryClick = onConfirmClick,
+                secondaryText = resourceReference(R.string.common_no),
+                onSecondaryClick = onDeclineClick,
             ),
         )
     }
