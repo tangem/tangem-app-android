@@ -1087,8 +1087,10 @@
   <string name="warning_rate_app_title">Подобається Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Вам необхідно провести асоціацію токена, щоб мати можливість приймати його</string>
   <string name="warning_rent_fee_title">Необхідна плата за оренду мережі</string>
-  <string name="warning_seedphrase_issue_message">Ви коли-небудь зверталися до нашої служби підтримки через застосунок?</string>
-  <string name="warning_seedphrase_issue_title">Ми виявили проблему в системі підтримки Tangem</string>
+  <string name="warning_seedphrase_issue_answer_no">Дякуємо! Все добре! Подальших дій не потрібно.</string>
+  <string name="warning_seedphrase_issue_answer_yes">Ви будете перенаправлені на офіційний сайт Tangem. Будь ласка, прочитайте та виконайте вказані там інструкції.</string>
+  <string name="warning_seedphrase_issue_message">Ви коли-небудь зверталися до служби підтримки Tangem безпосередньо з цього додатку?</string>
+  <string name="warning_seedphrase_issue_title">Обов’язкове оновлення безпеки</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s є активом у мережі %2$s. Щоб здійснити транзакцію %3$s, ви повинні внести певну суму %4$s (%5$s), щоб покрити комісію мережі.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Недостатньо %1$s для покриття комісії мережі</string>
   <string name="warning_solana_fee_message">Мережа Солана зазнає високого навантаження. Якщо транзакція не пройшла протягом 2 хвилин, повторіть транзакцію.</string>
