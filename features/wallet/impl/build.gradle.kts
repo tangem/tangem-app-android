@@ -101,8 +101,9 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
 
     /** Common modules */
-    implementation(projects.common.ui)
+    implementation(projects.common)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Test libraries */
     implementation(deps.test.junit)
