@@ -54,11 +54,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
         data class SeedPhraseNotification(val onDeclineClick: () -> Unit, val onConfirmClick: () -> Unit) : Critical(
             title = resourceReference(R.string.warning_seedphrase_issue_title),
             subtitle = resourceReference(R.string.warning_seedphrase_issue_message),
-            buttonsState = NotificationConfig.ButtonsState.PairButtonsConfig(
-                primaryText = resourceReference(R.string.common_yes),
-                onPrimaryClick = onConfirmClick,
-                secondaryText = resourceReference(R.string.common_no),
-                onSecondaryClick = onDeclineClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryPairButtonsConfig(
+                leftText = resourceReference(R.string.common_no),
+                onLeftClick = onDeclineClick,
+                rightText = resourceReference(R.string.common_yes),
+                onRightClick = onConfirmClick,
             ),
         )
     }
