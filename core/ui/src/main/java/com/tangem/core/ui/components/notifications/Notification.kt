@@ -216,6 +216,10 @@ private fun Buttons(state: NotificationButtonsState?, isEnabled: Boolean = true)
         )
         is NotificationButtonsState.PrimaryButtonConfig -> SinglePrimaryButton(config = state, isEnabled = isEnabled)
         is NotificationButtonsState.PairButtonsConfig -> PairButtons(config = state, isEnabled = isEnabled)
+        is NotificationConfig.ButtonsState.SecondaryPairButtonsConfig -> SecondaryPairButtons(
+            config = state,
+            isEnabled = isEnabled,
+        )
         null -> Unit
     }
 }
@@ -277,6 +281,30 @@ private fun PairButtons(config: NotificationButtonsState.PairButtonsConfig, isEn
         PrimaryButton(
             text = config.primaryText.resolveReference(),
             onClick = config.onPrimaryClick,
+            modifier = Modifier.weight(weight = 1f),
+            size = TangemButtonSize.WideAction,
+            enabled = isEnabled,
+        )
+    }
+}
+
+@Composable
+private fun SecondaryPairButtons(
+    config: NotificationButtonsState.SecondaryPairButtonsConfig,
+    isEnabled: Boolean = true,
+) {
+    Row(horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8)) {
+        SecondaryButton(
+            text = config.leftText.resolveReference(),
+            onClick = config.onLeftClick,
+            modifier = Modifier.weight(weight = 1f),
+            size = TangemButtonSize.WideAction,
+            enabled = isEnabled,
+        )
+
+        SecondaryButton(
+            text = config.rightText.resolveReference(),
+            onClick = config.onRightClick,
             modifier = Modifier.weight(weight = 1f),
             size = TangemButtonSize.WideAction,
             enabled = isEnabled,
@@ -383,6 +411,17 @@ private class NotificationConfigProvider : CollectionPreviewParameterProvider<No
                 onPrimaryClick = {},
                 secondaryText = TextReference.Str(value = "Can be better"),
                 onSecondaryClick = {},
+            ),
+        ),
+        NotificationConfig(
+            title = TextReference.Str(value = "Rate the app"),
+            subtitle = TextReference.Str(value = "How do you like Tangem?"),
+            iconResId = R.drawable.img_attention_20,
+            buttonsState = NotificationButtonsState.SecondaryPairButtonsConfig(
+                leftText = TextReference.Str(value = "Love it!"),
+                onLeftClick = {},
+                rightText = TextReference.Str(value = "Can be better"),
+                onRightClick = {},
             ),
         ),
         NotificationConfig(
