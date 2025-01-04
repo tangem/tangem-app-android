@@ -28,6 +28,8 @@ import com.tangem.feature.tester.presentation.menu.state.TesterMenuUM.ButtonUM
 import com.tangem.feature.tester.presentation.menu.ui.TesterMenuScreen
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
+import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersScreen
+import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
 import com.tangem.features.tester.api.TesterRouter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.collections.immutable.persistentSetOf
@@ -129,6 +131,15 @@ internal class TesterActivity : ComposeActivity() {
 
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 ExcludedBlockchainsScreen(state = state)
+            }
+
+            composable(route = TesterScreen.BLOCKCHAIN_PROVIDERS.name) {
+                val viewModel = hiltViewModel<BlockchainProvidersViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                BlockchainProvidersScreen(state)
             }
         }
     }
