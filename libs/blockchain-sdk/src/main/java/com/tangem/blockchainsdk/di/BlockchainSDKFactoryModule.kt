@@ -7,8 +7,8 @@ import com.tangem.blockchainsdk.WalletManagerFactoryCreator
 import com.tangem.blockchainsdk.accountcreator.DefaultAccountCreator
 import com.tangem.blockchainsdk.datastorage.DefaultBlockchainDataStorage
 import com.tangem.blockchainsdk.featuretoggles.DefaultBlockchainSDKFeatureToggles
-import com.tangem.blockchainsdk.providers.BlockchainProviderTypesStore
-import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseLoader
+import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
+import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
@@ -27,19 +27,26 @@ internal object BlockchainSDKFactoryModule {
     @Provides
     @Singleton
     fun provideBlockchainSDKFactory(
-        blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
+        blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
         environmentConfigStorage: EnvironmentConfigStorage,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
-        blockchainProviderTypesStore: BlockchainProviderTypesStore,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
-            blockchainProvidersResponseLoader = blockchainProvidersResponseLoader,
+            blockchainProvidersTypesManager = blockchainProvidersTypesManager,
             environmentConfigStorage = environmentConfigStorage,
-            blockchainProviderTypesStore = blockchainProviderTypesStore,
             walletManagerFactoryCreator = walletManagerFactoryCreator,
             dispatchers = dispatchers,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlockchainProvidersTypesManager(
+        prodBlockchainProvidersTypesManager: ProdBlockchainProvidersTypesManager,
+    ): BlockchainProvidersTypesManager {
+        // In the future, we will use different types of providers for different environments
+        return prodBlockchainProvidersTypesManager
     }
 
     @Provides
