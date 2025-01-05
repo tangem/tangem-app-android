@@ -83,7 +83,7 @@ private fun Preview_CameraDeniedBottomSheet() {
     TangemThemePreview {
         CameraDeniedBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = CameraDeniedBottomSheetConfig(
                     onSettingsClick = {},

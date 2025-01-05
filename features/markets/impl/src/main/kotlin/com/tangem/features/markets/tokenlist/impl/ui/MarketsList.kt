@@ -62,7 +62,7 @@ internal fun MarketsList(
     )
     MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
     KeyboardEvents(
-        isSortByBottomSheetShown = state.sortByBottomSheet.isShow,
+        isSortByBottomSheetShown = state.sortByBottomSheet.isShown,
         bottomSheetState = bottomSheetState,
     )
 }
@@ -321,7 +321,7 @@ private fun Preview() {
                     onIntervalClick = {},
                     onSortByButtonClick = {},
                     sortByBottomSheet = TangemBottomSheetConfig(
-                        isShow = false,
+                        isShown = false,
                         onDismissRequest = {},
                         content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
                     ),

@@ -33,7 +33,7 @@ internal class PreviewConfirmResidencyComponent(
         val state by previewState.collectAsStateWithLifecycle()
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = ::dismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             )

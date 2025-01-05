@@ -35,7 +35,7 @@ internal class MainScreenStateHolder(private val intents: MainIntents) {
         stateFlowInternal.update { state ->
             state.copy(
                 modalNotification = TangemBottomSheetConfig(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = intents::onDismissBottomSheet,
                     content = notificationsFactory.createBalancesAreHiddenModalNotification(),
                 ),
@@ -45,7 +45,7 @@ internal class MainScreenStateHolder(private val intents: MainIntents) {
 
     fun updateWithoutModalNotification() {
         stateFlowInternal.update { state ->
-            state.copy(modalNotification = state.modalNotification?.copy(isShow = false))
+            state.copy(modalNotification = state.modalNotification?.copy(isShown = false))
         }
     }
 
