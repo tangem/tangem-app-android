@@ -2,10 +2,11 @@ package com.tangem.feature.tester.presentation.providers.entity
 
 import androidx.compose.runtime.Immutable
 import com.tangem.blockchain.common.network.providers.ProviderType
+import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import kotlinx.collections.immutable.ImmutableList
 
 internal data class BlockchainProvidersUM(
-    val onBackClick: () -> Unit,
+    val topBar: TopBarWithRefreshUM,
     val blockchainProviders: ImmutableList<ProvidersUM>,
 ) {
 
