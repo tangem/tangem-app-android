@@ -27,13 +27,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
-import com.tangem.core.ui.components.SpacerH8
-import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.rows.RowText
 import com.tangem.core.ui.extensions.getActiveIconRes
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tester.impl.R
+import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefresh
+import com.tangem.feature.tester.presentation.common.components.notification.CustomSetupNotification
 import com.tangem.feature.tester.presentation.providers.entity.BlockchainProvidersUM
 import com.tangem.feature.tester.presentation.providers.entity.BlockchainProvidersUM.ProviderUM
 import com.tangem.feature.tester.presentation.providers.entity.BlockchainProvidersUM.ProvidersUM
@@ -50,12 +50,20 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
             .background(TangemTheme.colors.background.primary),
     ) {
         LazyColumn {
-            stickyHeader {
-                AppBarWithBackButton(
-                    onBackClick = state.onBackClick,
-                    text = stringResourceSafe(id = R.string.blockchain_providers),
-                    containerColor = TangemTheme.colors.background.primary,
-                )
+            stickyHeader { TopBarWithRefresh(state = state.topBar) }
+
+            if (state.topBar.refreshButton.isVisible) {
+                item(key = "notification", contentType = "notification") {
+                    CustomSetupNotification(
+                        subtitle = resourceReference(
+                            id = R.string.blockchain_providers_custom_setup_warning_description,
+                        ),
+                        modifier = Modifier
+                            .animateItem()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 8.dp),
+                    )
+                }
             }
 
             items(
@@ -74,8 +82,8 @@ private fun BlockchainProvidersItem(state: ProvidersUM) {
 
     ExpandableBlockchainRow(
         state = state,
-        modifier = Modifier.clickable { isExpanded = !isExpanded },
         content = { Providers(state = state, isExpanded = isExpanded) },
+        onExpandStateChange = { isExpanded = !isExpanded },
     )
 }
 
@@ -83,25 +91,23 @@ private fun BlockchainProvidersItem(state: ProvidersUM) {
 private fun ExpandableBlockchainRow(
     state: ProvidersUM,
     content: @Composable () -> Unit,
-    modifier: Modifier = Modifier,
+    onExpandStateChange: () -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-    ) {
-        BlockchainRow(state)
+    Column {
+        BlockchainRow(state = state, onExpandStateChange = onExpandStateChange)
 
         content()
     }
 }
 
 @Composable
-private fun BlockchainRow(state: ProvidersUM) {
+private fun BlockchainRow(state: ProvidersUM, onExpandStateChange: () -> Unit) {
     Row(
         modifier = Modifier
+            .clickable { onExpandStateChange() }
+            .padding(horizontal = 16.dp)
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -145,11 +151,15 @@ private fun BlockchainRow(state: ProvidersUM) {
 private fun Providers(state: ProvidersUM, isExpanded: Boolean) {
     AnimatedVisibility(
         visible = isExpanded,
+        modifier = Modifier.padding(horizontal = 16.dp),
         enter = fadeIn() + expandVertically(),
         exit = fadeOut() + shrinkVertically(),
         label = "providers_visibility",
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier.padding(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             state.providers.fastForEachIndexed { index, provider ->
                 key("${provider.name}_$index") {
                     ProviderItem(
@@ -157,8 +167,6 @@ private fun Providers(state: ProvidersUM, isExpanded: Boolean) {
                         state = provider,
                         onDrop = { prev, new -> state.onDrop(state.blockchainId, prev, new) },
                     )
-
-                    if (index == state.providers.lastIndex) SpacerH8()
                 }
             }
         }
