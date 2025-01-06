@@ -22,6 +22,7 @@ import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.common.util.hasDerivation
+import com.tangem.domain.demo.BuildConfig
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -369,7 +370,7 @@ class DefaultWalletManagersFacade(
                 blockchain = blockchain,
                 derivationPath = derivationPath,
             )
-            if (walletManager == null) {
+            if (BuildConfig.DEBUG || walletManager == null) {
                 walletManager = walletManagerFactory.createWalletManager(
                     scanResponse = userWallet.scanResponse,
                     blockchain = blockchain,
