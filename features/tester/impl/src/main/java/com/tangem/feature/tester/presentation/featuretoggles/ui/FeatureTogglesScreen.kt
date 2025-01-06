@@ -15,15 +15,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TangemSwitch
-import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
-import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tester.impl.R
+import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefresh
+import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
+import com.tangem.feature.tester.presentation.common.components.notification.CustomSetupNotification
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import kotlinx.collections.immutable.persistentListOf
@@ -41,12 +41,15 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
             .fillMaxSize()
             .background(TangemTheme.colors.background.secondary),
     ) {
-        stickyHeader { TopAppBar(state = state.topBarState, onBackClick = state.onBackClick) }
+        stickyHeader { TopBarWithRefresh(state = state.topBar) }
 
-        if (state.topBarState is FeatureTogglesContentState.TopBarState.CustomSetup) {
+        if (state.topBar.refreshButton.isVisible) {
             item(key = "warning_notification", contentType = "warning_notification") {
-                WarningNotification(
-                    appVersion = state.appVersion,
+                CustomSetupNotification(
+                    subtitle = resourceReference(
+                        id = R.string.feature_toggles_custom_setup_warning_description,
+                        wrappedList(state.appVersion),
+                    ),
                     modifier = Modifier
                         .animateItem()
                         .padding(horizontal = 16.dp)
@@ -76,39 +79,6 @@ internal fun FeatureTogglesScreen(state: FeatureTogglesContentState) {
             )
         }
     }
-}
-
-@Composable
-private fun TopAppBar(state: FeatureTogglesContentState.TopBarState, onBackClick: () -> Unit) {
-    AppBarWithBackButtonAndIcon(
-        onBackClick = onBackClick,
-        text = stringResourceSafe(id = R.string.feature_toggles),
-        iconRes = if (state is FeatureTogglesContentState.TopBarState.CustomSetup) {
-            R.drawable.ic_refresh_24
-        } else {
-            null
-        },
-        onIconClick = if (state is FeatureTogglesContentState.TopBarState.CustomSetup) {
-            state.onRecoverClick
-        } else {
-            null
-        },
-    )
-}
-
-@Composable
-private fun WarningNotification(appVersion: String, modifier: Modifier = Modifier) {
-    Notification(
-        config = NotificationConfig(
-            subtitle = resourceReference(
-                id = R.string.feature_toggles_custom_setup_warning_description,
-                wrappedList(appVersion),
-            ),
-            iconResId = R.drawable.ic_alert_triangle_20,
-            title = resourceReference(id = R.string.feature_toggles_custom_setup_warning_title),
-        ),
-        modifier = modifier,
-    )
 }
 
 @Composable
@@ -145,17 +115,19 @@ private fun PreviewFeatureTogglesScreen() {
 
         FeatureTogglesScreen(
             state = FeatureTogglesContentState(
-                topBarState = if (isCustomSetup) {
-                    FeatureTogglesContentState.TopBarState.CustomSetup(onRecoverClick = { isCustomSetup = false })
-                } else {
-                    FeatureTogglesContentState.TopBarState.ConfigSetup
-                },
+                topBar = TopBarWithRefreshUM(
+                    titleResId = R.string.feature_toggles,
+                    onBackClick = {},
+                    refreshButton = TopBarWithRefreshUM.RefreshButton(
+                        isVisible = isCustomSetup,
+                        onRefreshClick = { isCustomSetup = false },
+                    ),
+                ),
                 appVersion = "5.15",
                 featureToggles = persistentListOf(
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_1", isEnabled = true),
                     TesterFeatureToggle(name = "FEATURE_TOGGLE_2", isEnabled = false),
                 ),
-                onBackClick = {},
                 onToggleValueChange = { _, _ -> isCustomSetup = true },
                 onRestartAppClick = {},
             ),
