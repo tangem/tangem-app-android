@@ -1,19 +1,27 @@
 package com.tangem.feature.tester.presentation.providers.ui
 
+import android.content.ClipData
+import android.content.ClipDescription
+import android.view.View
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.draganddrop.dragAndDropSource
+import androidx.compose.foundation.draganddrop.dragAndDropTarget
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draganddrop.*
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -21,7 +29,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.components.rows.RowContentContainer
 import com.tangem.core.ui.components.rows.RowText
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -142,10 +149,14 @@ private fun Providers(state: ProvidersUM, isExpanded: Boolean) {
         exit = fadeOut() + shrinkVertically(),
         label = "providers_visibility",
     ) {
-        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             state.providers.fastForEachIndexed { index, provider ->
-                key(provider.name) {
-                    ProviderItem(index = index, state = provider)
+                key("${provider.name}_$index") {
+                    ProviderItem(
+                        index = index,
+                        state = provider,
+                        onDrop = { prev, new -> state.onDrop(state.blockchainId, prev, new) },
+                    )
 
                     if (index == state.providers.lastIndex) SpacerH8()
                 }
@@ -154,19 +165,65 @@ private fun Providers(state: ProvidersUM, isExpanded: Boolean) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ProviderItem(index: Int, state: ProviderUM) {
-    RowContentContainer(
-        icon = {
-            Text(
-                text = "${index + 1}.",
-                color = TangemTheme.colors.text.accent,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-                style = TangemTheme.typography.body2,
-            )
+private fun ProviderItem(index: Int, state: ProviderUM, onDrop: (Int, Int) -> Unit) {
+    var isActive by remember(index) { mutableStateOf(false) }
+    val color by animateColorAsState(
+        targetValue = if (isActive) {
+            TangemTheme.colors.icon.accent
+        } else {
+            TangemTheme.colors.icon.inactive
         },
-        text = {
+        label = "provider_name_background_color",
+    )
+
+    val target = remember {
+        ProvidersDnDTarget(
+            index = index,
+            onActiveStateChange = { isActive = it },
+            onDrop = onDrop,
+        )
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = "${index + 1}.",
+            color = TangemTheme.colors.text.accent,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 1,
+            style = TangemTheme.typography.body2,
+        )
+
+        Box(
+            modifier = Modifier
+                .background(color = color, shape = RoundedCornerShape(16.dp))
+                .padding(vertical = 4.dp, horizontal = 8.dp)
+                .dragAndDropSource {
+                    detectTapGestures(
+                        onLongPress = {
+                            startTransfer(
+                                DragAndDropTransferData(
+                                    clipData = ClipData.newPlainText("provider index", index.toString()),
+                                    flags = View.DRAG_FLAG_GLOBAL,
+                                ),
+                            )
+                        },
+                    )
+                }
+                .dragAndDropTarget(
+                    shouldStartDragAndDrop = { event ->
+                        event
+                            .mimeTypes()
+                            .contains(ClipDescription.MIMETYPE_TEXT_PLAIN)
+                    },
+                    target = target,
+                ),
+        ) {
             Text(
                 text = state.name,
                 color = TangemTheme.colors.text.primary1,
@@ -174,7 +231,38 @@ private fun ProviderItem(index: Int, state: ProviderUM) {
                 maxLines = 1,
                 style = TangemTheme.typography.body2,
             )
-        },
-        action = {},
-    )
+        }
+    }
+}
+
+private class ProvidersDnDTarget(
+    private val index: Int,
+    private val onActiveStateChange: (Boolean) -> Unit,
+    private val onDrop: (Int, Int) -> Unit,
+) : DragAndDropTarget {
+
+    override fun onEntered(event: DragAndDropEvent) {
+        super.onEntered(event)
+        onActiveStateChange(true)
+    }
+
+    override fun onExited(event: DragAndDropEvent) {
+        super.onExited(event)
+        onActiveStateChange(false)
+    }
+
+    override fun onEnded(event: DragAndDropEvent) {
+        super.onEnded(event)
+        onActiveStateChange(false)
+    }
+
+    override fun onDrop(event: DragAndDropEvent): Boolean {
+        val new = event.toAndroidDragEvent().clipData.getItemAt(0).text.toString().toInt()
+
+        if (index == new) return false
+
+        onDrop(new, index)
+
+        return true
+    }
 }
