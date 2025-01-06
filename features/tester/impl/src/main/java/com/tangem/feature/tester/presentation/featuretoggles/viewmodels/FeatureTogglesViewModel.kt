@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.configtoggle.feature.MutableFeatureTogglesManager
 import com.tangem.core.navigation.finisher.AppFinisher
+import com.tangem.feature.tester.impl.R
+import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.featuretoggles.models.TesterFeatureToggle
 import com.tangem.feature.tester.presentation.featuretoggles.state.FeatureTogglesContentState
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
@@ -45,20 +47,38 @@ internal class FeatureTogglesViewModel @Inject constructor(
     /** Setup navigation state property by router [router] and provides app restart method by [appFinisher] */
     fun setupInteractions(router: InnerTesterRouter, appFinisher: AppFinisher) {
         uiState = uiState.copy(
-            onBackClick = router::back,
+            topBar = uiState.topBar.copy(onBackClick = router::back),
             onRestartAppClick = appFinisher::restart,
         )
     }
 
     private fun initState(): FeatureTogglesContentState {
         return FeatureTogglesContentState(
-            topBarState = getConfigSetupState(),
+            topBar = getConfigSetupState(isPrimarySetup = true),
             appVersion = appVersionProvider.versionName,
             featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles(),
             onToggleValueChange = ::onToggleValueChange,
-            onBackClick = {},
             onRestartAppClick = {},
         )
+    }
+
+    private fun getConfigSetupState(isPrimarySetup: Boolean): TopBarWithRefreshUM {
+        val isMatchLocalConfig = mutableFeatureTogglesManager.isMatchLocalConfig()
+
+        return if (isPrimarySetup) {
+            TopBarWithRefreshUM(
+                titleResId = R.string.feature_toggles,
+                onBackClick = {},
+                refreshButton = TopBarWithRefreshUM.RefreshButton(
+                    isVisible = false,
+                    onRefreshClick = ::onRefreshClick,
+                ),
+            )
+        } else {
+            uiState.topBar.copy(
+                refreshButton = uiState.topBar.refreshButton.copy(isVisible = isMatchLocalConfig),
+            )
+        }
     }
 
     private fun onToggleValueChange(name: String, isEnabled: Boolean) {
@@ -70,25 +90,17 @@ internal class FeatureTogglesViewModel @Inject constructor(
             // delay for smoothly update animations
             delay(timeMillis = 300)
 
-            uiState = uiState.copy(topBarState = getConfigSetupState())
+            uiState = uiState.copy(topBar = getConfigSetupState(isPrimarySetup = false))
         }
     }
 
-    private fun getConfigSetupState(): FeatureTogglesContentState.TopBarState {
-        return if (mutableFeatureTogglesManager.isMatchLocalConfig()) {
-            FeatureTogglesContentState.TopBarState.ConfigSetup
-        } else {
-            FeatureTogglesContentState.TopBarState.CustomSetup(
-                onRecoverClick = {
-                    viewModelScope.launch {
-                        mutableFeatureTogglesManager.recoverLocalConfig()
+    private fun onRefreshClick() {
+        viewModelScope.launch {
+            mutableFeatureTogglesManager.recoverLocalConfig()
 
-                        uiState = uiState.copy(
-                            topBarState = getConfigSetupState(),
-                            featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles(),
-                        )
-                    }
-                },
+            uiState = uiState.copy(
+                topBar = getConfigSetupState(isPrimarySetup = false),
+                featureToggles = mutableFeatureTogglesManager.getTesterFeatureToggles(),
             )
         }
     }
