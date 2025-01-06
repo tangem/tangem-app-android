@@ -8,11 +8,13 @@ import com.tangem.blockchainsdk.accountcreator.DefaultAccountCreator
 import com.tangem.blockchainsdk.datastorage.DefaultBlockchainDataStorage
 import com.tangem.blockchainsdk.featuretoggles.DefaultBlockchainSDKFeatureToggles
 import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
+import com.tangem.blockchainsdk.providers.DevBlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -43,10 +45,14 @@ internal object BlockchainSDKFactoryModule {
     @Provides
     @Singleton
     fun provideBlockchainProvidersTypesManager(
+        devBlockchainProvidersTypesManager: DevBlockchainProvidersTypesManager,
         prodBlockchainProvidersTypesManager: ProdBlockchainProvidersTypesManager,
     ): BlockchainProvidersTypesManager {
-        // In the future, we will use different types of providers for different environments
-        return prodBlockchainProvidersTypesManager
+        return if (BuildConfig.DEBUG) {
+            devBlockchainProvidersTypesManager
+        } else {
+            prodBlockchainProvidersTypesManager
+        }
     }
 
     @Provides
