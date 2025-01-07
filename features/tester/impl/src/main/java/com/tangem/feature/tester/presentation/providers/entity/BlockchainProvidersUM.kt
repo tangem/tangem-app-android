@@ -17,7 +17,8 @@ internal data class BlockchainProvidersUM(
         val blockchainSymbol: String,
         val providers: ImmutableList<ProviderUM>,
         val isExpanded: Boolean,
-        val onDrop: (id: String, prev: Int, current: Int) -> Unit,
+        val onDrop: (prev: Int, current: Int) -> Unit,
+        val addPublicProviderDialog: AddPublicProviderDialogUM,
     )
 
     @Immutable
@@ -28,4 +29,10 @@ internal data class BlockchainProvidersUM(
             else -> type::class.java.simpleName
         }
     }
+
+    data class AddPublicProviderDialogUM(
+        val hasError: Boolean,
+        val onValueChange: (String) -> Unit,
+        val onSaveClick: (String) -> Unit,
+    )
 }
