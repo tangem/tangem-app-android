@@ -9,15 +9,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * Tangem snackbar host.
- * Based on Material3 component. It's best way to show [TangemSnackbar].
+ * Based on Material3 component. It's the best way to show [TangemSnackbar].
  *
- * @param hostState       snackbar host state
- * @param modifier        modifier
- * @param actionOnNewLine flag that indicates if the action should be displayed on a new line (default: false)
+ * @param modifier Modifier to be applied to the layout.
+ * @param hostState SnackbarHostState that will be used to show snackbar.
+ * Optional parameter. By default, it uses [LocalSnackbarHostState.current].
+ * @param actionOnNewLine Flag that indicates if the action should be displayed on a new line.
+ * Optional parameter, `false` by default.
  *
  * @see <a href = https://www.figma.com/design/14ISV23YB1yVW1uNVwqrKv/Android?node-id=682-761&t=kDzSZDx0m0sk4iYz-4
  * >Figma</a>
@@ -25,7 +28,11 @@ import com.tangem.core.ui.res.TangemThemePreview
 [REDACTED_AUTHOR]
  */
 @Composable
-fun TangemSnackbarHost(hostState: SnackbarHostState, modifier: Modifier = Modifier, actionOnNewLine: Boolean = false) {
+fun TangemSnackbarHost(
+    modifier: Modifier = Modifier,
+    hostState: SnackbarHostState = LocalSnackbarHostState.current,
+    actionOnNewLine: Boolean = false,
+) {
     SnackbarHost(hostState = hostState, modifier = modifier) { data ->
         TangemSnackbar(data = data, actionOnNewLine = actionOnNewLine)
     }
