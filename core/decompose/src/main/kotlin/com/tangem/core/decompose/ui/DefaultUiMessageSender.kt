@@ -1,6 +1,6 @@
 package com.tangem.core.decompose.ui
 
-internal class DefaultUiMessageSender(
+class DefaultUiMessageSender(
     private val handler: UiMessageHandler,
 ) : UiMessageSender {
 
