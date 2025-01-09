@@ -125,7 +125,7 @@ internal class MainViewModel @Inject constructor(
                 it.isBalanceHidingNotificationEnabled && it.isBalanceHidden
             }
             .onEach {
-                if (state.value.modalNotification?.isShow != true && !it.isUpdateFromToast) {
+                if (state.value.modalNotification?.isShown != true && !it.isUpdateFromToast) {
                     listenToFlipsUseCase.changeUpdateEnabled(false)
                     stateHolder.updateWithHiddenBalancesNotification()
                     router.push(AppRoute.ModalNotification)
