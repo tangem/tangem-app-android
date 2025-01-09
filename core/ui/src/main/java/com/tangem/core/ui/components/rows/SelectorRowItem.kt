@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,8 +22,9 @@ import com.tangem.core.ui.components.atoms.text.EllipsisText
 import com.tangem.core.ui.components.atoms.text.TextEllipsis
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.utils.StringsSigns
 
 @Composable
@@ -77,7 +77,7 @@ fun SelectorRowItem(
                 contentDescription = null,
             )
             Text(
-                text = stringResource(titleRes),
+                text = stringResourceSafe(titleRes),
                 style = textStyle,
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),

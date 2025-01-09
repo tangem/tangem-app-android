@@ -53,7 +53,6 @@ private fun handleHomeAction(action: Action) {
 
             store.dispatch(GlobalAction.RestoreAppCurrency)
             store.dispatch(GlobalAction.ExchangeManager.Init)
-            store.dispatch(GlobalAction.FetchUserCountry)
         }
         is HomeAction.ReadCard -> {
             action.scope.launch {
