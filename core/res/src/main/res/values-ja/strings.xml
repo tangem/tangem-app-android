@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">今後表示しない</string>
   <string name="balance_hidden_got_it_button">わかりました</string>
   <string name="balance_hidden_title">残高は非表示</string>
+  <string name="beta_mode_warning_message">ブロックチェーン開発者によると、Kaspaトークンは現在ベータ版です。アップデートをお楽しみに！</string>
+  <string name="beta_mode_warning_title">ベータモード</string>
   <string name="biometric_lockout_permanent_warning_description">カードまたはリングをスキャンしてください</string>
   <string name="biometric_lockout_warning_description">30秒後に再試行するか、カードまたはリングをスキャンしてください</string>
   <string name="biometric_lockout_warning_title">試行回数が多すぎます</string>
