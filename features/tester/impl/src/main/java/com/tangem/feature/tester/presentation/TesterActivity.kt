@@ -23,12 +23,16 @@ import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockc
 import com.tangem.feature.tester.presentation.excludedblockchains.ExcludedBlockchainsViewModel
 import com.tangem.feature.tester.presentation.featuretoggles.ui.FeatureTogglesScreen
 import com.tangem.feature.tester.presentation.featuretoggles.viewmodels.FeatureTogglesViewModel
-import com.tangem.feature.tester.presentation.menu.state.TesterMenuContentState
+import com.tangem.feature.tester.presentation.menu.state.TesterMenuUM
+import com.tangem.feature.tester.presentation.menu.state.TesterMenuUM.ButtonUM
 import com.tangem.feature.tester.presentation.menu.ui.TesterMenuScreen
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.feature.tester.presentation.navigation.TesterScreen
+import com.tangem.feature.tester.presentation.providers.ui.BlockchainProvidersScreen
+import com.tangem.feature.tester.presentation.providers.viewmodel.BlockchainProvidersViewModel
 import com.tangem.features.tester.api.TesterRouter
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.collections.immutable.persistentSetOf
 import javax.inject.Inject
 
 /** Activity for testers */
@@ -70,14 +74,26 @@ internal class TesterActivity : ComposeActivity() {
         NavHost(navController = navController, startDestination = TesterScreen.MENU.name) {
             composable(route = TesterScreen.MENU.name) {
                 TesterMenuScreen(
-                    state = TesterMenuContentState(
+                    state = TesterMenuUM(
                         onBackClick = { appRouter.pop { finish() } },
-                        onFeatureTogglesClick = { innerTesterRouter.open(TesterScreen.FEATURE_TOGGLES) },
-                        onEnvironmentTogglesClick = { innerTesterRouter.open(TesterScreen.ENVIRONMENTS_TOGGLES) },
-                        onExcludedBlockchainsClick = {
-                            innerTesterRouter.open(TesterScreen.EXCLUDED_BLOCKCHAINS)
+                        buttons = persistentSetOf(
+                            ButtonUM.FEATURE_TOGGLES,
+                            ButtonUM.EXCLUDED_BLOCKCHAINS,
+                            ButtonUM.ENVIRONMENT_TOGGLES,
+                            ButtonUM.BLOCKCHAIN_PROVIDERS,
+                            ButtonUM.TESTER_ACTIONS,
+                        ),
+                        onButtonClick = {
+                            val route = when (it) {
+                                ButtonUM.FEATURE_TOGGLES -> TesterScreen.FEATURE_TOGGLES
+                                ButtonUM.EXCLUDED_BLOCKCHAINS -> TesterScreen.EXCLUDED_BLOCKCHAINS
+                                ButtonUM.ENVIRONMENT_TOGGLES -> TesterScreen.ENVIRONMENTS_TOGGLES
+                                ButtonUM.BLOCKCHAIN_PROVIDERS -> TesterScreen.BLOCKCHAIN_PROVIDERS
+                                ButtonUM.TESTER_ACTIONS -> TesterScreen.TESTER_ACTIONS
+                            }
+
+                            innerTesterRouter.open(route)
                         },
-                        onTesterActionsClick = { innerTesterRouter.open(TesterScreen.TESTER_ACTIONS) },
                     ),
                 )
             }
@@ -115,6 +131,15 @@ internal class TesterActivity : ComposeActivity() {
 
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 ExcludedBlockchainsScreen(state = state)
+            }
+
+            composable(route = TesterScreen.BLOCKCHAIN_PROVIDERS.name) {
+                val viewModel = hiltViewModel<BlockchainProvidersViewModel>().apply {
+                    setupNavigation(innerTesterRouter)
+                }
+
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                BlockchainProvidersScreen(state)
             }
         }
     }
