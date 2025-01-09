@@ -181,7 +181,7 @@ private fun SecurityScoreBottomSheetPreview() {
     TangemThemePreview {
         SecurityScoreBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = SecurityScorePreviewData.bottomSheetContent,
             ),

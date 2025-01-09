@@ -12,6 +12,7 @@ import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.InMemoryStorage
+import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
@@ -150,7 +151,9 @@ class MockTangemSdkManager(
 
     @Deprecated("TangemSdkManager shouldn't returns a string from resources")
     override fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        return resources.getString(stringResId, *formatArgs)
+        val args = formatArgs.toSet().filterNotNull().toTypedArray()
+
+        return resources.getStringSafe(stringResId, *args)
     }
 
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
