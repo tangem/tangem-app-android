@@ -15,6 +15,7 @@ import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
+import com.tangem.datasource.api.visa.TangemVisaAuthApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.*
@@ -166,6 +167,21 @@ internal object NetworkModule {
                     .readTimeout(TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .applyTimeoutAnnotations()
             },
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideTangemVisaApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        apiConfigsManager: ApiConfigsManager,
+    ): TangemVisaAuthApi {
+        return createApi<TangemVisaAuthApi>(
+            id = ApiConfig.ID.TangemVisaAuth,
+            moshi = moshi,
+            context = context,
+            apiConfigsManager = apiConfigsManager,
         )
     }
 
