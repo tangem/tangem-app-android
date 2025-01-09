@@ -49,9 +49,9 @@ internal fun OnboardingMultiWallet(
                 url2 = state.artwork2Url,
                 url3 = state.artwork3Url,
                 modifier = Modifier
-                    .weight(.56f)
                     .padding(horizontal = 34.dp)
                     .padding(top = 20.dp)
+                    .weight(.4f)
                     .fillMaxWidth(),
                 state = artworksState,
             )
