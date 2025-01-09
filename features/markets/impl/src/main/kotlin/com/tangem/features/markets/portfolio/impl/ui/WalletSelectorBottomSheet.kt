@@ -94,7 +94,7 @@ private fun Preview() {
     TangemThemePreview {
         WalletSelectorBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = WalletSelectorBSContentUM(
                     userWallets = persistentListOf(
