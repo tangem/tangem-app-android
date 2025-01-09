@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -31,6 +30,7 @@ import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.buttons.common.TangemButtonColors
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -153,7 +153,7 @@ private fun BoxScope.DisclaimerButton(onAccept: (Boolean) -> Unit) {
         rememberPermissionState(permission = permission).status.isGranted
     } ?: true
     PrimaryButton(
-        text = stringResource(id = R.string.common_accept),
+        text = stringResourceSafe(id = R.string.common_accept),
         onClick = { onAccept(!isPermissionGranted) },
         colors = TangemButtonColors(
             backgroundColor = TangemColorPalette.Light4,
