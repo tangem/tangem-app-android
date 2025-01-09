@@ -17,7 +17,7 @@ internal class ShowInfoBottomSheetStateTransformer(
         return prevState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
                 onDismissRequest = onDismiss,
-                isShow = true,
+                isShown = true,
                 content = when (infoType) {
                     InfoType.ANNUAL_PERCENTAGE_RATE -> StakingInfoBottomSheetConfig(
                         title = resourceReference(R.string.staking_details_annual_percentage_rate),

@@ -59,13 +59,14 @@ internal object SendClickIntentsStub : SendClickIntents {
 
     override fun onExploreClick() {}
 
-    override fun onShareClick() {}
+    override fun onShareClick(txUrl: String) {}
 
     override fun onAmountReduceByClick(
         reduceAmountBy: BigDecimal,
         reduceAmountByDiff: BigDecimal,
         notification: Class<out NotificationUM>,
-    ) {}
+    ) {
+    }
 
     override fun onAmountReduceToClick(reduceAmountTo: BigDecimal, notification: Class<out NotificationUM>) {}
 
