@@ -7,6 +7,7 @@ import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
@@ -113,6 +114,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
+    private val shareManager: ShareManager,
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
     private val getUserCountryUseCase: GetUserCountryUseCase,
@@ -167,7 +169,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val defaultAddress = addresses.firstOrNull()?.value ?: return null
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-        clipboardManager.setText(text = defaultAddress)
+        clipboardManager.setText(text = defaultAddress, isSensitive = true)
         analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
     }
@@ -184,9 +186,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+                clipboardManager.setText(text = it, isSensitive = true)
             },
             onShareClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
+                shareManager.shareText(text = it)
             },
         )
     }
@@ -200,12 +204,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             walletManagersFacade.getDefaultAddress(
                 userWalletId = stateHolder.getSelectedWalletId(),
                 network = cryptoCurrencyStatus.currency.network,
-            )?.let {
+            )?.let { address ->
                 stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
 
-                walletEventSender.send(
-                    event = WalletEvent.CopyAddress(address = it),
-                )
+                clipboardManager.setText(text = address, isSensitive = true)
+                walletEventSender.send(event = WalletEvent.CopyAddress)
             }
         }
     }
