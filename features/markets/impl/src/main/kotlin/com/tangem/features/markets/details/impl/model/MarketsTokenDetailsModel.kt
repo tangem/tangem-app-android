@@ -205,7 +205,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             body = MarketsTokenDetailsUM.Body.Loading,
             triggerPriceChange = consumedEvent(),
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = false,
+                isShown = false,
                 onDismissRequest = {},
                 content = TangemBottomSheetConfigContent.Empty,
             ),
@@ -510,7 +510,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         state.update { stateToUpdate ->
             stateToUpdate.copy(
                 bottomSheetConfig = stateToUpdate.bottomSheetConfig.copy(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = ::hideBottomSheet,
                     content = content,
                 ),
@@ -521,7 +521,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     private fun hideBottomSheet() {
         state.update { stateToUpdate ->
             stateToUpdate.copy(
-                bottomSheetConfig = stateToUpdate.bottomSheetConfig.copy(isShow = false),
+                bottomSheetConfig = stateToUpdate.bottomSheetConfig.copy(isShown = false),
             )
         }
     }
