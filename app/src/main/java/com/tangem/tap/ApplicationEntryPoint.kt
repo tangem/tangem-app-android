@@ -14,6 +14,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
+import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
@@ -123,6 +124,8 @@ interface ApplicationEntryPoint {
     fun getCoroutineDispatcherProvider(): CoroutineDispatcherProvider
 
     fun getExcludedBlockchains(): ExcludedBlockchains
+
+    fun getAppLogsStore(): AppLogsStore
 
     fun getClipboardManager(): ClipboardManager
 }
