@@ -6,13 +6,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.audits.AuditLabel
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.orMaskWithStars
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.Subtitle2State as TokenCryptoAmountState
 
@@ -33,7 +33,7 @@ internal fun TokenCryptoAmount(
             AuditLabel(state = state.auditLabelUM, modifier = modifier)
         }
         is TokenCryptoAmountState.Unreachable -> {
-            CryptoAmountText(amount = stringResource(id = R.string.common_unreachable), modifier = modifier)
+            CryptoAmountText(amount = stringResourceSafe(id = R.string.common_unreachable), modifier = modifier)
         }
         is TokenCryptoAmountState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)

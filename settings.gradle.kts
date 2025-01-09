@@ -245,6 +245,7 @@ include(":domain:manage-tokens")
 include(":domain:manage-tokens:models")
 include(":domain:onramp")
 include(":domain:onramp:models")
+include(":domain:promo")
 // endregion Domain modules
 
 // region Data modules
@@ -270,3 +271,4 @@ include(":data:markets")
 include(":data:manage-tokens")
 include(":data:onramp")
 // endregion Data modules
+include(":domain:promo:models")
