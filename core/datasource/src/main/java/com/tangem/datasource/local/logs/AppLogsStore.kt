@@ -38,7 +38,7 @@ class AppLogsStore @Inject constructor(
     )
     private val mutex = Mutex()
 
-    private val file = File(applicationContext.filesDir, LOG_FILE_NAME)
+    private val file = File(applicationContext.filesDir, NEW_LOG_FILE_NAME)
 
     private val formatter = DateTimeFormatterBuilder()
         .appendDayOfMonth(2)
@@ -59,6 +59,9 @@ class AppLogsStore @Inject constructor(
 
     /** Save log [message] */
     fun saveLogMessage(message: String) {
+        // Temporally logs are not saved
+        return
+
         launchWithLock {
             createFileIfNotExist()
 
@@ -68,6 +71,9 @@ class AppLogsStore @Inject constructor(
 
     /** Save log that consists from [messages] */
     fun saveLogMessage(vararg messages: String) {
+        // Temporally logs are not saved
+        return
+
         launchWithLock {
             createFileIfNotExist()
 
@@ -82,6 +88,18 @@ class AppLogsStore @Inject constructor(
                 file.delete()
             }
         }
+    }
+
+    fun deleteOldLogsFile() {
+        val file = File(applicationContext.filesDir, LOG_FILE_NAME)
+
+        if (file.exists()) file.delete()
+    }
+
+    fun deleteLastLogFile() {
+        val file = File(applicationContext.filesDir, NEW_LOG_FILE_NAME)
+
+        if (file.exists()) file.delete()
     }
 
     private fun writeMessage(vararg messages: String) {
@@ -112,5 +130,6 @@ class AppLogsStore @Inject constructor(
 
     private companion object {
         const val LOG_FILE_NAME = "logs.txt"
+        const val NEW_LOG_FILE_NAME = "app_logs.txt"
     }
 }
