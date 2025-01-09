@@ -32,7 +32,6 @@ import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.OkxPromoNotification
-import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.event.EventEffect
@@ -65,16 +64,6 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
     val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
-        snackbarHost = {
-            TangemSnackbarHost(
-                modifier = Modifier.padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    bottom = bottomBarHeight + TangemTheme.dimens.spacing16,
-                ),
-                hostState = snackbarHostState,
-            )
-        },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
