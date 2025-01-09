@@ -13,7 +13,7 @@ internal class SetApprovalBottomSheetInProgressTransformer(
         return prevState.copy(
             bottomSheetConfig = prevState.bottomSheetConfig?.copy(
                 onDismissRequest = onDismiss,
-                isShow = true,
+                isShown = true,
                 content = approvalBottomSheetConfig?.let { config ->
                     config.copy(
                         data = config.data.copy(
