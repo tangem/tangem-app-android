@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.model
 
+import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
@@ -20,6 +21,7 @@ import javax.inject.Inject
 
 private const val MINIMUM_ACCESS_CODE_LENGTH = 4
 
+@Stable
 @ComponentScoped
 internal class MultiWalletAccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,

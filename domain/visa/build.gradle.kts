@@ -20,4 +20,6 @@ dependencies {
     /** Libs - Other */
     implementation(deps.jodatime)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
 }
