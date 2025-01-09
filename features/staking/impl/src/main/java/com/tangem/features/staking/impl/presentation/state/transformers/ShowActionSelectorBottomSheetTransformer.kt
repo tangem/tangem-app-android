@@ -17,7 +17,7 @@ internal class ShowActionSelectorBottomSheetTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 content = StakingActionSelectionBottomSheetConfig(
                     title = resourceReference(R.string.common_choose_action),
                     actions = pendingActions,
