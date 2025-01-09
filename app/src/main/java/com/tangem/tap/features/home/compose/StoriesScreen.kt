@@ -56,7 +56,7 @@ internal fun StoriesScreen(
             }
         }
     }
-
+// [REDACTED_TODO_COMMENT]
     StoriesScreenContent(
         modifier = Modifier
             .fillMaxSize()
@@ -75,6 +75,7 @@ internal fun StoriesScreen(
     )
 }
 
+@Deprecated("Use StoriesContainer from core/ui")
 @Suppress("LongMethod")
 @Composable
 private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: Modifier = Modifier) {
