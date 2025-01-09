@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.common.datastorage.BlockchainDataStorage
 import com.tangem.blockchain.common.logging.BlockchainSDKLogger
 import com.tangem.blockchainsdk.featuretoggles.BlockchainSDKFeatureToggles
+import com.tangem.blockchainsdk.providers.BlockchainProviderTypes
 import timber.log.Timber
 import javax.inject.Inject
 
