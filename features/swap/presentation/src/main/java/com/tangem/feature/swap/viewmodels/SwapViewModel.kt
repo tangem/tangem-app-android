@@ -1024,7 +1024,7 @@ internal class SwapViewModel @Inject constructor(
             },
             onBackClicked = {
                 val bottomSheet = uiState.bottomSheetConfig
-                if (bottomSheet != null && bottomSheet.isShow) {
+                if (bottomSheet != null && bottomSheet.isShown) {
                     uiState = stateBuilder.dismissBottomSheet(uiState)
                 } else {
                     if (swapRouter.currentScreen == SwapNavScreen.SelectToken) {
