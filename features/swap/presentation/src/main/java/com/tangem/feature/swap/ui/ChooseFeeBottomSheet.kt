@@ -8,7 +8,6 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -17,10 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.rows.SelectorRowItem
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.ui.FeeType
@@ -69,7 +65,7 @@ private fun ChooseFeeBottomSheetContent(content: ChooseFeeBottomSheetConfig) {
 @Composable
 private fun FooterBlock(readMore: TextReference, readMoreUrl: String, onReadMoreClick: (String) -> Unit) {
     val linkText = readMore.resolveReference()
-    val fullString = stringResource(R.string.common_fee_selector_footer, linkText)
+    val fullString = stringResourceSafe(R.string.common_fee_selector_footer, linkText)
     val linkTextPosition = fullString.length - linkText.length
     val annotatedString = buildAnnotatedString {
         withStyle(SpanStyle(color = TangemTheme.colors.text.tertiary)) {
@@ -174,7 +170,7 @@ private fun Preview_ChooseFeeBottomSheet() {
     TangemThemePreview {
         ChooseFeeBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = content,
             ),
