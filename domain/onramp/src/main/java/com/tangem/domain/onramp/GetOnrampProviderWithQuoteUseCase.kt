@@ -40,7 +40,7 @@ class GetOnrampProviderWithQuoteUseCase(
                 toAmount = matchedQuote.toAmount,
                 fromAmount = matchedQuote.fromAmount,
             )
-            is OnrampQuote.AmountError -> Unavailable.Error(
+            is OnrampQuote.AmountError -> Unavailable.AmountError(
                 provider = matchedQuote.provider,
                 quoteError = matchedQuote,
             )

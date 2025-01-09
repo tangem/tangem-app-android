@@ -114,6 +114,7 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         PolygonZkEVM -> null
         PolygonZkEVMTestnet -> null
         Radiant -> null
+        Fact0rn -> null
         BaseTestnet -> null
         Moonriver -> null
         MoonriverTestnet -> null
@@ -145,4 +146,6 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Xodex -> null
         Canxium -> null
         Clore -> null
+        VanarChain -> null
+        VanarChainTestnet -> null
     }
