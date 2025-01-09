@@ -29,7 +29,7 @@ internal class PreviewAddCustomTokenComponent(
     override fun BottomSheet() {
         val config by previewConfig.collectAsStateWithLifecycle()
         val bottomSheetConfig = TangemBottomSheetConfig(
-            isShow = true,
+            isShown = true,
             onDismissRequest = ::dismiss,
             content = config.step.toContentModel(::dismiss),
         )

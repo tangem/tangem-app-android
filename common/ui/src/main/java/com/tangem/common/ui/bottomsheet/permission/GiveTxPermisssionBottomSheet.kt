@@ -296,7 +296,7 @@ private fun Preview_GiveTxPermissionBottomSheet() {
     TangemThemePreview {
         GiveTxPermissionBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = previewData,
             ),
