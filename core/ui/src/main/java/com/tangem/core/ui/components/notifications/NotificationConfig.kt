@@ -48,5 +48,12 @@ data class NotificationConfig(
             val secondaryText: TextReference,
             val onSecondaryClick: () -> Unit,
         ) : ButtonsState()
+
+        data class SecondaryPairButtonsConfig(
+            val leftText: TextReference,
+            val onLeftClick: () -> Unit,
+            val rightText: TextReference,
+            val onRightClick: () -> Unit,
+        ) : ButtonsState()
     }
 }
