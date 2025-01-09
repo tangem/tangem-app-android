@@ -101,10 +101,10 @@ internal class TokenActionsHandler @AssistedInject constructor(
 
         updateTokenReceiveBSConfig {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {
                     updateTokenReceiveBSConfig {
-                        it.copy(isShow = false)
+                        it.copy(isShown = false)
                     }
                 },
                 content = TokenReceiveBottomSheetConfig(
