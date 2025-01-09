@@ -8,14 +8,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.extensions.pluralStringResourceSafe
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -31,26 +31,32 @@ internal fun MultiWalletSeedPhraseWords(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize()) {
-        SegmentSeedBlock(
-            modifier = Modifier.padding(vertical = 20.dp),
-            state = state,
-        )
-
-        TitleBlock(state)
-
-        SeedPhraseGridBlock(
-            mnemonicGridItems = state.words,
+        Column(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 32.dp),
-        )
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .weight(1f),
+        ) {
+            SegmentSeedBlock(
+                modifier = Modifier.padding(vertical = 20.dp),
+                state = state,
+            )
+
+            TitleBlock(state)
+
+            SeedPhraseGridBlock(
+                mnemonicGridItems = state.words,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp, bottom = 32.dp),
+            )
+        }
 
         PrimaryButton(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            text = stringResource(id = R.string.common_continue),
+            text = stringResourceSafe(id = R.string.common_continue),
             onClick = state.onContinueClick,
         )
     }
@@ -70,7 +76,7 @@ private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, 
         },
     ) {
         Text(
-            text = pluralStringResource(
+            text = pluralStringResourceSafe(
                 id = R.plurals.onboarding_seed_generate_words_count,
                 count = if (it == 0) 12 else 24,
                 if (it == 0) 12 else 24,
@@ -95,14 +101,14 @@ private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifi
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Text(
-            text = stringResource(id = R.string.onboarding_seed_generate_title),
+            text = stringResourceSafe(id = R.string.onboarding_seed_generate_title),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
         Text(
-            text = pluralStringResource(
+            text = pluralStringResourceSafe(
                 id = R.plurals.onboarding_seed_generate_message_words_count,
                 count = if (state.words24OptionSelected.not()) 12 else 24,
                 if (state.words24OptionSelected.not()) 12 else 24,
@@ -118,8 +124,7 @@ private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifi
 @Composable
 private fun SeedPhraseGridBlock(mnemonicGridItems: ImmutableList<MnemonicGridItem>, modifier: Modifier = Modifier) {
     VerticalGrid(
-        modifier = modifier
-            .verticalScroll(rememberScrollState()),
+        modifier = modifier,
         items = mnemonicGridItems,
     ) { item ->
         Row(

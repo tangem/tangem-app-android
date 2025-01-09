@@ -12,10 +12,6 @@
         "version": "5.17.0"
     },
     {
-        "name": "MIGRATE_USER_COUNTRY_CODE_ENABLED",
-        "version": "5.17.0"
-    },
-    {
         "name": "ONRAMP_ENABLED",
         "version": "undefined"
     },
@@ -25,6 +21,10 @@
     },
     {
         "name": "ONBOARDING_CODE_REFACTORING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "NAVIGATION_REFACTORING",
         "version": "undefined"
     }
 ]
