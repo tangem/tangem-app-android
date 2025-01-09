@@ -133,7 +133,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
 
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ExpressStatusBottomSheetConfig(
                     value = expressState,

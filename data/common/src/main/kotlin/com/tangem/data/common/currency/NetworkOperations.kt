@@ -257,6 +257,7 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.PolygonZkEVM,
         Blockchain.PolygonZkEVMTestnet,
         Blockchain.Radiant,
+        Blockchain.Fact0rn,
         Blockchain.Base,
         Blockchain.BaseTestnet,
         Blockchain.Moonriver,
@@ -289,6 +290,8 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.Canxium,
         Blockchain.Chiliz,
         Blockchain.ChilizTestnet,
+        Blockchain.VanarChain,
+        Blockchain.VanarChainTestnet,
         -> Network.TransactionExtrasType.NONE
         // endregion
     }

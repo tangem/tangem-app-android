@@ -16,7 +16,7 @@ androidxBrowser = "1.4.0"
 androidxConstraintLayout = "2.1.4"
 androidxKtx = "1.9.0"
 androidxSplashScreen = "1.0.1"
-androidxFragment = "1.5.3"
+androidxFragment = "1.8.5"
 androidxLifecycle = "2.5.1"
 androidx-paging = "3.1.1"
 androidx-palette = "1.0.0"
@@ -88,9 +88,9 @@ markdownComposeView = "0.5.4"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "release-app_5.19-888"
+tangemBlockchainSdk = "develop-896"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.19-419"
+tangemCardSdk = "develop-420"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemVico = "2.0.0-alpha.25-tangem17"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
@@ -143,6 +143,7 @@ androidx-constraintLayout = { module = "androidx.constraintlayout:constraintlayo
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidxKtx" }
 androidx-core-splashScreen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
 androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidxFragment" }
+androidx-fragment-compose = { module = "androidx.fragment:fragment-compose", version.ref = "androidxFragment" }
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "androidx-paging" }
 androidx-swipeRefreshLayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swipeRefreshLayout" }
 androidx-palette = { module = "androidx.palette:palette", version.ref = "androidx-palette" }
@@ -196,7 +197,7 @@ tangem-vico-core = { group = "com.tangem.vico", name = "core", version.ref = "ta
 # region Detekt
 detekt-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektComposeRules" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
-# ndregion Detekt
+# endregion Detekt
 
 # region Test
 test-coroutine = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutine" }
@@ -247,7 +248,6 @@ timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate-noreflection", version.ref = "viewBindingDelegate" }
 xmlShimmer = { module = "com.github.skydoves:androidveil", version.ref = "xmlShimmer" }
 zxing-qrCore = { module = "com.google.zxing:core", version.ref = "zxingQrCode" }
-mviCore-watcher = { module = "com.github.badoo.mvicore:mvicore-diff", version.ref = "mviCore" }
 kotlin-serialization = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinSerialization" }
 arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
 arrow-fx = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
