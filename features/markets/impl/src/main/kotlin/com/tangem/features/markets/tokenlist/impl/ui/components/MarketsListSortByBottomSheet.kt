@@ -72,7 +72,7 @@ private fun Preview() {
         Box(Modifier.background(TangemTheme.colors.background.secondary)) {
             MarketsListSortByBottomSheet(
                 TangemBottomSheetConfig(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = {},
                     content = SortByBottomSheetContentUM(
                         selectedOption = SortByTypeUM.Trending,
