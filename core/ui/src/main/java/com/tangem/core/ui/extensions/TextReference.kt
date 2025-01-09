@@ -6,12 +6,11 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.AnnotatedString.Builder
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.decapitalize
+import com.tangem.core.res.getPluralStringSafe
+import com.tangem.core.res.getStringSafe
 import org.intellij.markdown.MarkdownElementTypes
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -172,7 +171,7 @@ fun TextReference.resolveReference(): String {
                 .map { if (it is TextReference) it.resolveReference() else it }
                 .toTypedArray()
 
-            val resolvedReference = stringResource(id = id, *args)
+            val resolvedReference = stringResourceSafe(id = id, *args)
 
             if (decapitalize) {
                 resolvedReference.replaceFirstChar { char -> char.lowercase() }
@@ -180,7 +179,7 @@ fun TextReference.resolveReference(): String {
                 resolvedReference
             }
         }
-        is TextReference.PluralRes -> pluralStringResource(id, count, *formatArgs.toTypedArray())
+        is TextReference.PluralRes -> pluralStringResourceSafe(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
         is TextReference.Annotated -> value.text
         is TextReference.Combined -> {
@@ -201,9 +200,9 @@ fun TextReference.resolveReference(resources: Resources): String {
                 .map { if (it is TextReference) it.resolveReference(resources) else it }
                 .toTypedArray()
 
-            resources.getString(id, *args)
+            resources.getStringSafe(id, *args)
         }
-        is TextReference.PluralRes -> resources.getQuantityString(id, count, *formatArgs.toTypedArray())
+        is TextReference.PluralRes -> resources.getPluralStringSafe(id, count, *formatArgs.toTypedArray())
         is TextReference.Str -> value
         is TextReference.Annotated -> value.text
         is TextReference.Combined -> {
@@ -225,10 +224,10 @@ fun TextReference.resolveAnnotatedReference(): AnnotatedString {
                 .map { if (it is TextReference) it.resolveReference() else it }
                 .toTypedArray()
 
-            formatAnnotated(stringResource(id = id, *args))
+            formatAnnotated(stringResourceSafe(id = id, *args))
         }
         is TextReference.PluralRes -> formatAnnotated(
-            pluralStringResource(id, count, *formatArgs.toTypedArray()),
+            pluralStringResourceSafe(id, count, *formatArgs.toTypedArray()),
         )
         is TextReference.Str -> formatAnnotated(value)
         is TextReference.Annotated -> value
