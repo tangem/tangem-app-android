@@ -10,10 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import org.burnoutcrew.reorderable.detectReorder
@@ -67,7 +67,7 @@ private fun DraggableImage(reorderableTokenListState: ReorderableLazyListState?)
 @Composable
 private fun NonFiatContentText(@StringRes text: Int) {
     Text(
-        text = stringResource(id = text),
+        text = stringResourceSafe(id = text),
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
