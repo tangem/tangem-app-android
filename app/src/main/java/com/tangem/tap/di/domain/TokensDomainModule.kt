@@ -1,12 +1,10 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.settings.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -118,13 +116,9 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
-        swapRepository: SwapRepository,
         currencyChecksRepository: CurrencyChecksRepository,
-        showSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
-        promoRepository: PromoRepository,
         stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
-        rampStateManager: RampStateManager,
     ): GetCurrencyWarningsUseCase {
         return GetCurrencyWarningsUseCase(
             walletManagersFacade = walletManagersFacade,
@@ -132,12 +126,8 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             currencyChecksRepository = currencyChecksRepository,
-            swapRepository = swapRepository,
-            showSwapPromoTokenUseCase = showSwapPromoTokenUseCase,
-            promoRepository = promoRepository,
             stakingRepository = stakingRepository,
             dispatchers = dispatchers,
-            rampStateManager = rampStateManager,
         )
     }
 

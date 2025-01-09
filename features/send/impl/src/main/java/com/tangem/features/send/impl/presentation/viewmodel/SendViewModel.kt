@@ -15,6 +15,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -106,6 +107,7 @@ internal class SendViewModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
     validateTransactionUseCase: ValidateTransactionUseCase,
     getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
@@ -862,8 +864,9 @@ internal class SendViewModel @Inject constructor(
         innerRouter.openUrl(sendState.txUrl)
     }
 
-    override fun onShareClick() {
+    override fun onShareClick(txUrl: String) {
         analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
+        shareManager.shareText(txUrl)
     }
 
     override fun onAmountReduceToClick(reduceAmountTo: BigDecimal, notification: Class<out NotificationUM>) {

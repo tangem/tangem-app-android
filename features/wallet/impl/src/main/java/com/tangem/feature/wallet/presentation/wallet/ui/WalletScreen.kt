@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +60,7 @@ import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
@@ -513,7 +513,7 @@ internal fun MarketsHint(isVisible: Boolean, modifier: Modifier = Modifier) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = stringResource(R.string.markets_hint),
+                text = stringResourceSafe(R.string.markets_hint),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.Center,
@@ -561,12 +561,12 @@ private fun MarketsTooltipContent(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.Start,
     ) {
         Text(
-            text = stringResource(id = R.string.markets_tooltip_title),
+            text = stringResourceSafe(id = R.string.markets_tooltip_title),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.primary1,
         )
         Text(
-            text = stringResource(id = R.string.markets_tooltip_message),
+            text = stringResourceSafe(id = R.string.markets_tooltip_message),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
         )
