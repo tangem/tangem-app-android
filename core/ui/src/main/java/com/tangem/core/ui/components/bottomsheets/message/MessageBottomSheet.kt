@@ -112,7 +112,7 @@ private fun Preview_NotificationBottomSheet(
         MessageBottomSheet(
             config = TangemBottomSheetConfig(
                 content = params,
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
             ),
         )
