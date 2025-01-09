@@ -88,7 +88,7 @@ markdownComposeView = "0.5.4"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-892"
+tangemBlockchainSdk = "develop-896"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-416"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
@@ -197,7 +197,7 @@ tangem-vico-core = { group = "com.tangem.vico", name = "core", version.ref = "ta
 # region Detekt
 detekt-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektComposeRules" }
 detekt-formatting = { module = "io.gitlab.arturbosch.detekt:detekt-formatting", version.ref = "detekt" }
-# ndregion Detekt
+# endregion Detekt
 
 # region Test
 test-coroutine = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutine" }
