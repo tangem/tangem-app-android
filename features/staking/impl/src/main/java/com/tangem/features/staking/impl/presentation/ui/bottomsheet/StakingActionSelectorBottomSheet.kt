@@ -67,7 +67,7 @@ private fun Preview_StakingActionSelectorBottomSheet() {
     TangemThemePreview {
         StakingActionSelectorBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = StakingActionSelectionBottomSheetConfig(
                     title = resourceReference(R.string.common_select_action),
