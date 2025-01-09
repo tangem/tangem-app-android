@@ -69,7 +69,7 @@ class ImportSeedPhraseStateBuilder {
         return uiState.copy(
             importSeedPhraseState = uiState.importSeedPhraseState.copy(
                 bottomSheetConfig = TangemBottomSheetConfig(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = onDismiss,
                     content = ShowPassphraseInfoBottomSheetContent(onDismiss),
                 ),
@@ -81,7 +81,7 @@ class ImportSeedPhraseStateBuilder {
         return uiState.copy(
             importSeedPhraseState = uiState.importSeedPhraseState.copy(
                 bottomSheetConfig = uiState.importSeedPhraseState.bottomSheetConfig?.copy(
-                    isShow = false,
+                    isShown = false,
                 ),
             ),
         )
