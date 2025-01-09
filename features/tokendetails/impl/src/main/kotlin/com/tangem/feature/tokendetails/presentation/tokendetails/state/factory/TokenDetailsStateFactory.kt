@@ -249,12 +249,12 @@ internal class TokenDetailsStateFactory(
     fun getStateWithReceiveBottomSheet(
         currency: CryptoCurrency,
         networkAddress: NetworkAddress,
-        sendCopyAnalyticsEvent: () -> Unit,
-        sendShareAnalyticsEvent: () -> Unit,
+        onCopyClick: (String) -> Unit,
+        onShareClick: (String) -> Unit,
     ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = TokenReceiveBottomSheetConfig(
                     name = currency.name,
@@ -262,8 +262,8 @@ internal class TokenDetailsStateFactory(
                     network = currency.network.name,
                     addresses = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
                     showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                    onCopyClick = sendCopyAnalyticsEvent,
-                    onShareClick = sendShareAnalyticsEvent,
+                    onCopyClick = onCopyClick,
+                    onShareClick = onShareClick,
                 ),
             ),
         )
@@ -275,7 +275,7 @@ internal class TokenDetailsStateFactory(
     ): TokenDetailsState {
         return currentStateProvider().copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
                     addressModels = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
@@ -288,7 +288,7 @@ internal class TokenDetailsStateFactory(
     fun getStateWithClosedBottomSheet(): TokenDetailsState {
         val state = currentStateProvider()
         return state.copy(
-            bottomSheetConfig = state.bottomSheetConfig?.copy(isShow = false),
+            bottomSheetConfig = state.bottomSheetConfig?.copy(isShown = false),
         )
     }
 
