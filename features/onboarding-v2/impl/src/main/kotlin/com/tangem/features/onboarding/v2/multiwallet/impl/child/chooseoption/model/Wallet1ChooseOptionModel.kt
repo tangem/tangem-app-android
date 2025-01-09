@@ -1,10 +1,12 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.chooseoption.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.common.TapWorkarounds.canSkipBackup
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Stable
 @ComponentScoped
 internal class Wallet1ChooseOptionModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -35,6 +38,8 @@ internal class Wallet1ChooseOptionModel @Inject constructor(
     init {
         analyticsHandler.send(OnboardingEvent.Backup.ScreenOpened)
     }
+
+    val canSkipBackup = params.multiWalletState.value.currentScanResponse.card.canSkipBackup
 
     fun onSkipClick() {
         if (skipClicked) return
