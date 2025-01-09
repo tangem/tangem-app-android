@@ -12,7 +12,7 @@ internal class ShowCameraDeniedBottomSheetTransformer(
     override fun transform(prevState: QrScanningState): QrScanningState {
         return prevState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = clickIntents::onBackClick,
                 content = CameraDeniedBottomSheetConfig(
                     onSettingsClick = clickIntents::onSettingsClick,
