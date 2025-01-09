@@ -157,7 +157,7 @@ internal class ImportSeedPhraseUiStateBuilder(
         updateUiState { state ->
             state.copy(
                 infoBottomSheetConfig = TangemBottomSheetConfig.Empty.copy(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = {
                         updateUiState { it.copy(infoBottomSheetConfig = TangemBottomSheetConfig.Empty) }
                     },
