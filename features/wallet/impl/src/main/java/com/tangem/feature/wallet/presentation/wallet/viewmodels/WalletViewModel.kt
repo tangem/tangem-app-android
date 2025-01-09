@@ -383,6 +383,7 @@ internal class WalletViewModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 walletFeatureToggles = walletFeatureToggles,
+                selectedWalletIndex = action.selectedWalletIndex,
             ),
         )
 
