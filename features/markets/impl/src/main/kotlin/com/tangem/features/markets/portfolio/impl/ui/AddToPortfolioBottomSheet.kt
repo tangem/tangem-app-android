@@ -295,7 +295,7 @@ private fun Preview(
     TangemThemePreview {
         AddToPortfolioBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 content = content,
                 onDismissRequest = {},
             ),
@@ -370,7 +370,7 @@ private fun PreviewContentTestOnDevice(
 
         AddToPortfolioBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = isShow,
+                isShown = isShow,
                 content = contentState,
                 onDismissRequest = { isShow = false },
             ),
