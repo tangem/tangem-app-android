@@ -82,6 +82,21 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         val backupService = backupServiceHolder.backupService.get() ?: return MultiWalletFinalizeUM()
         val initialStep = getInitialStep()
 
+        // sets proper artwork state for initial step
+        // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
+        modelScope.launch {
+            when (initialStep) {
+                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
+                MultiWalletFinalizeUM.Step.BackupDevice1 -> {
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
+                }
+                MultiWalletFinalizeUM.Step.BackupDevice2 -> {
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded)
+                }
+            }
+        }
+
         val batchId = when (initialStep) {
             MultiWalletFinalizeUM.Step.Primary -> backupService.primaryCardBatchId
             MultiWalletFinalizeUM.Step.BackupDevice1 -> backupService.backupCardsBatchIds.getOrNull(0)
