@@ -76,7 +76,7 @@ fun EventMessageEffect(
 @Composable
 private fun MessageBottomSheet(message: BottomSheetMessage, onDismissRequest: () -> Unit) {
     val config = TangemBottomSheetConfig(
-        isShow = true,
+        isShown = true,
         content = MessageBottomSheetUM(
             iconResId = message.iconResId,
             title = message.title,
