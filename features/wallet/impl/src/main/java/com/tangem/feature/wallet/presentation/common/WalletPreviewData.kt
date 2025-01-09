@@ -180,7 +180,7 @@ internal object WalletPreviewData {
 
     val bottomSheet by lazy {
         TangemBottomSheetConfig(
-            isShow = false,
+            isShown = false,
             onDismissRequest = {},
             content = WalletBottomSheetConfig.UnlockWallets(
                 onUnlockClick = {},
