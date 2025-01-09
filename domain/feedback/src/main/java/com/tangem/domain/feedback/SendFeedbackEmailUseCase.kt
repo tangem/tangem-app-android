@@ -1,6 +1,7 @@
 package com.tangem.domain.feedback
 
 import android.content.res.Resources
+import com.tangem.core.res.getStringSafe
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.FeedbackEmail
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -66,7 +67,7 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.SwapProblem,
             is FeedbackEmailType.TransactionSendingProblem,
             -> {
-                append(resources.getString(R.string.feedback_data_collection_message))
+                append(resources.getStringSafe(R.string.feedback_data_collection_message))
                 skipLine()
             }
         }
