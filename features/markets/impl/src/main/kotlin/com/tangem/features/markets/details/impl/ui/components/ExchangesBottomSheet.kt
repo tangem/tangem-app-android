@@ -152,7 +152,7 @@ private fun Preview_ExchangesBottomSheet(
             config = TangemBottomSheetConfig(
                 onDismissRequest = {},
                 content = content,
-                isShow = true,
+                isShown = true,
             ),
         )
     }
