@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -32,9 +31,10 @@ import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.buttons.actions.ActionButtonConfig
 import com.tangem.core.ui.components.buttons.actions.RoundedActionButton
 import com.tangem.core.ui.components.token.TokenItem
-import com.tangem.core.ui.components.tokenlist.internal.DraggableNetworkTitleItem
+import com.tangem.core.ui.components.tokenlist.internal.DraggableGroupTitleItem
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.reordarable.ReorderableItem
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -176,10 +176,10 @@ private fun LazyItemScope.DraggableItem(
         val modifierWithBackground = itemModifier.background(color = TangemTheme.colors.background.primary)
 
         when (item) {
-            is DraggableItem.GroupHeader -> DraggableNetworkTitleItem(
-                modifier = modifierWithBackground,
-                networkName = item.networkName,
+            is DraggableItem.GroupHeader -> DraggableGroupTitleItem(
+                state = item.groupTitle,
                 reorderableTokenListState = reorderableState,
+                modifier = modifierWithBackground,
             )
             is DraggableItem.Token -> TokenItem(
                 modifier = modifierWithBackground,
@@ -232,7 +232,7 @@ private fun TopBar(
             contentAlignment = Alignment.CenterStart,
         ) {
             Text(
-                text = stringResource(id = R.string.organize_tokens_title),
+                text = stringResourceSafe(id = R.string.organize_tokens_title),
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
                 maxLines = 1,
@@ -287,12 +287,12 @@ private fun Actions(config: OrganizeTokensState.ActionsConfig, modifier: Modifie
     ) {
         SecondaryButton(
             modifier = Modifier.weight(1f),
-            text = stringResource(id = R.string.common_cancel),
+            text = stringResourceSafe(id = R.string.common_cancel),
             onClick = config.onCancelClick,
         )
         PrimaryButton(
             modifier = Modifier.weight(1f),
-            text = stringResource(id = R.string.common_apply),
+            text = stringResourceSafe(id = R.string.common_apply),
             onClick = config.onApplyClick,
             showProgress = config.showApplyProgress,
             enabled = config.canApply,

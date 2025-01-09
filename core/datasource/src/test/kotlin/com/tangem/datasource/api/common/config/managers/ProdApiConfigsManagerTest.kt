@@ -85,6 +85,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is Express -> createExpressModel()
                 is TangemTech -> createTangemTechModel()
                 is StakeKit -> createStakeKitModel()
+                is TangemVisaAuth -> createVisaAuthModel()
             }
         }
 
@@ -168,6 +169,16 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         "X-API-KEY" to Provider { STAKE_KIT_API_KEY },
                         "accept" to Provider { "application/json" },
                     ),
+                ),
+            )
+        }
+
+        private fun createVisaAuthModel(): Model {
+            return Model(
+                id = ApiConfig.ID.TangemVisaAuth,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.STAGE,
+                    baseUrl = "https://api-s.tangem.org/",
                 ),
             )
         }

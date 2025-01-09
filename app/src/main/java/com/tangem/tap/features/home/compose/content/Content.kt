@@ -2,20 +2,23 @@ package com.tangem.tap.features.home.compose.content
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH32
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
@@ -27,8 +30,8 @@ fun StoriesRevolutionaryWallet() {
     SplitContent(
         topContent = {
             TopContent(
-                titleText = stringResource(id = R.string.story_awe_title),
-                subtitleText = stringResource(id = R.string.story_awe_description),
+                titleText = stringResourceSafe(id = R.string.story_awe_title),
+                subtitleText = stringResourceSafe(id = R.string.story_awe_description),
             )
         },
         bottomContent = {
@@ -46,8 +49,8 @@ fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
-                titleText = stringResource(id = R.string.story_backup_title),
-                subtitleText = stringResource(id = R.string.story_backup_description),
+                titleText = stringResourceSafe(id = R.string.story_backup_title),
+                subtitleText = stringResourceSafe(id = R.string.story_backup_description),
             )
         },
         bottomContent = {
@@ -65,8 +68,8 @@ fun StoriesCurrencies(isPaused: Boolean, stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
-                titleText = stringResource(id = R.string.story_currencies_title),
-                subtitleText = stringResource(id = R.string.story_currencies_description),
+                titleText = stringResourceSafe(id = R.string.story_currencies_title),
+                subtitleText = stringResourceSafe(id = R.string.story_currencies_description),
             )
         },
         bottomContent = {
@@ -81,8 +84,8 @@ fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
-                titleText = stringResource(id = R.string.story_web3_title),
-                subtitleText = stringResource(id = R.string.story_web3_description),
+                titleText = stringResourceSafe(id = R.string.story_web3_title),
+                subtitleText = stringResourceSafe(id = R.string.story_web3_description),
             )
         },
         bottomContent = {
@@ -97,8 +100,8 @@ fun StoriesWalletForEveryone(stepDuration: Int) {
     SplitContent(
         topContent = {
             TopContent(
-                titleText = stringResource(id = R.string.story_finish_title),
-                subtitleText = stringResource(id = R.string.story_finish_description),
+                titleText = stringResourceSafe(id = R.string.story_finish_title),
+                subtitleText = stringResourceSafe(id = R.string.story_finish_description),
             )
         },
         bottomContent = {

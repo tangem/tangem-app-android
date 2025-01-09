@@ -21,9 +21,17 @@ platform :android do
     FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
   end
 
-  desc "Runs all the tests"
-  lane :test do
+  desc "Run detekt"
+  lane :detekt do
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(task: "detekt")
+  end
+
+  desc "Run tests"
+  lane :test do
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(task: "testDebugUnitTest")
   end
 
@@ -42,7 +50,14 @@ platform :android do
 
   desc "Build external and release APKs"
   lane :build do |options|
-     gradle(task: 'clean')
+     gradle(task: 'clean') # TODO: remove after fully moving from old CI
+
+     launched_from_github_action = options[:launched_from_github_action] || false # TODO: remove after fully moving from old CI
+     if launched_from_github_action
+         FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
+         puts File.read("../gradle.properties")
+     end
+
      gradle(
        task: "bundle",
        build_type: "Release",
@@ -79,19 +94,29 @@ platform :android do
 
   desc "Publish internal and external builds to Firebase App Distribution"
   lane :publishToFirebase do |options|
+      FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
+      puts File.read("../gradle.properties")
+
     gradle(
       task: "clean assemble",
       build_type: "Internal",
       properties: {
-        'versionCode' => ENV['versionCode'],
-        'versionName' => ENV['versionName'],
+        'versionCode' => ENV['version_code'],
+        'versionName' => ENV['version_name'],
       }
     )
-    firebase_app_distribution(
+    uploaded_release = firebase_app_distribution(
+      firebase_cli_token: ENV['firebase_cli_token'],
       app: ENV['app_id_internal'],
       apk_path: ENV['apk_path_internal'],
       groups: ENV['groups'],
-      release_notes: ENV['releaseNotes']
+      release_notes: ENV['release_notes'],
     )
+    release_url = uploaded_release[:testingUri]
+
+    # Applying base64 encoding twice to prevent GA bug "Skip output 'output' since it may contain secret."
+    # See https://github.com/orgs/community/discussions/13082#discussioncomment-6776428 for details
+    encoded_release_url = Base64.strict_encode64(Base64.strict_encode64(release_url))
+    sh("echo 'encoded_release_url=#{encoded_release_url}' >> /workspace/github_output.txt")
   end
 end
