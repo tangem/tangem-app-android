@@ -4,14 +4,14 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.promo.PromoBanner
+import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.promo.ShouldShowRingPromoUseCase
+import com.tangem.domain.promo.models.PromoBanner
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
-import com.tangem.domain.settings.ShouldShowRingPromoUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.repository.PromoRepository
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
