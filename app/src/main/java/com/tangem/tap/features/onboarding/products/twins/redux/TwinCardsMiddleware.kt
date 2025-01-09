@@ -299,7 +299,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             OnboardingHelper.handleTopUpAction(
                 walletManager = walletManager,
                 scanResponse = onboardingManager?.scanResponse ?: return,
-                globalState = globalState,
             )
         }
         TwinCardsAction.Done -> {

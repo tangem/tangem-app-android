@@ -9,6 +9,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.utils.asRouter
 import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
@@ -45,6 +47,10 @@ internal class WalletFragment : ComposeFragment() {
     @Inject
     internal lateinit var appRouter: AppRouter
 
+    @Inject
+    @GlobalUiMessageSender
+    internal lateinit var messageSender: UiMessageSender
+
     private lateinit var marketsEntryComponent: MarketsEntryComponent
 
     private val _walletRouter: InnerWalletRouter
@@ -57,7 +63,7 @@ internal class WalletFragment : ComposeFragment() {
 
         val appContext = DefaultAppComponentContext(
             componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
-            messageHandler = uiDependencies.eventMessageHandler,
+            messageSender = messageSender,
             dispatchers = coroutineDispatcherProvider,
             hiltComponentBuilder = componentBuilder,
             replaceRouter = appRouter.asRouter(),

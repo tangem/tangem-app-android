@@ -106,6 +106,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "nexa" -> Blockchain.Nexa // FIXME
         "nexa/test" -> Blockchain.NexaTestnet // FIXME
         "radiant" -> Blockchain.Radiant
+        "fact0rn" -> Blockchain.Fact0rn
         "moonriver" -> Blockchain.Moonriver
         "moonriver/test" -> Blockchain.MoonriverTestnet
         "mantle" -> Blockchain.Mantle
@@ -142,6 +143,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "casper-network/test" -> Blockchain.CasperTestnet
         "chiliz" -> Blockchain.Chiliz
         "chiliz/test" -> Blockchain.ChilizTestnet
+        "vanar-chain" -> Blockchain.VanarChain
+        "vanar-chain/test" -> Blockchain.VanarChainTestnet
         "xodex" -> Blockchain.Xodex
         "canxium" -> Blockchain.Canxium
         "clore-ai" -> Blockchain.Clore
@@ -250,6 +253,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Nexa -> "nexa" // FIXME
         Blockchain.NexaTestnet -> "nexa/test" // FIXME
         Blockchain.Radiant -> "radiant"
+        Blockchain.Fact0rn -> "fact0rn"
         Blockchain.Moonriver -> "moonriver"
         Blockchain.MoonriverTestnet -> "moonriver/test"
         Blockchain.Mantle -> "mantle"
@@ -284,6 +288,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.CoreTestnet -> "core/test"
         Blockchain.Chiliz -> "chiliz"
         Blockchain.ChilizTestnet -> "chiliz/test"
+        Blockchain.VanarChain -> "vanar-chain"
+        Blockchain.VanarChainTestnet -> "vanar-chain/test"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
         Blockchain.Clore -> "clore-ai"
@@ -358,6 +364,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.PolygonZkEVM, Blockchain.PolygonZkEVMTestnet -> "polygon-zkevm-ethereum"
         Blockchain.Nexa, Blockchain.NexaTestnet -> "nexa" // FIXME
         Blockchain.Radiant -> "radiant"
+        Blockchain.Fact0rn -> "fact0rn"
         Blockchain.Moonriver, Blockchain.MoonriverTestnet -> "moonriver"
         Blockchain.Mantle, Blockchain.MantleTestnet -> "mantle"
         Blockchain.Flare, Blockchain.FlareTestnet -> "flare-networks"
@@ -377,6 +384,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Casper, Blockchain.CasperTestnet -> "casper-network"
         Blockchain.Core, Blockchain.CoreTestnet -> "coredaoorg"
         Blockchain.Chiliz, Blockchain.ChilizTestnet -> "chiliz"
+        Blockchain.VanarChain, Blockchain.VanarChainTestnet -> "vanar-chain"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
         Blockchain.Clore -> "clore-ai"

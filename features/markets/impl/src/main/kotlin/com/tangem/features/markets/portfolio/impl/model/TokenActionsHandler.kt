@@ -101,10 +101,10 @@ internal class TokenActionsHandler @AssistedInject constructor(
 
         updateTokenReceiveBSConfig {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {
                     updateTokenReceiveBSConfig {
-                        it.copy(isShow = false)
+                        it.copy(isShown = false)
                     }
                 },
                 content = TokenReceiveBottomSheetConfig(
@@ -130,7 +130,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
             .toImmutableList()
         val defaultAddress = addresses.firstOrNull()?.value ?: return
 
-        clipboardManager.setText(text = defaultAddress)
+        clipboardManager.setText(text = defaultAddress, isSensitive = true)
         uiMessageSender.send(SnackbarMessage(resourceReference(R.string.wallet_notification_address_copied)))
     }
 

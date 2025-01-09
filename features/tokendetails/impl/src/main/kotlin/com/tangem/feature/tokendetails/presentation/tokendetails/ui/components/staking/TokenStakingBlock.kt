@@ -13,17 +13,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import com.tangem.core.ui.components.*
+import com.tangem.core.ui.components.RectangleShimmer
+import com.tangem.core.ui.components.SecondaryButton
+import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.getGreyScaleColorFilter
-import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingAvailableBlock
+import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingBalanceBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingLoadingBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData.stakingTemporaryUnavailableBlock
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.StakingBlockUM
@@ -111,7 +113,7 @@ private fun StakingAvailableContent(state: StakingBlockUM.StakeAvailable, modifi
         }
         SecondaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(id = R.string.common_stake),
+            text = stringResourceSafe(id = R.string.common_stake),
             enabled = state.isEnabled,
             onClick = state.onStakeClicked,
         )

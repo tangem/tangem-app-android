@@ -10,18 +10,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
@@ -29,6 +32,7 @@ import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
 import com.tangem.core.ui.components.snackbar.TangemSnackbar
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.referral.domain.models.ExpectedAward
@@ -43,14 +47,9 @@ import kotlinx.coroutines.launch
  * Referral program screen for participant and non-participant
  *
  * @param stateHolder state holder
- * @param modifier    modifier
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
-    var isBottomSheetVisible by remember { mutableStateOf(value = false) }
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
     val snackbarHostState = remember(::SnackbarHostState)
 
     BackHandler(onBack = stateHolder.headerState.onBackClicked)
@@ -59,7 +58,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
         topBar = {
             AppBarWithBackButton(
                 modifier = Modifier.statusBarsPadding(),
-                text = stringResource(R.string.details_referral_title),
+                text = stringResourceSafe(R.string.details_referral_title),
                 onBackClick = stateHolder.headerState.onBackClicked,
             )
         },
@@ -83,10 +82,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
         ReferralContent(
             stateHolder = stateHolder,
             snackbarHostState = snackbarHostState,
-            onAgreementClick = {
-                stateHolder.analytics.onAgreementClicked.invoke()
-                isBottomSheetVisible = true
-            },
+            onAgreementClick = stateHolder.analytics.onAgreementClicked,
             modifier = Modifier.padding(it),
         )
     }
@@ -100,7 +96,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
             coroutineScope.launch {
                 val result = snackbarHostState.showSnackbar(
                     message = resources.getMessageForErrorSnackbar(errorSnackbar.throwable),
-                    actionLabel = resources.getString(R.string.warning_button_ok),
+                    actionLabel = resources.getStringSafe(R.string.warning_button_ok),
                     duration = SnackbarDuration.Indefinite,
                 )
 
@@ -110,13 +106,6 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
             }
         }
     }
-
-    ReferralBottomSheet(
-        sheetState = sheetState,
-        isVisible = isBottomSheetVisible,
-        onDismissRequest = { isBottomSheetVisible = false },
-        config = stateHolder.referralInfoState,
-    )
 }
 
 @Composable
@@ -156,7 +145,7 @@ private fun Header() {
         )
         SpacerH24()
         Text(
-            text = stringResource(id = R.string.referral_title),
+            text = stringResourceSafe(id = R.string.referral_title),
             modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing50),
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
@@ -273,7 +262,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
 
 @Composable
 private fun InfoForYou(award: String, networkName: String, address: String? = null) {
-    ConditionInfo(title = stringResource(id = R.string.referral_point_currencies_title)) {
+    ConditionInfo(title = stringResourceSafe(id = R.string.referral_point_currencies_title)) {
         Text(
             formatAwardConditionsString(
                 quantity = award,
@@ -288,7 +277,7 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
 
 @Composable
 private fun formatAwardConditionsString(quantity: String, network: String, address: String): AnnotatedString {
-    val rawString = stringResource(R.string.referral_point_currencies_description, quantity, network, address)
+    val rawString = stringResourceSafe(R.string.referral_point_currencies_description, quantity, network, address)
 
     val pattern = Regex("\\^\\^(.*?)\\^\\^")
     var startIndex = 0
@@ -318,20 +307,20 @@ private fun formatAwardConditionsString(quantity: String, network: String, addre
 
 @Composable
 private fun InfoForYourFriend(discount: String) {
-    ConditionInfo(title = stringResource(id = R.string.referral_point_discount_title)) {
+    ConditionInfo(title = stringResourceSafe(id = R.string.referral_point_discount_title)) {
         Text(
             text = buildAnnotatedString {
-                append(stringResource(id = R.string.referral_point_discount_description_prefix))
+                append(stringResourceSafe(id = R.string.referral_point_discount_description_prefix))
                 withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
                     append(
                         String.format(
-                            stringResource(id = R.string.referral_point_discount_description_value),
+                            stringResourceSafe(id = R.string.referral_point_discount_description_value),
                             " $discount",
                         ),
                     )
                 }
                 append(" ")
-                append(stringResource(id = R.string.referral_point_discount_description_suffix))
+                append(stringResourceSafe(id = R.string.referral_point_discount_description_suffix))
             },
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
@@ -374,9 +363,11 @@ private fun ShimmerInfo() {
 
 private fun Resources.getMessageForErrorSnackbar(throwable: Throwable): String {
     return when {
-        throwable is DemoModeException -> getString(R.string.alert_demo_feature_disabled)
-        throwable.cause != null -> getString(R.string.referral_error_failed_to_load_info_with_reason, throwable.cause)
-        else -> getString(R.string.referral_error_failed_to_load_info)
+        throwable is DemoModeException -> getStringSafe(R.string.alert_demo_feature_disabled)
+        throwable.cause != null -> {
+            getStringSafe(R.string.referral_error_failed_to_load_info_with_reason, requireNotNull(throwable.cause))
+        }
+        else -> getStringSafe(R.string.referral_error_failed_to_load_info)
     }
 }
 

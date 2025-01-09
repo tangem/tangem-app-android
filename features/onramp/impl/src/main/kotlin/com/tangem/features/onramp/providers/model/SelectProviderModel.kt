@@ -76,10 +76,13 @@ internal class SelectProviderModel @Inject constructor(
             val filteredEmptyMethods = methods.mapNotNull { method ->
                 val providers = getOnrampProviderWithQuoteUseCase(method).getOrNull()
                 if (!providers.isNullOrEmpty()) {
+                    val allErrorProviders = providers.all {
+                        it is OnrampProviderWithQuote.Unavailable.NotSupportedPaymentMethod
+                    }
                     PaymentProviderUM(
                         paymentMethod = method,
                         providers = providers.toProvidersListItems(),
-                    )
+                    ).takeIf { !allErrorProviders }
                 } else {
                     null
                 }
@@ -225,7 +228,7 @@ internal class SelectProviderModel @Inject constructor(
                         },
                     )
                 }
-                is OnrampProviderWithQuote.Unavailable.Error -> {
+                is OnrampProviderWithQuote.Unavailable.AmountError -> {
                     val quoteError = quote.quoteError
                     val amount = quoteError.error.requiredAmount.format {
                         crypto(symbol = quoteError.fromAmount.symbol, decimals = quoteError.fromAmount.decimals)
@@ -307,7 +310,7 @@ internal class SelectProviderModel @Inject constructor(
             is OnrampProviderWithQuote.Data -> it.toAmount.value
 
             // negative difference to sort both when data and unavailable is present
-            is OnrampProviderWithQuote.Unavailable.Error -> {
+            is OnrampProviderWithQuote.Unavailable.AmountError -> {
                 when (val error = it.quoteError.error) {
                     is OnrampError.AmountError.TooSmallError -> it.quoteError.fromAmount.value - error.requiredAmount
                     is OnrampError.AmountError.TooBigError -> error.requiredAmount - it.quoteError.fromAmount.value

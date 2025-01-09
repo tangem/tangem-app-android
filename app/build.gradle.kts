@@ -75,6 +75,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.onramp)
+    implementation(projects.domain.promo)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -166,6 +167,7 @@ dependencies {
     implementation(deps.androidx.browser)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.swipeRefreshLayout)
+    implementation(deps.androidx.fragment.compose)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
@@ -226,11 +228,11 @@ dependencies {
     implementation(deps.xmlShimmer)
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
-    implementation(deps.mviCore.watcher)
     implementation(deps.kotlin.serialization)
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
+    implementation(deps.decompose.ext.compose)
 
     /** Testing libraries */
     testImplementation(deps.test.coroutine)

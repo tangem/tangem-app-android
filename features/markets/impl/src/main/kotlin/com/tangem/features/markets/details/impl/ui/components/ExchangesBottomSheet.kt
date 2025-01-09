@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,10 +26,7 @@ import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.token.TokenItem
 import com.tangem.core.ui.components.token.state.TokenItemState
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.details.impl.ui.state.ExchangesBottomSheetContent
@@ -92,7 +88,7 @@ internal fun ExchangesBottomSheet(config: TangemBottomSheetConfig) {
 @Composable
 private fun Title(@StringRes textResId: Int, onBackClick: () -> Unit) {
     TangemTopAppBar(
-        title = stringResource(id = textResId),
+        title = stringResourceSafe(id = textResId),
         startButton = TopAppBarButtonUM.Back(onBackClicked = onBackClick),
     )
 }
@@ -128,7 +124,7 @@ private fun Error(content: ExchangesBottomSheetContent.Error, modifier: Modifier
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(id = content.message),
+            text = stringResourceSafe(id = content.message),
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.caption1,
@@ -156,7 +152,7 @@ private fun Preview_ExchangesBottomSheet(
             config = TangemBottomSheetConfig(
                 onDismissRequest = {},
                 content = content,
-                isShow = true,
+                isShown = true,
             ),
         )
     }

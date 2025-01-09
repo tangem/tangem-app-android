@@ -109,6 +109,7 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.PolygonZkEVM -> null
             Blockchain.PolygonZkEVMTestnet -> null
             Blockchain.Radiant -> null
+            Blockchain.Fact0rn -> null
             Blockchain.BaseTestnet -> null
             Blockchain.Moonriver -> null
             Blockchain.MoonriverTestnet -> null
@@ -140,6 +141,8 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.CoreTestnet -> null
             Blockchain.Chiliz -> null
             Blockchain.ChilizTestnet -> null
+            Blockchain.VanarChain -> null
+            Blockchain.VanarChainTestnet -> null
             Blockchain.Unknown -> null
             Blockchain.Xodex -> null
             Blockchain.Canxium -> null

@@ -1,7 +1,10 @@
 package com.tangem.data.visa.di
 
+import com.tangem.data.visa.DefaultVisaAuthRepository
 import com.tangem.data.visa.DummyVisaRepository
+import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.domain.visa.repository.VisaRepository
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,4 +24,13 @@ internal object VisaDataModule {
     ): VisaRepository {
         return implementedVisaRepository.getOrNull() ?: DummyVisaRepository()
     }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+internal interface VisaDataBindsModule {
+
+    @Binds
+    @Singleton
+    fun bindVisaAuthRepository(repository: DefaultVisaAuthRepository): VisaAuthRepository
 }

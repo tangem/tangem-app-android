@@ -8,7 +8,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.factory.ComponentFactory
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.utils.Provider
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,11 +32,6 @@ internal class DecomposeFragment : ComposeFragment() {
     @Composable
     override fun ScreenContent(modifier: Modifier) {
         component.Content(modifier)
-
-        EventMessageEffect(
-            messageHandler = uiDependencies.eventMessageHandler,
-            snackbarHostState = uiDependencies.globalSnackbarHostState,
-        )
     }
 
     private class ComponentBuilder<C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C>>(
