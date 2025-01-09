@@ -7,8 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.block.BlockCard
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.details.impl.R
@@ -37,12 +37,12 @@ internal fun WalletConnectBlock(onClick: () -> Unit, modifier: Modifier = Modifi
                 verticalArrangement = Arrangement.SpaceAround,
             ) {
                 Text(
-                    text = stringResource(id = R.string.wallet_connect_title),
+                    text = stringResourceSafe(id = R.string.wallet_connect_title),
                     style = TangemTheme.typography.subtitle1,
                     color = TangemTheme.colors.text.primary1,
                 )
                 Text(
-                    text = stringResource(id = R.string.wallet_connect_subtitle),
+                    text = stringResourceSafe(id = R.string.wallet_connect_subtitle),
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
                 )
