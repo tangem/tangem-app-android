@@ -66,6 +66,16 @@ data class GetBlockAccessTokens(
     @Json(name = "base") val base: GetBlockToken?,
     @Json(name = "blast") val blast: GetBlockToken?,
     @Json(name = "filecoin") val filecoin: GetBlockToken?,
+    @Json(name = "arbitrum") val arbitrum: GetBlockToken?,
+    @Json(name = "bitcoinCash") val bitcoinCash: GetBlockToken?,
+    @Json(name = "kusama") val kusama: GetBlockToken?,
+    @Json(name = "moonbeam") val moonbeam: GetBlockToken?,
+    @Json(name = "optimism") val optimism: GetBlockToken?,
+    @Json(name = "polkadot") val polkadot: GetBlockToken?,
+    @Json(name = "shibarium") val shibarium: GetBlockToken?,
+    @Json(name = "sui") val sui: GetBlockToken?,
+    @Json(name = "telos") val telos: GetBlockToken?,
+    @Json(name = "tezos") val tezos: GetBlockToken?,
 )
 
 @JsonClass(generateAdapter = true)
