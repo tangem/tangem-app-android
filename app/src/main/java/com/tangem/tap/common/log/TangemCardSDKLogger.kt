@@ -14,6 +14,7 @@ import com.tangem.datasource.local.logs.AppLogsStore
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("UnusedPrivateMember")
 internal class TangemCardSDKLogger(
     private val levels: List<Log.Level>,
     private val messageFormatter: LogFormat,
@@ -21,8 +22,9 @@ internal class TangemCardSDKLogger(
 ) : TangemSdkLogger {
 
     override fun log(message: () -> String, level: Log.Level) {
-        if (!levels.contains(level)) return
-
-        appLogsStore.saveLogMessage(message = messageFormatter.format(message, level))
+        // Disabled for now in [REDACTED_JIRA]
+        // if (!levels.contains(level)) return
+        //
+        // appLogsStore.saveLogMessage(message = messageFormatter.format(message, level))
     }
 }
