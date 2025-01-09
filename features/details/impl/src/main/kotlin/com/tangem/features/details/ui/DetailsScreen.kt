@@ -22,10 +22,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockItem
-import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.res.LocalSnackbarHostState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.test.TestTags
@@ -48,12 +46,6 @@ internal fun DetailsScreen(
     Scaffold(
         modifier = modifier,
         containerColor = backgroundColor,
-        snackbarHost = {
-            TangemSnackbarHost(
-                modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
-                hostState = LocalSnackbarHostState.current,
-            )
-        },
         topBar = {
             TangemTopAppBar(
                 modifier = Modifier.statusBarsPadding(),
