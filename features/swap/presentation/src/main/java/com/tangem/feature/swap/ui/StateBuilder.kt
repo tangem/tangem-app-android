@@ -10,7 +10,6 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -946,7 +945,7 @@ internal class StateBuilder(
             )
             return uiState.copy(
                 bottomSheetConfig = TangemBottomSheetConfig(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = onDismiss,
                     content = config,
                 ),
@@ -957,7 +956,7 @@ internal class StateBuilder(
 
     fun dismissBottomSheet(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
-            bottomSheetConfig = uiState.bottomSheetConfig?.copy(isShow = false),
+            bottomSheetConfig = uiState.bottomSheetConfig?.copy(isShown = false),
         )
     }
 
@@ -981,7 +980,7 @@ internal class StateBuilder(
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = onDismiss,
                 content = config,
             ),
@@ -1044,7 +1043,7 @@ internal class StateBuilder(
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = onDismiss,
                 content = config,
             ),
