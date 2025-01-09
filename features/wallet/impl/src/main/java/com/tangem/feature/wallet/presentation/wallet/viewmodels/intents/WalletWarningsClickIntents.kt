@@ -1,8 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
 
 import arrow.core.getOrElse
+import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.SetCardWasScannedUseCase
@@ -23,6 +25,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockTy
 import com.tangem.domain.wallets.models.UnlockWalletsError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.domain.wallets.usecase.UnlockWalletsUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
@@ -68,6 +71,10 @@ internal interface WalletWarningsClickIntents {
     fun onSupportClick()
 
     fun onNoteMigrationButtonClick(url: String)
+
+    fun onSeedPhraseNotificationConfirm()
+
+    fun onSeedPhraseNotificationDecline()
 }
 
 @Suppress("LongParameterList")
@@ -90,6 +97,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
+    private val urlOpener: UrlOpener,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -277,6 +286,48 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         viewModelScope.launch(dispatchers.main) {
             router.openUrl(url)
         }
+    }
+
+    override fun onSeedPhraseNotificationConfirm() {
+        val userWallet = getSelectedUserWallet() ?: return
+
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonYes)
+
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.SimpleOkAlert(
+                    message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
+                    onOkClick = {
+                        viewModelScope.launch {
+                            seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
+
+                            urlOpener.openUrl(
+                                url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotify),
+                            )
+                        }
+                    },
+                ),
+            ),
+        )
+    }
+
+    override fun onSeedPhraseNotificationDecline() {
+        val userWallet = getSelectedUserWallet() ?: return
+
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonNo)
+
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.SimpleOkAlert(
+                    message = resourceReference(R.string.warning_seedphrase_issue_answer_no),
+                    onOkClick = {
+                        viewModelScope.launch {
+                            seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
+                        }
+                    },
+                ),
+            ),
+        )
     }
 
     private fun getSelectedUserWallet(): UserWallet? {
