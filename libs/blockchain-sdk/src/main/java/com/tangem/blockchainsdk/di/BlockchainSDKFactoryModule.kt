@@ -7,12 +7,14 @@ import com.tangem.blockchainsdk.WalletManagerFactoryCreator
 import com.tangem.blockchainsdk.accountcreator.DefaultAccountCreator
 import com.tangem.blockchainsdk.datastorage.DefaultBlockchainDataStorage
 import com.tangem.blockchainsdk.featuretoggles.DefaultBlockchainSDKFeatureToggles
-import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
-import com.tangem.blockchainsdk.store.DefaultRuntimeStore
+import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
+import com.tangem.blockchainsdk.providers.DevBlockchainProvidersTypesManager
+import com.tangem.blockchainsdk.providers.ProdBlockchainProvidersTypesManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.libs.blockchain_sdk.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -27,18 +29,30 @@ internal object BlockchainSDKFactoryModule {
     @Provides
     @Singleton
     fun provideBlockchainSDKFactory(
-        blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
+        blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
         environmentConfigStorage: EnvironmentConfigStorage,
         walletManagerFactoryCreator: WalletManagerFactoryCreator,
         dispatchers: CoroutineDispatcherProvider,
     ): BlockchainSDKFactory {
         return DefaultBlockchainSDKFactory(
-            blockchainProvidersResponseLoader = blockchainProvidersResponseLoader,
+            blockchainProvidersTypesManager = blockchainProvidersTypesManager,
             environmentConfigStorage = environmentConfigStorage,
-            blockchainProviderTypesStore = DefaultRuntimeStore(defaultValue = emptyMap()),
             walletManagerFactoryCreator = walletManagerFactoryCreator,
             dispatchers = dispatchers,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlockchainProvidersTypesManager(
+        devBlockchainProvidersTypesManager: DevBlockchainProvidersTypesManager,
+        prodBlockchainProvidersTypesManager: ProdBlockchainProvidersTypesManager,
+    ): BlockchainProvidersTypesManager {
+        return if (BuildConfig.DEBUG) {
+            devBlockchainProvidersTypesManager
+        } else {
+            prodBlockchainProvidersTypesManager
+        }
     }
 
     @Provides
