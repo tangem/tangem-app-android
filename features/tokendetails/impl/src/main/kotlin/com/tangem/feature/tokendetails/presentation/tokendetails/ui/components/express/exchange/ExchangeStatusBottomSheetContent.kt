@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.common.ui.expressStatus.ExpressEstimate
 import com.tangem.common.ui.expressStatus.ExpressProvider
@@ -18,6 +17,7 @@ import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.notifications.CurrencyNotification
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
@@ -28,14 +28,14 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM) {
     Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
         SpacerH10()
         Text(
-            text = stringResource(id = R.string.express_exchange_status_title),
+            text = stringResourceSafe(id = R.string.express_exchange_status_title),
             style = TangemTheme.typography.subtitle1,
             color = TangemTheme.colors.text.primary1,
             modifier = Modifier.align(CenterHorizontally),
         )
         SpacerH10()
         Text(
-            text = stringResource(id = R.string.express_exchange_status_subtitle),
+            text = stringResourceSafe(id = R.string.express_exchange_status_subtitle),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,

@@ -20,6 +20,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -58,7 +59,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -179,9 +179,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val transactionSignerFactory: TransactionSignerFactory
         get() = entryPoint.getTransactionSignerFactory()
 
-    private val homeFeatureToggles: HomeFeatureToggles
-        get() = entryPoint.getHomeFeatureToggles()
-
     private val getUserCountryUseCase: GetUserCountryUseCase
         get() = entryPoint.getGetUserCountryCodeUseCase()
 
@@ -202,6 +199,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val appLogsStore: AppLogsStore
         get() = entryPoint.getAppLogsStore()
+
+    private val clipboardManager: ClipboardManager
+        get() = entryPoint.getClipboardManager()
     // endregion
 
     override fun onCreate() {
@@ -292,7 +292,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     shareManager = shareManager,
                     appRouter = appRouter,
                     transactionSignerFactory = transactionSignerFactory,
-                    homeFeatureToggles = homeFeatureToggles,
                     getUserCountryUseCase = getUserCountryUseCase,
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
@@ -300,6 +299,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onboardingRepository = onboardingRepository,
                     excludedBlockchains = excludedBlockchains,
                     appPreferencesStore = appPreferencesStore,
+                    clipboardManager = clipboardManager,
                 ),
             ),
         )
