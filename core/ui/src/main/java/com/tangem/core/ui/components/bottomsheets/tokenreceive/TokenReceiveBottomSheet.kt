@@ -279,7 +279,7 @@ private fun Preview_TokenReceiveBottomSheet(
 ) {
     TangemThemePreview {
         val config = TangemBottomSheetConfig(
-            isShow = true,
+            isShown = true,
             content = params,
             onDismissRequest = {},
         )

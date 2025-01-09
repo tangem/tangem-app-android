@@ -50,7 +50,7 @@ internal class ModalNotificationBottomSheetFragment : ComposeBottomSheetFragment
         }
 
         LaunchedEffect(notification) {
-            if (!notification.isShow) {
+            if (!notification.isShown) {
                 dismiss()
             }
         }
