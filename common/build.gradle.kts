@@ -10,6 +10,8 @@ android {
 
 dependencies {
 
+    implementation(projects.core.utils)
+
     // region Firebase libraries
     implementation(platform(deps.firebase.bom))
     implementation(deps.firebase.analytics)
