@@ -35,7 +35,7 @@ internal class OpenBottomSheetTransformer(
     }
 
     private fun updateConfig() = TangemBottomSheetConfig(
-        isShow = true,
+        isShown = true,
         onDismissRequest = onDismissBottomSheet,
         content = content,
     )
