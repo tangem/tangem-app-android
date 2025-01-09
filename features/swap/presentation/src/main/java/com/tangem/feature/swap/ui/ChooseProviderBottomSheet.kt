@@ -134,7 +134,7 @@ private fun Preview_ChooseProviderBottomSheet() {
     TangemThemePreview {
         ChooseProviderBottomSheet(
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = content,
             ),
