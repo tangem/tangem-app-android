@@ -28,6 +28,8 @@ internal sealed interface WalletAlertState {
         abstract val errorTextProvider: (String) -> TextReference?
     }
 
+    data class SimpleOkAlert(val message: TextReference, val onOkClick: () -> Unit) : WalletAlertState
+
     data class DefaultAlert(
         override val title: TextReference?,
         override val message: TextReference,
