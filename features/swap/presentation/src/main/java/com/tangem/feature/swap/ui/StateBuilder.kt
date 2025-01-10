@@ -125,6 +125,26 @@ internal class StateBuilder(
         )
     }
 
+    fun createStoriesState(uiStateHolder: SwapStateHolder): SwapStateHolder {
+        return uiStateHolder.copy(
+            // todo stories [REDACTED_TASK_KEY] fix when design is ready
+            storiesConfig = SwapStoriesContentConfig(
+                stories = persistentListOf(
+                    SwapStoryConfig(
+                        imageRes = R.drawable.img_card_with_ring,
+                    ),
+                    SwapStoryConfig(
+                        imageRes = R.drawable.ill_businessman_3d,
+                    ),
+                    SwapStoryConfig(
+                        imageRes = R.drawable.ill_one_inch_powered,
+                    ),
+                ),
+                onClose = actions.onStoriesClose,
+            ),
+        )
+    }
+
     fun createNoAvailableTokensToSwapState(
         uiStateHolder: SwapStateHolder,
         fromToken: CryptoCurrencyStatus,
