@@ -314,16 +314,26 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        showErrorIfDemoModeOrElse {
-            viewModelScope.launch(dispatchers.main) {
-                reduxStateHolder.dispatch(
-                    TradeCryptoAction.Buy(
-                        userWallet = userWallet,
-                        source = OnrampSource.TOKEN_LONG_TAP,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
-                    ),
-                )
+        if (onrampFeatureToggles.isFeatureEnabled) {
+            appRouter.push(
+                AppRoute.Onramp(
+                    userWalletId = userWallet.walletId,
+                    currency = cryptoCurrencyStatus.currency,
+                    source = OnrampSource.TOKEN_LONG_TAP,
+                ),
+            )
+        } else {
+            showErrorIfDemoModeOrElse {
+                viewModelScope.launch(dispatchers.main) {
+                    reduxStateHolder.dispatch(
+                        TradeCryptoAction.Buy(
+                            userWallet = userWallet,
+                            source = OnrampSource.TOKEN_LONG_TAP,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
+                        ),
+                    )
+                }
             }
         }
     }
