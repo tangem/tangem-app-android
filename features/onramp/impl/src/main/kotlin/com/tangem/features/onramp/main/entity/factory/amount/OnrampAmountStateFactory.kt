@@ -67,6 +67,7 @@ internal class OnrampAmountStateFactory(
             amountBlockState = amountState.copy(secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading),
             providerBlockState = OnrampProviderBlockUM.Loading,
             buyButtonConfig = currentState.buyButtonConfig.copy(enabled = false),
+            errorNotification = null,
         )
     }
 
@@ -97,6 +98,7 @@ internal class OnrampAmountStateFactory(
                     }
                 },
             ),
+            errorNotification = null,
         )
     }
 
@@ -172,6 +174,7 @@ internal class OnrampAmountStateFactory(
                     }
                 },
             ),
+            errorNotification = null,
         )
     }
 
@@ -189,6 +192,7 @@ internal class OnrampAmountStateFactory(
                     amount = TextReference.EMPTY,
                 ),
             ),
+            errorNotification = null,
         )
     }
 
