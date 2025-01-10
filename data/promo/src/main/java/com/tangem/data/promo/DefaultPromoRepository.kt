@@ -8,7 +8,9 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.ADDED_WALLETS_WIT
 import com.tangem.datasource.local.preferences.PreferencesKeys.IS_TOKEN_SWAP_PROMO_OKX_SHOW_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.IS_WALLET_SWAP_PROMO_OKX_SHOW_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SHOW_RING_PROMO_KEY
+import com.tangem.datasource.local.preferences.PreferencesKeys.SHOULD_SHOW_SWAP_STORIES_KEY
 import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoBanner
@@ -87,6 +89,21 @@ internal class DefaultPromoRepository(
 
     override suspend fun setNeverToShowRingPromo() {
         appPreferencesStore.store(key = SHOULD_SHOW_RING_PROMO_KEY, value = false)
+    }
+
+    override fun isReadyToShowSwapStories(): Flow<Boolean> {
+        return appPreferencesStore.get(SHOULD_SHOW_SWAP_STORIES_KEY, true)
+    }
+
+    override suspend fun isReadyToShowSwapStoriesSync(): Boolean {
+        return appPreferencesStore.getSyncOrDefault(SHOULD_SHOW_SWAP_STORIES_KEY, true)
+    }
+
+    override suspend fun setNeverToShowSwapStories() {
+        appPreferencesStore.store(
+            key = SHOULD_SHOW_SWAP_STORIES_KEY,
+            value = false,
+        )
     }
 
     private companion object {
