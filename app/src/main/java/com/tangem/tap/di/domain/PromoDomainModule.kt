@@ -1,9 +1,6 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.promo.ShouldShowRingPromoUseCase
-import com.tangem.domain.promo.ShouldShowSwapPromoTokenUseCase
-import com.tangem.domain.promo.ShouldShowSwapPromoWalletUseCase
+import com.tangem.domain.promo.*
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,5 +29,11 @@ internal object PromoDomainModule {
     @Singleton
     fun provideShouldShowSwapPromoTokenUseCase(promoRepository: PromoRepository): ShouldShowSwapPromoTokenUseCase {
         return ShouldShowSwapPromoTokenUseCase(promoRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideShouldShowSwapStoriesUseCase(promoRepository: PromoRepository): ShouldShowSwapStoriesUseCase {
+        return ShouldShowSwapStoriesUseCase(promoRepository)
     }
 }
