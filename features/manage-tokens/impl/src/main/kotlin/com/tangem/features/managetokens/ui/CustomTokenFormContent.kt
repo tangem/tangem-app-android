@@ -162,7 +162,7 @@ private fun TextField(model: TextInputFieldUM, modifier: Modifier = Modifier) {
                     model.error != null -> {
                         TangemTheme.colors.text.warning
                     }
-                    model.value.isNotBlank() || model.isFocused -> {
+                    model.isEnabled || model.value.isNotBlank() || model.isFocused -> {
                         TangemTheme.colors.text.tertiary
                     }
                     else -> {
