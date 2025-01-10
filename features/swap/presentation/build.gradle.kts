@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.staking)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.promo)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
