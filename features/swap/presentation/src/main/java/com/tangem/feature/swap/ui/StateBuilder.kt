@@ -116,6 +116,8 @@ internal class StateBuilder(
             onMaxAmountSelected = actions.onMaxAmountSelected,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
+            onSelectTokenClick = actions.onSelectTokenClick,
+            onSuccess = actions.onSuccess,
             providerState = ProviderState.Empty(),
             shouldShowMaxAmount = false,
             priceImpact = PriceImpact.Empty(),
@@ -352,14 +354,14 @@ internal class StateBuilder(
                 LegalState(
                     title = resourceReference(R.string.common_terms_of_use),
                     link = it,
-                    onClick = actions.onTosClick,
+                    onClick = actions.onLinkClick,
                 )
             },
             policyLink = swapProvider.privacyPolicy?.let {
                 LegalState(
                     title = resourceReference(R.string.common_privacy_policy),
                     link = it,
-                    onClick = actions.onPolicyClick,
+                    onClick = actions.onLinkClick,
                 )
             },
         )
@@ -1039,7 +1041,7 @@ internal class StateBuilder(
             readMoreUrl = buildReadMoreUrl(),
             feeItems = txFeeState.toFeeItemState(),
             readMore = resourceReference(R.string.common_read_more),
-            onReadMoreClick = actions.onFeeReadMoreClick,
+            onReadMoreClick = actions.onLinkClick,
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
