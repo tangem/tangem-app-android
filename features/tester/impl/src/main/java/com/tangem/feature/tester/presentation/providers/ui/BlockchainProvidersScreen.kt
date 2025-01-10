@@ -24,22 +24,29 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
+import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.core.ui.components.AdditionalTextInputDialogUM
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.TextInputDialog
+import com.tangem.core.ui.components.fields.SearchBar
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.rows.RowText
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefresh
+import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.common.components.notification.CustomSetupNotification
 import com.tangem.feature.tester.presentation.providers.entity.BlockchainProvidersUM
 import com.tangem.feature.tester.presentation.providers.entity.BlockchainProvidersUM.ProviderUM
 import com.tangem.feature.tester.presentation.providers.entity.BlockchainProvidersUM.ProvidersUM
+import kotlinx.collections.immutable.persistentListOf
 
 private const val CHEVRON_ROTATION_EXPANDED = 180f
 private const val CHEVRON_ROTATION_COLLAPSED = 0f
@@ -53,7 +60,9 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
             .background(TangemTheme.colors.background.primary),
     ) {
         LazyColumn {
-            stickyHeader { TopBarWithRefresh(state = state.topBar) }
+            stickyHeader {
+                Header(topBar = state.topBar, searchBar = state.searchBar)
+            }
 
             if (state.topBar.refreshButton.isVisible) {
                 item(key = "notification", contentType = "notification") {
@@ -76,6 +85,22 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
                 itemContent = { BlockchainProvidersItem(it) },
             )
         }
+    }
+}
+
+@Composable
+private fun Header(topBar: TopBarWithRefreshUM, searchBar: SearchBarUM) {
+    Column(
+        modifier = Modifier.background(TangemTheme.colors.background.primary),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    ) {
+        TopBarWithRefresh(state = topBar)
+        SearchBar(
+            state = searchBar,
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .padding(bottom = TangemTheme.dimens.spacing12),
+        )
     }
 }
 
@@ -360,5 +385,49 @@ private class ProvidersDnDTarget(
         onDrop(new, index)
 
         return true
+    }
+}
+
+@Preview
+@Composable
+private fun Preview_BlockchainProvidersScreen() {
+    TangemThemePreview {
+        BlockchainProvidersScreen(
+            state = BlockchainProvidersUM(
+                topBar = TopBarWithRefreshUM(
+                    titleResId = R.string.blockchain_providers,
+                    onBackClick = {},
+                    refreshButton = TopBarWithRefreshUM.RefreshButton(
+                        isVisible = true,
+                        onRefreshClick = { },
+                    ),
+                ),
+                searchBar = SearchBarUM(
+                    placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                    query = "",
+                    onQueryChange = {},
+                    isActive = false,
+                    onActiveChange = {},
+                ),
+                blockchainProviders = persistentListOf(
+                    ProvidersUM(
+                        blockchainId = "ETH",
+                        blockchainName = "Ethereum",
+                        blockchainSymbol = "ETH",
+                        isExpanded = false,
+                        onDrop = { _, _ -> },
+                        addPublicProviderDialog = BlockchainProvidersUM.AddPublicProviderDialogUM(
+                            hasError = false,
+                            onValueChange = {},
+                            onSaveClick = {},
+                        ),
+                        providers = persistentListOf(
+                            ProviderUM(type = ProviderType.NowNodes),
+                            ProviderUM(type = ProviderType.GetBlock),
+                        ),
+                    ),
+                ),
+            ),
+        )
     }
 }
