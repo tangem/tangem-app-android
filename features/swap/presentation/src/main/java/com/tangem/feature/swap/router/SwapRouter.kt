@@ -9,7 +9,6 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 
 internal class SwapRouter(
-    private val customTabsManager: CustomTabsManager,
     private val router: AppRouter,
 ) {
 
@@ -43,10 +42,6 @@ internal class SwapRouter(
                 router.pop()
             }
         }
-    }
-
-    fun openUrl(url: String) {
-        customTabsManager.openUrl(url)
     }
 
     fun openTokenDetails(userWalletId: UserWalletId, currency: CryptoCurrency) {
