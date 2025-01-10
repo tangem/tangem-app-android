@@ -26,5 +26,9 @@
     {
         "name": "NAVIGATION_REFACTORING",
         "version": "undefined"
+    },
+    {
+        "name": "SWAP_STORIES_ENABLED",
+        "version": "undefined"
     }
 ]
