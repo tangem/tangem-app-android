@@ -7,6 +7,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.MutableBlockchainProvidersTypesManager
+import com.tangem.core.ui.components.fields.entity.SearchBarUM
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.common.components.appbar.TopBarWithRefreshUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
@@ -34,9 +36,20 @@ internal class BlockchainProvidersViewModel @Inject constructor(
                 onBackClick = {},
                 refreshButton = TopBarWithRefreshUM.RefreshButton(isVisible = false, onRefreshClick = ::onRefreshClick),
             ),
+            searchBar = SearchBarUM(
+                placeholderText = resourceReference(R.string.manage_tokens_search_placeholder),
+                query = "",
+                onQueryChange = {
+                    searchQuery.value = it.trim()
+                },
+                isActive = false,
+                onActiveChange = {},
+            ),
             blockchainProviders = persistentListOf(),
         ),
     )
+
+    private val searchQuery = MutableStateFlow(value = "")
 
     private val manager = blockchainProvidersTypesManager as MutableBlockchainProvidersTypesManager
 
@@ -53,8 +66,12 @@ internal class BlockchainProvidersViewModel @Inject constructor(
     }
 
     private fun subscribeOnBlockchainProviderTypesUpdates() {
-        manager.get()
-            .onEach { blockchainProviderTypes ->
+        combine(
+            flow = manager.get(),
+            flow2 = searchQuery,
+            transform = { blockchainProviderTypes, query -> blockchainProviderTypes to query },
+        )
+            .onEach { (blockchainProviderTypes, query) ->
                 val isChanged = !manager.isMatchWithMerged()
 
                 _state.update { state ->
@@ -62,7 +79,13 @@ internal class BlockchainProvidersViewModel @Inject constructor(
                         topBar = state.topBar.copy(
                             refreshButton = state.topBar.refreshButton.copy(isVisible = isChanged),
                         ),
-                        blockchainProviders = blockchainProviderTypes.toProvidersUM(),
+                        searchBar = state.searchBar.copy(query = query),
+                        blockchainProviders = blockchainProviderTypes
+                            .filter {
+                                it.key.fullName.contains(other = query, ignoreCase = true) ||
+                                    it.key.currency.contains(other = query, ignoreCase = true)
+                            }
+                            .toProvidersUM(),
                     )
                 }
             }
@@ -87,6 +110,7 @@ internal class BlockchainProvidersViewModel @Inject constructor(
                 ),
             )
         }
+            .sortedBy(ProvidersUM::blockchainName)
             .toImmutableList()
     }
 
@@ -153,10 +177,12 @@ internal class BlockchainProvidersViewModel @Inject constructor(
     // Before: [a, b, c, d, e]; previous = 0 (a), current = 4 (e)
     // After: [e, b, c, d, a]
     private fun List<ProviderUM>.replaceElements(prev: Int, current: Int): List<ProviderUM> {
-        return toMutableList().apply {
-            set(prev, this[current])
-            set(current, this[prev])
-        }
+        val mutableList = toMutableList()
+
+        mutableList[prev] = this[current]
+        mutableList[current] = this[prev]
+
+        return mutableList
     }
 
     private fun onPublicProviderUrlChange(id: String, url: String) {
