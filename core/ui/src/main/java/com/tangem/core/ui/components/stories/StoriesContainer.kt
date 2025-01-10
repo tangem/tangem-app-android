@@ -56,15 +56,19 @@ inline fun <reified T : StoryConfig> StoriesContainer(
             onNextStory = storyState::nextStory,
         )
 
+        currentStoryContent(storyState.currentStory, isPaused)
+
         StoriesProgressBar(
             steps = storyState.steps,
             currentStep = storyState.currentIndex.intValue,
             stepDuration = storyState.currentStory.duration,
             paused = isPaused,
-            onStepFinish = storyState::nextStory,
+            onStepFinish = {
+                if (storyState.nextStory()) {
+                    config.onClose()
+                }
+            },
         )
-
-        currentStoryContent(storyState.currentStory, isPaused)
     }
 }
 
@@ -97,6 +101,7 @@ private data class StoryContainerPreviewProviderData(
         StoryConfigPreviewProviderData(title = "Wallet"),
     ),
     override val isRestartable: Boolean = true,
+    override val onClose: () -> Unit = {},
 ) : StoriesContentConfig<StoryConfigPreviewProviderData>
 
 private data class StoryConfigPreviewProviderData(
