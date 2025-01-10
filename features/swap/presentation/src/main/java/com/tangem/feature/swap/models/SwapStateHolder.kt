@@ -42,8 +42,8 @@ internal data class SwapStateHolder(
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
-    val onSelectTokenClick: (() -> Unit)? = null,
-    val onSuccess: (() -> Unit)? = null,
+    val onSelectTokenClick: (() -> Unit),
+    val onSuccess: (() -> Unit),
     val onMaxAmountSelected: (() -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
 )
