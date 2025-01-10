@@ -2,9 +2,9 @@ package com.tangem.domain.promo
 
 import kotlinx.coroutines.flow.Flow
 
-class ShouldShowSwapPromoTokenUseCase(private val promoSettingsRepository: PromoRepository) {
+class ShouldShowSwapPromoTokenUseCase(private val promoRepository: PromoRepository) {
 
-    operator fun invoke(): Flow<Boolean> = promoSettingsRepository.isReadyToShowTokenSwapPromo()
+    operator fun invoke(): Flow<Boolean> = promoRepository.isReadyToShowTokenSwapPromo()
 
-    suspend fun neverToShow() = promoSettingsRepository.setNeverToShowTokenSwapPromo()
+    suspend fun neverToShow() = promoRepository.setNeverToShowTokenSwapPromo()
 }
