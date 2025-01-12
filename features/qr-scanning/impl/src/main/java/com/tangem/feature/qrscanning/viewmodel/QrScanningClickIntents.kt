@@ -62,6 +62,6 @@ internal class QrScanningClickIntentsImplementor @Inject constructor(
     }
 
     override fun onSettingsClick() {
-        settingsManager.openSettings()
+        settingsManager.openAppSettings()
     }
 }
