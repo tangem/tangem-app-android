@@ -1,5 +1,8 @@
 package com.tangem.core.navigation.settings
 
 interface SettingsManager {
-    fun openSettings()
+
+    fun openAppSettings()
+
+    fun openBiometricSettings()
 }

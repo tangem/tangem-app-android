@@ -2,17 +2,12 @@ package com.tangem.tap
 
 import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
-import android.content.Intent
 import android.os.Bundle
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import java.util.WeakHashMap
 import kotlin.reflect.KClass
 
-class ForegroundActivityObserver : ActivityResultCaller {
-    override var activityResultLauncher: ActivityResultLauncher<Intent>? = null
-        private set
+class ForegroundActivityObserver {
 
     private val activities = WeakHashMap<KClass<out Activity>, AppCompatActivity>()
 
@@ -26,11 +21,6 @@ class ForegroundActivityObserver : ActivityResultCaller {
 
     internal inner class Callbacks : ActivityLifecycleCallbacks {
         override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-            activityResultLauncher = (activity as? AppCompatActivity)?.registerForActivityResult(
-                ActivityResultContracts.StartActivityForResult(),
-            ) {
-                /* no-op */
-            }
         }
 
         override fun onActivityResumed(activity: Activity) {
@@ -39,9 +29,6 @@ class ForegroundActivityObserver : ActivityResultCaller {
 
         override fun onActivityDestroyed(activity: Activity) {
             activities.remove(activity::class)
-            if (activities.isEmpty()) {
-                activityResultLauncher = null
-            }
         }
 
         override fun onActivityStarted(activity: Activity) {
