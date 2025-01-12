@@ -20,6 +20,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
@@ -74,7 +75,6 @@ import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
-lateinit var activityResultCaller: ActivityResultCaller
 internal lateinit var derivationsFinder: DerivationsFinder
 
 abstract class TangemApplication : Application(), ImageLoaderFactory {
@@ -202,6 +202,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val clipboardManager: ClipboardManager
         get() = entryPoint.getClipboardManager()
+
+    private val settingsManager: SettingsManager
+        get() = entryPoint.getSettingsManager()
     // endregion
 
     override fun onCreate() {
@@ -231,7 +234,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         tangemAppLoggerInitializer.initialize()
 
         foregroundActivityObserver = ForegroundActivityObserver()
-        activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         // TODO: Try to performance and user experience.
@@ -300,6 +302,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     excludedBlockchains = excludedBlockchains,
                     appPreferencesStore = appPreferencesStore,
                     clipboardManager = clipboardManager,
+                    settingsManager = settingsManager,
                 ),
             ),
         )
