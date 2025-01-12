@@ -4,6 +4,7 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -77,4 +78,5 @@ data class DaggerGraphState(
     val excludedBlockchains: ExcludedBlockchains? = null,
     val appPreferencesStore: AppPreferencesStore? = null,
     val clipboardManager: ClipboardManager? = null,
+    val settingsManager: SettingsManager? = null,
 ) : StateType
