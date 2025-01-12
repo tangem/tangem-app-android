@@ -8,6 +8,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -128,4 +129,6 @@ interface ApplicationEntryPoint {
     fun getAppLogsStore(): AppLogsStore
 
     fun getClipboardManager(): ClipboardManager
+
+    fun getSettingsManager(): SettingsManager
 }
