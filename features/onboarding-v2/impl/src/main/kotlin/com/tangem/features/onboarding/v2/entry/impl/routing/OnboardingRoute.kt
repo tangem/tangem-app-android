@@ -18,6 +18,11 @@ sealed class OnboardingRoute : Route {
         val onDone: (UserWallet) -> Unit,
     ) : OnboardingRoute()
 
+    data class Visa(
+        val titleProvider: TitleProvider,
+        val scanResponse: ScanResponse,
+    ) : OnboardingRoute()
+
     data class ManageTokens(
         val userWallet: UserWallet,
     ) : OnboardingRoute()
