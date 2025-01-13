@@ -85,6 +85,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF32"),
     ),
 
+    GetsMine(
+        cards2ResId = R.drawable.ill_gets_mine_card2_120_106,
+        cards3ResId = R.drawable.ill_gets_mine_card3_120_106,
+        batchIds = setOf("BB000008"),
+    ),
+
     Grim(
         cards2ResId = R.drawable.ill_grim_card2_120_106,
         cards3ResId = R.drawable.ill_grim_card3_120_106,
@@ -194,6 +200,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF07"),
     ),
 
+    USA(
+        cards2ResId = R.drawable.ill_usa_card2_120_106,
+        cards3ResId = R.drawable.ill_usa_card3_120_106,
+        batchIds = setOf("AF91"),
+    ),
+
     VeChain(
         cards2ResId = R.drawable.ill_vechain_card2_120_106,
         cards3ResId = R.drawable.ill_vechain_card3_120_106,
@@ -217,5 +229,11 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_white_card2_120_106,
         cards3ResId = R.drawable.ill_white_card3_120_106,
         batchIds = setOf("AF15"),
+    ),
+
+    Winter(
+        cards2ResId = R.drawable.ill_winter_card2_120_106,
+        cards3ResId = R.drawable.ill_winter_card3_120_106,
+        batchIds = setOf("AF85", "AF86", "AF87", "AF99"),
     ),
 }
