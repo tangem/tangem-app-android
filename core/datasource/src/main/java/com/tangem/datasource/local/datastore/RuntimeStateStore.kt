@@ -2,6 +2,7 @@ package com.tangem.datasource.local.datastore
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 /**
  * Runtime store
@@ -15,6 +16,8 @@ interface RuntimeStateStore<T> {
 
     /** Store [value] */
     suspend fun store(value: T)
+
+    suspend fun update(function: (T) -> T)
 
     companion object {
 
@@ -31,6 +34,10 @@ interface RuntimeStateStore<T> {
 
             override suspend fun store(value: T) {
                 flow.value = value
+            }
+
+            override suspend fun update(function: (T) -> T) {
+                flow.update(function)
             }
         }
     }
