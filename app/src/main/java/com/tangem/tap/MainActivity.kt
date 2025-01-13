@@ -663,10 +663,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 }
 
                 store.dispatchNavigationAction { replaceAll(route) }
+                intentProcessor.handleIntent(intentWhichStartedActivity, false)
             }
         }
-
-        intentProcessor.handleIntent(intentWhichStartedActivity, false)
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
