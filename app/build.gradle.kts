@@ -75,6 +75,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.onramp)
+    implementation(projects.domain.promo)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -231,6 +232,7 @@ dependencies {
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
+    implementation(deps.decompose.ext.compose)
 
     /** Testing libraries */
     testImplementation(deps.test.coroutine)

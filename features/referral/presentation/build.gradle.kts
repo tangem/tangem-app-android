@@ -25,6 +25,7 @@ dependencies {
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.androidx.activity.compose)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -37,7 +38,6 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
-    implementation(deps.compose.accompanist.webView)
     implementation(deps.compose.accompanist.systemUiController)
 
     /** DI */

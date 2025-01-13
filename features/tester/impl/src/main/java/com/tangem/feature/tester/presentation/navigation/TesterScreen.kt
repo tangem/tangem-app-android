@@ -11,4 +11,5 @@ internal enum class TesterScreen {
     ENVIRONMENTS_TOGGLES,
     TESTER_ACTIONS,
     EXCLUDED_BLOCKCHAINS,
+    BLOCKCHAIN_PROVIDERS,
 }

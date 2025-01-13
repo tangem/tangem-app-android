@@ -1,5 +1,7 @@
 package com.tangem.core.ui.res
 
+import android.app.Activity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.text.selection.LocalTextSelectionColors
 import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Colors
@@ -10,12 +12,41 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.TangemShimmer
 import com.tangem.core.ui.haptic.DefaultHapticManager
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.core.ui.message.EventMessageHandler
 import com.tangem.core.ui.windowsize.WindowSize
+import com.tangem.core.ui.windowsize.rememberWindowSize
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.valentinilk.shimmer.Shimmer
+
+@Composable
+fun TangemTheme(
+    activity: Activity,
+    uiDependencies: UiDependencies,
+    typography: TangemTypography = TangemTheme.typography,
+    dimens: TangemDimens = TangemTheme.dimens,
+    overrideSystemBarColors: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val appThemeMode by uiDependencies.appThemeModeHolder.appThemeMode
+    val windowSize = rememberWindowSize(activity = activity)
+
+    TangemTheme(
+        isDark = shouldUseDarkTheme(appThemeMode),
+        windowSize = windowSize,
+        vibratorHapticManager = uiDependencies.vibratorHapticManager,
+        snackbarHostState = uiDependencies.globalSnackbarHostState,
+        eventMessageHandler = uiDependencies.eventMessageHandler,
+        overrideSystemBarColors = overrideSystemBarColors,
+        typography = typography,
+        dimens = dimens,
+        content = content,
+    )
+}
 
 @Composable
 fun TangemTheme(
@@ -24,6 +55,7 @@ fun TangemTheme(
     typography: TangemTypography = TangemTheme.typography,
     dimens: TangemDimens = TangemTheme.dimens,
     vibratorHapticManager: VibratorHapticManager? = null,
+    eventMessageHandler: EventMessageHandler = remember { EventMessageHandler() },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     overrideSystemBarColors: Boolean = true,
     content: @Composable () -> Unit,
@@ -64,6 +96,7 @@ fun TangemTheme(
             LocalIsInDarkTheme provides isDark,
             LocalHapticManager provides hapticManager,
             LocalSnackbarHostState provides snackbarHostState,
+            LocalEventMessageHandler provides eventMessageHandler,
             LocalWindowSize provides windowSize,
         ) {
             CompositionLocalProvider(
@@ -256,6 +289,10 @@ val LocalSnackbarHostState = staticCompositionLocalOf<SnackbarHostState> {
     error("No SnackbarHostState provided")
 }
 
+val LocalEventMessageHandler = staticCompositionLocalOf<EventMessageHandler> {
+    error("No EventMessageHandler provided")
+}
+
 val LocalWindowSize = staticCompositionLocalOf<WindowSize> {
     error("No WindowSize provided")
 }
@@ -266,4 +303,20 @@ val LocalTangemShimmer = staticCompositionLocalOf<Shimmer> {
 
 val LocalMainBottomSheetColor = staticCompositionLocalOf<MutableState<Color>> {
     error("No MainBottomSheetColor provided")
+}
+
+/**
+ * Determines whether the dark theme should be used based on the given [AppThemeMode].
+ *
+ * @param appThemeMode The application theme mode.
+ * @return `true` if the dark theme should be used, `false` otherwise.
+ */
+@Composable
+@ReadOnlyComposable
+private fun shouldUseDarkTheme(appThemeMode: AppThemeMode): Boolean {
+    return when (appThemeMode) {
+        AppThemeMode.FORCE_DARK -> true
+        AppThemeMode.FORCE_LIGHT -> false
+        AppThemeMode.FOLLOW_SYSTEM -> isSystemInDarkTheme()
+    }
 }

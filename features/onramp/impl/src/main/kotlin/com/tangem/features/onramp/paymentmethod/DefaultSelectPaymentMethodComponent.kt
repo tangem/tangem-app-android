@@ -24,7 +24,7 @@ internal class DefaultSelectPaymentMethodComponent @AssistedInject constructor(
     override fun BottomSheet() {
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = ::dismiss,
                 content = PaymentMethodsBottomSheetConfig(
                     selectedMethodId = params.selectedMethodId,

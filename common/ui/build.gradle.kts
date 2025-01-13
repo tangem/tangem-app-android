@@ -19,6 +19,7 @@ dependencies {
     implementation(deps.compose.navigation)
     implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.coil)
+    implementation(deps.compose.constraintLayout)
 
     /** Deps */
     implementation(deps.kotlin.immutable.collections)
@@ -34,6 +35,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.onramp.models)
 
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain) {

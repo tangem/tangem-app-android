@@ -170,7 +170,7 @@ private fun Preview_ChooseFeeBottomSheet() {
     TangemThemePreview {
         ChooseFeeBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = content,
             ),

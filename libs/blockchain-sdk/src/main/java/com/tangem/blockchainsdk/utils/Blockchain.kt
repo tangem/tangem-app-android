@@ -143,6 +143,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "casper-network/test" -> Blockchain.CasperTestnet
         "chiliz" -> Blockchain.Chiliz
         "chiliz/test" -> Blockchain.ChilizTestnet
+        "vanar-chain" -> Blockchain.VanarChain
+        "vanar-chain/test" -> Blockchain.VanarChainTestnet
         "xodex" -> Blockchain.Xodex
         "canxium" -> Blockchain.Canxium
         "clore-ai" -> Blockchain.Clore
@@ -286,6 +288,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.CoreTestnet -> "core/test"
         Blockchain.Chiliz -> "chiliz"
         Blockchain.ChilizTestnet -> "chiliz/test"
+        Blockchain.VanarChain -> "vanar-chain"
+        Blockchain.VanarChainTestnet -> "vanar-chain/test"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
         Blockchain.Clore -> "clore-ai"
@@ -380,6 +384,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Casper, Blockchain.CasperTestnet -> "casper-network"
         Blockchain.Core, Blockchain.CoreTestnet -> "coredaoorg"
         Blockchain.Chiliz, Blockchain.ChilizTestnet -> "chiliz"
+        Blockchain.VanarChain, Blockchain.VanarChainTestnet -> "vanar-chain"
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
         Blockchain.Clore -> "clore-ai"

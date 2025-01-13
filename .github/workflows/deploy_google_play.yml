@@ -1,28 +1,17 @@
 name: Deploy to Google Play Internal
 
 on:
+  push:
+    branches:
+      - 'release'
   workflow_dispatch:
-    inputs:
-      build_description:
-        description: >
-          Optional additional info about the build
-        type: string
-  workflow_call:
-    secrets:
-      FIREBASE_APP_ID_INTERNAL:
-        required: true
-      FIREBASE_CLI_TOKEN:
-        required: true
-      # Token must have read access to all the submodule repositories
-      GH_MOBILE_PAT:
-        required: true
 
 env:
-  INITIAL_VERSION_CODE: ${{ 1000 }}
+  INITIAL_VERSION_CODE: ${{ 1500 }}
 
 jobs:
   build_and_upload:
-    name: Upload apk to Firebase
+    name: Upload apk to Google Play Internal
     runs-on: [ self-hosted, ARM64, active-android, Linux ]
     environment: Alpha
     outputs:
@@ -75,12 +64,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-          app_id_internal: ${{ secrets.FIREBASE_APP_ID_INTERNAL }}
-          apk_path_internal: app/build/outputs/apk/internal/app-internal.apk
+          keystore_encoded_base64: ${{ secrets.TEST_KEYSTORE }}
+          store_password: ${{ secrets.TEST_STORE_PASSWORD }}
+          key_alias: ${{ secrets.TEST_KEY_ALIAS }}
+          key_password: ${{ secrets.TEST_KEY_PASSWORD }}
           version_code: ${{ steps.get_version_code.outputs.versionCode }}
           version_name:  ${{ steps.get_version_name.outputs.versionName }}
           release_notes: ${{ github.ref_name }} - ${{ github.sha }}
-          groups: testers
         run: |
           env > .env
           
@@ -88,48 +78,91 @@ jobs:
             --user ubuntu \
             --env-file .env \
             --volume ~/.gradle:/home/ubuntu/.gradle \
+            --volume ~/apks:/home/ubuntu/apks \
             --volume ${{ github.workspace }}:/workspace \
             --volume $GITHUB_OUTPUT:/workspace/github_output.txt \
             tangem_ci_android_environment \
             sh -c "
               cd /workspace;
+  
+              echo \"\$keystore_encoded_base64\" | base64 --decode > keystore
+              export keystore=\$(pwd)/keystore
+              
+              if [ ! -f \"\$keystore\" ]; then
+                echo 'Keystore file was not created.'
+                exit 1
+              fi
+              
+              echo 'Deploying APK to Google Play Internal...'
+              
+              fastlane build \
+                versionCode:\"$version_code\" \
+                versionName:\"$version_name\" \
+                keystore:\"\$keystore\" \
+                store_password:\"$store_password\" \
+                key_alias:\"$key_alias\" \
+                key_password:\"$key_password\" \
+                launched_from_github_action:true
+          
+              cp app/build/outputs/apk/release/app-release.apk /home/ubuntu/apks/app-release-\"$version_code\"-\"$version_name\".apk
           
               echo 'Deploying APK to Google Play Internal...';
           
-              fastlane build;
+              fastlane supply \
+                package_name:com.tangem.wallet \
+                track:internal \
+                aab:app/build/outputs/bundle/release/app-release.aab \
+                json_key_data:{TODO_AND-9952} \
+                release_status:completed \
+                skip_upload_apk:false \
+                skip_upload_aab:false \
+                skip_upload_metadata:false \
+                skip_upload_changelogs:false \
+                skip_upload_images:false \
+                skip_upload_screenshots:false \
+                sync_image_upload:false \
+                track_promote_release_status:completed \
+                validate_only:false \
+                check_superseded_tracks:false \
+                timeout:300 \
+                deactivate_on_promote:true \
+                changes_not_sent_for_review:false \
+                rescue_changes_not_sent_for_review:true \
+                ack_bundle_installation_warning:false
             "
 
-  notification:
-    name: Send Notification
-    needs: build_and_upload
-    uses: tangem/actions/.github/workflows/notification.yml@main
-    with:
-      channel: 'deployments-android'
-      status: 'success'
-      app_name: 'Tangem Release'
-      deploy_to: 'Google Play Internal'
-      version: ${{ needs.build_and_upload.outputs.version_name }}
-      build_number: ${{ needs.build_and_upload.outputs.version_code }}
-      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
-      build_description: ${{ inputs.build_description }}
-      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
-    secrets:
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
-
-  error_notification:
-    name: Error Notification
-    needs: build_and_upload
-    if: failure()
-    uses: tangem/actions/.github/workflows/notification.yml@main
-    with:
-      channel: 'deployments-android'
-      status: 'error'
-      app_name: 'Tangem Release'
-      deploy_to: 'Google Play Internal'
-      version: ${{ needs.build_and_upload.outputs.version_name }}
-      build_number: ${{ needs.build_and_upload.outputs.version_code }}
-      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
-      build_description: ${{ inputs.build_description }}
-      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
-    secrets:
-      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+# TODO: uncomment when AND-9552 is ready
+#  notification:
+#    name: Send Notification
+#    needs: build_and_upload
+#    uses: tangem/actions/.github/workflows/notification.yml@main
+#    with:
+#      channel: 'deployments-android'
+#      status: 'success'
+#      app_name: 'Tangem Release'
+#      deploy_to: 'Google Play Internal'
+#      version: ${{ needs.build_and_upload.outputs.version_name }}
+#      build_number: ${{ needs.build_and_upload.outputs.version_code }}
+#      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
+#      build_description: ${{ inputs.build_description }}
+#      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
+#    secrets:
+#      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+#
+#  error_notification:
+#    name: Error Notification
+#    needs: build_and_upload
+#    if: failure()
+#    uses: tangem/actions/.github/workflows/notification.yml@main
+#    with:
+#      channel: 'deployments-android'
+#      status: 'error'
+#      app_name: 'Tangem Release'
+#      deploy_to: 'Google Play Internal'
+#      version: ${{ needs.build_and_upload.outputs.version_name }}
+#      build_number: ${{ needs.build_and_upload.outputs.version_code }}
+#      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
+#      build_description: ${{ inputs.build_description }}
+#      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
+#    secrets:
+#      SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

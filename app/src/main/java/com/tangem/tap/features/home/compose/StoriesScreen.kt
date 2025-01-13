@@ -57,6 +57,7 @@ internal fun StoriesScreen(
         }
     }
 
+    // todo refactor AND-9605
     StoriesScreenContent(
         modifier = Modifier
             .fillMaxSize()
@@ -75,6 +76,7 @@ internal fun StoriesScreen(
     )
 }
 
+@Deprecated("Use StoriesContainer from core/ui")
 @Suppress("LongMethod")
 @Composable
 private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: Modifier = Modifier) {
