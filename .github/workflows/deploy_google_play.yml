@@ -39,6 +39,14 @@ jobs:
           submodules: true
           token: ${{ secrets.GH_MOBILE_PAT }}
 
+      - name: Checkout dexprotector config
+        uses: actions/checkout@v3
+        with:
+          repository: 'tangem/private-app-config'
+          ref: 'main'
+          token: ${{ secrets.GH_MOBILE_PAT }}
+          path: 'app-config'
+
       - name: Build Docker image
         run: |
           docker build --platform linux/arm64 -t tangem_ci_android_environment .
@@ -110,6 +118,7 @@ jobs:
               # protecting apk
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
                 -licenseFile $DEX_PROTECTOR_HOME/dexprotector.licel \
+                -configFile /workspace/app-config/dex-android-config.xml \
                 -signMode release \
                 -sha256CertificateFingerprint $SHA_256_CERTIFICATE_FINGERPRINT \
                 -keystore \$keystore \
@@ -121,6 +130,7 @@ jobs:
           
               # protecting aar
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
+                -configFile /workspace/app-config/dex-android-config.xml \
                 -licenseFile $DEX_PROTECTOR_HOME/dexprotector.licel \
                 -signMode release \
                 -sha256CertificateFingerprint $SHA_256_CERTIFICATE_FINGERPRINT \
