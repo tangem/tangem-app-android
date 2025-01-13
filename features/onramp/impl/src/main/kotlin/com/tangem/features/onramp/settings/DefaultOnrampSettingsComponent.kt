@@ -53,7 +53,7 @@ internal class DefaultOnrampSettingsComponent @AssistedInject constructor(
             context = childByContext(componentContext),
             params = SelectCountryComponent.Params(
                 params.cryptoCurrency,
-                model.bottomSheetNavigation::dismiss,
+                onDismiss = { model.bottomSheetNavigation.dismiss() },
             ),
         )
     }
