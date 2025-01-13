@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">今後表示しない</string>
   <string name="balance_hidden_got_it_button">わかりました</string>
   <string name="balance_hidden_title">残高は非表示</string>
+  <string name="beta_mode_warning_message">ブロックチェーン開発者によると、Kaspaトークンは現在ベータ版です。アップデートをお楽しみに！</string>
+  <string name="beta_mode_warning_title">ベータモード</string>
   <string name="biometric_lockout_permanent_warning_description">カードまたはリングをスキャンしてください</string>
   <string name="biometric_lockout_warning_description">30秒後に再試行するか、カードまたはリングをスキャンしてください</string>
   <string name="biometric_lockout_warning_title">試行回数が多すぎます</string>
@@ -575,6 +577,8 @@
   <string name="onramp_choose_provider_title_hint">Tangemでの暗号通貨の買付は、サードパーティプロバイダーの条件に基づいて行われます。</string>
   <string name="onramp_country_search">国で検索</string>
   <string name="onramp_country_unavailable">利用不可</string>
+  <string name="onramp_currency_other">その他の通貨</string>
+  <string name="onramp_currency_popular">人気の法定通貨</string>
   <string name="onramp_currency_search">通貨で検索</string>
   <string name="onramp_legal">オンランプ機能を使用することにより、プロバイダの%1$sおよび%2$sに同意するものとします</string>
   <string name="onramp_max_amount_restriction">買付金額は%s以下にしてください</string>

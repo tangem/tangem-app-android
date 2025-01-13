@@ -5,7 +5,8 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
@@ -13,9 +14,6 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.managetokens.entity.item.CurrencyItemUM
 import com.tangem.features.managetokens.impl.R
-import com.tangem.features.managetokens.ui.dialog.CurrencyUnsupportedDialog
-import com.tangem.features.managetokens.ui.dialog.HasLinkedTokensWarning
-import com.tangem.features.managetokens.ui.dialog.HideTokenWarning
 import com.tangem.features.managetokens.utils.mapper.toUiModel
 import com.tangem.features.managetokens.utils.ui.toggleExpanded
 import com.tangem.features.managetokens.utils.ui.update
@@ -195,26 +193,23 @@ internal class ManageTokensUiManager(
     }
 
     private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
-        val message = ContentMessage { onDismiss ->
-            CurrencyUnsupportedDialog(
-                title = resourceReference(R.string.common_warning),
-                message = when (unsupportedState) {
-                    is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
-                        id = R.string.alert_manage_tokens_unsupported_message,
-                        formatArgs = wrappedList(unsupportedState.networkName),
-                    )
-                    is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
-                        id = R.string.alert_manage_tokens_unsupported_curve_message,
-                        formatArgs = wrappedList(unsupportedState.networkName),
-                    )
-                    is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
-                        id = R.string.alert_manage_tokens_unsupported_curve_message,
-                        formatArgs = wrappedList(unsupportedState.networkName),
-                    )
-                },
-                onDismiss = onDismiss,
-            )
-        }
+        val message = DialogMessage(
+            title = resourceReference(R.string.common_warning),
+            message = when (unsupportedState) {
+                is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+                is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_curve_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+                is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_curve_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+            },
+        )
 
         messageSender.send(message)
     }
@@ -243,27 +238,40 @@ internal class ManageTokensUiManager(
     }
 
     private fun showLinkedTokensWarning(currency: ManagedCryptoCurrency, network: Network) {
-        val message = ContentMessage { onDismiss ->
-            HasLinkedTokensWarning(
-                currency = currency,
-                network = network,
-                onDismiss = onDismiss,
-            )
-        }
+        val message = DialogMessage(
+            title = resourceReference(
+                id = R.string.token_details_unable_hide_alert_title,
+                formatArgs = wrappedList(currency.name),
+            ),
+            message = resourceReference(
+                id = R.string.token_details_unable_hide_alert_message,
+                formatArgs = wrappedList(
+                    currency.name,
+                    currency.symbol,
+                    network.name,
+                ),
+            ),
+        )
         messageSender.send(message)
     }
 
     private fun showHideTokenWarning(currency: ManagedCryptoCurrency, onConfirm: () -> Unit) {
-        val message = ContentMessage { onDismiss ->
-            HideTokenWarning(
-                currency = currency,
-                onConfirm = {
-                    onConfirm()
-                    onDismiss()
-                },
-                onDismiss = onDismiss,
-            )
-        }
+        val message = DialogMessage(
+            title = resourceReference(
+                id = R.string.token_details_hide_alert_title,
+                formatArgs = wrappedList(currency.name),
+            ),
+            message = resourceReference(R.string.token_details_hide_alert_message),
+            firstActionBuilder = {
+                EventMessageAction(
+                    title = resourceReference(R.string.token_details_hide_alert_hide),
+                    warning = true,
+                    onClick = onConfirm,
+                )
+            },
+            secondActionBuilder = { cancelAction() },
+        )
+
         messageSender.send(message)
     }
 

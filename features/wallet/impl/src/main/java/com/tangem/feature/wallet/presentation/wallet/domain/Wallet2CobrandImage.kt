@@ -161,7 +161,7 @@ internal enum class Wallet2CobrandImage(
     Pastel(
         cards2ResId = R.drawable.ill_pastel_cards3_120_106,
         cards3ResId = R.drawable.ill_pastel_cards3_120_106,
-        batchIds = setOf("AF43", "AF44", "AF45"),
+        batchIds = setOf("AF43", "AF44", "AF45", "AF78", "AF79", "AF80"),
     ),
 
     RedPanda(
@@ -204,7 +204,7 @@ internal enum class Wallet2CobrandImage(
     Vivid(
         cards2ResId = R.drawable.ill_vivid_cards3_120_106,
         cards3ResId = R.drawable.ill_vivid_cards3_120_106,
-        batchIds = setOf("AF40", "AF41", "AF42"),
+        batchIds = setOf("AF40", "AF41", "AF42", "AF75", "AF76", "AF77"),
     ),
 
     VoltInu(

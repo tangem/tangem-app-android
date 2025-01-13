@@ -658,6 +658,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
                 var userWallet: UserWallet? = null
                 if (scanResponse != null) {
+                    scanResponse = updateScanResponseAfterBackup(scanResponse!!, backupState)
                     userWallet = createUserWallet(
                         scanResponse = requireNotNull(value = scanResponse, lazyMessage = { "ScanResponse is null" }),
                         backupState = backupState,
@@ -689,6 +690,14 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                             store.dispatchNavigationAction(AppRouter::pop)
                         },
                     )
+                }
+
+                scope.launch {
+                    userWallet?.let {
+                        if (it.scanResponse.cardTypesResolver.isWallet2() && it.isImported) {
+                            store.inject(DaggerGraphState::walletsRepository).markWallet2WasCreated(it.walletId)
+                        }
+                    }
                 }
 
                 val notActivatedCardIds = gatherCardIds(backupState, card).mapNotNull {

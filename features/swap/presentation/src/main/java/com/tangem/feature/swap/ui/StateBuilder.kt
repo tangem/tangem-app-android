@@ -10,7 +10,6 @@ import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIco
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -117,6 +116,8 @@ internal class StateBuilder(
             onMaxAmountSelected = actions.onMaxAmountSelected,
             changeCardsButtonState = ChangeCardsButtonState.UPDATE_IN_PROGRESS,
             onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
+            onSelectTokenClick = actions.onSelectTokenClick,
+            onSuccess = actions.onSuccess,
             providerState = ProviderState.Empty(),
             shouldShowMaxAmount = false,
             priceImpact = PriceImpact.Empty(),
@@ -353,14 +354,14 @@ internal class StateBuilder(
                 LegalState(
                     title = resourceReference(R.string.common_terms_of_use),
                     link = it,
-                    onClick = actions.onTosClick,
+                    onClick = actions.onLinkClick,
                 )
             },
             policyLink = swapProvider.privacyPolicy?.let {
                 LegalState(
                     title = resourceReference(R.string.common_privacy_policy),
                     link = it,
-                    onClick = actions.onPolicyClick,
+                    onClick = actions.onLinkClick,
                 )
             },
         )
@@ -946,7 +947,7 @@ internal class StateBuilder(
             )
             return uiState.copy(
                 bottomSheetConfig = TangemBottomSheetConfig(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = onDismiss,
                     content = config,
                 ),
@@ -957,7 +958,7 @@ internal class StateBuilder(
 
     fun dismissBottomSheet(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
-            bottomSheetConfig = uiState.bottomSheetConfig?.copy(isShow = false),
+            bottomSheetConfig = uiState.bottomSheetConfig?.copy(isShown = false),
         )
     }
 
@@ -981,7 +982,7 @@ internal class StateBuilder(
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = onDismiss,
                 content = config,
             ),
@@ -1040,11 +1041,11 @@ internal class StateBuilder(
             readMoreUrl = buildReadMoreUrl(),
             feeItems = txFeeState.toFeeItemState(),
             readMore = resourceReference(R.string.common_read_more),
-            onReadMoreClick = actions.onFeeReadMoreClick,
+            onReadMoreClick = actions.onLinkClick,
         )
         return uiState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = onDismiss,
                 content = config,
             ),

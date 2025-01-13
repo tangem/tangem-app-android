@@ -17,6 +17,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomS
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -119,6 +120,7 @@ internal class StakingViewModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getActionsUseCase: GetActionsUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
+    private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
@@ -638,6 +640,7 @@ internal class StakingViewModel @Inject constructor(
                 amount = amount.orZero(),
                 fee = fee.orZero(),
                 reduceAmountBy = confirmationState?.reduceAmountBy.orZero(),
+                actionType = value.actionType,
             )
             val currencyStatus = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
@@ -697,14 +700,21 @@ internal class StakingViewModel @Inject constructor(
         amount: BigDecimal,
         fee: BigDecimal,
         reduceAmountBy: BigDecimal,
+        actionType: StakingActionCommonType,
     ): BigDecimal? {
-        val subtractedBalanceAmount = checkAndCalculateSubtractedAmount(
-            isAmountSubtractAvailable = isAmountSubtractAvailable,
-            cryptoCurrencyStatus = cryptoCurrencyStatus,
-            amountValue = amount.orZero(),
-            feeValue = fee.orZero(),
-            reduceAmountBy = reduceAmountBy,
-        )
+        // TODO split for different networks
+        val subtractedBalanceAmount = when (actionType) {
+            StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
+                isAmountSubtractAvailable = isAmountSubtractAvailable,
+                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                amountValue = amount.orZero(),
+                feeValue = fee.orZero(),
+                reduceAmountBy = reduceAmountBy,
+            )
+            StakingActionCommonType.Exit,
+            is StakingActionCommonType.Pending,
+            -> BigDecimal.ZERO
+        }
         val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
         return statusValue?.let { it.amount - subtractedBalanceAmount - fee.orZero() }
     }
@@ -757,7 +767,7 @@ internal class StakingViewModel @Inject constructor(
         analyticsEventHandler.send(StakingAnalyticsEvent.ButtonShare)
         if (txUrl != null) {
             vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-            stakingEventFactory.createShareDialog(txUrl = txUrl)
+            shareManager.shareText(txUrl)
         }
     }
 

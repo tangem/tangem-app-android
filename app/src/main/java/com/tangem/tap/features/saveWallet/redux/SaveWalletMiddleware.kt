@@ -8,7 +8,6 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchNavigationAction
@@ -17,7 +16,11 @@ import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
+import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.launch
@@ -97,7 +100,7 @@ internal class SaveWalletMiddleware {
     }
 
     private fun enrollBiometrics() {
-        activityResultCaller.openSystemBiometrySettings()
+        store.inject(DaggerGraphState::settingsManager).openBiometricSettings()
     }
 
     private fun allowToUseBiometrics(state: SaveWalletState) = scope.launch {

@@ -27,8 +27,8 @@ data class UiActions(
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
     val onBuyClick: (CryptoCurrency) -> Unit,
-    val onPolicyClick: (String) -> Unit,
-    val onTosClick: (String) -> Unit,
+    val onSelectTokenClick: () -> Unit,
+    val onSuccess: () -> Unit,
+    val onLinkClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
-    val onFeeReadMoreClick: (String) -> Unit,
 )
