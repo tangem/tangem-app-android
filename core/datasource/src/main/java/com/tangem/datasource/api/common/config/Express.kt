@@ -4,7 +4,7 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.utils.RequestHeader
 import com.tangem.lib.auth.ExpressAuthProvider
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.version.AppVersionProvider
 
 /**
@@ -47,11 +47,11 @@ internal class Express(
     )
 
     private fun createHeaders(isProd: Boolean) = buildMap {
-        put(key = "api-key", value = Provider { getApiKey(isProd) })
-        put(key = "user-id", value = Provider(expressAuthProvider::getUserId))
-        put(key = "session-id", value = Provider(expressAuthProvider::getSessionId))
+        put(key = "api-key", value = ProviderSuspend { getApiKey(isProd) })
+        put(key = "user-id", value = ProviderSuspend(expressAuthProvider::getUserId))
+        put(key = "session-id", value = ProviderSuspend(expressAuthProvider::getSessionId))
         putAll(from = RequestHeader.AppVersionPlatformHeaders(appVersionProvider).values)
-        put(key = "refcode", value = Provider(expressAuthProvider::getRefCode))
+        put(key = "refcode", value = ProviderSuspend(expressAuthProvider::getRefCode))
     }
 
     private fun getApiKey(isProd: Boolean): String {
