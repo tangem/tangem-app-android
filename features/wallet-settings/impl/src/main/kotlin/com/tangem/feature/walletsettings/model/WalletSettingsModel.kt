@@ -11,11 +11,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
+import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.CardDTO
@@ -93,26 +91,19 @@ internal class WalletSettingsModel @Inject constructor(
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
         forgetWallet = {
-            messageSender.send(
-                ContentMessage { onDismiss ->
-                    BasicDialog(
-                        message = stringResourceSafe(R.string.user_wallet_list_delete_prompt),
-                        onDismissDialog = onDismiss,
-                        confirmButton = DialogButtonUM(
-                            title = stringResourceSafe(R.string.common_delete),
-                            warning = true,
-                            onClick = {
-                                forgetWallet()
-                                onDismiss()
-                            },
-                        ),
-                        dismissButton = DialogButtonUM(
-                            title = stringResourceSafe(R.string.common_cancel),
-                            onClick = onDismiss,
-                        ),
+            val message = DialogMessage(
+                message = resourceReference(R.string.user_wallet_list_delete_prompt),
+                firstActionBuilder = {
+                    EventMessageAction(
+                        title = resourceReference(R.string.common_delete),
+                        warning = true,
+                        onClick = ::forgetWallet,
                     )
                 },
+                secondActionBuilder = { cancelAction() },
             )
+
+            messageSender.send(message)
         },
         onLinkMoreCardsClick = {
             onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
