@@ -19,9 +19,9 @@ class IntentProcessor {
         intentHandlers.clear()
     }
 
-    fun handleIntent(intent: Intent?, isFromForeground: Boolean) {
-        intentHandlers.forEach {
-            it.handleIntent(intent, isFromForeground)
-        }
+    fun handleIntent(intent: Intent?, isFromForeground: Boolean, skipNavigationHandlers: Boolean = false) {
+        intentHandlers
+            .run { if (skipNavigationHandlers) filterNot { it is AffectsNavigation } else this }
+            .forEach { handler -> handler.handleIntent(intent, isFromForeground) }
     }
 }
