@@ -15,6 +15,7 @@ import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.version.AppVersionProvider
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -37,6 +38,8 @@ private val API_CONFIGS = setOf(
     Express(configManager, expressAuthProvider, appVersionProvider),
     TangemTech(appVersionProvider, appAuthProvider),
     StakeKit(stakeKitAuthProvider),
+    TangemVisaAuth(),
+    TangemVisa(visaAuthProvider),
 )
 
 /**
@@ -56,7 +59,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { appAuthProvider.getCardId() } returns APP_CARD_ID
         every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
-        every { runBlocking { visaAuthProvider.getAuthHeader() } } returns VISA_AUTH_HEADER
+        coEvery { visaAuthProvider.getAuthHeader() } returns VISA_AUTH_HEADER
     }
 
     @Test

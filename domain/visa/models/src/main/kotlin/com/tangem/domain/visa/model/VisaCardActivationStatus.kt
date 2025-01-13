@@ -1,7 +1,6 @@
 package com.tangem.domain.visa.model
 
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import kotlinx.serialization.Serializable
 
