@@ -258,9 +258,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         }
 
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        //     window.setHideOverlayWindows(true)
-        // }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            window.setHideOverlayWindows(true)
+        }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
