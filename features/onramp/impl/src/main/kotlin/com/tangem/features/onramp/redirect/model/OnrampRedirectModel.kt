@@ -6,11 +6,12 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.extensions.*
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.extensions.combinedReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.onramp.GetOnrampRedirectUrlUseCase
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.features.onramp.impl.R
@@ -82,22 +83,11 @@ internal class OnrampRedirectModel @Inject constructor(
             providerName = params.onrampProviderWithQuote.provider.info.name,
             paymentMethod = params.onrampProviderWithQuote.paymentMethod.name,
         )
-        val contentMessage = ContentMessage { onDismiss ->
-            BasicDialog(
-                message = stringResourceSafe(id = R.string.common_unknown_error),
-                confirmButton = DialogButtonUM(
-                    title = stringResourceSafe(id = R.string.common_ok),
-                    onClick = {
-                        params.onBack()
-                        onDismiss()
-                    },
-                ),
-                onDismissDialog = {
-                    params.onBack()
-                    onDismiss()
-                },
-            )
-        }
-        messageSender.send(contentMessage)
+        val message = DialogMessage(
+            message = resourceReference(R.string.common_unknown_error),
+            onDismissRequest = params.onBack,
+        )
+
+        messageSender.send(message)
     }
 }
