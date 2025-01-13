@@ -8,6 +8,7 @@ import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.models.scan.serialization.*
+import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.sdk.storage.AndroidSecureStorage
 import com.tangem.sdk.storage.createEncryptedSharedPreferences
@@ -60,6 +61,7 @@ internal object UserWalletsListManagerModule {
             .add(TangemSdkAdapter.DateAdapter())
             .add(TangemSdkAdapter.DerivationNodeAdapter())
             .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
+            .add(VisaCardActivationStatus.serializer)
             .add(KotlinJsonAdapterFactory())
             .build()
 

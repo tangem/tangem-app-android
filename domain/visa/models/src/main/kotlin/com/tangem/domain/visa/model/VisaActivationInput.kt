@@ -1,9 +1,15 @@
 package com.tangem.domain.visa.model
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
+import kotlinx.serialization.Serializable
+
+@Serializable
+@JsonClass(generateAdapter = true)
 data class VisaActivationInput(
-    val cardId: String,
-    val cardPublicKey: ByteArray,
-    val isAccessCodeSet: Boolean,
+    @Json(name = "cardId") val cardId: String,
+    @Json(name = "cardPublicKey") val cardPublicKey: ByteArray,
+    @Json(name = "isAccessCodeSet") val isAccessCodeSet: Boolean,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
