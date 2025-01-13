@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.AnalyticsParam.Key.CURRENCY
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PROVIDER
 import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
@@ -16,7 +15,7 @@ class TokenOnrampAnalyticsEvent(
         params = mapOf(
             TOKEN_PARAM to tokenSymbol,
             PROVIDER to provider,
-            CURRENCY to fiatCurrency,
+            "Currency Type" to fiatCurrency,
         ),
     )
 
@@ -27,7 +26,7 @@ class TokenOnrampAnalyticsEvent(
                 TOKEN_PARAM to tokenSymbol,
                 STATUS to status,
                 PROVIDER to provider,
-                CURRENCY to fiatCurrency,
+                "Currency Type" to fiatCurrency,
             ),
         )
 
