@@ -25,7 +25,7 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
     private val model: OnrampSelectCountryModel = getOrCreateModel(params)
 
     override fun dismiss() {
-        model.dismiss()
+        model.dismiss(isCountrySelected = false)
     }
 
     @Composable
