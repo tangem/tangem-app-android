@@ -4,6 +4,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaCardActivationStatus
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -22,6 +23,7 @@ internal object ScanResponseAsStringSerializer : KSerializer<ScanResponse> {
         .add(TangemSdkAdapter.DateAdapter())
         .add(TangemSdkAdapter.DerivationNodeAdapter())
         .add(TangemSdkAdapter.FirmwareVersionAdapter()) // For PrimaryCard model
+        .add(VisaCardActivationStatus.serializer)
         .add(KotlinJsonAdapterFactory())
         .build()
 
