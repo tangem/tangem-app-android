@@ -392,7 +392,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
         Blockchain.Clore -> "clore-ai"
-        Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet -> "odyssey"
+        Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet -> "dione"
     }
 }
 

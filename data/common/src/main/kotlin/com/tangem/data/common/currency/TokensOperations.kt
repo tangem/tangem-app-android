@@ -1,5 +1,6 @@
 package com.tangem.data.common.currency
 
+import android.util.Log
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchainsdk.utils.toCoinId
