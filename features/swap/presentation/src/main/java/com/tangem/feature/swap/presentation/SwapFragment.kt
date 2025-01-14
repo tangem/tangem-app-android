@@ -13,6 +13,7 @@ import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSelectTokenScreen
+import com.tangem.feature.swap.ui.SwapStoriesScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.feature.swap.viewmodels.SwapViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -46,6 +47,14 @@ class SwapFragment : ComposeFragment() {
             label = "",
         ) { screen ->
             when (screen) {
+                SwapNavScreen.PromoStories -> {
+                    val storiesConfig = viewModel.uiState.storiesConfig
+                    if (storiesConfig != null) {
+                        SwapStoriesScreen(config = storiesConfig)
+                    } else {
+                        SwapScreen(stateHolder = viewModel.uiState)
+                    }
+                }
                 SwapNavScreen.Main -> SwapScreen(stateHolder = viewModel.uiState)
                 SwapNavScreen.Success -> {
                     val successState = viewModel.uiState.successState
