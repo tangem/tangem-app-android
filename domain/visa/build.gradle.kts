@@ -9,6 +9,8 @@ android {
 }
 
 dependencies {
+    /** Domain models */
+    api(projects.domain.visa.models)
 
     /** Project - Domain */
     implementation(projects.core.utils)
