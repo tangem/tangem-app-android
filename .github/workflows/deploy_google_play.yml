@@ -12,6 +12,7 @@ jobs:
     name: Prepare
     with:
       initial_version_code: 1500
+      use_dexprotector: true
     secrets: inherit
 
   build_apk_and_aab:
