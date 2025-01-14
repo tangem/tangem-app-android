@@ -47,8 +47,12 @@ jobs:
             tangem_ci_android_environment \
             sh -c "
               cd /workspace;
+          
+              # decoding keystore
               echo \"\$keystore_encoded_base64\" | base64 --decode > keystore
               export keystore=\$(pwd)/keystore
+          
+              # building release
               fastlane buildRelease \
                 versionCode:\"\$version_code\" \
                 versionName:\"\$version_name\" \
@@ -57,6 +61,8 @@ jobs:
                 key_alias:\"\$key_alias\" \
                 key_password:\"\$key_password\" \
                 launched_from_github_action:true
+          
+              # protecting apk
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
                 -licenseFile $DEX_PROTECTOR_HOME/dexprotector.licel \
                 -configFile /workspace/app-config/dex-android-config.xml \
@@ -68,6 +74,8 @@ jobs:
                 -keypass $key_password \
                 app/build/outputs/apk/release/app-release.apk \
                 app/build/outputs/apk/release/app-release-protected.apk
+          
+              # protecting aar
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
                 -configFile /workspace/app-config/dex-android-config.xml \
                 -licenseFile $DEX_PROTECTOR_HOME/dexprotector.licel \
@@ -80,9 +88,11 @@ jobs:
                 app/build/outputs/bundle/release/app-release.aab \
                 app/build/outputs/bundle/release/app-release-protected.aab
           
+              # copy apk and aab to host
               cp app/build/outputs/apk/release/app-release.apk /home/ubuntu/apks/app-release-\$version_code-\$version_name.apk
               cp app/build/outputs/apk/release/app-release-protected.apk /home/ubuntu/apks/app-release-protected-\$version_code-\$version_name.apk
           
+              # upload to Google Play
               fastlane supply \
                 package_name:com.tangem.wallet \
                 track:internal \
