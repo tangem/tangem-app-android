@@ -85,6 +85,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
         "clore-ai" -> R.drawable.img_clore_22
         "fact0rn" -> R.drawable.img_fact0rn_22
+        "odyssey", "odyssey/test" -> R.drawable.img_odyssey_chain_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -168,6 +169,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "chiliz", "chiliz/test" -> R.drawable.img_chiliz_22
         "clore-ai" -> R.drawable.img_clore_22
         "fact0rn" -> R.drawable.img_fact0rn_22
+        "odyssey", "odyssey/test" -> R.drawable.img_odyssey_chain_22
         else -> R.drawable.ic_alert_24
     }
 }
@@ -254,6 +256,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "chiliz", "chiliz/test" -> R.drawable.ic_chiliz_22
         "clore-ai" -> R.drawable.ic_clore_22
         "fact0rn" -> R.drawable.ic_fact0rn_22
+        "odyssey", "odyssey/test" -> R.drawable.ic_odyssey_chain_22
         else -> R.drawable.ic_alert_24
     }
 }
