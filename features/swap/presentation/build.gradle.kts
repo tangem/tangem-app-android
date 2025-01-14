@@ -38,12 +38,14 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.staking)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.promo)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
     implementation(projects.features.wallet.api)
+    implementation(projects.features.swap.api)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
