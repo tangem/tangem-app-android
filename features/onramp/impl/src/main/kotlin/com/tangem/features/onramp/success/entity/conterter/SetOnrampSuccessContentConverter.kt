@@ -52,20 +52,25 @@ internal class SetOnrampSuccessContentConverter(
     }
 
     private fun getNotification(status: OnrampStatus.Status, externalTxUrl: String?): NotificationUM? {
-        if (externalTxUrl == null) return null
         return when (status) {
             OnrampStatus.Status.Verifying -> {
-                ExpressNotificationsUM.NeedVerification {
-                    goToProviderClick(externalTxUrl)
-                }
+                ExpressNotificationsUM.NeedVerification(
+                    onGoToProviderClick = onProviderClick(externalTxUrl),
+                )
             }
             OnrampStatus.Status.Failed -> {
-                ExpressNotificationsUM.FailedByProvider {
-                    goToProviderClick(externalTxUrl)
-                }
+                ExpressNotificationsUM.FailedByProvider(
+                    onGoToProviderClick = onProviderClick(externalTxUrl),
+                )
             }
             else -> null
         }
+    }
+
+    private fun onProviderClick(externalTxUrl: String?) = if (externalTxUrl != null) {
+        { goToProviderClick(externalTxUrl) }
+    } else {
+        null
     }
 
     private fun convertStatuses(status: OnrampStatus.Status, externalTxUrl: String?): ExpressStatusUM {
