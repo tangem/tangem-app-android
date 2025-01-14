@@ -233,6 +233,7 @@ dependencies {
     implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
     implementation(deps.decompose.ext.compose)
+    implementation(deps.moshi.adapters)
 
     /** Testing libraries */
     testImplementation(deps.test.coroutine)
