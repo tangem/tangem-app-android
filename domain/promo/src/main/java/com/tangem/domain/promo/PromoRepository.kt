@@ -23,4 +23,10 @@ interface PromoRepository {
     fun isReadyToShowRingPromo(userWalletId: UserWalletId): Flow<Boolean>
 
     suspend fun setNeverToShowRingPromo()
+
+    fun isReadyToShowSwapStories(): Flow<Boolean>
+
+    suspend fun isReadyToShowSwapStoriesSync(): Boolean
+
+    suspend fun setNeverToShowSwapStories()
 }
