@@ -3,7 +3,7 @@ name: Deploy to Google Play Internal
 on:
   push:
     branches:
-      - 'feature/AND-9603_move_to_jobs'
+      - 'release'
   workflow_dispatch:
 
 jobs:

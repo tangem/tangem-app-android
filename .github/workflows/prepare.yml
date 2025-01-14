@@ -14,6 +14,9 @@ on:
       version_code:
         description: "Version code"
         value: ${{ jobs.prepare.outputs.version_code }}
+      jira_summary:
+        description: "Jira summary"
+        value: ${{ jobs.prepare.outputs.jira_summary }}
 
 jobs:
   prepare:
@@ -22,6 +25,7 @@ jobs:
     outputs:
       version_name: ${{ steps.get_version_name.outputs.versionName }}
       version_code: ${{ steps.get_version_code.outputs.versionCode }}
+      jira_summary: ${{ steps.jira.outputs.summary }}
     steps:
       - name: Jira Login
         uses: atlassian/gajira-login@master
