@@ -9,6 +9,7 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.deserialization.WalletDataDeserializer
 import com.tangem.common.extensions.*
+import com.tangem.common.map
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
@@ -22,6 +23,7 @@ import com.tangem.domain.common.TapWorkarounds.isVisa
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
@@ -35,16 +37,20 @@ import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.TapSdkError
+import com.tangem.tap.domain.visa.VisaCardScanHandler
 import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.collections.set
 
 internal class ScanProductTask(
     private val card: Card?,
     private val derivationsFinder: DerivationsFinder?,
+    private val visaCardScanHandler: VisaCardScanHandler?,
+    private val visaCoroutineScope: CoroutineScope?,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -58,6 +64,16 @@ internal class ScanProductTask(
         val error = getErrorIfExcludedCard(cardDto, card)
         if (error != null) {
             callback(CompletionResult.Failure(error))
+            return
+        }
+
+        if (VisaUtilities.isVisaCard(cardDto)) {
+            readVisaCard(
+                session = session,
+                cardDto = cardDto,
+                scanWalletProcessor = ScanWalletProcessor(derivationsFinder),
+                callback = callback,
+            )
             return
         }
 
@@ -95,6 +111,43 @@ internal class ScanProductTask(
             return TapSdkError.CardNotSupportedByRelease
         }
         return null
+    }
+
+    private fun readVisaCard(
+        session: CardSession,
+        cardDto: CardDTO,
+        scanWalletProcessor: ScanWalletProcessor,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
+    ) {
+        visaCardScanHandler ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.InsNotSupported()))
+            return
+        }
+
+        visaCoroutineScope ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.InsNotSupported()))
+            return
+        }
+
+        visaCoroutineScope.launch {
+            when (val result = visaCardScanHandler.handleVisaCardScan(session = session)) {
+                is CompletionResult.Success -> {
+                    scanWalletProcessor.proceed(
+                        card = cardDto,
+                        session = session,
+                    ) { scanResponseResult ->
+                        callback(
+                            scanResponseResult.map { scanResponse ->
+                                scanResponse.copy(visaCardActivationStatus = result.data)
+                            },
+                        )
+                    }
+                }
+                is CompletionResult.Failure -> {
+                    callback(CompletionResult.Failure(result.error))
+                }
+            }
+        }
     }
 }
 
