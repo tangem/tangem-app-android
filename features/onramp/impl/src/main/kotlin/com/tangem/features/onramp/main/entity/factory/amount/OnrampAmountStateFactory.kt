@@ -47,6 +47,7 @@ internal class OnrampAmountStateFactory(
                     precision = currency.precision,
                 ),
                 amountFieldModel = amountState.amountFieldModel.copy(
+                    isError = false,
                     fiatAmount = amountState.amountFieldModel.fiatAmount.copy(
                         currencySymbol = currency.unit,
                         decimals = currency.precision,
