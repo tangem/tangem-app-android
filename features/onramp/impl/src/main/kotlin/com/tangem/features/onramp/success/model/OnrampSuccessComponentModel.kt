@@ -79,10 +79,17 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
-        val cryptoCurrency = getCryptoCurrencyUseCase(
+        val multiCryptoCurrency = getCryptoCurrencyUseCase(
             transaction.userWalletId,
             transaction.toCurrencyId,
-        ).getOrElse { error("Crypto currency not found") }
+        ).getOrNull()
+
+        val cryptoCurrency = multiCryptoCurrency
+            ?: getCryptoCurrencyUseCase.invoke(transaction.userWalletId).getOrElse {
+                Timber.e("Crypto currency not found")
+                showErrorAlert(OnrampError.DomainError(null))
+                return
+            }
 
         getOnrampStatusUseCase(txId = transaction.txId)
             .fold(

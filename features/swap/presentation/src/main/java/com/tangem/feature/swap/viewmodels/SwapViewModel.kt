@@ -27,6 +27,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.promo.ShouldShowSwapStoriesUseCase
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -50,6 +51,7 @@ import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
@@ -86,6 +88,8 @@ internal class SwapViewModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
+    private val shouldShowSwapStoriesUseCase: ShouldShowSwapStoriesUseCase,
+    private val featureToggles: SwapFeatureToggles,
     swapInteractorFactory: SwapInteractor.Factory,
     private val savedStateHandle: SavedStateHandle,
     private val urlOpener: UrlOpener,
@@ -168,6 +172,13 @@ internal class SwapViewModel @Inject constructor(
             val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
             val toStatus = initialCurrencyTo?.let { getCryptoCurrencyStatusUseCase(userWalletId, it.id).getOrNull() }
             val wallet = getUserWalletUseCase(userWalletId).getOrNull()
+            val isShowPromoStories = shouldShowSwapStoriesUseCase.invokeSync() && featureToggles.isPromoStoriesEnabled
+
+            if (isShowPromoStories) {
+                initStories()
+                swapRouter.openScreen(SwapNavScreen.PromoStories)
+            }
+
             if (fromStatus == null || wallet == null) {
                 uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
             } else {
@@ -269,6 +280,10 @@ internal class SwapViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun initStories() {
+        uiState = stateBuilder.createStoriesState(uiState)
     }
 
     private fun applyInitialTokenChoice(
@@ -1114,6 +1129,9 @@ internal class SwapViewModel @Inject constructor(
             },
             onSuccess = {
                 swapRouter.openScreen(SwapNavScreen.Success)
+            },
+            onStoriesClose = {
+                swapRouter.openScreen(SwapNavScreen.Main)
             },
         )
     }
