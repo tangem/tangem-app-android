@@ -25,6 +25,7 @@ sealed class ApiConfig {
         TangemTech,
         StakeKit,
         TangemVisaAuth,
+        TangemVisa,
     }
 
     private fun initializeId(): ID {
@@ -33,6 +34,7 @@ sealed class ApiConfig {
             is TangemTech -> ID.TangemTech
             is StakeKit -> ID.StakeKit
             is TangemVisaAuth -> ID.TangemVisaAuth
+            is TangemVisa -> ID.TangemVisa
         }
     }
 

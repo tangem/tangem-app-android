@@ -7,7 +7,7 @@ data class OnboardingVisaAccessCodeUM(
     val accessCodeFirst: TextFieldValue = TextFieldValue(""),
     val accessCodeSecond: TextFieldValue = TextFieldValue(""),
     val codesNotMatchError: Boolean = false,
-    val atLeast4CharError: Boolean = false,
+    val atLeastMinCharsError: Boolean = false,
     val accessCodeHidden: Boolean = true,
     val onAccessCodeFirstChange: (TextFieldValue) -> Unit = {},
     val onAccessCodeSecondChange: (TextFieldValue) -> Unit = {},
