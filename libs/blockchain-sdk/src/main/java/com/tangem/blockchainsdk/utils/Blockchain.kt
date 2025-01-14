@@ -148,6 +148,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "xodex" -> Blockchain.Xodex
         "canxium" -> Blockchain.Canxium
         "clore-ai" -> Blockchain.Clore
+        "dione" -> Blockchain.OdysseyChain
+        "dione/test" -> Blockchain.OdysseyChainTestnet
         else -> null
     }
 }
@@ -293,6 +295,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
         Blockchain.Clore -> "clore-ai"
+        Blockchain.OdysseyChain -> "dione"
+        Blockchain.OdysseyChainTestnet -> "dione/test"
     }
 }
 
@@ -388,6 +392,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Xodex -> "xodex"
         Blockchain.Canxium -> "canxium"
         Blockchain.Clore -> "clore-ai"
+        Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet -> "dione"
     }
 }
 
