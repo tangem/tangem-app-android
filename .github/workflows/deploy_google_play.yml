@@ -3,21 +3,16 @@ name: Deploy to Google Play Internal
 on:
   push:
     branches:
-      - 'release'
+      - 'feature/AND-9603_move_to_jobs'
   workflow_dispatch:
 
 env:
   INITIAL_VERSION_CODE: ${{ 1500 }}
 
 jobs:
-  build_and_upload:
-    name: Upload apk to Google Play Internal
-    runs-on: [ self-hosted, ARM64, active-android, Linux ]
-    environment: Alpha
-    outputs:
-      version_name: ${{ steps.get_version_name.outputs.versionName }}
-      version_code: ${{ steps.get_version_code.outputs.versionCode }}
-      jira_summary: ${{ steps.jira.outputs.summary }}
+  jira_and_checkout:
+    name: Jira Login & Checkout
+    runs-on: [self-hosted, ARM64, active-android, Linux]
     steps:
       - name: Jira Login
         uses: atlassian/gajira-login@master
@@ -47,10 +42,14 @@ jobs:
           token: ${{ secrets.GH_MOBILE_PAT }}
           path: 'app-config'
 
-      - name: Build Docker image
-        run: |
-          docker build --platform linux/arm64 -t tangem_ci_android_environment .
-
+  version_management:
+    name: Version Management
+    runs-on: [self-hosted, ARM64, active-android, Linux]
+    needs: jira_and_checkout
+    outputs:
+      version_name: ${{ steps.get_version_name.outputs.versionName }}
+      version_code: ${{ steps.get_version_code.outputs.versionCode }}
+    steps:
       - name: Increment version code
         id: get_version_code
         env:
@@ -67,8 +66,24 @@ jobs:
           property: versionName
           default: 0.0.1
 
-      - name: Run uploading
-        id: uploading
+  build_docker_image:
+    name: Build Docker Image
+    runs-on: [self-hosted, ARM64, active-android, Linux]
+    needs: version_management
+    steps:
+      - name: Build Docker image
+        run: |
+          docker build --platform linux/arm64 -t tangem_ci_android_environment .
+
+  build_apk_and_aab:
+    name: Build APK & AAB
+    runs-on: [self-hosted, ARM64, active-android, Linux]
+    needs:
+      - build_docker_image
+      - version_management
+    steps:
+      - name: Run build
+        id: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
@@ -78,12 +93,11 @@ jobs:
           store_password: ${{ secrets.TEST_STORE_PASSWORD }}
           key_alias: ${{ secrets.TEST_KEY_ALIAS }}
           key_password: ${{ secrets.TEST_KEY_PASSWORD }}
-          version_code: ${{ steps.get_version_code.outputs.versionCode }}
-          version_name:  ${{ steps.get_version_name.outputs.versionName }}
+          version_code: ${{ needs.version_management.outputs.version_code }}
+          version_name: ${{ needs.version_management.outputs.version_name }}
           release_notes: ${{ github.ref_name }} - ${{ github.sha }}
         run: |
           env > .env
-          
           docker run --rm \
             --user ubuntu \
             --env-file .env \
@@ -95,18 +109,9 @@ jobs:
             tangem_ci_android_environment \
             sh -c "
               cd /workspace;
-  
-              # decoding keystore
               echo \"\$keystore_encoded_base64\" | base64 --decode > keystore
               export keystore=\$(pwd)/keystore
-              
-              if [ ! -f \"\$keystore\" ]; then
-                echo 'Keystore file was not created.'
-                exit 1
-              fi
-              
-              # building release
-              fastlane build \
+              fastlane buildRelease \
                 versionCode:\"\$version_code\" \
                 versionName:\"\$version_name\" \
                 keystore:\"\$keystore\" \
@@ -114,8 +119,6 @@ jobs:
                 key_alias:\"\$key_alias\" \
                 key_password:\"\$key_password\" \
                 launched_from_github_action:true
-          
-              # protecting apk
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
                 -licenseFile $DEX_PROTECTOR_HOME/dexprotector.licel \
                 -configFile /workspace/app-config/dex-android-config.xml \
@@ -127,8 +130,6 @@ jobs:
                 -keypass $key_password \
                 app/build/outputs/apk/release/app-release.apk \
                 app/build/outputs/apk/release/app-release-protected.apk
-          
-              # protecting aar
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
                 -configFile /workspace/app-config/dex-android-config.xml \
                 -licenseFile $DEX_PROTECTOR_HOME/dexprotector.licel \
@@ -140,12 +141,10 @@ jobs:
                 -keypass $key_password \
                 app/build/outputs/bundle/release/app-release.aab \
                 app/build/outputs/bundle/release/app-release-protected.aab
-              
-              # copy apk and aab to host
-              cp app/build/outputs/apk/release/app-release.apk /home/ubuntu/apks/app-release-$version_code-$version_name.apk     
-              cp app/build/outputs/apk/release/app-release-protected.apk /home/ubuntu/apks/app-release-protected-$version_code-$version_name.apk
-              
-              # upload to Google Play
+          
+              cp app/build/outputs/apk/release/app-release.apk /home/ubuntu/apks/app-release-\$version_code-\$version_name.apk
+              cp app/build/outputs/apk/release/app-release-protected.apk /home/ubuntu/apks/app-release-protected-\$version_code-\$version_name.apk
+          
               fastlane supply \
                 package_name:com.tangem.wallet \
                 track:internal \
@@ -167,7 +166,8 @@ jobs:
                 changes_not_sent_for_review:false \
                 rescue_changes_not_sent_for_review:true \
                 ack_bundle_installation_warning:false
-                "
+              "
+          
 
 # TODO: uncomment when AND-9552 is ready
 #  notification:
