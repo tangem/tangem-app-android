@@ -47,6 +47,11 @@ internal inline fun OnboardingEntry(
                         modifier = modifier,
                     )
                 }
+                is OnboardingRoute.Visa -> {
+                    (it.instance as ComposableContentComponent).Content(
+                        modifier = modifier,
+                    )
+                }
                 OnboardingRoute.None -> {}
             }
         }
