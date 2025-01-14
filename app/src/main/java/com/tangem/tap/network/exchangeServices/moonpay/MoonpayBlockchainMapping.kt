@@ -148,4 +148,5 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Clore -> null
         VanarChain -> null
         VanarChainTestnet -> null
+        OdysseyChain, OdysseyChainTestnet -> null
     }
