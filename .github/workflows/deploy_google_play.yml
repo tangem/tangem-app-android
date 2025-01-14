@@ -6,72 +6,20 @@ on:
       - 'feature/AND-9603_move_to_jobs'
   workflow_dispatch:
 
-env:
-  INITIAL_VERSION_CODE: ${{ 1500 }}
-
 jobs:
   prepare:
+    uses: ./.github/workflows/prepare.yml
     name: Prepare
-    runs-on: [self-hosted, ARM64, active-android, Linux]
-    outputs:
-      version_name: ${{ steps.get_version_name.outputs.versionName }}
-      version_code: ${{ steps.get_version_code.outputs.versionCode }}
-    steps:
-      - name: Jira Login
-        uses: atlassian/gajira-login@master
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
-
-      - name: Get Jira Issue Number from Branch Name
-        id: jira
-        uses: tangem/jira-action@master
-        with:
-          action: getBranchSummary
-          branch-name: ${{ github.ref_name }}
-
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          submodules: true
-          token: ${{ secrets.GH_MOBILE_PAT }}
-
-      - name: Checkout dexprotector config
-        uses: actions/checkout@v3
-        with:
-          repository: 'tangem/private-app-config'
-          ref: 'main'
-          token: ${{ secrets.GH_MOBILE_PAT }}
-          path: 'app-config'
-
-      - name: Increment version code
-        id: get_version_code
-        env:
-          RUN_NUMBER: ${{ github.run_number }}
-        run: |
-          VERSION_CODE=$((RUN_NUMBER + $INITIAL_VERSION_CODE))
-          echo "versionCode=$VERSION_CODE" >> $GITHUB_OUTPUT
-
-      - name: Read version.properties file
-        id: get_version_name
-        uses: BrycensRanch/read-properties-action@v1
-        with:
-          file: version.properties
-          property: versionName
-          default: 0.0.1
-
-      - name: Build Docker image
-        run: |
-          docker build --platform linux/arm64 -t tangem_ci_android_environment .
-
+    with:
+      initial_version_code: 1500
+    secrets: inherit
 
   build_apk_and_aab:
     name: Build APK & AAB
     runs-on: [self-hosted, ARM64, active-android, Linux]
     needs: prepare
     steps:
-      - name: Run build
+      - name: Build & deploy
         id: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -161,7 +109,7 @@ jobs:
 # TODO: uncomment when AND-9552 is ready
 #  notification:
 #    name: Send Notification
-#    needs: build_and_upload
+#    needs: build_apk_and_aab
 #    uses: tangem/actions/.github/workflows/notification.yml@main
 #    with:
 #      channel: 'deployments-android'
@@ -178,7 +126,7 @@ jobs:
 #
 #  error_notification:
 #    name: Error Notification
-#    needs: build_and_upload
+#    needs: build_apk_and_aab
 #    if: failure()
 #    uses: tangem/actions/.github/workflows/notification.yml@main
 #    with:
