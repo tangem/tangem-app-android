@@ -978,6 +978,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 Clore,
                 VanarChain,
                 VanarChainTestnet,
+                OdysseyChain, OdysseyChainTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
