@@ -70,12 +70,14 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
             context = childByContext(componentContext),
             params = SelectCountryComponent.Params(
                 cryptoCurrency = params.cryptoCurrency,
-                onDismiss = {
+                onDismiss = { isCountrySelected ->
                     // Dismiss country select sheet
                     model.bottomSheetNavigation.dismiss()
 
-                    // Dismiss confirm residency sheet
-                    config.onDismiss()
+                    if (isCountrySelected) {
+                        // Dismiss confirm residency sheet
+                        config.onDismiss()
+                    }
                 },
             ),
         )
