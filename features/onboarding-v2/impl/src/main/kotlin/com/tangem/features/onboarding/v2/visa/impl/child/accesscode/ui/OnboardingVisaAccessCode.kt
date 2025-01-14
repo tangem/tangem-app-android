@@ -134,7 +134,7 @@ private fun Content(
                 state.onAccessCodeFirstChange
             },
             label = stringResource(id = R.string.onboarding_wallet_info_title_third),
-            isError = state.codesNotMatchError || state.atLeast4CharError,
+            isError = state.codesNotMatchError || state.atLeastMinCharsError,
             visualTransformation = if (state.accessCodeHidden) {
                 PasswordVisualTransformation()
             } else {
@@ -143,7 +143,7 @@ private fun Content(
             caption = when {
                 state.codesNotMatchError && reEnterAccessCodeState ->
                     stringResource(R.string.onboarding_access_codes_doesnt_match)
-                state.atLeast4CharError && !reEnterAccessCodeState ->
+                state.atLeastMinCharsError && !reEnterAccessCodeState ->
                     stringResource(R.string.onboarding_access_code_too_short)
                 else -> null
             },
