@@ -6,6 +6,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
+import com.tangem.tap.domain.visa.VisaCardScanHandler
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -15,18 +16,23 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class TangemSdkManagerModule {
+internal class TangemSdkManagerModule {
 
     @Provides
     @Singleton
     fun provideTangemSdkManager(
         @ApplicationContext context: Context,
         cardSdkConfigRepository: CardSdkConfigRepository,
+        visaCardScanHandler: VisaCardScanHandler,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
             MockTangemSdkManager(resources = context.resources)
         } else {
-            DefaultTangemSdkManager(cardSdkConfigRepository = cardSdkConfigRepository, resources = context.resources)
+            DefaultTangemSdkManager(
+                cardSdkConfigRepository = cardSdkConfigRepository,
+                resources = context.resources,
+                visaCardScanHandler = visaCardScanHandler,
+            )
         }
     }
 }
