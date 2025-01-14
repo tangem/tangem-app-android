@@ -7,11 +7,10 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
+import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.common.visa.VisaUtilities
-import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaAuthSignedChallenge
-import com.tangem.domain.visa.model.VisaCardActivationStatus
-import com.tangem.domain.visa.model.toSignedChallenge
+import com.tangem.domain.visa.model.*
+import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.operations.attestation.AttestCardKeyCommand
 import com.tangem.operations.attestation.AttestCardKeyResponse
@@ -25,6 +24,8 @@ import kotlin.coroutines.resume
 
 internal class VisaCardScanHandler @Inject constructor(
     private val visaAuthRepository: VisaAuthRepository,
+    private val visaActivationRepository: VisaActivationRepository,
+    private val visaAuthTokenStorage: VisaAuthTokenStorage,
 ) {
 
     suspend fun handleVisaCardScan(session: CardSession): CompletionResult<VisaCardActivationStatus> {
@@ -153,6 +154,8 @@ internal class VisaCardScanHandler @Inject constructor(
             return handleCardAuthorization(session)
         }
 
+        visaAuthTokenStorage.store(authorizationTokensResponse)
+
         Timber.i("Authorized using Wallet public key successfully")
 
         return CompletionResult.Success(VisaCardActivationStatus.Activated(authorizationTokensResponse))
@@ -207,7 +210,33 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }
 
-        TODO() // implement card activation status handling ([REDACTED_TASK_KEY])
+        visaAuthTokenStorage.store(authorizationTokensResponse)
+
+        val activationRemoteState = visaActivationRepository.getActivationRemoteState()
+
+        val error = when (activationRemoteState) {
+            VisaActivationRemoteState.BlockedForActivation -> VisaActivationError.BlockedForActivation
+            VisaActivationRemoteState.Activated -> VisaActivationError.InvalidActivationState
+            else -> null
+        }
+
+        if (error != null) {
+            return CompletionResult.Failure(TangemSdkError.Underlying(error.message))
+        }
+
+        val activationInput = VisaActivationInput(
+            cardId = card.cardId,
+            cardPublicKey = card.cardPublicKey,
+            isAccessCodeSet = card.isAccessCodeSet,
+        )
+
+        return CompletionResult.Success(
+            VisaCardActivationStatus.ActivationStarted(
+                activationInput = activationInput,
+                authTokens = authorizationTokensResponse,
+                remoteState = activationRemoteState,
+            ),
+        )
     }
 
     private suspend fun signChallengeWithWallet(
