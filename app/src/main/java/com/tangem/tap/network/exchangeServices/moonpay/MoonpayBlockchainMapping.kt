@@ -146,4 +146,7 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         Xodex -> null
         Canxium -> null
         Clore -> null
+        VanarChain -> null
+        VanarChainTestnet -> null
+        OdysseyChain, OdysseyChainTestnet -> null
     }

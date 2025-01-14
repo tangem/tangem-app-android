@@ -1,7 +1,6 @@
 package com.tangem.domain.onramp.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
-import com.tangem.core.analytics.models.AnalyticsParam.Key.CURRENCY
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_DESCRIPTION
 import com.tangem.core.analytics.models.AnalyticsParam.Key.PAYMENT_METHOD
@@ -37,7 +36,7 @@ sealed class OnrampAnalyticsEvent(
         private val currency: String,
     ) : OnrampAnalyticsEvent(
         event = "Currency Chosen",
-        params = mapOf(CURRENCY to currency),
+        params = mapOf("Currency Type" to currency),
     )
 
     data object CloseOnramp : OnrampAnalyticsEvent(event = "Button - Close")
@@ -114,7 +113,7 @@ sealed class OnrampAnalyticsEvent(
         event = "Button - Buy",
         params = mapOf(
             PROVIDER to providerName,
-            CURRENCY to currency,
+            "Currency Type" to currency,
             TOKEN_PARAM to tokenSymbol,
         ),
     )
@@ -131,7 +130,7 @@ sealed class OnrampAnalyticsEvent(
             TOKEN_PARAM to tokenSymbol,
             PROVIDER to providerName,
             RESIDENCE to residence,
-            CURRENCY to currency,
+            "Currency Type" to currency,
             PAYMENT_METHOD to paymentMethod,
         ),
     )
@@ -143,11 +142,13 @@ sealed class OnrampAnalyticsEvent(
         private val tokenSymbol: String,
         private val errorCode: String,
         private val providerName: String?,
+        private val paymentMethod: String?,
     ) : OnrampAnalyticsEvent(
         event = "Errors",
         params = buildMap {
             put(TOKEN_PARAM, tokenSymbol)
             providerName?.let { put(PROVIDER, providerName) }
+            paymentMethod?.let { put(PAYMENT_METHOD, paymentMethod) }
             put(ERROR_CODE, errorCode)
         },
     )

@@ -6,8 +6,9 @@ import com.arkivanov.decompose.defaultComponentContext
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.di.RootAppComponentContext
-import com.tangem.core.ui.UiDependencies
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -27,13 +28,13 @@ internal object RootAppComponentContextModule {
         @ActivityContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
         componentBuilder: DecomposeComponent.Builder,
-        uiDependencies: UiDependencies,
+        @GlobalUiMessageSender messageSender: UiMessageSender,
     ): AppComponentContext {
         return DefaultAppComponentContext(
             componentContext = (context as AppCompatActivity).defaultComponentContext(),
-            messageHandler = uiDependencies.eventMessageHandler,
             dispatchers = dispatchers,
             hiltComponentBuilder = componentBuilder,
+            messageSender = messageSender,
         )
     }
 }

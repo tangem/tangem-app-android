@@ -290,6 +290,9 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.Canxium,
         Blockchain.Chiliz,
         Blockchain.ChilizTestnet,
+        Blockchain.VanarChain,
+        Blockchain.VanarChainTestnet,
+        Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet,
         -> Network.TransactionExtrasType.NONE
         // endregion
     }

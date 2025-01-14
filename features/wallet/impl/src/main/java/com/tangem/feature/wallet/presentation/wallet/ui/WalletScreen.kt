@@ -44,6 +44,9 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheet
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.expressTransactionsItems
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.components.atoms.handComposableComponentHeight
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
@@ -215,6 +218,12 @@ private fun WalletContent(
             (selectedWallet as? WalletState.SingleCurrency)?.let { walletState ->
                 walletState.marketPriceBlockState?.let { marketPriceBlockState ->
                     marketPriceBlock(state = marketPriceBlockState, modifier = itemModifier)
+                }
+                if (walletState is WalletState.SingleCurrency.Content) {
+                    expressTransactionsItems(
+                        expressTxs = walletState.expressTxsToDisplay,
+                        modifier = itemModifier,
+                    )
                 }
             }
 
@@ -716,6 +725,7 @@ private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
             is BalancesAndLimitsBottomSheetConfig -> BalancesAndLimitsBottomSheet(config = bottomSheetConfig)
             is VisaTxDetailsBottomSheetConfig -> VisaTxDetailsBottomSheet(config = bottomSheetConfig)
             is PushNotificationsBottomSheetConfig -> PushNotificationsBottomSheet(config = bottomSheetConfig)
+            is ExpressStatusBottomSheetConfig -> ExpressStatusBottomSheet(config = bottomSheetConfig)
         }
     }
 }

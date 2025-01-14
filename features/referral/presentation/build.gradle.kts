@@ -14,6 +14,7 @@ dependencies {
     /** Core modules */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
@@ -24,6 +25,7 @@ dependencies {
     implementation(deps.androidx.appCompat)
     implementation(deps.androidx.fragment.ktx)
     implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.androidx.activity.compose)
 
     /** Compose */
     implementation(deps.compose.foundation)
@@ -36,7 +38,6 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
-    implementation(deps.compose.accompanist.webView)
     implementation(deps.compose.accompanist.systemUiController)
 
     /** DI */

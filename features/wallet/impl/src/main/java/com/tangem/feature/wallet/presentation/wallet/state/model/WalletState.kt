@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -59,6 +60,8 @@ internal sealed interface WalletState : WalletStateHolder {
             override val buttons: PersistentList<WalletManageButton>,
             override val marketPriceBlockState: MarketPriceBlockState,
             override val txHistoryState: TxHistoryState,
+            val expressTxsToDisplay: PersistentList<ExpressTransactionStateUM>,
+            val expressTxs: PersistentList<ExpressTransactionStateUM>,
         ) : SingleCurrency()
 
         data class Locked(

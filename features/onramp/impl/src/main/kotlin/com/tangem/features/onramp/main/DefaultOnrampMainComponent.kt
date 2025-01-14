@@ -58,7 +58,7 @@ internal class DefaultOnrampMainComponent @AssistedInject constructor(
                 country = config.country,
                 onDismiss = {
                     model.bottomSheetNavigation.dismiss()
-                    model.handleOnrampAvailable(it.defaultCurrency)
+                    model.handleOnrampAvailable()
                 },
             ),
         )

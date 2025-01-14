@@ -141,9 +141,12 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.CoreTestnet -> null
             Blockchain.Chiliz -> null
             Blockchain.ChilizTestnet -> null
+            Blockchain.VanarChain -> null
+            Blockchain.VanarChainTestnet -> null
             Blockchain.Unknown -> null
             Blockchain.Xodex -> null
             Blockchain.Canxium -> null
             Blockchain.Clore -> null
+            Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet -> null
         }
     }

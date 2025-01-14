@@ -23,9 +23,9 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateIconUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateInfoUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExpressTransactionStateUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -108,21 +108,22 @@ internal class TokenDetailsOnrampTransactionStateConverter(
         externalTxUrl: String?,
         providerName: String,
     ): NotificationUM? {
-        if (externalTxUrl == null) return null
         return when (status) {
             OnrampStatus.Status.Verifying -> {
                 analyticsEventHandler.send(TokenOnrampAnalyticsEvent.NoticeKYC(cryptoCurrency.symbol, providerName))
-                ExpressNotificationsUM.NeedVerification {
-                    clickIntents.onGoToProviderClick(externalTxUrl)
-                }
+                ExpressNotificationsUM.NeedVerification(onGoToProviderClick = onProviderClick(externalTxUrl))
             }
             OnrampStatus.Status.Failed -> {
-                ExpressNotificationsUM.FailedByProvider {
-                    clickIntents.onGoToProviderClick(externalTxUrl)
-                }
+                ExpressNotificationsUM.FailedByProvider(onGoToProviderClick = onProviderClick(externalTxUrl))
             }
             else -> null
         }
+    }
+
+    private fun onProviderClick(externalTxUrl: String?) = if (externalTxUrl != null) {
+        { clickIntents.onGoToProviderClick(externalTxUrl) }
+    } else {
+        null
     }
 
     private fun getIconState(status: OnrampStatus.Status): ExpressTransactionStateIconUM {

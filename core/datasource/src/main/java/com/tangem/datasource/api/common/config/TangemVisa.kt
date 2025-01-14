@@ -20,10 +20,6 @@ internal class TangemVisa(
     )
 
     private fun createHeaders() = mapOf(
-        "Authorization" to ProviderSuspend {
-            // This is safe because it's used by interceptor which runs on the IO thread
-            // (maybe change to ProviderSuspend implementation)
-            authProvider.getAuthHeader()
-        },
+        "Authorization" to ProviderSuspend { authProvider.getAuthHeader() },
     )
 }

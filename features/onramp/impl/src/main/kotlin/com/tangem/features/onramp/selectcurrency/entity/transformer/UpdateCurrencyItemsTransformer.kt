@@ -1,10 +1,11 @@
 package com.tangem.features.onramp.selectcurrency.entity.transformer
 
 import arrow.core.Either
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.onramp.model.OnrampCurrencies
 import com.tangem.domain.onramp.model.OnrampCurrency
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesSection
 import com.tangem.features.onramp.selectcurrency.entity.CurrencyItemState
@@ -28,7 +29,7 @@ internal class UpdateCurrencyItemsTransformer(
                     if (populars.isNotEmpty()) {
                         add(
                             CurrenciesSection(
-                                title = stringReference("Popular fiats"),
+                                title = resourceReference(R.string.onramp_currency_popular),
                                 items = populars.map(::convertCurrencyToUiModel).toImmutableList(),
                             ),
                         )
@@ -36,7 +37,7 @@ internal class UpdateCurrencyItemsTransformer(
                     if (others.isNotEmpty()) {
                         add(
                             CurrenciesSection(
-                                title = stringReference("Other currencies"),
+                                title = resourceReference(R.string.onramp_currency_other),
                                 items = others.map(::convertCurrencyToUiModel).toImmutableList(),
                             ),
                         )

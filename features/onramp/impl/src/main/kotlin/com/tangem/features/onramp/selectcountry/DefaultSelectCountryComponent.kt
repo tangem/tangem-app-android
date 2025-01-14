@@ -25,7 +25,7 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
     private val model: OnrampSelectCountryModel = getOrCreateModel(params)
 
     override fun dismiss() {
-        model.dismiss()
+        model.dismiss(isCountrySelected = false)
     }
 
     @Composable
@@ -33,7 +33,7 @@ internal class DefaultSelectCountryComponent @AssistedInject constructor(
         val state by model.state.collectAsStateWithLifecycle()
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = ::dismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             )

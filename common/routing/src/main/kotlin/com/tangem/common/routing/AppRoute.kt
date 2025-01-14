@@ -253,9 +253,6 @@ sealed class AppRoute(val path: String) : Route {
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
 
     @Serializable
-    data object ModalNotification : AppRoute(path = "/modal_notification")
-
-    @Serializable
     data class Staking(
         val userWalletId: UserWalletId,
         val cryptoCurrencyId: CryptoCurrency.ID,

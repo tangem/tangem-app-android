@@ -17,8 +17,9 @@ dependencies {
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
-    implementation(projects.domain.tokens)
-    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.promo)
+    implementation(projects.domain.promo.models)
+    implementation(projects.domain.wallets.models)
 
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
