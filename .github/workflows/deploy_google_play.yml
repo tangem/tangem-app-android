@@ -10,9 +10,12 @@ env:
   INITIAL_VERSION_CODE: ${{ 1500 }}
 
 jobs:
-  jira_and_checkout:
-    name: Jira Login & Checkout
+  prepare:
+    name: Prepare
     runs-on: [self-hosted, ARM64, active-android, Linux]
+    outputs:
+      version_name: ${{ steps.get_version_name.outputs.versionName }}
+      version_code: ${{ steps.get_version_code.outputs.versionCode }}
     steps:
       - name: Jira Login
         uses: atlassian/gajira-login@master
@@ -42,14 +45,6 @@ jobs:
           token: ${{ secrets.GH_MOBILE_PAT }}
           path: 'app-config'
 
-  version_management:
-    name: Version Management
-    runs-on: [self-hosted, ARM64, active-android, Linux]
-    needs: jira_and_checkout
-    outputs:
-      version_name: ${{ steps.get_version_name.outputs.versionName }}
-      version_code: ${{ steps.get_version_code.outputs.versionCode }}
-    steps:
       - name: Increment version code
         id: get_version_code
         env:
@@ -66,21 +61,15 @@ jobs:
           property: versionName
           default: 0.0.1
 
-  build_docker_image:
-    name: Build Docker Image
-    runs-on: [self-hosted, ARM64, active-android, Linux]
-    needs: version_management
-    steps:
       - name: Build Docker image
         run: |
           docker build --platform linux/arm64 -t tangem_ci_android_environment .
 
+
   build_apk_and_aab:
     name: Build APK & AAB
     runs-on: [self-hosted, ARM64, active-android, Linux]
-    needs:
-      - build_docker_image
-      - version_management
+    needs: prepare
     steps:
       - name: Run build
         id: build
@@ -93,8 +82,8 @@ jobs:
           store_password: ${{ secrets.TEST_STORE_PASSWORD }}
           key_alias: ${{ secrets.TEST_KEY_ALIAS }}
           key_password: ${{ secrets.TEST_KEY_PASSWORD }}
-          version_code: ${{ needs.version_management.outputs.version_code }}
-          version_name: ${{ needs.version_management.outputs.version_name }}
+          version_code: ${{ needs.prepare.outputs.version_code }}
+          version_name: ${{ needs.prepare.outputs.version_name }}
           release_notes: ${{ github.ref_name }} - ${{ github.sha }}
         run: |
           env > .env
