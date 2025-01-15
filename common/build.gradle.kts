@@ -1,6 +1,8 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -25,4 +27,9 @@ dependencies {
 
     implementation(deps.test.junit)
     implementation(deps.test.truth)
+
+    // region DI
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
+    // end
 }
