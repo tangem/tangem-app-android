@@ -1,8 +1,7 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.datasource.api.common.visa.TangemVisaAuthProvider
-import com.tangem.utils.Provider
-import kotlinx.coroutines.runBlocking
+import com.tangem.utils.ProviderSuspend
 
 internal class TangemVisa(
     private val authProvider: TangemVisaAuthProvider,
@@ -21,10 +20,6 @@ internal class TangemVisa(
     )
 
     private fun createHeaders() = mapOf(
-        "Authorization" to Provider {
-            // This is safe because it's used by interceptor which runs on the IO thread
-            // (maybe change to ProviderSuspend implementation)
-            runBlocking { authProvider.getAuthHeader() }
-        },
+        "Authorization" to ProviderSuspend { authProvider.getAuthHeader() },
     )
 }
