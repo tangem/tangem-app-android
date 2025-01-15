@@ -293,6 +293,7 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.VanarChain,
         Blockchain.VanarChainTestnet,
         Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet,
+        Blockchain.Bitrock, Blockchain.BitrockTestnet,
         -> Network.TransactionExtrasType.NONE
         // endregion
     }
