@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -22,7 +23,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonColors
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -120,10 +120,10 @@ private fun Button(config: NotificationConfig) {
             text = button.text.resolveReference(),
             icon = TangemButtonIconPosition.Start(button.iconResId ?: R.drawable.ic_exchange_vertical_24),
             onClick = button.onClick,
-            colors = TangemButtonColors(
-                backgroundColor = if (isDarkMode) Light4 else TangemTheme.colors.button.secondary,
+            colors = ButtonColors(
+                containerColor = if (isDarkMode) Light4 else TangemTheme.colors.button.secondary,
                 contentColor = Dark6,
-                disabledBackgroundColor = TangemTheme.colors.button.disabled,
+                disabledContainerColor = TangemTheme.colors.button.disabled,
                 disabledContentColor = TangemTheme.colors.text.disabled,
             ),
             textStyle = TangemTheme.typography.subtitle1,
