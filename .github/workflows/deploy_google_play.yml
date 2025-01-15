@@ -97,7 +97,7 @@ jobs:
                 package_name:com.tangem.wallet \
                 track:internal \
                 aab:app/build/outputs/bundle/release/app-release-protected.aab \
-                json_key_data:{TODO_AND-9952} \
+                json_key_data:{TODO_AND-9552} \
                 release_status:completed \
                 skip_upload_apk:false \
                 skip_upload_aab:false \
