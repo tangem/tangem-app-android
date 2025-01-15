@@ -1,7 +1,9 @@
 package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class ExchangeStatusResponse(
 
     @Json(name = "providerId")
@@ -26,6 +28,7 @@ data class ExchangeStatusResponse(
     val refundContractAddress: String? = null,
 )
 
+@JsonClass(generateAdapter = false)
 enum class ExchangeStatus {
 
     @Json(name = "new")
@@ -71,6 +74,7 @@ enum class ExchangeStatus {
     Unknown,
 }
 
+@JsonClass(generateAdapter = true)
 data class ExchangeStatusError(
     @Json(name = "code")
     val code: Int,

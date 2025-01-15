@@ -1,3 +1,5 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -53,6 +55,8 @@ dependencies {
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Time */
     implementation(deps.jodatime)
@@ -62,6 +66,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    debugPGImplementation(deps.chucker)
     mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
