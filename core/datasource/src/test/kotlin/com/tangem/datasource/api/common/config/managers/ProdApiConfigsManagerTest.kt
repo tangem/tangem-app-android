@@ -6,6 +6,7 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
+import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_PG_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
@@ -95,7 +96,9 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
 
         private fun createExpressModel(): Model {
             val environment = when (BuildConfig.BUILD_TYPE) {
-                DEBUG_BUILD_TYPE -> ApiEnvironment.DEV
+                DEBUG_BUILD_TYPE,
+                DEBUG_PG_BUILD_TYPE,
+                -> ApiEnvironment.DEV
                 INTERNAL_BUILD_TYPE,
                 MOCKED_BUILD_TYPE,
                 -> ApiEnvironment.STAGE
@@ -110,7 +113,9 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 expected = ApiEnvironmentConfig(
                     environment = environment,
                     baseUrl = when (BuildConfig.BUILD_TYPE) {
-                        DEBUG_BUILD_TYPE -> "[REDACTED_ENV_URL]"
+                        DEBUG_BUILD_TYPE,
+                        DEBUG_PG_BUILD_TYPE,
+                        -> "[REDACTED_ENV_URL]"
                         INTERNAL_BUILD_TYPE,
                         MOCKED_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
