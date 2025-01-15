@@ -148,5 +148,6 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.Canxium -> null
             Blockchain.Clore -> null
             Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet -> null
+            Blockchain.Bitrock, Blockchain.BitrockTestnet -> null
         }
     }
