@@ -7,6 +7,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
@@ -24,7 +25,6 @@ import androidx.constraintlayout.compose.Dimension
 import androidx.constraintlayout.compose.Visibility
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonColors
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -146,10 +146,10 @@ fun NotificationWithBackground(config: NotificationConfig, modifier: Modifier = 
             text = button?.text?.resolveReference().orEmpty(),
             icon = TangemButtonIconPosition.Start(button?.iconResId ?: R.drawable.ic_exchange_vertical_24),
             onClick = button?.onClick ?: {},
-            colors = TangemButtonColors(
-                backgroundColor = if (isDarkMode) Light4 else TangemTheme.colors.button.secondary,
+            colors = ButtonColors(
+                containerColor = if (isDarkMode) Light4 else TangemTheme.colors.button.secondary,
                 contentColor = Dark6,
-                disabledBackgroundColor = TangemTheme.colors.button.disabled,
+                disabledContainerColor = TangemTheme.colors.button.disabled,
                 disabledContentColor = TangemTheme.colors.text.disabled,
             ),
             textStyle = TangemTheme.typography.subtitle1,
