@@ -18,5 +18,9 @@
     {
         "name": "vanar-chain",
         "version": "undefined"
+    },
+    {
+        "name": "bitrock",
+        "version": "undefined"
     }
 ]
