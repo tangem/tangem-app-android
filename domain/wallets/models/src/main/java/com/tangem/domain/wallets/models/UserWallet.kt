@@ -1,5 +1,7 @@
 package com.tangem.domain.wallets.models
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 
@@ -14,13 +16,21 @@ import com.tangem.domain.models.scan.ScanResponse
  * @property isMultiCurrency Indicates whether this user wallet can work with more than one currency
  * @property scanResponse    [ScanResponse] of primary user's wallet card.
  */
+@JsonClass(generateAdapter = true)
 data class UserWallet(
+    @Json(name = "name")
     val name: String,
+    @Json(name = "walletId")
     val walletId: UserWalletId,
+    @Json(name = "artworkUrl")
     val artworkUrl: String,
+    @Json(name = "cardsInWallet")
     val cardsInWallet: Set<String>,
+    @Json(name = "isMultiCurrency")
     val isMultiCurrency: Boolean,
+    @Json(name = "hasBackupError")
     val hasBackupError: Boolean,
+    @Json(name = "scanResponse")
     val scanResponse: ScanResponse, // TODO: Replace with [com.tangem.domain.models.scan.CardDTO]
 ) {
 
