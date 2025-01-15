@@ -1,7 +1,9 @@
 package com.tangem.datasource.api.stakekit.models.response.model
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = false)
 enum class NetworkTypeDTO {
     @Json(name = "avalanche-c")
     AVALANCHE_C,
