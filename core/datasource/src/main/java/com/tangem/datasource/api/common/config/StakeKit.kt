@@ -1,7 +1,7 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.lib.auth.StakeKitAuthProvider
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 
 /**
  * StakeKit [ApiConfig]
@@ -25,8 +25,8 @@ internal class StakeKit(
             environment = ApiEnvironment.PROD,
             baseUrl = "https://api.stakek.it/v1/",
             headers = mapOf(
-                "X-API-KEY" to Provider(stakeKitAuthProvider::getApiKey),
-                "accept" to Provider { "application/json" },
+                "X-API-KEY" to ProviderSuspend(stakeKitAuthProvider::getApiKey),
+                "accept" to ProviderSuspend { "application/json" },
             ),
         )
     }
