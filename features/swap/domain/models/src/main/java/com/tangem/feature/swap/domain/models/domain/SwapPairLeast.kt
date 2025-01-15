@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.domain.models.domain
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import java.math.BigDecimal
 
@@ -31,22 +33,35 @@ data class CryptoCurrencySwapInfo(
  * Uses to store transaction data in datastore, when extends - should always add default value
  * to support backward compatibility
  */
+@JsonClass(generateAdapter = true)
 data class SwapProvider(
+    @Json(name = "providerId")
     val providerId: String,
+    @Json(name = "rateTypes")
     val rateTypes: List<RateType> = emptyList(),
+    @Json(name = "name")
     val name: String,
+    @Json(name = "type")
     val type: ExchangeProviderType,
+    @Json(name = "imageLarge")
     val imageLarge: String,
+    @Json(name = "termsOfUse")
     val termsOfUse: String?,
+    @Json(name = "privacyPolicy")
     val privacyPolicy: String?,
+    @Json(name = "isRecommended")
     val isRecommended: Boolean = false,
+    @Json(name = "slippage")
     val slippage: BigDecimal?,
 )
 
+@JsonClass(generateAdapter = false)
 enum class ExchangeProviderType(val providerName: String) {
-    DEX("DEX"),
-    CEX("CEX"),
-    DEX_BRIDGE("DEX/Bridge"),
+    @Json(name = "DEX") DEX("DEX"),
+
+    @Json(name = "CEX") CEX("CEX"),
+
+    @Json(name = "DEX_BRIDGE") DEX_BRIDGE("DEX/Bridge"),
 }
 
 /**
@@ -54,7 +69,9 @@ enum class ExchangeProviderType(val providerName: String) {
  *
  * Current implementation contains only float type, fixed will be supported later.
  */
+@JsonClass(generateAdapter = false)
 enum class RateType {
-    FLOAT,
-    FIXED,
+    @Json(name = "FLOAT") FLOAT,
+
+    @Json(name = "FIXED") FIXED,
 }
