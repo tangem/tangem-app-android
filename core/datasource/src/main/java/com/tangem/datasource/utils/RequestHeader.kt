@@ -3,7 +3,7 @@ package com.tangem.datasource.utils
 import android.os.Build
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.utils.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.version.AppVersionProvider
 import java.util.Locale
 import java.util.TimeZone
@@ -13,26 +13,26 @@ import java.util.TimeZone
  *
  * @param pairs header name and header value pairs
  */
-sealed class RequestHeader(vararg pairs: Pair<String, Provider<String>>) {
+sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) {
 
     /** Header list */
-    val values: Map<String, Provider<String>> = pairs.toMap()
+    val values: Map<String, ProviderSuspend<String>> = pairs.toMap()
 
-    data object CacheControlHeader : RequestHeader("Cache-Control" to Provider { "max-age=600" })
+    data object CacheControlHeader : RequestHeader("Cache-Control" to ProviderSuspend { "max-age=600" })
 
     class AuthenticationHeader(authProvider: AuthProvider) : RequestHeader(
-        "card_id" to Provider(authProvider::getCardId),
-        "card_public_key" to Provider(authProvider::getCardPublicKey),
+        "card_id" to ProviderSuspend(authProvider::getCardId),
+        "card_public_key" to ProviderSuspend(authProvider::getCardPublicKey),
     )
 
     class AppVersionPlatformHeaders(appVersionProvider: AppVersionProvider) : RequestHeader(
-        "version" to Provider(appVersionProvider::versionName),
-        "platform" to Provider { "android" },
-        "language" to Provider { Locale.getDefault().language.checkHeaderValueOrEmpty() },
-        "timezone" to Provider {
+        "version" to ProviderSuspend { appVersionProvider.versionName },
+        "platform" to ProviderSuspend { "android" },
+        "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+        "timezone" to ProviderSuspend {
             TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
         },
-        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
+        "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
     )
 
     /**

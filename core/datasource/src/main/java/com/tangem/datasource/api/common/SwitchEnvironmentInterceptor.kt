@@ -2,7 +2,8 @@ package com.tangem.datasource.api.common
 
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
+import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
@@ -44,11 +45,13 @@ internal class SwitchEnvironmentInterceptor(
             .build()
     }
 
-    private fun Request.Builder.addHeaders(headers: Map<String, Provider<String>>): Request.Builder {
-        headers.forEach { (name, valueProvider) ->
-            val value = valueProvider()
+    private fun Request.Builder.addHeaders(headers: Map<String, ProviderSuspend<String>>): Request.Builder {
+        runBlocking {
+            headers.forEach { (name, valueProvider) ->
+                val value = valueProvider()
 
-            if (value.isNotBlank()) addHeader(name = name, value = value)
+                if (value.isNotBlank()) addHeader(name = name, value = value)
+            }
         }
 
         return this

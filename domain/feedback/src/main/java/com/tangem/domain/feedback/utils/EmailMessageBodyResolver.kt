@@ -21,12 +21,14 @@ internal class EmailMessageBodyResolver(
         when (type) {
             is FeedbackEmailType.DirectUserRequest -> addUserRequestBody(type.cardInfo)
             is FeedbackEmailType.RateCanBeBetter -> addCardAndPhoneInfo(type.cardInfo)
-            is FeedbackEmailType.ScanningProblem -> addScanningProblemBody()
             is FeedbackEmailType.TransactionSendingProblem -> addTransactionSendingProblemBody(type.cardInfo)
             is FeedbackEmailType.StakingProblem -> addStakingProblemBody(type)
             is FeedbackEmailType.SwapProblem -> addSwapProblemBody(type)
             is FeedbackEmailType.CurrencyDescriptionError -> addTokenInfo(type)
             is FeedbackEmailType.PreActivatedWallet -> addUserRequestBody(type.cardInfo)
+            is FeedbackEmailType.ScanningProblem,
+            is FeedbackEmailType.CardAttestationFailed,
+            -> addPhoneInfoBody()
         }
 
         return build()
@@ -50,7 +52,7 @@ internal class EmailMessageBodyResolver(
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 
-    private fun FeedbackDataBuilder.addScanningProblemBody() {
+    private fun FeedbackDataBuilder.addPhoneInfoBody() {
         addPhoneInfo(phoneInfo = feedbackRepository.getPhoneInfo())
     }
 

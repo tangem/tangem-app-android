@@ -48,4 +48,8 @@ sealed interface FeedbackEmailType {
     }
 
     data class PreActivatedWallet(override val cardInfo: CardInfo) : FeedbackEmailType
+
+    data object CardAttestationFailed : FeedbackEmailType {
+        override val cardInfo: CardInfo? = null
+    }
 }
