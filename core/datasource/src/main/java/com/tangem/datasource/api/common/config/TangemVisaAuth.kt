@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.common.config
 
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 
 internal class TangemVisaAuth : ApiConfig() {
 
@@ -16,5 +16,5 @@ internal class TangemVisaAuth : ApiConfig() {
         headers = createHeaders(),
     )
 
-    private fun createHeaders() = mapOf<String, Provider<String>>()
+    private fun createHeaders() = mapOf<String, ProviderSuspend<String>>()
 }
