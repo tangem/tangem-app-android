@@ -4,21 +4,28 @@ import com.github.salomonbrys.kotson.jsonSerializer
 import com.google.gson.JsonObject
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.tap.domain.walletconnect2.domain.WcRequestData
 
 @Suppress("LongParameterList")
 @JsonClass(generateAdapter = true)
-class WcBinanceTradeOrder(
+data class WcBinanceTradeOrder(
     @Json(name = "account_number")
-    accountNumber: String,
+    val accountNumber: String,
     @Json(name = "chain_id")
-    chainId: String,
-    data: String?,
-    memo: String?,
-    sequence: String,
-    source: String,
-    msgs: List<Message>,
-) : WcBinanceOrder<WcBinanceTradeOrder.Message>(accountNumber, chainId, data, memo, sequence, source, msgs) {
+    val chainId: String,
+    @Json(name = "data")
+    val data: String?,
+    @Json(name = "memo")
+    val memo: String?,
+    @Json(name = "sequence")
+    val sequence: String,
+    @Json(name = "source")
+    val source: String,
+    @Json(name = "msgs")
+    val msgs: List<Message>,
+) : WcRequestData {
 
+    @JsonClass(generateAdapter = false)
     enum class MessageKey(val key: String) {
         ID("id"),
         ORDER_TYPE("ordertype"),
@@ -30,14 +37,23 @@ class WcBinanceTradeOrder(
         TIME_INFORCE("timeinforce"),
     }
 
+    @JsonClass(generateAdapter = true)
     data class Message(
+        @Json(name = "id")
         val id: String,
+        @Json(name = "orderType")
         val orderType: Int,
+        @Json(name = "price")
         val price: Long,
+        @Json(name = "quantity")
         val quantity: Long,
+        @Json(name = "sender")
         val sender: String,
+        @Json(name = "side")
         val side: Int,
+        @Json(name = "symbol")
         val symbol: String,
+        @Json(name = "timeInforce")
         val timeInforce: Int,
     )
 }

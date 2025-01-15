@@ -1,4 +1,5 @@
 import java.util.Properties
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
 
 plugins {
     alias(deps.plugins.android.application)
@@ -254,6 +255,10 @@ dependencies {
     implementation(deps.decompose.ext.compose)
     implementation(deps.moshi.adapters)
 
+    implementation(deps.moshi.kotlin)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+
     /** Testing libraries */
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
@@ -271,6 +276,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    debugPGImplementation(deps.chucker)
     mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
@@ -292,5 +298,4 @@ dependencies {
         // excludes version 9999.0-empty-to-avoid-conflict-with-guava
         exclude(group = "com.google.guava", module = "listenablefuture")
     }
-
 }
