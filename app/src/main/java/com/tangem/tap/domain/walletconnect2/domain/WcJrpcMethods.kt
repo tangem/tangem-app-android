@@ -52,6 +52,8 @@ data class WcSignMessage(
     @Json(name = "type")
     val type: WCSignType,
 ) : WcRequestData {
+
+    @JsonClass(generateAdapter = false)
     enum class WCSignType {
         MESSAGE, PERSONAL_MESSAGE, TYPED_MESSAGE, SOLANA_MESSAGE,
     }
