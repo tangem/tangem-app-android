@@ -6,6 +6,7 @@ import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
+import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
@@ -52,6 +53,7 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -205,6 +207,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val settingsManager: SettingsManager
         get() = entryPoint.getSettingsManager()
+
+    private val blockchainExceptionHandler: BlockchainExceptionHandler
+        get() = entryPoint.getBlockchainExceptionHandler()
     // endregion
 
     override fun onCreate() {
@@ -247,7 +252,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         }
 
         loadNativeLibraries()
-
+        ExceptionHandler.append(blockchainExceptionHandler)
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
