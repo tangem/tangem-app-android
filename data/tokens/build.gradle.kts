@@ -1,3 +1,5 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -48,4 +50,6 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.retrofit) // For HttpException
     implementation(deps.androidx.paging.runtime)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 }
