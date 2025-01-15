@@ -36,6 +36,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
@@ -131,4 +132,6 @@ interface ApplicationEntryPoint {
     fun getClipboardManager(): ClipboardManager
 
     fun getSettingsManager(): SettingsManager
+
+    fun getBlockchainExceptionHandler(): BlockchainExceptionHandler
 }
