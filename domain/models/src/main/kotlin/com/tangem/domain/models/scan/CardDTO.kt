@@ -1,5 +1,6 @@
 package com.tangem.domain.models.scan
 
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
@@ -17,20 +18,35 @@ import com.tangem.common.card.FirmwareVersion as SdkFirmwareVersion
  * */
 @JsonClass(generateAdapter = true)
 data class CardDTO(
+    @Json(name = "cardId")
     val cardId: String,
+    @Json(name = "batchId")
     val batchId: String,
+    @Json(name = "cardPublicKey")
     val cardPublicKey: ByteArray,
+    @Json(name = "firmwareVersion")
     val firmwareVersion: FirmwareVersion,
+    @Json(name = "manufacturer")
     val manufacturer: Manufacturer,
+    @Json(name = "issuer")
     val issuer: Issuer,
+    @Json(name = "settings")
     val settings: Settings,
+    @Json(name = "userSettings")
     val userSettings: UserSettings?,
+    @Json(name = "linkedTerminalStatus")
     val linkedTerminalStatus: LinkedTerminalStatus,
+    @Json(name = "isAccessCodeSet")
     val isAccessCodeSet: Boolean,
+    @Json(name = "isPasscodeSet")
     val isPasscodeSet: Boolean?,
+    @Json(name = "supportedCurves")
     val supportedCurves: List<EllipticCurve>,
+    @Json(name = "wallets")
     val wallets: List<Wallet>,
+    @Json(name = "attestation")
     val attestation: Attestation,
+    @Json(name = "backupStatus")
     val backupStatus: BackupStatus?,
 ) {
     constructor(card: Card) : this(
@@ -92,16 +108,27 @@ data class CardDTO(
 
     @JsonClass(generateAdapter = true)
     data class Settings(
+        @Json(name = "securityDelay")
         val securityDelay: Int,
+        @Json(name = "maxWalletsCount")
         val maxWalletsCount: Int,
+        @Json(name = "isSettingAccessCodeAllowed")
         val isSettingAccessCodeAllowed: Boolean,
+        @Json(name = "isSettingPasscodeAllowed")
         val isSettingPasscodeAllowed: Boolean,
+        @Json(name = "isResettingUserCodesAllowed")
         val isResettingUserCodesAllowed: Boolean,
+        @Json(name = "isLinkedTerminalEnabled")
         val isLinkedTerminalEnabled: Boolean,
+        @Json(name = "isBackupAllowed")
         val isBackupAllowed: Boolean,
+        @Json(name = "supportedEncryptionModes")
         val supportedEncryptionModes: List<EncryptionMode>,
+        @Json(name = "isFilesAllowed")
         val isFilesAllowed: Boolean,
+        @Json(name = "isHDWalletAllowed")
         val isHDWalletAllowed: Boolean,
+        @Json(name = "isKeysImportAllowed")
         val isKeysImportAllowed: Boolean = false,
     ) {
         constructor(settings: Card.Settings) : this(
@@ -121,6 +148,7 @@ data class CardDTO(
 
     @JsonClass(generateAdapter = true)
     data class UserSettings(
+        @Json(name = "isUserCodeRecoveryAllowed")
         val isUserCodeRecoveryAllowed: Boolean,
     ) {
         constructor(userSettings: com.tangem.common.card.UserSettings) : this(
@@ -130,9 +158,13 @@ data class CardDTO(
 
     @JsonClass(generateAdapter = true)
     data class FirmwareVersion(
+        @Json(name = "major")
         val major: Int,
+        @Json(name = "minor")
         val minor: Int,
+        @Json(name = "patch")
         val patch: Int,
+        @Json(name = "type")
         val type: SdkFirmwareVersion.FirmwareType,
     ) : Comparable<SdkFirmwareVersion> {
         val stringValue: String
@@ -161,8 +193,11 @@ data class CardDTO(
 
     @JsonClass(generateAdapter = true)
     data class Manufacturer(
+        @Json(name = "name")
         val name: String,
+        @Json(name = "manufactureDate")
         val manufactureDate: Date,
+        @Json(name = "signature")
         val signature: ByteArray?,
     ) {
         constructor(manufacturer: Card.Manufacturer) : this(
@@ -195,7 +230,9 @@ data class CardDTO(
 
     @JsonClass(generateAdapter = true)
     data class Issuer(
+        @Json(name = "name")
         val name: String,
+        @Json(name = "publicKey")
         val publicKey: ByteArray,
     ) {
         constructor(issuer: Card.Issuer) : this(
@@ -220,16 +257,27 @@ data class CardDTO(
 
     @JsonClass(generateAdapter = true)
     data class Wallet(
+        @Json(name = "publicKey")
         val publicKey: ByteArray,
+        @Json(name = "chainCode")
         val chainCode: ByteArray?,
+        @Json(name = "curve")
         val curve: EllipticCurve,
+        @Json(name = "settings")
         val settings: CardWallet.Settings,
+        @Json(name = "totalSignedHashes")
         val totalSignedHashes: Int?,
+        @Json(name = "remainingSignatures")
         val remainingSignatures: Int?,
+        @Json(name = "index")
         val index: Int,
+        @Json(name = "hasBackup")
         val hasBackup: Boolean,
+        @Json(name = "derivedKeys")
         val derivedKeys: Map<DerivationPath, ExtendedPublicKey>,
+        @Json(name = "extendedPublicKey")
         val extendedPublicKey: ExtendedPublicKey?,
+        @Json(name = "isImported")
         val isImported: Boolean = false,
     ) {
         constructor(wallet: CardWallet) : this(
@@ -281,9 +329,15 @@ data class CardDTO(
         }
     }
 
+    @JsonClass(generateAdapter = false)
     enum class LinkedTerminalStatus {
+        @Json(name = "Current")
         Current,
+
+        @Json(name = "Other")
         Other,
+
+        @Json(name = "None")
         None,
         ;
 

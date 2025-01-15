@@ -22,7 +22,9 @@ interface MoonPayApi {
 
 @JsonClass(generateAdapter = true)
 data class MoonPayUserStatus(
+    @Json(name = "isBuyAllowed")
     val isBuyAllowed: Boolean,
+    @Json(name = "isSellAllowed")
     val isSellAllowed: Boolean,
     @Json(name = "isAllowed")
     val isMoonpayAllowed: Boolean,
@@ -34,18 +36,18 @@ data class MoonPayUserStatus(
 
 @JsonClass(generateAdapter = true)
 data class MoonPayCurrencies(
-    val type: String,
-    val code: String,
-    val supportsLiveMode: Boolean = false,
-    val isSuspended: Boolean = true,
-    val isSupportedInUS: Boolean = false,
-    val isSellSupported: Boolean = false,
-    val notAllowedUSStates: List<String> = emptyList(),
-    val metadata: MoonPayCurrenciesMetadata? = null,
+    @Json(name = "type") val type: String,
+    @Json(name = "code") val code: String,
+    @Json(name = "supportsLiveMode") val supportsLiveMode: Boolean = false,
+    @Json(name = "isSuspended") val isSuspended: Boolean = true,
+    @Json(name = "isSupportedInUS") val isSupportedInUS: Boolean = false,
+    @Json(name = "isSellSupported") val isSellSupported: Boolean = false,
+    @Json(name = "notAllowedUSStates") val notAllowedUSStates: List<String> = emptyList(),
+    @Json(name = "metadata") val metadata: MoonPayCurrenciesMetadata? = null,
 )
 
 @JsonClass(generateAdapter = true)
 data class MoonPayCurrenciesMetadata(
-    val contractAddress: String?,
-    val networkCode: String?,
+    @Json(name = "contractAddress") val contractAddress: String?,
+    @Json(name = "networkCode") val networkCode: String?,
 )

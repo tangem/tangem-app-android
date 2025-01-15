@@ -1,14 +1,17 @@
 package com.tangem.datasource.api.tangemTech.models
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
+@JsonClass(generateAdapter = true)
 data class CoinsResponse(
     @Json(name = "imageHost") val imageHost: String?,
     @Json(name = "coins") val coins: List<Coin>,
     @Json(name = "total") val total: Int,
 ) {
 
+    @JsonClass(generateAdapter = true)
     data class Coin(
         @Json(name = "id") val id: String,
         @Json(name = "name") val name: String,
@@ -17,6 +20,7 @@ data class CoinsResponse(
         @Json(name = "networks") val networks: List<Network> = listOf(),
     ) {
 
+        @JsonClass(generateAdapter = true)
         data class Network(
             @Json(name = "networkId") val networkId: String,
             @Json(name = "contractAddress") val contractAddress: String? = null,

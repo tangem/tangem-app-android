@@ -45,6 +45,7 @@ private fun LibraryExtension.configurePackagingOptions() {
             excludes += "lib/x86_64/freebsd/libscrypt.so"
             excludes += "lib/x86_64/linux/libscrypt.so"
             excludes += "META-INF/gradle/incremental.annotation.processors"
+            pickFirsts += "google/protobuf/*"
         }
     }
 }
