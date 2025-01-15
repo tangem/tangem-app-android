@@ -73,7 +73,7 @@ jobs:
                 -storepass $store_password \
                 -keypass $key_password \
                 app/build/outputs/apk/release/app-release.apk \
-                app/build/outputs/apk/release/app-release-protected.apk
+                app/build/outputs/apk/release/app-release-protected.apk > output.log 2>&1
           
               # protecting aar
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
@@ -86,7 +86,7 @@ jobs:
                 -storepass $store_password \
                 -keypass $key_password \
                 app/build/outputs/bundle/release/app-release.aab \
-                app/build/outputs/bundle/release/app-release-protected.aab
+                app/build/outputs/bundle/release/app-release-protected.aab > output.log 2>&1
           
               # copy apk and aab to host
               cp app/build/outputs/apk/release/app-release.apk /home/ubuntu/apks/app-release-\$version_code-\$version_name.apk
