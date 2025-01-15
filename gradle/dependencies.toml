@@ -57,11 +57,11 @@ kotlin-immutable-collections = "0.3.5"
 kotsonGsonExt = "2.5.0"
 lottie = "3.4.0"
 lottie-compose = "6.6.0"
-moshi = "1.12.0"
+moshi = "1.15.1"
 okhttp = "4.9.3"
 rekotlin = "1.0.4"
-retrofit = "2.8.1"
-retrofitMoshiConverter = "2.6.0"
+retrofit = "2.11.0"
+retrofitMoshiConverter = "2.9.0"
 spongycastleCryptoCore = "1.58.0.0"
 timber = "4.7.1"
 viewBindingDelegate = "1.5.9"
@@ -238,11 +238,13 @@ material = { module = "com.google.android.material:material", version.ref = "goo
 moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
+moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshi" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
 spongecastle-core = { module = "com.madgag.spongycastle:core", version.ref = "spongycastleCryptoCore" }
 reKotlin = { module = "org.rekotlin:rekotlin", version.ref = "rekotlin" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-response-type-keeper = { module = "com.squareup.retrofit2:response-type-keeper", version.ref = "retrofit" }
 retrofit-moshi = { module = "com.squareup.retrofit2:converter-moshi", version.ref = "retrofitMoshiConverter" }
 timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
 viewBindingDelegate = { module = "com.github.kirich1409:viewbindingpropertydelegate-noreflection", version.ref = "viewBindingDelegate" }
