@@ -1,6 +1,6 @@
 package com.tangem.datasource.api.common.config
 
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 
 /**
  * Api environment config
@@ -14,5 +14,5 @@ import com.tangem.utils.Provider
 data class ApiEnvironmentConfig(
     val environment: ApiEnvironment,
     val baseUrl: String,
-    val headers: Map<String, Provider<String>> = emptyMap(),
+    val headers: Map<String, ProviderSuspend<String>> = emptyMap(),
 )
