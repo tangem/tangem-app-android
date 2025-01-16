@@ -80,7 +80,7 @@ internal class StateBuilder(
                 type = TransactionCardType.Inputtable(
                     onAmountChanged = actions.onAmountChanged,
                     onFocusChanged = actions.onAmountSelected,
-                    isError = false,
+                    inputError = TransactionCardType.InputError.Empty,
                 ),
                 amountEquivalent = null,
                 amountTextFieldValue = null,
@@ -195,11 +195,11 @@ internal class StateBuilder(
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
         val sendInputType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
-        val sendInput = if (sendInputType.isError) {
+        val sendInput = if (sendInputType.inputError !is TransactionCardType.InputError.Empty) {
             sendInputType
         } else {
             sendInputType.copy(
-                isError = false,
+                inputError = TransactionCardType.InputError.Empty,
                 header = TextReference.Res(R.string.swapping_from_title),
             )
         }
@@ -282,14 +282,22 @@ internal class StateBuilder(
             TextReference.Res(R.string.swapping_from_title)
         }
         val sendCardType = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.Inputtable)
-        val sendInput = if (sendCardType.isError && !isInsufficientFunds) {
-            // if any error in inputField and funds enough -> show that error else show fund is not enough error
-            sendCardType
-        } else {
-            sendCardType.copy(
-                isError = isInsufficientFunds,
-                header = insufficientFundsHeader,
-            )
+        val sendInput = when (sendCardType.inputError) {
+            is TransactionCardType.InputError.WrongAmount,
+            -> sendCardType
+            is TransactionCardType.InputError.Empty,
+            is TransactionCardType.InputError.InsufficientFunds,
+            -> {
+                val error = if (isInsufficientFunds) {
+                    TransactionCardType.InputError.InsufficientFunds
+                } else {
+                    TransactionCardType.InputError.Empty
+                }
+                sendCardType.copy(
+                    inputError = error,
+                    header = insufficientFundsHeader,
+                )
+            }
         }
         return uiStateHolder.copy(
             sendCardData = SwapCardState.SwapCardData(
@@ -610,12 +618,12 @@ internal class StateBuilder(
                 crypto(cryptoCurrency = fromToken, ignoreSymbolPosition = true)
             }
             (uiState.sendCardData.type as? TransactionCardType.Inputtable)?.copy(
-                isError = true,
+                inputError = TransactionCardType.InputError.WrongAmount,
                 header = resourceReference(R.string.transfer_min_amount_error, wrappedList(minAmountFormatted)),
             ) ?: uiState.sendCardData.type
         } else {
             (uiState.sendCardData.type as? TransactionCardType.Inputtable)?.copy(
-                isError = false,
+                inputError = TransactionCardType.InputError.Empty,
                 header = TextReference.Res(R.string.swapping_from_title),
             ) ?: uiState.sendCardData.type
         }
@@ -1278,6 +1286,7 @@ internal class StateBuilder(
         private const val MAX_DECIMALS_TO_SHOW = 8
         private const val IF_ZERO_DECIMALS_TO_SHOW = 2
         private const val FEE_READ_MORE_URL_FIRST_PART = "https://tangem.com/"
-        private const val FEE_READ_MORE_URL_SECOND_PART = "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
+        private const val FEE_READ_MORE_URL_SECOND_PART =
+            "/blog/post/what-is-a-transaction-fee-and-why-do-we-need-it/"
     }
 }
