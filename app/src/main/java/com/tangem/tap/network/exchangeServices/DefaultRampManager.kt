@@ -1,5 +1,10 @@
 package com.tangem.tap.network.exchangeServices
 
+import arrow.core.Either
+import arrow.core.raise.catch
+import arrow.core.raise.either
+import arrow.core.raise.ensure
+import arrow.core.right
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
 import com.tangem.datasource.api.express.models.response.Asset
@@ -37,16 +42,6 @@ internal class DefaultRampManager(
 
     private val cryptoCurrencyConverter = CryptoCurrencyConverter(excludedBlockchains)
 
-    override fun isSellSupportedByService(cryptoCurrency: CryptoCurrency): Boolean {
-        return runCatching {
-            exchangeService?.availableForSell(
-                currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
-            )
-        }
-            .getOrNull()
-            ?: false
-    }
-
     override suspend fun availableForBuy(
         scanResponse: ScanResponse,
         userWalletId: UserWalletId,
@@ -66,18 +61,40 @@ internal class DefaultRampManager(
             ?: false
     }
 
-    override suspend fun availableForSell(userWalletId: UserWalletId, status: CryptoCurrencyStatus): Boolean {
-        return runCatching {
-            val sellSupportedByService = isSellSupportedByService(cryptoCurrency = status.currency)
+    override suspend fun availableForSell(
+        userWalletId: UserWalletId,
+        status: CryptoCurrencyStatus,
+    ): Either<ScenarioUnavailabilityReason, Unit> {
+        return either {
+            val sellSupportedByService = catch(
+                block = {
+                    val serviceCurrency = cryptoCurrencyConverter.convertBack(status.currency)
 
-            if (!sellSupportedByService) return false
+                    exchangeService?.availableForSell(currency = serviceCurrency) ?: false
+                },
+                catch = { raise(ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)) },
+            )
+
+            ensure(condition = sellSupportedByService) {
+                ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)
+            }
 
             val reason = getSendUnavailabilityReason(userWalletId, status)
 
-            reason == ScenarioUnavailabilityReason.None
+            ensure(condition = reason is ScenarioUnavailabilityReason.None) {
+                when (reason) {
+                    is ScenarioUnavailabilityReason.EmptyBalance -> {
+                        reason.copy(withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL)
+                    }
+                    is ScenarioUnavailabilityReason.PendingTransaction -> {
+                        reason.copy(withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL)
+                    }
+                    else -> reason
+                }
+            }
+
+            Unit.right()
         }
-            .getOrNull()
-            ?: false
     }
 
     override suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
