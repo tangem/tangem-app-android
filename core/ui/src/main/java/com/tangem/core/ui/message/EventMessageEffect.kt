@@ -131,6 +131,7 @@ private fun MessageDialog(message: DialogMessage, onDismissRequest: () -> Unit) 
             )
         },
         onDismissDialog = onDismissRequest,
+        isDismissable = message.isDismissable,
     )
 }
 
