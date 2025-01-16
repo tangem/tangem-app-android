@@ -11,12 +11,9 @@ import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -34,10 +31,6 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.OkxPromoNotification
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
-import com.tangem.core.ui.event.EventEffect
-import com.tangem.core.ui.event.StateEvent
-import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -61,7 +54,6 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
     BackHandler(onBack = state.topAppBarConfig.onBackClick)
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
-    val snackbarHostState = remember { SnackbarHostState() }
     Scaffold(
         topBar = { TokenDetailsTopAppBar(config = state.topAppBarConfig) },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
@@ -200,21 +192,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                 }
             }
         }
-
-        TokenDetailsEventEffect(snackbarHostState = snackbarHostState, event = state.event)
     }
-}
-
-@Composable
-internal fun TokenDetailsEventEffect(snackbarHostState: SnackbarHostState, event: StateEvent<TextReference>) {
-    val resources = LocalContext.current.resources
-
-    EventEffect(
-        event = event,
-        onTrigger = { value ->
-            snackbarHostState.showSnackbar(message = value.resolveReference(resources))
-        },
-    )
 }
 
 // region Preview
