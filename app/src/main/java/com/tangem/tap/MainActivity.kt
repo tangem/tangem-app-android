@@ -511,7 +511,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onNewIntent(intent)
 
         lifecycleScope.launch {
-            intentProcessor.handleIntent(intent, true)
+            intentProcessor.handleIntent(intent = intent, isFromForeground = true)
         }
 
         if (intent != null) {
@@ -628,6 +628,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             store.dispatchNavigationAction {
                 replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
             }
+            intentProcessor.handleIntent(
+                intent = intentWhichStartedActivity,
+                isFromForeground = false,
+                skipNavigationHandlers = true,
+            )
         } else {
             lifecycleScope.launch {
                 val shouldShowTos = !cardRepository.isTangemTOSAccepted()
@@ -640,7 +645,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 }
 
                 store.dispatchNavigationAction { replaceAll(route) }
-                intentProcessor.handleIntent(intentWhichStartedActivity, false)
+                intentProcessor.handleIntent(
+                    intent = intentWhichStartedActivity,
+                    isFromForeground = false,
+                    skipNavigationHandlers = false,
+                )
             }
         }
 
