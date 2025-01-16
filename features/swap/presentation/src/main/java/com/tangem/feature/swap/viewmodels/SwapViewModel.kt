@@ -1322,7 +1322,7 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onFailedTxEmailClick(errorMessage: String) {
         viewModelScope.launch {
-            val transaction =  dataState.swapDataModel?.transaction
+            val transaction = dataState.swapDataModel?.transaction
             val fromCurrencyStatus = dataState.fromCryptoCurrency ?: initialFromStatus
             val network = fromCurrencyStatus.currency.network
             val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
