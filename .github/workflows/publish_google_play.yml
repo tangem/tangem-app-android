@@ -1,4 +1,4 @@
-name: Deploy to Google Play Internal
+name: Publish release build to Google Play Beta
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Deploy to Firebase
+name: Publish internal build to Firebase App Distribution
 
 on:
   push:

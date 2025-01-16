@@ -1,0 +1,12 @@
+name: Publish release build to Github
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: [ self-hosted, ARM64, active-android, Linux ]
+    steps:
+      - name: Publish
+        run: |
+          env > .env
