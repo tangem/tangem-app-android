@@ -216,7 +216,10 @@ internal class OnrampTokenListModel @Inject constructor(
                 )
             }
             OnrampOperation.SELL -> {
-                rampStateManager.availableForSell(userWalletId = params.userWalletId, status = status)
+                rampStateManager.availableForSell(
+                    userWalletId = params.userWalletId,
+                    status = status,
+                ).isRight()
             }
             OnrampOperation.SWAP -> {
                 val isAvailable = rampStateManager.availableForSwap(

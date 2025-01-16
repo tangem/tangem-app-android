@@ -9,8 +9,6 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.event.consumedEvent
-import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
@@ -318,22 +316,6 @@ internal class TokenDetailsStateFactory(
         return state.copy(
             notifications = notificationConverter.removeKaspaIncompleteTransactionWarning(state),
             dialogConfig = state.dialogConfig?.copy(isShow = false),
-        )
-    }
-
-    fun getStateAndTriggerEvent(
-        state: TokenDetailsState,
-        errorMessage: TextReference,
-        setUiState: (TokenDetailsState) -> Unit,
-    ): TokenDetailsState {
-        return state.copy(
-            event = triggeredEvent(
-                data = errorMessage,
-                onConsume = {
-                    val currentState = currentStateProvider()
-                    setUiState(currentState.copy(event = consumedEvent()))
-                },
-            ),
         )
     }
 
