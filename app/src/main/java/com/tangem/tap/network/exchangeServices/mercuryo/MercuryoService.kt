@@ -54,13 +54,7 @@ internal class MercuryoService(private val environment: MercuryoEnvironment) : E
         }
     }
 
-    override fun isBuyAllowed(): Boolean = true
-
-    override fun isSellAllowed(): Boolean = false
-
     override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
-        if (!isBuyAllowed()) return false
-
         val mercuryoNetwork = currency.blockchain.mercuryoNetwork
         val contractAddress = (currency as? Currency.Token)?.token?.contractAddress ?: ""
         val availableCurrency = availableMercuryoCurrencies.firstOrNull {
