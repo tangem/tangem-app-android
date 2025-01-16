@@ -1322,7 +1322,9 @@ internal class SwapViewModel @Inject constructor(
 
     private fun onFailedTxEmailClick(errorMessage: String) {
         viewModelScope.launch {
-            val network = initialFromStatus.currency.network
+            val transaction =  dataState.swapDataModel?.transaction
+            val fromCurrencyStatus = dataState.fromCryptoCurrency ?: initialFromStatus
+            val network = fromCurrencyStatus.currency.network
             val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
 
             saveBlockchainErrorUseCase(
@@ -1330,8 +1332,8 @@ internal class SwapViewModel @Inject constructor(
                     errorMessage = errorMessage,
                     blockchainId = network.id.value,
                     derivationPath = network.derivationPath.value,
-                    destinationAddress = dataState.swapDataModel?.transaction?.txTo.orEmpty(),
-                    tokenSymbol = initialCurrencyFrom.symbol,
+                    destinationAddress = transaction?.txTo.orEmpty(),
+                    tokenSymbol = fromCurrencyStatus.currency.symbol,
                     amount = dataState.amount.orEmpty(),
                     fee = dataState.selectedFee?.feeCryptoFormatted.orEmpty(),
                 ),
@@ -1340,7 +1342,7 @@ internal class SwapViewModel @Inject constructor(
             val email = FeedbackEmailType.SwapProblem(
                 cardInfo = cardInfo,
                 providerName = dataState.selectedProvider?.name.orEmpty(),
-                txId = dataState.swapDataModel?.transaction?.txId.orEmpty(),
+                txId = transaction?.txId.orEmpty(),
             )
 
             sendFeedbackEmailUseCase(email)
