@@ -29,8 +29,6 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
-import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
@@ -46,7 +44,10 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.onramp.OnrampFeatureToggles
@@ -117,7 +118,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val shareManager: ShareManager,
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
-    private val getUserCountryUseCase: GetUserCountryUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
@@ -410,33 +410,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletSellClick(userWalletId: UserWalletId) {
-        viewModelScope.launch {
-            val userCountry = getUserCountryUseCase().getOrNull()
-            if (userCountry is UserCountry.Russia) {
-                handleError(
-                    alertState = WalletAlertState.SellingRegionalRestriction,
-                    eventCreator = MainScreenAnalyticsEvent::ButtonSell,
-                )
-
-                return@launch
-            }
-
-            val selectedWallet = stateHolder.getSelectedWallet().walletCardState as? WalletCardState.Content
-            if (selectedWallet?.isZeroBalance == true) {
-                handleError(
-                    alertState = WalletAlertState.InsufficientBalanceForSelling,
-                    eventCreator = MainScreenAnalyticsEvent::ButtonSell,
-                )
-
-                return@launch
-            }
-
-            onMultiWalletActionClick(
-                statusFlow = rampStateManager.getSellInitializationStatus(),
-                route = AppRoute.SellCrypto(userWalletId = userWalletId),
-                eventCreator = MainScreenAnalyticsEvent::ButtonSell,
-            )
-        }
+        onMultiWalletActionClick(
+            statusFlow = rampStateManager.getSellInitializationStatus(),
+            route = AppRoute.SellCrypto(userWalletId = userWalletId),
+            eventCreator = MainScreenAnalyticsEvent::ButtonSell,
+        )
     }
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
