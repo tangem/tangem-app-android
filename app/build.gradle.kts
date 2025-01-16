@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(deps.plugins.android.application)
     alias(deps.plugins.kotlin.android)
@@ -25,6 +27,23 @@ android {
     androidResources {
         generateLocaleConfig = true
     }
+    signingConfigs {
+        getByName("debug") {
+            val keystorePath = "src/main/assets/tangem-app-config/android/keystore/debug_keystore"
+            val propertiesPath = "src/main/assets/tangem-app-config/android/keystore/debug_keystore.properties"
+
+            val keystoreProperties = Properties()
+            file(propertiesPath)
+                .inputStream()
+                .use { keystoreProperties.load(it) }
+
+            storeFile = file(keystorePath)
+            storePassword = keystoreProperties["store_password"] as String
+            keyAlias = keystoreProperties["key_alias"] as String
+            keyPassword = keystoreProperties["key_password"] as String
+        }
+    }
+
 }
 
 configurations.all {
