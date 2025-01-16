@@ -11,6 +11,7 @@ import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.common.huawei.HuaweiServicesHelper
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.ParamsInterceptor
@@ -51,11 +52,10 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.google.GoogleServicesHelper
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
-import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
-import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.common.redux.AppState
@@ -331,8 +331,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun initAnalytics(application: Application, environmentConfig: EnvironmentConfig) {
         val factory = AnalyticsFactory()
-        factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
-        factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
+        factory.setupHandlers(
+            isGoogleServicesAvailable = GoogleServicesHelper.checkGoogleServicesAvailability(this),
+            isHuaweiServicesAvailable = HuaweiServicesHelper.checkHuaweiServicesAvailability(this),
+        )
 
         factory.addFilter(oneTimeEventFilter)
 

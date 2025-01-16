@@ -3,12 +3,17 @@ import java.util.Properties
 plugins {
     alias(deps.plugins.android.application)
     alias(deps.plugins.kotlin.android)
+    id(deps.plugins.agconnect.get().pluginId)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.google.services)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.firebase.crashlytics)
     id("configuration")
+}
+
+agcp {
+    manifest = false
 }
 
 android {
@@ -49,6 +54,7 @@ android {
 configurations.all {
     exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
     exclude(group = "com.github.komputing.kethereum")
+    exclude(group = "com.android.tools.build", module = "gradle")
 
     resolutionStrategy {
         dependencySubstitution {
@@ -99,6 +105,7 @@ dependencies {
     implementation(projects.common)
     implementation(projects.common.routing)
     implementation(projects.common.google)
+    implementation(projects.common.huawei)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
@@ -212,6 +219,13 @@ dependencies {
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
     implementation(deps.firebase.messaging)
+
+    /** AppGallery libraries */
+    implementation(deps.agconnect.agcp)
+    implementation(deps.agconnect.core)
+    implementation(deps.agconnect.crash)
+    implementation(deps.huawei.base)
+    implementation(deps.huawei.analytics)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {
