@@ -82,21 +82,27 @@ data class SwapButton(
 sealed interface TransactionCardType {
 
     val header: TextReference
-    val isError: Boolean
+    val inputError: InputError
 
     data class Inputtable(
         val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
-        override val isError: Boolean,
+        override val inputError: InputError,
         override val header: TextReference = TextReference.Res(R.string.swapping_from_title),
     ) : TransactionCardType
 
     data class ReadOnly(
         val showWarning: Boolean = false,
         val onWarningClick: (() -> Unit)? = null,
-        override val isError: Boolean = false,
+        override val inputError: InputError = InputError.Empty,
         override val header: TextReference = TextReference.Res(R.string.swapping_to_title),
     ) : TransactionCardType
+
+    sealed interface InputError {
+        data object Empty : InputError
+        data object InsufficientFunds : InputError
+        data object WrongAmount : InputError
+    }
 }
 
 data class TosState(
