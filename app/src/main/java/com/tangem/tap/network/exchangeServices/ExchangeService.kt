@@ -11,8 +11,6 @@ import kotlinx.coroutines.flow.StateFlow
 typealias ExchangeServiceInitializationStatus = Lce<Throwable, Any>
 
 interface Exchanger {
-    fun isBuyAllowed(): Boolean
-    fun isSellAllowed(): Boolean
     fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean
     fun availableForSell(currency: Currency): Boolean
 }
@@ -30,8 +28,6 @@ interface ExchangeService : Exchanger, ExchangeUrlBuilder {
                 MutableStateFlow(value = lceLoading())
 
             override suspend fun update() {}
-            override fun isBuyAllowed(): Boolean = false
-            override fun isSellAllowed(): Boolean = false
             override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean = false
             override fun availableForSell(currency: Currency): Boolean = false
             override fun getUrl(
@@ -54,8 +50,6 @@ interface ExchangeRules : Exchanger {
 
     companion object {
         fun dummy(): ExchangeRules = object : ExchangeRules {
-            override fun isBuyAllowed(): Boolean = false
-            override fun isSellAllowed(): Boolean = false
             override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean = false
             override fun availableForSell(currency: Currency): Boolean = false
         }
