@@ -44,7 +44,10 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -62,6 +65,9 @@ internal class LegacyScanProcessor @Inject constructor(
             cardId = cardId,
             allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
         )
+            .doOnFailure { error ->
+                onScanFailure(error = error, onFailure = {}, onCancel = {})
+            }
     }
 
     @Suppress("LongParameterList")
@@ -159,7 +165,7 @@ internal class LegacyScanProcessor @Inject constructor(
     private suspend inline fun onScanFailure(
         error: TangemError,
         crossinline onFailure: suspend (TangemError) -> Unit,
-        crossinline onCancel: () -> Job,
+        crossinline onCancel: () -> Unit,
     ) {
         if (error is TangemSdkError.CardVerificationFailed) {
             analyticsEventHandler.send(event = Onboarding.OfflineAttestationFailed)
