@@ -6,6 +6,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
+import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.visa.VisaCardScanHandler
 import dagger.Module
 import dagger.Provides
@@ -24,6 +25,7 @@ internal class TangemSdkManagerModule {
         @ApplicationContext context: Context,
         cardSdkConfigRepository: CardSdkConfigRepository,
         visaCardScanHandler: VisaCardScanHandler,
+        visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
             MockTangemSdkManager(resources = context.resources)
@@ -32,6 +34,7 @@ internal class TangemSdkManagerModule {
                 cardSdkConfigRepository = cardSdkConfigRepository,
                 resources = context.resources,
                 visaCardScanHandler = visaCardScanHandler,
+                visaCardActivationTaskFactory = visaCardActivationTaskFactory,
             )
         }
     }
