@@ -8,8 +8,12 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.navigation.share.ShareManager
@@ -23,6 +27,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -31,8 +36,8 @@ import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.promo.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
@@ -67,10 +72,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.Token
 import com.tangem.feature.tokendetails.presentation.tokendetails.analytics.TokenDetailsNotificationsAnalyticsSender
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBalanceSegmentedButtonConfig
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
-import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -118,6 +121,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     private val getCryptoCurrencySyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val shareManager: ShareManager,
+    @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
     getStakingIntegrationIdUseCase: GetStakingIntegrationIdUseCase,
@@ -597,10 +601,9 @@ internal class TokenDetailsViewModel @Inject constructor(
             if (extendedKey.isNotBlank()) {
                 vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
                 clipboardManager.setText(text = extendedKey, isSensitive = true)
-                internalUiState.value = stateFactory.getStateAndTriggerEvent(
-                    state = internalUiState.value,
-                    errorMessage = resourceReference(R.string.wallet_notification_address_copied),
-                    setUiState = { internalUiState.value = it },
+
+                uiMessageSender.send(
+                    message = SnackbarMessage(message = resourceReference(R.string.wallet_notification_address_copied)),
                 )
             }
         }
@@ -698,17 +701,14 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     private fun showErrorIfDemoModeOrElse(action: () -> Unit) {
-        viewModelScope.launch(dispatchers.main) {
-            if (isDemoCardUseCase(cardId = userWallet.cardId)) {
-                internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
-                internalUiState.value = stateFactory.getStateAndTriggerEvent(
-                    state = internalUiState.value,
-                    errorMessage = resourceReference(id = R.string.alert_demo_feature_disabled),
-                    setUiState = { internalUiState.value = it },
-                )
-            } else {
-                action()
-            }
+        if (isDemoCardUseCase(cardId = userWallet.cardId)) {
+            internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+
+            uiMessageSender.send(
+                message = SnackbarMessage(message = resourceReference(R.string.alert_demo_feature_disabled)),
+            )
+        } else {
+            action()
         }
     }
 
