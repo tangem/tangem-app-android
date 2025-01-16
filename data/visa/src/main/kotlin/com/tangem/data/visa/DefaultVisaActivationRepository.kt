@@ -2,6 +2,7 @@ package com.tangem.data.visa
 
 import com.tangem.data.visa.converter.VisaActivationStatusConverter
 import com.tangem.datasource.api.visa.TangemVisaApi
+import com.tangem.domain.visa.model.ActivationOrder
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -19,5 +20,9 @@ internal class DefaultVisaActivationRepository @Inject constructor(
     override suspend fun getActivationRemoteState(): VisaActivationRemoteState = withContext(dispatcherProvider.io) {
         visaActivationStatusConverter.convert(visaApi.getRemoteActivationStatus())
         // TODO implement refreshing access token if it's expired
+    }
+
+    override suspend fun getActivationOrderToSign(): ActivationOrder {
+        return ActivationOrder("TODO implement")
     }
 }
