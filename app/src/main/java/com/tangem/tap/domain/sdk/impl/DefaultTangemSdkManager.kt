@@ -24,6 +24,9 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaActivationInput
+import com.tangem.domain.visa.model.VisaAuthChallenge
+import com.tangem.domain.visa.model.VisaCardActivationResponse
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
@@ -40,6 +43,7 @@ import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
@@ -55,6 +59,7 @@ internal class DefaultTangemSdkManager(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val resources: Resources,
     private val visaCardScanHandler: VisaCardScanHandler,
+    private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
 ) : TangemSdkManager {
 
     private val awaitInitializationMutex = Mutex()
@@ -462,6 +467,28 @@ internal class DefaultTangemSdkManager(
             initialMessage = initialMessage,
             preflightReadFilter = null,
         )
+    }
+
+    // endregion
+
+    // region Visa-specific
+
+    override suspend fun activateVisaCard(
+        accessCode: String,
+        challengeToSign: VisaAuthChallenge.Card?,
+        activationInput: VisaActivationInput,
+    ): CompletionResult<VisaCardActivationResponse> {
+        return coroutineScope {
+            runTaskAsyncReturnOnMain(
+                runnable = visaCardActivationTaskFactory.create(
+                    accessCode = accessCode,
+                    challengeToSign = challengeToSign,
+                    activationInput = activationInput,
+                    coroutineScope = this,
+                ),
+                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            )
+        }
     }
 
     // endregion
