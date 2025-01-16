@@ -78,7 +78,7 @@ platform :android do
      )
   end
 
-  desc "Build release AAB and APKs"
+  desc "Build release AAB and APK"
     lane :buildRelease do |options|
        FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
        puts File.read("../gradle.properties")
@@ -110,26 +110,31 @@ platform :android do
     end
 
   desc "Submit a new Beta Build to Firebase App Distribution"
-  lane :beta do |options|
+  lane :beta do |options| # TODO: remove after fully moving from old CI
        firebase_app_distribution(
             app: options[:app_id],
             apk_path: options[:apk_path],
             groups: options[:groups])
   end
 
-  desc "Publish internal and external builds to Firebase App Distribution"
-  lane :publishToFirebase do |options|
-      FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
-      puts File.read("../gradle.properties")
+
+  desc "Build internal APK Firebase App Distribution"
+  lane :buildInternal do |options|
+    FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
 
     gradle(
-      task: "clean assemble",
+      task: "assemble",
       build_type: "Internal",
       properties: {
         'versionCode' => ENV['version_code'],
         'versionName' => ENV['version_name'],
       }
-    )
+  )
+  end
+
+  desc "Publish internal build to Firebase App Distribution"
+  lane :publishToFirebase do |options|
     uploaded_release = firebase_app_distribution(
       firebase_cli_token: ENV['firebase_cli_token'],
       app: ENV['app_id_internal'],
@@ -144,4 +149,5 @@ platform :android do
     encoded_release_url = Base64.strict_encode64(Base64.strict_encode64(release_url))
     sh("echo 'encoded_release_url=#{encoded_release_url}' >> /workspace/github_output.txt")
   end
+
 end
