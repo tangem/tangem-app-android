@@ -1,9 +1,11 @@
 package com.tangem.domain.exchange
 
+import arrow.core.Either
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -11,9 +13,6 @@ import kotlinx.coroutines.flow.Flow
  * Manager that holds info about available actions as Sell and Buy
  */
 interface RampStateManager {
-
-    /** Check if sell service is supported for given [CryptoCurrency] */
-    fun isSellSupportedByService(cryptoCurrency: CryptoCurrency): Boolean
 
     suspend fun availableForBuy(
         scanResponse: ScanResponse,
@@ -24,10 +23,13 @@ interface RampStateManager {
     /**
      * Check if [CryptoCurrency] is available for sell
      *
-     * @param userWalletId id of multi-currency wallet
-     * @param status       crypto currency status
+     * @param userWalletId      id of multi-currency wallet
+     * @param status            crypto currency status
      */
-    suspend fun availableForSell(userWalletId: UserWalletId, status: CryptoCurrencyStatus): Boolean
+    suspend fun availableForSell(
+        userWalletId: UserWalletId,
+        status: CryptoCurrencyStatus,
+    ): Either<ScenarioUnavailabilityReason, Unit>
 
     suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean
 
