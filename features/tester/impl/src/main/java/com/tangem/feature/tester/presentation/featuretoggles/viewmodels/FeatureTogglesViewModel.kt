@@ -70,13 +70,13 @@ internal class FeatureTogglesViewModel @Inject constructor(
                 titleResId = R.string.feature_toggles,
                 onBackClick = {},
                 refreshButton = TopBarWithRefreshUM.RefreshButton(
-                    isVisible = false,
+                    isVisible = !isMatchLocalConfig,
                     onRefreshClick = ::onRefreshClick,
                 ),
             )
         } else {
             uiState.topBar.copy(
-                refreshButton = uiState.topBar.refreshButton.copy(isVisible = isMatchLocalConfig),
+                refreshButton = uiState.topBar.refreshButton.copy(isVisible = !isMatchLocalConfig),
             )
         }
     }
