@@ -28,7 +28,7 @@ sealed class VisaCardActivationStatus {
     data object Blocked : VisaCardActivationStatus()
 
     companion object {
-        val serializer: PolymorphicJsonAdapterFactory<VisaCardActivationStatus>
+        val jsonAdapter: PolymorphicJsonAdapterFactory<VisaCardActivationStatus>
             get() = PolymorphicJsonAdapterFactory.of(VisaCardActivationStatus::class.java, "type")
                 .withSubtype(Activated::class.java, "Activated")
                 .withSubtype(ActivationStarted::class.java, "ActivationStarted")
