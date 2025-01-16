@@ -7,7 +7,7 @@ on:
       initial_version_code:
         required: true
         type: number
-      use_dexprotector:
+      checkout_dexprotector_config:
         required: false
         type: boolean
         default: false
@@ -52,7 +52,7 @@ jobs:
           token: ${{ secrets.GH_MOBILE_PAT }}
 
       - name: Checkout dexprotector config
-        if: ${{ inputs.use_dexprotector == true }}
+        if: ${{ inputs.checkout_dexprotector_config == true }}
         uses: actions/checkout@v3
         with:
           repository: 'tangem/private-app-config'

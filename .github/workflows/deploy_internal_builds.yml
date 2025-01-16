@@ -31,24 +31,19 @@ jobs:
       initial_version_code: 1000
     secrets: inherit
 
-  build_and_upload:
-    name: Build APK & AAB
+  build_and_publish:
+    name: Build and publish
     runs-on: [ self-hosted, ARM64, active-android, Linux ]
     environment: Alpha # required for obtaining token
     needs: prepare
     steps:
-      - name: Run uploading
-        id: uploading
+      - name: Build internal
+        id: build
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-          app_id_internal: ${{ secrets.FIREBASE_APP_ID_INTERNAL }}
-          firebase_cli_token: ${{ secrets.FIREBASE_CLI_TOKEN }}
-          apk_path_internal: app/build/outputs/apk/internal/app-internal.apk
           version_code: ${{ needs.prepare.outputs.version_code }}
           version_name: ${{ needs.prepare.outputs.version_name }}
-          release_notes: ${{ github.ref_name }} - ${{ github.sha }}
-          groups: testers
         run: |
           env > .env
           
@@ -57,36 +52,58 @@ jobs:
             --env-file .env \
             --volume ~/.gradle:/home/ubuntu/.gradle \
             --volume ${{ github.workspace }}:/workspace \
-            --volume $GITHUB_OUTPUT:/workspace/github_output.txt \
             tangem_ci_android_environment \
             sh -c "
               cd /workspace;
           
-              echo 'Deploying APK to Firebase...';
+              fastlane buildInternal;
+            "
+
+      - name: Publish to Firebase
+        id: publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          app_id_internal: ${{ secrets.FIREBASE_APP_ID_INTERNAL }}
+          firebase_cli_token: ${{ secrets.FIREBASE_CLI_TOKEN }}
+          apk_path_internal: app/build/outputs/apk/internal/app-internal.apk
+          release_notes: ${{ github.ref_name }} - ${{ github.sha }}
+          groups: testers
+        run: |
+          env > .env
+          
+          docker run --rm \
+            --user ubuntu \
+            --env-file .env \
+            --volume ${{ github.workspace }}:/workspace \
+            --volume $GITHUB_OUTPUT:/workspace/github_output.txt \
+            tangem_ci_android_environment \
+            sh -c "
+              cd /workspace;
           
               fastlane publishToFirebase;
             "
 
   notification:
     name: Send Notification
-    needs: build_and_upload
+    needs: build_and_publish
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
       channel: 'deployments-android'
       status: 'success'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase app distribution'
-      version: ${{ needs.build_and_upload.outputs.version_name }}
-      build_number: ${{ needs.build_and_upload.outputs.version_code }}
-      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
+      version: ${{ needs.build_and_publish.outputs.version_name }}
+      build_number: ${{ needs.build_and_publish.outputs.version_code }}
+      changelog: ${{ needs.build_and_publish.outputs.jira_summary }}
       build_description: ${{ inputs.build_description }}
-      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
+      encoded_release_url: ${{ needs.build_and_publish.outputs.encoded_release_url }}
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
   error_notification:
     name: Error Notification
-    needs: build_and_upload
+    needs: build_and_publish
     if: failure()
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
@@ -94,10 +111,10 @@ jobs:
       status: 'error'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase App Distribution'
-      version: ${{ needs.build_and_upload.outputs.version_name }}
-      build_number: ${{ needs.build_and_upload.outputs.version_code }}
-      changelog: ${{ needs.build_and_upload.outputs.jira_summary }}
+      version: ${{ needs.build_and_publish.outputs.version_name }}
+      build_number: ${{ needs.build_and_publish.outputs.version_code }}
+      changelog: ${{ needs.build_and_publish.outputs.jira_summary }}
       build_description: ${{ inputs.build_description }}
-      encoded_release_url: ${{ needs.build_and_upload.outputs.encoded_release_url }}
+      encoded_release_url: ${{ needs.build_and_publish.outputs.encoded_release_url }}
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

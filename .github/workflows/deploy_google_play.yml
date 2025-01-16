@@ -12,11 +12,11 @@ jobs:
     name: Prepare
     with:
       initial_version_code: 1500
-      use_dexprotector: true
+      checkout_dexprotector_config: true
     secrets: inherit
 
-  deploy:
-    name: Build and deploy
+  publish:
+    name: Build, protect and publish
     runs-on: [ self-hosted, ARM64, active-android, Linux ]
     needs: prepare
     steps:
@@ -149,7 +149,7 @@ jobs:
 # TODO: uncomment when AND-9552 is ready
 #  notification:
 #    name: Send Notification
-#    needs: build_apk_and_aab
+#    needs: publish
 #    uses: tangem/actions/.github/workflows/notification.yml@main
 #    with:
 #      channel: 'deployments-android'
@@ -166,7 +166,7 @@ jobs:
 #
 #  error_notification:
 #    name: Error Notification
-#    needs: build_apk_and_aab
+#    needs: publish
 #    if: failure()
 #    uses: tangem/actions/.github/workflows/notification.yml@main
 #    with:
