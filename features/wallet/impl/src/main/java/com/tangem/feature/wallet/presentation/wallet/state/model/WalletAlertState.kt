@@ -98,22 +98,6 @@ internal sealed interface WalletAlertState {
         override val onConfirmClick: (() -> Unit)? = null
     }
 
-    data object SellingRegionalRestriction : Basic() {
-        override val title: TextReference = resourceReference(id = R.string.selling_regional_restriction_alert_title)
-        override val message: TextReference =
-            resourceReference(id = R.string.selling_regional_restriction_alert_message)
-
-        override val onConfirmClick: (() -> Unit)? = null
-    }
-
-    data object InsufficientBalanceForSelling : Basic() {
-        override val title: TextReference = resourceReference(id = R.string.selling_insufficient_balance_alert_title)
-        override val message: TextReference =
-            resourceReference(id = R.string.selling_insufficient_balance_alert_message)
-
-        override val onConfirmClick: (() -> Unit)? = null
-    }
-
     data object InsufficientTokensCountForSwapping : Basic() {
         override val title: TextReference =
             resourceReference(id = R.string.action_buttons_swap_no_tokens_added_alert_title)

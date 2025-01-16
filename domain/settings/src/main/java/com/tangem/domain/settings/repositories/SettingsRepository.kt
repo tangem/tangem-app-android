@@ -1,6 +1,7 @@
 package com.tangem.domain.settings.repositories
 
 import com.tangem.domain.settings.usercountry.models.UserCountry
+import kotlinx.coroutines.flow.StateFlow
 
 @Suppress("TooManyFunctions")
 interface SettingsRepository {
@@ -38,6 +39,8 @@ interface SettingsRepository {
     suspend fun setMarketsTooltipShown(value: Boolean)
 
     suspend fun getUserCountryCodeSync(): UserCountry?
+
+    fun getUserCountryCode(): StateFlow<UserCountry?>
 
     suspend fun fetchUserCountryCode()
 

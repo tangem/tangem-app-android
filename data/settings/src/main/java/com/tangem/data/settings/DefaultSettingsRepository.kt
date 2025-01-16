@@ -12,6 +12,7 @@ import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -126,6 +127,8 @@ internal class DefaultSettingsRepository(
 
         return null
     }
+
+    override fun getUserCountryCode(): StateFlow<UserCountry?> = userCountryFlow
 
     override suspend fun fetchUserCountryCode() {
         Timber.i("Start fetching user country code")
