@@ -363,6 +363,5 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         )
 
         factory.build(Analytics, buildData)
-        // ExceptionHandler.append(blockchainExceptionHandler) TODO: [REDACTED_JIRA]
     }
 }
