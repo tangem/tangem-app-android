@@ -15,6 +15,9 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaActivationInput
+import com.tangem.domain.visa.model.VisaAuthChallenge
+import com.tangem.domain.visa.model.VisaCardActivationResponse
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
@@ -139,6 +142,16 @@ interface TangemSdkManager {
     fun changeProductType(isRing: Boolean)
 
     fun clearProductType()
+
+    // endregion
+
+    // region Visa-specific
+
+    suspend fun activateVisaCard(
+        accessCode: String,
+        challengeToSign: VisaAuthChallenge.Card?,
+        activationInput: VisaActivationInput,
+    ): CompletionResult<VisaCardActivationResponse>
 
     // endregion
 }
