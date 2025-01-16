@@ -10,6 +10,7 @@ import com.tangem.datasource.api.common.adapter.LocalDateAdapter
 import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.domain.models.scan.serialization.*
+import com.tangem.domain.visa.model.VisaCardActivationStatus
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,6 +35,7 @@ class MoshiModule {
             .add(BigDecimalAdapter())
             .add(LocalDateAdapter())
             .add(DateTimeAdapter())
+            .add(VisaCardActivationStatus.jsonAdapter)
             .add(KotlinJsonAdapterFactory())
             .addStakeKitEnumFallbackAdapters()
             .build()
@@ -42,8 +44,26 @@ class MoshiModule {
     @Provides
     @Singleton
     @SdkMoshi
-    fun provideSdkMoshi(sdkMoshiJsonConverter: MoshiJsonConverter): Moshi {
-        return sdkMoshiJsonConverter.moshi
+    fun provideSdkMoshi(): Moshi {
+        val adapters = MoshiJsonConverter.getTangemSdkAdapters() +
+            listOf(
+                BigDecimalAdapter(),
+                WalletDerivedKeysMapAdapter(),
+                ScanResponseDerivedKeysMapAdapter(),
+                ByteArrayKeyAdapter(),
+                ExtendedPublicKeysMapAdapter(),
+                CardBackupStatusAdapter(),
+                DerivationPathAdapterWithMigration(),
+            )
+
+        val typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters()
+
+        return Moshi.Builder().apply {
+            add(VisaCardActivationStatus.jsonAdapter)
+            adapters.forEach { this.add(it) }
+            typedAdapters.forEach { add(it.key, it.value) }
+            add(KotlinJsonAdapterFactory())
+        }.build()
     }
 
     @Provides
