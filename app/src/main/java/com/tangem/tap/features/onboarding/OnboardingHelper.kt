@@ -237,7 +237,7 @@ object OnboardingHelper {
 
         scope.launch {
             val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
-            val isRussia = getUserCountryCodeUseCase().isRight { it is UserCountry.Russia }
+            val isRussia = getUserCountryCodeUseCase.invokeSync().isRight { it is UserCountry.Russia }
 
             val onrampFeatureToggles = store.inject(DaggerGraphState::onrampFeatureToggles)
             if (isRussia && !onrampFeatureToggles.isFeatureEnabled) {
