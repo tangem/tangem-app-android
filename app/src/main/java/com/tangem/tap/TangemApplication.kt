@@ -362,6 +362,5 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         )
 
         factory.build(Analytics, buildData)
-        // ExceptionHandler.append(blockchainExceptionHandler) TODO: https://tangem.atlassian.net/browse/AND-4173
     }
 }
