@@ -5,14 +5,9 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,7 +26,7 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.OkxPromoNotification
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
-import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
@@ -48,7 +43,6 @@ import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 
 // TODO: Split to blocks [REDACTED_JIRA]
 @Suppress("LongMethod")
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockComponent: TokenMarketBlockComponent?) {
     BackHandler(onBack = state.topAppBarConfig.onBackClick)
@@ -59,11 +53,6 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.exclude(WindowInsets.navigationBars),
         containerColor = TangemTheme.colors.background.secondary,
     ) { scaffoldPaddings ->
-        val pullRefreshState = rememberPullRefreshState(
-            refreshing = state.pullToRefreshConfig.isRefreshing,
-            onRefresh = { state.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState()) },
-        )
-
         val txHistoryItems = if (state.txHistoryState is TxHistoryState.Content) {
             state.txHistoryState.contentItems.collectAsLazyPagingItems()
         } else {
@@ -75,10 +64,9 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
             .padding(top = betweenItemsPadding)
             .padding(horizontal = horizontalPadding)
 
-        Box(
-            modifier = Modifier
-                .padding(scaffoldPaddings)
-                .pullRefresh(pullRefreshState),
+        TangemPullToRefreshContainer(
+            config = state.pullToRefreshConfig,
+            modifier = Modifier.padding(scaffoldPaddings),
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -169,12 +157,6 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                     txHistoryItems = txHistoryItems,
                 )
             }
-
-            PullRefreshIndicator(
-                modifier = Modifier.align(Alignment.TopCenter),
-                refreshing = state.pullToRefreshConfig.isRefreshing,
-                state = pullRefreshState,
-            )
         }
 
         TokenDetailsDialogs(state = state)
