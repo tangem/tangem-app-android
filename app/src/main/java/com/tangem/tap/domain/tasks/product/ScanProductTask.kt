@@ -29,6 +29,7 @@ import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
@@ -51,6 +52,7 @@ internal class ScanProductTask(
     private val derivationsFinder: DerivationsFinder?,
     private val visaCardScanHandler: VisaCardScanHandler?,
     private val visaCoroutineScope: CoroutineScope?,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
     override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
@@ -68,6 +70,13 @@ internal class ScanProductTask(
         }
 
         if (VisaUtilities.isVisaCard(cardDto)) {
+            if (onboardingV2FeatureToggles == null ||
+                onboardingV2FeatureToggles.isVisaOnboardingEnabled.not()
+            ) {
+                callback(CompletionResult.Failure(TangemSdkError.NotSupportedFirmwareVersion()))
+                return
+            }
+
             readVisaCard(
                 session = session,
                 cardDto = cardDto,
