@@ -58,10 +58,9 @@ internal fun MyPortfolio(state: MyPortfolioUM, modifier: Modifier = Modifier) {
         }
     }
 
-    when (state) {
-        is MyPortfolioUM.AddFirstToken -> AddToPortfolioBottomSheet(config = state.addToPortfolioBSConfig)
-        is MyPortfolioUM.Tokens -> AddToPortfolioBottomSheet(config = state.addToPortfolioBSConfig)
-        else -> Unit
+    val bsConfig = state.addToPortfolioBSConfig
+    if (bsConfig != null) {
+        AddToPortfolioBottomSheet(config = bsConfig)
     }
 }
 
