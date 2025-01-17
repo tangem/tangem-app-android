@@ -3,6 +3,7 @@ package com.tangem.tap.di
 import android.content.Context
 import com.tangem.domain.card.BuildConfig
 import com.tangem.domain.card.repository.CardSdkConfigRepository
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.domain.sdk.impl.DefaultTangemSdkManager
 import com.tangem.tap.domain.sdk.impl.MockTangemSdkManager
@@ -26,6 +27,7 @@ internal class TangemSdkManagerModule {
         cardSdkConfigRepository: CardSdkConfigRepository,
         visaCardScanHandler: VisaCardScanHandler,
         visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
+        onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     ): TangemSdkManager {
         return if (BuildConfig.MOCK_DATA_SOURCE) {
             MockTangemSdkManager(resources = context.resources)
@@ -35,6 +37,7 @@ internal class TangemSdkManagerModule {
                 resources = context.resources,
                 visaCardScanHandler = visaCardScanHandler,
                 visaCardActivationTaskFactory = visaCardActivationTaskFactory,
+                onboardingV2FeatureToggles = onboardingV2FeatureToggles,
             )
         }
     }
