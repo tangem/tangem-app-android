@@ -14,8 +14,11 @@ import kotlinx.collections.immutable.ImmutableList
 /**
  * Factory for creating [MyPortfolioUM]
  *
- * @property onAddClick       callback when user wants to add new token
- * @property onTokenItemClick callback when user wants to see actions with token
+ * @property onAddClick                       callback when user wants to add new token
+ * @property addToPortfolioBSContentUMFactory factory for creating add to portfolio bottom sheet content
+ * @property tokenActionsHandler              token actions handler
+ * @property currentState                     current state provider
+ * @property updateTokens                     callback for updating tokens
  *
 [REDACTED_AUTHOR]
  */
@@ -87,6 +90,7 @@ internal class MyPortfolioUMFactory(
             ?.toSet()
 
         return addToPortfolioBSContentUMFactory.create(
+            currentState = currentState().addToPortfolioBSConfig,
             portfolioData = portfolioData,
             portfolioUIData = portfolioUIData,
             selectedWallet = selectedWallet,
