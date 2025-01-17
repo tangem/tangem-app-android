@@ -4,7 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -27,13 +27,12 @@ internal fun SettingsScreensScaffold(
     addBottomInsets: Boolean = true,
     fab: @Composable () -> Unit = {},
 ) {
-    val state = rememberScaffoldState(snackbarHostState = snackbarHostState)
     val backgroundColor = TangemTheme.colors.background.secondary
 
     BackHandler(onBack = onBackClick)
 
     Scaffold(
-        scaffoldState = state,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             EmptyTopBarWithNavigation(
                 modifier = Modifier.statusBarsPadding(),
@@ -43,7 +42,7 @@ internal fun SettingsScreensScaffold(
         },
         modifier = modifier,
         contentWindowInsets = WindowInsetsZero,
-        backgroundColor = backgroundColor,
+        containerColor = backgroundColor,
         floatingActionButton = {
             Box(modifier = Modifier.navigationBarsPadding()) {
                 fab()
@@ -89,6 +88,7 @@ internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
@@ -108,8 +108,9 @@ internal fun EmptyTopBarWithNavigation(
                 )
             }
         },
-        backgroundColor = backgroundColor,
-        elevation = 0.dp,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = backgroundColor,
+        ),
     )
 }
 
