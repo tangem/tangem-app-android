@@ -70,7 +70,9 @@ internal class ScanProductTask(
         }
 
         if (VisaUtilities.isVisaCard(cardDto)) {
-            if (onboardingV2FeatureToggles?.isVisaOnboardingEnabled?.not() == false) {
+            if (onboardingV2FeatureToggles == null ||
+                onboardingV2FeatureToggles.isVisaOnboardingEnabled.not()
+            ) {
                 callback(CompletionResult.Failure(TangemSdkError.NotSupportedFirmwareVersion()))
                 return
             }
