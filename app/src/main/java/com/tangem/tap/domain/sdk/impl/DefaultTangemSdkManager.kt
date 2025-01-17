@@ -28,6 +28,7 @@ import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaCardActivationResponse
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -60,6 +61,7 @@ internal class DefaultTangemSdkManager(
     private val resources: Resources,
     private val visaCardScanHandler: VisaCardScanHandler,
     private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : TangemSdkManager {
 
     private val awaitInitializationMutex = Mutex()
@@ -139,6 +141,7 @@ internal class DefaultTangemSdkManager(
                     allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
                     visaCardScanHandler = visaCardScanHandler,
                     visaCoroutineScope = this,
+                    onboardingV2FeatureToggles = onboardingV2FeatureToggles,
                 ),
                 cardId = cardId,
                 initialMessage = message,
