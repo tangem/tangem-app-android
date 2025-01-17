@@ -28,6 +28,7 @@ class FinalizeTwinTask(
                                     derivationsFinder = null,
                                     visaCardScanHandler = null,
                                     visaCoroutineScope = null,
+                                    onboardingV2FeatureToggles = null,
                                 ).run(session, callback)
                             is CompletionResult.Failure ->
                                 callback(CompletionResult.Failure(readResult.error))
