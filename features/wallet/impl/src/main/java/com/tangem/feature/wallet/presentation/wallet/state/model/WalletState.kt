@@ -5,7 +5,7 @@ import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedTxHistoryStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.LockedWalletStateHolder
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistoryStateHolder
