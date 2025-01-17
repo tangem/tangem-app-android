@@ -7,10 +7,12 @@ import kotlinx.collections.immutable.ImmutableList
 @Immutable
 internal sealed class MyPortfolioUM {
 
+    abstract val addToPortfolioBSConfig: TangemBottomSheetConfig?
+
     data class Tokens(
+        override val addToPortfolioBSConfig: TangemBottomSheetConfig,
         val tokens: ImmutableList<PortfolioTokenUM>,
         val buttonState: AddButtonState,
-        val addToPortfolioBSConfig: TangemBottomSheetConfig,
         val tokenReceiveBSConfig: TangemBottomSheetConfig,
         val onAddClick: () -> Unit,
     ) : MyPortfolioUM() {
@@ -23,13 +25,19 @@ internal sealed class MyPortfolioUM {
     }
 
     data class AddFirstToken(
-        val addToPortfolioBSConfig: TangemBottomSheetConfig,
+        override val addToPortfolioBSConfig: TangemBottomSheetConfig,
         val onAddClick: () -> Unit,
     ) : MyPortfolioUM()
 
-    data object Loading : MyPortfolioUM()
+    data object Loading : MyPortfolioUM() {
+        override val addToPortfolioBSConfig: TangemBottomSheetConfig? = null
+    }
 
-    data object Unavailable : MyPortfolioUM()
+    data object Unavailable : MyPortfolioUM() {
+        override val addToPortfolioBSConfig: TangemBottomSheetConfig? = null
+    }
 
-    data object UnavailableForWallet : MyPortfolioUM()
+    data object UnavailableForWallet : MyPortfolioUM() {
+        override val addToPortfolioBSConfig: TangemBottomSheetConfig? = null
+    }
 }
