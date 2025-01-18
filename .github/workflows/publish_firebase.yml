@@ -1,4 +1,4 @@
-name: Publish internal build to Firebase App Distribution
+name: Publish internal build to Firebase AD
 
 on:
   push:
