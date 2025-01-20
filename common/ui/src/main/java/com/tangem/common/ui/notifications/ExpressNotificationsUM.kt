@@ -6,23 +6,27 @@ import com.tangem.core.ui.extensions.resourceReference
 
 object ExpressNotificationsUM {
 
-    data class NeedVerification(val onGoToProviderClick: () -> Unit) : NotificationUM.Warning(
+    data class NeedVerification(val onGoToProviderClick: (() -> Unit)?) : NotificationUM.Warning(
         title = resourceReference(R.string.express_exchange_notification_verification_title),
         subtitle = resourceReference(R.string.express_exchange_notification_verification_text),
         iconResId = R.drawable.ic_alert_triangle_20,
-        buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-            text = resourceReference(R.string.common_go_to_provider),
-            onClick = onGoToProviderClick,
-        ),
+        buttonsState = onGoToProviderClick?.let { onClick ->
+            NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_go_to_provider),
+                onClick = onClick,
+            )
+        },
     )
 
-    data class FailedByProvider(val onGoToProviderClick: () -> Unit) : NotificationUM.Error(
+    data class FailedByProvider(val onGoToProviderClick: (() -> Unit)?) : NotificationUM.Error(
         title = resourceReference(R.string.express_exchange_notification_failed_title),
         subtitle = resourceReference(R.string.express_exchange_notification_failed_text),
         iconResId = R.drawable.ic_alert_circle_24,
-        buttonState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
-            text = resourceReference(R.string.common_go_to_provider),
-            onClick = onGoToProviderClick,
-        ),
+        buttonState = onGoToProviderClick?.let { onClick ->
+            NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_go_to_provider),
+                onClick = onClick,
+            )
+        },
     )
 }

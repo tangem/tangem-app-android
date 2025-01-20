@@ -1,7 +1,7 @@
 package com.tangem.data.promo.converters
 
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
-import com.tangem.domain.promo.PromoBanner
+import com.tangem.domain.promo.models.PromoBanner
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTime
 

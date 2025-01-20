@@ -9,6 +9,8 @@ android {
 }
 
 dependencies {
+    /** Domain models */
+    api(projects.domain.visa.models)
 
     /** Project - Domain */
     implementation(projects.core.utils)
@@ -20,4 +22,6 @@ dependencies {
     /** Libs - Other */
     implementation(deps.jodatime)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
 }
