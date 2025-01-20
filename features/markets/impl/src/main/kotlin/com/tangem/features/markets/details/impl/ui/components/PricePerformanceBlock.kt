@@ -2,14 +2,12 @@ package com.tangem.features.markets.details.impl.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,13 +19,14 @@ import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
 import com.tangem.core.ui.components.progressbar.LinearProgressIndicator
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.PreviewShimmerContainer
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.features.markets.details.impl.ui.state.PricePerformanceUM
 import com.tangem.features.markets.details.impl.ui.getText
+import com.tangem.features.markets.details.impl.ui.state.PricePerformanceUM
 import com.tangem.features.markets.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -39,7 +38,7 @@ internal fun PricePerformanceBlock(state: PricePerformanceUM, modifier: Modifier
         modifier = modifier,
         title = {
             Text(
-                text = stringResource(id = R.string.markets_token_details_price_performance),
+                text = stringResourceSafe(id = R.string.markets_token_details_price_performance),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
                 maxLines = 1,
@@ -106,13 +105,13 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                text = stringResource(R.string.markets_token_details_low),
+                text = stringResourceSafe(R.string.markets_token_details_low),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
             SpacerW8()
             Text(
-                text = stringResource(R.string.markets_token_details_high),
+                text = stringResourceSafe(R.string.markets_token_details_high),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
             )
