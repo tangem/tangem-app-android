@@ -1,5 +1,6 @@
 package com.tangem.features.onramp.tokenlist.entity.transformer
 
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
@@ -19,6 +20,7 @@ internal class UpdateTokenItemsTransformer(
     private val statuses: Map<Boolean, List<CryptoCurrencyStatus>>,
     private val isBalanceHidden: Boolean,
     private val unavailableTokensHeaderReference: TextReference,
+    private val warning: NotificationUM? = null,
 ) : TokenListUMTransformer {
 
     override fun transform(prevState: TokenListUM): TokenListUM {
@@ -38,7 +40,7 @@ internal class UpdateTokenItemsTransformer(
             ),
             unavailableItems = unavailableItems.addHeader(textReference = unavailableTokensHeaderReference),
             isBalanceHidden = isBalanceHidden,
-            warning = null,
+            warning = warning,
         )
     }
 

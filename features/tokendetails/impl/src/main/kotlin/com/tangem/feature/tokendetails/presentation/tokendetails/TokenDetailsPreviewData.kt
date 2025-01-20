@@ -7,7 +7,6 @@ import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -90,7 +89,7 @@ internal object TokenDetailsPreviewData {
         ),
     )
 
-    val iconState = IconState.TokenIcon(
+    private val iconState = IconState.TokenIcon(
         url = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/stellar.png",
         fallbackTint = Color.Cyan,
         fallbackBackground = Color.Blue,
@@ -314,7 +313,6 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = false,
-        event = consumedEvent(),
     )
 
     val tokenDetailsState_2 = TokenDetailsState(
@@ -345,7 +343,6 @@ internal object TokenDetailsPreviewData {
         bottomSheetConfig = null,
         isBalanceHidden = false,
         isMarketPriceAvailable = true,
-        event = consumedEvent(),
     )
 
     val tokenDetailsState_3 = tokenDetailsState_2.copy(

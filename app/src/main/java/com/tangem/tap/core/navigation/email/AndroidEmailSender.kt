@@ -68,5 +68,6 @@ internal class AndroidEmailSender : EmailSender {
         }
 
         return builder.intent
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 }
