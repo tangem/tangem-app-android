@@ -8,6 +8,7 @@ import com.tangem.common.card.WalletData
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.operations.attestation.Attestation
@@ -66,7 +67,7 @@ internal class TangemCardTypesResolver(
     override fun getBlockchain(): Blockchain {
         return when (productType) {
             ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
-            ProductType.Visa -> Blockchain.PolygonTestnet
+            ProductType.Visa -> VisaUtilities.visaBlockchain
             else -> {
                 val blockchainName: String = walletData?.blockchain
                     ?: if (productType == ProductType.Note) {
