@@ -52,9 +52,6 @@ class CurrencyExchangeManager(
         _initializationStatus.value = lceContent()
     }
 
-    override fun isBuyAllowed(): Boolean = primaryRules.isBuyAllowed() && buyService.isBuyAllowed()
-    override fun isSellAllowed(): Boolean = primaryRules.isSellAllowed() && sellService.isSellAllowed()
-
     override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
         return primaryRules.availableForBuy(scanResponse, currency) &&
             buyService.availableForBuy(scanResponse, currency)
