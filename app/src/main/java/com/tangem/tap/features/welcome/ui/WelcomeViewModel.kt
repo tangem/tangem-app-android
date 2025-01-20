@@ -130,6 +130,5 @@ internal class WelcomeViewModel @Inject constructor(
     private fun initGlobalState() {
         store.dispatch(GlobalAction.RestoreAppCurrency)
         store.dispatch(GlobalAction.ExchangeManager.Init)
-        store.dispatch(GlobalAction.FetchUserCountry)
     }
 }
