@@ -1,6 +1,5 @@
 package com.tangem.features.send.impl.presentation.ui.common
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -10,7 +9,6 @@ import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.res.TangemTheme
 import kotlinx.collections.immutable.ImmutableList
 
-@OptIn(ExperimentalFoundationApi::class)
 internal fun LazyListScope.notifications(
     notifications: ImmutableList<NotificationUM>,
     modifier: Modifier = Modifier,
@@ -31,7 +29,7 @@ internal fun LazyListScope.notifications(
                 config = item.config,
                 modifier = modifier
                     .padding(top = topPadding)
-                    .animateItemPlacement(),
+                    .animateItem(fadeInSpec = null, fadeOutSpec = null),
                 containerColor = when (item) {
                     is NotificationUM.Error.TokenExceedsBalance,
                     is NotificationUM.Warning.NetworkFeeUnreachable,
