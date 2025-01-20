@@ -2,10 +2,10 @@ package com.tangem.features.staking.impl.presentation.ui
 
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.core.ui.extensions.appendColored
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
 
@@ -17,9 +17,9 @@ private const val PRIVACY_POLICY_URL = "https://docs.stakek.it/docs/privacy-poli
 
 @Composable
 internal fun StakingTosText(onTextClick: (String) -> Unit) {
-    val termsOfUse = stringResource(R.string.common_terms_of_use)
-    val privacyPolicy = stringResource(R.string.common_privacy_policy)
-    val tosText = stringResource(R.string.staking_legal, termsOfUse, privacyPolicy)
+    val termsOfUse = stringResourceSafe(R.string.common_terms_of_use)
+    val privacyPolicy = stringResourceSafe(R.string.common_privacy_policy)
+    val tosText = stringResourceSafe(R.string.staking_legal, termsOfUse, privacyPolicy)
 
     val clickableAnnotation = buildAnnotatedString {
         append(tosText.substringBefore(termsOfUse))
