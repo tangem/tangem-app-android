@@ -3,7 +3,7 @@ name: Publish release build to GP Beta
 on:
   push:
     branches:
-      - 'feature/AND-9698_implement_publishing_to_github'
+      - 'release'
   workflow_dispatch:
 
 jobs:
