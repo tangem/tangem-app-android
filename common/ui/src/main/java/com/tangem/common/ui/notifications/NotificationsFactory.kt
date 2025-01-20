@@ -1,7 +1,6 @@
 package com.tangem.common.ui.notifications
 
 import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.utils.getFiatString
@@ -149,10 +148,19 @@ object NotificationsFactory {
         }
     }
 
+    /**
+     * Adds Existential Warning
+     *
+     * @param existentialDeposit existential deposit of blockchain
+     * @param feeAmount amount of fee spending for transaction
+     * @param sendingAmount amount sending by user (excluding fee for coins)
+     * @param cryptoCurrencyStatus blockchain currency status
+     * @param onReduceClick action to leave existential amount in balance after transaction
+     */
     fun MutableList<NotificationUM>.addExistentialWarningNotification(
         existentialDeposit: BigDecimal?,
         feeAmount: BigDecimal,
-        receivedAmount: BigDecimal,
+        sendingAmount: BigDecimal,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         onReduceClick: (
             reduceAmountBy: BigDecimal,
@@ -165,7 +173,7 @@ object NotificationsFactory {
         val spendingAmount = if (cryptoCurrency is CryptoCurrency.Token) {
             feeAmount
         } else {
-            receivedAmount
+            sendingAmount
         }
         val diff = balance.minus(spendingAmount)
         if (existentialDeposit != null && diff >= BigDecimal.ZERO && existentialDeposit > diff) {
@@ -283,9 +291,9 @@ object NotificationsFactory {
 
     fun MutableList<NotificationUM>.addValidateTransactionNotifications(
         dustValue: BigDecimal,
-        fee: Fee?,
         validationError: Throwable?,
         cryptoCurrency: CryptoCurrency,
+        minAdaValue: BigDecimal?, // TODO revert to Fee, after swap TxFee refactored
         onReduceClick: (
             reduceAmountTo: BigDecimal,
             notification: Class<out NotificationUM>,
@@ -301,11 +309,11 @@ object NotificationsFactory {
                 error = validationError,
                 onReduceClick = onReduceClick,
             )
-            null -> (fee as? Fee.CardanoToken)?.let {
+            null -> minAdaValue?.let {
                 add(
                     NotificationUM.Cardano.MinAdaValueCharged(
                         tokenName = cryptoCurrency.name,
-                        minAdaValue = it.minAdaValue.parseBigDecimal(cryptoCurrency.decimals),
+                        minAdaValue = minAdaValue.parseBigDecimal(cryptoCurrency.decimals),
                     ),
                 )
             }

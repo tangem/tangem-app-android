@@ -38,12 +38,14 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.staking)
     implementation(projects.domain.feedback)
+    implementation(projects.domain.promo)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.domain.models)
     implementation(projects.features.wallet.api)
+    implementation(projects.features.swap.api)
 
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
@@ -60,7 +62,6 @@ dependencies {
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
     implementation(deps.compose.constraintLayout)
-    implementation(deps.compose.accompanist.systemUiController)
 
     /** Api */
     implementation(projects.features.swap.api)
@@ -71,7 +72,6 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
-    implementation(deps.compose.accompanist.webView)
     implementation(deps.compose.accompanist.systemUiController)
     implementation(deps.kotlin.serialization)
     implementation(deps.kotlin.immutable.collections)

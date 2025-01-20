@@ -1,11 +1,7 @@
 package com.tangem.blockchainsdk
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.blockchain.common.network.providers.ProviderType
-import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
-import com.tangem.blockchainsdk.loader.BlockchainProvidersResponseLoader
-import com.tangem.blockchainsdk.store.RuntimeStore
+import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -13,25 +9,22 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 internal typealias BlockchainProvidersResponse = Map<String, List<ProviderModel>>
-internal typealias BlockchainProviderTypes = Map<Blockchain, List<ProviderType>>
 
 /**
  * Implementation of Blockchain SDK components factory
  *
- * @property blockchainProvidersResponseLoader blockchain providers response loader
- * @property environmentConfigStorage          environment config storage
- * @property blockchainProviderTypesStore      blockchain provider types store
- * @property walletManagerFactoryCreator       wallet manager factory creator
+ * @property blockchainProvidersTypesManager blockchain providers types manager
+ * @property environmentConfigStorage        environment config storage
+ * @property walletManagerFactoryCreator     wallet manager factory creator
+ * @param dispatchers                     coroutine dispatchers provider
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultBlockchainSDKFactory(
-    private val blockchainProvidersResponseLoader: BlockchainProvidersResponseLoader,
+    private val blockchainProvidersTypesManager: BlockchainProvidersTypesManager,
     private val environmentConfigStorage: EnvironmentConfigStorage,
-    private val blockchainProviderTypesStore: RuntimeStore<BlockchainProviderTypes>,
     private val walletManagerFactoryCreator: WalletManagerFactoryCreator,
     dispatchers: CoroutineDispatcherProvider,
 ) : BlockchainSDKFactory {
@@ -42,7 +35,7 @@ internal class DefaultBlockchainSDKFactory(
 
     override suspend fun init() {
         coroutineScope {
-            updateBlockchainProviderTypes()
+            launch { blockchainProvidersTypesManager.update() }
         }
     }
 
@@ -51,28 +44,11 @@ internal class DefaultBlockchainSDKFactory(
     private fun createWalletManagerFactory(): Flow<WalletManagerFactory?> {
         return combine(
             flow = environmentConfigStorage.getConfig().map { it.blockchainSdkConfig },
-            flow2 = blockchainProviderTypesStore.get(),
+            flow2 = blockchainProvidersTypesManager.get(),
             // flow3 = subscribe on feature toggles changes, TODO: [REDACTED_JIRA]
             transform = walletManagerFactoryCreator::create,
         )
             // don't use Lazily because some features (WC) require initialized factory on app started
             .stateIn(scope = mainScope, started = SharingStarted.Eagerly, initialValue = null)
-    }
-
-    private fun CoroutineScope.updateBlockchainProviderTypes() {
-        launch {
-            val response = blockchainProvidersResponseLoader.load()
-
-            if (response == null) {
-                Timber.e("Error loading BlockchainProviderTypes")
-                return@launch
-            }
-
-            Timber.i("Update BlockchainProviderTypes")
-
-            blockchainProviderTypesStore.store(
-                value = BlockchainProviderTypesConverter.convert(response),
-            )
-        }
     }
 }
