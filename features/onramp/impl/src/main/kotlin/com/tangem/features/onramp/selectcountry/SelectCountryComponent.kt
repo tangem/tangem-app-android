@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 
 internal interface SelectCountryComponent : ComposableBottomSheetComponent {
 
-    data class Params(val cryptoCurrency: CryptoCurrency, val onDismiss: () -> Unit)
+    data class Params(val cryptoCurrency: CryptoCurrency, val onDismiss: (Boolean) -> Unit)
 
     interface Factory : ComponentFactory<Params, SelectCountryComponent>
 }

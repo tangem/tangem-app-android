@@ -52,7 +52,7 @@ internal class DefaultSelectProviderComponent @AssistedInject constructor(
 
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = ::dismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             )

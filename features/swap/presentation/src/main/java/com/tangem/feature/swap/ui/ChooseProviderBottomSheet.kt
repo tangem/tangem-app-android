@@ -12,13 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.models.states.ChooseProviderBottomSheetConfig
@@ -43,7 +43,7 @@ fun ChooseProviderBottomSheet(config: TangemBottomSheetConfig) {
 private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetConfig) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = stringResource(R.string.express_choose_providers_subtitle),
+            text = stringResourceSafe(R.string.express_choose_providers_subtitle),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             modifier = Modifier
@@ -89,7 +89,7 @@ private fun ChooseProviderBottomSheetContent(content: ChooseProviderBottomSheetC
             tint = TangemTheme.colors.icon.informative,
         )
         Text(
-            text = stringResource(R.string.express_more_providers_soon),
+            text = stringResourceSafe(R.string.express_more_providers_soon),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.icon.informative,
             modifier = Modifier
@@ -134,7 +134,7 @@ private fun Preview_ChooseProviderBottomSheet() {
     TangemThemePreview {
         ChooseProviderBottomSheet(
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = content,
             ),
