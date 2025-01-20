@@ -1,6 +1,5 @@
 package com.tangem.core.ui.components.transactions
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -119,13 +118,12 @@ private fun PendingTxsBlock(pendingTxs: ImmutableList<TransactionState>, isBalan
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.nonContentItem(state: EmptyTransactionsBlockState, modifier: Modifier = Modifier) {
     item(key = state::class.java, contentType = state::class.java) {
         EmptyTransactionBlock(
             state = state,
             modifier = modifier
-                .animateItemPlacement()
+                .animateItem(fadeInSpec = null, fadeOutSpec = null)
                 .padding(horizontal = TangemTheme.dimens.spacing16, vertical = TangemTheme.dimens.spacing12)
                 .fillMaxWidth(),
         )
