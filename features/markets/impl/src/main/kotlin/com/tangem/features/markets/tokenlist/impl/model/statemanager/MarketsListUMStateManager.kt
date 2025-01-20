@@ -26,8 +26,8 @@ internal class MarketsListUMStateManager(
 ) {
 
     private var sortByBottomSheetIsShown
-        get() = state.value.sortByBottomSheet.isShow
-        set(value) = state.update { it.copy(sortByBottomSheet = it.sortByBottomSheet.copy(isShow = value)) }
+        get() = state.value.sortByBottomSheet.isShown
+        set(value) = state.update { it.copy(sortByBottomSheet = it.sortByBottomSheet.copy(isShown = value)) }
 
     var searchQuery
         get() = state.value.searchBar.query
@@ -203,7 +203,7 @@ internal class MarketsListUMStateManager(
         onIntervalClick = { selectedInterval = it },
         onSortByButtonClick = { sortByBottomSheetIsShown = true },
         sortByBottomSheet = TangemBottomSheetConfig(
-            isShow = false,
+            isShown = false,
             onDismissRequest = { sortByBottomSheetIsShown = false },
             content = SortByBottomSheetContentUM(
                 selectedOption = SortByTypeUM.Rating,
@@ -217,7 +217,7 @@ internal class MarketsListUMStateManager(
             it.copy(
                 selectedSortBy = sortByTypeUM,
                 sortByBottomSheet = it.sortByBottomSheet.copy(
-                    isShow = false,
+                    isShown = false,
                     content = (it.sortByBottomSheet.content as SortByBottomSheetContentUM).copy(
                         selectedOption = sortByTypeUM,
                     ),

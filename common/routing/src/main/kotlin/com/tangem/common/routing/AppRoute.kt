@@ -253,9 +253,6 @@ sealed class AppRoute(val path: String) : Route {
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
 
     @Serializable
-    data object ModalNotification : AppRoute(path = "/modal_notification")
-
-    @Serializable
     data class Staking(
         val userWalletId: UserWalletId,
         val cryptoCurrencyId: CryptoCurrency.ID,
@@ -326,11 +323,16 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/swap_crypto/${userWalletId.stringValue}")
 
-    // Onboarding V2
+    /**
+     * Onboarding V2
+     * @property scanResponse scan response, determines onboarding route by the product type
+     * @property startFromBackup (MultiWallet param, doesn't affect other types) start onboarding from backup
+     * @property mode (MultiWallet param, doesn't affect other types) onboarding mode
+     */
     @Serializable
     data class Onboarding(
         val scanResponse: ScanResponse,
-        val startFromBackup: Boolean,
+        val startFromBackup: Boolean = false,
         val mode: Mode = Mode.Onboarding,
     ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}") {
 

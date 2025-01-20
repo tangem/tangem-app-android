@@ -14,6 +14,7 @@ dependencies {
     /** Core modules */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
+    implementation(projects.core.navigation)
     implementation(projects.core.res)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
@@ -37,7 +38,6 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
-    implementation(deps.compose.accompanist.webView)
     implementation(deps.compose.accompanist.systemUiController)
 
     /** DI */
