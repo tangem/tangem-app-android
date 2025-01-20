@@ -45,7 +45,7 @@ internal class ShowApprovalBottomSheetTransformer(
         )
         return prevState.copy(
             bottomSheetConfig = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = onDismiss,
                 content = GiveTxPermissionBottomSheetConfig(
                     data = GiveTxPermissionState.ReadyForRequest(
