@@ -3,8 +3,7 @@ package com.tangem.feature.tokendetails.presentation
 import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.defaultComponentContext
 import com.tangem.common.routing.AppRoute
@@ -13,6 +12,8 @@ import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.routing.utils.asRouter
 import com.tangem.core.decompose.context.DefaultAppComponentContext
 import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.screen.ComposeFragment
@@ -33,7 +34,11 @@ internal class TokenDetailsFragment : ComposeFragment() {
     override lateinit var uiDependencies: UiDependencies
 
     @Inject
-    lateinit var tokenDetailsRouter: TokenDetailsRouter
+    @GlobalUiMessageSender
+    internal lateinit var messageSender: UiMessageSender
+
+    @Inject
+    internal lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     @Inject
     internal lateinit var coroutineDispatcherProvider: CoroutineDispatcherProvider
@@ -47,6 +52,8 @@ internal class TokenDetailsFragment : ComposeFragment() {
     @Inject
     internal lateinit var appRouter: AppRouter
 
+    private val viewModel by viewModels<TokenDetailsViewModel>()
+
     private var tokenMarketBlockComponent: TokenMarketBlockComponent? = null
 
     private val internalTokenDetailsRouter: InnerTokenDetailsRouter
@@ -57,6 +64,9 @@ internal class TokenDetailsFragment : ComposeFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        viewModel.router = internalTokenDetailsRouter
+        lifecycle.addObserver(viewModel)
+
         val cryptoCurrency: CryptoCurrency = arguments
             ?.getBundle(AppRoute.CurrencyDetails.CRYPTO_CURRENCY_KEY)
             ?.unbundle(CryptoCurrency.serializer())
@@ -66,7 +76,7 @@ internal class TokenDetailsFragment : ComposeFragment() {
 
         val appContext = DefaultAppComponentContext(
             componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
-            messageHandler = uiDependencies.eventMessageHandler,
+            messageSender = messageSender,
             dispatchers = coroutineDispatcherProvider,
             hiltComponentBuilder = componentBuilder,
             replaceRouter = appRouter.asRouter(),
@@ -86,9 +96,6 @@ internal class TokenDetailsFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
-        val viewModel = hiltViewModel<TokenDetailsViewModel>()
-        viewModel.router = this@TokenDetailsFragment.internalTokenDetailsRouter
-        LocalLifecycleOwner.current.lifecycle.addObserver(viewModel)
         NavigationBar3ButtonsScrim()
         TokenDetailsScreen(
             state = viewModel.uiState.collectAsStateWithLifecycle().value,

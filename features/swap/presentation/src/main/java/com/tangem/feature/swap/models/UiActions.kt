@@ -4,6 +4,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.ui.TxFee
+import java.math.BigDecimal
 
 data class UiActions(
     val onSearchEntered: (String) -> Unit,
@@ -15,19 +16,20 @@ data class UiActions(
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
-    val onReduceAmount: (SwapAmount) -> Unit,
-    val onLeaveExistentialDeposit: (SwapAmount) -> Unit,
+    val onReduceToAmount: (SwapAmount) -> Unit,
+    val onReduceByAmount: (SwapAmount, reduceBy: BigDecimal) -> Unit,
     val openPermissionBottomSheet: () -> Unit,
     val onChangeApproveType: (ApproveType) -> Unit,
     // region new actions
+    val onStoriesClose: () -> Unit,
     val onRetryClick: () -> Unit,
     val onClickFee: () -> Unit,
     val onSelectFeeType: (TxFee) -> Unit,
     val onProviderClick: (String) -> Unit,
     val onProviderSelect: (String) -> Unit,
     val onBuyClick: (CryptoCurrency) -> Unit,
-    val onPolicyClick: (String) -> Unit,
-    val onTosClick: (String) -> Unit,
+    val onSelectTokenClick: () -> Unit,
+    val onSuccess: () -> Unit,
+    val onLinkClick: (String) -> Unit,
     val onReceiveCardWarningClick: () -> Unit,
-    val onFeeReadMoreClick: (String) -> Unit,
 )

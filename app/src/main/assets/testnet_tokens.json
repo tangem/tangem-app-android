@@ -760,6 +760,16 @@
             ]
         },
         {
+            "id": "vanar-chain",
+            "name": "Vanar Chain",
+            "symbol": "VANRY",
+            "networks": [
+                {
+                    "networkId": "vanar-chain/test"
+                }
+            ]
+        },
+        {
             "id": "casper-network",
             "name": "Casper",
             "symbol": "CSPR",

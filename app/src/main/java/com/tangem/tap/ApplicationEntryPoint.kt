@@ -8,8 +8,10 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
@@ -34,9 +36,9 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.log.TangemAppLoggerInitializer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.EntryPoint
@@ -113,8 +115,6 @@ interface ApplicationEntryPoint {
 
     fun getTransactionSignerFactory(): TransactionSignerFactory
 
-    fun getHomeFeatureToggles(): HomeFeatureToggles
-
     fun getGetUserCountryCodeUseCase(): GetUserCountryUseCase
 
     fun getOnrampFeatureToggles(): OnrampFeatureToggles
@@ -128,4 +128,10 @@ interface ApplicationEntryPoint {
     fun getExcludedBlockchains(): ExcludedBlockchains
 
     fun getAppLogsStore(): AppLogsStore
+
+    fun getClipboardManager(): ClipboardManager
+
+    fun getSettingsManager(): SettingsManager
+
+    fun getBlockchainExceptionHandler(): BlockchainExceptionHandler
 }

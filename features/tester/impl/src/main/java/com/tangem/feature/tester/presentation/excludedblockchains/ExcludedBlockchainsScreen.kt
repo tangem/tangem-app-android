@@ -114,7 +114,7 @@ private fun TogglesNotification(appVersion: String, isVisible: Boolean, modifier
                     wrappedList(appVersion),
                 ),
                 iconResId = R.drawable.ic_alert_triangle_20,
-                title = resourceReference(id = R.string.feature_toggles_custom_setup_warning_title),
+                title = resourceReference(id = R.string.custom_setup_warning_title),
             ),
         )
     }
