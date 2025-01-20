@@ -232,6 +232,7 @@ include(":domain:transaction")
 include(":domain:transaction:models")
 include(":domain:analytics")
 include(":domain:visa")
+include(":domain:visa:models")
 include(":domain:onboarding")
 include(":domain:feedback")
 include(":domain:qr-scanning")
@@ -245,6 +246,7 @@ include(":domain:manage-tokens")
 include(":domain:manage-tokens:models")
 include(":domain:onramp")
 include(":domain:onramp:models")
+include(":domain:promo")
 // endregion Domain modules
 
 // region Data modules
@@ -270,3 +272,4 @@ include(":data:markets")
 include(":data:manage-tokens")
 include(":data:onramp")
 // endregion Data modules
+include(":domain:promo:models")
