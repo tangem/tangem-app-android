@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(deps.plugins.android.application)
     alias(deps.plugins.kotlin.android)
@@ -25,6 +27,23 @@ android {
     androidResources {
         generateLocaleConfig = true
     }
+    signingConfigs {
+        getByName("debug") {
+            val keystorePath = "src/main/assets/tangem-app-config/android/keystore/debug_keystore"
+            val propertiesPath = "src/main/assets/tangem-app-config/android/keystore/debug_keystore.properties"
+
+            val keystoreProperties = Properties()
+            file(propertiesPath)
+                .inputStream()
+                .use { keystoreProperties.load(it) }
+
+            storeFile = file(keystorePath)
+            storePassword = keystoreProperties["store_password"] as String
+            keyAlias = keystoreProperties["key_alias"] as String
+            keyPassword = keystoreProperties["key_password"] as String
+        }
+    }
+
 }
 
 configurations.all {
@@ -75,6 +94,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.onramp)
+    implementation(projects.domain.promo)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -166,6 +186,7 @@ dependencies {
     implementation(deps.androidx.browser)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.swipeRefreshLayout)
+    implementation(deps.androidx.fragment.compose)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
@@ -226,11 +247,12 @@ dependencies {
     implementation(deps.xmlShimmer)
     implementation(deps.viewBindingDelegate)
     implementation(deps.armadillo)
-    implementation(deps.mviCore.watcher)
     implementation(deps.kotlin.serialization)
     implementation(deps.reownCore)
     implementation(deps.reownWeb3)
     implementation(deps.prettyLogger)
+    implementation(deps.decompose.ext.compose)
+    implementation(deps.moshi.adapters)
 
     /** Testing libraries */
     testImplementation(deps.test.coroutine)
