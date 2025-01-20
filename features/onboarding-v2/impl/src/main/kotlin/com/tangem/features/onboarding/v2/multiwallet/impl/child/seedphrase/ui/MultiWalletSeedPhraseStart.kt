@@ -40,6 +40,7 @@ internal fun MultiWalletSeedPhraseStart(state: MultiWalletSeedPhraseUM.Start, mo
                 modifier = Modifier.size(56.dp),
                 imageVector = ImageVector.vectorResource(R.drawable.ic_onboarding_text_edit_56),
                 contentDescription = null,
+                tint = TangemTheme.colors.text.tertiary,
             )
             Box(
                 modifier = Modifier
@@ -119,6 +120,7 @@ private fun ReadMoreBlock(state: MultiWalletSeedPhraseUM.Start, modifier: Modifi
             Text(
                 modifier = Modifier.align(Alignment.CenterVertically),
                 style = TangemTheme.typography.button,
+                color = TangemTheme.colors.text.primary1,
                 text = stringResourceSafe(id = R.string.onboarding_seed_button_read_more),
             )
         }
