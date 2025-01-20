@@ -29,6 +29,6 @@ internal class CloseBottomSheetTransformer(userWalletId: UserWalletId) : WalletS
     }
 
     private fun updateConfig(prevState: WalletState) = prevState.bottomSheetConfig?.copy(
-        isShow = false,
+        isShown = false,
     )
 }

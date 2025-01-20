@@ -192,44 +192,18 @@ class GetCryptoCurrencyActionsUseCase(
             )
         }
 
-        // sell
-        val sellSupportedByService = rampManager.isSellSupportedByService(cryptoCurrency)
-        val sendAvailable = sendUnavailabilityReason is ScenarioUnavailabilityReason.None
-
-        when {
-            sellSupportedByService && sendAvailable -> {
+        // region sell
+        rampManager.availableForSell(
+            userWalletId = userWallet.walletId,
+            status = cryptoCurrencyStatus,
+        )
+            .onRight {
                 activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.None))
             }
-            sellSupportedByService && !sendAvailable -> {
-                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.EmptyBalance)?.let {
-                    disabledList.add(
-                        TokenActionsState.ActionState.Sell(
-                            unavailabilityReason = it.copy(
-                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
-                            ),
-                        ),
-                    )
-                }
-                (sendUnavailabilityReason as? ScenarioUnavailabilityReason.PendingTransaction)?.let {
-                    disabledList.add(
-                        TokenActionsState.ActionState.Sell(
-                            unavailabilityReason = it.copy(
-                                withdrawalScenario = ScenarioUnavailabilityReason.WithdrawalScenario.SELL,
-                            ),
-                        ),
-                    )
-                }
+            .onLeft { reason ->
+                disabledList.add(TokenActionsState.ActionState.Sell(reason))
             }
-            else -> {
-                disabledList.add(
-                    TokenActionsState.ActionState.Sell(
-                        unavailabilityReason = ScenarioUnavailabilityReason.NotSupportedBySellService(
-                            cryptoCurrency.name,
-                        ),
-                    ),
-                )
-            }
-        }
+        // endregion
 
         // hide
         activeList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
