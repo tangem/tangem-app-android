@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -54,7 +53,7 @@ fun GiveTxPermissionBottomSheet(config: TangemBottomSheetConfig) {
             if (isPermissionAlertShow) {
                 BasicDialog(
                     message = content.data.dialogText.resolveReference(),
-                    title = stringResource(id = R.string.common_approve),
+                    title = stringResourceSafe(id = R.string.common_approve),
                     confirmButton = DialogButtonUM { isPermissionAlertShow = false },
                     onDismissDialog = {},
                 )
@@ -87,7 +86,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         SpacerH(height = TangemTheme.dimens.spacing20)
 
         PrimaryButtonIconEnd(
-            text = stringResource(id = R.string.common_approve),
+            text = stringResourceSafe(id = R.string.common_approve),
             iconResId = R.drawable.ic_tangem_24,
             showProgress = data.approveButton.loading,
             modifier = Modifier
@@ -100,7 +99,7 @@ private fun GiveTxPermissionBottomSheetContent(content: GiveTxPermissionBottomSh
         SpacerH12()
 
         SecondaryButton(
-            text = stringResource(id = R.string.common_cancel),
+            text = stringResourceSafe(id = R.string.common_cancel),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = TangemTheme.dimens.spacing16),
@@ -180,7 +179,7 @@ private fun AmountItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                text = stringResource(id = R.string.give_permission_rows_amount, currency),
+                text = stringResourceSafe(id = R.string.give_permission_rows_amount, currency),
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.subtitle1,
                 maxLines = 1,
@@ -259,10 +258,10 @@ private fun DropdownSelector(
                         Row {
                             Text(
                                 text = when (item) {
-                                    ApproveType.LIMITED -> stringResource(
+                                    ApproveType.LIMITED -> stringResourceSafe(
                                         id = R.string.give_permission_current_transaction,
                                     )
-                                    ApproveType.UNLIMITED -> stringResource(id = R.string.give_permission_unlimited)
+                                    ApproveType.UNLIMITED -> stringResourceSafe(id = R.string.give_permission_unlimited)
                                 },
                                 color = TangemTheme.colors.text.primary1,
                                 style = TangemTheme.typography.body1,
@@ -297,7 +296,7 @@ private fun Preview_GiveTxPermissionBottomSheet() {
     TangemThemePreview {
         GiveTxPermissionBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = previewData,
             ),
