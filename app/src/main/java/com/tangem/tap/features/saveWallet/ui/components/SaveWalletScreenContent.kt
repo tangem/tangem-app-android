@@ -11,11 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.atoms.Hand
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.wallet.R
@@ -63,7 +63,7 @@ private fun Header(onCloseClick: () -> Unit) {
                     modifier = Modifier.size(TangemTheme.dimens.size24),
                     painter = painterResource(id = R.drawable.ic_close_24),
                     tint = TangemTheme.colors.icon.secondary,
-                    contentDescription = stringResource(id = R.string.common_cancel),
+                    contentDescription = stringResourceSafe(id = R.string.common_cancel),
                 )
             }
             SpacerW8()
@@ -85,7 +85,7 @@ private fun Title(modifier: Modifier = Modifier) {
             contentDescription = null,
         )
         Text(
-            text = stringResource(id = R.string.save_user_wallet_agreement_header_biometrics),
+            text = stringResourceSafe(id = R.string.save_user_wallet_agreement_header_biometrics),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
@@ -102,13 +102,13 @@ private fun Description(modifier: Modifier = Modifier) {
     ) {
         DescriptionItem(
             iconPainter = painterResource(id = R.drawable.ic_face_recognition_24),
-            title = stringResource(id = R.string.save_user_wallet_agreement_access_title),
-            description = stringResource(id = R.string.save_user_wallet_agreement_access_description),
+            title = stringResourceSafe(id = R.string.save_user_wallet_agreement_access_title),
+            description = stringResourceSafe(id = R.string.save_user_wallet_agreement_access_description),
         )
         DescriptionItem(
             iconPainter = painterResource(id = R.drawable.ic_lock_24),
-            title = stringResource(id = R.string.save_user_wallet_agreement_code_title),
-            description = stringResource(id = R.string.save_user_wallet_agreement_code_description_biometrics),
+            title = stringResourceSafe(id = R.string.save_user_wallet_agreement_code_title),
+            description = stringResourceSafe(id = R.string.save_user_wallet_agreement_code_description_biometrics),
         )
     }
 }
@@ -125,12 +125,12 @@ private fun Footer(showProgress: Boolean, onSaveWalletClick: () -> Unit) {
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             showProgress = showProgress,
-            text = stringResource(id = R.string.save_user_wallet_agreement_allow_biometrics),
+            text = stringResourceSafe(id = R.string.save_user_wallet_agreement_allow_biometrics),
             onClick = onSaveWalletClick,
         )
         Text(
             modifier = Modifier.fillMaxWidth(fraction = .7f),
-            text = stringResource(R.string.save_user_wallet_agreement_notice),
+            text = stringResourceSafe(R.string.save_user_wallet_agreement_notice),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,

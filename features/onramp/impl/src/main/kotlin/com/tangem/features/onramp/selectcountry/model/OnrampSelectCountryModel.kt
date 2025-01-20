@@ -60,8 +60,8 @@ internal class OnrampSelectCountryModel @Inject constructor(
         modelScope.launch { subscribeOnUpdateState() }
     }
 
-    fun dismiss() {
-        params.onDismiss()
+    fun dismiss(isCountrySelected: Boolean) {
+        params.onDismiss(isCountrySelected)
     }
 
     private suspend fun subscribeOnUpdateState() {
@@ -92,7 +92,7 @@ internal class OnrampSelectCountryModel @Inject constructor(
         analyticsEventHandler.send(OnrampAnalyticsEvent.OnResidenceChosen(country.name))
         modelScope.launch {
             saveDefaultCountryUseCase.invoke(country)
-            dismiss()
+            dismiss(isCountrySelected = true)
         }
     }
 
