@@ -1,16 +1,14 @@
 package com.tangem.features.managetokens.model
 
-import androidx.compose.ui.res.stringResource
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.SimpleOkDialog
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.model.exceptoin.CustomTokenFormValidationException
@@ -229,12 +227,9 @@ internal class CustomTokenFormModel @Inject constructor(
     }
 
     private fun showErrorDialog() {
-        val dialog = ContentMessage { onDismiss ->
-            SimpleOkDialog(
-                message = stringResource(R.string.common_unknown_error),
-                onDismissDialog = onDismiss,
-            )
-        }
+        val dialog = DialogMessage(
+            message = resourceReference(R.string.common_unknown_error),
+        )
 
         messageSender.send(dialog)
     }
