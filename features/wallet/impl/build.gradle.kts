@@ -56,7 +56,7 @@ dependencies {
     implementation(projects.core.deepLinks.global)
     implementation(projects.core.decompose)
     implementation(projects.core.datasource)
-
+    implementation(projects.core.res)
 
     implementation(projects.libs.crypto)
     implementation(projects.libs.blockchainSdk)
@@ -84,6 +84,8 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.onramp)
+    implementation(projects.domain.promo)
+    implementation(projects.domain.promo.models)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)

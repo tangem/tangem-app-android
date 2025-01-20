@@ -5,6 +5,7 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.removePrefixOrNull
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.intentHandler.IntentHandler
+import com.tangem.tap.features.intentHandler.AffectsNavigation
 import com.tangem.tap.store
 import timber.log.Timber
 import java.net.URLDecoder
@@ -12,7 +13,7 @@ import java.net.URLDecoder
 /**
 [REDACTED_AUTHOR]
  */
-class WalletConnectLinkIntentHandler : IntentHandler {
+class WalletConnectLinkIntentHandler : IntentHandler, AffectsNavigation {
 
     override fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean {
         val intentData = intent?.data ?: return false

@@ -17,6 +17,7 @@ dependencies {
     implementation(projects.domain.card)
     implementation(projects.domain.legacy)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.visa.models)
 
     implementation(projects.core.res)
 
