@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import com.tangem.core.ui.components.CircleShimmer
@@ -24,6 +23,7 @@ import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selectcurrency.entity.CurrenciesListUM
@@ -67,7 +67,7 @@ private fun LazyListScope.currencyListError(state: CurrenciesListUM.Error) {
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
-                text = stringResource(id = R.string.markets_loading_error_title),
+                text = stringResourceSafe(id = R.string.markets_loading_error_title),
                 style = TangemTheme.typography.caption1,
                 color = TangemTheme.colors.text.tertiary,
             )

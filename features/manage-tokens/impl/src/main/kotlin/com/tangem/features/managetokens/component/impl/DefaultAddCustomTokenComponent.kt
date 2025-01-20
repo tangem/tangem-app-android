@@ -62,7 +62,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
     override fun BottomSheet() {
         val config = remember {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = ::dismiss,
                 content = initialConfiguration.step.toContentModel(::popBack),
             )
