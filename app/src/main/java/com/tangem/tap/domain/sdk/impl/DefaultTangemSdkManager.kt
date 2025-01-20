@@ -15,6 +15,7 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -23,7 +24,11 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaActivationInput
+import com.tangem.domain.visa.model.VisaAuthChallenge
+import com.tangem.domain.visa.model.VisaCardActivationResponse
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -35,23 +40,28 @@ import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.derivationsFinder
-import com.tangem.tap.domain.tasks.product.*
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
+import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
+import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
+import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.visa.VisaCardActivationTask
 import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask
 import com.tangem.tap.domain.twins.CreateSecondTwinWalletTask
 import com.tangem.tap.domain.twins.FinalizeTwinTask
+import com.tangem.tap.domain.visa.VisaCardScanHandler
 import com.tangem.wallet.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 
 @Suppress("TooManyFunctions", "LargeClass")
-class DefaultTangemSdkManager(
+internal class DefaultTangemSdkManager(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val resources: Resources,
+    private val visaCardScanHandler: VisaCardScanHandler,
+    private val visaCardActivationTaskFactory: VisaCardActivationTask.Factory,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : TangemSdkManager {
 
     private val awaitInitializationMutex = Mutex()
@@ -122,16 +132,21 @@ class DefaultTangemSdkManager(
         messageRes: Int?,
         allowsRequestAccessCodeFromRepository: Boolean,
     ): CompletionResult<ScanResponse> {
-        val message = Message(resources.getString(messageRes ?: R.string.initial_message_scan_header))
-        return runTaskAsyncReturnOnMain(
-            runnable = ScanProductTask(
-                card = null,
-                derivationsFinder = derivationsFinder,
-                allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
-            ),
-            cardId = cardId,
-            initialMessage = message,
-        ).also { sendScanResultsToAnalytics(it) }
+        val message = Message(resources.getStringSafe(messageRes ?: R.string.initial_message_scan_header))
+        return coroutineScope {
+            runTaskAsyncReturnOnMain(
+                runnable = ScanProductTask(
+                    card = null,
+                    derivationsFinder = derivationsFinder,
+                    allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
+                    visaCardScanHandler = visaCardScanHandler,
+                    visaCoroutineScope = this,
+                    onboardingV2FeatureToggles = onboardingV2FeatureToggles,
+                ),
+                cardId = cardId,
+                initialMessage = message,
+            ).also { sendScanResultsToAnalytics(it) }
+        }
     }
 
     override suspend fun createProductWallet(
@@ -154,9 +169,9 @@ class DefaultTangemSdkManager(
             ),
             cardId = scanResponse.card.cardId,
             initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
-                Message(resources.getString(R.string.initial_message_create_wallet_body_ring))
+                Message(resources.getStringSafe(R.string.initial_message_create_wallet_body_ring))
             } else {
-                Message(resources.getString(R.string.initial_message_create_wallet_body))
+                Message(resources.getStringSafe(R.string.initial_message_create_wallet_body))
             },
             iconScanRes = if (scanResponse.cardTypesResolver.isRing()) R.drawable.img_hand_scan_ring else null,
             preflightReadFilter = null,
@@ -194,9 +209,9 @@ class DefaultTangemSdkManager(
             ),
             cardId = scanResponse.card.cardId,
             initialMessage = if (scanResponse.cardTypesResolver.isRing()) {
-                Message(resources.getString(R.string.initial_message_create_wallet_body_ring))
+                Message(resources.getStringSafe(R.string.initial_message_create_wallet_body_ring))
             } else {
-                Message(resources.getString(R.string.initial_message_create_wallet_body))
+                Message(resources.getStringSafe(R.string.initial_message_create_wallet_body))
             },
             preflightReadFilter = null,
         )
@@ -243,7 +258,7 @@ class DefaultTangemSdkManager(
                 allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
             ),
             cardId = cardId,
-            initialMessage = Message(resources.getString(R.string.card_settings_reset_card_to_factory)),
+            initialMessage = Message(resources.getStringSafe(R.string.card_settings_reset_card_to_factory)),
         )
     }
 
@@ -251,7 +266,7 @@ class DefaultTangemSdkManager(
         return runTaskAsyncReturnOnMain(
             runnable = ResetBackupCardTask(userWalletId),
             initialMessage = Message(
-                resources.getString(
+                resources.getStringSafe(
                     R.string.initial_message_reset_backup_card_header,
                     cardNumber.toString(),
                 ),
@@ -281,7 +296,7 @@ class DefaultTangemSdkManager(
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.changePasscode(null),
             cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_change_passcode_body)),
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_change_passcode_body)),
         )
     }
 
@@ -289,7 +304,7 @@ class DefaultTangemSdkManager(
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.changeAccessCode(null),
             cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_change_access_code_body)),
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_change_access_code_body)),
         )
     }
 
@@ -297,7 +312,7 @@ class DefaultTangemSdkManager(
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.resetUserCodes(),
             cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_tap_header)),
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
         )
     }
 
@@ -308,7 +323,7 @@ class DefaultTangemSdkManager(
         return runTaskAsyncReturnOnMain(
             SetUserCodeRecoveryAllowedTask(enabled),
             cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_tap_header)),
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
         )
     }
 
@@ -319,7 +334,7 @@ class DefaultTangemSdkManager(
         return runTaskAsyncReturnOnMain(
             runnable = ScanTask(allowRequestAccessCodeFromRepository),
             cardId = cardId,
-            initialMessage = Message(resources.getString(R.string.initial_message_tap_header)),
+            initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
         )
             .map { CardDTO(it) }
     }
@@ -372,7 +387,9 @@ class DefaultTangemSdkManager(
 
     @Deprecated("TangemSdkManager shouldn't returns a string from resources")
     override fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        return resources.getString(stringResId, *formatArgs)
+        val args = formatArgs.toSet().filterNotNull().toTypedArray()
+
+        return resources.getStringSafe(stringResId, *args)
     }
 
     override fun setUserCodeRequestPolicy(policy: UserCodeRequestPolicy) {
@@ -453,6 +470,28 @@ class DefaultTangemSdkManager(
             initialMessage = initialMessage,
             preflightReadFilter = null,
         )
+    }
+
+    // endregion
+
+    // region Visa-specific
+
+    override suspend fun activateVisaCard(
+        accessCode: String,
+        challengeToSign: VisaAuthChallenge.Card?,
+        activationInput: VisaActivationInput,
+    ): CompletionResult<VisaCardActivationResponse> {
+        return coroutineScope {
+            runTaskAsyncReturnOnMain(
+                runnable = visaCardActivationTaskFactory.create(
+                    accessCode = accessCode,
+                    challengeToSign = challengeToSign,
+                    activationInput = activationInput,
+                    coroutineScope = this,
+                ),
+                initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
+            )
+        }
     }
 
     // endregion
