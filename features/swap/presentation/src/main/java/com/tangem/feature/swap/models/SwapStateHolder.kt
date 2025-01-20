@@ -3,9 +3,9 @@ package com.tangem.feature.swap.models
 import androidx.annotation.DrawableRes
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
+import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
@@ -14,12 +14,15 @@ import com.tangem.feature.swap.domain.models.ui.PriceImpact
 import com.tangem.feature.swap.models.states.FeeItemState
 import com.tangem.feature.swap.models.states.ProviderState
 import com.tangem.feature.swap.models.states.events.SwapEvent
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 internal data class SwapStateHolder(
     val sendCardData: SwapCardState,
     val receiveCardData: SwapCardState,
     val blockchainId: String, // not the same as networkId, its local id in app
-    val warnings: List<SwapWarning> = emptyList(),
+    val notifications: ImmutableList<NotificationUM> = persistentListOf(),
+    val isInsufficientFunds: Boolean,
     val event: StateEvent<SwapEvent> = consumedEvent(),
     val changeCardsButtonState: ChangeCardsButtonState = ChangeCardsButtonState.ENABLED,
     val providerState: ProviderState,
@@ -31,6 +34,7 @@ internal data class SwapStateHolder(
     val successState: SwapSuccessStateHolder? = null,
     val selectTokenState: SwapSelectTokenStateHolder? = null,
     val bottomSheetConfig: TangemBottomSheetConfig? = null,
+    val storiesConfig: SwapStoriesContentConfig? = null,
 
     val swapButton: SwapButton,
     val shouldShowMaxAmount: Boolean,
@@ -39,8 +43,8 @@ internal data class SwapStateHolder(
     val onRefresh: () -> Unit,
     val onBackClicked: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
-    val onSelectTokenClick: (() -> Unit)? = null,
-    val onSuccess: (() -> Unit)? = null,
+    val onSelectTokenClick: (() -> Unit),
+    val onSuccess: (() -> Unit),
     val onMaxAmountSelected: (() -> Unit)? = null,
     val onShowPermissionBottomSheet: () -> Unit = {},
 )
@@ -78,21 +82,27 @@ data class SwapButton(
 sealed interface TransactionCardType {
 
     val header: TextReference
-    val isError: Boolean
+    val inputError: InputError
 
     data class Inputtable(
         val onAmountChanged: ((String) -> Unit),
         val onFocusChanged: ((Boolean) -> Unit),
-        override val isError: Boolean,
+        override val inputError: InputError,
         override val header: TextReference = TextReference.Res(R.string.swapping_from_title),
     ) : TransactionCardType
 
     data class ReadOnly(
         val showWarning: Boolean = false,
         val onWarningClick: (() -> Unit)? = null,
-        override val isError: Boolean = false,
+        override val inputError: InputError = InputError.Empty,
         override val header: TextReference = TextReference.Res(R.string.swapping_to_title),
     ) : TransactionCardType
+
+    sealed interface InputError {
+        data object Empty : InputError
+        data object InsufficientFunds : InputError
+        data object WrongAmount : InputError
+    }
 }
 
 data class TosState(
@@ -105,35 +115,6 @@ data class LegalState(
     val link: String,
     val onClick: (String) -> Unit,
 )
-
-sealed interface SwapWarning {
-    data class PermissionNeeded(val notificationConfig: NotificationConfig) : SwapWarning
-    data object InsufficientFunds : SwapWarning
-    data class NoAvailableTokensToSwap(val notificationConfig: NotificationConfig) : SwapWarning
-    data class GenericWarning(
-        val title: TextReference? = null,
-        val message: TextReference? = null,
-        val onClick: () -> Unit,
-    ) : SwapWarning
-
-    data class GeneralError(val notificationConfig: NotificationConfig) : SwapWarning
-    data class UnableToCoverFeeWarning(val notificationConfig: NotificationConfig) : SwapWarning
-    data class GeneralWarning(val notificationConfig: NotificationConfig) : SwapWarning
-    data class GeneralInformational(val notificationConfig: NotificationConfig) : SwapWarning
-    data class TransactionInProgressWarning(val title: TextReference, val description: TextReference) : SwapWarning
-    data class NeedReserveToCreateAccount(val notificationConfig: NotificationConfig) : SwapWarning
-    data class ReduceAmount(val notificationConfig: NotificationConfig) : SwapWarning
-
-    sealed interface Cardano : SwapWarning {
-        val notificationConfig: NotificationConfig
-
-        data class MinAdaValueCharged(override val notificationConfig: NotificationConfig) : Cardano
-
-        data class InsufficientBalanceToTransferCoin(override val notificationConfig: NotificationConfig) : Cardano
-
-        data class InsufficientBalanceToTransferToken(override val notificationConfig: NotificationConfig) : Cardano
-    }
-}
 
 enum class ChangeCardsButtonState {
     ENABLED, DISABLED, UPDATE_IN_PROGRESS

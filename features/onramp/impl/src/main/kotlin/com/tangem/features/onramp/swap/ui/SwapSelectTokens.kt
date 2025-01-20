@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
 import com.tangem.features.onramp.impl.R
@@ -59,7 +59,7 @@ internal fun SwapSelectTokens(
         stickyHeader(key = "header") {
             AppBarWithBackButton(
                 onBackClick = state.onBackClick,
-                text = stringResource(id = R.string.common_swap),
+                text = stringResourceSafe(id = R.string.common_swap),
                 iconRes = R.drawable.ic_close_24,
                 containerColor = TangemTheme.colors.background.secondary,
             )
