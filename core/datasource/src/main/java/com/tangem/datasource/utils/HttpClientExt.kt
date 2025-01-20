@@ -10,7 +10,8 @@ import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.api.utils.ConnectTimeout
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.api.utils.WriteTimeout
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Invocation
@@ -22,7 +23,7 @@ internal fun OkHttpClient.Builder.addHeaders(vararg requestHeaders: RequestHeade
             val request = chain.request().newBuilder().apply {
                 requestHeaders
                     .flatMap { it.values.toList() }
-                    .forEach { addHeader(it.first, it.second.invoke()) }
+                    .forEach { addHeader(it.first, runBlocking { it.second.invoke() }) }
             }.build()
 
             chain.proceed(request)
@@ -59,14 +60,17 @@ internal fun OkHttpClient.Builder.applyTimeoutAnnotations(): OkHttpClient.Builde
 }
 
 /** Extension for adding headers [requestHeaders] to every [OkHttpClient] request */
-internal fun OkHttpClient.Builder.addHeaders(requestHeaders: Map<String, Provider<String>>): OkHttpClient.Builder {
+internal fun OkHttpClient.Builder.addHeaders(
+    requestHeaders: Map<String, ProviderSuspend<String>>,
+): OkHttpClient.Builder {
     return addInterceptor(
         Interceptor { chain ->
             val request = chain.request().newBuilder().apply {
-                requestHeaders.forEach {
-                    val value = it.value.invoke()
-
-                    if (value.isNotBlank()) addHeader(name = it.key, value = value)
+                runBlocking {
+                    requestHeaders.forEach {
+                        val value = it.value.invoke()
+                        if (value.isNotBlank()) addHeader(name = it.key, value = value)
+                    }
                 }
             }.build()
 

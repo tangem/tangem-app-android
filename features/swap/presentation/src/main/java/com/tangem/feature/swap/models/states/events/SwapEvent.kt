@@ -6,6 +6,4 @@ import com.tangem.common.ui.alerts.models.AlertUM
 @Immutable
 internal sealed class SwapEvent {
     data class ShowAlert(val alert: AlertUM) : SwapEvent()
-
-    data class ShowShareDialog(val txUrl: String) : SwapEvent()
 }
