@@ -1,6 +1,5 @@
 package com.tangem.features.details.utils
 
-import androidx.compose.ui.res.stringResource
 import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.ensureNotNull
@@ -12,12 +11,11 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.popTo
 import com.tangem.core.decompose.ui.UiMessageSender
-import com.tangem.core.ui.components.SimpleOkDialog
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.models.scan.ScanResponse
@@ -105,12 +103,9 @@ internal class UserWalletSaver @Inject constructor(
 
     private fun selectUserWallet() {
         messageSender.send(
-            message = ContentMessage { onDismiss ->
-                SimpleOkDialog(
-                    message = stringResource(id = R.string.user_wallet_list_error_wallet_already_saved),
-                    onDismissDialog = onDismiss,
-                )
-            },
+            message = DialogMessage(
+                message = resourceReference(R.string.user_wallet_list_error_wallet_already_saved),
+            ),
         )
     }
 
