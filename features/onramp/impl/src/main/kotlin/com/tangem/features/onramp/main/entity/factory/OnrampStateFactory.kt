@@ -30,6 +30,7 @@ internal class OnrampStateFactory(
             currency = currency,
             onClose = onClose,
             openSettings = onrampIntents::openSettings,
+            errorNotification = null,
         )
     }
 

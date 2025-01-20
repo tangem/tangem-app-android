@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,6 +32,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.onramp.model.OnrampPaymentMethod
@@ -61,7 +61,7 @@ internal fun SelectProviderBottomSheetContent(state: SelectPaymentAndProviderUM,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(id = R.string.onramp_choose_provider_title_hint),
+            text = stringResourceSafe(id = R.string.onramp_choose_provider_title_hint),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
@@ -102,7 +102,7 @@ private fun PaymentMethodBlock(
         PaymentMethodIcon(imageUrl = state.imageUrl)
         Column(modifier = Modifier.weight(1F)) {
             Text(
-                text = stringResource(id = R.string.onramp_pay_with),
+                text = stringResourceSafe(id = R.string.onramp_pay_with),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -193,7 +193,7 @@ private fun AvailableProviderItem(state: ProviderListItemUM.Available.Content, m
             when {
                 state.isBestRate -> {
                     Text(
-                        text = stringResource(R.string.express_provider_best_rate),
+                        text = stringResourceSafe(R.string.express_provider_best_rate),
                         style = TangemTheme.typography.caption1,
                         color = TangemTheme.colors.text.constantWhite,
                         modifier = Modifier
@@ -278,7 +278,7 @@ private fun OnrampMoreProviders() {
             .padding(top = 16.dp),
     )
     Text(
-        text = stringResource(R.string.express_more_providers_soon),
+        text = stringResourceSafe(R.string.express_more_providers_soon),
         style = TangemTheme.typography.caption2,
         color = TangemTheme.colors.icon.informative,
         modifier = Modifier
