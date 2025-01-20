@@ -15,6 +15,7 @@ dependencies {
     /** AndroidX */
     implementation(deps.androidx.activity.compose)
     implementation(deps.androidx.paging.runtime)
+    implementation(deps.androidx.fragment.ktx)
 
     /** Compose */
     implementation(deps.compose.accompanist.systemUiController)
@@ -83,6 +84,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp)
     implementation(projects.domain.onramp.models)
+    implementation(projects.domain.promo)
 
     /** Temp dependency to swap domain */
     implementation(projects.features.swap.domain)

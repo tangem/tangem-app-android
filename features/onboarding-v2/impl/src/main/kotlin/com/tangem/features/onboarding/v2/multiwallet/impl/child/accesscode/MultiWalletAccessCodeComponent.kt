@@ -51,7 +51,7 @@ class MultiWalletAccessCodeComponent(
 
         val bsConfig = remember(this, showBs) {
             TangemBottomSheetConfig(
-                isShow = showBs,
+                isShown = showBs,
                 onDismissRequest = { dismiss() },
                 content = TangemBottomSheetConfigContent.Empty,
             )

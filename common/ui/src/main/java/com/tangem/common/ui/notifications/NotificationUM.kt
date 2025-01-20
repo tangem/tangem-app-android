@@ -245,6 +245,16 @@ sealed class NotificationUM(val config: NotificationConfig) {
             title = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_title),
             subtitle = resourceReference(id = R.string.action_buttons_swap_no_available_pair_notification_message),
         )
+
+        data object SellingRegionalRestriction : Warning(
+            title = resourceReference(id = R.string.selling_regional_restriction_alert_title),
+            subtitle = resourceReference(id = R.string.selling_regional_restriction_alert_message),
+        )
+
+        data object InsufficientBalanceForSelling : Warning(
+            title = resourceReference(id = R.string.selling_insufficient_balance_alert_title),
+            subtitle = resourceReference(id = R.string.selling_insufficient_balance_alert_message),
+        )
     }
 
     open class Info(
