@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,6 +36,7 @@ import com.tangem.core.ui.components.currency.icon.CoinIcon
 import com.tangem.core.ui.components.rows.ArrowRow
 import com.tangem.core.ui.components.rows.BlockchainRow
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
@@ -154,7 +154,7 @@ private fun ContinueButton(
             )
             .navigationBarsPadding()
             .fillMaxWidth(),
-        text = stringResource(R.string.common_continue),
+        text = stringResourceSafe(R.string.common_continue),
         icon = if (enabled && isTangemIconVisible) {
             TangemButtonIconPosition.End(R.drawable.ic_tangem_24)
         } else {
@@ -178,7 +178,7 @@ private fun NetworkSelection(state: SelectNetworkUM, modifier: Modifier = Modifi
         modifier = modifier,
         title = {
             Text(
-                text = stringResource(R.string.markets_select_network),
+                text = stringResourceSafe(R.string.markets_select_network),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -279,7 +279,7 @@ private fun ScanWalletWarning(modifier: Modifier = Modifier) {
             contentDescription = null,
         )
         Text(
-            text = stringResource(R.string.markets_generate_addresses_notification),
+            text = stringResourceSafe(R.string.markets_generate_addresses_notification),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -295,7 +295,7 @@ private fun Preview(
     TangemThemePreview {
         AddToPortfolioBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 content = content,
                 onDismissRequest = {},
             ),
@@ -370,7 +370,7 @@ private fun PreviewContentTestOnDevice(
 
         AddToPortfolioBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = isShow,
+                isShown = isShow,
                 content = contentState,
                 onDismissRequest = { isShow = false },
             ),

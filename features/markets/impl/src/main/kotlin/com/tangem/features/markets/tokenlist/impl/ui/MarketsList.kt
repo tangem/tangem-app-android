@@ -15,7 +15,6 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,6 +32,7 @@ import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -62,7 +62,7 @@ internal fun MarketsList(
     )
     MarketsListSortByBottomSheet(config = state.sortByBottomSheet)
     KeyboardEvents(
-        isSortByBottomSheetShown = state.sortByBottomSheet.isShow,
+        isSortByBottomSheetShown = state.sortByBottomSheet.isShown,
         bottomSheetState = bottomSheetState,
     )
 }
@@ -149,9 +149,9 @@ private fun Title(isInSearchMode: Boolean, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier,
         text = if (isInSearchMode) {
-            stringResource(id = R.string.markets_search_result_title)
+            stringResourceSafe(id = R.string.markets_search_result_title)
         } else {
-            stringResource(id = R.string.markets_common_title)
+            stringResourceSafe(id = R.string.markets_common_title)
         },
         style = TangemTheme.typography.h3,
         color = TangemTheme.colors.text.primary1,
@@ -321,7 +321,7 @@ private fun Preview() {
                     onIntervalClick = {},
                     onSortByButtonClick = {},
                     sortByBottomSheet = TangemBottomSheetConfig(
-                        isShow = false,
+                        isShown = false,
                         onDismissRequest = {},
                         content = SortByBottomSheetContentUM(selectedOption = SortByTypeUM.Rating) {},
                     ),
