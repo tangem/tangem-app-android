@@ -11,7 +11,7 @@ import com.tangem.core.ui.components.rows.model.BlockchainRowUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.message.ContentMessage
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -26,7 +26,6 @@ import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.api.MarketsPortfolioComponent
 import com.tangem.features.markets.portfolio.impl.analytics.PortfolioAnalyticsEvent
 import com.tangem.features.markets.portfolio.impl.loader.PortfolioDataLoader
-import com.tangem.features.markets.portfolio.impl.ui.WarningDialog
 import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
@@ -259,25 +258,22 @@ internal class MarketsPortfolioModel @Inject constructor(
     }
 
     private fun showUnsupportedWarning(unsupportedState: CurrencyUnsupportedState) {
-        val message = ContentMessage { onDismiss ->
-            WarningDialog(
-                message = when (unsupportedState) {
-                    is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
-                        id = R.string.alert_manage_tokens_unsupported_message,
-                        formatArgs = wrappedList(unsupportedState.networkName),
-                    )
-                    is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
-                        id = R.string.alert_manage_tokens_unsupported_curve_message,
-                        formatArgs = wrappedList(unsupportedState.networkName),
-                    )
-                    is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
-                        id = R.string.alert_manage_tokens_unsupported_curve_message,
-                        formatArgs = wrappedList(unsupportedState.networkName),
-                    )
-                },
-                onDismiss = onDismiss,
-            )
-        }
+        val message = DialogMessage(
+            message = when (unsupportedState) {
+                is CurrencyUnsupportedState.Token.NetworkTokensUnsupported -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+                is CurrencyUnsupportedState.Token.UnsupportedCurve -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_curve_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+                is CurrencyUnsupportedState.UnsupportedNetwork -> resourceReference(
+                    id = R.string.alert_manage_tokens_unsupported_curve_message,
+                    formatArgs = wrappedList(unsupportedState.networkName),
+                )
+            },
+        )
 
         messageSender.send(message)
     }
