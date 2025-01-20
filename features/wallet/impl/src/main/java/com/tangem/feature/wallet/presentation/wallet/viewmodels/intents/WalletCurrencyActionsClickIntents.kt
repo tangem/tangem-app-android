@@ -7,6 +7,7 @@ import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
@@ -28,8 +29,6 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
-import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
-import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.IsCryptoCurrencyCoinCouldHideUseCase
@@ -45,7 +44,10 @@ import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensListState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.onramp.OnrampFeatureToggles
@@ -113,9 +115,9 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val vibratorHapticManager: VibratorHapticManager,
     private val clipboardManager: ClipboardManager,
+    private val shareManager: ShareManager,
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
-    private val getUserCountryUseCase: GetUserCountryUseCase,
     private val onrampFeatureToggles: OnrampFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
@@ -167,7 +169,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val defaultAddress = addresses.firstOrNull()?.value ?: return null
 
         vibratorHapticManager.performOneTime(TangemHapticEffect.OneTime.Click)
-        clipboardManager.setText(text = defaultAddress)
+        clipboardManager.setText(text = defaultAddress, isSensitive = true)
         analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(cryptoCurrency.symbol))
         return resourceReference(R.string.wallet_notification_address_copied)
     }
@@ -184,9 +186,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+                clipboardManager.setText(text = it, isSensitive = true)
             },
             onShareClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
+                shareManager.shareText(text = it)
             },
         )
     }
@@ -200,12 +204,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             walletManagersFacade.getDefaultAddress(
                 userWalletId = stateHolder.getSelectedWalletId(),
                 network = cryptoCurrencyStatus.currency.network,
-            )?.let {
+            )?.let { address ->
                 stateHolder.update(CloseBottomSheetTransformer(userWalletId = stateHolder.getSelectedWalletId()))
 
-                walletEventSender.send(
-                    event = WalletEvent.CopyAddress(address = it),
-                )
+                clipboardManager.setText(text = address, isSensitive = true)
+                walletEventSender.send(event = WalletEvent.CopyAddress)
             }
         }
     }
@@ -311,16 +314,26 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
-        showErrorIfDemoModeOrElse {
-            viewModelScope.launch(dispatchers.main) {
-                reduxStateHolder.dispatch(
-                    TradeCryptoAction.Buy(
-                        userWallet = userWallet,
-                        source = OnrampSource.TOKEN_LONG_TAP,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
-                    ),
-                )
+        if (onrampFeatureToggles.isFeatureEnabled) {
+            appRouter.push(
+                AppRoute.Onramp(
+                    userWalletId = userWallet.walletId,
+                    currency = cryptoCurrencyStatus.currency,
+                    source = OnrampSource.TOKEN_LONG_TAP,
+                ),
+            )
+        } else {
+            showErrorIfDemoModeOrElse {
+                viewModelScope.launch(dispatchers.main) {
+                    reduxStateHolder.dispatch(
+                        TradeCryptoAction.Buy(
+                            userWallet = userWallet,
+                            source = OnrampSource.TOKEN_LONG_TAP,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            appCurrencyCode = getSelectedAppCurrencyUseCase.unwrap().code,
+                        ),
+                    )
+                }
             }
         }
     }
@@ -397,33 +410,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onMultiWalletSellClick(userWalletId: UserWalletId) {
-        viewModelScope.launch {
-            val userCountry = getUserCountryUseCase().getOrNull()
-            if (userCountry is UserCountry.Russia) {
-                handleError(
-                    alertState = WalletAlertState.SellingRegionalRestriction,
-                    eventCreator = MainScreenAnalyticsEvent::ButtonSell,
-                )
-
-                return@launch
-            }
-
-            val selectedWallet = stateHolder.getSelectedWallet().walletCardState as? WalletCardState.Content
-            if (selectedWallet?.isZeroBalance == true) {
-                handleError(
-                    alertState = WalletAlertState.InsufficientBalanceForSelling,
-                    eventCreator = MainScreenAnalyticsEvent::ButtonSell,
-                )
-
-                return@launch
-            }
-
-            onMultiWalletActionClick(
-                statusFlow = rampStateManager.getSellInitializationStatus(),
-                route = AppRoute.SellCrypto(userWalletId = userWalletId),
-                eventCreator = MainScreenAnalyticsEvent::ButtonSell,
-            )
-        }
+        onMultiWalletActionClick(
+            statusFlow = rampStateManager.getSellInitializationStatus(),
+            route = AppRoute.SellCrypto(userWalletId = userWalletId),
+            eventCreator = MainScreenAnalyticsEvent::ButtonSell,
+        )
     }
 
     override fun onMultiWalletSwapClick(userWalletId: UserWalletId) {
