@@ -8,7 +8,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNavigationAction
@@ -18,6 +17,9 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.delay
@@ -112,7 +114,7 @@ class DetailsMiddleware {
 
         private fun enrollBiometrics() {
             Analytics.send(Settings.AppSettings.ButtonEnableBiometricAuthentication)
-            activityResultCaller.openSystemBiometrySettings()
+            store.inject(DaggerGraphState::settingsManager).openBiometricSettings()
         }
 
         private fun changeAppThemeMode(appThemeMode: AppThemeMode) {

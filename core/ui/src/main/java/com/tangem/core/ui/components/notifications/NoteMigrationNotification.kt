@@ -3,7 +3,8 @@ package com.tangem.core.ui.components.notifications
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.buttons.common.TangemButton
-import com.tangem.core.ui.components.buttons.common.TangemButtonColors
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -71,10 +71,10 @@ fun NoteMigrationNotification(config: NotificationConfig, modifier: Modifier = M
                 text = button.text.resolveReference(),
                 icon = TangemButtonIconPosition.None,
                 onClick = button.onClick,
-                colors = TangemButtonColors(
-                    backgroundColor = Light2,
+                colors = ButtonColors(
+                    containerColor = Light2,
                     contentColor = Dark6,
-                    disabledBackgroundColor = TangemTheme.colors.button.disabled,
+                    disabledContainerColor = TangemTheme.colors.button.disabled,
                     disabledContentColor = TangemTheme.colors.text.disabled,
                 ),
                 enabled = true,

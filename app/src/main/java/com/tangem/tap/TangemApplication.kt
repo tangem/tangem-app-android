@@ -6,6 +6,7 @@ import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
+import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
@@ -20,6 +21,8 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.navigation.settings.SettingsManager
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -50,6 +53,7 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -58,7 +62,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.tasks.product.DerivationsFinder
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -74,7 +77,6 @@ import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
-lateinit var activityResultCaller: ActivityResultCaller
 internal lateinit var derivationsFinder: DerivationsFinder
 
 abstract class TangemApplication : Application(), ImageLoaderFactory {
@@ -179,9 +181,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val transactionSignerFactory: TransactionSignerFactory
         get() = entryPoint.getTransactionSignerFactory()
 
-    private val homeFeatureToggles: HomeFeatureToggles
-        get() = entryPoint.getHomeFeatureToggles()
-
     private val getUserCountryUseCase: GetUserCountryUseCase
         get() = entryPoint.getGetUserCountryCodeUseCase()
 
@@ -202,6 +201,15 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val appLogsStore: AppLogsStore
         get() = entryPoint.getAppLogsStore()
+
+    private val clipboardManager: ClipboardManager
+        get() = entryPoint.getClipboardManager()
+
+    private val settingsManager: SettingsManager
+        get() = entryPoint.getSettingsManager()
+
+    private val blockchainExceptionHandler: BlockchainExceptionHandler
+        get() = entryPoint.getBlockchainExceptionHandler()
     // endregion
 
     override fun onCreate() {
@@ -231,7 +239,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         tangemAppLoggerInitializer.initialize()
 
         foregroundActivityObserver = ForegroundActivityObserver()
-        activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         // TODO: Try to performance and user experience.
@@ -245,7 +252,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         }
 
         loadNativeLibraries()
-
+        ExceptionHandler.append(blockchainExceptionHandler)
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
@@ -292,7 +299,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     shareManager = shareManager,
                     appRouter = appRouter,
                     transactionSignerFactory = transactionSignerFactory,
-                    homeFeatureToggles = homeFeatureToggles,
                     getUserCountryUseCase = getUserCountryUseCase,
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
@@ -300,6 +306,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     onboardingRepository = onboardingRepository,
                     excludedBlockchains = excludedBlockchains,
                     appPreferencesStore = appPreferencesStore,
+                    clipboardManager = clipboardManager,
+                    settingsManager = settingsManager,
                 ),
             ),
         )
@@ -355,6 +363,5 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         )
 
         factory.build(Analytics, buildData)
-        // ExceptionHandler.append(blockchainExceptionHandler) TODO: [REDACTED_JIRA]
     }
 }

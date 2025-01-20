@@ -13,26 +13,6 @@ class CardExchangeRules(
     val cardProvider: () -> CardDTO?,
 ) : ExchangeRules {
 
-    override fun isBuyAllowed(): Boolean {
-        val card = cardProvider() ?: return false
-
-        return when {
-            card.isDemoCard() -> true
-            card.isStart2Coin -> false
-            else -> true
-        }
-    }
-
-    override fun isSellAllowed(): Boolean {
-        val card = cardProvider() ?: return false
-
-        return when {
-            card.isDemoCard() -> false
-            card.isStart2Coin -> false
-            else -> true
-        }
-    }
-
     override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
         val card = scanResponse.card
 
@@ -46,10 +26,6 @@ class CardExchangeRules(
     override fun availableForSell(currency: Currency): Boolean {
         val card = cardProvider() ?: return false
 
-        return when {
-            card.isDemoCard() -> false
-            card.isStart2Coin -> false
-            else -> true
-        }
+        return !card.isStart2Coin
     }
 }

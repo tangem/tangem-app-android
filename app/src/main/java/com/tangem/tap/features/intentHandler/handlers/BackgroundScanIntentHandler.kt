@@ -7,6 +7,7 @@ import android.os.Build
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.intentHandler.IntentHandler
+import com.tangem.tap.features.intentHandler.AffectsNavigation
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.store
 import kotlinx.coroutines.CoroutineScope
@@ -17,7 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 class BackgroundScanIntentHandler(
     private val hasSavedUserWalletsProvider: () -> Boolean,
     private val scope: CoroutineScope,
-) : IntentHandler {
+) : IntentHandler, AffectsNavigation {
 
     private val nfcActions = arrayOf(
         NfcAdapter.ACTION_NDEF_DISCOVERED,

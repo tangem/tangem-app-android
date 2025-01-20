@@ -52,7 +52,7 @@ private fun Preview_StakingInfoBottomSheet() {
     TangemThemePreview {
         StakingInfoBottomSheet(
             config = TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = {},
                 content = StakingInfoBottomSheetConfig(
                     title = stringReference("Title"),
