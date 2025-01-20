@@ -102,12 +102,6 @@ class MoonPayService(
         }
     }
 
-    override fun isBuyAllowed(): Boolean = false
-
-    override fun isSellAllowed(): Boolean {
-        return status?.responseUserStatus?.isSellAllowed ?: false
-    }
-
     override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean = false
 
     override fun availableForSell(currency: Currency): Boolean {
@@ -185,6 +179,10 @@ class MoonPayService(
         sha256Hmac.init(secretKey)
         val sha256encoded = sha256Hmac.doFinal("?$data".toByteArray())
         return Base64.encodeToString(sha256encoded, Base64.NO_WRAP)
+    }
+
+    private fun isSellAllowed(): Boolean {
+        return status?.responseUserStatus?.isSellAllowed ?: false
     }
 
     companion object {

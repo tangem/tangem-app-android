@@ -186,10 +186,10 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val titleColor = if (type.isError) {
-            TangemTheme.colors.text.warning
-        } else {
+        val titleColor = if (type.inputError is TransactionCardType.InputError.Empty) {
             TangemTheme.colors.text.tertiary
+        } else {
+            TangemTheme.colors.text.warning
         }
         Text(
             text = type.header.resolveReference(),
@@ -551,7 +551,7 @@ private fun Preview_TransactionCardWithoutPriceImpact_InDarkTheme() {
 @Composable
 private fun TransactionCardPreview() {
     TransactionCard(
-        type = TransactionCardType.Inputtable({}, {}, false),
+        type = TransactionCardType.Inputtable({}, {}, TransactionCardType.InputError.Empty),
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",

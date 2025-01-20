@@ -3,7 +3,10 @@ package com.tangem.tap.features.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.blockchainsdk.BlockchainSDKFactory
+import com.tangem.common.keyboard.KeyboardValidator
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
@@ -44,8 +47,9 @@ internal class MainViewModel @Inject constructor(
     private val fetchStakingTokensUseCase: FetchStakingTokensUseCase,
     private val apiConfigsManager: ApiConfigsManager,
     private val fetchUserCountryUseCase: FetchUserCountryUseCase,
-    @GlobalUiMessageSender
-    private val messageSender: UiMessageSender,
+    @GlobalUiMessageSender private val messageSender: UiMessageSender,
+    private val keyboardValidator: KeyboardValidator,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -74,6 +78,8 @@ internal class MainViewModel @Inject constructor(
         fetchStakingTokens()
 
         deleteDeprecatedLogsUseCase()
+
+        sendKeyboardIdentifierEvent()
     }
 
     /** Loading the resources needed to run the application */
@@ -251,5 +257,25 @@ internal class MainViewModel @Inject constructor(
 
     private fun onBottomSheetDismissed() {
         listenToFlipsUseCase.changeUpdateEnabled(isUpdateEnabled = true)
+    }
+
+    private fun sendKeyboardIdentifierEvent() {
+        viewModelScope.launch {
+            val keyboardId = keyboardValidator.getKeyboardId()
+
+            if (keyboardId != null) {
+                Timber.d("Keyboard ID: https://play.google.com/store/apps/details?id=${keyboardId.getPackageName()}")
+
+                analyticsEventHandler.send(
+                    event = TechAnalyticsEvent.KeyboardIdentifier(
+                        id = keyboardId.value,
+                        packageName = keyboardId.getPackageName(),
+                        isTrusted = keyboardValidator.validate(id = keyboardId),
+                    ),
+                )
+            } else {
+                Timber.e("Unable to get keyboard identifier")
+            }
+        }
     }
 }
