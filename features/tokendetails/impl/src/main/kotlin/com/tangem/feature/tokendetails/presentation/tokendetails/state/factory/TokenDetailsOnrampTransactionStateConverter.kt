@@ -108,21 +108,22 @@ internal class TokenDetailsOnrampTransactionStateConverter(
         externalTxUrl: String?,
         providerName: String,
     ): NotificationUM? {
-        if (externalTxUrl == null) return null
         return when (status) {
             OnrampStatus.Status.Verifying -> {
                 analyticsEventHandler.send(TokenOnrampAnalyticsEvent.NoticeKYC(cryptoCurrency.symbol, providerName))
-                ExpressNotificationsUM.NeedVerification {
-                    clickIntents.onGoToProviderClick(externalTxUrl)
-                }
+                ExpressNotificationsUM.NeedVerification(onGoToProviderClick = onProviderClick(externalTxUrl))
             }
             OnrampStatus.Status.Failed -> {
-                ExpressNotificationsUM.FailedByProvider {
-                    clickIntents.onGoToProviderClick(externalTxUrl)
-                }
+                ExpressNotificationsUM.FailedByProvider(onGoToProviderClick = onProviderClick(externalTxUrl))
             }
             else -> null
         }
+    }
+
+    private fun onProviderClick(externalTxUrl: String?) = if (externalTxUrl != null) {
+        { clickIntents.onGoToProviderClick(externalTxUrl) }
+    } else {
+        null
     }
 
     private fun getIconState(status: OnrampStatus.Status): ExpressTransactionStateIconUM {

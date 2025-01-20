@@ -1,23 +1,26 @@
 package com.tangem.features.markets.entry.impl
 
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
-import com.arkivanov.decompose.router.stack.*
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.core.ui.UiDependencies
-import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
+import com.tangem.domain.markets.toSerializableParam
+import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.MarketsEntryComponent
-import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.domain.markets.toSerializableParam
 import com.tangem.features.markets.entry.impl.MarketsEntryChildFactory.Child
 import com.tangem.features.markets.entry.impl.ui.EntryBottomSheetContent
 import dagger.assisted.Assisted
@@ -28,7 +31,6 @@ import dagger.assisted.AssistedInject
 internal class DefaultMarketsEntryComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     private val marketsEntryChildFactory: MarketsEntryChildFactory,
-    private val uiDependencies: UiDependencies,
 ) : MarketsEntryComponent, AppComponentContext by context {
 
     private val stackNavigation = StackNavigation<Child>()
@@ -63,10 +65,6 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
             onHeaderSizeChange = onHeaderSizeChange,
             stackState = stack.subscribeAsState(),
             modifier = modifier,
-        )
-        EventMessageEffect(
-            messageHandler = uiDependencies.eventMessageHandler,
-            snackbarHostState = uiDependencies.globalSnackbarHostState,
         )
     }
 
