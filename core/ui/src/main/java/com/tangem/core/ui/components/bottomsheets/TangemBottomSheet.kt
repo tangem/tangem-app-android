@@ -2,7 +2,6 @@ package com.tangem.core.ui.components.bottomsheets
 
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
-import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -99,7 +98,7 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultBottomSheet(
     crossinline title: @Composable (BoxScope.(T) -> Unit),
     crossinline content: @Composable (ColumnScope.(T) -> Unit),
 ) {
-    var isVisible by remember { mutableStateOf(value = config.isShow) }
+    var isVisible by remember { mutableStateOf(value = config.isShown) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = skipPartiallyExpanded)
 
     if (isVisible && config.content is T) {
@@ -114,8 +113,8 @@ inline fun <reified T : TangemBottomSheetConfigContent> DefaultBottomSheet(
         )
     }
 
-    LaunchedEffect(key1 = config.isShow) {
-        if (config.isShow) {
+    LaunchedEffect(key1 = config.isShown) {
+        if (config.isShown) {
             isVisible = true
         } else {
             sheetState.collapse { isVisible = false }

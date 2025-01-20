@@ -4,12 +4,14 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import javax.inject.Inject
 
 internal class OnboardingChildFactory @Inject constructor(
     private val multiWalletComponentFactory: OnboardingMultiWalletComponent.Factory,
     private val onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory,
     private val onboardingDoneComponentFactory: OnboardingDoneComponent.Factory,
+    private val onBoardingVisaComponentFactory: OnboardingVisaComponent.Factory,
 ) {
 
     fun createChild(route: OnboardingRoute, childContext: AppComponentContext, onManageTokensDone: () -> Unit): Any {
@@ -22,6 +24,13 @@ internal class OnboardingChildFactory @Inject constructor(
                     titleProvider = route.titleProvider,
                     onDone = route.onDone,
                     mode = route.mode,
+                ),
+            )
+            is OnboardingRoute.Visa -> onBoardingVisaComponentFactory.create(
+                context = childContext,
+                params = OnboardingVisaComponent.Params(
+                    scanResponse = route.scanResponse,
+                    titleProvider = route.titleProvider,
                 ),
             )
             is OnboardingRoute.ManageTokens -> onboardingManageTokensComponentFactory.create(
