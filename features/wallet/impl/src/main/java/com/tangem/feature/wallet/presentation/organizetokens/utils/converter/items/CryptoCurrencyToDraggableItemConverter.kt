@@ -3,14 +3,18 @@ package com.tangem.feature.wallet.presentation.organizetokens.utils.converter.it
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.BigDecimalFormatConstants
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getGroupHeaderId
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getTokenItemId
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import java.math.BigDecimal
 
 internal class CryptoCurrencyToDraggableItemConverter(
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -57,8 +61,11 @@ internal class CryptoCurrencyToDraggableItemConverter(
     }
 
     private fun getFormattedFiatAmount(currency: CryptoCurrencyStatus, appCurrency: AppCurrency): String {
-        val fiatAmount = currency.value.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val yieldBalance = currency.value.yieldBalance as? YieldBalance.Data
+        val fiatRate = currency.value.fiatRate ?: BigDecimal.ZERO
+        val fiatYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance()?.multiply(fiatRate) ?: BigDecimal.ZERO
 
-        return BigDecimalFormatter.formatFiatAmount(fiatAmount, appCurrency.code, appCurrency.symbol)
+        val fiatAmount = currency.value.fiatAmount ?: return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
+        return (fiatAmount + fiatYieldBalance).format { fiat(appCurrency.code, appCurrency.symbol) }
     }
 }
