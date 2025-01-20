@@ -43,6 +43,7 @@ internal fun MultiWalletAccessCodeEnter(
                 stringResourceSafe(R.string.onboarding_access_code_intro_title)
             },
             style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
         )
         Text(
             text = if (reEnterAccessCodeState) {
@@ -51,6 +52,7 @@ internal fun MultiWalletAccessCodeEnter(
                 stringResourceSafe(R.string.onboarding_access_code_hint)
             },
             style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.secondary,
         )
 
         val focusRequester = remember { FocusRequester() }
