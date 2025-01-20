@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 
+import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ComponentScoped
@@ -29,14 +30,12 @@ import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
+@Stable
 @ComponentScoped
 internal class MultiWalletFinalizeModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -59,6 +58,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private var walletHasBackupError = false
     val uiState = _uiState.asStateFlow()
+    val onBackFlow = MutableSharedFlow<Unit>()
 
     val onEvent = MutableSharedFlow<MultiWalletFinalizeComponent.Event>()
 
@@ -72,9 +72,30 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         }
     }
 
+    fun onBack() {
+        if (uiState.value.scanPrimary) {
+            modelScope.launch { onBackFlow.emit(Unit) }
+        }
+    }
+
     private fun getInitialState(): MultiWalletFinalizeUM {
         val backupService = backupServiceHolder.backupService.get() ?: return MultiWalletFinalizeUM()
         val initialStep = getInitialStep()
+
+        // sets proper artwork state for initial step
+        // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
+        modelScope.launch {
+            when (initialStep) {
+                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
+                MultiWalletFinalizeUM.Step.BackupDevice1 -> {
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
+                }
+                MultiWalletFinalizeUM.Step.BackupDevice2 -> {
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded)
+                }
+            }
+        }
 
         val batchId = when (initialStep) {
             MultiWalletFinalizeUM.Step.Primary -> backupService.primaryCardBatchId
@@ -193,18 +214,24 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private fun finishBackup() {
         modelScope.launch {
             val scanResponse = params.multiWalletState.value.currentScanResponse
-            val userWallet = createUserWallet(scanResponse)
 
-            when (params.parentParams.mode) {
+            val userWalletCreated = createUserWallet(scanResponse)
+
+            val userWallet = when (params.parentParams.mode) {
                 OnboardingMultiWalletComponent.Mode.Onboarding -> {
                     userWalletsListManager.save(
-                        userWallet = userWallet.copy(
+                        userWallet = userWalletCreated.copy(
                             scanResponse = scanResponse.updateScanResponseAfterBackup(),
                         ),
                         canOverride = true,
                     )
+                    userWalletCreated
                 }
                 OnboardingMultiWalletComponent.Mode.AddBackup -> {
+                    val userWallet = userWalletsListManager.userWallets.first()
+                        .firstOrNull { it.scanResponse.primaryCard?.cardId == scanResponse.primaryCard?.cardId }
+                        ?: userWalletCreated
+
                     userWalletsListManager.update(
                         userWalletId = userWallet.walletId,
                         update = { wallet ->
@@ -213,6 +240,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                             )
                         },
                     )
+
+                    userWallet
                 }
             }
 
