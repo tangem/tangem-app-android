@@ -10,12 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.list.InfiniteListHandler
 import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
@@ -160,7 +160,7 @@ private fun ShowTokensUnder100kItem(onShowTokensClick: () -> Unit, modifier: Mod
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.markets_search_see_tokens_under_100k),
+            text = stringResourceSafe(R.string.markets_search_see_tokens_under_100k),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -180,7 +180,7 @@ private fun SearchNothingFoundText(modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = stringResource(R.string.markets_search_token_no_result_title),
+            text = stringResourceSafe(R.string.markets_search_token_no_result_title),
             style = TangemTheme.typography.caption1,
             color = TangemTheme.colors.text.tertiary,
         )

@@ -47,6 +47,7 @@ internal class OnrampAmountStateFactory(
                     precision = currency.precision,
                 ),
                 amountFieldModel = amountState.amountFieldModel.copy(
+                    isError = false,
                     fiatAmount = amountState.amountFieldModel.fiatAmount.copy(
                         currencySymbol = currency.unit,
                         decimals = currency.precision,
@@ -67,6 +68,7 @@ internal class OnrampAmountStateFactory(
             amountBlockState = amountState.copy(secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading),
             providerBlockState = OnrampProviderBlockUM.Loading,
             buyButtonConfig = currentState.buyButtonConfig.copy(enabled = false),
+            errorNotification = null,
         )
     }
 
@@ -97,6 +99,7 @@ internal class OnrampAmountStateFactory(
                     }
                 },
             ),
+            errorNotification = null,
         )
     }
 
@@ -172,6 +175,7 @@ internal class OnrampAmountStateFactory(
                     }
                 },
             ),
+            errorNotification = null,
         )
     }
 
@@ -189,6 +193,7 @@ internal class OnrampAmountStateFactory(
                     amount = TextReference.EMPTY,
                 ),
             ),
+            errorNotification = null,
         )
     }
 

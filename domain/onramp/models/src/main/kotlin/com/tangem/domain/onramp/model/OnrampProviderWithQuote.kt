@@ -21,7 +21,7 @@ sealed interface OnrampProviderWithQuote {
             val availablePaymentMethods: List<OnrampPaymentMethod>,
         ) : Unavailable
 
-        data class Error(
+        data class AmountError(
             override val provider: OnrampProvider,
             val quoteError: OnrampQuote.AmountError,
         ) : Unavailable

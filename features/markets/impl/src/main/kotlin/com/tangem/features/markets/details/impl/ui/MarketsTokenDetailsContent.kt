@@ -336,7 +336,7 @@ private fun Preview() {
                 onSelectedIntervalChange = { },
                 body = MarketsTokenDetailsUM.Body.Loading,
                 bottomSheetConfig = TangemBottomSheetConfig(
-                    isShow = false,
+                    isShown = false,
                     onDismissRequest = {},
                     content = TangemBottomSheetConfigContent.Empty,
                 ),
