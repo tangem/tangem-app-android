@@ -7,17 +7,20 @@ import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.MotionEvent
-import android.view.View
 import android.view.WindowManager
 import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
@@ -36,10 +39,13 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.email.EmailSender
-import com.tangem.core.ui.event.StateEvent
+import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.message.EventMessageEffect
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
@@ -81,12 +87,12 @@ import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandle
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
-import com.tangem.tap.features.main.model.Toast
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
-import com.tangem.tap.routing.RoutingComponent
+import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.configurator.AppRouterConfig
+import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
@@ -209,6 +215,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     lateinit var dispatchers: CoroutineDispatcherProvider
 
+    @Inject
+    internal lateinit var routingFeatureToggles: RoutingFeatureToggles
+
+    @Inject
+    internal lateinit var uiDependencies: UiDependencies
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -246,20 +258,25 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         }
 
-        // if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-        //     window.setHideOverlayWindows(true)
-        // }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            window.setHideOverlayWindows(true)
+        }
 
         splashScreen.setKeepOnScreenCondition { viewModel.isSplashScreenShown }
 
         installActivityDependencies()
         observeAppThemeModeUpdates()
 
-        setContentView(R.layout.activity_main)
-        installRouting()
+        if (routingFeatureToggles.isNavigationRefactoringEnabled) {
+            setRootContent()
+        } else {
+            setContentView(R.layout.activity_main)
+            installRouting()
+            installEventMessageEffect()
+        }
+
         initContent()
 
-        observeStateUpdates()
         observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
@@ -269,6 +286,43 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
+    }
+
+    private fun installEventMessageEffect() {
+        binding.composeView.setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+        binding.composeView.setContent {
+            TangemTheme(
+                activity = this,
+                uiDependencies = uiDependencies,
+                overrideSystemBarColors = false,
+            ) {
+                EventMessageEffect(
+                    onShowSnackbar = { message, _ ->
+                        showSnackbar(
+                            text = message.message.resolveReference(resources),
+                            length = when (message.duration) {
+                                SnackbarMessage.Duration.Short -> Snackbar.LENGTH_SHORT
+                                SnackbarMessage.Duration.Long -> Snackbar.LENGTH_LONG
+                                SnackbarMessage.Duration.Indefinite -> Snackbar.LENGTH_INDEFINITE
+                            },
+                            buttonTitle = message.actionLabel?.resolveReference(resources),
+                            action = message.action,
+                            onDismiss = message.onDismissRequest,
+                        )
+                    },
+                )
+            }
+        }
+    }
+
+    private fun setRootContent() {
+        val routingComponent = routingComponentFactory.create(
+            context = rootComponentContext,
+        )
+
+        setContent {
+            routingComponent.Content(Modifier.fillMaxSize())
+        }
     }
 
     private fun installRouting() {
@@ -297,27 +351,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 is RoutingComponent.Child.LegacyIntent -> {
                     startActivity(child.intent)
                 }
+                is RoutingComponent.Child.ComposableComponent -> error("Unsupported child: $child")
             }
-        }
-    }
-
-    private fun observeStateUpdates() {
-        viewModel.state
-            .flowWithLifecycle(lifecycle)
-            .onEach { state ->
-                if (state.toast is StateEvent.Triggered) {
-                    showToast(state.toast.data)
-                    state.toast.onConsume()
-                }
-            }
-            .launchIn(lifecycleScope)
-    }
-
-    private fun showToast(toast: Toast) {
-        dismissSnackbar()
-        showSnackbar(toast.message, Snackbar.LENGTH_LONG, toast.action.text) {
-            toast.action.onClick()
-            dismissSnackbar()
         }
     }
 
@@ -400,8 +435,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onResume() {
         super.onResume()
-        // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
-        notificationsHandler = NotificationsHandler(binding.fragmentContainer)
+
+        if (!routingFeatureToggles.isNavigationRefactoringEnabled) {
+            // TODO: RESEARCH! NotificationsHandler is created in onResume and destroyed in onStop
+            notificationsHandler = NotificationsHandler(binding.fragmentContainer)
+        }
 
         navigateToInitialScreenIfNeeded(intent)
     }
@@ -473,7 +511,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onNewIntent(intent)
 
         lifecycleScope.launch {
-            intentProcessor.handleIntent(intent, true)
+            intentProcessor.handleIntent(intent = intent, isFromForeground = true)
         }
 
         if (intent != null) {
@@ -481,22 +519,22 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
     }
 
-    override fun showSnackbar(
-        @StringRes text: Int,
-        length: Int,
-        @StringRes buttonTitle: Int?,
-        action: View.OnClickListener?,
-    ) {
-        showSnackbar(getString(text), length, buttonTitle?.let(::getString), action)
+    override fun showSnackbar(@StringRes text: Int, length: Int, @StringRes buttonTitle: Int?, action: (() -> Unit)?) {
+        showSnackbar(
+            getString(text),
+            length,
+            buttonTitle?.let(::getString),
+            action = { action?.invoke() },
+        )
     }
 
-    override fun showSnackbar(
-        text: TextReference,
-        length: Int,
-        buttonTitle: TextReference?,
-        action: View.OnClickListener?,
-    ) {
-        showSnackbar(text.resolveReference(resources), length, buttonTitle?.resolveReference(resources), action)
+    override fun showSnackbar(text: TextReference, length: Int, buttonTitle: TextReference?, action: (() -> Unit)?) {
+        showSnackbar(
+            text = text.resolveReference(resources),
+            length = length,
+            buttonTitle = buttonTitle?.resolveReference(resources),
+            action = { action?.invoke() },
+        )
     }
 
     override fun dismissSnackbar() {
@@ -531,7 +569,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         return if (result) super.dispatchTouchEvent(event) else false
     }
 
-    private fun showSnackbar(text: String, length: Int, buttonTitle: String?, action: View.OnClickListener?) {
+    private fun showSnackbar(
+        text: String,
+        length: Int,
+        buttonTitle: String?,
+        action: (() -> Unit)? = null,
+        onDismiss: () -> Unit = {},
+    ) {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(binding.fragmentContainer, text, length).apply {
@@ -542,12 +586,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             setTextColor(textColor)
 
             if (buttonTitle != null && action != null) {
-                setAction(buttonTitle, action)
+                setAction(buttonTitle, { action() })
             }
 
             addCallback(
                 object : BaseTransientBottomBar.BaseCallback<Snackbar>() {
                     override fun onDismissed(transientBottomBar: Snackbar?, event: Int) {
+                        onDismiss()
                         snackbar = null
                         removeCallback(this)
                     }
@@ -583,6 +628,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             store.dispatchNavigationAction {
                 replaceAll(AppRoute.Welcome(intentWhichStartedActivity?.let(::SerializableIntent)))
             }
+            intentProcessor.handleIntent(
+                intent = intentWhichStartedActivity,
+                isFromForeground = false,
+                skipNavigationHandlers = true,
+            )
         } else {
             lifecycleScope.launch {
                 val shouldShowTos = !cardRepository.isTangemTOSAccepted()
@@ -595,7 +645,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 }
 
                 store.dispatchNavigationAction { replaceAll(route) }
-                intentProcessor.handleIntent(intentWhichStartedActivity, false)
+                intentProcessor.handleIntent(
+                    intent = intentWhichStartedActivity,
+                    isFromForeground = false,
+                    skipNavigationHandlers = false,
+                )
             }
         }
 
