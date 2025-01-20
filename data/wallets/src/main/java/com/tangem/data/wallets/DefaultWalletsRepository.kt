@@ -20,13 +20,14 @@ import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
-    private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<Boolean>,
+    private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<Map<UserWalletId, Boolean>>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletsRepository {
 
@@ -59,7 +60,9 @@ internal class DefaultWalletsRepository(
     override fun seedPhraseNotificationStatus(userWalletId: UserWalletId): Flow<Boolean> {
         return channelFlow {
             launch {
-                seedPhraseNotificationVisibilityStore.get().collectLatest(::send)
+                seedPhraseNotificationVisibilityStore.get()
+                    .map { it.getOrDefault(key = userWalletId, defaultValue = false) }
+                    .collectLatest(::send)
             }
 
             fetchSeedPhraseNotificationStatus(userWalletId)
@@ -81,7 +84,7 @@ internal class DefaultWalletsRepository(
                 )
         }
 
-        seedPhraseNotificationVisibilityStore.store(value = status)
+        updateNotificationVisibility(id = userWalletId, value = status)
     }
 
     override suspend fun notifiedSeedPhraseNotification(userWalletId: UserWalletId) {
@@ -101,7 +104,7 @@ internal class DefaultWalletsRepository(
             ).getOrThrow()
         }
 
-        seedPhraseNotificationVisibilityStore.store(value = false)
+        updateNotificationVisibility(id = userWalletId, value = false)
     }
 
     override suspend fun declineSeedPhraseNotification(userWalletId: UserWalletId) {
@@ -112,7 +115,7 @@ internal class DefaultWalletsRepository(
             ).getOrThrow()
         }
 
-        seedPhraseNotificationVisibilityStore.store(value = false)
+        updateNotificationVisibility(id = userWalletId, value = false)
     }
 
     override suspend fun markWallet2WasCreated(userWalletId: UserWalletId) {
@@ -120,6 +123,14 @@ internal class DefaultWalletsRepository(
             tangemTechApi.markUserWallerWasCreated(
                 body = MarkUserWalletWasCreatedBody(userWalletId = userWalletId.stringValue),
             )
+        }
+    }
+
+    private suspend fun updateNotificationVisibility(id: UserWalletId, value: Boolean) {
+        return seedPhraseNotificationVisibilityStore.update {
+            it.toMutableMap().apply {
+                this[id] = value
+            }
         }
     }
 }
