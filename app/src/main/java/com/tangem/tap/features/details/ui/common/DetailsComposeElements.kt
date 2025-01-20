@@ -10,9 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.wallet.R
@@ -64,7 +64,7 @@ internal fun SettingsScreensScaffold(
             ) {
                 if (titleRes != null) {
                     Text(
-                        text = stringResource(id = titleRes),
+                        text = stringResourceSafe(id = titleRes),
                         modifier = Modifier
                             .padding(horizontal = TangemTheme.dimens.spacing20)
                             .padding(bottom = TangemTheme.dimens.spacing36),
@@ -82,7 +82,7 @@ internal fun SettingsScreensScaffold(
 @Composable
 internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
     Text(
-        text = stringResource(id = titleRes),
+        text = stringResourceSafe(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
         style = TangemTheme.typography.h1,
         color = TangemTheme.colors.text.primary1,
