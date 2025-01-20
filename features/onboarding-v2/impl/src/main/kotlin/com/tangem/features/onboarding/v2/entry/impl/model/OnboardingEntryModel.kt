@@ -69,6 +69,10 @@ internal class OnboardingEntryModel @Inject constructor(
                 onDone = ::onMultiWalletOnboardingDone,
                 mode = multiWalletNavigationMode,
             )
+            ProductType.Visa -> OnboardingRoute.Visa(
+                scanResponse = scanResponse,
+                titleProvider = titleProvider,
+            )
             else -> error("Unsupported")
         }
     }
