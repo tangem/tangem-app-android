@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +24,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.inputrow.InputRowBestRate
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -50,7 +50,7 @@ fun ExpressProvider(
                 .fillMaxWidth(),
         ) {
             Text(
-                text = stringResource(id = R.string.express_provider),
+                text = stringResourceSafe(id = R.string.express_provider),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -62,7 +62,9 @@ fun ExpressProvider(
                         .clickable {
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             clipboardManager.setText(AnnotatedString(providerTxId))
-                            Toast.makeText(context, R.string.express_transaction_id_copied, Toast.LENGTH_SHORT).show()
+                            Toast
+                                .makeText(context, R.string.express_transaction_id_copied, Toast.LENGTH_SHORT)
+                                .show()
                         },
                 ) {
                     Icon(
@@ -76,7 +78,7 @@ fun ExpressProvider(
                     )
                     Text(
                         modifier = Modifier.align(Alignment.CenterVertically),
-                        text = stringResource(R.string.express_transaction_id, providerTxId),
+                        text = stringResourceSafe(R.string.express_transaction_id, providerTxId),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         style = TangemTheme.typography.body2,
