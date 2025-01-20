@@ -1,13 +1,13 @@
 package com.tangem.feature.wallet.presentation.wallet.ui
 
 import androidx.compose.runtime.*
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.core.ui.components.AdditionalTextInputDialogUM
 import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.DialogButtonUM
 import com.tangem.core.ui.components.TextInputDialog
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
 
@@ -48,7 +48,7 @@ private fun BasicAlert(state: WalletAlertState.Basic, onDismiss: () -> Unit) {
             },
         )
         dismissButton = DialogButtonUM(
-            title = stringResource(id = R.string.common_cancel),
+            title = stringResourceSafe(id = R.string.common_cancel),
             onClick = onDismiss,
         )
     } else {
@@ -88,7 +88,7 @@ private fun TextInputAlert(state: WalletAlertState.TextInput, onDismiss: () -> U
         onDismissDialog = onDismiss,
         onValueChange = { value = it },
         title = state.title.resolveReference(),
-        dismissButton = DialogButtonUM(title = stringResource(id = R.string.common_cancel), onClick = onDismiss),
+        dismissButton = DialogButtonUM(title = stringResourceSafe(id = R.string.common_cancel), onClick = onDismiss),
         textFieldParams = AdditionalTextInputDialogUM(
             label = state.label.resolveReference(),
             isError = state.errorTextProvider(value.text) != null,

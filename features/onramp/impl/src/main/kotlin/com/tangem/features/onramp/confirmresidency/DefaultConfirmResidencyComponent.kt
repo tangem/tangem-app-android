@@ -47,7 +47,7 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
         val bottomSheet by bottomSheetSlot.subscribeAsState()
         val bottomSheetConfig = remember(key1 = this) {
             TangemBottomSheetConfig(
-                isShow = true,
+                isShown = true,
                 onDismissRequest = ::dismiss,
                 content = TangemBottomSheetConfigContent.Empty,
             )
@@ -70,12 +70,14 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
             context = childByContext(componentContext),
             params = SelectCountryComponent.Params(
                 cryptoCurrency = params.cryptoCurrency,
-                onDismiss = {
+                onDismiss = { isCountrySelected ->
                     // Dismiss country select sheet
                     model.bottomSheetNavigation.dismiss()
 
-                    // Dismiss confirm residency sheet
-                    config.onDismiss()
+                    if (isCountrySelected) {
+                        // Dismiss confirm residency sheet
+                        config.onDismiss()
+                    }
                 },
             ),
         )
