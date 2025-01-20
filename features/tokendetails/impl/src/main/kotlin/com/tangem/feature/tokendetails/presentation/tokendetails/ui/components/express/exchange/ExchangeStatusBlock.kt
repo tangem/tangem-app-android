@@ -17,11 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
@@ -53,7 +53,7 @@ internal fun ExchangeStatusBlock(
                 .padding(bottom = TangemTheme.dimens.spacing16),
         ) {
             Text(
-                text = stringResource(id = R.string.express_exchange_status_title),
+                text = stringResourceSafe(id = R.string.express_exchange_status_title),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -72,7 +72,7 @@ internal fun ExchangeStatusBlock(
                             .padding(end = TangemTheme.dimens.spacing2),
                     )
                     Text(
-                        text = stringResource(id = R.string.common_go_to_provider),
+                        text = stringResourceSafe(id = R.string.common_go_to_provider),
                         style = TangemTheme.typography.body2,
                         color = TangemTheme.colors.text.tertiary,
                     )
