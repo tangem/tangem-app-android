@@ -4,6 +4,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.StateType
 
+// todo refactor [REDACTED_TASK_KEY]
 data class HomeState(
     val scanInProgress: Boolean = false,
     val stories: ImmutableList<Stories> = Stories.entries.toImmutableList(),
