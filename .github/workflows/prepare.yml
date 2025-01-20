@@ -79,4 +79,4 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build --platform linux/arm64 -t tangem_ci_android_environment .
+          docker build --platform linux/arm64 -t tangem_ci_android_environment -f ci_resources/Dockerfile.android .

@@ -13,6 +13,10 @@ jobs:
   publish:
     runs-on: [ self-hosted, ARM64, active-android, Linux ]
     steps:
+      - name: Build Docker image
+        run: |
+          docker build --platform linux/arm64 -t lightweight -f ci_resources/Dockerfile.lightweight .
+
       - name: Publish
         env:
           GITHUB_TOKEN: ${{ secrets.TANGEM_BINARIES_REPOSITORY_TOKEN }}
@@ -23,7 +27,7 @@ jobs:
           docker run --rm \
             --env-file .env \
             --volume ~/apks:/home/ubuntu/apks \
-            tangem_ci_android_environment \
+            lightweight \
             sh -c '
               APK_DIR=/home/ubuntu/apks
               export GITHUB_TOKEN=TODO

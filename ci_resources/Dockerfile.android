@@ -42,7 +42,7 @@ RUN gem install bundler:2.5.23
 RUN gem install fastlane -v 2.211.0 -N -V
 RUN gem install fastlane-plugin-firebase_app_distribution -v 0.9.1 -N -V
 
-COPY Gemfile Gemfile.lock ./
+COPY ../Gemfile Gemfile.lock ./
 RUN bundle install --jobs=4 --retry=3 --verbose
 
 RUN bundle exec fastlane -v
