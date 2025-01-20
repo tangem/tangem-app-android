@@ -18,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -69,7 +68,7 @@ internal fun SendNavigationButtons(
         SendDoneButtons(
             txUrl = sendState.txUrl,
             onExploreClick = uiState.clickIntents::onExploreClick,
-            onShareClick = uiState.clickIntents::onShareClick,
+            onShareClick = { uiState.clickIntents.onShareClick(it) },
             isVisible = isSentState,
         )
         SendNavigationButton(
@@ -131,7 +130,7 @@ private fun SendNavigationButton(
         }
         TangemButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(buttonTextId),
+            text = stringResourceSafe(buttonTextId),
             icon = buttonIcon,
             enabled = isButtonEnabled,
             onClick = {

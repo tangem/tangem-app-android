@@ -2,7 +2,9 @@
 
 package com.tangem.core.ui.components.progressbar
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -15,10 +17,12 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import kotlin.math.abs
 
 /**
@@ -124,3 +128,17 @@ private fun DrawScope.drawLinearIndicator(
 
 private fun DrawScope.drawLinearIndicatorBackground(color: Color, strokeWidth: Float, strokeCap: StrokeCap) =
     drawLinearIndicator(0f, 1f, color, strokeWidth, strokeCap)
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun LinearProgressIndicator_Preview() {
+    TangemThemePreview {
+        LinearProgressIndicator(
+            progress = { 0.5f },
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+// endregion
