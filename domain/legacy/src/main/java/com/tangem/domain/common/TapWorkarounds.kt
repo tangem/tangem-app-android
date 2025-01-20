@@ -2,6 +2,7 @@ package com.tangem.domain.common
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.models.scan.CardDTO
 import java.util.Locale
@@ -23,7 +24,7 @@ object TapWorkarounds {
         get() = isStart2CoinIssuer(issuer.name)
 
     val CardDTO.isVisa: Boolean
-        get() = firmwareVersion.doubleValue in FirmwareVersion.visaRange
+        get() = VisaUtilities.isVisaCard(this)
 
     val CardDTO.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)

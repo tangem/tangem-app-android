@@ -20,16 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
@@ -75,10 +73,9 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
             )
 
             Buttons(
-                address = selectedAddress.value,
                 snackbarHostState = snackbarHostState,
-                onShareClick = content.onShareClick,
-                onCopyClick = content.onCopyClick,
+                onShareClick = { content.onShareClick(selectedAddress.value) },
+                onCopyClick = { content.onCopyClick(selectedAddress.value) },
             )
         }
     }
@@ -96,7 +93,7 @@ private fun Info(currency: String, network: String, showMemoDisclaimer: Boolean,
                 modifier = Modifier
                     .padding(horizontal = 18.dp)
                     .fillMaxWidth(),
-                text = stringResource(R.string.receive_bottom_sheet_no_memo_required_message),
+                text = stringResourceSafe(R.string.receive_bottom_sheet_no_memo_required_message),
                 style = TangemTheme.typography.caption1,
                 color = TangemTheme.colors.text.tertiary,
                 textAlign = TextAlign.Center,
@@ -191,7 +188,7 @@ private fun QrCodePage(content: TokenReceiveBottomSheetConfig, qrCodePainter: Pa
         verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         Text(
-            text = stringResource(
+            text = stringResourceSafe(
                 R.string.receive_bottom_sheet_warning_message,
                 getName(content = content, index = currentIndex),
                 content.symbol,
@@ -229,14 +226,12 @@ private fun getName(content: TokenReceiveBottomSheetConfig, index: Int): String 
 
 @Composable
 private fun Buttons(
-    address: String,
     snackbarHostState: SnackbarHostState,
     onShareClick: () -> Unit,
     onCopyClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val hapticFeedback = LocalHapticFeedback.current
-    val clipboardManager = LocalClipboardManager.current
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val resources = context.resources
@@ -247,17 +242,16 @@ private fun Buttons(
     ) {
         SecondaryButtonIconStart(
             modifier = Modifier.weight(1f),
-            text = stringResource(id = R.string.common_copy),
+            text = stringResourceSafe(id = R.string.common_copy),
             iconResId = R.drawable.ic_copy_24,
             onClick = {
                 onCopyClick()
 
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                clipboardManager.setText(AnnotatedString(address))
 
                 coroutineScope.launch {
                     snackbarHostState.showSnackbar(
-                        message = resources.getString(R.string.wallet_notification_address_copied),
+                        message = resources.getStringSafe(R.string.wallet_notification_address_copied),
                     )
                 }
             },
@@ -265,13 +259,12 @@ private fun Buttons(
 
         SecondaryButtonIconStart(
             modifier = Modifier.weight(1f),
-            text = stringResource(id = R.string.common_share),
+            text = stringResourceSafe(id = R.string.common_share),
             iconResId = R.drawable.ic_share_24,
             onClick = {
-                onShareClick()
-
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                context.shareText(address)
+
+                onShareClick()
             },
         )
     }
@@ -286,7 +279,7 @@ private fun Preview_TokenReceiveBottomSheet(
 ) {
     TangemThemePreview {
         val config = TangemBottomSheetConfig(
-            isShow = true,
+            isShown = true,
             content = params,
             onDismissRequest = {},
         )
