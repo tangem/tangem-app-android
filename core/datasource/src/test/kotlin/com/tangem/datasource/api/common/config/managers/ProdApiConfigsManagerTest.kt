@@ -10,12 +10,15 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUIL
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
+import com.tangem.datasource.api.common.visa.TangemVisaAuthProvider
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
-import com.tangem.utils.Provider
+import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.version.AppVersionProvider
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,12 +31,15 @@ private val appVersionProvider = mockk<AppVersionProvider>()
 private val expressAuthProvider = mockk<ExpressAuthProvider>()
 private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
 private val appAuthProvider = mockk<AuthProvider>()
+private val visaAuthProvider = mockk<TangemVisaAuthProvider>()
 
 // Don't forget to add new config !!!
 private val API_CONFIGS = setOf(
     Express(configManager, expressAuthProvider, appVersionProvider),
     TangemTech(appVersionProvider, appAuthProvider),
     StakeKit(stakeKitAuthProvider),
+    TangemVisaAuth(),
+    TangemVisa(visaAuthProvider),
 )
 
 /**
@@ -53,6 +59,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { appAuthProvider.getCardId() } returns APP_CARD_ID
         every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
+        coEvery { visaAuthProvider.getAuthHeader() } returns VISA_AUTH_HEADER
     }
 
     @Test
@@ -62,8 +69,8 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         Truth.assertThat(actual.environment).isEqualTo(model.expected.environment)
         Truth.assertThat(actual.baseUrl).isEqualTo(model.expected.baseUrl)
 
-        Truth.assertThat(actual.headers.mapValues { it.value() })
-            .isEqualTo(model.expected.headers.mapValues { it.value() })
+        Truth.assertThat(actual.headers.mapValues { runBlocking { it.value() } })
+            .isEqualTo(model.expected.headers.mapValues { runBlocking { it.value() } })
     }
 
     data class Model(val id: ApiConfig.ID, val expected: ApiEnvironmentConfig)
@@ -77,6 +84,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
         const val APP_CARD_ID = "app_card_id"
         const val APP_CARD_PUBLIC_KEY = "app_public_key"
+        const val VISA_AUTH_HEADER = "Bearer visa_auth_header"
 
         @JvmStatic
         @Parameterized.Parameters
@@ -85,6 +93,8 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is Express -> createExpressModel()
                 is TangemTech -> createTangemTechModel()
                 is StakeKit -> createStakeKitModel()
+                is TangemVisaAuth -> createVisaAuthModel()
+                is TangemVisa -> createVisaModel()
             }
         }
 
@@ -115,23 +125,23 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
                     },
                     headers = mapOf(
-                        "api-key" to Provider {
+                        "api-key" to ProviderSuspend {
                             if (environment == ApiEnvironment.PROD) {
                                 MockEnvironmentConfigStorage.EXPRESS_API_KEY
                             } else {
                                 MockEnvironmentConfigStorage.EXPRESS_DEV_API_KEY
                             }
                         },
-                        "user-id" to Provider { EXPRESS_USER_ID },
-                        "session-id" to Provider { EXPRESS_SESSION_ID },
-                        "refcode" to Provider { EXPRESS_REF_CODE },
-                        "version" to Provider { VERSION_NAME },
-                        "platform" to Provider { "android" },
-                        "language" to Provider { Locale.getDefault().language.checkHeaderValueOrEmpty() },
-                        "timezone" to Provider {
+                        "user-id" to ProviderSuspend { EXPRESS_USER_ID },
+                        "session-id" to ProviderSuspend { EXPRESS_SESSION_ID },
+                        "refcode" to ProviderSuspend { EXPRESS_REF_CODE },
+                        "version" to ProviderSuspend { VERSION_NAME },
+                        "platform" to ProviderSuspend { "android" },
+                        "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                        "timezone" to ProviderSuspend {
                             TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                         },
-                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
+                        "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
                     ),
                 ),
             )
@@ -144,15 +154,15 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://api.tangem-tech.com/v1/",
                     headers = mapOf(
-                        "card_id" to Provider { APP_CARD_ID },
-                        "card_public_key" to Provider { APP_CARD_PUBLIC_KEY },
-                        "version" to Provider { VERSION_NAME },
-                        "platform" to Provider { "android" },
-                        "language" to Provider { Locale.getDefault().language.checkHeaderValueOrEmpty() },
-                        "timezone" to Provider {
+                        "card_id" to ProviderSuspend { APP_CARD_ID },
+                        "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
+                        "version" to ProviderSuspend { VERSION_NAME },
+                        "platform" to ProviderSuspend { "android" },
+                        "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+                        "timezone" to ProviderSuspend {
                             TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
                         },
-                        "device" to Provider { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
+                        "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
                     ),
                 ),
             )
@@ -165,8 +175,31 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://api.stakek.it/v1/",
                     headers = mapOf(
-                        "X-API-KEY" to Provider { STAKE_KIT_API_KEY },
-                        "accept" to Provider { "application/json" },
+                        "X-API-KEY" to ProviderSuspend { STAKE_KIT_API_KEY },
+                        "accept" to ProviderSuspend { "application/json" },
+                    ),
+                ),
+            )
+        }
+
+        private fun createVisaAuthModel(): Model {
+            return Model(
+                id = ApiConfig.ID.TangemVisaAuth,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.STAGE,
+                    baseUrl = "https://api-s.tangem.org/",
+                ),
+            )
+        }
+
+        private fun createVisaModel(): Model {
+            return Model(
+                id = ApiConfig.ID.TangemVisa,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.PROD,
+                    baseUrl = "https://bff.tangem.com/",
+                    headers = mapOf(
+                        "Authorization" to ProviderSuspend { VISA_AUTH_HEADER },
                     ),
                 ),
             )

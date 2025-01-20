@@ -79,6 +79,7 @@ internal class WalletViewModel @Inject constructor(
     private lateinit var router: InnerWalletRouter
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
+    private val expressStatusJobHolder = JobHolder()
     private var needToRefreshWallet = false
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
@@ -233,10 +234,16 @@ internal class WalletViewModel @Inject constructor(
     private fun subscribeToScreenBackgroundState() {
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
+                expressTxStatusTaskScheduler.cancelTask()
+                expressStatusJobHolder.cancel()
                 refreshWalletJobHolder.cancel()
                 when {
                     isBackground -> needToRefreshTimer()
-                    needToRefreshWallet && !isBackground -> triggerRefreshWalletQuotes()
+                    needToRefreshWallet && !isBackground -> {
+                        triggerRefreshWalletQuotes()
+                        subscribeOnExpressTransactionsUpdates()
+                    }
+                    !isBackground -> subscribeOnExpressTransactionsUpdates()
                 }
             }
             .launchIn(viewModelScope)
@@ -257,7 +264,7 @@ internal class WalletViewModel @Inject constructor(
                     onError = { /* no-op */ },
                 ),
             )
-        }
+        }.saveIn(expressStatusJobHolder)
     }
 
     private fun needToRefreshTimer() {

@@ -59,7 +59,6 @@ class WalletConnectMiddleware {
             is WalletConnectAction.StartWalletConnect -> {
                 val uri = action.copiedUri
                 if (uri != null && isWalletConnectUri(uri)) {
-// [REDACTED_TODO_COMMENT]
                     store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
                 } else {
                     store.dispatchNavigationAction { push(AppRoute.QrScanning(SourceType.WALLET_CONNECT)) }

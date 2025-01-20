@@ -1,6 +1,7 @@
 package com.tangem.features.onramp.tokenlist.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,14 +43,18 @@ internal fun TokenList(state: TokenListUM, modifier: Modifier = Modifier) {
         if (state.warning == null) {
             SearchBar(searchBarUM = state.searchBarUM)
         } else {
-            when (state.warning) {
-                is NotificationUM.Warning.OnrampErrorNotification -> {
-                    Notification(config = state.warning.config, containerColor = TangemTheme.colors.background.primary)
+            AnimatedContent(targetState = state.warning, label = "") { warning ->
+                when (warning) {
+                    is NotificationUM.Warning.OnrampErrorNotification -> {
+                        Notification(
+                            config = warning.config,
+                            containerColor = TangemTheme.colors.background.primary,
+                        )
+                    }
+                    else -> {
+                        Notification(config = warning.config, containerColor = TangemTheme.colors.button.disabled)
+                    }
                 }
-                is NotificationUM.Warning.SwapNoAvailablePair -> {
-                    Notification(config = state.warning.config, containerColor = TangemTheme.colors.button.disabled)
-                }
-                else -> Unit
             }
         }
 

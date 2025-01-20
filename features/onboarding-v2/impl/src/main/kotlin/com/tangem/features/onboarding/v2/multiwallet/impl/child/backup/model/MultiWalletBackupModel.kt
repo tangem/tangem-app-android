@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.backup.model
 
+import androidx.compose.runtime.Stable
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Stable
 @ComponentScoped
 class MultiWalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -82,15 +84,16 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun startBackupWallet() {
-        if (state.value.numberOfBackupCards == 0) {
+        if (state.value.numberOfBackupCards == 0 && scanResponse.primaryCard != null) {
             backupService.discardSavedBackup()
         }
-        val primaryCard = scanResponse.primaryCard
 
+        val primaryCard = scanResponse.primaryCard
         if (primaryCard != null) {
             backupService.setPrimaryCard(primaryCard)
-            addBackupCardWithService()
         }
+
+        addBackupCardWithService()
     }
 
     private fun setNumberOfBackupCards(number: Int) {

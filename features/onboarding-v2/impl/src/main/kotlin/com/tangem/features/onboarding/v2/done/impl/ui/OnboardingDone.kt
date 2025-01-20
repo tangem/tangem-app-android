@@ -8,8 +8,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.airbnb.lottie.compose.LottieAnimation
@@ -17,6 +17,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -49,16 +50,17 @@ internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Mo
             SpacerH32()
             Text(
                 modifier = Modifier.padding(horizontal = 32.dp),
-                text = stringResource(R.string.onboarding_done_header),
+                text = stringResourceSafe(R.string.onboarding_done_header),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
             )
             SpacerH12()
             Text(
                 modifier = Modifier.padding(horizontal = 32.dp),
-                text = stringResource(R.string.onboarding_subtitle_success_tangem_wallet_onboarding),
+                text = stringResourceSafe(R.string.onboarding_subtitle_success_tangem_wallet_onboarding),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
+                textAlign = TextAlign.Center,
             )
             SpacerH(72.dp)
         }
@@ -69,7 +71,7 @@ internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Mo
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 16.dp)
                 .navigationBarsPadding(),
-            text = stringResource(R.string.onboarding_button_continue_wallet),
+            text = stringResourceSafe(R.string.onboarding_button_continue_wallet),
             onClick = onContinueClick,
         )
     }

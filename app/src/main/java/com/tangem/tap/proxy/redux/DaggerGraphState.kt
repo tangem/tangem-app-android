@@ -4,8 +4,10 @@ import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.connection.NetworkConnectionManager
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
@@ -35,7 +37,6 @@ import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
-import com.tangem.tap.features.home.featuretoggles.HomeFeatureToggles
 import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.StateType
 
@@ -69,7 +70,6 @@ data class DaggerGraphState(
     val appRouter: AppRouter? = null,
     val pushNotificationsRouter: PushNotificationsRouter? = null,
     val transactionSignerFactory: TransactionSignerFactory? = null,
-    val homeFeatureToggles: HomeFeatureToggles? = null,
     val getUserCountryUseCase: GetUserCountryUseCase? = null,
     val onrampFeatureToggles: OnrampFeatureToggles? = null,
     val environmentConfigStorage: EnvironmentConfigStorage? = null,
@@ -77,4 +77,6 @@ data class DaggerGraphState(
     val onboardingRepository: OnboardingRepository? = null,
     val excludedBlockchains: ExcludedBlockchains? = null,
     val appPreferencesStore: AppPreferencesStore? = null,
+    val clipboardManager: ClipboardManager? = null,
+    val settingsManager: SettingsManager? = null,
 ) : StateType

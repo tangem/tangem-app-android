@@ -13,11 +13,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import com.tangem.core.ui.extensions.appendSpace
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.main.entity.OnrampProviderBlockUM
@@ -47,7 +47,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
         Column(modifier = Modifier.weight(1F)) {
             Text(
                 text = buildAnnotatedString {
-                    append(stringResource(id = R.string.onramp_pay_with))
+                    append(stringResourceSafe(id = R.string.onramp_pay_with))
                     appendSpace()
                     withStyle(
                         style = SpanStyle(
@@ -63,7 +63,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
             )
             Text(
                 text = buildAnnotatedString {
-                    append(stringResource(id = R.string.onramp_via))
+                    append(stringResourceSafe(id = R.string.onramp_via))
                     appendSpace()
                     append(state.providerName)
                 },
@@ -87,7 +87,7 @@ private fun OnrampProviderBlock(state: OnrampProviderBlockUM.Content, modifier: 
                         horizontal = TangemTheme.dimens.spacing6,
                         vertical = TangemTheme.dimens.spacing1,
                     ),
-                text = stringResource(id = R.string.express_provider_best_rate),
+                text = stringResourceSafe(id = R.string.express_provider_best_rate),
                 style = TangemTheme.typography.caption1,
                 color = TangemTheme.colors.text.primary2,
             )
@@ -105,7 +105,7 @@ private fun OnrampProviderLoading(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
     ) {
         Text(
-            text = stringResource(id = R.string.express_provider),
+            text = stringResourceSafe(id = R.string.express_provider),
             style = TangemTheme.typography.subtitle2,
             color = TangemTheme.colors.text.tertiary,
         )
@@ -119,7 +119,7 @@ private fun OnrampProviderLoading(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(TangemTheme.dimens.size16),
             )
             Text(
-                text = stringResource(id = R.string.express_fetch_best_rates),
+                text = stringResourceSafe(id = R.string.express_fetch_best_rates),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )

@@ -23,8 +23,13 @@ class FinalizeTwinTask(
                     PreflightReadTask(PreflightReadMode.FullCardRead).run(session) { readResult ->
                         when (readResult) {
                             is CompletionResult.Success ->
-                                ScanProductTask(readResult.data, derivationsFinder = null)
-                                    .run(session, callback)
+                                ScanProductTask(
+                                    readResult.data,
+                                    derivationsFinder = null,
+                                    visaCardScanHandler = null,
+                                    visaCoroutineScope = null,
+                                    onboardingV2FeatureToggles = null,
+                                ).run(session, callback)
                             is CompletionResult.Failure ->
                                 callback(CompletionResult.Failure(readResult.error))
                         }

@@ -72,7 +72,7 @@ private fun Preview() {
         Box(Modifier.background(TangemTheme.colors.background.secondary)) {
             TokenActionsBottomSheet(
                 TangemBottomSheetConfig(
-                    isShow = true,
+                    isShown = true,
                     onDismissRequest = {},
                     content = TokenActionsBSContentUM(
                         title = "Wallet 1",

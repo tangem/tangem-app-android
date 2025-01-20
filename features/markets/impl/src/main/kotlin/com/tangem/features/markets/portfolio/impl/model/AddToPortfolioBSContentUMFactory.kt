@@ -38,19 +38,21 @@ internal class AddToPortfolioBSContentUMFactory(
     /**
      * Create [TangemBottomSheetConfig]
      *
+     * @param currentState         current state if it is already created
      * @param portfolioData        portfolio data
      * @param portfolioUIData      portfolio bottom sheet visibility model
      * @param selectedWallet       selected wallet
      * @param alreadyAddedNetworks already added networks
      */
     fun create(
+        currentState: TangemBottomSheetConfig?,
         portfolioData: PortfolioData,
         portfolioUIData: PortfolioUIData,
         selectedWallet: UserWallet?,
         alreadyAddedNetworks: Set<String>?,
     ): TangemBottomSheetConfig {
-        return TangemBottomSheetConfig(
-            isShow = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
+        return (currentState ?: TangemBottomSheetConfig.Empty).copy(
+            isShown = portfolioUIData.portfolioBSVisibilityModel.addToPortfolioBSVisibility,
             onDismissRequest = { onAddToPortfolioVisibilityChange(false) },
             content = if (selectedWallet != null && alreadyAddedNetworks != null) {
                 AddToPortfolioBSContentUM(
@@ -107,7 +109,7 @@ internal class AddToPortfolioBSContentUMFactory(
         selectedWalletId: UserWalletId,
     ): TangemBottomSheetConfig {
         return TangemBottomSheetConfig(
-            isShow = isShow,
+            isShown = isShow,
             onDismissRequest = { onWalletSelectorVisibilityChange(false) },
             content = WalletSelectorBSContentUM(
                 userWallets = portfolioData.walletsWithCurrencies

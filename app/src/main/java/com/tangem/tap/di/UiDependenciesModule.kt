@@ -1,6 +1,9 @@
 package com.tangem.tap.di
 
 import androidx.compose.material3.SnackbarHostState
+import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.ui.DefaultUiMessageSender
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.core.ui.message.EventMessageHandler
@@ -27,5 +30,12 @@ internal object UiDependenciesModule {
             override val globalSnackbarHostState: SnackbarHostState = SnackbarHostState()
             override val eventMessageHandler: EventMessageHandler = EventMessageHandler()
         }
+    }
+
+    @Provides
+    @Singleton
+    @GlobalUiMessageSender
+    fun provideUiMessageSender(uiDependencies: UiDependencies): UiMessageSender {
+        return DefaultUiMessageSender(uiDependencies.eventMessageHandler)
     }
 }

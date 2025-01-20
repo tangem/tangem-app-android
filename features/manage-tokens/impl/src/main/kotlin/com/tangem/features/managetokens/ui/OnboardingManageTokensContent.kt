@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -18,9 +17,8 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
 import com.tangem.core.ui.event.EventEffect
-import com.tangem.core.ui.res.LocalSnackbarHostState
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.WindowInsetsZero
@@ -51,14 +49,6 @@ internal fun OnboardingManageTokensContent(state: OnboardingManageTokensUM, modi
                     .padding(innerPadding)
                     .fillMaxSize(),
                 state = state,
-            )
-        },
-        snackbarHost = {
-            TangemSnackbarHost(
-                modifier = Modifier
-                    .padding(all = TangemTheme.dimens.spacing16)
-                    .navigationBarsPadding(),
-                hostState = LocalSnackbarHostState.current,
             )
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -102,7 +92,7 @@ private fun FloatingActionButton(config: OnboardingManageTokensUM.ActionButtonCo
         is OnboardingManageTokensUM.ActionButtonConfig.Continue -> ContinueButton(config = config, modifier = modifier)
         is OnboardingManageTokensUM.ActionButtonConfig.Later -> SecondaryButton(
             modifier = modifier,
-            text = stringResource(id = R.string.common_later),
+            text = stringResourceSafe(id = R.string.common_later),
             showProgress = config.showProgress,
             onClick = config.onClick,
         )
@@ -117,7 +107,7 @@ private fun ContinueButton(
     if (config.showTangemIcon) {
         PrimaryButtonIconEnd(
             modifier = modifier,
-            text = stringResource(id = R.string.common_continue),
+            text = stringResourceSafe(id = R.string.common_continue),
             iconResId = R.drawable.ic_tangem_24,
             showProgress = config.showProgress,
             onClick = config.onClick,
@@ -125,7 +115,7 @@ private fun ContinueButton(
     } else {
         PrimaryButton(
             modifier = modifier,
-            text = stringResource(id = R.string.common_continue),
+            text = stringResourceSafe(id = R.string.common_continue),
             showProgress = config.showProgress,
             onClick = config.onClick,
         )

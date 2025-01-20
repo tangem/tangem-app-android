@@ -32,7 +32,7 @@ class Wallet1ChooseOptionComponent(
         }
 
         params.parentParams.titleProvider.changeTitle(
-            text = resourceReference(R.string.onboarding_create_wallet_header),
+            text = resourceReference(R.string.onboarding_getting_started),
         )
 
         componentScope.launch {
@@ -45,6 +45,7 @@ class Wallet1ChooseOptionComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         Wallet1ChooseOption(
+            canSkipBackup = model.canSkipBackup,
             onBackupClick = {
                 onNextStep(OnboardingMultiWalletState.Step.AddBackupDevice)
             },

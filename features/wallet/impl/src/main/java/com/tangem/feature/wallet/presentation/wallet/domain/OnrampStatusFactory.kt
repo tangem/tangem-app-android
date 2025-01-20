@@ -67,7 +67,7 @@ internal class OnrampStatusFactory @Inject constructor(
                         analyticsEventHandler.send(
                             TokenOnrampAnalyticsEvent.OnrampStatusChanged(
                                 tokenSymbol = onrampTx.info.toAmountSymbol,
-                                status = status.name,
+                                status = status.value,
                                 provider = onrampTx.providerName,
                                 fiatCurrency = onrampTx.fromCurrencyCode,
                             ),
