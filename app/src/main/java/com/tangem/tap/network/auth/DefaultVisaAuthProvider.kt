@@ -8,7 +8,7 @@ internal class DefaultVisaAuthProvider @Inject constructor(
     private val authStorage: VisaAuthTokenStorage,
 ) : TangemVisaAuthProvider {
 
-    override suspend fun getAuthHeader(): String {
-        return authStorage.get()?.accessToken?.let { "Bearer $it" } ?: "Error in the app!"
+    override suspend fun getAuthHeader(cardId: String): String {
+        return authStorage.get(cardId)?.accessToken?.let { "Bearer $it" } ?: "Error in the app!"
     }
 }
