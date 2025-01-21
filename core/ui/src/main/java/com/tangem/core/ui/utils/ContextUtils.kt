@@ -10,5 +10,5 @@ fun Context.findActivity(): Activity {
         if (context is Activity) return context
         context = context.baseContext
     }
-    error("")
+    error("Cannot find activity. Please make sure that the context is attached to an activity.")
 }
