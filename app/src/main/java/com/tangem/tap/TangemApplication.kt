@@ -21,6 +21,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.api.common.MoshiConverter
@@ -210,6 +211,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val blockchainExceptionHandler: BlockchainExceptionHandler
         get() = entryPoint.getBlockchainExceptionHandler()
+
+    private val uiMessageSender: UiMessageSender
+        get() = entryPoint.getUiMessageSender()
+
     // endregion
 
     override fun onCreate() {
@@ -308,6 +313,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     appPreferencesStore = appPreferencesStore,
                     clipboardManager = clipboardManager,
                     settingsManager = settingsManager,
+                    uiMessageSender = uiMessageSender,
                 ),
             ),
         )
