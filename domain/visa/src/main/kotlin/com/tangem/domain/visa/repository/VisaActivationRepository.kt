@@ -8,4 +8,8 @@ interface VisaActivationRepository {
     suspend fun getActivationRemoteState(): VisaActivationRemoteState
 
     suspend fun getActivationOrderToSign(): ActivationOrder
+
+    interface Factory {
+        fun create(cardId: String): VisaActivationRepository
+    }
 }
