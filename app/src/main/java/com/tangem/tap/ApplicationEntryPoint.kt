@@ -8,6 +8,8 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
@@ -134,4 +136,7 @@ interface ApplicationEntryPoint {
     fun getSettingsManager(): SettingsManager
 
     fun getBlockchainExceptionHandler(): BlockchainExceptionHandler
+
+    @GlobalUiMessageSender
+    fun getUiMessageSender(): UiMessageSender
 }
