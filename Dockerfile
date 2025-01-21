@@ -18,6 +18,12 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     && apt-get clean
 
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
+        chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list && \
+        apt-get update && apt-get install -y gh && \
+        apt-get clean
+
 RUN mkdir -p $ANDROID_HOME/cmdline-tools/latest && \
     wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip && \
     unzip /tmp/cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools/latest && \
