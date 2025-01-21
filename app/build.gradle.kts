@@ -8,6 +8,7 @@ plugins {
     alias(deps.plugins.google.services)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.firebase.crashlytics)
+    alias(deps.plugins.firebase.perf)
     id("configuration")
 }
 
@@ -212,7 +213,10 @@ dependencies {
     implementation(deps.firebase.analytics)
     implementation(deps.firebase.crashlytics)
     implementation(deps.firebase.messaging)
-
+    implementation(deps.firebase.perf) {
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")
