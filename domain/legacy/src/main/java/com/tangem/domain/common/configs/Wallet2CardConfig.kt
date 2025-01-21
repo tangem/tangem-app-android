@@ -194,6 +194,8 @@ data object Wallet2CardConfig : CardConfig {
             Blockchain.OdysseyChainTestnet -> EllipticCurve.Secp256k1
             Blockchain.Bitrock -> EllipticCurve.Secp256k1
             Blockchain.BitrockTestnet -> EllipticCurve.Secp256k1
+            Blockchain.Sonic -> EllipticCurve.Secp256k1
+            Blockchain.SonicTestnet -> EllipticCurve.Secp256k1
         }
     }
 }
