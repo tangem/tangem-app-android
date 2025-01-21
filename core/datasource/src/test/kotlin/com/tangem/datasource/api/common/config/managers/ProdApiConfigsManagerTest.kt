@@ -10,12 +10,10 @@ import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUIL
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
-import com.tangem.datasource.api.common.visa.TangemVisaAuthProvider
 import com.tangem.lib.auth.ExpressAuthProvider
 import com.tangem.lib.auth.StakeKitAuthProvider
 import com.tangem.utils.ProviderSuspend
 import com.tangem.utils.version.AppVersionProvider
-import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.runBlocking
@@ -31,7 +29,6 @@ private val appVersionProvider = mockk<AppVersionProvider>()
 private val expressAuthProvider = mockk<ExpressAuthProvider>()
 private val stakeKitAuthProvider = mockk<StakeKitAuthProvider>()
 private val appAuthProvider = mockk<AuthProvider>()
-private val visaAuthProvider = mockk<TangemVisaAuthProvider>()
 
 // Don't forget to add new config !!!
 private val API_CONFIGS = setOf(
@@ -39,7 +36,7 @@ private val API_CONFIGS = setOf(
     TangemTech(appVersionProvider, appAuthProvider),
     StakeKit(stakeKitAuthProvider),
     TangemVisaAuth(),
-    TangemVisa(visaAuthProvider),
+    TangemVisa(),
 )
 
 /**
@@ -59,7 +56,6 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { appAuthProvider.getCardId() } returns APP_CARD_ID
         every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
-        coEvery { visaAuthProvider.getAuthHeader() } returns VISA_AUTH_HEADER
     }
 
     @Test
@@ -84,7 +80,6 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
         const val STAKE_KIT_API_KEY = "stake_kit_api_key"
         const val APP_CARD_ID = "app_card_id"
         const val APP_CARD_PUBLIC_KEY = "app_public_key"
-        const val VISA_AUTH_HEADER = "Bearer visa_auth_header"
 
         @JvmStatic
         @Parameterized.Parameters
@@ -198,9 +193,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://bff.tangem.com/",
-                    headers = mapOf(
-                        "Authorization" to ProviderSuspend { VISA_AUTH_HEADER },
-                    ),
+                    headers = mapOf(),
                 ),
             )
         }
