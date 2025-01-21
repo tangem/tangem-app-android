@@ -152,6 +152,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "dione/test" -> Blockchain.OdysseyChainTestnet
         "bitrock" -> Blockchain.Bitrock
         "bitrock/test" -> Blockchain.BitrockTestnet
+        "sonic" -> Blockchain.Sonic
+        "sonic/test" -> Blockchain.SonicTestnet
         else -> null
     }
 }
@@ -301,6 +303,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OdysseyChainTestnet -> "dione/test"
         Blockchain.Bitrock -> "bitrock"
         Blockchain.BitrockTestnet -> "bitrock/test"
+        Blockchain.Sonic -> "sonic"
+        Blockchain.SonicTestnet -> "sonic/test"
     }
 }
 
@@ -398,6 +402,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Clore -> "clore-ai"
         Blockchain.OdysseyChain, Blockchain.OdysseyChainTestnet -> "dione"
         Blockchain.Bitrock, Blockchain.BitrockTestnet -> "bitrock"
+        Blockchain.Sonic, Blockchain.SonicTestnet -> "sonic-3"
     }
 }
 
