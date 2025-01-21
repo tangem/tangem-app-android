@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.model.OnboardingVisaChooseWalletModel
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.ui.OnboardingVisaChooseWallet
 import kotlinx.coroutines.flow.launchIn
@@ -31,7 +32,7 @@ internal class OnboardingVisaChooseWalletComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = remember(this) { { params.onBack() } })
+        BackHandler(onBack = remember(this) { { params.childParams.onBack() } })
 
         OnboardingVisaChooseWallet(
             modifier = modifier,
@@ -40,7 +41,7 @@ internal class OnboardingVisaChooseWalletComponent(
     }
 
     data class Params(
-        val onBack: () -> Unit,
+        val childParams: DefaultOnboardingVisaComponent.ChildParams,
         val onEvent: (Event) -> Unit,
     ) {
         enum class Event {
