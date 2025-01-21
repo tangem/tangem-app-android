@@ -2,6 +2,7 @@ package com.tangem.tap.domain.tasks.visa
 
 import com.reown.util.hexToBytes
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
@@ -36,8 +37,14 @@ class VisaCardActivationTask @AssistedInject constructor(
     private val otpStorage: VisaOTPStorage,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val visaAuthRepository: VisaAuthRepository,
-    private val visaActivationRepository: VisaActivationRepository,
+    private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
 ) : CardSessionRunnable<VisaCardActivationResponse> {
+
+    private class SessionContext(
+        val visaActivationRepository: VisaActivationRepository,
+        val card: Card,
+        val session: CardSession,
+    )
 
     override fun run(session: CardSession, callback: CompletionCallback<VisaCardActivationResponse>) {
         coroutineScope.launch {
@@ -52,20 +59,27 @@ class VisaCardActivationTask @AssistedInject constructor(
             return CompletionResult.Failure(TangemSdkError.Underlying(VisaActivationError.WrongCard.message))
         }
 
+        val visaActivationRepository = visaActivationRepositoryFactory.create(card.cardId)
+
+        val context = SessionContext(
+            visaActivationRepository = visaActivationRepository,
+            card = card,
+            session = session,
+        )
+
         return if (challengeToSign != null) {
-            signAuthorizationChallenge(session, challengeToSign)
+            context.signAuthorizationChallenge(challengeToSign)
         } else {
             val activationOrder = runCatching { visaActivationRepository.getActivationOrderToSign() }
                 .getOrElse {
                     return CompletionResult.Failure(TangemSdkError.Underlying(it.message ?: ""))
                 }
 
-            signOrder(session, activationOrder)
+            context.signOrder(activationOrder)
         }
     }
 
-    private suspend fun signAuthorizationChallenge(
-        session: CardSession,
+    private suspend fun SessionContext.signAuthorizationChallenge(
         challengeToSign: VisaAuthChallenge.Card,
     ): CompletionResult<VisaCardActivationResponse> {
         val attestationCommand = AttestCardKeyCommand(challenge = challengeToSign.challenge.hexToBytes())
@@ -78,7 +92,6 @@ class VisaCardActivationTask @AssistedInject constructor(
         return when (result) {
             is CompletionResult.Success -> {
                 processSignedAuthorizationChallenge(
-                    session = session,
                     signedChallenge = challengeToSign.toSignedChallenge(
                         signedChallenge = result.data.cardSignature.toHexString(),
                         salt = result.data.salt.toHexString(),
@@ -91,8 +104,7 @@ class VisaCardActivationTask @AssistedInject constructor(
         }
     }
 
-    private suspend fun processSignedAuthorizationChallenge(
-        session: CardSession,
+    private suspend fun SessionContext.processSignedAuthorizationChallenge(
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationResponse> {
         return coroutineScope {
@@ -107,12 +119,14 @@ class VisaCardActivationTask @AssistedInject constructor(
 
             otpTaskDeferred.await()
 
-            signOrder(session, order)
+            signOrder(order)
         }
     }
 
     @Throws(TangemSdkError::class)
-    private suspend fun getActivationOrderToSign(signedChallenge: VisaAuthSignedChallenge): ActivationOrder {
+    private suspend fun SessionContext.getActivationOrderToSign(
+        signedChallenge: VisaAuthSignedChallenge,
+    ): ActivationOrder {
         val tokens = runCatching {
             visaAuthRepository.getAccessTokens(signedChallenge)
         }.getOrElse {
@@ -121,7 +135,7 @@ class VisaCardActivationTask @AssistedInject constructor(
             )
         }
 
-        visaAuthTokenStorage.store(tokens)
+        visaAuthTokenStorage.store(card.cardId, tokens)
 
         return visaActivationRepository.getActivationOrderToSign()
     }
@@ -180,11 +194,7 @@ class VisaCardActivationTask @AssistedInject constructor(
         }
     }
 
-    private suspend fun signOrder(
-        session: CardSession,
-        order: ActivationOrder,
-    ): CompletionResult<VisaCardActivationResponse> {
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+    private suspend fun SessionContext.signOrder(order: ActivationOrder): CompletionResult<VisaCardActivationResponse> {
         val wallet =
             card.wallets.firstOrNull() ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
         val task = SignHashCommand(order.hash.hexToBytes(), wallet.publicKey)
@@ -197,7 +207,6 @@ class VisaCardActivationTask @AssistedInject constructor(
         return when (result) {
             is CompletionResult.Success -> {
                 handleSignedOrder(
-                    session = session,
                     activationOrder = order,
                     response = result.data,
                 )
@@ -208,13 +217,10 @@ class VisaCardActivationTask @AssistedInject constructor(
         }
     }
 
-    private suspend fun handleSignedOrder(
-        session: CardSession,
+    private suspend fun SessionContext.handleSignedOrder(
         activationOrder: ActivationOrder,
         response: SignHashResponse,
     ): CompletionResult<VisaCardActivationResponse> {
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-
         val signedOrder = SignedActivationOrder(
             activationOrder = activationOrder,
             signature = response.signature.toHexString(),
@@ -232,9 +238,7 @@ class VisaCardActivationTask @AssistedInject constructor(
         return setupAccessCode(session).map { activationResponse }
     }
 
-    private suspend fun setupAccessCode(session: CardSession): CompletionResult<Unit> {
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-
+    private suspend fun SessionContext.setupAccessCode(session: CardSession): CompletionResult<Unit> {
         if (card.isAccessCodeSet) {
             return CompletionResult.Success(Unit)
         }
