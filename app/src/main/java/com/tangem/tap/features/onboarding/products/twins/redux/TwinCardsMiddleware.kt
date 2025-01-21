@@ -1,17 +1,25 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
-import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.ui.R
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.toWrappedList
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.twinsIsTwinned
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.*
@@ -185,8 +193,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateSecondWallet))
                         }
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
                 }
             }
         }
@@ -208,8 +215,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateThirdWallet))
                         }
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
                 }
             }
         }
@@ -218,7 +224,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
             scope.launch {
                 when (val result = manager.complete(action.message)) {
-                    is Result.Success -> {
+                    is CompletionResult.Success -> {
                         Analytics.send(Onboarding.Twins.SetupFinished())
                         updateScanResponse(result.data)
 
@@ -234,8 +240,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                             }
                         }
                     }
-                    is Result.Failure -> {
-                    }
+                    is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
                 }
             }
         }
@@ -346,6 +351,29 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
         }
         else -> Unit
+    }
+}
+
+private fun showCardVerificationFailedDialog(error: TangemError) {
+    if (error is TangemSdkError.CardVerificationFailed) {
+        Analytics.send(event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed)
+
+        val resource = error.localizedDescriptionRes()
+        val resId = resource.resId ?: R.string.common_unknown_error
+        val resArgs = resource.args.map { it.value }
+
+        store.inject(DaggerGraphState::uiMessageSender).send(
+            message = Dialogs.cardVerificationFailed(
+                errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
+                onRequestSupport = {
+                    mainScope.launch {
+                        store.inject(DaggerGraphState::sendFeedbackEmailUseCase).invoke(
+                            type = FeedbackEmailType.CardAttestationFailed,
+                        )
+                    }
+                },
+            ),
+        )
     }
 }
 
