@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.visa
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.TangemSdkError
@@ -24,9 +25,15 @@ import kotlin.coroutines.resume
 
 internal class VisaCardScanHandler @Inject constructor(
     private val visaAuthRepository: VisaAuthRepository,
-    private val visaActivationRepository: VisaActivationRepository,
+    private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
 ) {
+
+    private class SessionContext(
+        val visaActivationRepository: VisaActivationRepository,
+        val card: Card,
+        val session: CardSession,
+    )
 
     suspend fun handleVisaCardScan(session: CardSession): CompletionResult<VisaCardActivationStatus> {
         Timber.i("Attempting to handle Visa card scan")
@@ -36,6 +43,14 @@ internal class VisaCardScanHandler @Inject constructor(
             return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
         }
 
+        val visaActivationRepository = visaActivationRepositoryFactory.create(card.cardId)
+
+        val context = SessionContext(
+            visaActivationRepository = visaActivationRepository,
+            card = card,
+            session = session,
+        )
+
         val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: run {
             val activationInput =
                 VisaActivationInput(card.cardId, card.cardPublicKey, card.isAccessCodeSet)
@@ -43,13 +58,10 @@ internal class VisaCardScanHandler @Inject constructor(
             return CompletionResult.Success(activationStatus)
         }
 
-        return deriveKey(wallet, session)
+        return context.deriveKey(wallet)
     }
 
-    private suspend fun deriveKey(
-        wallet: CardWallet,
-        session: CardSession,
-    ): CompletionResult<VisaCardActivationStatus> {
+    private suspend fun SessionContext.deriveKey(wallet: CardWallet): CompletionResult<VisaCardActivationStatus> {
         val derivationPath = VisaUtilities.visaDefaultDerivationPath ?: run {
             Timber.e("Failed to create derivation path while first scan")
 
@@ -64,17 +76,16 @@ internal class VisaCardScanHandler @Inject constructor(
                 continuation.resume(result)
             }
         }
-        return handleDerivationResponse(derivationTaskResult, session)
+        return handleDerivationResponse(derivationTaskResult)
     }
 
-    private suspend fun handleDerivationResponse(
+    private suspend fun SessionContext.handleDerivationResponse(
         result: CompletionResult<ExtendedPublicKey>,
-        session: CardSession,
     ): CompletionResult<VisaCardActivationStatus> {
         return when (result) {
             is CompletionResult.Success -> {
                 Timber.i("Start task for loading challenge for Visa wallet")
-                handleWalletAuthorization(session)
+                handleWalletAuthorization()
             }
             is CompletionResult.Failure -> {
                 CompletionResult.Failure(result.error)
@@ -82,9 +93,8 @@ internal class VisaCardScanHandler @Inject constructor(
         }
     }
 
-    private suspend fun handleWalletAuthorization(session: CardSession): CompletionResult<VisaCardActivationStatus> {
+    private suspend fun SessionContext.handleWalletAuthorization(): CompletionResult<VisaCardActivationStatus> {
         Timber.i("Started handling authorization using Visa wallet")
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         val derivationPath = VisaUtilities.visaDefaultDerivationPath ?: run {
             Timber.e("Failed to create derivation path while handling wallet authorization")
@@ -122,14 +132,12 @@ internal class VisaCardScanHandler @Inject constructor(
             publicKey = wallet.publicKey,
             derivationPath = derivationPath,
             nonce = challengeResponse.challenge,
-            session = session,
         )
 
         return when (signChallengeResult) {
             is CompletionResult.Success -> {
                 Timber.i("Challenge signed with Wallet public key")
                 handleWalletAuthorizationTokens(
-                    session = session,
                     signedChallenge = challengeResponse
                         .toSignedChallenge(signChallengeResult.data.signature.toHexString()),
                 )
@@ -141,27 +149,31 @@ internal class VisaCardScanHandler @Inject constructor(
         }
     }
 
-    private suspend fun handleWalletAuthorizationTokens(
-        session: CardSession,
+    private suspend fun SessionContext.handleWalletAuthorizationTokens(
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationStatus> {
+        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
         val authorizationTokensResponse = runCatching {
             visaAuthRepository.getAccessTokens(signedChallenge = signedChallenge)
         }.getOrElse {
             Timber.i(
                 "Failed to get Access token for Wallet public key authoziation. Authorizing using Card Pub key",
             )
-            return handleCardAuthorization(session)
+            return handleCardAuthorization()
         }
 
-        visaAuthTokenStorage.store(authorizationTokensResponse)
+        visaAuthTokenStorage.store(
+            cardId = card.cardId,
+            tokens = authorizationTokensResponse,
+        )
 
         Timber.i("Authorized using Wallet public key successfully")
 
         return CompletionResult.Success(VisaCardActivationStatus.Activated(authorizationTokensResponse))
     }
 
-    private suspend fun handleCardAuthorization(session: CardSession): CompletionResult<VisaCardActivationStatus> {
+    private suspend fun SessionContext.handleCardAuthorization(): CompletionResult<VisaCardActivationStatus> {
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         Timber.i("Requesting authorization challenge to sign")
@@ -178,7 +190,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
         Timber.i("Received challenge to sign: ${challengeResponse.challenge}")
 
-        val signChallengeResult = signChallengeWithCard(session = session, challenge = challengeResponse.challenge)
+        val signChallengeResult = signChallengeWithCard(challenge = challengeResponse.challenge)
 
         val attestCardKeyResponse = when (signChallengeResult) {
             is CompletionResult.Success -> {
@@ -210,7 +222,10 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }
 
-        visaAuthTokenStorage.store(authorizationTokensResponse)
+        visaAuthTokenStorage.store(
+            cardId = card.cardId,
+            tokens = authorizationTokensResponse,
+        )
 
         val activationRemoteState = visaActivationRepository.getActivationRemoteState()
 
@@ -239,11 +254,10 @@ internal class VisaCardScanHandler @Inject constructor(
         )
     }
 
-    private suspend fun signChallengeWithWallet(
+    private suspend fun SessionContext.signChallengeWithWallet(
         publicKey: ByteArray,
         derivationPath: DerivationPath,
         nonce: String,
-        session: CardSession,
     ): CompletionResult<SignHashResponse> {
         val signHashCommand = SignHashCommand(publicKey, nonce.toByteArray(), derivationPath)
         val result = suspendCancellableCoroutine {
@@ -262,8 +276,7 @@ internal class VisaCardScanHandler @Inject constructor(
         }
     }
 
-    private suspend fun signChallengeWithCard(
-        session: CardSession,
+    private suspend fun SessionContext.signChallengeWithCard(
         challenge: String,
     ): CompletionResult<AttestCardKeyResponse> {
         val signHashCommand = AttestCardKeyCommand(challenge = challenge.toByteArray())
