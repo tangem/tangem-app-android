@@ -9,6 +9,8 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.model.OnboardingVisaAccessCodeModel
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.OnboardingVisaAccessCode
@@ -16,10 +18,11 @@ import kotlinx.coroutines.launch
 
 internal class OnboardingVisaAccessCodeComponent(
     appComponentContext: AppComponentContext,
+    config: Config,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: OnboardingVisaAccessCodeModel = getOrCreateModel()
+    private val model: OnboardingVisaAccessCodeModel = getOrCreateModel(config)
 
     init {
         componentScope.launch {
@@ -31,7 +34,7 @@ internal class OnboardingVisaAccessCodeComponent(
             }
         }
         componentScope.launch {
-            model.onDone.collect { params.onDone() }
+            model.onDone.collect { params.onDone(it) }
         }
     }
 
@@ -46,8 +49,17 @@ internal class OnboardingVisaAccessCodeComponent(
         OnboardingVisaAccessCode(state, modifier)
     }
 
+    data class Config(
+        val scanResponse: ScanResponse,
+    )
+
     data class Params(
         val childParams: DefaultOnboardingVisaComponent.ChildParams,
-        val onDone: () -> Unit,
+        val onDone: (DoneEvent) -> Unit,
+    )
+
+    data class DoneEvent(
+        val visaDataForApprove: VisaDataForApprove,
+        val walletFound: Boolean,
     )
 }
