@@ -52,6 +52,11 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         MutableSharedFlow<Unit>()
     }
 
+    private val childParams = ChildParams(
+        onBack = ::onChildBack,
+        parentBackEvent = currentChildBackEventHandle,
+    )
+
     private val stackNavigation = StackNavigation<OnboardingVisaRoute>()
 
     private val childStack: Value<ChildStack<OnboardingVisaRoute, ComposableContentComponent>> =
@@ -76,7 +81,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
             if (childStack.value.active.configuration is OnboardingVisaRoute.AccessCode) {
                 componentScope.launch { currentChildBackEventHandle.emit(Unit) }
             } else {
-                stackNavigation.pop()
+                onChildBack()
             }
         }
     }
@@ -90,11 +95,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         }
     }
 
-    private val childParams = ChildParams(
-        onBack = ::onChildBack,
-        parentBackEvent = currentChildBackEventHandle,
-    )
-
+    @Suppress("LongMethod")
     private fun createChild(
         route: OnboardingVisaRoute,
         factoryContext: AppComponentContext,
@@ -112,10 +113,24 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaAccessCodeComponent.Params(
                     childParams = childParams,
-                    onDone = { stackNavigation.push(OnboardingVisaRoute.ChooseWallet) },
+                    onDone = {
+                        stackNavigation.push(
+                            if (it.walletFound) {
+                                OnboardingVisaRoute.TangemWalletApproveOption(
+                                    visaDataForApprove = it.visaDataForApprove,
+                                    allowNavigateBack = false,
+                                )
+                            } else {
+                                OnboardingVisaRoute.ChooseWallet(it.visaDataForApprove)
+                            },
+                        )
+                    },
+                ),
+                config = OnboardingVisaAccessCodeComponent.Config(
+                    scanResponse = params.scanResponse,
                 ),
             )
-            OnboardingVisaRoute.ChooseWallet -> OnboardingVisaChooseWalletComponent(
+            is OnboardingVisaRoute.ChooseWallet -> OnboardingVisaChooseWalletComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaChooseWalletComponent.Params(
                     childParams = childParams,
@@ -123,9 +138,12 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                         stackNavigation.push(
                             when (event) {
                                 OnboardingVisaChooseWalletComponent.Params.Event.TangemWallet ->
-                                    OnboardingVisaRoute.TangemWalletApproveOption
+                                    OnboardingVisaRoute.TangemWalletApproveOption(
+                                        visaDataForApprove = route.visaDataForApprove,
+                                        allowNavigateBack = true,
+                                    )
                                 OnboardingVisaChooseWalletComponent.Params.Event.OtherWallet ->
-                                    OnboardingVisaRoute.OtherWalletApproveOption
+                                    OnboardingVisaRoute.OtherWalletApproveOption(route.visaDataForApprove)
                             },
                         )
                     },
@@ -138,8 +156,11 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                     onDone = { stackNavigation.push(OnboardingVisaRoute.PinCode) },
                 ),
             )
-            OnboardingVisaRoute.OtherWalletApproveOption -> OnboardingVisaOtherWalletComponent(
+            is OnboardingVisaRoute.OtherWalletApproveOption -> OnboardingVisaOtherWalletComponent(
                 appComponentContext = factoryContext,
+                config = OnboardingVisaOtherWalletComponent.Config(
+                    visaDataForApprove = route.visaDataForApprove,
+                ),
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
                     onDone = { stackNavigation.push(OnboardingVisaRoute.InProgress) },
@@ -152,8 +173,11 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                     onDone = { params.onDone() },
                 ),
             )
-            OnboardingVisaRoute.TangemWalletApproveOption -> OnboardingVisaApproveComponent(
+            is OnboardingVisaRoute.TangemWalletApproveOption -> OnboardingVisaApproveComponent(
                 appComponentContext = factoryContext,
+                config = OnboardingVisaApproveComponent.Config(
+                    visaDataForApprove = route.visaDataForApprove,
+                ),
                 params = OnboardingVisaApproveComponent.Params(
                     childParams = childParams,
                     onDone = { stackNavigation.push(OnboardingVisaRoute.InProgress) },
@@ -163,15 +187,24 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
     }
 
     private fun onChildBack() {
-        when (childStack.value.active.configuration) {
+        if (childStack.value.backStack.size == 1) {
+            // TODO show dialog
+            return
+        }
+
+        when (val route = childStack.value.active.configuration) {
             OnboardingVisaRoute.AccessCode,
-            OnboardingVisaRoute.TangemWalletApproveOption,
-            OnboardingVisaRoute.OtherWalletApproveOption,
+            is OnboardingVisaRoute.OtherWalletApproveOption,
             -> stackNavigation.pop()
+            is OnboardingVisaRoute.TangemWalletApproveOption -> {
+                if (route.allowNavigateBack) {
+                    stackNavigation.pop()
+                }
+            }
+
             is OnboardingVisaRoute.Welcome,
-            OnboardingVisaRoute.ChooseWallet,
+            is OnboardingVisaRoute.ChooseWallet,
             OnboardingVisaRoute.InProgress,
-            OnboardingVisaRoute.OtherWalletApproveOption,
             OnboardingVisaRoute.PinCode,
             -> {
             }
