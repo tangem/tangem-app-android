@@ -173,7 +173,7 @@ object NotificationsFactory {
         val spendingAmount = if (cryptoCurrency is CryptoCurrency.Token) {
             feeAmount
         } else {
-            sendingAmount
+            sendingAmount + feeAmount
         }
         val diff = balance.minus(spendingAmount)
         if (existentialDeposit != null && diff >= BigDecimal.ZERO && existentialDeposit > diff) {
