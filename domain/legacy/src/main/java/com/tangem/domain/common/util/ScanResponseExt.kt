@@ -24,10 +24,10 @@ val ScanResponse.cardTypesResolver: CardTypesResolver
     )
 
 val ScanResponse.derivationStyleProvider: DerivationStyleProvider
-    get() = TangemDerivationStyleProvider(
-        cardTypesResolver,
-        card,
-    )
+    get() = card.derivationStyleProvider
+
+val CardDTO.derivationStyleProvider: DerivationStyleProvider
+    get() = TangemDerivationStyleProvider(this)
 
 val UserWallet.cardTypesResolver: CardTypesResolver
     get() = scanResponse.cardTypesResolver
