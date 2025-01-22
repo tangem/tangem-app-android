@@ -338,7 +338,9 @@ internal class DefaultLegacyWalletConnectRepository(
                 optionalNamespace.key to Wallet.Model.Namespace.Session(
                     accounts = accountsOptional.distinct(),
                     methods = methods,
-                    chains = userChains.keys.toList(),
+                    chains = userChains.keys
+                        .filter { it.startsWith(optionalNamespace.key) }
+                        .toList(),
                     events = optionalNamespace.value.events,
                 )
             }
