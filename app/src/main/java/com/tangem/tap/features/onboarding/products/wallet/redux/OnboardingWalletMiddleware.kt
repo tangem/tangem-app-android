@@ -12,9 +12,14 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.toWrappedList
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
@@ -30,6 +35,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
+import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
@@ -469,6 +475,25 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         val crashlytics = FirebaseCrashlytics.getInstance()
 
                         when (val error = result.error) {
+                            is TangemSdkError.CardVerificationFailed -> {
+                                Analytics.send(event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed)
+
+                                val resource = error.localizedDescriptionRes()
+                                val resId = resource.resId ?: com.tangem.core.ui.R.string.common_unknown_error
+                                val resArgs = resource.args.map { it.value }
+
+                                store.inject(DaggerGraphState::uiMessageSender).send(
+                                    message = Dialogs.cardVerificationFailed(
+                                        errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
+                                        onRequestSupport = {
+                                            mainScope.launch {
+                                                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                                                    .invoke(type = FeedbackEmailType.CardAttestationFailed)
+                                            }
+                                        },
+                                    ),
+                                )
+                            }
                             is TangemSdkError.BackupFailedNotEmptyWallets -> {
                                 store.dispatchOnMain(
                                     GlobalAction.ShowDialog(
