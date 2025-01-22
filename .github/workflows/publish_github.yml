@@ -48,8 +48,8 @@ jobs:
                 version_name=$(basename "$apk_file" | sed -E "s/app-release-protected-${VERSION_CODE}-(.*).apk/\1/")
                 echo "Version name: $version_name"
 
-                apk_hash=$(sha256sum "$apk_file" | awk '"'"'{print $1}'"'"')
-                echo "APK hash: $apk_hash"
+                apk_checksum=$(sha256sum "$apk_file" | awk '"'"'{print $1}'"'"')
+                echo "APK hash: $apk_checksum"
               else
                 echo "File with code $VERSION_CODE not found"
                 exit 1
@@ -66,7 +66,7 @@ jobs:
               cd tangem-binaries
   
               git checkout main
-              echo "- **Version**: $version_name\n- **Hash**: $apk_hash" > README.md
+              echo "- **Version**: $version_name\n- **Hash**: $apk_checksum" > README.md
               cp "$apk_file" app-release-protected.apk
               git add .
               git commit -m "Updated to version $version_name"
@@ -78,12 +78,12 @@ jobs:
               # create github release
               RELEASE_TAG="v$version_name"
               RELEASE_NAME="Release $version_name"
-              RELEASE_BODY="Version code ${VERSION_CODE}"
+              RELEASE_BODY="Version code: ${VERSION_CODE}\nChecksum: $apk_checksum"
               
               if ! gh release view $RELEASE_TAG > /dev/null 2>&1; then
                 gh release create $RELEASE_TAG "$apk_file" \
                 --title "$RELEASE_NAME" \
-                --notes "$RELEASE_BODY"
+                -F README.md
               else
                 gh release upload $RELEASE_TAG "$apk_file"
               fi
