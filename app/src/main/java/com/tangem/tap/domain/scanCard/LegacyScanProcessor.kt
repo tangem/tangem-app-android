@@ -11,13 +11,13 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
-import com.tangem.core.ui.message.DialogMessage
-import com.tangem.core.ui.message.EventMessageAction
+import com.tangem.core.ui.message.dialog.Dialogs
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
@@ -28,7 +28,6 @@ import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.sdk.extensions.localizedDescriptionRes
-import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.analytics.paramsInterceptor.CardContextInterceptor
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
@@ -168,36 +167,25 @@ internal class LegacyScanProcessor @Inject constructor(
         crossinline onCancel: () -> Unit,
     ) {
         if (error is TangemSdkError.CardVerificationFailed) {
-            analyticsEventHandler.send(event = Onboarding.OfflineAttestationFailed)
+            analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed)
 
             val resource = error.localizedDescriptionRes()
             val resId = resource.resId ?: R.string.common_unknown_error
             val resArgs = resource.args.map { it.value }
 
             uiMessageSender.send(
-                message = DialogMessage(
-                    message = resourceReference(id = resId, resArgs.toWrappedList()),
-                    title = resourceReference(id = R.string.security_alert_title),
-                    isDismissable = false,
-                    firstActionBuilder = {
-                        EventMessageAction(
-                            title = resourceReference(id = R.string.alert_button_request_support),
-                            onClick = {
-                                mainScope.launch {
-                                    onCancel()
+                message = Dialogs.cardVerificationFailed(
+                    errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
+                    onRequestSupport = {
+                        mainScope.launch {
+                            onCancel()
 
-                                    store.inject(DaggerGraphState::sendFeedbackEmailUseCase).invoke(
-                                        type = FeedbackEmailType.CardAttestationFailed,
-                                    )
-                                }
-                            },
-                        )
-                    },
-                    secondActionBuilder = {
-                        cancelAction {
-                            mainScope.launch { onCancel() }
+                            store.inject(DaggerGraphState::sendFeedbackEmailUseCase).invoke(
+                                type = FeedbackEmailType.CardAttestationFailed,
+                            )
                         }
                     },
+                    onCancelClick = { onCancel() },
                 ),
             )
         } else {
