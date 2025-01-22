@@ -68,6 +68,7 @@ internal fun OnboardingVisaApprove(state: OnboardingVisaApproveUM, modifier: Mod
                 textReference = TextReference.Str("Approve"),
                 iconRes = R.drawable.ic_tangem_24,
                 isIconVisible = true,
+                showProgress = state.approveButtonLoading,
                 onClick = state.onApproveClick,
             ),
         )
