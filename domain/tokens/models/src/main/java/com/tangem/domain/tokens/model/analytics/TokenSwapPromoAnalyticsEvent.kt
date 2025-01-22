@@ -36,8 +36,8 @@ sealed class TokenSwapPromoAnalyticsEvent(
         }
     }
 
+    // Use it on new promo action
     enum class ProgramName {
-        OKX,
-        Ring,
+        Empty,
     }
 }

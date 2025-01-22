@@ -1,4 +1,4 @@
-package com.tangem.core.ui.pullToRefresh
+package com.tangem.core.ui.components.containers.pullToRefresh
 
 /**
  * Pull to refresh config data

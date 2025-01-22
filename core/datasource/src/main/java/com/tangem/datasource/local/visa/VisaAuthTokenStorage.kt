@@ -4,7 +4,7 @@ import com.tangem.domain.visa.model.VisaAuthTokens
 
 interface VisaAuthTokenStorage {
 
-    suspend fun store(tokens: VisaAuthTokens)
+    suspend fun store(cardId: String, tokens: VisaAuthTokens)
 
-    suspend fun get(): VisaAuthTokens?
+    suspend fun get(cardId: String): VisaAuthTokens?
 }

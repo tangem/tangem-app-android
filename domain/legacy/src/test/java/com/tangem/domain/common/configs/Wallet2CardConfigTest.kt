@@ -151,6 +151,8 @@ class Wallet2CardConfigTest {
         Blockchain.OdysseyChainTestnet to EllipticCurve.Secp256k1,
         Blockchain.Bitrock to EllipticCurve.Secp256k1,
         Blockchain.BitrockTestnet to EllipticCurve.Secp256k1,
+        Blockchain.Sonic to EllipticCurve.Secp256k1,
+        Blockchain.SonicTestnet to EllipticCurve.Secp256k1,
     )
 
     @Test

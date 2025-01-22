@@ -33,22 +33,20 @@ internal class DefaultVisaAuthTokenStorage @Inject constructor(
 
     private val tokensAdapter = moshi.adapter(VisaAuthTokens::class.java)
 
-    override suspend fun store(tokens: VisaAuthTokens) = withContext(dispatcherProvider.io) {
+    override suspend fun store(cardId: String, tokens: VisaAuthTokens) = withContext(dispatcherProvider.io) {
         val json = tokensAdapter.toJson(tokens)
 
         secureStorage.store(
             json.encodeToByteArray(throwOnInvalidSequence = true),
-            VISA_AUTH_TOKENS_KEY,
+            createKey(cardId),
         )
     }
 
-    override suspend fun get(): VisaAuthTokens? = withContext(dispatcherProvider.io) {
-        secureStorage.get(VISA_AUTH_TOKENS_KEY)
+    override suspend fun get(cardId: String): VisaAuthTokens? = withContext(dispatcherProvider.io) {
+        secureStorage.get(createKey(cardId))
             ?.decodeToString(throwOnInvalidSequence = true)
             ?.let(tokensAdapter::fromJson)
     }
 
-    private companion object {
-        const val VISA_AUTH_TOKENS_KEY = "visa_auth_tokens"
-    }
+    private fun createKey(cardId: String): String = "visa_auth_tokens_$cardId"
 }

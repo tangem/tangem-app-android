@@ -6,23 +6,29 @@ import com.tangem.domain.visa.model.ActivationOrder
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-internal class DefaultVisaActivationRepository @Inject constructor(
+internal class DefaultVisaActivationRepository @AssistedInject constructor(
+    @Assisted private val cardId: String,
     private val visaApi: TangemVisaApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val visaActivationStatusConverter: VisaActivationStatusConverter,
 ) : VisaActivationRepository {
 
     override suspend fun getActivationRemoteState(): VisaActivationRemoteState = withContext(dispatcherProvider.io) {
-        visaActivationStatusConverter.convert(visaApi.getRemoteActivationStatus())
+        visaActivationStatusConverter.convert(visaApi.getRemoteActivationStatus(cardId))
         // TODO implement refreshing access token if it's expired
     }
 
     override suspend fun getActivationOrderToSign(): ActivationOrder {
         return ActivationOrder("TODO implement")
+    }
+
+    @AssistedFactory
+    interface Factory : VisaActivationRepository.Factory {
+        override fun create(cardId: String): DefaultVisaActivationRepository
     }
 }
