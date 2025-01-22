@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.ProgramName
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -50,7 +51,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.NoteMigration -> MainScreen.NotePromo
             is WalletNotification.SwapPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
                 source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
             )
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
@@ -58,10 +59,6 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.SomeNetworksUnreachable,
             is WalletNotification.Warning.NetworksUnreachable,
             -> null
-            is WalletNotification.RingPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
-                source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Ring,
-            )
             is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
         }
     }
