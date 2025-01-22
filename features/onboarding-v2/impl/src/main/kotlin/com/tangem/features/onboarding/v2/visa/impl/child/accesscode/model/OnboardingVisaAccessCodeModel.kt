@@ -2,8 +2,15 @@ package com.tangem.features.onboarding.v2.visa.impl.child.accesscode.model
 
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.common.CompletionResult
+import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -14,15 +21,22 @@ import javax.inject.Inject
 @Stable
 @ComponentScoped
 internal class OnboardingVisaAccessCodeModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     @Suppress("UnusedPrivateMember")
     private val tangemSdkManager: TangemSdkManager,
+    private val visaAuthRepository: VisaAuthRepository,
 ) : Model() {
+
+    private val params: OnboardingVisaAccessCodeComponent.Config = paramsContainer.require()
+    private val activationStatus =
+        params.scanResponse.visaCardActivationStatus as? VisaCardActivationStatus.NotStartedActivation
+            ?: error("Visa activation status is not set or incorrect for this step")
 
     private val _uiState = MutableStateFlow(getInitialState())
     val uiState = _uiState.asStateFlow()
     val onBack = MutableSharedFlow<Unit>()
-    val onDone = MutableSharedFlow<Unit>()
+    val onDone = MutableSharedFlow<OnboardingVisaAccessCodeComponent.DoneEvent>()
 
     fun onBack() {
         when (uiState.value.step) {
@@ -97,27 +111,53 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
 
     @Suppress("UnusedPrivateMember")
     private fun startActivationProcess(accessCode: String) {
-        modelScope.launch { onDone.emit(Unit) }
+        loading(true)
 
-        // modelScope.launch {
-        //     @Suppress("UnusedPrivateMember")
-        //     val result = tangemSdkManager.activateVisaCard(
-        //         accessCode = accessCode,
-        //         challengeToSign = null,
-        //         activationInput = TODO(),
-        //     )
-        //
-        // when (result) {
-        //     is CompletionResult.Success -> {
-        //         val response = result.data
-        //         TODO()
-        //     }
-        //     is CompletionResult.Failure -> {
-        //         // show alert
-        //         TODO()
-        //     }
-        // }
-        // }
+        modelScope.launch {
+            val challengeToSign = runCatching {
+                visaAuthRepository.getCardAuthChallenge(
+                    cardId = activationStatus.activationInput.cardId,
+                    cardPublicKey = activationStatus.activationInput.cardPublicKey.toHexString(),
+                )
+            }.getOrElse {
+                loading(false)
+                // show alert
+                return@launch
+            }
+
+            val result = tangemSdkManager.activateVisaCard(
+                accessCode = accessCode,
+                challengeToSign = challengeToSign,
+                activationInput = activationStatus.activationInput,
+            )
+            //
+            when (result) {
+                is CompletionResult.Success -> {
+                    // TODO load approve data from backend
+                    // TODO try to find wallet in the app
+
+                    modelScope.launch {
+                        onDone.emit(
+                            OnboardingVisaAccessCodeComponent.DoneEvent(
+                                visaDataForApprove = VisaDataForApprove(
+                                    targetAddress = "x9F65354e595284956599F2892fA4A4a87653D6E6",
+                                    approveHash = "approve hash",
+                                ),
+                                walletFound = false, // TODO
+                            ),
+                        )
+                    }
+                }
+                is CompletionResult.Failure -> {
+                    loading(false)
+                    // show alert
+                }
+            }
+        }
+    }
+
+    private fun loading(state: Boolean) {
+        _uiState.update { it.copy(buttonLoading = state) }
     }
 
     private companion object {
