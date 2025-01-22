@@ -23,7 +23,6 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.OkxPromoNotification
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
@@ -92,21 +91,14 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                     key = { it::class.java },
                     contentType = { it.config::class.java },
                     itemContent = {
-                        if (it is TokenDetailsNotification.SwapPromo) {
-                            OkxPromoNotification(
-                                config = it.config,
-                                modifier = itemModifier.animateItem(),
-                            )
-                        } else {
-                            Notification(
-                                modifier = itemModifier.animateItem(),
-                                config = it.config,
-                                iconTint = when (it) {
-                                    is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
-                                    else -> null
-                                },
-                            )
-                        }
+                        Notification(
+                            modifier = itemModifier.animateItem(),
+                            config = it.config,
+                            iconTint = when (it) {
+                                is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
+                                else -> null
+                            },
+                        )
                     },
                 )
 
