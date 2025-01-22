@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.visa.impl.route
 
+import com.tangem.domain.visa.model.VisaDataForApprove
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -12,13 +13,16 @@ sealed class OnboardingVisaRoute {
     data object AccessCode : OnboardingVisaRoute()
 
     @Serializable
-    data object ChooseWallet : OnboardingVisaRoute()
+    data class ChooseWallet(val visaDataForApprove: VisaDataForApprove) : OnboardingVisaRoute()
 
     @Serializable
-    data object TangemWalletApproveOption : OnboardingVisaRoute()
+    data class TangemWalletApproveOption(
+        val visaDataForApprove: VisaDataForApprove,
+        val allowNavigateBack: Boolean,
+    ) : OnboardingVisaRoute()
 
     @Serializable
-    data object OtherWalletApproveOption : OnboardingVisaRoute()
+    data class OtherWalletApproveOption(val visaDataForApprove: VisaDataForApprove) : OnboardingVisaRoute()
 
     @Serializable
     data object InProgress : OnboardingVisaRoute()
