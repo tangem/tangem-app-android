@@ -20,6 +20,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
 
     override suspend fun getActivationRemoteState(): VisaActivationRemoteState = withContext(dispatcherProvider.io) {
         visaActivationStatusConverter.convert(visaApi.getRemoteActivationStatus(cardId))
+        VisaActivationRemoteState.CardWalletSignatureRequired // mock
         // TODO implement refreshing access token if it's expired
     }
 
