@@ -9,6 +9,7 @@ internal data class OnboardingVisaAccessCodeUM(
     val codesNotMatchError: Boolean = false,
     val atLeastMinCharsError: Boolean = false,
     val accessCodeHidden: Boolean = true,
+    val buttonLoading: Boolean = false,
     val onAccessCodeFirstChange: (TextFieldValue) -> Unit = {},
     val onAccessCodeSecondChange: (TextFieldValue) -> Unit = {},
     val onContinue: () -> Unit = {},
