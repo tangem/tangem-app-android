@@ -45,6 +45,7 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import kotlin.collections.set
 
 internal class ScanProductTask(
@@ -172,6 +173,7 @@ private class ScanWalletProcessor(
     ) {
         @Suppress("MagicNumber")
         if (card.firmwareVersion.doubleValue >= 4.39 && card.settings.maxWalletsCount == 1) {
+            Timber.tag("ASDASD").i("ScanWalletProcessor: ${card.firmwareVersion}")
             readFile(card, session, callback)
             return
         }
@@ -190,6 +192,7 @@ private class ScanWalletProcessor(
 
             when (result) {
                 is CompletionResult.Success -> {
+                    Timber.tag("ASDASD").i("ReadFilesTask: ${result.data}")
                     val file = result.data.firstOrNull()
                     val counter = file?.counter
                     val signature = file?.signature
@@ -311,15 +314,12 @@ private class ScanWalletProcessor(
     }
 
     private fun getWalletProductType(card: CardDTO): ProductType {
-        if (RING_BATCH_IDS.contains(card.batchId) || card.batchId.startsWith(RING_BATCH_PREFIX)) {
-            return ProductType.Ring
-        }
-        return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
-            card.settings.isKeysImportAllowed
-        ) {
-            ProductType.Wallet2
-        } else {
-            ProductType.Wallet
+        return when {
+            card.isVisa -> ProductType.Visa
+            RING_BATCH_IDS.contains(card.batchId) || card.batchId.startsWith(RING_BATCH_PREFIX) -> ProductType.Ring
+            card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+                card.settings.isKeysImportAllowed -> ProductType.Wallet2
+            else -> ProductType.Wallet
         }
     }
 
