@@ -1,4 +1,4 @@
-name: Publish release build to Google Play Beta
+name: Publish release build to GP Beta
 
 on:
   push:
@@ -39,25 +39,25 @@ jobs:
             --volume ~/.gradle:/home/ubuntu/.gradle \
             --volume ${{ github.workspace }}:/workspace \
             tangem_ci_android_environment \
-            sh -c "
+            sh -c '
               cd /workspace;
           
               # decoding keystore
-              echo \"\$keystore_encoded_base64\" | base64 --decode > keystore
-              export keystore=\$(pwd)/keystore
+              echo $keystore_encoded_base64 | base64 --decode > keystore
+              export keystore=$(pwd)/keystore
           
               # build release
               fastlane buildRelease \
-                versionCode:\"\$version_code\" \
-                versionName:\"\$version_name\" \
-                keystore:\"\$keystore\" \
-                store_password:\"\$store_password\" \
-                key_alias:\"\$key_alias\" \
-                key_password:\"\$key_password\"
+                versionCode:$version_code \
+                versionName:$version_name \
+                keystore:$keystore \
+                store_password:$store_password \
+                key_alias:$key_alias \
+                key_password:$key_password
           
               cp app/build/outputs/apk/release/app-release.apk /workspace/app-release.apk
               cp app/build/outputs/bundle/release/app-release.aab /workspace/app-release.aab
-            "
+            '
 
       - name: Protect APK & AAB
         id: dexprotector
@@ -71,25 +71,28 @@ jobs:
           version_code: ${{ needs.prepare.outputs.version_code }}
           version_name: ${{ needs.prepare.outputs.version_name }}
         run: |
+          env > .env
+          
           docker run --rm \
             --user ubuntu \
             --env-file .env \
             --volume $DEX_PROTECTOR_HOME:$DEX_PROTECTOR_HOME \
+            --volume ~/apks:/home/ubuntu/apks \
             --volume ${{ github.workspace }}:/workspace \
             tangem_ci_android_environment \
-            sh -c "
+            sh -c '
               cd /workspace;
           
               # decoding keystore
-              echo \"\$keystore_encoded_base64\" | base64 --decode > keystore
-              export keystore=\$(pwd)/keystore
+              echo $keystore_encoded_base64 | base64 --decode > keystore
+              export keystore=$(pwd)/keystore
           
               java -jar $DEX_PROTECTOR_HOME/dexprotector.jar \
                 -licenseFile $DEX_PROTECTOR_HOME/dexprotector.licel \
                 -configFile /workspace/app-config/dex-android-config.xml \
                 -signMode release \
                 -sha256CertificateFingerprint $SHA_256_CERTIFICATE_FINGERPRINT \
-                -keystore \$keystore \
+                -keystore $keystore \
                 -alias $key_alias \
                 -storepass $store_password \
                 -keypass $key_password \
@@ -100,26 +103,24 @@ jobs:
                 -configFile /workspace/app-config/dex-android-config.xml \
                 -signMode release \
                 -sha256CertificateFingerprint $SHA_256_CERTIFICATE_FINGERPRINT \
-                -keystore \$keystore \
+                -keystore $keystore \
                 -alias $key_alias \
                 -storepass $store_password \
                 -keypass $key_password \
                 app-release.aab app-release-protected.aab > output.log 2>&1
-            "
+            '
           
           # copy two apk to host
-          cp app-release.apk /home/ubuntu/apks/app-release-\$version_code-\$version_name.apk
-          cp app-release-protected.apk /home/ubuntu/apks/app-release-protected-\$version_code-\$version_name.apk
+          cp app-release.apk /home/ubuntu/apks/app-release-$version_code-$version_name.apk
+          cp app-release-protected.apk /home/ubuntu/apks/app-release-protected-$version_code-$version_name.apk
 
       - name: Upload to Google Play
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker run --rm \
             --user ubuntu \
             --volume ${{ github.workspace }}:/workspace \
             tangem_ci_android_environment \
-            sh -c "
+            sh -c '
               cd /workspace;
               fastlane supply \
                 package_name:com.tangem.wallet \
@@ -142,7 +143,7 @@ jobs:
                 changes_not_sent_for_review:false \
                 rescue_changes_not_sent_for_review:true \
                 ack_bundle_installation_warning:false
-            "
+            '
 
 
 

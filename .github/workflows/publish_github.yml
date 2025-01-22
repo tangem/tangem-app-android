@@ -2,11 +2,86 @@ name: Publish release build to Github
 
 on:
   workflow_dispatch:
+    inputs:
+      version_code:
+        description: 'Required version code to upload APK'
+        required: true
+        type: number
+
 
 jobs:
   publish:
     runs-on: [ self-hosted, ARM64, active-android, Linux ]
     steps:
       - name: Publish
+        env:
+          GITHUB_TOKEN: ${{ secrets.TANGEM_BINARIES_REPOSITORY_TOKEN }}
+          VERSION_CODE: ${{ github.event.inputs.version_code }}
         run: |
           env > .env
+                  
+          docker run --rm \
+            --env-file .env \
+            --volume ~/apks:/home/ubuntu/apks \
+            tangem_ci_android_environment \
+            sh -c '
+              APK_DIR=/home/ubuntu/apks
+              export GITHUB_TOKEN=TODO
+  
+  
+  
+
+              # find apk file
+              apk_file=$(find $APK_DIR -type f -name "app-release-protected-${VERSION_CODE}-*.apk")
+              if [ -n "$apk_file" ]; then
+                echo "Found APK file: $apk_file"
+
+                version_name=$(basename "$apk_file" | sed -E "s/app-release-protected-${VERSION_CODE}-(.*).apk/\1/")
+                echo "Version name: $version_name"
+
+                apk_hash=$(sha256sum "$apk_file" | awk '"'"'{print $1}'"'"')
+                echo "APK hash: $apk_hash"
+              else
+                echo "File with code $VERSION_CODE not found"
+                exit 1
+              fi
+  
+  
+  
+  
+              # create commit
+              git clone https://x-access-token:$GITHUB_TOKEN@github.com/tangem/tangem-binaries-uploading-test.git tangem-binaries
+              git config --global user.name "GitHub Actions"
+              git config --global user.email "actions@github.com"
+  
+              cd tangem-binaries
+  
+              git checkout main
+              echo "- **Version**: $version_name\n- **Hash**: $apk_hash" > README.md
+              cp "$apk_file" app-release-protected.apk
+              git add .
+              git commit -m "Updated to version $version_name"
+              git push origin main
+  
+  
+  
+  
+              # create github release
+              RELEASE_TAG="v$version_name"
+              RELEASE_NAME="Release $version_name"
+              RELEASE_BODY="Version code ${VERSION_CODE}"
+              
+              if ! gh release view $RELEASE_TAG > /dev/null 2>&1; then
+                gh release create $RELEASE_TAG "$apk_file" \
+                --title "$RELEASE_NAME" \
+                --notes "$RELEASE_BODY"
+              else
+                gh release upload $RELEASE_TAG "$apk_file"
+              fi
+            '
+          
+          cd ~/apks
+
+          # keep only the 100 most recent files and delete the rest
+          ls -t1 | tail -n +101 | awk '{printf "\"%s\"\n", $0}' | xargs -r rm --
+          ls -l
