@@ -11,4 +11,9 @@ RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | d
         apt-get update && apt-get install -y gh && \
         apt-get clean
 
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
+        apt-get install -y git-lfs && \
+        git lfs install && \
+        apt-get clean
+
 CMD ["bash"]
