@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.model.OnboardingVisaOtherWalletModel
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.ui.OnboardingVisaOtherWallet
@@ -17,10 +18,11 @@ import kotlinx.coroutines.flow.onEach
 
 internal class OnboardingVisaOtherWalletComponent(
     appComponentContext: AppComponentContext,
+    config: Config,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: OnboardingVisaOtherWalletModel = getOrCreateModel()
+    private val model: OnboardingVisaOtherWalletModel = getOrCreateModel(config)
 
     init {
         model.onDone
@@ -39,6 +41,10 @@ internal class OnboardingVisaOtherWalletComponent(
             state = state,
         )
     }
+
+    data class Config(
+        val visaDataForApprove: VisaDataForApprove,
+    )
 
     data class Params(
         val childParams: DefaultOnboardingVisaComponent.ChildParams,
