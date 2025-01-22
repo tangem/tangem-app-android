@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.model.OnboardingVisaApproveModel
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.ui.OnboardingVisaApprove
@@ -16,10 +17,11 @@ import kotlinx.coroutines.launch
 
 internal class OnboardingVisaApproveComponent(
     appComponentContext: AppComponentContext,
+    config: Config,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: OnboardingVisaApproveModel = getOrCreateModel()
+    private val model: OnboardingVisaApproveModel = getOrCreateModel(config)
 
     init {
         componentScope.launch {
@@ -38,6 +40,10 @@ internal class OnboardingVisaApproveComponent(
             modifier = modifier,
         )
     }
+
+    data class Config(
+        val visaDataForApprove: VisaDataForApprove,
+    )
 
     data class Params(
         val childParams: DefaultOnboardingVisaComponent.ChildParams,
