@@ -7,5 +7,8 @@ internal class DefaultOnrampFeatureToggles(
 ) : OnrampFeatureToggles {
 
     override val isFeatureEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled("ONRAMP_ENABLED")
+        get() = featureTogglesManager.isFeatureEnabled(name = "ONRAMP_ENABLED")
+
+    override val isHotTokensEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "ONRAMP_HOT_TOKENS_ENABLED")
 }
