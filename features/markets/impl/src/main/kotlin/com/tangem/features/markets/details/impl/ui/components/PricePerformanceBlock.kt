@@ -17,7 +17,7 @@ import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
-import com.tangem.core.ui.components.progressbar.LinearProgressIndicator
+import com.tangem.core.ui.components.progressbar.TangemLinearProgressIndicator
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemAnimations
@@ -116,7 +116,7 @@ private fun Content(state: PricePerformanceUM.Value, modifier: Modifier = Modifi
                 color = TangemTheme.colors.text.tertiary,
             )
         }
-        LinearProgressIndicator(
+        TangemLinearProgressIndicator(
             modifier = Modifier
                 .height(TangemTheme.dimens.size6)
                 .fillMaxWidth(),

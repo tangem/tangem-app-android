@@ -35,7 +35,7 @@ internal object SwapNotificationUM {
             title = title,
             subtitle = subtitle ?: resourceReference(id = R.string.common_unknown_error),
             buttonState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
-                text = resourceReference(R.string.common_ok),
+                text = resourceReference(R.string.common_retry),
                 onClick = onConfirmClick,
             ),
         )

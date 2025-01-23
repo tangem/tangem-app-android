@@ -1,13 +1,16 @@
 package com.tangem.datasource.api.tangemTech.models
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
+@JsonClass(generateAdapter = true)
 data class QuotesResponse(
     @Json(name = "quotes")
     val quotes: Map<String, Quote>,
 ) {
 
+    @JsonClass(generateAdapter = true)
     data class Quote(
         @Json(name = "price")
         val price: BigDecimal?,
