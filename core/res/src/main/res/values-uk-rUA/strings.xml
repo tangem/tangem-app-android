@@ -932,6 +932,7 @@
   <string name="token_swap_changelly_promotion_message">Обмінюйте цей токен на інші з %1$s комісією за обслуговування з %2$s по %3$s лютого.</string>
   <string name="token_swap_changelly_promotion_title">Обмін із Changelly, %s комісії</string>
   <string name="token_swap_promotion_button">Обміняти</string>
+  <string name="tokens_list_hot_crypto_header">В тренді 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Недоступно для покупки</string>
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажу</string>
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обміну з %s</string>
