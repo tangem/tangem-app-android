@@ -36,6 +36,8 @@ jobs:
     runs-on: [ self-hosted, ARM64, active-android, Linux ]
     environment: Alpha # required for obtaining token
     needs: prepare
+    outputs:
+      encoded_release_url: ${{ steps.publish.outputs.encoded_release_url }}
     steps:
       - name: Build internal
         id: build
@@ -86,16 +88,18 @@ jobs:
 
   notification:
     name: Send Notification
-    needs: build_and_publish
+    needs:
+      - prepare
+      - build_and_publish
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
       channel: 'deployments-android'
       status: 'success'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase app distribution'
-      version: ${{ needs.build_and_publish.outputs.version_name }}
-      build_number: ${{ needs.build_and_publish.outputs.version_code }}
-      changelog: ${{ needs.build_and_publish.outputs.jira_summary }}
+      version: ${{ needs.prepare.outputs.version_name }}
+      build_number: ${{ needs.prepare.outputs.version_code }}
+      changelog: ${{ needs.prepare.outputs.jira_summary }}
       build_description: ${{ inputs.build_description }}
       encoded_release_url: ${{ needs.build_and_publish.outputs.encoded_release_url }}
     secrets:
@@ -103,7 +107,9 @@ jobs:
 
   error_notification:
     name: Error Notification
-    needs: build_and_publish
+    needs:
+      - prepare
+      - build_and_publish
     if: failure()
     uses: tangem/actions/.github/workflows/notification.yml@main
     with:
@@ -111,9 +117,9 @@ jobs:
       status: 'error'
       app_name: 'Tangem Internal'
       deploy_to: 'Firebase App Distribution'
-      version: ${{ needs.build_and_publish.outputs.version_name }}
-      build_number: ${{ needs.build_and_publish.outputs.version_code }}
-      changelog: ${{ needs.build_and_publish.outputs.jira_summary }}
+      version: ${{ needs.prepare.outputs.version_name }}
+      build_number: ${{ needs.prepare.outputs.version_code }}
+      changelog: ${{ needs.prepare.outputs.jira_summary }}
       build_description: ${{ inputs.build_description }}
       encoded_release_url: ${{ needs.build_and_publish.outputs.encoded_release_url }}
     secrets:
