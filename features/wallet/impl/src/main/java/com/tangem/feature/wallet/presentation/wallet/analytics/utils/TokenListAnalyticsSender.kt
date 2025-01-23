@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import arrow.core.getOrElse
+import com.google.firebase.perf.FirebasePerformance
+import com.google.firebase.perf.metrics.Trace
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
@@ -31,11 +33,28 @@ internal class TokenListAnalyticsSender @Inject constructor(
 
     private val balanceWasSentMap = mutableMapOf<String, Boolean>()
     private val mutex = Mutex()
+    private var loadingTrace: Trace? = null
 
     suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
         if (screenLifecycleProvider.isBackgroundState.value) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
-        if (tokenList.totalFiatBalance is TotalFiatBalance.Loading) return
+        if (tokenList.totalFiatBalance is TotalFiatBalance.Loading) {
+            if (loadingTrace == null) {
+                loadingTrace = FirebasePerformance.getInstance().newTrace("Balance_loaded")
+                loadingTrace?.start()
+            }
+            return
+        }
+
+        val terminalStateReached = when (tokenList.totalFiatBalance) {
+            is TotalFiatBalance.Failed, is TotalFiatBalance.Loaded -> true
+            else -> false
+        }
+
+        if (terminalStateReached) {
+            loadingTrace?.stop()
+            loadingTrace = null
+        }
 
         val currenciesStatuses = tokenList.flattenCurrencies()
 
