@@ -931,6 +931,7 @@
   <string name="token_swap_changelly_promotion_message">Обменивайте этот токен на другие с %1$s комиссии за обслуживание с %2$s по %3$s февраля.</string>
   <string name="token_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="token_swap_promotion_button">Обменять</string>
+  <string name="tokens_list_hot_crypto_header">В тренде🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Недоступно для покупки</string>
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажи</string>
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обмена с %s</string>
@@ -964,7 +965,7 @@
   <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
-  <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
+  <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите забыть этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту или кольцо для входа</string>
   <string name="user_wallet_list_error_wallet_already_saved">Этот кошелек уже был сохранен, вы можете добавить другой</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">Кошелек с именем %s уже существует</string>
