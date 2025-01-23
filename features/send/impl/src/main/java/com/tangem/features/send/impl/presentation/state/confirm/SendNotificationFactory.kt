@@ -96,7 +96,12 @@ internal class SendNotificationFactory(
 
             val recipientAddress = state.recipientState?.addressTextField?.value
             val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
-            val balanceAfterTransaction = statusValue?.let { it.amount - sendingAmount - feeValue }
+            val feeToSubtract = if (isSubtractAvailableProvider()) {
+                feeValue
+            } else {
+                BigDecimal.ZERO
+            }
+            val balanceAfterTransaction = statusValue?.let { it.amount - sendingAmount - feeToSubtract }
             val currencyCheck = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,

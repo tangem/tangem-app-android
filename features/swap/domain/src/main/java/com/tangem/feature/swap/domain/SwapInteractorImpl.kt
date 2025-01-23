@@ -1992,7 +1992,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getFeePaidCurrency(currency: CryptoCurrency): FeePaidCurrency {
         return currenciesRepository.getFeePaidCurrency(
             userWalletId = userWalletId,
-            currency = currency,
+            network = currency.network,
         )
     }
 
