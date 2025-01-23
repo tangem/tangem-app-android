@@ -914,6 +914,7 @@
   <string name="token_swap_changelly_promotion_message">Échangez ce jeton contre un autre moyennant des frais de service de %1$s du %2$s au %3$s février.</string>
   <string name="token_swap_changelly_promotion_title">Échangez avec Changelly, %s frais</string>
   <string name="token_swap_promotion_button">Échangez maintenant</string>
+  <string name="tokens_list_hot_crypto_header">Crypto-monnaies populaire 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Non disponible à l\'achat</string>
   <string name="tokens_list_unavailable_to_sell_header">Indisponible à la vente</string>
   <string name="tokens_list_unavailable_to_swap_header">Non disponible pour l\'échange de %s</string>
