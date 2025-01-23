@@ -88,6 +88,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "odyssey", "odyssey/test" -> R.drawable.img_odyssey_chain_22
         "bitrock", "bitrock/test" -> R.drawable.img_bitrock_22
         "sonic", "sonic/test" -> R.drawable.ic_alert_24 // todo Sonic [REDACTED_TASK_KEY]
+        "apechain", "apechain/test" -> R.drawable.ic_alert_24 // todo ApeChain [REDACTED_TASK_KEY]
         else -> R.drawable.ic_alert_24
     }
 }
@@ -174,6 +175,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "odyssey", "odyssey/test" -> R.drawable.img_odyssey_chain_22
         "bitrock", "bitrock/test" -> R.drawable.img_bitrock_22
         "sonic", "sonic/test" -> R.drawable.ic_alert_24 // todo Sonic [REDACTED_TASK_KEY]
+        "apechain", "apechain/test" -> R.drawable.ic_alert_24 // todo ApeChain [REDACTED_TASK_KEY]
         else -> R.drawable.ic_alert_24
     }
 }
@@ -263,6 +265,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "odyssey", "odyssey/test" -> R.drawable.ic_odyssey_chain_22
         "bitrock", "bitrock/test" -> R.drawable.ic_bitrock_22
         "sonic", "sonic/test" -> R.drawable.ic_alert_24 // todo Sonic [REDACTED_TASK_KEY]
+        "apechain", "apechain/test" -> R.drawable.ic_alert_24 // todo ApeChain [REDACTED_TASK_KEY]
         else -> R.drawable.ic_alert_24
     }
 }
