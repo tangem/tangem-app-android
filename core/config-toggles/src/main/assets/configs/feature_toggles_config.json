@@ -34,5 +34,9 @@
     {
         "name": "VISA_ONBOARDING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "ONRAMP_HOT_TOKENS_ENABLED",
+        "version": "undefined"
     }
 ]
