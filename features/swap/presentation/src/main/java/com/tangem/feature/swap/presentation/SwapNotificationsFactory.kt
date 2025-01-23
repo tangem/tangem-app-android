@@ -43,19 +43,15 @@ internal class SwapNotificationsFactory(
     }
 
     fun getGeneralErrorStateNotifications(
-        notifications: ImmutableList<NotificationUM>,
         message: TextReference?,
         onClick: () -> Unit,
     ): ImmutableList<NotificationUM> {
-        val updatedNotifications = notifications.toMutableList()
-        updatedNotifications.add(
+        return persistentListOf(
             SwapNotificationUM.Error.GenericError(
                 subtitle = message,
                 onConfirmClick = onClick,
             ),
         )
-
-        return updatedNotifications.toPersistentList()
     }
 
     fun getNotAvailableStateNotifications(fromCurrencyName: String): ImmutableList<NotificationUM> {
