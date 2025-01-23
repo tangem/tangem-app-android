@@ -1,0 +1,14 @@
+FROM ubuntu:24.04
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && apt-get clean
+
+RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
+        chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg && \
+        echo "deb [signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list && \
+        apt-get update && apt-get install -y gh && \
+        apt-get clean
+
+CMD ["bash"]
