@@ -24,6 +24,7 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.OnboardingVisaChooseWalletComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.ui.state.OnboardingVisaChooseWalletUM
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.ui.state.SelectableChainRowUM
 import kotlinx.collections.immutable.ImmutableList
@@ -152,18 +153,18 @@ private fun Preview() {
             state = OnboardingVisaChooseWalletUM(
                 options = persistentListOf(
                     SelectableChainRowUM(
-                        id = 0,
+                        event = OnboardingVisaChooseWalletComponent.Params.Event.TangemWallet,
                         icon = R.drawable.ic_tangem_24,
                         text = TextReference.Str("Tangem Wallet"),
                     ),
                     SelectableChainRowUM(
-                        id = 1,
+                        event = OnboardingVisaChooseWalletComponent.Params.Event.OtherWallet,
                         icon = R.drawable.ic_wallet_filled_24,
                         text = TextReference.Str("Other Wallet"),
                     ),
                 ),
                 selectedOption = SelectableChainRowUM(
-                    id = 0,
+                    event = OnboardingVisaChooseWalletComponent.Params.Event.OtherWallet,
                     icon = R.drawable.ic_tangem_24,
                     text = TextReference.Str("Tangem Wallet"),
                 ),

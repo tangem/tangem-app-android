@@ -2,11 +2,11 @@ package com.tangem.feature.wallet.presentation.wallet.ui.utils
 
 import android.app.Activity
 import android.content.Context
-import android.content.ContextWrapper
 import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewInfo
 import com.google.android.play.core.review.ReviewManager
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.tangem.core.ui.utils.findActivity
 import timber.log.Timber
 
 internal object ReviewManagerRequester {
@@ -43,14 +43,5 @@ internal object ReviewManagerRequester {
         } else {
             Timber.e(task.exception)
         }
-    }
-
-    private fun Context.findActivity(): Activity {
-        var context = this
-        while (context is ContextWrapper) {
-            if (context is Activity) return context
-            context = context.baseContext
-        }
-        error("Permissions should be called in the context of an Activity")
     }
 }

@@ -30,7 +30,7 @@ internal class OnboardingVisaChooseWalletModel @Inject constructor(
 
     private fun getInitialState(): OnboardingVisaChooseWalletUM {
         val selectedOption = SelectableChainRowUM(
-            id = Event.TangemWallet.id(),
+            event = Event.TangemWallet,
             icon = R.drawable.ic_tangem_24,
             text = TextReference.Str("Tangem Wallet"),
         )
@@ -39,7 +39,7 @@ internal class OnboardingVisaChooseWalletModel @Inject constructor(
             options = persistentListOf(
                 selectedOption,
                 SelectableChainRowUM(
-                    id = Event.OtherWallet.id(),
+                    event = Event.OtherWallet,
                     icon = R.drawable.ic_wallet_filled_24,
                     text = TextReference.Str("Other Wallet"),
                 ),
@@ -52,18 +52,8 @@ internal class OnboardingVisaChooseWalletModel @Inject constructor(
 
     private fun onContinueClicked() {
         modelScope.launch {
-            onEvent.emit(
-                when (_uiState.value.selectedOption?.id) {
-                    Event.TangemWallet.id() -> Event.TangemWallet
-                    Event.OtherWallet.id() -> Event.OtherWallet
-                    else -> error("")
-                },
-            )
+            val selectedOption = _uiState.value.selectedOption ?: return@launch
+            onEvent.emit(selectedOption.event)
         }
-    }
-
-    private fun Event.id(): Int = when (this) {
-        Event.TangemWallet -> 0
-        Event.OtherWallet -> 1
     }
 }
