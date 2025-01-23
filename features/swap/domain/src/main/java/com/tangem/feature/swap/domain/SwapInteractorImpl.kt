@@ -1321,13 +1321,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amount.value > reducedBalance -> {
                 IncludeFeeInAmount.BalanceNotEnough
             }
-            amountWithFee < reducedBalance -> {
+            amountWithFee <= reducedBalance -> {
                 IncludeFeeInAmount.Excluded
             }
             else -> {
                 if (feeValue < amount.value) {
                     IncludeFeeInAmount.Included(
-                        SwapAmount(
+                        amountSubtractFee = SwapAmount(
                             reducedBalance - feeValue,
                             getNativeToken(fromToken.network.backendId).decimals,
                         ),
