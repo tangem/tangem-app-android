@@ -981,6 +981,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 OdysseyChain, OdysseyChainTestnet,
                 Bitrock, BitrockTestnet,
                 Sonic, SonicTestnet,
+                ApeChain, ApeChainTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
