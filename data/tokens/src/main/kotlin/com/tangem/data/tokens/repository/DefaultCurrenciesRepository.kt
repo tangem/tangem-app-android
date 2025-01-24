@@ -417,16 +417,16 @@ internal class DefaultCurrenciesRepository(
         }
     }
 
-    override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency {
+    override suspend fun getFeePaidCurrency(userWalletId: UserWalletId, network: Network): FeePaidCurrency {
         return withContext(dispatchers.io) {
-            val blockchain = Blockchain.fromId(currency.network.id.value)
+            val blockchain = Blockchain.fromId(network.id.value)
             when (val feePaidCurrency = blockchain.feePaidCurrency()) {
                 FeePaidSdkCurrency.Coin -> FeePaidCurrency.Coin
                 FeePaidSdkCurrency.SameCurrency -> FeePaidCurrency.SameCurrency
                 is FeePaidSdkCurrency.Token -> {
                     val balance = walletManagersFacade.tokenBalance(
                         userWalletId = userWalletId,
-                        network = currency.network,
+                        network = network,
                         name = feePaidCurrency.token.name,
                         symbol = feePaidCurrency.token.symbol,
                         contractAddress = feePaidCurrency.token.contractAddress,
@@ -434,7 +434,7 @@ internal class DefaultCurrenciesRepository(
                         id = feePaidCurrency.token.id,
                     )
                     FeePaidCurrency.Token(
-                        tokenId = getTokenId(network = currency.network, sdkToken = feePaidCurrency.token),
+                        tokenId = getTokenId(network = network, sdkToken = feePaidCurrency.token),
                         name = feePaidCurrency.token.name,
                         symbol = feePaidCurrency.token.symbol,
                         contractAddress = feePaidCurrency.token.contractAddress,
