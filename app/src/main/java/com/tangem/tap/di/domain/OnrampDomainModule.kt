@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.onramp.*
+import com.tangem.domain.onramp.repositories.HotCryptoRepository
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
@@ -228,5 +229,11 @@ internal object OnrampDomainModule {
         onrampErrorResolver: OnrampErrorResolver,
     ): FetchOnrampCountriesUseCase {
         return FetchOnrampCountriesUseCase(onrampRepository, onrampErrorResolver)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetHotCryptoTokensUseCase(hotCryptoRepository: HotCryptoRepository): GetHotCryptoUseCase {
+        return GetHotCryptoUseCase(hotCryptoRepository)
     }
 }
