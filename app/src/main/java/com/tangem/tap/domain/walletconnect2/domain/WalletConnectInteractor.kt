@@ -155,8 +155,8 @@ class WalletConnectInteractor(
                             return@onEach
                         }
                         val networksFormatted = (wcEvent.requiredChainIds + wcEvent.optionalChainIds)
-                            .distinct()
                             .mapNotNull { blockchainHelper.chainIdToFullNameOrNull(it) }
+                            .distinct()
                             .toString()
                         handler.onProposalReceived(proposal = wcEvent, networksFormatted = networksFormatted)
                     }
