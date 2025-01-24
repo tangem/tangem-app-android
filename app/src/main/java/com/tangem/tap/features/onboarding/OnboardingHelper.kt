@@ -13,7 +13,6 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
@@ -21,7 +20,6 @@ import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
@@ -235,18 +233,7 @@ object OnboardingHelper {
         val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
         Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
 
-        scope.launch {
-            val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
-            val isRussia = getUserCountryCodeUseCase.invokeSync().isRight { it is UserCountry.Russia }
-
-            val onrampFeatureToggles = store.inject(DaggerGraphState::onrampFeatureToggles)
-            if (isRussia && !onrampFeatureToggles.isFeatureEnabled) {
-                val dialogData = AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
-                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(dialogData))
-            } else {
-                store.dispatchOpenUrl(topUpUrl)
-            }
-        }
+        store.dispatchOpenUrl(topUpUrl)
     }
 
     private suspend fun proceedWithScanResponse(
