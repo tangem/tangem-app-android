@@ -655,8 +655,6 @@
   <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring and remove it from the app. You will not be able to restore the current wallet.</string>
   <string name="ring_promo_text">Ring owners get 3 commission-free swaps on Changelly until 15.11!</string>
   <string name="ring_promo_title">Swap With 0%% Fees Now!</string>
-  <string name="russian_bank_card_warning_subtitle">Do you have a bank card from another country and a residence permit or registration outside the Russian Federation?</string>
-  <string name="russian_bank_card_warning_title">Russian bank cards are not currently accepted</string>
   <string name="save_user_wallet_agreement_access_description">Log into the app and check your balance without scanning the card or ring</string>
   <string name="save_user_wallet_agreement_access_title">Access the app</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
