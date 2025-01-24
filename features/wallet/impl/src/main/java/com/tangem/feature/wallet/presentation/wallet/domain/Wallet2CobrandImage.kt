@@ -55,6 +55,18 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF97"),
     ),
 
+    CashClubGold(
+        cards2ResId = R.drawable.ill_cashclubgold_card2_120_106,
+        cards3ResId = R.drawable.ill_cashclubgold_card3_120_106,
+        batchIds = setOf("BB000004"),
+    ),
+
+    Changenow(
+        cards2ResId = R.drawable.ill_changenow_card2_120_106,
+        cards3ResId = R.drawable.ill_changenow_card3_120_106,
+        batchIds = setOf("BB000013"),
+    ),
+
     CoinMetrica(
         cards2ResId = R.drawable.ill_coin_metrica_card2_120_106,
         cards3ResId = R.drawable.ill_coin_metrica_card3_120_106,
@@ -95,6 +107,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_grim_card2_120_106,
         cards3ResId = R.drawable.ill_grim_card3_120_106,
         batchIds = setOf("AF13"),
+    ),
+
+    Hodl(
+        cards2ResId = R.drawable.ill_hodl_card2_120_106,
+        cards3ResId = R.drawable.ill_hodl_card3_120_106,
+        batchIds = setOf("BB000009"),
     ),
 
     Jr(
@@ -145,10 +163,22 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF52"),
     ),
 
+    Kango(
+        cards2ResId = R.drawable.ill_kango_card2_120_106,
+        cards3ResId = R.drawable.ill_kango_card3_120_106,
+        batchIds = setOf("BB000006"),
+    ),
+
     Konan(
         cards2ResId = R.drawable.ill_konan_card2_120_106,
         cards3ResId = R.drawable.ill_konan_card3_120_106,
         batchIds = setOf("AF93"),
+    ),
+
+    Kroak(
+        cards2ResId = R.drawable.ill_kroak_card2_120_106,
+        cards3ResId = R.drawable.ill_kroak_card3_120_106,
+        batchIds = setOf("BB000011"),
     ),
 
     Neiro(
@@ -161,6 +191,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_nwe_card2_120_106,
         cards3ResId = R.drawable.ill_nwe_card3_120_106,
         batchIds = setOf("AF26"),
+    ),
+
+    PassimPay(
+        cards2ResId = R.drawable.ill_passimpay_cards2_120_106,
+        cards3ResId = R.drawable.ill_passimpay_cards3_120_106,
+        batchIds = setOf("BB000007"),
     ),
 
     // for multicolored cards use image of 3 cards in all cases
@@ -176,10 +212,22 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF34"),
     ),
 
+    Rizo(
+        cards2ResId = R.drawable.ill_rizo_card2_120_106,
+        cards3ResId = R.drawable.ill_rizo_card3_120_106,
+        batchIds = setOf("BB000012"),
+    ),
+
     SatoshiFriends(
         cards2ResId = R.drawable.ill_satoshi_card2_120_106,
         cards3ResId = R.drawable.ill_satoshi_card3_120_106,
         batchIds = setOf("AF19"),
+    ),
+
+    SinCity(
+        cards2ResId = R.drawable.ill_sincity_card2_120_106,
+        cards3ResId = R.drawable.ill_sincity_card3_120_106,
+        batchIds = setOf("BB000010"),
     ),
 
     StealthCard(
@@ -219,6 +267,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF40", "AF41", "AF42", "AF75", "AF76", "AF77"),
     ),
 
+    Vnish(
+        cards2ResId = R.drawable.ill_vnish_card2_120_106,
+        cards3ResId = R.drawable.ill_vnish_card3_120_106,
+        batchIds = setOf("BB000005"),
+    ),
+
     VoltInu(
         cards2ResId = R.drawable.ill_volt_inu_card2_120_106,
         cards3ResId = R.drawable.ill_volt_inu_card3_120_106,
@@ -229,6 +283,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_white_card2_120_106,
         cards3ResId = R.drawable.ill_white_card3_120_106,
         batchIds = setOf("AF15"),
+    ),
+
+    WildGoat(
+        cards2ResId = R.drawable.ill_wildgoat_card2_120_106,
+        cards3ResId = R.drawable.ill_wildgoat_card3_120_106,
+        batchIds = setOf("BB000001"),
     ),
 
     Winter(
