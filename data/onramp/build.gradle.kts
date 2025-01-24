@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.domain.onramp)
     implementation(projects.domain.legacy)
     implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.models)
 
     // region DI
 
