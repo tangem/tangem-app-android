@@ -41,12 +41,12 @@ internal class TokenListAnalyticsSender @Inject constructor(
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
 
         if (tokenList.totalFiatBalance is TotalFiatBalance.Loading) {
-            startLoadingTraceIfNeeded(userWallet.walletId)
+            startLoadingTraceIfNeeded(userWallet.walletId, tokenList)
             return
         }
 
         if (isTerminalState(tokenList.totalFiatBalance)) {
-            stopLoadingTraceIfNeeded(userWallet.walletId)
+            stopLoadingTraceIfNeeded(userWallet.walletId, tokenList.totalFiatBalance)
         }
 
         val currenciesStatuses = tokenList.flattenCurrencies()
@@ -57,19 +57,25 @@ internal class TokenListAnalyticsSender @Inject constructor(
         sendTokenBalancesIfNeeded(currenciesStatuses)
     }
 
-    private suspend fun startLoadingTraceIfNeeded(userWalletId: UserWalletId) {
+    private suspend fun startLoadingTraceIfNeeded(userWalletId: UserWalletId, tokenList: TokenList) {
         mutex.withLock {
             if (!loadingTraces.containsKey(userWalletId)) {
                 val trace = FirebasePerformance.getInstance().newTrace(BALANCE_LOADED_TRACE_NAME)
                 trace.start()
+                trace.putAttribute(TOKENS_COUNT, tokenList.flattenCurrencies().size.toString())
                 loadingTraces[userWalletId] = trace
             }
         }
     }
 
-    private suspend fun stopLoadingTraceIfNeeded(userWalletId: UserWalletId) {
+    private suspend fun stopLoadingTraceIfNeeded(userWalletId: UserWalletId, totalFiatBalance: TotalFiatBalance) {
         mutex.withLock {
             loadingTraces[userWalletId]?.apply {
+                when (totalFiatBalance) {
+                    is TotalFiatBalance.Loaded -> putAttribute(HAS_ERROR, "No")
+                    is TotalFiatBalance.Failed -> putAttribute(HAS_ERROR, "Yes")
+                    else -> { /* Intentionally do nothing */ }
+                }
                 stop()
                 loadingTraces.remove(userWalletId)
             }
@@ -216,6 +222,8 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     companion object {
-        const val BALANCE_LOADED_TRACE_NAME = "Balance_loaded"
+        const val BALANCE_LOADED_TRACE_NAME = "Total_balance_loaded"
+        const val HAS_ERROR = "has_error"
+        const val TOKENS_COUNT = "tokens_count"
     }
 }
