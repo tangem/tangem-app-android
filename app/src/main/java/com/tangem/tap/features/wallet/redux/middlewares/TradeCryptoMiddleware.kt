@@ -6,15 +6,16 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.apptheme.MutableAppThemeModeHolder
-import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -89,19 +90,6 @@ object TradeCryptoMiddleware {
         )
 
         scope.launch {
-            val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
-            val onrampFeatureToggles = store.inject(DaggerGraphState::onrampFeatureToggles)
-
-            val isRussia = getUserCountryCodeUseCase.invokeSync().isRight { it is UserCountry.Russia }
-
-            if (action.checkUserLocation && isRussia && !onrampFeatureToggles.isFeatureEnabled) {
-                val dialogData = topUrl?.let {
-                    AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl = it)
-                }
-                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(data = dialogData))
-                return@launch
-            }
-
             if (currency is CryptoCurrency.Token && currency.network.isTestnet) {
                 val walletManager = store.inject(DaggerGraphState::walletManagersFacade)
                     .getOrCreateWalletManager(
