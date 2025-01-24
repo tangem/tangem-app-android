@@ -34,7 +34,7 @@ class GetBalanceNotEnoughForFeeWarningUseCase(
         coinStatus: CryptoCurrencyStatus,
     ): Either<Throwable, CryptoCurrencyWarning?> = Either.catch {
         withContext(dispatchers.io) {
-            val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
+            val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
             val coinBalance = coinStatus.value.amount ?: BigDecimal.ZERO
 
             val isFeePaidByCoin = tokenStatus.currency is CryptoCurrency.Token
