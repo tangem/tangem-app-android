@@ -58,10 +58,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
             )
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
-            is AppDialog.RussianCardholdersWarningDialog -> RussianCardholdersWarningBottomSheetDialog(
-                context,
-                state.dialog.data,
-            )
             is OnboardingDialog.TwinningProcessNotCompleted -> TwinningProcessNotCompletedDialog.create(context)
             is OnboardingDialog.InterruptOnboarding -> InterruptOnboardingDialog.create(context, state.dialog)
             is OnboardingDialog.WalletActivationError -> WalletActivationErrorDialog.create(context, state.dialog)
