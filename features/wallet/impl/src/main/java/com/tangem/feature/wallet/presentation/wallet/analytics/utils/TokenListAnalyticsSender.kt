@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
 import arrow.core.getOrElse
+import com.google.firebase.perf.FirebasePerformance
+import com.google.firebase.perf.metrics.Trace
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
@@ -12,6 +14,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.Basic
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -31,11 +34,20 @@ internal class TokenListAnalyticsSender @Inject constructor(
 
     private val balanceWasSentMap = mutableMapOf<String, Boolean>()
     private val mutex = Mutex()
+    private val loadingTraces = mutableMapOf<UserWalletId, Trace>()
 
     suspend fun send(displayedUiState: WalletState?, userWallet: UserWallet, tokenList: TokenList) {
         if (screenLifecycleProvider.isBackgroundState.value) return
         if (displayedUiState == null || displayedUiState.pullToRefreshConfig.isRefreshing) return
-        if (tokenList.totalFiatBalance is TotalFiatBalance.Loading) return
+
+        if (tokenList.totalFiatBalance is TotalFiatBalance.Loading) {
+            startLoadingTraceIfNeeded(userWallet.walletId, tokenList)
+            return
+        }
+
+        if (isTerminalState(tokenList.totalFiatBalance)) {
+            stopLoadingTraceIfNeeded(userWallet.walletId, tokenList.totalFiatBalance)
+        }
 
         val currenciesStatuses = tokenList.flattenCurrencies()
 
@@ -43,6 +55,35 @@ internal class TokenListAnalyticsSender @Inject constructor(
         sendToppedUpEventIfNeeded(userWallet, tokenList.totalFiatBalance, currenciesStatuses)
         sendUnreachableNetworksEventIfNeeded(currenciesStatuses)
         sendTokenBalancesIfNeeded(currenciesStatuses)
+    }
+
+    private suspend fun startLoadingTraceIfNeeded(userWalletId: UserWalletId, tokenList: TokenList) {
+        mutex.withLock {
+            if (!loadingTraces.containsKey(userWalletId)) {
+                val trace = FirebasePerformance.getInstance().newTrace(BALANCE_LOADED_TRACE_NAME)
+                trace.start()
+                trace.putAttribute(TOKENS_COUNT, tokenList.flattenCurrencies().size.toString())
+                loadingTraces[userWalletId] = trace
+            }
+        }
+    }
+
+    private suspend fun stopLoadingTraceIfNeeded(userWalletId: UserWalletId, totalFiatBalance: TotalFiatBalance) {
+        mutex.withLock {
+            loadingTraces[userWalletId]?.apply {
+                when (totalFiatBalance) {
+                    is TotalFiatBalance.Loaded -> putAttribute(HAS_ERROR, "No")
+                    is TotalFiatBalance.Failed -> putAttribute(HAS_ERROR, "Yes")
+                    else -> { /* Intentionally do nothing */ }
+                }
+                stop()
+                loadingTraces.remove(userWalletId)
+            }
+        }
+    }
+
+    private fun isTerminalState(balance: TotalFiatBalance): Boolean {
+        return balance is TotalFiatBalance.Failed || balance is TotalFiatBalance.Loaded
     }
 
     private fun sendBalanceLoadedEventIfNeeded(
@@ -178,5 +219,11 @@ internal class TokenListAnalyticsSender @Inject constructor(
         if (unreachableCurrencies.isNotEmpty()) {
             analyticsEventHandler.send(MainScreen.NetworksUnreachable(unreachableCurrencies))
         }
+    }
+
+    companion object {
+        const val BALANCE_LOADED_TRACE_NAME = "Total_balance_loaded"
+        const val HAS_ERROR = "has_error"
+        const val TOKENS_COUNT = "tokens_count"
     }
 }
