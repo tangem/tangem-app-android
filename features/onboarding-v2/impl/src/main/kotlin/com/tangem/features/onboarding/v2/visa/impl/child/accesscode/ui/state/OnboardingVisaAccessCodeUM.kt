@@ -2,7 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state
 
 import androidx.compose.ui.text.input.TextFieldValue
 
-data class OnboardingVisaAccessCodeUM(
+internal data class OnboardingVisaAccessCodeUM(
     val step: Step = Step.Enter,
     val accessCodeFirst: TextFieldValue = TextFieldValue(""),
     val accessCodeSecond: TextFieldValue = TextFieldValue(""),
