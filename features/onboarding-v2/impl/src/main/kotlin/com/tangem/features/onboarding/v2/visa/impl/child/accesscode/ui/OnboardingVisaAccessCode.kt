@@ -43,7 +43,7 @@ internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifie
                 .weight(1f),
             targetState = state.step,
             transitionSpec = TangemAnimations.AnimatedContent
-                .slide { initial, target -> initial.ordinal < target.ordinal },
+                .slide { initial, target -> initial.ordinal > target.ordinal },
         ) { step ->
             Content(
                 state = state,
