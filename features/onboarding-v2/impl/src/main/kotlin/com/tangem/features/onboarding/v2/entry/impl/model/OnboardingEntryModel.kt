@@ -72,6 +72,7 @@ internal class OnboardingEntryModel @Inject constructor(
             ProductType.Visa -> OnboardingRoute.Visa(
                 scanResponse = scanResponse,
                 titleProvider = titleProvider,
+                onDone = ::onVisaOnboardingDone,
             )
             else -> error("Unsupported")
         }
@@ -84,6 +85,12 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     fun onManageTokensDone() {
+        stackNavigation.navigate {
+            listOf(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+        }
+    }
+
+    private fun onVisaOnboardingDone() {
         stackNavigation.navigate {
             listOf(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
         }
