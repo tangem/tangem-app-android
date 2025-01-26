@@ -16,16 +16,29 @@ internal class OnboardingVisaWelcomeComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
+        val state = remember(this) {
+            OnboardingVisaWelcomeUM(
+                mode = if (params.isWelcomeBack) {
+                    OnboardingVisaWelcomeUM.Mode.WelcomeBack
+                } else {
+                    OnboardingVisaWelcomeUM.Mode.Hello
+                },
+                userName = "User", // TODO:
+                onContinueClick = params.onDone,
+            )
+        }
+
         BackHandler(onBack = remember(this) { { params.onBack() } })
 
         OnboardingVisaWelcome(
             modifier = modifier,
-            state = OnboardingVisaWelcomeUM(),
+            state = state,
         )
     }
 
     data class Params(
+        val isWelcomeBack: Boolean,
         val onBack: () -> Unit,
-        val startActivation: () -> Unit,
+        val onDone: () -> Unit,
     )
 }
