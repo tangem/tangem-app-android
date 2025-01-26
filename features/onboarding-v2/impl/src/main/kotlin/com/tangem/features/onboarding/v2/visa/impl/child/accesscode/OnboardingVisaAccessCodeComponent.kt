@@ -8,6 +8,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.model.OnboardingVisaAccessCodeModel
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.OnboardingVisaAccessCode
 import kotlinx.coroutines.flow.SharedFlow
@@ -29,6 +30,9 @@ internal class OnboardingVisaAccessCodeComponent(
                 model.onBack()
             }
         }
+        componentScope.launch {
+            model.onDone.collect { params.onDone() }
+        }
     }
 
     @Composable
@@ -37,11 +41,14 @@ internal class OnboardingVisaAccessCodeComponent(
 
         BackHandler(onBack = model::onBack)
 
+        DisableScreenshotsDisposableEffect()
+
         OnboardingVisaAccessCode(state, modifier)
     }
 
     data class Params(
         val parentBackEvent: SharedFlow<Unit>,
         val onBack: () -> Unit,
+        val onDone: () -> Unit,
     )
 }
