@@ -1,10 +1,10 @@
 package com.tangem.tap.domain.visa
 
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -258,32 +258,25 @@ internal class VisaCardScanHandler @Inject constructor(
         derivationPath: DerivationPath,
         nonce: String,
     ): CompletionResult<SignHashResponse> {
-        val signHashCommand = SignHashCommand(publicKey, nonce.toByteArray(), derivationPath)
-        val result = suspendCancellableCoroutine {
+        val signHashCommand = SignHashCommand(
+            hash = nonce.hexToBytes(),
+            walletPublicKey = publicKey,
+            derivationPath = derivationPath,
+        )
+        return suspendCancellableCoroutine {
             signHashCommand.run(session) { result ->
                 it.resume(result)
             }
         }
-
-        return result
     }
 
     private suspend fun SessionContext.signChallengeWithCard(
         challenge: String,
     ): CompletionResult<AttestCardKeyResponse> {
-        val signHashCommand = AttestCardKeyCommand(challenge = challenge.toByteArray())
-        val result = suspendCancellableCoroutine { continuation ->
+        val signHashCommand = AttestCardKeyCommand(challenge = challenge.hexToBytes())
+        return suspendCancellableCoroutine { continuation ->
             signHashCommand.run(session) { result ->
                 continuation.resume(result)
-            }
-        }
-
-        return when (result) {
-            is CompletionResult.Success -> {
-                CompletionResult.Success(result.data)
-            }
-            is CompletionResult.Failure -> {
-                CompletionResult.Failure(result.error)
             }
         }
     }
