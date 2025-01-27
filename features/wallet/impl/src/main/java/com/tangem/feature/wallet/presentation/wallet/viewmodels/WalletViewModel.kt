@@ -224,7 +224,7 @@ internal class WalletViewModel @Inject constructor(
                     Timber.e("Selected wallet changed from background state: $selectedWalletId")
 
                     delay(timeMillis = 1000)
-                    scrollToWallet(selectedIndex)
+                    scrollToWallet(prevIndex = stateHolder.value.selectedWalletIndex, newIndex = selectedIndex)
                 }
         }
     }
@@ -387,7 +387,7 @@ internal class WalletViewModel @Inject constructor(
             ),
         )
 
-        scrollToWallet(index = action.selectedWalletIndex)
+        scrollToWallet(prevIndex = action.prevWalletIndex, newIndex = action.selectedWalletIndex)
     }
 
     private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
@@ -410,7 +410,8 @@ internal class WalletViewModel @Inject constructor(
             withContext(dispatchers.io) { delay(timeMillis = 1000) }
 
             scrollToWallet(
-                index = action.selectedWalletIndex,
+                prevIndex = action.deletedWalletIndex,
+                newIndex = action.selectedWalletIndex,
                 onConsume = { updateStateByDeleteWalletTransformer(action) },
             )
         }
@@ -444,10 +445,11 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
+    private fun scrollToWallet(prevIndex: Int, newIndex: Int, onConsume: () -> Unit = {}) {
         stateHolder.update(
             ScrollToWalletTransformer(
-                index = index,
+                prevIndex = prevIndex,
+                newIndex = newIndex,
                 currentStateProvider = Provider(action = stateHolder::value),
                 stateUpdater = { newState -> stateHolder.update { newState } },
                 onConsume = onConsume,
