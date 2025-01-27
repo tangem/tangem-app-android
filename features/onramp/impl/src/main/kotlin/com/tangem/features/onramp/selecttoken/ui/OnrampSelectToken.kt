@@ -15,6 +15,7 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.rememberHideKeyboardNestedScrollConnection
+import com.tangem.features.onramp.hottokens.HotCryptoComponent
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.selecttoken.entity.OnrampOperationUM
 import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
@@ -24,6 +25,7 @@ import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 internal fun OnrampSelectToken(
     state: OnrampOperationUM,
     onrampTokenListComponent: OnrampTokenListComponent,
+    hotCryptoComponent: HotCryptoComponent?,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(onBack = state.onBackClick)
@@ -49,6 +51,15 @@ internal fun OnrampSelectToken(
             onrampTokenListComponent.Content(
                 modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
             )
+        }
+
+        // TODO: paddings
+        if (hotCryptoComponent != null) {
+            item(key = "hot_crypto", contentType = "hot_crypto") {
+                hotCryptoComponent.Content(
+                    modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp),
+                )
+            }
         }
     }
 }
