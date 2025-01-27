@@ -93,7 +93,7 @@ class VisaCardActivationTask @AssistedInject constructor(
 
         return when (result) {
             is CompletionResult.Success -> {
-                Timber.tag("ASDASD").e("AttestCardKeyCommand success")
+                Timber.i("AttestCardKeyCommand success")
                 processSignedAuthorizationChallenge(
                     signedChallenge = challengeToSign.toSignedChallenge(
                         signedChallenge = result.data.cardSignature.toHexString(),
@@ -102,7 +102,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 )
             }
             is CompletionResult.Failure -> {
-                Timber.tag("ASDASD").e("AttestCardKeyCommand failure ${result.error}")
+                Timber.e("AttestCardKeyCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
@@ -161,11 +161,11 @@ class VisaCardActivationTask @AssistedInject constructor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    Timber.tag("ASDASD").e("CreateWalletTask success")
+                    Timber.i("CreateWalletTask success")
                     createOTP(session)
                 }
                 is CompletionResult.Failure -> {
-                    Timber.tag("ASDASD").e("CreateWalletTask failure ${result.error}")
+                    Timber.e("CreateWalletTask failure ${result.error}")
                     CompletionResult.Failure(result.error)
                 }
             }
@@ -187,12 +187,12 @@ class VisaCardActivationTask @AssistedInject constructor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    Timber.tag("ASDASD").e("GenerateOTPCommand success")
+                    Timber.i("GenerateOTPCommand success")
                     otpStorage.saveOTP(cardId, result.data.rootOTP)
                     CompletionResult.Success(Unit)
                 }
                 is CompletionResult.Failure -> {
-                    Timber.tag("ASDASD").e("GenerateOTPCommand failure ${result.error}")
+                    Timber.e("GenerateOTPCommand failure ${result.error}")
                     CompletionResult.Failure(result.error)
                 }
             }
@@ -220,14 +220,14 @@ class VisaCardActivationTask @AssistedInject constructor(
 
         return when (result) {
             is CompletionResult.Success -> {
-                Timber.tag("ASDASD").e("SignHashCommand success")
+                Timber.i("SignHashCommand success")
                 handleSignedOrder(
                     activationOrder = order,
                     response = result.data,
                 )
             }
             is CompletionResult.Failure -> {
-                Timber.tag("ASDASD").e("SignHashCommand failure ${result.error}")
+                Timber.e("SignHashCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
@@ -261,7 +261,7 @@ class VisaCardActivationTask @AssistedInject constructor(
             return CompletionResult.Success(Unit)
         }
 
-        Timber.tag("ASDASD").e("Setting access code: $accessCode")
+        Timber.i("Setting access code")
 
         val task = SetUserCodeCommand.changeAccessCode(accessCode)
         val result = suspendCancellableCoroutine { continuation ->
@@ -272,11 +272,11 @@ class VisaCardActivationTask @AssistedInject constructor(
 
         return when (result) {
             is CompletionResult.Success -> {
-                Timber.tag("ASDASD").e("SetUserCodeCommand success")
+                Timber.i("SetUserCodeCommand success")
                 CompletionResult.Success(Unit)
             }
             is CompletionResult.Failure -> {
-                Timber.tag("ASDASD").e("SetUserCodeCommand failure ${result.error}")
+                Timber.i("SetUserCodeCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
