@@ -38,6 +38,7 @@ internal class BiometricUserWalletsListManager(
     override val userWalletsSync: List<UserWallet>
         get() = state.value.userWallets
 
+    @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     override val selectedUserWallet: Flow<UserWallet>
         get() = state
             .mapLatest { state ->
@@ -46,6 +47,7 @@ internal class BiometricUserWalletsListManager(
             .filterNotNull()
             .distinctUntilChanged()
 
+    @Deprecated("You should provide the selected wallet via routing parameters due to the scalability of the features")
     override val selectedUserWalletSync: UserWallet?
         get() = findSelectedUserWallet()
 
@@ -166,6 +168,9 @@ internal class BiometricUserWalletsListManager(
                     val isSelectedWalletDeleted = prevState.selectedUserWalletId in idsToRemove
                     val newSelectedUserWallet = findOrSetSelectedWallet(
                         prevSelectedWalletId = prevState.selectedUserWalletId,
+                        prevSelectedWalletIndex = prevState.userWallets.indexOfFirst {
+                            it.walletId == prevState.selectedUserWalletId
+                        },
                         userWallets = remainingWallets,
                         ignorePrevSelectedWallet = isSelectedWalletDeleted,
                     )
@@ -248,27 +253,33 @@ internal class BiometricUserWalletsListManager(
 
                             throw UserWalletsListError.NotAllUserWalletsUnlocked
                         } else {
+                            val prevState = state.value
+
                             val selectedWallet = findOrSetSelectedWallet(
-                                state.value.selectedUserWalletId,
-                                loadedState.userWallets,
+                                prevSelectedWalletId = prevState.selectedUserWalletId,
+                                userWallets = loadedState.userWallets,
+                                prevSelectedWalletIndex = prevState.userWallets.indexOfFirst {
+                                    it.walletId == prevState.selectedUserWalletId
+                                },
                             )
 
-                            state.value = loadedState.copy(
-                                selectedUserWalletId = selectedWallet?.walletId,
-                            )
+                            state.value = loadedState.copy(selectedUserWalletId = selectedWallet?.walletId)
 
                             selectedWallet
                         }
                     }
                     UnlockType.ANY -> {
+                        val prevState = state.value
+
                         val selectedWallet = findOrSetSelectedWallet(
-                            state.value.selectedUserWalletId,
-                            loadedState.userWallets,
+                            prevSelectedWalletId = state.value.selectedUserWalletId,
+                            prevSelectedWalletIndex = prevState.userWallets.indexOfFirst {
+                                it.walletId == prevState.selectedUserWalletId
+                            },
+                            userWallets = loadedState.userWallets,
                         )
 
-                        state.value = loadedState.copy(
-                            selectedUserWalletId = selectedWallet?.walletId,
-                        )
+                        state.value = loadedState.copy(selectedUserWalletId = selectedWallet?.walletId)
 
                         selectedWallet
                     }
@@ -310,6 +321,7 @@ internal class BiometricUserWalletsListManager(
 
     private fun findOrSetSelectedWallet(
         prevSelectedWalletId: UserWalletId?,
+        prevSelectedWalletIndex: Int,
         userWallets: List<UserWallet>,
         ignorePrevSelectedWallet: Boolean = false,
     ): UserWallet? {
@@ -321,12 +333,42 @@ internal class BiometricUserWalletsListManager(
         }
 
         if (possibleSelectedUserWallet == null || possibleSelectedUserWallet.isLocked) {
-            possibleSelectedUserWallet = userWallets.firstOrNull { !it.isLocked } ?: userWallets.firstOrNull()
+            possibleSelectedUserWallet =
+                userWallets.findAvailableUserWallet(prevSelectedIndex = prevSelectedWalletIndex)
         }
 
         selectedUserWalletRepository.set(possibleSelectedUserWallet?.walletId)
 
         return possibleSelectedUserWallet
+    }
+
+    /**
+     * Find the nearest available wallet that can be selected
+     *
+     * Example:
+     * Number with *n* is previous selected wallet with index [prevSelectedIndex].
+     *
+     * 1. [*1*, 2, 3, 4] => delete 1 => [2, 3, 4] => find and select => [*2*, 3, 4]
+     * 2. [1, *2*, 3, 4] => delete 2 => [1, 3, 4] => find and select => [1, *3*, 4]
+     * 3. [1, 2, *3*, 4] => delete 3 => [1, 2, 4] => find and select => [1, 2, *4*]
+     * 4. [1, 2, 3, *4*] => delete 4 => [1, 2, 3] => find and select => [1, 2, *3*]
+     *
+     * @receiver list of user wallets without deleted wallet
+     */
+    private fun List<UserWallet>.findAvailableUserWallet(prevSelectedIndex: Int): UserWallet? {
+        if (prevSelectedIndex == 0) return firstOrNull { !it.isLocked } ?: firstOrNull()
+
+        if (prevSelectedIndex in indices && !this[prevSelectedIndex].isLocked) return this[prevSelectedIndex]
+
+        for (offset in 1..size) {
+            val rightIndex = prevSelectedIndex + offset
+            if (rightIndex in indices && !this[rightIndex].isLocked) return this[rightIndex]
+
+            val leftIndex = prevSelectedIndex - offset
+            if (leftIndex in indices && !this[leftIndex].isLocked) return this[leftIndex]
+        }
+
+        return lastOrNull()
     }
 
     private fun findSelectedUserWallet(
