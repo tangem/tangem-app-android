@@ -672,7 +672,7 @@
   <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек или использовать данную карту или кольцо для восстановления кода доступа.</string>
   <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты или кольца. Вы не сможете восстановить текущий кошелек.</string>
   <string name="ring_promo_text">Владельцам колец — 3 обмена без комиссии на Changelly до 15.11!</string>
-  <string name="ring_promo_title">Обмен с 0%% комиссией!</string>
+  <string name="ring_promo_title">Обмен с 0% комиссией!</string>
   <string name="save_user_wallet_agreement_access_description">Войдите в приложение и следите за своим балансом без сканирования карты или кольца</string>
   <string name="save_user_wallet_agreement_access_title">Доступ в приложение</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Использовать биометрию</string>
@@ -929,6 +929,7 @@
   <string name="token_swap_changelly_promotion_message">Обменивайте этот токен на другие с %1$s комиссии за обслуживание с %2$s по %3$s февраля.</string>
   <string name="token_swap_changelly_promotion_title">Обмен с Changelly, %s комиссии</string>
   <string name="token_swap_promotion_button">Обменять</string>
+  <string name="tokens_list_hot_crypto_header">В тренде🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Недоступно для покупки</string>
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажи</string>
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обмена с %s</string>
@@ -962,7 +963,7 @@
   <string name="user_push_notification_agreement_argument_two">Узнавайте первым о новых акциях</string>
   <string name="user_push_notification_agreement_header">Хотите использовать Push-уведомления?</string>
   <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
-  <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите удалить этот кошелек?</string>
+  <string name="user_wallet_list_delete_prompt">Вы уверены, что хотите забыть этот кошелек?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Произошла ошибка, пожалуйста, отсканируйте свою карту или кольцо для входа</string>
   <string name="user_wallet_list_error_wallet_already_saved">Этот кошелек уже был сохранен, вы можете добавить другой</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">Кошелек с именем %s уже существует</string>
@@ -1010,7 +1011,7 @@
   <string name="wallet_network_group_title">Сеть %s</string>
   <string name="wallet_notification_address_copied">Адрес скопирован в буфер обмена</string>
   <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
-  <string name="wallet_promo_banner_button_title">Получить с 10%% скидкой</string>
+  <string name="wallet_promo_banner_button_title">Получить с 10% скидкой</string>
   <string name="wallet_promo_banner_description">Получите доступ к более чем 13 000 криптовалют. Покупайте, продавайте, обменивайте и стейкайте в один клик. Свяжите до трех карт для резервного копирования. </string>
   <string name="wallet_promo_banner_title">Откройте Tangem Wallet</string>
   <string name="wallet_settings_title">Настройки кошелька</string>
