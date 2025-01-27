@@ -7,6 +7,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.resourceReference
@@ -356,7 +357,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
 private fun showCardVerificationFailedDialog(error: TangemError) {
     if (error is TangemSdkError.CardVerificationFailed) {
-        Analytics.send(event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed)
+        Analytics.send(
+            event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(AnalyticsParam.ScreensSources.Backup),
+        )
 
         val resource = error.localizedDescriptionRes()
         val resId = resource.resId ?: R.string.common_unknown_error
