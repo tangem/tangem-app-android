@@ -14,6 +14,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.withContext
 
+@Suppress("UnusedPrivateMember")
 internal class DefaultVisaActivationRepository @AssistedInject constructor(
     @Assisted private val cardId: String,
     private val visaApi: TangemVisaApi,
@@ -38,7 +39,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         }
 
     override suspend fun getActivationOrderToSign(): ActivationOrder = withContext(dispatcherProvider.io) {
-        ActivationOrder(CryptoUtils.generateRandomBytes(32).toHexString())
+        ActivationOrder(CryptoUtils.generateRandomBytes(length = 32).toHexString())
     }
 
     @AssistedFactory
