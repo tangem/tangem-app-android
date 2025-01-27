@@ -51,6 +51,7 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.rememberIsKeyboardVisible
 import com.tangem.core.ui.components.sheetscaffold.*
 import com.tangem.core.ui.components.snackbar.CopiedTextSnackbar
@@ -58,7 +59,6 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -119,12 +119,11 @@ internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: Marke
     )
 
     WalletEventEffect(
-        event = state.event,
-        selectedWalletIndex = state.selectedWalletIndex,
         walletsListState = walletsListState,
         snackbarHostState = snackbarHostState,
-        onAlertConfigSet = { alertConfig = it },
+        event = state.event,
         onAutoScrollSet = { isAutoScroll.value = true },
+        onAlertConfigSet = { alertConfig = it },
     )
 }
 
@@ -139,7 +138,11 @@ private fun WalletContent(
     alertConfig: WalletAlertState?,
     onAutoScrollReset: () -> Unit,
 ) {
-    var selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
+    /*
+     * Don't pass key to remember, because it will brake scroll animation.
+     * selectedWalletIndex will be changed in WalletsListEffects.
+     */
+    val selectedWalletIndex by remember(state.selectedWalletIndex) { mutableIntStateOf(state.selectedWalletIndex) }
     val selectedWallet = state.wallets.getOrElse(selectedWalletIndex) { state.wallets[state.selectedWalletIndex] }
 
     val listState = rememberLazyListState()
@@ -251,10 +254,15 @@ private fun WalletContent(
         WalletsListEffects(
             lazyListState = walletsListState,
             selectedWalletIndex = selectedWalletIndex,
-            onWalletChange = state.onWalletChange,
-            onSelectedWalletIndexSet = { selectedWalletIndex = it },
-            isAutoScroll = isAutoScroll,
-            onAutoScrollReset = onAutoScrollReset,
+            onUserScroll = onAutoScrollReset,
+            onIndexChange = { index ->
+                // Auto scroll must not change wallet
+                if (isAutoScroll.value) {
+                    state.onWalletChange(index, true)
+                } else {
+                    state.onWalletChange(index, false)
+                }
+            },
         )
     }
 
