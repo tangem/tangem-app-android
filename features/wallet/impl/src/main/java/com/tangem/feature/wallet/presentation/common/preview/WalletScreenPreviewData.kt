@@ -153,7 +153,7 @@ internal object WalletScreenPreviewData {
             singleWalletLockedState,
             multiWalletState,
         ),
-        onWalletChange = {},
+        onWalletChange = { _, _ -> },
         event = consumedEvent(),
         isHidingMode = false,
         showMarketsOnboarding = false,
