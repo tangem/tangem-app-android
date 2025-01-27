@@ -6,6 +6,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.ui.OnboardingVisaWelcome
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.ui.state.OnboardingVisaWelcomeUM
 
@@ -28,7 +29,7 @@ internal class OnboardingVisaWelcomeComponent(
             )
         }
 
-        BackHandler(onBack = remember(this) { { params.onBack() } })
+        BackHandler(onBack = remember(this) { { params.childParams.onBack() } })
 
         OnboardingVisaWelcome(
             modifier = modifier,
@@ -37,8 +38,8 @@ internal class OnboardingVisaWelcomeComponent(
     }
 
     data class Params(
+        val childParams: DefaultOnboardingVisaComponent.ChildParams,
         val isWelcomeBack: Boolean,
-        val onBack: () -> Unit,
         val onDone: () -> Unit,
     )
 }
