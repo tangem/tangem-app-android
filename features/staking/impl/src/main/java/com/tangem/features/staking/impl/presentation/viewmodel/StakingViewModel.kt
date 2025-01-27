@@ -647,7 +647,7 @@ internal class StakingViewModel @Inject constructor(
                 currencyStatus = cryptoCurrencyStatus,
                 amount = amount,
                 fee = fee,
-                balanceAfterTransaction = balanceAfterTransaction,
+                feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
             )
             stateController.update(
                 AddStakingNotificationsTransformer(

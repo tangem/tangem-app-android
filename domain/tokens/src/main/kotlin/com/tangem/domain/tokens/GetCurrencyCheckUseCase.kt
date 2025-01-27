@@ -19,7 +19,7 @@ class GetCurrencyCheckUseCase(
         currencyStatus: CryptoCurrencyStatus,
         amount: BigDecimal?,
         fee: BigDecimal?,
-        balanceAfterTransaction: BigDecimal?,
+        feeCurrencyBalanceAfterTransaction: BigDecimal?,
         recipientAddress: String? = null,
     ): CryptoCurrencyCheck {
         return withContext(dispatchers.io) {
@@ -32,7 +32,7 @@ class GetCurrencyCheckUseCase(
             val rentWarning = currencyChecksRepository.getRentExemptionError(
                 userWalletId = userWalletId,
                 currencyStatus = currencyStatus,
-                balanceAfterTransaction = balanceAfterTransaction ?: BigDecimal.ZERO,
+                balanceAfterTransaction = feeCurrencyBalanceAfterTransaction ?: BigDecimal.ZERO,
             )
             val isAccountFunded = recipientAddress?.let {
                 currencyChecksRepository.checkIfAccountFunded(
