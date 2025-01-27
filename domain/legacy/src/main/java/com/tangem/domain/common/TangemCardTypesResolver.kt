@@ -8,6 +8,7 @@ import com.tangem.common.card.WalletData
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.TapWorkarounds.isWallet2
 import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
@@ -35,10 +36,7 @@ internal class TangemCardTypesResolver(
         return walletData == null && card.firmwareVersion <= FirmwareVersion.HDWalletAvailable
     }
 
-    override fun isWallet2(): Boolean {
-        return card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
-            card.settings.isKeysImportAllowed
-    }
+    override fun isWallet2(): Boolean = card.isWallet2
 
     override fun isVisaWallet(): Boolean = productType == ProductType.Visa
 
