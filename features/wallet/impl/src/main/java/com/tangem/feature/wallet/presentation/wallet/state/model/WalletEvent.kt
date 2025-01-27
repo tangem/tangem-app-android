@@ -6,7 +6,8 @@ import com.tangem.core.ui.extensions.TextReference
 @Immutable
 internal sealed class WalletEvent {
 
-    data class ChangeWallet(val index: Int) : WalletEvent()
+    /** Change wallet with animation. Using [prevIndex] and [newIndex] to calculate offset */
+    data class ChangeWallet(val prevIndex: Int, val newIndex: Int) : WalletEvent()
 
     data class ShowError(val text: TextReference) : WalletEvent()
 
