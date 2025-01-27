@@ -5,6 +5,7 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
@@ -22,7 +23,7 @@ internal class ScanCardToUnlockWalletClickHandler @Inject constructor(
 
     suspend operator fun invoke(walletId: UserWalletId): Either<ScanCardToUnlockWalletError, Unit> {
         return either {
-            when (val result = scanCardProcessor.scan()) {
+            when (val result = scanCardProcessor.scan(analyticsSource = AnalyticsParam.ScreensSources.Main)) {
                 is CompletionResult.Failure -> {
                     if (result.error is TangemSdkError.UserCancelled) {
                         scanFailsCounter++
