@@ -8,6 +8,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.map
+import com.tangem.common.timemeasure.RealtimeMonotonicTimeSource
 import com.tangem.crypto.CryptoUtils
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
@@ -29,6 +30,7 @@ import kotlinx.coroutines.*
 import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.jvm.Throws
+import kotlin.time.measureTimedValue
 
 @Suppress("LongParameterList")
 class VisaCardActivationTask @AssistedInject constructor(
@@ -69,31 +71,38 @@ class VisaCardActivationTask @AssistedInject constructor(
             session = session,
         )
 
-        return if (challengeToSign != null) {
-            context.signAuthorizationChallenge(challengeToSign)
-        } else {
-            val activationOrder = runCatching { visaActivationRepository.getActivationOrderToSign() }
-                .getOrElse {
-                    return CompletionResult.Failure(TangemSdkError.Underlying(it.message ?: ""))
-                }
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            if (challengeToSign != null) {
+                context.signAuthorizationChallenge(challengeToSign)
+            } else {
+                val activationOrder = runCatching { visaActivationRepository.getActivationOrderToSign() }
+                    .getOrElse {
+                        return CompletionResult.Failure(TangemSdkError.Underlying(it.message ?: ""))
+                    }
 
-            context.signOrder(activationOrder)
+                context.signOrder(activationOrder)
+            }
         }
+        Timber.i("VisaCardActivationTask all time: ${timedResult.duration}")
+        return timedResult.value
     }
 
     private suspend fun SessionContext.signAuthorizationChallenge(
         challengeToSign: VisaAuthChallenge.Card,
     ): CompletionResult<VisaCardActivationResponse> {
         val attestationCommand = AttestCardKeyCommand(challenge = CryptoUtils.generateRandomBytes(length = 16))
-        val result = suspendCancellableCoroutine { continuation ->
-            attestationCommand.run(session = session) { attestationResponse ->
-                continuation.resume(attestationResponse)
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            suspendCancellableCoroutine { continuation ->
+                attestationCommand.run(session = session) { attestationResponse ->
+                    continuation.resume(attestationResponse)
+                }
             }
         }
+        Timber.i("AttestCardKeyCommand time: ${timedResult.duration}")
 
-        return when (result) {
+        return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                Timber.tag("ASDASD").e("AttestCardKeyCommand success")
+                Timber.i("AttestCardKeyCommand success")
                 processSignedAuthorizationChallenge(
                     signedChallenge = challengeToSign.toSignedChallenge(
                         signedChallenge = result.data.cardSignature.toHexString(),
@@ -102,7 +111,7 @@ class VisaCardActivationTask @AssistedInject constructor(
                 )
             }
             is CompletionResult.Failure -> {
-                Timber.tag("ASDASD").e("AttestCardKeyCommand failure ${result.error}")
+                Timber.e("AttestCardKeyCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
@@ -153,19 +162,24 @@ class VisaCardActivationTask @AssistedInject constructor(
             createOTP(session)
         } else {
             val createWalletTask = CreateWalletTask(VisaUtilities.mandatoryCurve)
-            val result = suspendCancellableCoroutine { continuation ->
-                createWalletTask.run(session) { createWalletResult ->
-                    continuation.resume(createWalletResult)
+
+            val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+                suspendCancellableCoroutine { continuation ->
+                    createWalletTask.run(session) { createWalletResult ->
+                        continuation.resume(createWalletResult)
+                    }
                 }
             }
 
-            when (result) {
+            Timber.i("CreateWalletTask time: ${timedResult.duration}")
+
+            when (val result = timedResult.value) {
                 is CompletionResult.Success -> {
-                    Timber.tag("ASDASD").e("CreateWalletTask success")
+                    Timber.i("CreateWalletTask success")
                     createOTP(session)
                 }
                 is CompletionResult.Failure -> {
-                    Timber.tag("ASDASD").e("CreateWalletTask failure ${result.error}")
+                    Timber.e("CreateWalletTask failure ${result.error}")
                     CompletionResult.Failure(result.error)
                 }
             }
@@ -179,20 +193,24 @@ class VisaCardActivationTask @AssistedInject constructor(
             CompletionResult.Success(Unit)
         } else {
             val otpCommand = GenerateOTPCommand()
-            val result = suspendCancellableCoroutine { continuation ->
-                otpCommand.run(session) { otpResult ->
-                    continuation.resume(otpResult)
+            val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+                suspendCancellableCoroutine { continuation ->
+                    otpCommand.run(session) { otpResult ->
+                        continuation.resume(otpResult)
+                    }
                 }
             }
 
-            when (result) {
+            Timber.i("GenerateOTPCommand time: ${timedResult.duration}")
+
+            when (val result = timedResult.value) {
                 is CompletionResult.Success -> {
-                    Timber.tag("ASDASD").e("GenerateOTPCommand success")
+                    Timber.i("GenerateOTPCommand success")
                     otpStorage.saveOTP(cardId, result.data.rootOTP)
                     CompletionResult.Success(Unit)
                 }
                 is CompletionResult.Failure -> {
-                    Timber.tag("ASDASD").e("GenerateOTPCommand failure ${result.error}")
+                    Timber.e("GenerateOTPCommand failure ${result.error}")
                     CompletionResult.Failure(result.error)
                 }
             }
@@ -212,22 +230,26 @@ class VisaCardActivationTask @AssistedInject constructor(
             derivationPath = VisaUtilities.visaDefaultDerivationPath,
         )
 
-        val result = suspendCancellableCoroutine { continuation ->
-            task.run(session) { signResult ->
-                continuation.resume(signResult)
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            suspendCancellableCoroutine { continuation ->
+                task.run(session) { signResult ->
+                    continuation.resume(signResult)
+                }
             }
         }
 
-        return when (result) {
+        Timber.i("SignHashCommand time: ${timedResult.duration}")
+
+        return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                Timber.tag("ASDASD").e("SignHashCommand success")
+                Timber.i("SignHashCommand success")
                 handleSignedOrder(
                     activationOrder = order,
                     response = result.data,
                 )
             }
             is CompletionResult.Failure -> {
-                Timber.tag("ASDASD").e("SignHashCommand failure ${result.error}")
+                Timber.e("SignHashCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
@@ -261,22 +283,27 @@ class VisaCardActivationTask @AssistedInject constructor(
             return CompletionResult.Success(Unit)
         }
 
-        Timber.tag("ASDASD").e("Setting access code: $accessCode")
+        Timber.i("Setting access code")
 
         val task = SetUserCodeCommand.changeAccessCode(accessCode)
-        val result = suspendCancellableCoroutine { continuation ->
-            task.run(session) { setAccessCodeResult ->
-                continuation.resume(setAccessCodeResult)
+
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            suspendCancellableCoroutine { continuation ->
+                task.run(session) { setAccessCodeResult ->
+                    continuation.resume(setAccessCodeResult)
+                }
             }
         }
 
-        return when (result) {
+        Timber.i("SetUserCodeCommand time: ${timedResult.duration}")
+
+        return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
-                Timber.tag("ASDASD").e("SetUserCodeCommand success")
+                Timber.i("SetUserCodeCommand success")
                 CompletionResult.Success(Unit)
             }
             is CompletionResult.Failure -> {
-                Timber.tag("ASDASD").e("SetUserCodeCommand failure ${result.error}")
+                Timber.i("SetUserCodeCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
