@@ -6,6 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
+import com.tangem.features.onboarding.v2.visa.impl.route.stepNum
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import javax.inject.Inject
 
@@ -20,4 +21,6 @@ internal class OnboardingVisaModel @Inject constructor(
     private val params = paramsContainer.require<OnboardingVisaComponent.Params>()
 
     val initialRoute = OnboardingVisaRoute.Welcome(isWelcomeBack = false)
+
+    val initialStepNum = initialRoute.stepNum()
 }
