@@ -47,7 +47,7 @@ dependencyResolutionManagement {
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
-            url = uri("https://maven.pkg.github.com/tangem/tangem-sdk-android")
+            url = uri("https://maven.pkg.github.com/tangem-developments/tangem-sdk-android")
             credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
@@ -56,7 +56,7 @@ dependencyResolutionManagement {
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
-            url = uri("https://maven.pkg.github.com/tangem/blst-android")
+            url = uri("https://maven.pkg.github.com/tangem-developments/blst-android")
             credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
@@ -65,7 +65,7 @@ dependencyResolutionManagement {
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
-            url = uri("https://maven.pkg.github.com/tangem/blockchain-sdk-kotlin")
+            url = uri("https://maven.pkg.github.com/tangem-developments/blockchain-sdk-kotlin")
             credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
@@ -74,7 +74,7 @@ dependencyResolutionManagement {
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
-            url = uri("https://maven.pkg.github.com/tangem/wallet-core")
+            url = uri("https://maven.pkg.github.com/tangem-developments/wallet-core")
             credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
@@ -86,7 +86,7 @@ dependencyResolutionManagement {
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
-            url = uri("https://maven.pkg.github.com/tangem/vico")
+            url = uri("https://maven.pkg.github.com/tangem-developments/vico")
             credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
@@ -97,7 +97,7 @@ dependencyResolutionManagement {
         }
         maven {
             // setting any repository from tangem project allows maven search all packages in the project
-            url = uri("https://maven.pkg.github.com/tangem/ic4j-agent")
+            url = uri("https://maven.pkg.github.com/tangem-developments/ic4j-agent")
             credentials {
                 username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
                 password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
