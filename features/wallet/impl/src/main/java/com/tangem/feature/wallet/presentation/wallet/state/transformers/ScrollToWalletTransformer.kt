@@ -7,7 +7,8 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenSta
 import com.tangem.utils.Provider
 
 internal class ScrollToWalletTransformer(
-    private val index: Int,
+    private val prevIndex: Int,
+    private val newIndex: Int,
     private val currentStateProvider: Provider<WalletScreenState>,
     private val stateUpdater: (WalletScreenState) -> Unit,
     private val onConsume: () -> Unit = {},
@@ -16,13 +17,10 @@ internal class ScrollToWalletTransformer(
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
             event = triggeredEvent(
-                data = WalletEvent.ChangeWallet(index),
+                data = WalletEvent.ChangeWallet(prevIndex = prevIndex, newIndex = newIndex),
                 onConsume = {
                     stateUpdater(
-                        currentStateProvider().copy(
-                            selectedWalletIndex = index,
-                            event = consumedEvent(),
-                        ),
+                        currentStateProvider().copy(event = consumedEvent()),
                     )
 
                     onConsume()
