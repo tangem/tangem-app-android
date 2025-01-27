@@ -476,7 +476,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
                         when (val error = result.error) {
                             is TangemSdkError.CardVerificationFailed -> {
-                                Analytics.send(event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed)
+                                Analytics.send(
+                                    event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(
+                                        com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.Backup,
+                                    ),
+                                )
 
                                 val resource = error.localizedDescriptionRes()
                                 val resId = resource.resId ?: com.tangem.core.ui.R.string.common_unknown_error
