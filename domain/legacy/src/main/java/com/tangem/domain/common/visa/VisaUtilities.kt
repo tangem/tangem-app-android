@@ -16,7 +16,8 @@ object VisaUtilities {
 
     val visaBlockchain = Blockchain.Polygon
 
-    val visaDefaultDerivationPath = visaBlockchain.derivationPath(DerivationStyle.V3)
+    val visaDefaultDerivationPath
+        get() = visaBlockchain.derivationPath(DerivationStyle.V3)
 
     fun visaDefaultDerivationPath(style: DerivationStyle) = visaBlockchain.derivationPath(style)
 
