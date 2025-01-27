@@ -17,7 +17,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.tan
 
 @Stable
 @ComponentScoped
