@@ -40,7 +40,7 @@ jobs:
 
       - name: Run ${{ matrix.task }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_MOBILE_PAT }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
           BUNDLE_PATH: vendor/bundle
         run: |
