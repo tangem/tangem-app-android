@@ -122,6 +122,9 @@ interface TangemTechApi {
         @Body body: SeedPhraseNotificationDTO,
     ): ApiResponse<Unit>
 
+    @GET("hot_crypto")
+    suspend fun getHotCrypto(@Query("currency") currencyId: String): ApiResponse<HotCryptoResponse>
+
     companion object {
         val marketsQuoteFields = listOf(
             "price",
