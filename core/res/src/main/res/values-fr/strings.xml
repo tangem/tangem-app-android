@@ -654,7 +654,7 @@
   <string name="reset_card_with_backup_to_factory_message">La réinitialisation aux paramètres d\'usine supprimera complètement le portefeuille de la carte sélectionnée. Vous ne pourrez pas restaurer le portefeuille actuel ni utiliser la carte pour récupérer le code d\'accès.</string>
   <string name="reset_card_without_backup_to_factory_message">La réinitialisation aux paramètres d\'usine supprimera complètement le portefeuille de la carte sélectionnée et le supprimera de l\'application. Vous ne pourrez pas restaurer le portefeuille actuel.</string>
   <string name="ring_promo_text">Les propriétaires du Tangem Ring ont droit à 3 swap gratis sur Changelly jusqu\'au 15/11 !</string>
-  <string name="ring_promo_title">Échangez avec 0 %% de frais !</string>
+  <string name="ring_promo_title">Échangez avec 0 % de frais !</string>
   <string name="save_user_wallet_agreement_access_description">Connectez-vous à l\'application et vérifiez votre solde sans scanner la carte</string>
   <string name="save_user_wallet_agreement_access_title">Accéder à l\'application</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Autoriser l\'utilisation de la biométrie</string>
@@ -912,6 +912,7 @@
   <string name="token_swap_changelly_promotion_message">Échangez ce jeton contre un autre moyennant des frais de service de %1$s du %2$s au %3$s février.</string>
   <string name="token_swap_changelly_promotion_title">Échangez avec Changelly, %s frais</string>
   <string name="token_swap_promotion_button">Échangez maintenant</string>
+  <string name="tokens_list_hot_crypto_header">Crypto-monnaies populaire 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Non disponible à l\'achat</string>
   <string name="tokens_list_unavailable_to_sell_header">Indisponible à la vente</string>
   <string name="tokens_list_unavailable_to_swap_header">Non disponible pour l\'échange de %s</string>
@@ -993,7 +994,7 @@
   <string name="wallet_network_group_title">%s réseau</string>
   <string name="wallet_notification_address_copied">L\'adresse a été copiée avec succès</string>
   <string name="wallet_notification_no_internet">Pas de connexion internet</string>
-  <string name="wallet_promo_banner_button_title">Obtenez-le maintenant avec 10 %% de réduction</string>
+  <string name="wallet_promo_banner_button_title">Obtenez-le maintenant avec 10 % de réduction</string>
   <string name="wallet_promo_banner_description">Accédez à plus de 13 000 cryptomonnaies. Achetez, vendez, échangez et stakez en un seul clic.\nAssociez jusqu\'à trois cartes pour une sauvegarde.</string>
   <string name="wallet_promo_banner_title">Découvrez le Portefeuille Tangem</string>
   <string name="wallet_settings_title">Paramètres du portefeuille</string>
