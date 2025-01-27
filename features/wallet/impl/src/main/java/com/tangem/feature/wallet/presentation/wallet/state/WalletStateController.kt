@@ -91,7 +91,7 @@ internal class WalletStateController @Inject constructor() {
             topBarConfig = WalletTopBarConfig(onDetailsClick = {}),
             selectedWalletIndex = NOT_INITIALIZED_WALLET_INDEX,
             wallets = persistentListOf(),
-            onWalletChange = {},
+            onWalletChange = { _, _ -> },
             event = consumedEvent(),
             isHidingMode = false,
             showMarketsOnboarding = false,

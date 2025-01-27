@@ -90,15 +90,19 @@ internal class WalletsUpdateActionResolver @Inject constructor(
 
         return when {
             prevWalletsSize > wallets.size -> {
+                val deletedWalletId = state.wallets.getDeletedWalletId(wallets)
+
                 Action.DeleteWallet(
                     selectedWallet = selectedWallet,
                     selectedWalletIndex = wallets.indexOfWallet(id = selectedWallet.walletId),
-                    deletedWalletId = state.wallets.getDeletedWalletId(wallets),
+                    deletedWalletId = deletedWalletId,
+                    deletedWalletIndex = state.selectedWalletIndex,
                 )
             }
             prevWalletsSize < wallets.size -> {
                 val newUserWallet = state.wallets.getAddedWallet(wallets)
                 Action.AddWallet(
+                    prevWalletIndex = state.selectedWalletIndex,
                     selectedWalletIndex = wallets.indexOfWallet(id = newUserWallet.walletId),
                     selectedWallet = newUserWallet,
                 )
@@ -266,6 +270,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             val selectedWallet: UserWallet,
             val selectedWalletIndex: Int,
             val deletedWalletId: UserWalletId,
+            val deletedWalletIndex: Int,
         ) : Action() {
 
             override fun toString(): String {
@@ -273,19 +278,25 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                     DeleteWallet(
                         selectedWallet = ${selectedWallet.walletId},
                         selectedWalletIndex = $selectedWalletIndex,
-                        deletedWalletId = $deletedWalletId
+                        deletedWalletId = $deletedWalletId,
+                        deletedWalletIndex = $deletedWalletIndex,
                     )
                 """.trimIndent()
             }
         }
 
-        data class AddWallet(val selectedWalletIndex: Int, val selectedWallet: UserWallet) : Action() {
+        data class AddWallet(
+            val prevWalletIndex: Int,
+            val selectedWalletIndex: Int,
+            val selectedWallet: UserWallet,
+        ) : Action() {
 
             override fun toString(): String {
                 return """
                     AddWallet(
+                        prevWalletIndex = $prevWalletIndex,
                         selectedWalletIndex = $selectedWalletIndex,
-                        selectedWallet = ${selectedWallet.walletId}
+                        selectedWallet = ${selectedWallet.walletId},
                     )
                 """.trimIndent()
             }
