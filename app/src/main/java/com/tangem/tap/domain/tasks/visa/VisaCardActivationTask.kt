@@ -1,12 +1,12 @@
 package com.tangem.tap.domain.tasks.visa
 
-import com.reown.util.hexToBytes
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.map
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
