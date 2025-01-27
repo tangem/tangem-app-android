@@ -45,7 +45,6 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.collections.set
 
 internal class ScanProductTask(
@@ -173,7 +172,6 @@ private class ScanWalletProcessor(
     ) {
         @Suppress("MagicNumber")
         if (card.firmwareVersion.doubleValue >= 4.39 && card.settings.maxWalletsCount == 1) {
-            Timber.tag("ASDASD").i("ScanWalletProcessor: ${card.firmwareVersion}")
             readFile(card, session, callback)
             return
         }
@@ -192,7 +190,6 @@ private class ScanWalletProcessor(
 
             when (result) {
                 is CompletionResult.Success -> {
-                    Timber.tag("ASDASD").i("ReadFilesTask: ${result.data}")
                     val file = result.data.firstOrNull()
                     val counter = file?.counter
                     val signature = file?.signature
