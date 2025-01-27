@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.model.OnboardingVisaApproveModel
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.ui.OnboardingVisaApprove
 import kotlinx.coroutines.launch
@@ -30,7 +31,7 @@ internal class OnboardingVisaApproveComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = remember(this) { { params.onBack() } })
+        BackHandler(onBack = remember(this) { { params.childParams.onBack() } })
 
         OnboardingVisaApprove(
             state = state,
@@ -39,7 +40,7 @@ internal class OnboardingVisaApproveComponent(
     }
 
     data class Params(
-        val onBack: () -> Unit,
+        val childParams: DefaultOnboardingVisaComponent.ChildParams,
         val onDone: () -> Unit,
     )
 }
