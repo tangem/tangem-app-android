@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/prepare.yml
     name: Prepare
     with:
-      initial_version_code: 1500
+      initial_version_code: 1200
       checkout_dexprotector_config: true
     secrets: inherit
 
@@ -23,7 +23,7 @@ jobs:
       - name: Build APK & AAB
         id: build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_MOBILE_PAT }}
           keystore_encoded_base64: ${{ secrets.TEST_KEYSTORE }}
           store_password: ${{ secrets.TEST_STORE_PASSWORD }}
           key_alias: ${{ secrets.TEST_KEY_ALIAS }}

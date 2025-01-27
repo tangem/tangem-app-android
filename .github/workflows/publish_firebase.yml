@@ -21,7 +21,7 @@ on:
         required: true
 
 env:
-  INITIAL_VERSION_CODE: ${{ 1000 }}
+  INITIAL_VERSION_CODE: ${{ 1050 }}
 
 jobs:
   prepare:
@@ -40,7 +40,7 @@ jobs:
       - name: Build internal
         id: build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_MOBILE_PAT }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
           version_code: ${{ needs.prepare.outputs.version_code }}
           version_name: ${{ needs.prepare.outputs.version_name }}
