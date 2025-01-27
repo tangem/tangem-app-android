@@ -7,12 +7,13 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.model.OnboardingVisaInProgressModel
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.ui.OnboardingVisaInProgress
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
-class OnboardingVisaInProgressComponent(
+internal class OnboardingVisaInProgressComponent(
     appComponentContext: AppComponentContext,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
@@ -27,7 +28,7 @@ class OnboardingVisaInProgressComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        BackHandler(onBack = remember(this) { { params.onBack() } })
+        BackHandler(onBack = remember(this) { { params.childParams.onBack() } })
 
         OnboardingVisaInProgress(
             modifier = modifier,
@@ -35,7 +36,7 @@ class OnboardingVisaInProgressComponent(
     }
 
     data class Params(
-        val onBack: () -> Unit,
+        val childParams: DefaultOnboardingVisaComponent.ChildParams,
         val onDone: () -> Unit,
     )
 }
