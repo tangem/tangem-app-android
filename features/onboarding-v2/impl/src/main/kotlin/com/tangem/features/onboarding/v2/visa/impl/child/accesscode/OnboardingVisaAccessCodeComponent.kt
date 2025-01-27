@@ -9,9 +9,9 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
+import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.model.OnboardingVisaAccessCodeModel
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.OnboardingVisaAccessCode
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 internal class OnboardingVisaAccessCodeComponent(
@@ -23,10 +23,10 @@ internal class OnboardingVisaAccessCodeComponent(
 
     init {
         componentScope.launch {
-            model.onBack.collect { params.onBack() }
+            model.onBack.collect { params.childParams.onBack() }
         }
         componentScope.launch {
-            params.parentBackEvent.collect {
+            params.childParams.parentBackEvent.collect {
                 model.onBack()
             }
         }
@@ -47,8 +47,7 @@ internal class OnboardingVisaAccessCodeComponent(
     }
 
     data class Params(
-        val parentBackEvent: SharedFlow<Unit>,
-        val onBack: () -> Unit,
+        val childParams: DefaultOnboardingVisaComponent.ChildParams,
         val onDone: () -> Unit,
     )
 }
