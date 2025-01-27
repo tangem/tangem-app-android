@@ -16,15 +16,12 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.ReviewManagerRequester
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.animateScrollByIndex
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.demonstrateScrolling
-import kotlinx.coroutines.delay
 
-@Suppress("LongParameterList")
 @Composable
 internal fun WalletEventEffect(
     walletsListState: LazyListState,
     snackbarHostState: SnackbarHostState,
     event: StateEvent<WalletEvent>,
-    selectedWalletIndex: Int,
     onAutoScrollSet: () -> Unit,
     onAlertConfigSet: (WalletAlertState) -> Unit,
 ) {
@@ -36,9 +33,8 @@ internal fun WalletEventEffect(
         onTrigger = { value ->
             when (value) {
                 is WalletEvent.ChangeWallet -> {
-                    delay(timeMillis = 1000) // to let compose time to start drawing otherwise animation doesnt work
                     onAutoScrollSet()
-                    walletsListState.animateScrollByIndex(prevIndex = selectedWalletIndex, newIndex = value.index)
+                    walletsListState.animateScrollByIndex(prevIndex = value.prevIndex, newIndex = value.newIndex)
                 }
                 is WalletEvent.ShowError -> {
                     snackbarHostState.showSnackbar(message = value.text.resolveReference(resources))
