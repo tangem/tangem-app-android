@@ -10,6 +10,7 @@ interface ScanCardProcessor {
     suspend fun scan(
         cardId: String? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
+        analyticsSource: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse>
 
     suspend fun scan(
