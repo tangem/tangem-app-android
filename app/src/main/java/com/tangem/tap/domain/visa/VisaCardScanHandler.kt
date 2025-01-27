@@ -31,7 +31,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
     private class SessionContext(
         val visaActivationRepository: VisaActivationRepository,
-        val card: Card,
+        val cardId: String,
         val session: CardSession,
     )
 
@@ -47,7 +47,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val context = SessionContext(
             visaActivationRepository = visaActivationRepository,
-            card = card,
+            cardId = card.cardId,
             session = session,
         )
 
@@ -103,6 +103,8 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }
 
+        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
         val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: run {
             Timber.e("Failed to find extended public key while handling wallet authorization")
             return CompletionResult.Failure(
@@ -118,7 +120,6 @@ internal class VisaCardScanHandler @Inject constructor(
         }
 
         Timber.i("Requesting challenge for wallet authorization")
-        // Will be changed later after backend implementation
         val challengeResponse = runCatching {
             visaAuthRepository.getCustomerWalletAuthChallenge(
                 cardId = card.cardId,
@@ -152,8 +153,6 @@ internal class VisaCardScanHandler @Inject constructor(
     private suspend fun SessionContext.handleWalletAuthorizationTokens(
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationStatus> {
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-
         val authorizationTokensResponse = runCatching {
             visaAuthRepository.getAccessTokens(signedChallenge = signedChallenge)
         }.getOrElse {
@@ -164,7 +163,7 @@ internal class VisaCardScanHandler @Inject constructor(
         }
 
         visaAuthTokenStorage.store(
-            cardId = card.cardId,
+            cardId = cardId,
             tokens = authorizationTokensResponse,
         )
 
@@ -266,14 +265,7 @@ internal class VisaCardScanHandler @Inject constructor(
             }
         }
 
-        return when (result) {
-            is CompletionResult.Success -> {
-                CompletionResult.Success(result.data)
-            }
-            is CompletionResult.Failure -> {
-                CompletionResult.Failure(result.error)
-            }
-        }
+        return result
     }
 
     private suspend fun SessionContext.signChallengeWithCard(
