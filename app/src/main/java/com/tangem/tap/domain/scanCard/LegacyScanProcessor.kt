@@ -59,13 +59,14 @@ internal class LegacyScanProcessor @Inject constructor(
     suspend fun scan(
         cardId: String? = null,
         allowsRequestAccessCodeFromRepository: Boolean = false,
+        analyticsSource: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse> {
         return tangemSdkManager.scanProduct(
             cardId = cardId,
             allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
         )
             .doOnFailure { error ->
-                onScanFailure(error = error, onFailure = {}, onCancel = {})
+                onScanFailure(analyticsSource = analyticsSource, error = error, onFailure = {}, onCancel = {})
             }
     }
 
@@ -92,6 +93,7 @@ internal class LegacyScanProcessor @Inject constructor(
         result
             .doOnFailure { error ->
                 onScanFailure(
+                    analyticsSource = analyticsSource,
                     error = error,
                     onFailure = onFailure,
                     onCancel = {
@@ -162,12 +164,17 @@ internal class LegacyScanProcessor @Inject constructor(
     }
 
     private suspend inline fun onScanFailure(
+        analyticsSource: AnalyticsParam.ScreensSources,
         error: TangemError,
         crossinline onFailure: suspend (TangemError) -> Unit,
         crossinline onCancel: () -> Unit,
     ) {
         if (error is TangemSdkError.CardVerificationFailed) {
-            analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed)
+            analyticsEventHandler.send(
+                event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(
+                    analyticsSource,
+                ),
+            )
 
             val resource = error.localizedDescriptionRes()
             val resId = resource.resId ?: R.string.common_unknown_error
