@@ -66,7 +66,10 @@ internal class CardSettingsViewModel @Inject constructor(
     )
 
     private fun scanCard() = viewModelScope.launch {
-        scanCardProcessor.scan(allowsRequestAccessCodeFromRepository = true)
+        scanCardProcessor.scan(
+            analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.Settings,
+            allowsRequestAccessCodeFromRepository = true,
+        )
             .doOnSuccess { scanResponse ->
                 val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
                 if (userWalletId == scannedUserWalletId || scannedUserWalletId == null) {
