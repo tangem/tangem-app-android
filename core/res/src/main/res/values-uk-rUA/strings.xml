@@ -51,6 +51,8 @@
   <string name="balance_hidden_do_not_show_button">Більше не показувати</string>
   <string name="balance_hidden_got_it_button">Зрозуміло</string>
   <string name="balance_hidden_title">Баланси приховані</string>
+  <string name="beta_mode_warning_message">Згідно інформації від розробників мережі, токени Kaspa знаходяться у режимі бета. Слідкуйте за оновленнями!</string>
+  <string name="beta_mode_warning_title">Бета режим</string>
   <string name="biometric_lockout_permanent_warning_description">Будь ласка, відскануйте картку або кільце</string>
   <string name="biometric_lockout_warning_description">Будь ласка, спробуйте знову через 30 секунд або відскануйте картку або кільце</string>
   <string name="biometric_lockout_warning_title">Забагато спроб</string>
@@ -672,7 +674,7 @@
   <string name="reset_card_with_backup_to_factory_message">Скидання до заводських налаштувань призведе до повного видалення гаманця з обраної картки або кільця. Ви не зможете відновити поточний гаманець або використати цю картку або кільце для відновлення коду доступу.</string>
   <string name="reset_card_without_backup_to_factory_message">Скидання до заводських налаштувань призведе до повного видалення гаманця з обраної картки або кільця. Ви не зможете відновити поточний гаманець.</string>
   <string name="ring_promo_text">Власникам кілець - 3 обміни без комісії на Changelly до 15.11!</string>
-  <string name="ring_promo_title">Обмін з 0%% комісією!</string>
+  <string name="ring_promo_title">Обмін з 0% комісією!</string>
   <string name="save_user_wallet_agreement_access_description">Увійдіть у додаток та слідкуйте за своїм балансом без сканування картки чи кільця</string>
   <string name="save_user_wallet_agreement_access_title">Доступ до додатку</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Використовувати біометрію</string>
@@ -930,6 +932,7 @@
   <string name="token_swap_changelly_promotion_message">Обмінюйте цей токен на інші з %1$s комісією за обслуговування з %2$s по %3$s лютого.</string>
   <string name="token_swap_changelly_promotion_title">Обмін із Changelly, %s комісії</string>
   <string name="token_swap_promotion_button">Обміняти</string>
+  <string name="tokens_list_hot_crypto_header">В тренді 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Недоступно для покупки</string>
   <string name="tokens_list_unavailable_to_sell_header">Недоступно для продажу</string>
   <string name="tokens_list_unavailable_to_swap_header">Недоступно для обміну з %s</string>
@@ -1011,7 +1014,7 @@
   <string name="wallet_network_group_title">Мережа %s</string>
   <string name="wallet_notification_address_copied">Адреса скопійована в буфер обміну</string>
   <string name="wallet_notification_no_internet">Немає підключення до інтернету</string>
-  <string name="wallet_promo_banner_button_title">Отримати з 10%% знижкою</string>
+  <string name="wallet_promo_banner_button_title">Отримати з 10% знижкою</string>
   <string name="wallet_promo_banner_description">Доступ до 13,000+ криптовалют. Купуйте, продавайте, обмінюйте та стейкайте одним дотиком.\nЗ’єднайте до трьох карток для бекапу.</string>
   <string name="wallet_promo_banner_title">Відкрийте Tangem Wallet</string>
   <string name="wallet_settings_title">Налаштування гаманця</string>
