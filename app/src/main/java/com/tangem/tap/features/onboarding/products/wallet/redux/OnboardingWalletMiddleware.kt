@@ -4,7 +4,6 @@ import android.net.Uri
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
-import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.extensions.toHexString
@@ -37,7 +36,6 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.proxy.redux.DaggerGraphState
@@ -228,31 +226,14 @@ private fun navigateToWalletScreen() {
     }
 }
 
-private suspend fun readCard(onSuccess: suspend (ScanResponse) -> Unit, onFailure: (TangemError) -> Unit) {
+private suspend fun readCard(): CompletionResult<ScanResponse> {
     val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
 
     store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
         isBiometricsRequestPolicy = shouldSaveAccessCodes,
     )
 
-    store.inject(DaggerGraphState::scanCardProcessor).scan(
-        analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.Intro,
-        onProgressStateChange = { showProgress ->
-            if (showProgress) {
-                store.dispatch(HomeAction.ScanInProgress(scanInProgress = true))
-            } else {
-                delay(HIDE_PROGRESS_DELAY)
-                store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
-            }
-        },
-        onFailure = {
-            Timber.e(it, "Unable to scan card")
-            delay(HIDE_PROGRESS_DELAY)
-            store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
-            onFailure(it)
-        },
-        onSuccess = onSuccess,
-    )
+    return store.inject(DaggerGraphState::scanCardProcessor).scan()
 }
 
 private suspend fun loadArtworkForCard(cardId: String, cardPublicKey: ByteArray, defaultArtwork: Uri?): Uri {
@@ -637,14 +618,10 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
             if (scanResponse == null) {
                 scope.launch {
-                    readCard(
-                        onSuccess = { newScanResponse ->
-                            handleFinishBackup(newScanResponse)
-                        },
-                        onFailure = {
-                            store.dispatchNavigationAction(AppRouter::pop)
-                        },
-                    )
+                    when (val result = readCard()) {
+                        is CompletionResult.Success -> handleFinishBackup(result.data)
+                        is CompletionResult.Failure -> store.dispatchNavigationAction(AppRouter::pop)
+                    }
                 }
             } else {
                 handleFinishBackup(scanResponse)
@@ -681,22 +658,23 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 } else {
                     delay(HIDE_PROGRESS_DELAY)
 
-                    readCard(
-                        onSuccess = { newScanResponse ->
-                            scanResponse = newScanResponse
-                            userWallet = createUserWallet(newScanResponse, backupState)
-                        },
-                        onFailure = {
+                    Timber.e("start")
+                    when (val result = readCard()) {
+                        is CompletionResult.Failure -> {
                             store.dispatchNavigationAction(AppRouter::pop)
-                        },
-                    )
+                            Timber.e("return because failed")
+                            return@launch
+                        }
+                        is CompletionResult.Success -> {
+                            scanResponse = result.data
+                            userWallet = createUserWallet(scanResponse = result.data, backupState = backupState)
+                        }
+                    }
                 }
 
                 scope.launch {
-                    userWallet?.let {
-                        if (it.scanResponse.cardTypesResolver.isWallet2() && it.isImported) {
-                            store.inject(DaggerGraphState::walletsRepository).markWallet2WasCreated(it.walletId)
-                        }
+                    if (userWallet.scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported) {
+                        store.inject(DaggerGraphState::walletsRepository).markWallet2WasCreated(userWallet.walletId)
                     }
                 }
 
@@ -711,16 +689,17 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 // All cardIds may already be activated if the backup was skipped before.
                 if (notActivatedCardIds.isEmpty()) {
                     delay(1000)
-                    store.dispatchWithMain(BackupAction.BackupFinished(userWallet?.walletId))
+                    store.dispatchWithMain(BackupAction.BackupFinished(userWallet.walletId))
                     return@launch
                 }
 
                 Analytics.send(Onboarding.Finished())
 
                 store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
+                Timber.e("handleFinishBackup: $scanResponse")
                 handleFinishBackup(requireNotNull(scanResponse), userWallet)
-                delay(1000)
-                store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet?.walletId))
+                // delay(1000)
+                store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet.walletId))
             }
         }
 
