@@ -12,6 +12,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@Suppress("UnusedPrivateMember")
 internal class DefaultVisaAuthRepository @Inject constructor(
     private val visaAuthApi: TangemVisaAuthApi,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -30,7 +31,7 @@ internal class DefaultVisaAuthRepository @Inject constructor(
             // )
 
             VisaAuthChallenge.Card(
-                challenge = CryptoUtils.generateRandomBytes(16).toHexString(),
+                challenge = CryptoUtils.generateRandomBytes(length = 16).toHexString(),
                 session = VisaAuthSession("session"),
             )
         }
@@ -49,7 +50,7 @@ internal class DefaultVisaAuthRepository @Inject constructor(
         //     session = VisaAuthSession(response.sessionId),
         // )
         VisaAuthChallenge.Wallet(
-            challenge = CryptoUtils.generateRandomBytes(32).toHexString(),
+            challenge = CryptoUtils.generateRandomBytes(length = 32).toHexString(),
             session = VisaAuthSession("session"),
         )
     }
