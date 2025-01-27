@@ -44,17 +44,13 @@ internal fun OkHttpClient.Builder.applyTimeoutAnnotations(): OkHttpClient.Builde
             val readTimeout = tag?.method()?.getAnnotation(ReadTimeout::class.java)
             val writeTimeout = tag?.method()?.getAnnotation(WriteTimeout::class.java)
 
-            chain
-                .apply {
-                    connectionTimeout?.let { withConnectTimeout(timeout = it.duration, unit = it.unit) }
-                }
-                .apply {
-                    readTimeout?.let { withReadTimeout(timeout = it.duration, unit = it.unit) }
-                }
-                .apply {
-                    writeTimeout?.let { withWriteTimeout(timeout = it.duration, unit = it.unit) }
-                }
-                .proceed(request)
+            chain.run {
+                connectionTimeout?.let { withConnectTimeout(timeout = it.duration, unit = it.unit) } ?: this
+            }.run {
+                readTimeout?.let { withReadTimeout(timeout = it.duration, unit = it.unit) } ?: this
+            }.run {
+                writeTimeout?.let { withWriteTimeout(timeout = it.duration, unit = it.unit) } ?: this
+            }.proceed(request)
         },
     )
 }
