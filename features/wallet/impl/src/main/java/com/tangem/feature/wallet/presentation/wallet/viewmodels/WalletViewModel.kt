@@ -35,7 +35,6 @@ import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
-import com.tangem.utils.extensions.indexOfFirstOrNull
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
@@ -204,28 +203,10 @@ internal class WalletViewModel @Inject constructor(
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
 
-                    changeSelectedWalletState(selectedWalletId = selectedWallet.walletId)
-
                     walletDeepLinksHandler.registerForWallet(viewModel = this, userWallet = selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
-        }
-    }
-
-    /** Change selected wallet state if selected wallet [selectedWalletId] was changed in the background */
-    private suspend fun changeSelectedWalletState(selectedWalletId: UserWalletId) {
-        if (!stateHolder.isInitialized) return
-
-        if (screenLifecycleProvider.isBackgroundState.value && selectedWalletId != stateHolder.getSelectedWalletId()) {
-            stateHolder.value.wallets
-                .indexOfFirstOrNull { prevState -> prevState.walletCardState.id == selectedWalletId }
-                ?.let { selectedIndex ->
-                    Timber.e("Selected wallet changed from background state: $selectedWalletId")
-
-                    delay(timeMillis = 1000)
-                    scrollToWallet(selectedIndex)
-                }
         }
     }
 
@@ -383,11 +364,14 @@ internal class WalletViewModel @Inject constructor(
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
                 walletFeatureToggles = walletFeatureToggles,
-                selectedWalletIndex = action.selectedWalletIndex,
             ),
         )
 
-        scrollToWallet(index = action.selectedWalletIndex)
+        scrollToWallet(prevIndex = action.prevWalletIndex, newIndex = action.selectedWalletIndex) {
+            stateHolder.update {
+                it.copy(selectedWalletIndex = action.selectedWalletIndex)
+            }
+        }
     }
 
     private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
@@ -400,27 +384,42 @@ internal class WalletViewModel @Inject constructor(
             coroutineScope = viewModelScope,
         )
 
+        val newSelectedWalletIndex = if (action.selectedWalletIndex - action.deletedWalletIndex == 1) {
+            action.deletedWalletIndex
+        } else {
+            action.selectedWalletIndex
+        }
+
         /*
          * Should not show scroll animation if WalletScreen isn't in the background.
          * Example, reset card
          */
         if (screenLifecycleProvider.isBackgroundState.value) {
-            updateStateByDeleteWalletTransformer(action)
+            updateStateByDeleteWalletTransformer(
+                selectedWalletIndex = newSelectedWalletIndex,
+                deletedWalletId = action.deletedWalletId,
+            )
         } else {
             withContext(dispatchers.io) { delay(timeMillis = 1000) }
 
             scrollToWallet(
-                index = action.selectedWalletIndex,
-                onConsume = { updateStateByDeleteWalletTransformer(action) },
+                prevIndex = action.deletedWalletIndex,
+                newIndex = action.selectedWalletIndex,
+                onConsume = {
+                    updateStateByDeleteWalletTransformer(
+                        selectedWalletIndex = newSelectedWalletIndex,
+                        deletedWalletId = action.deletedWalletId,
+                    )
+                },
             )
         }
     }
 
-    private fun updateStateByDeleteWalletTransformer(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
+    private fun updateStateByDeleteWalletTransformer(selectedWalletIndex: Int, deletedWalletId: UserWalletId) {
         stateHolder.update(
             DeleteWalletTransformer(
-                selectedWalletIndex = action.selectedWalletIndex,
-                deletedWalletId = action.deletedWalletId,
+                selectedWalletIndex = selectedWalletIndex,
+                deletedWalletId = deletedWalletId,
             ),
         )
     }
@@ -444,10 +443,11 @@ internal class WalletViewModel @Inject constructor(
         )
     }
 
-    private fun scrollToWallet(index: Int, onConsume: () -> Unit = {}) {
+    private fun scrollToWallet(prevIndex: Int, newIndex: Int, onConsume: () -> Unit = {}) {
         stateHolder.update(
             ScrollToWalletTransformer(
-                index = index,
+                prevIndex = prevIndex,
+                newIndex = newIndex,
                 currentStateProvider = Provider(action = stateHolder::value),
                 stateUpdater = { newState -> stateHolder.update { newState } },
                 onConsume = onConsume,

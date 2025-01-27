@@ -67,9 +67,14 @@ internal class WalletClickIntents @Inject constructor(
         pushPermissionClickIntentsImplementor.initialize(router, coroutineScope)
     }
 
-    fun onWalletChange(index: Int) {
-        viewModelScope.launch(dispatchers.main) {
-            launch(dispatchers.main) { neverToShowWalletsScrollPreview() }
+    fun onWalletChange(index: Int, onlyState: Boolean) {
+        if (onlyState) {
+            stateHolder.update { it.copy(selectedWalletIndex = index) }
+            return
+        }
+
+        viewModelScope.launch {
+            launch { neverToShowWalletsScrollPreview() }
 
             val maybeUserWallet = selectWalletUseCase(
                 userWalletId = stateHolder.value.wallets[index].walletCardState.id,
