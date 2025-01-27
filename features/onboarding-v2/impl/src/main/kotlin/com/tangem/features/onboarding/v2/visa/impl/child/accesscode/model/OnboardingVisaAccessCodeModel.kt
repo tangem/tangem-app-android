@@ -17,6 +17,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.tan
 
 @Stable
 @ComponentScoped
@@ -39,6 +40,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     val onDone = MutableSharedFlow<OnboardingVisaAccessCodeComponent.DoneEvent>()
 
     fun onBack() {
+        if (uiState.value.buttonLoading) return
+
         when (uiState.value.step) {
             OnboardingVisaAccessCodeUM.Step.Enter -> modelScope.launch { onBack.emit(Unit) }
             OnboardingVisaAccessCodeUM.Step.ReEnter ->
@@ -141,7 +144,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                             OnboardingVisaAccessCodeComponent.DoneEvent(
                                 visaDataForApprove = VisaDataForApprove(
                                     targetAddress = "x9F65354e595284956599F2892fA4A4a87653D6E6",
-                                    approveHash = "approve hash",
+                                    approveHash = "48b55c482123a10ad9022f9f4c5dd95c",
                                 ),
                                 walletFound = false, // TODO
                             ),
