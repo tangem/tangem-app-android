@@ -87,6 +87,8 @@
   <string name="cardano_max_amount_has_token_title">Nicht genug ADA</string>
   <string name="common_accept">Akzeptieren</string>
   <string name="common_access_denied">Zugang verweigert</string>
+  <string name="common_add_to_portfolio">Zum Portfolio hinzufügen</string>
+  <string name="common_add_token">Token hinzufügen</string>
   <string name="common_all">Alle</string>
   <string name="common_allow">Erlauben</string>
   <string name="common_analytics">Analysen</string>
@@ -105,7 +107,7 @@
   <string name="common_change">Ändern</string>
   <string name="common_choose_action">Aktion wählen</string>
   <string name="common_claim">Beanspruchen</string>
-  <string name="common_claim_rewards">Stakingbelohnungen beanstpruchen</string>
+  <string name="common_claim_rewards">Stakingbelohnungen beanspruchen</string>
   <string name="common_close">Schließen</string>
   <string name="common_confirm">Bestätigen</string>
   <string name="common_continue">Weiter</string>
@@ -197,7 +199,7 @@
   <string name="common_understand">Ich verstehe</string>
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="common_unreachable">Nicht erreichbar</string>
-  <string name="common_unstake">staking beenden</string>
+  <string name="common_unstake">Staking beenden</string>
   <string name="common_week">woche</string>
   <string name="common_with">mit</string>
   <string name="common_yes">Ja</string>
@@ -338,6 +340,8 @@
   <string name="give_permission_unlimited">Unbegrenzt</string>
   <string name="home_button_order">Karte oder Ring bestellen</string>
   <string name="home_button_scan">Karte oder Ring scannen</string>
+  <string name="hot_crypto_add_token_subtitle">An %s</string>
+  <string name="hot_crypto_token_network">In %s</string>
   <string name="information_generated_with_ai">Diese Informationen wurden mithilfe von KI generiert.\nTippe hier, wenn Du Fehler finden.</string>
   <string name="initial_message_change_access_code_body">Um den Zugangscode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
   <string name="initial_message_change_passcode_body">Um den Passcode zu ändern, halte die Karte oder Ring wie oben gezeigt an das Gerät und entferne sie erst am Ende des Vorgangs.</string>
@@ -654,7 +658,7 @@
   <string name="reset_card_with_backup_to_factory_message">Durch das Zurücksetzen auf Werkseinstellungen wird die Wallet vollständig von der ausgewählten Karte oder Ring gelöscht. Du kannst die aktuelle Wallet nicht wiederherstellen oder die Karte oder Ring verwenden, um den Zugangscode wiederherzustellen.</string>
   <string name="reset_card_without_backup_to_factory_message">Beim Zurücksetzen auf die Werkseinstellungen wird die Wallet der ausgewählten Karte oder Ring vollständig gelöscht und aus der App entfernt. Es ist nicht möglich, die aktuelle Wallet wiederherzustellen.</string>
   <string name="ring_promo_text">Ringbesitzer erhalten bis zum 15.11. 3 provisionsfreie Swaps auf Changelly!</string>
-  <string name="ring_promo_title">Jetzt mit 0 %% Gebühren tauschen!</string>
+  <string name="ring_promo_title">Jetzt mit 0 % Gebühren tauschen!</string>
   <string name="save_user_wallet_agreement_access_description">Melde dich bei der App an und überprüfe dein Guthaben, ohne die Karte oder Ring zu scannen</string>
   <string name="save_user_wallet_agreement_access_title">Zugriff auf die App</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Nutzung biometrischer Daten zulassen</string>
@@ -806,7 +810,7 @@
   <string name="staking_notification_stake_entire_balance_text">Du bist dabei, Dein gesamtes Guthaben zu staken. Wir empfehlen, einen kleinen Betrag übrig zu lassen, um die Netzwerkgebühren für die Aufhebung des Stakes oder das Einfordern von Prämien abzudecken.</string>
   <string name="staking_notification_unlock_text">Entsperre dein Geld, um es aus dem Staking-Prozess abzuheben. Das Freischalten nimmt %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Nach Ablauf der 21-tägigen Bindungsfrist kannst Du über Dein Guthaben verfügen. Die Prämie wird zusammen mit dem ungestaketen Guthaben abgehoben.</string>
-  <string name="staking_notification_unstake_text">Deine Assets steht Dir nach Ablauf der Frist für die Aufhebung der Bindung %s zur Verfügung.</string>
+  <string name="staking_notification_unstake_text">Deine Assets stehen Dir nach Ablauf der Frist für die Aufhebung der Bindung %s zur Verfügung.</string>
   <string name="staking_notification_withdraw_text">Du kannst Dein Guthaben jetzt abheben. Es steht Dir sofort zur Verfügung.</string>
   <string name="staking_notifications_revote_tron_text">Wenn du im Tron-Netzwerk mit einem neuen Validator stakest, werden alle zuvor eingesetzten Assets automatisch an diesen Validator übertragen.</string>
   <string name="staking_preparing">Vorbereitung</string>
@@ -838,7 +842,7 @@
   <string name="staking_tap_to_unlock_or_vote">Tippe zum Entsperren oder Abstimmen</string>
   <string name="staking_tap_to_withdraw">Zum abheben antippen</string>
   <string name="staking_title_stake">Stake %s</string>
-  <string name="staking_title_unstake">Staking beenden%s</string>
+  <string name="staking_title_unstake">Staking beenden %s</string>
   <string name="staking_transaction_in_progress_text">Die Transaktion wird bearbeitet! Derzeit findet eine Validierung in der Blockchain statt. Dies kann einige Minuten dauern.</string>
   <string name="staking_unbonding">Lösen der Bindungen</string>
   <string name="staking_unlocked_locked">Gelocktes unlocken</string>
@@ -912,6 +916,7 @@
   <string name="token_swap_changelly_promotion_message">Tausche diesen Token gegen einen anderen zu %1$s Servicegebühren von Februar %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Tausche mit Changelly, %s Gebühren</string>
   <string name="token_swap_promotion_button">Jetzt tauschen</string>
+  <string name="tokens_list_hot_crypto_header">Hot Krypto 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Nicht verfügbar zum Kauf</string>
   <string name="tokens_list_unavailable_to_sell_header">Nicht zum Verkauf verfügbar</string>
   <string name="tokens_list_unavailable_to_swap_header">Nicht verfügbar für Tausch von %s</string>
@@ -945,7 +950,7 @@
   <string name="user_push_notification_agreement_argument_two">Sei der Erste, der von neuen Aktionen erfährt</string>
   <string name="user_push_notification_agreement_header">Möchtest du Push-Benachrichtigungen verwenden?</string>
   <string name="user_wallet_list_add_button">Neues Wallet hinzufügen</string>
-  <string name="user_wallet_list_delete_prompt">Möchtest du diese Wallet wirklich löschen?</string>
+  <string name="user_wallet_list_delete_prompt">Möchtest Du diese Wallet wirklich entfernen?</string>
   <string name="user_wallet_list_error_unable_to_unlock">Es ist ein Fehler aufgetreten, bitte scanne deine Karte oder Ring, um sich anzumelden</string>
   <string name="user_wallet_list_error_wallet_already_saved">Dieses Wallet wurde bereits gespeichert, du kannst ein weiteres hinzufügen</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">Die Wallet mit dem Namen %s existiert bereits</string>
@@ -955,7 +960,7 @@
   <string name="user_wallet_list_unlock_all_with">Alle mit %s freischalten</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain ist nicht erreichbar. Versuche es später nochmal</string>
   <string name="wallet_balance_missing_derivation">Karte oder Ring scannen</string>
-  <string name="wallet_been_activated_message">Diese Wallet wurde bereits früher aktiviert.\nWenn es nicht von Dir durchgeführt wurde, wende Dich bitte an den Support.\nTangem verkauft niemals Wallets zusammen mit dem vorgenerierten Zugangscode.</string>
+  <string name="wallet_been_activated_message">Dieses Wallet wurde bereits früher aktiviert. \n Wenn dies nicht von Dir durchgeführt wurde, wende Dich bitte an den Support. \n Tangem verkauft niemals Wallets zusammen mit vorgenerierten Zugangscodes.</string>
   <string name="wallet_connect_alert_sign_message">Aufforderung zum Signieren einer Nachricht. \n\n %s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, mit der Bitte um\nBNB-Transaktion zu unterzeichnen.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Handelsauftrag für %1$s\n Preis: %2$s\n Zu erhaltender Betrag: %3$s\n Zu zahlender Betrag: %4$s</string>
@@ -993,7 +998,7 @@
   <string name="wallet_network_group_title">%s Netzwerk</string>
   <string name="wallet_notification_address_copied">Die Adresse wurde erfolgreich kopiert</string>
   <string name="wallet_notification_no_internet">Keine Internetverbindung</string>
-  <string name="wallet_promo_banner_button_title">Jetzt mit 10 %% Rabatt kaufen</string>
+  <string name="wallet_promo_banner_button_title">Jetzt mit 10 % Rabatt kaufen</string>
   <string name="wallet_promo_banner_description">Greife auf 13.000+ Kryptowährungen zu. Kaufe, verkaufe, tausche und stake Sie mit einem einzigen Fingertipp.\nVerbinde bis zu drei Karten für ein Backup.</string>
   <string name="wallet_promo_banner_title">Entdecke die Tangem Wallet</string>
   <string name="wallet_settings_title">Wallet-Einstellungen</string>
@@ -1044,6 +1049,7 @@
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Bist Du sicher, dass Du die Transaktion stornieren willst? Du kannst die Transaktion nicht erneut starten.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Deine Transaktion mit einem Betrag von %1$s %2$s wurde nicht abgeschlossen. Du kannst versuchen, diese erneut abzuschließen.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Du hast eine nicht abgeschlossene Transaktion</string>
+  <string name="warning_last_balance_updated_time">Letzte Aktualisierung war %s</string>
   <string name="warning_low_signatures_message">Auf dieser Karte oder Ring sind nur noch %s Unterschriften übrig. Du musst dein gesamtes Guthaben abheben.</string>
   <string name="warning_low_signatures_title">Geringe Anzahl von Unterschriften</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Token in verschiedenen Netzwerken können unterschiedliche Adressen haben. Überprüfe bei der Überweisung noch einmal, ob deine Adresse mit der des Netzwerks übereinstimmt.</string>
@@ -1067,7 +1073,7 @@
   <string name="warning_rent_fee_title">Netzmietgebühr erforderlich</string>
   <string name="warning_seedphrase_issue_answer_no">Vielen Dank! Alles erledigt! Keine weiteren Maßnahmen erforderlich.</string>
   <string name="warning_seedphrase_issue_answer_yes">Sie werden jetzt auf die offizielle Tangem-Website weitergeleitet. Bitte lesen und befolgen Sie dort die Anweisungen.</string>
-  <string name="warning_seedphrase_issue_message">Haben Sie jemals das Support-Team von Tangem direkt über diese Anwendung kontaktiert?</string>
+  <string name="warning_seedphrase_issue_message">Hast Du das Tangem-Supportteam schon einmal direkt über diese Anwendung kontaktiert?</string>
   <string name="warning_seedphrase_issue_title">Verpflichtendes Sicherheitsupdate</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s ist ein Vermögenswert im %2$s Netzwerk. Um eine %3$s Transaktion durchzuführen, musst du etwas %4$s (%5$s) einzahlen, um die Netzwerkgebühr zu decken.</string>
   <string name="warning_send_blocked_funds_for_fee_title">Unzureichende %1$s zur Deckung der Netzgebühr</string>
@@ -1076,6 +1082,7 @@
   <string name="warning_solana_rent_fee_message">Das Solana-Netzwerk erhebt alle 2 Tage eine Miete von %1$s. Konten, die sich die Miete nicht leisten können, werden aus dem Netzwerk gelöscht. Hinterlege deinem Konto mit mehr als %2$s, um es kostenlos zu nutzen.</string>
   <string name="warning_some_networks_unreachable_message">Wischen Sie nach unten, um zu aktualisieren, oder versuchen Sie es später erneut.</string>
   <string name="warning_some_networks_unreachable_title">Einige Netzwerke sind nicht erreichbar</string>
+  <string name="warning_some_token_balances_not_updated">Einige Token-Guthaben konnten nicht aktualisiert werden</string>
   <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
   <string name="welcome_interrupted_backup_alert_discard">Verwerfen</string>
