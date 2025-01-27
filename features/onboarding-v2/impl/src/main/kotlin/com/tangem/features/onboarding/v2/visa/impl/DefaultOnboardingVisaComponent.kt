@@ -9,6 +9,7 @@ import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackA
 import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.decompose.value.observe
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
@@ -25,13 +26,14 @@ import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.OnboardingV
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.OnboardingVisaPinCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.OnboardingVisaWelcomeComponent
 import com.tangem.features.onboarding.v2.visa.impl.model.OnboardingVisaModel
+import com.tangem.features.onboarding.v2.visa.impl.route.ONBOARDING_VISA_STEPS_COUNT
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
+import com.tangem.features.onboarding.v2.visa.impl.route.screenTitle
+import com.tangem.features.onboarding.v2.visa.impl.route.stepNum
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 @Suppress("UnusedPrivateMember")
@@ -43,12 +45,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
     private val model: OnboardingVisaModel = getOrCreateModel(params)
 
     private val innerNavigationState = instanceKeeper.getOrCreateSimple(key = "innerNavigationState") {
-        MutableStateFlow(
-            OnboardingVisaInnerNavigationState(
-                stackSize = 1,
-                stackMaxSize = 7,
-            ),
-        )
+        MutableStateFlow(OnboardingVisaInnerNavigationState(stackSize = model.initialStepNum))
     }
 
     private val currentChildBackEventHandle = instanceKeeper.getOrCreateSimple(key = "currentChildBackEventHandle") {
@@ -84,6 +81,20 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         }
     }
 
+    init {
+        // sets title and stepper value
+        childStack.observe(lifecycle) { stack ->
+            val currentRoute = stack.active.configuration
+            params.titleProvider.changeTitle(currentRoute.screenTitle())
+            innerNavigationState.update { it.copy(stackSize = currentRoute.stepNum()) }
+        }
+    }
+
+    private val childParams = ChildParams(
+        onBack = ::onChildBack,
+        parentBackEvent = currentChildBackEventHandle,
+    )
+
     private fun createChild(
         route: OnboardingVisaRoute,
         factoryContext: AppComponentContext,
@@ -93,22 +104,21 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaWelcomeComponent.Params(
                     isWelcomeBack = route.isWelcomeBack,
-                    onBack = ::onChildBack,
+                    childParams = childParams,
                     onDone = { stackNavigation.push(OnboardingVisaRoute.AccessCode) },
                 ),
             )
             OnboardingVisaRoute.AccessCode -> OnboardingVisaAccessCodeComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaAccessCodeComponent.Params(
-                    onBack = ::onChildBack,
-                    parentBackEvent = currentChildBackEventHandle,
+                    childParams = childParams,
                     onDone = { stackNavigation.push(OnboardingVisaRoute.ChooseWallet) },
                 ),
             )
             OnboardingVisaRoute.ChooseWallet -> OnboardingVisaChooseWalletComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaChooseWalletComponent.Params(
-                    onBack = ::onChildBack,
+                    childParams = childParams,
                     onEvent = { event ->
                         stackNavigation.push(
                             when (event) {
@@ -124,28 +134,28 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
             OnboardingVisaRoute.InProgress -> OnboardingVisaInProgressComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaInProgressComponent.Params(
-                    onBack = ::onChildBack,
+                    childParams = childParams,
                     onDone = { stackNavigation.push(OnboardingVisaRoute.PinCode) },
                 ),
             )
             OnboardingVisaRoute.OtherWalletApproveOption -> OnboardingVisaOtherWalletComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaOtherWalletComponent.Params(
-                    onBack = ::onChildBack,
+                    childParams = childParams,
                     onDone = { stackNavigation.push(OnboardingVisaRoute.InProgress) },
                 ),
             )
             OnboardingVisaRoute.PinCode -> OnboardingVisaPinCodeComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaPinCodeComponent.Params(
-                    onBack = ::onChildBack,
+                    childParams = childParams,
                     onDone = { params.onDone() },
                 ),
             )
             OnboardingVisaRoute.TangemWalletApproveOption -> OnboardingVisaApproveComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaApproveComponent.Params(
-                    onBack = ::onChildBack,
+                    childParams = childParams,
                     onDone = { stackNavigation.push(OnboardingVisaRoute.InProgress) },
                 ),
             )
@@ -180,6 +190,11 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         }
     }
 
+    data class ChildParams(
+        val onBack: () -> Unit,
+        val parentBackEvent: SharedFlow<Unit>,
+    )
+
     @AssistedFactory
     interface Factory : OnboardingVisaComponent.Factory {
         override fun create(
@@ -189,7 +204,8 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
     }
 }
 
-data class OnboardingVisaInnerNavigationState(
+internal data class OnboardingVisaInnerNavigationState(
     override val stackSize: Int,
-    override val stackMaxSize: Int?,
-) : InnerNavigationState
+) : InnerNavigationState {
+    override val stackMaxSize: Int = ONBOARDING_VISA_STEPS_COUNT
+}
