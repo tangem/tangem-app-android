@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -28,9 +27,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButton
+import com.tangem.common.ui.navigationButtons.NavigationButton
+import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
@@ -72,13 +73,17 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
             PinCodeSection(state)
         }
 
-        PrimaryButton(
+        NavigationPrimaryButton(
             modifier = Modifier
                 .imePadding()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
-            text = "Submit",
-            onClick = state.onSubmitClick,
+            primaryButton = NavigationButton(
+                textReference = TextReference.Str("Submit"),
+                onClick = state.onSubmitClick,
+                showProgress = state.submitButtonLoading,
+                isEnabled = state.submitButtonEnabled,
+            ),
         )
     }
 }
@@ -154,7 +159,7 @@ private fun PinCode(
                 Box(
                     modifier = Modifier
                         .background(
-                            color = Color(color = 0xFFF5F5F5),
+                            color = TangemTheme.colors.field.primary,
                             shape = TangemTheme.shapes.roundedCornersXMedium,
                         )
                         .padding(
