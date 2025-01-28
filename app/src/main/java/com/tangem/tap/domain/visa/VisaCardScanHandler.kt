@@ -1,10 +1,10 @@
 package com.tangem.tap.domain.visa
 
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -31,7 +31,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
     private class SessionContext(
         val visaActivationRepository: VisaActivationRepository,
-        val card: Card,
+        val cardId: String,
         val session: CardSession,
     )
 
@@ -47,7 +47,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val context = SessionContext(
             visaActivationRepository = visaActivationRepository,
-            card = card,
+            cardId = card.cardId,
             session = session,
         )
 
@@ -103,6 +103,8 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }
 
+        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
         val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: run {
             Timber.e("Failed to find extended public key while handling wallet authorization")
             return CompletionResult.Failure(
@@ -118,7 +120,6 @@ internal class VisaCardScanHandler @Inject constructor(
         }
 
         Timber.i("Requesting challenge for wallet authorization")
-        // Will be changed later after backend implementation
         val challengeResponse = runCatching {
             visaAuthRepository.getCustomerWalletAuthChallenge(
                 cardId = card.cardId,
@@ -152,8 +153,6 @@ internal class VisaCardScanHandler @Inject constructor(
     private suspend fun SessionContext.handleWalletAuthorizationTokens(
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationStatus> {
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-
         val authorizationTokensResponse = runCatching {
             visaAuthRepository.getAccessTokens(signedChallenge = signedChallenge)
         }.getOrElse {
@@ -164,7 +163,7 @@ internal class VisaCardScanHandler @Inject constructor(
         }
 
         visaAuthTokenStorage.store(
-            cardId = card.cardId,
+            cardId = cardId,
             tokens = authorizationTokensResponse,
         )
 
@@ -259,19 +258,14 @@ internal class VisaCardScanHandler @Inject constructor(
         derivationPath: DerivationPath,
         nonce: String,
     ): CompletionResult<SignHashResponse> {
-        val signHashCommand = SignHashCommand(publicKey, nonce.toByteArray(), derivationPath)
-        val result = suspendCancellableCoroutine {
+        val signHashCommand = SignHashCommand(
+            hash = nonce.hexToBytes(),
+            walletPublicKey = publicKey,
+            derivationPath = derivationPath,
+        )
+        return suspendCancellableCoroutine {
             signHashCommand.run(session) { result ->
                 it.resume(result)
-            }
-        }
-
-        return when (result) {
-            is CompletionResult.Success -> {
-                CompletionResult.Success(result.data)
-            }
-            is CompletionResult.Failure -> {
-                CompletionResult.Failure(result.error)
             }
         }
     }
@@ -279,19 +273,10 @@ internal class VisaCardScanHandler @Inject constructor(
     private suspend fun SessionContext.signChallengeWithCard(
         challenge: String,
     ): CompletionResult<AttestCardKeyResponse> {
-        val signHashCommand = AttestCardKeyCommand(challenge = challenge.toByteArray())
-        val result = suspendCancellableCoroutine { continuation ->
+        val signHashCommand = AttestCardKeyCommand(challenge = challenge.hexToBytes())
+        return suspendCancellableCoroutine { continuation ->
             signHashCommand.run(session) { result ->
                 continuation.resume(result)
-            }
-        }
-
-        return when (result) {
-            is CompletionResult.Success -> {
-                CompletionResult.Success(result.data)
-            }
-            is CompletionResult.Failure -> {
-                CompletionResult.Failure(result.error)
             }
         }
     }
