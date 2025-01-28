@@ -10,6 +10,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.model.OnboardingVisaPinCodeModel
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.OnboardingVisaPinCode
@@ -17,10 +18,11 @@ import kotlinx.coroutines.launch
 
 internal class OnboardingVisaPinCodeComponent(
     appComponentContext: AppComponentContext,
+    config: Config,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: OnboardingVisaPinCodeModel = getOrCreateModel()
+    private val model: OnboardingVisaPinCodeModel = getOrCreateModel(config)
 
     init {
         componentScope.launch {
@@ -41,6 +43,10 @@ internal class OnboardingVisaPinCodeComponent(
             state = state,
         )
     }
+
+    data class Config(
+        val scanResponse: ScanResponse,
+    )
 
     data class Params(
         val childParams: DefaultOnboardingVisaComponent.ChildParams,
