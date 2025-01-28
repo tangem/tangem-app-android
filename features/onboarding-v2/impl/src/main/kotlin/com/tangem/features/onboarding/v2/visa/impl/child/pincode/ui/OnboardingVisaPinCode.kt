@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -160,7 +159,7 @@ private fun PinCode(
                 Box(
                     modifier = Modifier
                         .background(
-                            color = Color(color = 0xFFF5F5F5),
+                            color = TangemTheme.colors.field.primary,
                             shape = TangemTheme.shapes.roundedCornersXMedium,
                         )
                         .padding(
