@@ -48,5 +48,9 @@ internal class DefaultVisaAuthTokenStorage @Inject constructor(
             ?.let(tokensAdapter::fromJson)
     }
 
+    override fun remove(cardId: String) {
+        secureStorage.delete(createKey(cardId))
+    }
+
     private fun createKey(cardId: String): String = "visa_auth_tokens_$cardId"
 }
