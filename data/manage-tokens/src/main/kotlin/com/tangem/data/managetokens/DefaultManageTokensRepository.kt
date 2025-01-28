@@ -295,7 +295,7 @@ internal class DefaultManageTokensRepository(
         )
 
         return if (!canHandleBlockchain) {
-            CurrencyUnsupportedState.UnsupportedNetwork(networkName = blockchain.getNetworkName())
+            CurrencyUnsupportedState.UnsupportedNetwork(networkName = blockchain.fullName)
         } else {
             null
         }
@@ -314,10 +314,10 @@ internal class DefaultManageTokensRepository(
         return when {
             // refactor this later by moving all this logic in card config
             blockchain == Blockchain.Solana && !supportedTokens.contains(Blockchain.Solana) -> {
-                CurrencyUnsupportedState.Token.NetworkTokensUnsupported(networkName = blockchain.getNetworkName())
+                CurrencyUnsupportedState.Token.NetworkTokensUnsupported(networkName = blockchain.fullName)
             }
             !userWallet.scanResponse.card.canHandleToken(supportedTokens, blockchain, cardTypesResolver) -> {
-                CurrencyUnsupportedState.Token.UnsupportedCurve(networkName = blockchain.getNetworkName())
+                CurrencyUnsupportedState.Token.UnsupportedCurve(networkName = blockchain.fullName)
             }
             else -> null
         }
