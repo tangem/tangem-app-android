@@ -29,7 +29,6 @@ import com.tangem.features.onboarding.v2.visa.impl.model.OnboardingVisaModel
 import com.tangem.features.onboarding.v2.visa.impl.route.ONBOARDING_VISA_STEPS_COUNT
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
 import com.tangem.features.onboarding.v2.visa.impl.route.screenTitle
-import com.tangem.features.onboarding.v2.visa.impl.route.stepNum
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -44,10 +43,6 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
 
     private val model: OnboardingVisaModel = getOrCreateModel(params)
 
-    private val innerNavigationState = instanceKeeper.getOrCreateSimple(key = "innerNavigationState") {
-        MutableStateFlow(OnboardingVisaInnerNavigationState(stackSize = model.initialStepNum))
-    }
-
     private val currentChildBackEventHandle = instanceKeeper.getOrCreateSimple(key = "currentChildBackEventHandle") {
         MutableSharedFlow<Unit>()
     }
@@ -57,12 +52,10 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         parentBackEvent = currentChildBackEventHandle,
     )
 
-    private val stackNavigation = StackNavigation<OnboardingVisaRoute>()
-
     private val childStack: Value<ChildStack<OnboardingVisaRoute, ComposableContentComponent>> =
         childStack(
             key = "innerStack",
-            source = stackNavigation,
+            source = model.stackNavigation,
             serializer = null,
             initialConfiguration = model.initialRoute,
             handleBackButton = true,
@@ -75,7 +68,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         )
 
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
-        override val state: StateFlow<InnerNavigationState> = innerNavigationState
+        override val state: StateFlow<InnerNavigationState> = model.innerNavigationState
 
         override fun pop(onComplete: (Boolean) -> Unit) {
             if (childStack.value.active.configuration is OnboardingVisaRoute.AccessCode) {
@@ -91,7 +84,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         childStack.observe(lifecycle) { stack ->
             val currentRoute = stack.active.configuration
             params.titleProvider.changeTitle(currentRoute.screenTitle())
-            innerNavigationState.update { it.copy(stackSize = currentRoute.stepNum()) }
+            model.updateStepForNewRoute(currentRoute)
         }
     }
 
@@ -106,68 +99,52 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 params = OnboardingVisaWelcomeComponent.Params(
                     isWelcomeBack = route.isWelcomeBack,
                     childParams = childParams,
-                    onDone = { stackNavigation.push(OnboardingVisaRoute.AccessCode) },
+                    onDone = { model.navigateFromWelcome(route) },
                 ),
             )
             OnboardingVisaRoute.AccessCode -> OnboardingVisaAccessCodeComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaAccessCodeComponent.Params(
                     childParams = childParams,
-                    onDone = {
-                        stackNavigation.push(
-                            if (it.walletFound) {
-                                OnboardingVisaRoute.TangemWalletApproveOption(
-                                    visaDataForApprove = it.visaDataForApprove,
-                                    allowNavigateBack = false,
-                                )
-                            } else {
-                                OnboardingVisaRoute.ChooseWallet(it.visaDataForApprove)
-                            },
-                        )
-                    },
+                    onDone = { model.navigateFromAccessCode(it) },
                 ),
                 config = OnboardingVisaAccessCodeComponent.Config(
-                    scanResponse = params.scanResponse,
+                    scanResponse = model.currentScanResponse.value,
                 ),
             )
             is OnboardingVisaRoute.ChooseWallet -> OnboardingVisaChooseWalletComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaChooseWalletComponent.Params(
                     childParams = childParams,
-                    onEvent = { event ->
-                        stackNavigation.push(
-                            when (event) {
-                                OnboardingVisaChooseWalletComponent.Params.Event.TangemWallet ->
-                                    OnboardingVisaRoute.TangemWalletApproveOption(
-                                        visaDataForApprove = route.visaDataForApprove,
-                                        allowNavigateBack = true,
-                                    )
-                                OnboardingVisaChooseWalletComponent.Params.Event.OtherWallet ->
-                                    OnboardingVisaRoute.OtherWalletApproveOption(route.visaDataForApprove)
-                            },
-                        )
-                    },
+                    onEvent = { event -> model.navigateFromChooseWallet(route, event) },
                 ),
             )
             OnboardingVisaRoute.InProgress -> OnboardingVisaInProgressComponent(
                 appComponentContext = factoryContext,
+                config = OnboardingVisaInProgressComponent.Config(
+                    scanResponse = model.currentScanResponse.value,
+                ),
                 params = OnboardingVisaInProgressComponent.Params(
                     childParams = childParams,
-                    onDone = { stackNavigation.push(OnboardingVisaRoute.PinCode) },
+                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.PinCode) },
                 ),
             )
             is OnboardingVisaRoute.OtherWalletApproveOption -> OnboardingVisaOtherWalletComponent(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaOtherWalletComponent.Config(
+                    scanResponse = model.currentScanResponse.value,
                     visaDataForApprove = route.visaDataForApprove,
                 ),
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
-                    onDone = { stackNavigation.push(OnboardingVisaRoute.InProgress) },
+                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.PinCode) },
                 ),
             )
             OnboardingVisaRoute.PinCode -> OnboardingVisaPinCodeComponent(
                 appComponentContext = factoryContext,
+                config = OnboardingVisaPinCodeComponent.Config(
+                    scanResponse = model.currentScanResponse.value,
+                ),
                 params = OnboardingVisaPinCodeComponent.Params(
                     childParams = childParams,
                     onDone = { params.onDone() },
@@ -180,36 +157,16 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaApproveComponent.Params(
                     childParams = childParams,
-                    onDone = { stackNavigation.push(OnboardingVisaRoute.InProgress) },
+                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.InProgress) },
                 ),
             )
         }
     }
 
-    private fun onChildBack() {
-        if (childStack.value.backStack.size == 1) {
-            // TODO show dialog
-            return
-        }
-
-        when (val route = childStack.value.active.configuration) {
-            OnboardingVisaRoute.AccessCode,
-            is OnboardingVisaRoute.OtherWalletApproveOption,
-            -> stackNavigation.pop()
-            is OnboardingVisaRoute.TangemWalletApproveOption -> {
-                if (route.allowNavigateBack) {
-                    stackNavigation.pop()
-                }
-            }
-
-            is OnboardingVisaRoute.Welcome,
-            is OnboardingVisaRoute.ChooseWallet,
-            OnboardingVisaRoute.InProgress,
-            OnboardingVisaRoute.PinCode,
-            -> {
-            }
-        }
-    }
+    private fun onChildBack() = model.onChildBack(
+        currentRoute = childStack.value.active.configuration,
+        lastRoute = childStack.value.backStack.size == 1,
+    )
 
     @Composable
     override fun Content(modifier: Modifier) {
