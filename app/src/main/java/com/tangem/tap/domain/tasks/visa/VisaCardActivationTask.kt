@@ -14,6 +14,7 @@ import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.datasource.local.visa.hasSavedOTP
 import com.tangem.domain.common.visa.VisaUtilities
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -23,6 +24,7 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.operations.sign.SignHashResponse
 import com.tangem.operations.wallet.CreateWalletTask
+import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -268,15 +270,19 @@ class VisaCardActivationTask @AssistedInject constructor(
             TangemSdkError.Underlying(VisaActivationError.MissingRootOTP.message),
         )
 
-        val activationResponse = VisaCardActivationResponse(
-            signedActivationOrder = signedOrder,
-            rootOTP = VisaRootOTP(otp.toHexString()),
-        )
+        return setupAccessCode().map {
+            val card =
+                session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        return setupAccessCode(session).map { activationResponse }
+            VisaCardActivationResponse(
+                signedActivationOrder = signedOrder,
+                rootOTP = VisaRootOTP(otp.toHexString()),
+                newCardDTO = CardDTO(card),
+            )
+        }
     }
 
-    private suspend fun SessionContext.setupAccessCode(session: CardSession): CompletionResult<Unit> {
+    private suspend fun SessionContext.setupAccessCode(): CompletionResult<Unit> {
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         if (card.isAccessCodeSet) {
