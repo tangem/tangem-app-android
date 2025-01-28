@@ -7,4 +7,6 @@ interface VisaAuthTokenStorage {
     suspend fun store(cardId: String, tokens: VisaAuthTokens)
 
     suspend fun get(cardId: String): VisaAuthTokens?
+
+    fun remove(cardId: String)
 }
