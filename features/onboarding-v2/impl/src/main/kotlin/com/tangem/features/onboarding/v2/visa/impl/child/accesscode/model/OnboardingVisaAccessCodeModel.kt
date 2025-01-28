@@ -14,7 +14,10 @@ import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVi
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,6 +42,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     val onDone = MutableSharedFlow<OnboardingVisaAccessCodeComponent.DoneEvent>()
 
     fun onBack() {
+        if (uiState.value.buttonLoading) return
+
         when (uiState.value.step) {
             OnboardingVisaAccessCodeUM.Step.Enter -> modelScope.launch { onBack.emit(Unit) }
             OnboardingVisaAccessCodeUM.Step.ReEnter ->
@@ -141,9 +146,12 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                             OnboardingVisaAccessCodeComponent.DoneEvent(
                                 visaDataForApprove = VisaDataForApprove(
                                     targetAddress = "x9F65354e595284956599F2892fA4A4a87653D6E6",
-                                    approveHash = "approve hash",
+                                    approveHash = "48b55c482123a10ad9022f9f4c5dd95c",
                                 ),
                                 walletFound = false, // TODO
+                                newScanResponse = params.scanResponse.copy(
+                                    card = result.data.newCardDTO,
+                                ),
                             ),
                         )
                     }
