@@ -80,7 +80,7 @@ internal class DefaultVisaAuthRepository @Inject constructor(
             // )
             VisaAuthTokens(
                 accessToken = "accessToken",
-                refreshToken = "refreshToken",
+                refreshToken = "refreshToken2",
             )
         }
 }
