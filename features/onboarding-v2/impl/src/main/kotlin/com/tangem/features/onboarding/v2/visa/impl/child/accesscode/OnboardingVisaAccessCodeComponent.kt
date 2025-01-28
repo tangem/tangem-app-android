@@ -60,5 +60,6 @@ internal class OnboardingVisaAccessCodeComponent(
     data class DoneEvent(
         val visaDataForApprove: VisaDataForApprove,
         val walletFound: Boolean,
+        val newScanResponse: ScanResponse,
     )
 }
