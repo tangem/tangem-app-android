@@ -67,7 +67,7 @@ internal class AddressInfoBottomSheetDialog(
         val blockchain = stateDialog.currency.blockchain
         tvReceiveMessage.text = tvReceiveMessage.getString(
             id = R.string.address_qr_code_message_format,
-            blockchain.fullName,
+            blockchain.getCoinName(),
             blockchain.currency,
             blockchain.fullName,
         )
