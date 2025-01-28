@@ -30,7 +30,7 @@ fun getNetwork(
     return Network(
         id = Network.ID(blockchain.id),
         backendId = blockchain.toNetworkId(),
-        name = blockchain.getNetworkName(),
+        name = blockchain.fullName,
         isTestnet = blockchain.isTestnet(),
         derivationPath = getNetworkDerivationPath(
             blockchain = blockchain,
@@ -59,7 +59,7 @@ fun getNetwork(
     return Network(
         id = networkId,
         backendId = blockchain.toNetworkId(),
-        name = blockchain.getNetworkName(),
+        name = blockchain.fullName,
         isTestnet = blockchain.isTestnet(),
         derivationPath = derivationPath,
         currencySymbol = blockchain.currency,
