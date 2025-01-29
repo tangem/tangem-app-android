@@ -4,6 +4,7 @@ internal enum class BuildType(
     val id: String,
     val appIdSuffix: String? = null,
     val versionSuffix: String? = null,
+    val obfuscating: Boolean = false,
     val configFields: List<BuildConfigField>,
 ) {
 
@@ -22,6 +23,19 @@ internal enum class BuildType(
     Debug(
         id = "debug",
         appIdSuffix = "debug",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "dev"),
+            BuildConfigField.TestActionEnabled(isEnabled = true),
+            BuildConfigField.LogEnabled(isEnabled = true),
+            BuildConfigField.TesterMenuAvailability(isEnabled = true),
+            BuildConfigField.MockDataSource(isEnabled = false),
+        ),
+    ),
+
+    DebugPG(
+        id = "debugPG",
+        appIdSuffix = "debug",
+        obfuscating = true,
         configFields = listOf(
             BuildConfigField.Environment(value = "dev"),
             BuildConfigField.TestActionEnabled(isEnabled = true),
