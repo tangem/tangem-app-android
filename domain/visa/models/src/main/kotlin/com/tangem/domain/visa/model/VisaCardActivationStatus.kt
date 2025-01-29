@@ -27,6 +27,9 @@ sealed class VisaCardActivationStatus {
     @Serializable
     data object Blocked : VisaCardActivationStatus()
 
+    @Serializable
+    data object RefreshTokenExpired : VisaCardActivationStatus()
+
     companion object {
         val jsonAdapter: PolymorphicJsonAdapterFactory<VisaCardActivationStatus>
             get() = PolymorphicJsonAdapterFactory.of(VisaCardActivationStatus::class.java, "type")
