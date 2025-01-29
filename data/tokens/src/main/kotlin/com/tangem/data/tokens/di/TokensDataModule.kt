@@ -4,6 +4,7 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.tokens.repository.*
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoLoader
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
@@ -32,6 +33,7 @@ internal object TokensDataModule {
         cacheRegistry: CacheRegistry,
         dispatchers: CoroutineDispatcherProvider,
         expressServiceLoader: ExpressServiceLoader,
+        hotCryptoLoader: HotCryptoLoader,
         excludedBlockchains: ExcludedBlockchains,
     ): CurrenciesRepository {
         return DefaultCurrenciesRepository(
@@ -42,6 +44,7 @@ internal object TokensDataModule {
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
             expressServiceLoader = expressServiceLoader,
+            hotCryptoLoader = hotCryptoLoader,
             excludedBlockchains = excludedBlockchains,
         )
     }
