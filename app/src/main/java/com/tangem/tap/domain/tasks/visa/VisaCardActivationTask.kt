@@ -1,16 +1,20 @@
 package com.tangem.tap.domain.tasks.visa
 
-import com.reown.util.hexToBytes
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.map
+import com.tangem.common.timemeasure.RealtimeMonotonicTimeSource
+import com.tangem.crypto.CryptoUtils
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
+import com.tangem.datasource.local.visa.hasSavedOTP
 import com.tangem.domain.common.visa.VisaUtilities
+import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -20,12 +24,15 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.operations.sign.SignHashResponse
 import com.tangem.operations.wallet.CreateWalletTask
+import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.*
+import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.jvm.Throws
+import kotlin.time.measureTimedValue
 
 @Suppress("LongParameterList")
 class VisaCardActivationTask @AssistedInject constructor(
@@ -36,8 +43,14 @@ class VisaCardActivationTask @AssistedInject constructor(
     private val otpStorage: VisaOTPStorage,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val visaAuthRepository: VisaAuthRepository,
-    private val visaActivationRepository: VisaActivationRepository,
+    private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
 ) : CardSessionRunnable<VisaCardActivationResponse> {
+
+    private class SessionContext(
+        val visaActivationRepository: VisaActivationRepository,
+        val cardId: String,
+        val session: CardSession,
+    )
 
     override fun run(session: CardSession, callback: CompletionCallback<VisaCardActivationResponse>) {
         coroutineScope.launch {
@@ -52,33 +65,47 @@ class VisaCardActivationTask @AssistedInject constructor(
             return CompletionResult.Failure(TangemSdkError.Underlying(VisaActivationError.WrongCard.message))
         }
 
-        return if (challengeToSign != null) {
-            signAuthorizationChallenge(session, challengeToSign)
-        } else {
-            val activationOrder = runCatching { visaActivationRepository.getActivationOrderToSign() }
-                .getOrElse {
-                    return CompletionResult.Failure(TangemSdkError.Underlying(it.message ?: ""))
-                }
+        val visaActivationRepository = visaActivationRepositoryFactory.create(card.cardId)
 
-            signOrder(session, activationOrder)
-        }
-    }
+        val context = SessionContext(
+            visaActivationRepository = visaActivationRepository,
+            cardId = card.cardId,
+            session = session,
+        )
 
-    private suspend fun signAuthorizationChallenge(
-        session: CardSession,
-        challengeToSign: VisaAuthChallenge.Card,
-    ): CompletionResult<VisaCardActivationResponse> {
-        val attestationCommand = AttestCardKeyCommand(challenge = challengeToSign.challenge.hexToBytes())
-        val result = suspendCancellableCoroutine { continuation ->
-            attestationCommand.run(session = session) { attestationResponse ->
-                continuation.resume(attestationResponse)
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            if (challengeToSign != null) {
+                context.signAuthorizationChallenge(challengeToSign)
+            } else {
+                val activationOrder = runCatching { visaActivationRepository.getActivationOrderToSign() }
+                    .getOrElse {
+                        return CompletionResult.Failure(TangemSdkError.Underlying(it.message ?: ""))
+                    }
+
+                context.signOrder(activationOrder)
             }
         }
+        Timber.i("VisaCardActivationTask all time: ${timedResult.duration}")
+        return timedResult.value
+    }
 
-        return when (result) {
+    private suspend fun SessionContext.signAuthorizationChallenge(
+        challengeToSign: VisaAuthChallenge.Card,
+    ): CompletionResult<VisaCardActivationResponse> {
+        val attestationCommand = AttestCardKeyCommand(challenge = CryptoUtils.generateRandomBytes(length = 16))
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            suspendCancellableCoroutine { continuation ->
+                attestationCommand.run(session = session) { attestationResponse ->
+                    continuation.resume(attestationResponse)
+                }
+            }
+        }
+        Timber.i("AttestCardKeyCommand time: ${timedResult.duration}")
+
+        return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
+                Timber.i("AttestCardKeyCommand success")
                 processSignedAuthorizationChallenge(
-                    session = session,
                     signedChallenge = challengeToSign.toSignedChallenge(
                         signedChallenge = result.data.cardSignature.toHexString(),
                         salt = result.data.salt.toHexString(),
@@ -86,13 +113,13 @@ class VisaCardActivationTask @AssistedInject constructor(
                 )
             }
             is CompletionResult.Failure -> {
+                Timber.e("AttestCardKeyCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
     }
 
-    private suspend fun processSignedAuthorizationChallenge(
-        session: CardSession,
+    private suspend fun SessionContext.processSignedAuthorizationChallenge(
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationResponse> {
         return coroutineScope {
@@ -107,12 +134,14 @@ class VisaCardActivationTask @AssistedInject constructor(
 
             otpTaskDeferred.await()
 
-            signOrder(session, order)
+            signOrder(order)
         }
     }
 
     @Throws(TangemSdkError::class)
-    private suspend fun getActivationOrderToSign(signedChallenge: VisaAuthSignedChallenge): ActivationOrder {
+    private suspend fun SessionContext.getActivationOrderToSign(
+        signedChallenge: VisaAuthSignedChallenge,
+    ): ActivationOrder {
         val tokens = runCatching {
             visaAuthRepository.getAccessTokens(signedChallenge)
         }.getOrElse {
@@ -121,12 +150,12 @@ class VisaCardActivationTask @AssistedInject constructor(
             )
         }
 
-        visaAuthTokenStorage.store(tokens)
+        visaAuthTokenStorage.store(cardId, tokens)
 
         return visaActivationRepository.getActivationOrderToSign()
     }
 
-    private suspend fun createWallet(session: CardSession): CompletionResult<Unit> {
+    private suspend fun SessionContext.createWallet(session: CardSession): CompletionResult<Unit> {
         coroutineScope { ensureActive() }
 
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
@@ -135,122 +164,152 @@ class VisaCardActivationTask @AssistedInject constructor(
             createOTP(session)
         } else {
             val createWalletTask = CreateWalletTask(VisaUtilities.mandatoryCurve)
-            val result = suspendCancellableCoroutine { continuation ->
-                createWalletTask.run(session) { createWalletResult ->
-                    continuation.resume(createWalletResult)
+
+            val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+                suspendCancellableCoroutine { continuation ->
+                    createWalletTask.run(session) { createWalletResult ->
+                        continuation.resume(createWalletResult)
+                    }
                 }
             }
 
-            when (result) {
+            Timber.i("CreateWalletTask time: ${timedResult.duration}")
+
+            when (val result = timedResult.value) {
                 is CompletionResult.Success -> {
+                    Timber.i("CreateWalletTask success")
                     createOTP(session)
                 }
                 is CompletionResult.Failure -> {
+                    Timber.e("CreateWalletTask failure ${result.error}")
                     CompletionResult.Failure(result.error)
                 }
             }
         }
     }
 
-    private suspend fun createOTP(session: CardSession): CompletionResult<Unit> {
+    private suspend fun SessionContext.createOTP(session: CardSession): CompletionResult<Unit> {
         coroutineScope { ensureActive() }
 
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-
-        val otp = otpStorage.getOTP(card.cardId)
-        return if (otp != null) {
+        return if (otpStorage.hasSavedOTP(cardId)) {
             CompletionResult.Success(Unit)
         } else {
             val otpCommand = GenerateOTPCommand()
-            val result = suspendCancellableCoroutine { continuation ->
-                otpCommand.run(session) { otpResult ->
-                    continuation.resume(otpResult)
+            val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+                suspendCancellableCoroutine { continuation ->
+                    otpCommand.run(session) { otpResult ->
+                        continuation.resume(otpResult)
+                    }
                 }
             }
 
-            when (result) {
+            Timber.i("GenerateOTPCommand time: ${timedResult.duration}")
+
+            when (val result = timedResult.value) {
                 is CompletionResult.Success -> {
-                    otpStorage.saveOTP(card.cardId, result.data.rootOTP)
+                    Timber.i("GenerateOTPCommand success")
+                    otpStorage.saveOTP(cardId, result.data.rootOTP)
                     CompletionResult.Success(Unit)
                 }
                 is CompletionResult.Failure -> {
+                    Timber.e("GenerateOTPCommand failure ${result.error}")
                     CompletionResult.Failure(result.error)
                 }
             }
         }
     }
 
-    private suspend fun signOrder(
-        session: CardSession,
-        order: ActivationOrder,
-    ): CompletionResult<VisaCardActivationResponse> {
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+    private suspend fun SessionContext.signOrder(order: ActivationOrder): CompletionResult<VisaCardActivationResponse> {
+        val card =
+            session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
         val wallet =
-            card.wallets.firstOrNull() ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-        val task = SignHashCommand(order.hash.hexToBytes(), wallet.publicKey)
-        val result = suspendCancellableCoroutine { continuation ->
-            task.run(session) { signResult ->
-                continuation.resume(signResult)
+            card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve }
+                ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
+
+        val task = SignHashCommand(
+            hash = order.hash.hexToBytes(),
+            walletPublicKey = wallet.publicKey,
+            derivationPath = VisaUtilities.visaDefaultDerivationPath,
+        )
+
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            suspendCancellableCoroutine { continuation ->
+                task.run(session) { signResult ->
+                    continuation.resume(signResult)
+                }
             }
         }
 
-        return when (result) {
+        Timber.i("SignHashCommand time: ${timedResult.duration}")
+
+        return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
+                Timber.i("SignHashCommand success")
                 handleSignedOrder(
-                    session = session,
                     activationOrder = order,
                     response = result.data,
                 )
             }
             is CompletionResult.Failure -> {
+                Timber.e("SignHashCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
     }
 
-    private suspend fun handleSignedOrder(
-        session: CardSession,
+    private suspend fun SessionContext.handleSignedOrder(
         activationOrder: ActivationOrder,
         response: SignHashResponse,
     ): CompletionResult<VisaCardActivationResponse> {
-        val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
-
         val signedOrder = SignedActivationOrder(
             activationOrder = activationOrder,
             signature = response.signature.toHexString(),
         )
 
-        val otp = otpStorage.getOTP(card.cardId) ?: return CompletionResult.Failure(
+        val otp = otpStorage.getOTP(cardId) ?: return CompletionResult.Failure(
             TangemSdkError.Underlying(VisaActivationError.MissingRootOTP.message),
         )
 
-        val activationResponse = VisaCardActivationResponse(
-            signedActivationOrder = signedOrder,
-            rootOTP = VisaRootOTP(otp.toHexString()),
-        )
+        return setupAccessCode().map {
+            val card =
+                session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        return setupAccessCode(session).map { activationResponse }
+            VisaCardActivationResponse(
+                signedActivationOrder = signedOrder,
+                rootOTP = VisaRootOTP(otp.toHexString()),
+                newCardDTO = CardDTO(card),
+            )
+        }
     }
 
-    private suspend fun setupAccessCode(session: CardSession): CompletionResult<Unit> {
+    private suspend fun SessionContext.setupAccessCode(): CompletionResult<Unit> {
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         if (card.isAccessCodeSet) {
             return CompletionResult.Success(Unit)
         }
 
+        Timber.i("Setting access code")
+
         val task = SetUserCodeCommand.changeAccessCode(accessCode)
-        val result = suspendCancellableCoroutine { continuation ->
-            task.run(session) { setAccessCodeResult ->
-                continuation.resume(setAccessCodeResult)
+
+        val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
+            suspendCancellableCoroutine { continuation ->
+                task.run(session) { setAccessCodeResult ->
+                    continuation.resume(setAccessCodeResult)
+                }
             }
         }
 
-        return when (result) {
+        Timber.i("SetUserCodeCommand time: ${timedResult.duration}")
+
+        return when (val result = timedResult.value) {
             is CompletionResult.Success -> {
+                Timber.i("SetUserCodeCommand success")
                 CompletionResult.Success(Unit)
             }
             is CompletionResult.Failure -> {
+                Timber.i("SetUserCodeCommand failure ${result.error}")
                 CompletionResult.Failure(result.error)
             }
         }
