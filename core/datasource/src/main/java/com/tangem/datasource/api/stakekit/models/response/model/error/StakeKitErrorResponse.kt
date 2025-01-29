@@ -1,7 +1,9 @@
 package com.tangem.datasource.api.stakekit.models.response.model.error
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 class StakeKitErrorResponse(
     @Json(name = "message")
     val message: String? = null,
@@ -26,6 +28,7 @@ class StakeKitErrorResponse(
     val tags: List<String>? = null,
 )
 
+@JsonClass(generateAdapter = true)
 data class StakeKitErrorDetailsDTO(
     @Json(name = "arguments")
     val arguments: String? = null,

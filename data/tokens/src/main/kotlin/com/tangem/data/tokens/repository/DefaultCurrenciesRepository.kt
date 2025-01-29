@@ -15,6 +15,7 @@ import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRA
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoLoader
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -33,10 +34,8 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.plus
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import com.tangem.blockchain.common.FeePaidCurrency as FeePaidSdkCurrency
 
@@ -48,6 +47,7 @@ internal class DefaultCurrenciesRepository(
     private val cacheRegistry: CacheRegistry,
     private val appPreferencesStore: AppPreferencesStore,
     private val expressServiceLoader: ExpressServiceLoader,
+    private val hotCryptoLoader: HotCryptoLoader,
     private val dispatchers: CoroutineDispatcherProvider,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
@@ -601,7 +601,11 @@ internal class DefaultCurrenciesRepository(
                 network = token.networkId,
             )
         }
-        expressServiceLoader.update(userWalletId, tokens)
+
+        coroutineScope {
+            launch { expressServiceLoader.update(userWalletId, tokens) }
+            launch { hotCryptoLoader.fetch(tokens = userTokens.tokens) }
+        }
     }
 
     private suspend fun fetchExpressAssetsByNetworkIds(
@@ -619,7 +623,12 @@ internal class DefaultCurrenciesRepository(
         cacheRegistry.invokeOnExpire(
             key = getAssetsCacheKey(userWalletId),
             skipCache = refresh,
-            block = { expressServiceLoader.update(userWalletId, tokens) },
+            block = {
+                coroutineScope {
+                    launch { expressServiceLoader.update(userWalletId, tokens) }
+                    launch { hotCryptoLoader.update(cryptoCurrencies) }
+                }
+            },
         )
     }
 
