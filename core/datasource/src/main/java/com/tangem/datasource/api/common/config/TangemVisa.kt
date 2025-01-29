@@ -1,11 +1,8 @@
 package com.tangem.datasource.api.common.config
 
-import com.tangem.datasource.api.common.visa.TangemVisaAuthProvider
 import com.tangem.utils.ProviderSuspend
 
-internal class TangemVisa(
-    private val authProvider: TangemVisaAuthProvider,
-) : ApiConfig() {
+internal class TangemVisa : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.PROD
 
@@ -19,7 +16,5 @@ internal class TangemVisa(
         headers = createHeaders(),
     )
 
-    private fun createHeaders() = mapOf(
-        "Authorization" to ProviderSuspend { authProvider.getAuthHeader() },
-    )
+    private fun createHeaders() = mapOf<String, ProviderSuspend<String>>()
 }
