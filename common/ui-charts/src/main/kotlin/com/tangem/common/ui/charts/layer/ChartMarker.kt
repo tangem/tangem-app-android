@@ -15,7 +15,6 @@ import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerValueForma
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.LayeredComponent
-import com.patrykandpatrick.vico.core.common.component.Component
 import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shape.Shape
 import com.tangem.core.ui.res.TangemTheme
@@ -39,7 +38,28 @@ internal fun rememberTangemChartMarker(color: Color): CartesianMarker {
 
         object : DefaultCartesianMarker(
             label = TextComponent(textSizeSp = 0f),
-            indicator = ::indicator,
+            indicator = { color ->
+                val composeColor = Color(color)
+
+                LayeredComponent(
+                    rear = shapeComponent(
+                        color = composeColor.copy(alpha = INDICATOR_REAR_COLOR_ALPHA),
+                        shape = Shape.Pill,
+                    ),
+                    front = LayeredComponent(
+                        rear = shapeComponent(
+                            color = composeColor,
+                            shape = Shape.Pill,
+                        ),
+                        front = shapeComponent(
+                            color = Color.White,
+                            shape = Shape.Pill,
+                        ),
+                        padding = indicatorPadding,
+                    ),
+                    padding = indicatorPadding,
+                )
+            },
             indicatorSizeDp = INDICATOR_SIZE_DP,
             guideline = guideline,
             valueFormatter = object : CartesianMarkerValueFormatter {
@@ -79,29 +99,6 @@ internal fun rememberTangemChartMarker(color: Color): CartesianMarker {
             }
         }
     }
-}
-
-private fun indicator(color: Int): Component {
-    val composeColor = Color(color)
-
-    return LayeredComponent(
-        rear = shapeComponent(
-            color = composeColor.copy(alpha = INDICATOR_REAR_COLOR_ALPHA),
-            shape = Shape.Pill,
-        ),
-        front = LayeredComponent(
-            rear = shapeComponent(
-                color = composeColor,
-                shape = Shape.Pill,
-            ),
-            front = shapeComponent(
-                color = Color.White,
-                shape = Shape.Pill,
-            ),
-            padding = indicatorPadding,
-        ),
-        padding = indicatorPadding,
-    )
 }
 
 private val indicatorPadding = Dimensions.of(3.dp)
