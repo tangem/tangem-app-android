@@ -85,7 +85,7 @@ data class YieldDTO(
         @Json(name = "preferred")
         val preferred: Boolean?,
     ) {
-        @JsonClass(generateAdapter = true)
+        @JsonClass(generateAdapter = false)
         enum class ValidatorStatusDTO {
             @Json(name = "active")
             ACTIVE,
@@ -153,6 +153,7 @@ data class YieldDTO(
             val enabled: Boolean?,
         )
 
+        @JsonClass(generateAdapter = false)
         enum class RewardScheduleDTO {
             @Json(name = "block")
             BLOCK,
@@ -178,6 +179,7 @@ data class YieldDTO(
             UNKNOWN,
         }
 
+        @JsonClass(generateAdapter = false)
         enum class RewardClaimingDTO {
             @Json(name = "auto")
             AUTO,
@@ -189,6 +191,7 @@ data class YieldDTO(
         }
     }
 
+    @JsonClass(generateAdapter = false)
     enum class RewardTypeDTO {
         @Json(name = "apy")
         APY, // compound rate

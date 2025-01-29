@@ -4,9 +4,6 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
-import com.tangem.domain.promo.PromoRepository
-import com.tangem.domain.promo.ShouldShowRingPromoUseCase
-import com.tangem.domain.promo.models.PromoBanner
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -22,7 +19,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 import kotlin.collections.count
 
@@ -32,8 +28,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val isReadyToShowRateAppUseCase: IsReadyToShowRateAppUseCase,
-    private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
-    private val promoRepository: PromoRepository,
     private val isNeedToBackupUseCase: IsNeedToBackupUseCase,
     private val backupValidator: BackupValidator,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
@@ -43,25 +37,13 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     fun create(userWallet: UserWallet, clickIntents: WalletClickIntents): Flow<ImmutableList<WalletNotification>> {
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
 
-        val promoFlow = flow { emit(promoRepository.getRingPromoBanner()) }
         return combine(
-            tokenListStore.getOrThrow(userWallet.walletId),
-            isReadyToShowRateAppUseCase(),
-            isNeedToBackupUseCase(userWallet.walletId),
-            shouldShowRingPromoUseCase(userWalletId = userWallet.walletId),
-            promoFlow,
-            seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
-        ) {
-            val maybeTokenList = it[0] as Lce<TokenListError, TokenList>
-            val isReadyToShowRating = it[1] as Boolean
-            val isNeedToBackup = it[2] as Boolean
-            val shouldShowPromo = it[3] as Boolean
-            val promoBanner = it[4] as? PromoBanner
-            val seedPhraseIssueStatus = it[5] as Boolean
-
+            flow = tokenListStore.getOrThrow(userWallet.walletId),
+            flow2 = isReadyToShowRateAppUseCase(),
+            flow3 = isNeedToBackupUseCase(userWallet.walletId),
+            flow4 = seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
+        ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, seedPhraseIssueStatus ->
             buildList {
-                addRingPromoNotification(shouldShowPromo, promoBanner, clickIntents)
-
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
@@ -77,19 +59,6 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 }
             }.toImmutableList()
         }
-    }
-
-    private fun MutableList<WalletNotification>.addRingPromoNotification(
-        shouldShowPromo: Boolean,
-        promoBanner: PromoBanner?,
-        clickIntents: WalletClickIntents,
-    ) {
-        promoBanner ?: return
-        val promoNotification = WalletNotification.RingPromo(onCloseClick = clickIntents::onCloseRingPromoClick)
-        addIf(
-            element = promoNotification,
-            condition = shouldShowPromo && promoBanner.isActive,
-        )
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(

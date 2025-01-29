@@ -11,7 +11,6 @@ import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.promo.ShouldShowRingPromoUseCase
 import com.tangem.domain.promo.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
@@ -66,8 +65,6 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseSwapPromoClick()
 
-    fun onCloseRingPromoClick()
-
     fun onSupportClick()
 
     fun onNoteMigrationButtonClick(url: String)
@@ -94,7 +91,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
-    private val shouldShowRingPromoUseCase: ShouldShowRingPromoUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
@@ -249,26 +245,12 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(
             TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                 source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.OKX,
+                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
                 action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
             ),
         )
         viewModelScope.launch(dispatchers.main) {
             shouldShowSwapPromoWalletUseCase.neverToShow()
-        }
-    }
-
-    override fun onCloseRingPromoClick() {
-        analyticsEventHandler.send(
-            TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
-                source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Ring,
-                action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
-            ),
-        )
-
-        viewModelScope.launch {
-            shouldShowRingPromoUseCase.neverToShow()
         }
     }
 

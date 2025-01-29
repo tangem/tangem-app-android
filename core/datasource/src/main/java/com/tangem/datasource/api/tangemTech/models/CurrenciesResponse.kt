@@ -17,7 +17,7 @@ data class CurrenciesResponse(
         @Json(name = "rateBTC") val rateBTC: String,
         @Json(name = "unit") val unit: String, // $, €, ₽
         @Json(name = "type") val type: String,
-        val iconSmallUrl: String? = null,
-        val iconMediumUrl: String? = null,
+        @Json(name = "iconSmallUrl") val iconSmallUrl: String? = null,
+        @Json(name = "iconMediumUrl") val iconMediumUrl: String? = null,
     )
 }
