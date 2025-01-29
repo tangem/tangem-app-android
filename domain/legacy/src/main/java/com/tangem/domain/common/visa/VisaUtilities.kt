@@ -16,14 +16,17 @@ object VisaUtilities {
 
     val visaBlockchain = Blockchain.Polygon
 
-    val visaDefaultDerivationPath = visaBlockchain.derivationPath(DerivationStyle.V3)
+    val visaDefaultDerivationPath
+        get() = visaBlockchain.derivationPath(DerivationStyle.V3)
+
+    fun visaDefaultDerivationPath(style: DerivationStyle) = visaBlockchain.derivationPath(style)
 
     fun isVisaCard(card: CardDTO): Boolean {
         return isVisaCard(card.firmwareVersion.doubleValue, card.batchId)
     }
 
     fun isVisaCard(firmwareVersion: Double, batchId: String): Boolean {
-        return FirmwareVersion.visaRange.contains(firmwareVersion) &&
+        return firmwareVersion in FirmwareVersion.visaRange &&
             batchId.startsWith(VISA_BATCH_START)
     }
 }
