@@ -21,11 +21,11 @@
     },
     {
         "name": "ONBOARDING_CODE_REFACTORING_ENABLED",
-        "version": "undefined"
+        "version": "5.21.0"
     },
     {
         "name": "NAVIGATION_REFACTORING",
-        "version": "undefined"
+        "version": "5.21.0"
     },
     {
         "name": "SWAP_STORIES_ENABLED",
@@ -33,6 +33,10 @@
     },
     {
         "name": "VISA_ONBOARDING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "ONRAMP_HOT_TOKENS_ENABLED",
         "version": "undefined"
     }
 ]
