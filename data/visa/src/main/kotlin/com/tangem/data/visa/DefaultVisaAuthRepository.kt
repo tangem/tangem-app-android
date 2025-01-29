@@ -80,7 +80,16 @@ internal class DefaultVisaAuthRepository @Inject constructor(
             // )
             VisaAuthTokens(
                 accessToken = "accessToken",
-                refreshToken = "refreshToken",
+                refreshToken = VisaAuthTokens.RefreshToken("refreshToken"),
+            )
+        }
+
+    override suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): VisaAuthTokens =
+        withContext(dispatchers.io) {
+            // TODO
+            VisaAuthTokens(
+                accessToken = "accessToken",
+                refreshToken = VisaAuthTokens.RefreshToken("new refreshToken"),
             )
         }
 }
