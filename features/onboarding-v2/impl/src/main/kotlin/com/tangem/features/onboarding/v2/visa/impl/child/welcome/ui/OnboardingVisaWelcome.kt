@@ -1,14 +1,17 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.welcome.ui
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SpacerH
@@ -87,30 +90,36 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 fun Artwork(modifier: Modifier = Modifier) {
     Box(modifier) {
         val circleColor = TangemTheme.colors.background.secondary
+        var cardHeightPx by remember { mutableIntStateOf(0) }
+        val circleRadiusPx = cardHeightPx / 2 + cardHeightPx / 8f
+        val circleSize = with(LocalDensity.current) { (circleRadiusPx * 2).toDp() }
 
         Canvas(
             modifier = Modifier
                 .align(Alignment.Center)
-                .size(254.dp)
+                .size(circleSize)
                 .fillMaxSize(),
         ) {
             drawCircle(
                 color = circleColor,
-                radius = size.width / 2,
+                radius = circleRadiusPx,
                 center = center,
             )
         }
 
-        AsyncImage(
-            model = R.drawable.img_card_visa,
+        Image(
+            painter = painterResource(R.drawable.img_card_visa),
             contentDescription = null,
-            modifier = Modifier
+            modifier = modifier
                 .align(Alignment.Center)
-                .size(128.dp), // Adjust the size as needed
+                .onSizeChanged { cardHeightPx = it.height }
+                .widthIn(max = 512.dp)
+                .fillMaxWidth(),
         )
     }
 }
