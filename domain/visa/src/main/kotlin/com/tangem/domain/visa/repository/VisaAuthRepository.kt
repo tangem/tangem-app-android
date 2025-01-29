@@ -11,4 +11,6 @@ interface VisaAuthRepository {
     suspend fun getCustomerWalletAuthChallenge(cardId: String, walletPublicKey: String): VisaAuthChallenge.Wallet
 
     suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): VisaAuthTokens
+
+    suspend fun refreshAccessTokens(refreshToken: VisaAuthTokens.RefreshToken): VisaAuthTokens
 }
