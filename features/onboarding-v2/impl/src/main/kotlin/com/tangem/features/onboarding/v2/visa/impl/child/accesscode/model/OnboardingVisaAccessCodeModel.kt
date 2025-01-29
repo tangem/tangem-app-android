@@ -7,9 +7,12 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.common.visa.VisaUtilities
+import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.repository.VisaAuthRepository
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import com.tangem.sdk.api.TangemSdkManager
@@ -29,6 +32,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     @Suppress("UnusedPrivateMember")
     private val tangemSdkManager: TangemSdkManager,
     private val visaAuthRepository: VisaAuthRepository,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private val params: OnboardingVisaAccessCodeComponent.Config = paramsContainer.require()
@@ -139,16 +143,18 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
             when (result) {
                 is CompletionResult.Success -> {
                     // TODO load approve data from backend
-                    // TODO try to find wallet in the app
+                    val targetAddress = "x9F65354e595284956599F2892fA4A4a87653D6E6"
+                    val foundCardId = tryToFindExistingWalletCardId(targetAddress)
 
                     modelScope.launch {
                         onDone.emit(
                             OnboardingVisaAccessCodeComponent.DoneEvent(
                                 visaDataForApprove = VisaDataForApprove(
-                                    targetAddress = "x9F65354e595284956599F2892fA4A4a87653D6E6",
+                                    targetAddress = targetAddress,
                                     approveHash = "48b55c482123a10ad9022f9f4c5dd95c",
+                                    customerWalletCardId = foundCardId,
                                 ),
-                                walletFound = false, // TODO
+                                walletFound = foundCardId != null,
                                 newScanResponse = params.scanResponse.copy(
                                     card = result.data.newCardDTO,
                                 ),
@@ -162,6 +168,26 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private fun tryToFindExistingWalletCardId(targetAddress: String): String? {
+        val wallets = getWalletsUseCase.invokeSync().filter { it.isLocked.not() }
+
+        return wallets.firstOrNull { wallet ->
+            wallet.scanResponse.card.wallets.any {
+                val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false
+
+                VisaWalletPublicKeyUtility.validateExtendedPublicKey(
+                    targetAddress = targetAddress,
+                    extendedPublicKey = derivedKey,
+                ).onLeft {
+                    return@any VisaWalletPublicKeyUtility.findKeyWithoutDerivation(
+                        targetAddress = targetAddress,
+                        card = wallet.scanResponse.card,
+                    ).isRight()
+                }.isRight()
+            }
+        }?.cardId
     }
 
     private fun loading(state: Boolean) {
