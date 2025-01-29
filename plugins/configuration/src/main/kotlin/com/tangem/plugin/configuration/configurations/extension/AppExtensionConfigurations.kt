@@ -71,12 +71,15 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
     when (buildType) {
         BuildType.Release -> {
             isDebuggable = false
-            isMinifyEnabled = false
-            proguardFiles(appExtension.getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
         }
         BuildType.Debug -> {
             isDebuggable = true
-            isMinifyEnabled = false
+        }
+        BuildType.DebugPG -> {
+            // build is not debuggable to let R8 make optimizations
+            // otherwise, only shrinking will be applied
+            matchingFallbacks.add(BuildType.Debug.id)
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
         }
         BuildType.Internal,
         BuildType.External,
@@ -95,6 +98,9 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
 
     versionNameSuffix = buildType.versionSuffix?.let { "-$it" }
     applicationIdSuffix = buildType.appIdSuffix?.let { ".$it" }
+    isMinifyEnabled = buildType.obfuscating
+    isShrinkResources = buildType.obfuscating
+    proguardFiles("proguard-rules.pro", appExtension.getDefaultProguardFile("proguard-android.txt"))
 }
 
 private fun AppExtension.configurePackagingOptions() {
@@ -104,6 +110,7 @@ private fun AppExtension.configurePackagingOptions() {
             excludes += "lib/x86_64/freebsd/libscrypt.so"
             excludes += "lib/x86_64/linux/libscrypt.so"
             excludes += "META-INF/gradle/incremental.annotation.processors"
+            pickFirsts += "google/protobuf/*"
 
             merges += "paymentrequest.proto"
         }

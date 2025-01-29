@@ -8,26 +8,32 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.model.OnboardingVisaAccessCodeModel
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.OnboardingVisaAccessCode
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 internal class OnboardingVisaAccessCodeComponent(
     appComponentContext: AppComponentContext,
+    config: Config,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: OnboardingVisaAccessCodeModel = getOrCreateModel()
+    private val model: OnboardingVisaAccessCodeModel = getOrCreateModel(config)
 
     init {
         componentScope.launch {
-            model.onBack.collect { params.onBack() }
+            model.onBack.collect { params.childParams.onBack() }
         }
         componentScope.launch {
-            params.parentBackEvent.collect {
+            params.childParams.parentBackEvent.collect {
                 model.onBack()
             }
+        }
+        componentScope.launch {
+            model.onDone.collect { params.onDone(it) }
         }
     }
 
@@ -37,11 +43,23 @@ internal class OnboardingVisaAccessCodeComponent(
 
         BackHandler(onBack = model::onBack)
 
+        // DisableScreenshotsDisposableEffect()
+
         OnboardingVisaAccessCode(state, modifier)
     }
 
+    data class Config(
+        val scanResponse: ScanResponse,
+    )
+
     data class Params(
-        val parentBackEvent: SharedFlow<Unit>,
-        val onBack: () -> Unit,
+        val childParams: DefaultOnboardingVisaComponent.ChildParams,
+        val onDone: (DoneEvent) -> Unit,
+    )
+
+    data class DoneEvent(
+        val visaDataForApprove: VisaDataForApprove,
+        val walletFound: Boolean,
+        val newScanResponse: ScanResponse,
     )
 }
