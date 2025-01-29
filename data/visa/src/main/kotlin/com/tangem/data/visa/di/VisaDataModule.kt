@@ -38,5 +38,7 @@ internal interface VisaDataBindsModule {
 
     @Binds
     @Singleton
-    fun bindVisaActivationRepository(repository: DefaultVisaActivationRepository): VisaActivationRepository
+    fun bindVisaActivationRepositoryFactory(
+        repository: DefaultVisaActivationRepository.Factory,
+    ): VisaActivationRepository.Factory
 }
