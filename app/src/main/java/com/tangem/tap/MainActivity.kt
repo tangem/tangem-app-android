@@ -1,8 +1,10 @@
 package com.tangem.tap
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -32,6 +35,8 @@ import com.arkivanov.decompose.value.observe
 import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
+import com.huawei.agconnect.common.network.AccessNetworkManager
+import com.tangem.common.huawei.HuaweiServicesHelper
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.entity.SerializableIntent
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -279,7 +284,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         observePolkadotAccountHealthCheck()
         sendStakingUnsubmittedHashes()
-        checkGoogleServicesAvailability()
+        checkPlatformServicesAvailability()
 
         if (intent != null) {
             deepLinksRegistry.launch(intent)
@@ -685,6 +690,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
     }
 
+    private fun checkPlatformServicesAvailability() {
+        if (GoogleServicesHelper.checkGoogleServicesAvailability(this)) {
+            checkGoogleServicesAvailability()
+        } else if (HuaweiServicesHelper.checkHuaweiServicesAvailability(this)) {
+            checkHuaweiServicesAvailability()
+        }
+    }
+
     private fun checkGoogleServicesAvailability() {
         val isGoogleServicesAvailable = GoogleServicesHelper.checkGoogleServicesAvailability(this)
 
@@ -698,6 +711,19 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             } else {
                 setGooglePayAvailabilityUseCase(false)
             }
+        }
+    }
+
+    private fun checkHuaweiServicesAvailability() {
+        val isHuaweiServicesAvailable = HuaweiServicesHelper.checkHuaweiServicesAvailability(this)
+
+        if (isHuaweiServicesAvailable &&
+            ActivityCompat.checkSelfPermission(
+                    /* context = */ this,
+                    /* permission = */ Manifest.permission.ACCESS_NETWORK_STATE,
+                ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            AccessNetworkManager.getInstance().setAccessNetwork(true)
         }
     }
 

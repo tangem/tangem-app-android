@@ -10,6 +10,9 @@ local.properties
 # Google services
 
 
+# Huawei servies
+app/agconnect-services.json
+
 # Gradle generated files
 .gradle
 

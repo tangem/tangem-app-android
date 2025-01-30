@@ -3,6 +3,9 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
+        maven {
+            url = uri("https://developer.huawei.com/repo/")
+        }
     }
 
     includeBuild("plugins/configuration")
@@ -106,6 +109,9 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.tangem.ic4j")
             }
         }
+        maven {
+            url = uri("https://developer.huawei.com/repo/")
+        }
         maven("https://jitpack.io")
     }
 
@@ -141,6 +147,7 @@ include(":core:pagination")
 // region Common modules
 include(":common:ui")
 include(":common:google")
+include(":common:huawei")
 // endregion
 
 // region Libs modules
