@@ -35,7 +35,7 @@ internal fun LazyListScope.lazyActions(
     item(key = ACTIONS_CONTENT_TYPE + selectedWalletIndex, contentType = ACTIONS_CONTENT_TYPE) {
         HorizontalActionChips(
             buttons = actions.map(WalletManageButton::config).toImmutableList(),
-            modifier = modifier.animateItem(),
+            modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
             contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing16),
         )
     }
@@ -62,7 +62,7 @@ internal fun LazyListScope.actions(
             modifier = modifier
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth()
-                .animateItem(),
+                .animateItem(fadeInSpec = null, fadeOutSpec = null),
             horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing8),
             verticalAlignment = Alignment.CenterVertically,
         ) {
