@@ -74,6 +74,7 @@ private fun AndroidBuildType.configureBuildVariant(appExtension: AppExtension, b
         }
         BuildType.Debug -> {
             isDebuggable = true
+            signingConfig = appExtension.signingConfigs.getByName(BuildType.Debug.id)
         }
         BuildType.DebugPG -> {
             // build is not debuggable to let R8 make optimizations
