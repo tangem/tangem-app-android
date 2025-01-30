@@ -143,7 +143,7 @@ object BlockchainUtils {
     }
 
     private fun getNetworkNameWithoutTestnet(blockchain: Blockchain): String {
-        return blockchain.getNetworkName().replace(oldValue = " Testnet", newValue = "")
+        return blockchain.fullName.replace(oldValue = " Testnet", newValue = "")
     }
 
     fun isTokenBetaFunctionality(blockchainId: String): Boolean {
