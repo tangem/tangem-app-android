@@ -62,9 +62,7 @@ internal class SingleWalletOnrampTransactionConverter(
                         value.timestamp.toTimeFormat(),
                     ),
                 ),
-                toAmount = stringReference(
-                    value.toAmount.format { crypto(currency) },
-                ),
+                toAmount = stringReference(value.toAmount.format { crypto(currency) }),
                 toFiatAmount = stringReference(
                     status.fiatRate?.multiply(value.toAmount).format {
                         fiat(
@@ -94,6 +92,7 @@ internal class SingleWalletOnrampTransactionConverter(
                     analyticsEventHandler.send(TokenOnrampAnalyticsEvent.GoToProvider)
                     clickIntents.onGoToProviderClick(it)
                 },
+                onDisposeExpressStatus = clickIntents::onConfirmDisposeExpressStatus,
                 onClick = {
                     val analyticEvent = TokenOnrampAnalyticsEvent.OnrampStatusOpened(
                         tokenSymbol = currency.symbol,
