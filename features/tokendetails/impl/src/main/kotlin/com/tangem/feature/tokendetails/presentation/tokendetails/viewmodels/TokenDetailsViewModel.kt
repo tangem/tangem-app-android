@@ -784,16 +784,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) {
-        val bottomSheetState = internalUiState.value.bottomSheetConfig?.content
-        if (bottomSheetState is ExpressStatusBottomSheetConfig) {
-            viewModelScope.launch {
-                expressStatusFactory.removeTransactionOnBottomSheetClosed(
-                    expressState = bottomSheetState.value,
-                    isForceTerminal = true,
-                )
-            }
-        }
-        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
+        onDisposeExpressStatus()
         router.openTokenDetails(userWalletId, cryptoCurrency)
     }
 
@@ -948,6 +939,23 @@ internal class TokenDetailsViewModel @Inject constructor(
 
     override fun onBalanceSelect(config: TokenBalanceSegmentedButtonConfig) {
         internalUiState.value = stateFactory.getStateWithUpdatedBalanceSegmentedButtonConfig(config)
+    }
+
+    override fun onConfirmDisposeExpressStatus() {
+        internalUiState.value = stateFactory.getStateWithConfirmHideExpressStatus()
+    }
+
+    override fun onDisposeExpressStatus() {
+        val bottomSheetState = internalUiState.value.bottomSheetConfig?.content
+        if (bottomSheetState is ExpressStatusBottomSheetConfig) {
+            viewModelScope.launch {
+                expressStatusFactory.removeTransactionOnBottomSheetClosed(
+                    expressState = bottomSheetState.value,
+                    isForceDispose = true,
+                )
+            }
+        }
+        internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
     private fun handleUnavailabilityReason(
