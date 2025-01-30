@@ -231,9 +231,9 @@ interface CurrenciesRepository {
     ): Boolean
 
     /**
-     * Retrieves fee paid currency for specific [currency].
+     * Retrieves fee paid currency for specific [network].
      */
-    suspend fun getFeePaidCurrency(userWalletId: UserWalletId, currency: CryptoCurrency): FeePaidCurrency
+    suspend fun getFeePaidCurrency(userWalletId: UserWalletId, network: Network): FeePaidCurrency
 
     /**
      * Creates token [cryptoCurrency] based on current token and [network] it`s will be added

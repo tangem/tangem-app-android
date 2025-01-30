@@ -78,7 +78,7 @@ private fun LazyListScope.nonContentItem(modifier: Modifier = Modifier) {
     ) {
         Column(
             modifier = modifier
-                .animateItem()
+                .animateItem(fadeInSpec = null, fadeOutSpec = null)
                 .padding(top = TangemTheme.dimens.spacing96),
             verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
             horizontalAlignment = Alignment.CenterHorizontally,

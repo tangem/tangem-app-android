@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import timber.log.Timber
 
+@Suppress("LargeClass")
 internal class DefaultLegacyWalletConnectRepository(
     private val application: Application,
     private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
@@ -72,19 +73,23 @@ internal class DefaultLegacyWalletConnectRepository(
             }
         }
 
-        WalletKit.initialize(Wallet.Params.Init(core = CoreClient)) { error ->
-            Timber.e("Error while initializing Web3Wallet: $error")
-            scope.launch {
-                _events.emit(
-                    WalletConnectEvents.SessionApprovalError(
-                        WalletConnectError.ExternalApprovalError(error.throwable.message),
-                    ),
-                )
-            }
-        }
-
-        val walletDelegate = defineWalletDelegate()
-        WalletKit.setWalletDelegate(walletDelegate)
+        WalletKit.initialize(
+            Wallet.Params.Init(core = CoreClient),
+            onSuccess = {
+                val walletDelegate = defineWalletDelegate()
+                WalletKit.setWalletDelegate(walletDelegate)
+            },
+            onError = { error ->
+                Timber.e("Error while initializing Web3Wallet: $error")
+                scope.launch {
+                    _events.emit(
+                        WalletConnectEvents.SessionApprovalError(
+                            WalletConnectError.ExternalApprovalError(error.throwable.message),
+                        ),
+                    )
+                }
+            },
+        )
     }
 
     private fun defineWalletDelegate(): WalletKit.WalletDelegate {
@@ -333,7 +338,9 @@ internal class DefaultLegacyWalletConnectRepository(
                 optionalNamespace.key to Wallet.Model.Namespace.Session(
                     accounts = accountsOptional.distinct(),
                     methods = methods,
-                    chains = userChains.keys.toList(),
+                    chains = userChains.keys
+                        .filter { it.startsWith(optionalNamespace.key) }
+                        .toList(),
                     events = optionalNamespace.value.events,
                 )
             }

@@ -27,10 +27,6 @@ sealed class AppDialog : StateDialog {
         val actionsList: List<TestAction>,
     ) : AppDialog()
 
-    data class RussianCardholdersWarningDialog(val data: Data?) : AppDialog() {
-        data class Data(val topUpUrl: String)
-    }
-
     data class RemoveWalletDialog(
         val currencyTitle: String,
         val onOk: () -> Unit,
