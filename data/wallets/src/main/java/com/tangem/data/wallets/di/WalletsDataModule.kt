@@ -31,7 +31,7 @@ internal object WalletsDataModule {
             appPreferencesStore = appPreferencesStore,
             tangemTechApi = tangemTechApi,
             userWalletsStore = userWalletsStore,
-            seedPhraseNotificationVisibilityStore = RuntimeStateStore(defaultValue = false),
+            seedPhraseNotificationVisibilityStore = RuntimeStateStore(defaultValue = emptyMap()),
             dispatchers = dispatchers,
         )
     }

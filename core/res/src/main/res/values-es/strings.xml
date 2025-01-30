@@ -654,9 +654,7 @@
   <string name="reset_card_with_backup_to_factory_message">El restablecimiento de fábrica eliminará completamente la billetera de la tarjeta seleccionada. No podrá restaurar la billetera actual ni usar la tarjeta para recuperar el código de acceso.</string>
   <string name="reset_card_without_backup_to_factory_message">El reseteo a valores de fábrica eliminará completamente la billetera de la tarjeta/anillo seleccionado y lo eliminará de la app. No podrá restaurar la billetera actual.</string>
   <string name="ring_promo_text">Si tienes un Anillo Tangem, ¡3 swaps sin comisión en Changelly hasta el 15/11!</string>
-  <string name="ring_promo_title">¡Intercambia con 0%% de comisión!</string>
-  <string name="russian_bank_card_warning_subtitle">¿Tiene una tarjeta bancaria de otro país y un permiso de residencia o registro fuera de la Federación Rusa?</string>
-  <string name="russian_bank_card_warning_title">Las tarjetas bancarias rusas no se aceptan actualmente</string>
+  <string name="ring_promo_title">¡Intercambia con 0% de comisión!</string>
   <string name="save_user_wallet_agreement_access_description">Inicie sesión en la app y comprueba su saldo sin escanear la tarjeta o el anillo</string>
   <string name="save_user_wallet_agreement_access_title">Acceder a la app</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Permitir el uso de biometría</string>
@@ -996,7 +994,7 @@
   <string name="wallet_network_group_title">%s red</string>
   <string name="wallet_notification_address_copied">La dirección se copió correctamente</string>
   <string name="wallet_notification_no_internet">Sin conexión a internet</string>
-  <string name="wallet_promo_banner_button_title">Consíguelo ahora con un 10 %% de descuento</string>
+  <string name="wallet_promo_banner_button_title">Consíguelo ahora con un 10 % de descuento</string>
   <string name="wallet_promo_banner_description">Accede a más de 13 000 criptomonedas. Compra, vende, intercambia y realiza staking con un solo toque.\nVincula hasta tres tarjetas para hacer copias de seguridad.</string>
   <string name="wallet_promo_banner_title">Descubre Tangem Wallet</string>
   <string name="wallet_settings_title">Ajustes de la wallet</string>
