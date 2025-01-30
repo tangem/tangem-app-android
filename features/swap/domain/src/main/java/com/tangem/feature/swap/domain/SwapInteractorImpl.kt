@@ -409,7 +409,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             currencyStatus = fromTokenStatus,
             amount = amount.value,
             fee = fee,
-            balanceAfterTransaction = balanceAfterTransaction,
+            feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
         )
 
         return currencyCheck
@@ -1323,13 +1323,13 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             amount.value > reducedBalance -> {
                 IncludeFeeInAmount.BalanceNotEnough
             }
-            amountWithFee < reducedBalance -> {
+            amountWithFee <= reducedBalance -> {
                 IncludeFeeInAmount.Excluded
             }
             else -> {
                 if (feeValue < amount.value) {
                     IncludeFeeInAmount.Included(
-                        SwapAmount(
+                        amountSubtractFee = SwapAmount(
                             reducedBalance - feeValue,
                             getNativeToken(fromToken.network.backendId).decimals,
                         ),
@@ -1994,7 +1994,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun getFeePaidCurrency(currency: CryptoCurrency): FeePaidCurrency {
         return currenciesRepository.getFeePaidCurrency(
             userWalletId = userWalletId,
-            currency = currency,
+            network = currency.network,
         )
     }
 
