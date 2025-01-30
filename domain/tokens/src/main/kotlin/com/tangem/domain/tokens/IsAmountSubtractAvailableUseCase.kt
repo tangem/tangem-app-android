@@ -19,7 +19,7 @@ class IsAmountSubtractAvailableUseCase(
     suspend operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency): Either<Throwable, Boolean> =
         Either.catch {
             withContext(dispatchers.io) {
-                when (val feeCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, currency)) {
+                when (val feeCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, currency.network)) {
                     is FeePaidCurrency.Coin -> currency is CryptoCurrency.Coin
                     is FeePaidCurrency.SameCurrency -> true
                     is FeePaidCurrency.Token -> currency.id == feeCurrency.tokenId
