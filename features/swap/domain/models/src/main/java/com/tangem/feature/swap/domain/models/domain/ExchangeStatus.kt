@@ -64,4 +64,16 @@ enum class ExchangeStatus {
 
     @Json(name = "Paused")
     Paused,
+
+    ;
+
+    val isTerminal: Boolean
+        get() = this == Refunded ||
+            this == Finished ||
+            this == Cancelled ||
+            this == TxFailed ||
+            this == Unknown
+
+    val isAutoDisposable: Boolean
+        get() = this == Finished
 }

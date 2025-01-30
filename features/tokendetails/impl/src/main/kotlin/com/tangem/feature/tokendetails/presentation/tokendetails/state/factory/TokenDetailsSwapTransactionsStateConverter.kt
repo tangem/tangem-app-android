@@ -89,7 +89,6 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             notification = notifications,
                             activeStatus = transaction.status?.status,
                             showProviderLink = showProviderLink,
-                            isRefundTerminalStatus = true,
                             fromCryptoCurrency = fromCryptoCurrency,
                             toCryptoCurrency = toCryptoCurrency,
                             info = createStateInfo(
@@ -106,12 +105,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return result.toPersistentList()
     }
 
-    fun updateTxStatus(
-        tx: ExchangeUM,
-        statusModel: ExchangeStatusModel?,
-        refundToken: CryptoCurrency?,
-        isRefundTerminalStatus: Boolean,
-    ): ExchangeUM {
+    fun updateTxStatus(tx: ExchangeUM, statusModel: ExchangeStatusModel?, refundToken: CryptoCurrency?): ExchangeUM {
         if (statusModel == null || tx.activeStatus == statusModel.status) {
             Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
@@ -124,7 +118,6 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             notification = notifications,
             statuses = getStatuses(statusModel.status, hasFailed),
             showProviderLink = showProviderLink,
-            isRefundTerminalStatus = isRefundTerminalStatus,
             info = tx.info.copy(txExternalUrl = statusModel.txExternalUrl),
         )
     }
@@ -163,7 +156,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             },
             iconState = getIconState(transaction.status?.status),
             status = getStatusState(),
-            notification = null, // fixme https://tangem.atlassian.net/browse/AND-9219
+            notification = null, // fixme https://tangem.atlassian.net/browse/AND-9219,
+            onDisposeExpressStatus = clickIntents::onConfirmDisposeExpressStatus,
         )
     }
 
