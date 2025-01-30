@@ -13,7 +13,6 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
@@ -22,7 +21,6 @@ import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
@@ -109,7 +107,7 @@ object OnboardingHelper {
         }
     }
 
-    fun saveWallet(
+    suspend fun saveWallet(
         alreadyCreatedWallet: UserWallet?,
         scanResponse: ScanResponse,
         accessCode: String? = null,
@@ -117,46 +115,42 @@ object OnboardingHelper {
         hasBackupError: Boolean = false,
     ) {
         Analytics.setContext(scanResponse)
-        scope.launch {
-            val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
-            when {
-                // When should save user wallets, then save card without navigate to save wallet screen
-                store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
-                    store.dispatchWithMain(
-                        SaveWalletAction.ProvideBackupInfo(
-                            scanResponse = scanResponse,
-                            accessCode = accessCode,
-                            backupCardsIds = backupCardsIds?.toSet(),
-                        ),
-                    )
+        val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
+        when {
+            // When should save user wallets, then save card without navigate to save wallet screen
+            store.inject(DaggerGraphState::walletsRepository).shouldSaveUserWalletsSync() -> {
+                store.dispatchWithMain(
+                    SaveWalletAction.ProvideBackupInfo(
+                        scanResponse = scanResponse,
+                        accessCode = accessCode,
+                        backupCardsIds = backupCardsIds?.toSet(),
+                    ),
+                )
 
-                    store.dispatchWithMain(
-                        SaveWalletAction.SaveWalletAfterBackup(
-                            hasBackupError = hasBackupError,
-                            shouldNavigateToWallet = false,
-                        ),
-                    )
-                }
-                // When should not save user wallets but device has biometry and save wallet screen has not been shown,
-                // then open save wallet screen
-                tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen() -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError, alreadyCreatedWallet)
-
-                    delay(timeMillis = 1_200)
-
-                    store.dispatchOnMain(
-                        SaveWalletAction.ProvideBackupInfo(
-                            scanResponse = scanResponse,
-                            accessCode = accessCode,
-                            backupCardsIds = backupCardsIds?.toSet(),
-                        ),
-                    )
-                }
-                // If device has no biometry and save wallet screen has been shown, then go through old scenario
-                else -> {
-                    proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError, alreadyCreatedWallet)
-                }
+                store.dispatchWithMain(
+                    SaveWalletAction.SaveWalletAfterBackup(
+                        hasBackupError = hasBackupError,
+                        shouldNavigateToWallet = false,
+                    ),
+                )
             }
+            // When should not save user wallets but device has biometry and save wallet screen has not been shown,
+            // then open save wallet screen
+            tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen() -> {
+                proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError, alreadyCreatedWallet)
+
+                delay(timeMillis = 1_200)
+
+                store.dispatchWithMain(
+                    SaveWalletAction.ProvideBackupInfo(
+                        scanResponse = scanResponse,
+                        accessCode = accessCode,
+                        backupCardsIds = backupCardsIds?.toSet(),
+                    ),
+                )
+            }
+            // If device has no biometry and save wallet screen has been shown, then go through old scenario
+            else -> proceedWithScanResponse(scanResponse, backupCardsIds, hasBackupError, alreadyCreatedWallet)
         }
     }
 
@@ -243,18 +237,7 @@ object OnboardingHelper {
         val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
         Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
 
-        scope.launch {
-            val getUserCountryCodeUseCase = store.inject(DaggerGraphState::getUserCountryUseCase)
-            val isRussia = getUserCountryCodeUseCase.invokeSync().isRight { it is UserCountry.Russia }
-
-            val onrampFeatureToggles = store.inject(DaggerGraphState::onrampFeatureToggles)
-            if (isRussia && !onrampFeatureToggles.isFeatureEnabled) {
-                val dialogData = AppDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
-                store.dispatchDialogShow(AppDialog.RussianCardholdersWarningDialog(dialogData))
-            } else {
-                store.dispatchOpenUrl(topUpUrl)
-            }
-        }
+        store.dispatchOpenUrl(topUpUrl)
     }
 
     private suspend fun proceedWithScanResponse(
