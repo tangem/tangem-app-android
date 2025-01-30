@@ -3,6 +3,7 @@ package com.tangem.common.ui.expressStatus
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,7 +20,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-fun ExpressHideButton(isTerminal: Boolean, isAutoDisposable: Boolean, onClick: () -> Unit) {
+fun ColumnScope.ExpressHideButton(isTerminal: Boolean, isAutoDisposable: Boolean, onClick: () -> Unit) {
     AnimatedVisibility(
         visible = isTerminal && !isAutoDisposable,
         label = "Hide button visibility animation",
