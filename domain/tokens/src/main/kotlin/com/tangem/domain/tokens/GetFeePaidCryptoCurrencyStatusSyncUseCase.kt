@@ -26,7 +26,8 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Either<TokenListError, CryptoCurrencyStatus?> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, cryptoCurrency)
+        val network = cryptoCurrency.network
+        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, network)
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
             currenciesRepository = currenciesRepository,
@@ -39,7 +40,7 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
             when (feePaidCurrency) {
                 FeePaidCurrency.Coin ->
                     operations
-                        .getNetworkCoinSync(cryptoCurrency.network.id, cryptoCurrency.network.derivationPath)
+                        .getNetworkCoinSync(network.id, network.derivationPath)
                         .getOrNull()
                 FeePaidCurrency.SameCurrency,
                 is FeePaidCurrency.FeeResource,
