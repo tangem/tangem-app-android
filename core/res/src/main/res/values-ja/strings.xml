@@ -648,9 +648,7 @@
   <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードやリングからウォレットが完全に削除されます。現在のウォレットを復元したり、カードやリングを使用してアクセスコードを復元することはできません。</string>
   <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードやリングからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
   <string name="ring_promo_text">Tangem Ringユーザーは、11/15日までChangelly経由でスワップを3回手数料ゼロで行えます！</string>
-  <string name="ring_promo_title">今すぐ手数料0%%でスワップしましょう！</string>
-  <string name="russian_bank_card_warning_subtitle">他の国の銀行カードと、ロシア連邦外での居住許可証または登録をお持ちですか?</string>
-  <string name="russian_bank_card_warning_title">ロシアの銀行カードは現在ご利用いただけません</string>
+  <string name="ring_promo_title">今すぐ手数料0%でスワップしましょう！</string>
   <string name="save_user_wallet_agreement_access_description">アプリにログインして、カードまたはリングをスキャンせずに残高を確認できます</string>
   <string name="save_user_wallet_agreement_access_title">アプリにアクセスする</string>
   <string name="save_user_wallet_agreement_allow_biometrics">生体認証の使用を許可する</string>
@@ -990,7 +988,7 @@
   <string name="wallet_network_group_title">%sネットワーク</string>
   <string name="wallet_notification_address_copied">アドレスがクリップボードにコピーされました</string>
   <string name="wallet_notification_no_internet">インターネット接続がありません</string>
-  <string name="wallet_promo_banner_button_title">今すぐ10 %%オフで購入</string>
+  <string name="wallet_promo_banner_button_title">今すぐ10 %オフで購入</string>
   <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_title">ウォレット設定</string>
