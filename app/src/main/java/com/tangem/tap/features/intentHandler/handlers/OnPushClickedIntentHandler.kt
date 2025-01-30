@@ -8,7 +8,7 @@ import com.tangem.tap.features.intentHandler.IntentHandler
 internal class OnPushClickedIntentHandler(val analyticsEventHandler: AnalyticsEventHandler) : IntentHandler {
 
     override fun handleIntent(intent: Intent?, isFromForeground: Boolean): Boolean {
-        val fromPush = intent?.extras?.getBoolean(IS_OPENED_FROM_PUSH) ?: false
+        val fromPush = intent?.extras?.containsKey(OPENED_FROM_GCM_PUSH) ?: false
 
         return if (fromPush) {
             analyticsEventHandler.send(Push.PushNotificationOpened)
@@ -19,6 +19,6 @@ internal class OnPushClickedIntentHandler(val analyticsEventHandler: AnalyticsEv
     }
 
     companion object {
-        const val IS_OPENED_FROM_PUSH = "IS_OPENED_FROM_PUSH"
+        const val OPENED_FROM_GCM_PUSH = "google.sent_time" // every bundle from FCM contains this key
     }
 }
