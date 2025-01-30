@@ -67,6 +67,9 @@ internal class WalletsUpdateActionResolver @Inject constructor(
                     selectedWallet = selectedWallet,
                 )
             }
+            isAnyWalletNameChanged(state, wallets) -> {
+                getRenameWalletsAction(state, wallets)
+            }
             else -> getUpdateSelectedWalletAction(state, wallets, selectedWallet)
         }
     }
@@ -121,15 +124,35 @@ internal class WalletsUpdateActionResolver @Inject constructor(
         return state.getPrevSelectedWallet().id != selectedWallet.walletId
     }
 
+    private fun isAnyWalletNameChanged(state: WalletScreenState, wallets: List<UserWallet>): Boolean {
+        val prevWallets = state.wallets.map { it.walletCardState.id to it.walletCardState.title }
+        val newWallets = wallets.map { it.walletId to it.name }
+
+        val prevWalletsIds = prevWallets.map { it.first }
+        val newWalletsIds = newWallets.map { it.first }
+
+        val isAnyNameChanged = (newWallets - prevWallets.toSet()).isNotEmpty()
+
+        return prevWalletsIds != newWalletsIds && isAnyNameChanged
+    }
+
+    private fun getRenameWalletsAction(state: WalletScreenState, wallets: List<UserWallet>): Action.RenameWallets {
+        val prevWallets = state.wallets.map { it.walletCardState.id to it.walletCardState.title }
+        val newWallets = wallets.map { it.walletId to it.name }
+
+        val renamedWallets = newWallets - prevWallets.toSet()
+
+        return Action.RenameWallets(
+            renamedWallets = wallets.filter { wallet -> renamedWallets.any { it.first == wallet.walletId } },
+        )
+    }
+
     private fun getUpdateSelectedWalletAction(
         state: WalletScreenState,
         wallets: List<UserWallet>,
         selectedWallet: UserWallet,
     ): Action {
         return when {
-            isSelectedWalletNameChanged(state, selectedWallet) -> {
-                Action.UpdateWalletName(selectedWalletId = selectedWallet.walletId, name = selectedWallet.name)
-            }
             isSelectedWalletUnlocked(state, selectedWallet) -> {
                 Action.UnlockWallet(
                     selectedWallet = selectedWallet,
@@ -141,10 +164,6 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             }
             else -> Action.Unknown
         }
-    }
-
-    private fun isSelectedWalletNameChanged(state: WalletScreenState, selectedWallet: UserWallet): Boolean {
-        return state.getPrevSelectedWallet().title != selectedWallet.name
     }
 
     private fun isSelectedWalletUnlocked(state: WalletScreenState, selectedWallet: UserWallet): Boolean {
@@ -215,10 +234,19 @@ internal class WalletsUpdateActionResolver @Inject constructor(
             }
         }
 
-        data class UpdateWalletName(val selectedWalletId: UserWalletId, val name: String) : Action() {
+        /**
+         * Rename wallets
+         *
+         * @property renamedWallets renamed wallets
+         */
+        data class RenameWallets(val renamedWallets: List<UserWallet>) : Action() {
 
             override fun toString(): String {
-                return "UpdateWalletName(selectedWalletId = $selectedWalletId, name = $name)"
+                return """
+                    RenameWallets(
+                        renamedWallets = ${renamedWallets.joinToString { it.walletId.toString() }}
+                    )
+                """.trimIndent()
             }
         }
 
