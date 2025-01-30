@@ -36,6 +36,7 @@ internal sealed interface WalletAlertState {
         override val onConfirmClick: (() -> Unit)?,
     ) : Basic()
 
+    // TODO: reuse RenameWalletComponent [REDACTED_JIRA]
     data class RenameWalletAlert(
         override val text: String,
         override val onConfirmClick: (String) -> Unit,
