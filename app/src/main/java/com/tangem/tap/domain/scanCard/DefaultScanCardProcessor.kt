@@ -19,11 +19,13 @@ internal class DefaultScanCardProcessor(
     override suspend fun scan(
         cardId: String?,
         allowsRequestAccessCodeFromRepository: Boolean,
+        analyticsSource: AnalyticsParam.ScreensSources,
     ): CompletionResult<ScanResponse> {
         return if (isNewCardScanningEnabled) {
             UseCaseScanProcessor.scan(cardId, allowsRequestAccessCodeFromRepository)
         } else {
             legacyScanProcessor.scan(
+                analyticsSource = analyticsSource,
                 cardId = cardId,
                 allowsRequestAccessCodeFromRepository = allowsRequestAccessCodeFromRepository,
             )

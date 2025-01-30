@@ -658,9 +658,7 @@
   <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring. You will not be able to restore the current wallet or use the card or ring to recover the access code.</string>
   <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring and remove it from the app. You will not be able to restore the current wallet.</string>
   <string name="ring_promo_text">Ring owners get 3 commission-free swaps on Changelly until 15.11!</string>
-  <string name="ring_promo_title">Swap With 0%% Fees Now!</string>
-  <string name="russian_bank_card_warning_subtitle">Do you have a bank card from another country and a residence permit or registration outside the Russian Federation?</string>
-  <string name="russian_bank_card_warning_title">Russian bank cards are not currently accepted</string>
+  <string name="ring_promo_title">Swap With 0% Fees Now!</string>
   <string name="save_user_wallet_agreement_access_description">Log into the app and check your balance without scanning the card or ring</string>
   <string name="save_user_wallet_agreement_access_title">Access the app</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
@@ -1000,7 +998,7 @@
   <string name="wallet_network_group_title">%s network</string>
   <string name="wallet_notification_address_copied">Address was copied to clipboard</string>
   <string name="wallet_notification_no_internet">No internet connection</string>
-  <string name="wallet_promo_banner_button_title">Get now with 10%% off</string>
+  <string name="wallet_promo_banner_button_title">Get now with 10% off</string>
   <string name="wallet_promo_banner_description">Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap.\nLink up to three cards for a backup.</string>
   <string name="wallet_promo_banner_title">Discover Tangem Wallet</string>
   <string name="wallet_settings_title">Wallet settings</string>
@@ -1084,7 +1082,7 @@
   <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
   <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
-  <string name="warning_some_token_balances_not_updated">Some token balances could not updated</string>
+  <string name="warning_some_token_balances_not_updated">Some token balances could not be updated</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
