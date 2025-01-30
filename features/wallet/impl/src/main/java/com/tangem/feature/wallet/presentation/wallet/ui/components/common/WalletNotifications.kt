@@ -31,13 +31,13 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
                 is WalletNotification.NoteMigration -> {
                     NoteMigrationNotification(
                         config = it.config,
-                        modifier = modifier.animateItem(),
+                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                     )
                 }
                 else -> {
                     Notification(
                         config = it.config,
-                        modifier = modifier.animateItem(),
+                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
                         iconTint = when (it) {
                             is WalletNotification.Critical -> TangemTheme.colors.icon.warning
                             is WalletNotification.Informational -> TangemTheme.colors.icon.accent
