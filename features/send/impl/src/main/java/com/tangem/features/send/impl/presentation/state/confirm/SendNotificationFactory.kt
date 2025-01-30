@@ -95,15 +95,19 @@ internal class SendNotificationFactory(
             val feeError = (feeState.feeSelectorState as? FeeSelectorState.Error)?.error
 
             val recipientAddress = state.recipientState?.addressTextField?.value
-            val statusValue = cryptoCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
-            val balanceAfterTransaction = statusValue?.let { it.amount - sendingAmount - feeValue }
+            val feeCurrencyBalanceAfterTransaction = getFeeCurrencyBalanceAfterTx(
+                feeCurrencyStatus = feeCryptoCurrencyStatusProvider(),
+                sendingCurrencyStatus = cryptoCurrencyStatus,
+                sendingAmount = sendingAmount,
+                feeValue = feeValue,
+            )
             val currencyCheck = getCurrencyCheckUseCase(
                 userWalletId = userWalletId,
                 currencyStatus = cryptoCurrencyStatus,
                 amount = sendingAmount,
                 fee = feeValue,
                 recipientAddress = recipientAddress,
-                balanceAfterTransaction = balanceAfterTransaction,
+                feeCurrencyBalanceAfterTransaction = feeCurrencyBalanceAfterTransaction,
             )
             buildList {
                 addErrorNotifications(
@@ -136,6 +140,23 @@ internal class SendNotificationFactory(
                 notifications = updatedNotifications.toImmutableList(),
             ),
         )
+    }
+
+    private fun getFeeCurrencyBalanceAfterTx(
+        feeCurrencyStatus: CryptoCurrencyStatus?,
+        sendingCurrencyStatus: CryptoCurrencyStatus,
+        sendingAmount: BigDecimal,
+        feeValue: BigDecimal,
+    ): BigDecimal? {
+        val sendingCurrencyBalance = sendingCurrencyStatus.value as? CryptoCurrencyStatus.Loaded
+        val feeCurrencyBalance = feeCurrencyStatus?.value as? CryptoCurrencyStatus.Loaded
+        if (feeCurrencyStatus?.value !is CryptoCurrencyStatus.Loaded) return null
+        return when {
+            feeCurrencyStatus == sendingCurrencyStatus -> sendingCurrencyBalance?.let {
+                it.amount - sendingAmount - feeValue
+            }
+            else -> feeCurrencyBalance?.let { it.amount - feeValue }
+        }
     }
 
     private suspend fun MutableList<NotificationUM>.addErrorNotifications(

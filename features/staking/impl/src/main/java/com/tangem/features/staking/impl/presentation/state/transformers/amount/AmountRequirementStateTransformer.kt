@@ -16,6 +16,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isTron
+import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -41,8 +42,16 @@ internal class AmountRequirementStateTransformer(
         val isIntegerOnlyError = isIntegerOnlyError(amountState, actionType)
 
         val cryptoAmount = amountState.amountTextField.cryptoAmount
-        val roundedDownCrypto = cryptoAmount.value?.setScale(0, RoundingMode.DOWN)
-        val value = roundedDownCrypto?.parseBigDecimal(0).orEmpty()
+        val roundedDownCrypto = cryptoAmount.value
+            ?.setScale(0, RoundingMode.DOWN)
+            ?.parseBigDecimal(0)
+            .orEmpty()
+
+        val isAmountZeroOrNull = if (amountState.amountTextField.isFiatValue) {
+            amountState.amountTextField.fiatAmount.value.isNullOrZero()
+        } else {
+            amountState.amountTextField.cryptoAmount.value.isNullOrZero()
+        }
 
         val errorText = when {
             amountState.amountTextField.isError -> amountState.amountTextField.error
@@ -50,11 +59,11 @@ internal class AmountRequirementStateTransformer(
             isIntegerOnlyError -> when (actionType) {
                 StakingActionCommonType.Enter -> resourceReference(
                     R.string.staking_amount_tron_integer_error,
-                    wrappedList(value),
+                    wrappedList(roundedDownCrypto),
                 )
                 StakingActionCommonType.Exit -> resourceReference(
                     R.string.staking_amount_tron_integer_error_unstaking,
-                    wrappedList(value),
+                    wrappedList(roundedDownCrypto),
                 )
                 else -> null
             }
@@ -62,7 +71,7 @@ internal class AmountRequirementStateTransformer(
         }
         val isError = amountState.amountTextField.isError || requirementError != null
         return amountState.copy(
-            isPrimaryButtonEnabled = !isError,
+            isPrimaryButtonEnabled = !isAmountZeroOrNull && !isError,
             amountTextField = amountState.amountTextField.copy(
                 isError = isError,
                 isWarning = isIntegerOnlyError,
