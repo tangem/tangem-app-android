@@ -35,7 +35,7 @@ internal sealed interface WalletAlertState {
         override val message: TextReference,
         override val onConfirmClick: (() -> Unit)?,
     ) : Basic()
-
+// [REDACTED_TODO_COMMENT]
     data class RenameWalletAlert(
         override val text: String,
         override val onConfirmClick: (String) -> Unit,
