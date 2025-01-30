@@ -115,7 +115,7 @@ class GetCurrencyWarningsUseCase(
         coinStatus: CryptoCurrencyStatus,
         tokenStatus: CryptoCurrencyStatus,
     ): CryptoCurrencyWarning? {
-        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency)
+        val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, tokenStatus.currency.network)
         val isNetworkFeeZero = currenciesRepository.isNetworkFeeZero(userWalletId, tokenStatus.currency.network)
         return when {
             feePaidCurrency is FeePaidCurrency.Coin &&
