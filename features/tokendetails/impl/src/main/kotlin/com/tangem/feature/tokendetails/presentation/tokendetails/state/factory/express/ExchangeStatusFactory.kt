@@ -79,13 +79,13 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
             }
     }
 
-    suspend fun removeTransactionOnBottomSheetClosed(isForceTerminal: Boolean = false) {
+    suspend fun removeTransactionOnBottomSheetClosed(isForceDispose: Boolean = false) {
         val state = currentStateProvider()
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
         val selectedTx = bottomSheetConfig.value as? ExchangeUM ?: return
 
-        val shouldTerminate = selectedTx.activeStatus.isTerminal(selectedTx.isRefundTerminalStatus) || isForceTerminal
-        if (shouldTerminate) {
+        val shouldDispose = selectedTx.activeStatus?.isAutoDisposable == true || isForceDispose
+        if (shouldDispose) {
             swapTransactionRepository.removeTransaction(
                 userWalletId = userWalletId,
                 fromCryptoCurrency = selectedTx.fromCryptoCurrency,
@@ -96,20 +96,16 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     }
 
     suspend fun updateSwapTxStatus(swapTx: ExchangeUM): ExchangeUM {
-        return if (swapTx.activeStatus.isTerminal(swapTx.isRefundTerminalStatus)) {
+        return if (swapTx.activeStatus?.isTerminal == true) {
             swapTx
         } else {
             val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider)
-            val isRefundTerminalStatus = statusModel?.refundNetwork == null &&
-                statusModel?.refundContractAddress == null &&
-                swapTx.provider.type != ExchangeProviderType.DEX_BRIDGE
 
             val addedRefundToken = addRefundCurrencyIfNeeded(statusModel, swapTx.provider.type)
             swapTransactionsStateConverter.updateTxStatus(
                 tx = swapTx,
                 statusModel = statusModel,
                 refundToken = addedRefundToken,
-                isRefundTerminalStatus = isRefundTerminalStatus,
             )
         }
     }
@@ -172,15 +168,6 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
             savedTransactions = savedTransactions,
             quotes = quotes,
         )
-    }
-
-    private fun ExchangeStatus?.isTerminal(isRefundTerminal: Boolean): Boolean {
-        val needTerminalRefund = this == ExchangeStatus.Refunded && isRefundTerminal
-        return needTerminalRefund ||
-            this == ExchangeStatus.Finished ||
-            this == ExchangeStatus.Cancelled ||
-            this == ExchangeStatus.TxFailed ||
-            this == ExchangeStatus.Unknown
     }
 
     private fun toAnalyticStatus(status: ExchangeStatus?): ExpressAnalyticsStatus? {
