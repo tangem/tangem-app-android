@@ -1,5 +1,12 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
+buildscript {
+    dependencies {
+        classpath(deps.gradle.android)
+        classpath(deps.agconnect.agcp)
+    }
+}
+
 plugins {
     alias(deps.plugins.kotlin.android) apply false
     alias(deps.plugins.kotlin.jvm) apply false
