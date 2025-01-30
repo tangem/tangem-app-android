@@ -9,6 +9,7 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.transaction.error.IncompleteTransactionError
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 
