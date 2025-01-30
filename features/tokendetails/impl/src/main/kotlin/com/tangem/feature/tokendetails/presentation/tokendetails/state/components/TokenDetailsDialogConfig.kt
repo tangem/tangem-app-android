@@ -1,6 +1,7 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.components
 
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.features.tokendetails.impl.R
 
@@ -131,6 +132,23 @@ internal data class TokenDetailsDialogConfig(
             override val confirmButtonConfig: ButtonConfig = ButtonConfig(
                 text = TextReference.Res(R.string.common_ok),
                 onClick = onConfirmClick,
+            )
+        }
+
+        data class ConfirmExpressStatusHideDialogConfig(
+            val onConfirmClick: () -> Unit,
+            val onCancelClick: () -> Unit,
+        ) : DialogContentConfig() {
+            override val title: TextReference = resourceReference(R.string.express_status_hide_dialog_title)
+            override val message: TextReference = resourceReference(R.string.express_status_hide_dialog_text)
+            override val confirmButtonConfig: ButtonConfig = ButtonConfig(
+                text = resourceReference(R.string.common_hide),
+                onClick = onConfirmClick,
+            )
+
+            override val cancelButtonConfig: ButtonConfig = ButtonConfig(
+                text = resourceReference(R.string.common_cancel),
+                onClick = onCancelClick,
             )
         }
     }
