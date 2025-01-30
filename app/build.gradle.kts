@@ -4,6 +4,7 @@ import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscati
 plugins {
     alias(deps.plugins.android.application)
     alias(deps.plugins.kotlin.android)
+    id(deps.plugins.agconnect.get().pluginId)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.kotlin.serialization)
     alias(deps.plugins.google.services)
@@ -11,6 +12,10 @@ plugins {
     alias(deps.plugins.firebase.crashlytics)
     alias(deps.plugins.firebase.perf)
     id("configuration")
+}
+
+agcp {
+    manifest = false
 }
 
 android {
@@ -51,6 +56,7 @@ android {
 configurations.all {
     exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
     exclude(group = "com.github.komputing.kethereum")
+    exclude(group = "com.android.tools.build", module = "gradle")
 
     resolutionStrategy {
         dependencySubstitution {
@@ -101,6 +107,7 @@ dependencies {
     implementation(projects.common)
     implementation(projects.common.routing)
     implementation(projects.common.google)
+    implementation(projects.common.huawei)
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.navigation)
@@ -218,6 +225,14 @@ dependencies {
         exclude(group = "com.google.firebase", module = "protolite-well-known-types")
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
     }
+
+    /** AppGallery libraries */
+    implementation(deps.agconnect.agcp)
+    implementation(deps.agconnect.core)
+    implementation(deps.agconnect.crash)
+    implementation(deps.huawei.base)
+    implementation(deps.huawei.analytics)
+
     /** Tangem libraries */
     implementation(deps.tangem.blockchain) {
         exclude(module = "joda-time")

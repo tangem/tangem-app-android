@@ -32,6 +32,12 @@
         </intent>
     </queries>
 
+    <queries>
+        <intent>
+            <action android:name="com.huawei.hms.core.aidlservice" />
+        </intent>
+    </queries>
+
     <application
         android:name="com.tangem.tap.TangemHiltApplication"
         android:allowBackup="false"
@@ -50,6 +56,10 @@
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
+
+        <meta-data
+            android:name="com.huawei.agconnect.AccessNetwork"
+            android:value="false" />
 
         <activity
             android:name="com.tangem.tap.MainActivity"
