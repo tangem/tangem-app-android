@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.twins
 
 import com.tangem.Message
-import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.extensions.hexToBytes
@@ -57,7 +56,7 @@ class TwinCardsManager(card: CardDTO) {
         return response
     }
 
-    suspend fun complete(message: Message): Result<ScanResponse> {
+    suspend fun complete(message: Message): CompletionResult<ScanResponse> {
         val response = tangemSdkManager.finalizeTwin(
             secondCardPublicKey = secondCardPublicKey!!.hexToBytes(),
             issuerKeyPair = getIssuerKeys(),
@@ -65,10 +64,7 @@ class TwinCardsManager(card: CardDTO) {
             initialMessage = message,
         )
 
-        return when (response) {
-            is CompletionResult.Success -> Result.Success(response.data)
-            is CompletionResult.Failure -> Result.fromTangemSdkError(response.error)
-        }
+        return response
     }
 
     private suspend fun getIssuerKeys(): KeyPair {
