@@ -7,6 +7,7 @@ androidGradlePlugin = "8.2.2"
 firebaseCrashlytics = "3.0.1"
 googleServices = "4.4.1"
 kotlin = "1.9.22"
+firebasePerf = "1.4.2"
 # endregion Classpath
 
 # region AndroidX
@@ -45,7 +46,7 @@ coil = "2.1.0"
 compose-shimmer = "1.0.3"
 coroutine = "1.7.2"
 desugarJdkLibs = "1.1.5"
-firebase = "33.1.0"
+firebase = "33.7.0"
 googleMaterialComponent = "1.6.1"
 googlePlayReview = "2.0.1"
 googlePlayReviewKtx = "2.0.1"
@@ -70,8 +71,8 @@ zxingQrCode = "3.5.1"
 mviCore = "1.3.1"
 kotlinSerialization = "1.4.1"
 arrow = "1.2.3"
-reownCore = "1.0.2"
-reownWeb3 = "1.0.2"
+reownCore = "1.1.2"
+reownWeb3 = "1.1.2"
 prettyLogger = "2.2.0"
 okHttp-prettyLogging = "3.1.0"
 chucker = "4.0.0"
@@ -88,9 +89,9 @@ markdownComposeView = "0.5.4"
 # endregion Other libraries
 
 # region Tangem
-tangemBlockchainSdk = "develop-923"
+tangemBlockchainSdk = "develop-933"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "develop-424"
+tangemCardSdk = "develop-429"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
 tangemVico = "2.0.0-alpha.25-tangem-developments8"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
@@ -122,6 +123,7 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }
 android-library = { id = "com.android.library", version.ref = "androidGradlePlugin" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
+firebase-perf = { id = "com.google.firebase.firebase-perf", version.ref = "firebasePerf" }
 google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
 hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
@@ -182,6 +184,7 @@ firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "fir
 firebase-analytics = { module = "com.google.firebase:firebase-analytics-ktx" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx" }
 firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
+firebase-perf = { module = "com.google.firebase:firebase-perf" }
 # endregion Firebase
 
 # region Tangem
