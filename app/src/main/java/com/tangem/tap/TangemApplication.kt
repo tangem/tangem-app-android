@@ -6,7 +6,6 @@ import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.signer.TransactionSignerFactory
@@ -21,6 +20,7 @@ import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.WalletForm
 import com.tangem.core.configtoggle.blockchain.ExcludedBlockchainsManager
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.datasource.api.common.MoshiConverter
@@ -53,7 +53,6 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
-import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -208,8 +207,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
     private val settingsManager: SettingsManager
         get() = entryPoint.getSettingsManager()
 
-    private val blockchainExceptionHandler: BlockchainExceptionHandler
-        get() = entryPoint.getBlockchainExceptionHandler()
+    private val uiMessageSender: UiMessageSender
+        get() = entryPoint.getUiMessageSender()
+
     // endregion
 
     override fun onCreate() {
@@ -252,7 +252,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
         }
 
         loadNativeLibraries()
-        ExceptionHandler.append(blockchainExceptionHandler)
+        // ExceptionHandler.append(blockchainExceptionHandler) // TODO [REDACTED_TASK_KEY] Send only to Firebase
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
@@ -308,6 +308,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
                     appPreferencesStore = appPreferencesStore,
                     clipboardManager = clipboardManager,
                     settingsManager = settingsManager,
+                    uiMessageSender = uiMessageSender,
                 ),
             ),
         )
