@@ -89,7 +89,7 @@ class CryptoCurrencyFactory(
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
             network = network,
-            name = blockchain.fullName,
+            name = blockchain.getCoinName(),
             symbol = blockchain.currency,
             iconUrl = getCoinIconUrl(blockchain),
             decimals = blockchain.decimals(),
