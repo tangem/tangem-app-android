@@ -40,6 +40,10 @@ dependencies {
     implementation(deps.tangem.card.core)
     implementation(deps.tangem.blockchain)
     implementation(deps.timber)
+    implementation(deps.firebase.perf) {
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
 
     /** DI */
     implementation(deps.hilt.android)
