@@ -4,6 +4,8 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventFilter
 import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 
 /**
  * Created by Anton Zhilenkov on 22/09/2022.
@@ -14,8 +16,15 @@ class AnalyticsFactory {
     private val filters = mutableListOf<AnalyticsEventFilter>()
     private val interceptors = mutableListOf<ParamsInterceptor>()
 
-    fun addHandlerBuilder(builder: AnalyticsHandlerBuilder) {
-        builders.add(builder)
+    fun setupHandlers(isGoogleServicesAvailable: Boolean, isHuaweiServicesAvailable: Boolean) {
+        builders.add(AmplitudeAnalyticsHandler.Builder())
+
+        if (isGoogleServicesAvailable) {
+            builders.add(FirebaseAnalyticsHandler.Builder())
+        } else if (isHuaweiServicesAvailable) {
+            // todo huawei AND-9717
+            return // builders.add(AppGalleryAnalyticsHandler.Builder())
+        }
     }
 
     fun addFilter(filter: AnalyticsEventFilter) {
