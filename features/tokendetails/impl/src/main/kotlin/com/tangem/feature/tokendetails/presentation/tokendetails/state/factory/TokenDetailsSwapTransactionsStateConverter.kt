@@ -80,15 +80,19 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             fromFiatAmount = quote.fiatRate.multiply(fromAmount)
                         }
                     }
-                    val notifications =
-                        getNotification(transaction.status?.status, transaction.status?.txExternalUrl, null)
+                    val statusModel = transaction.status
+                    val notifications = getNotification(
+                        status = statusModel?.status,
+                        txUrl = statusModel?.txExternalUrl,
+                        refundToken = statusModel?.refundCurrency,
+                    )
                     val showProviderLink = getShowProviderLink(notifications, transaction.status)
                     result.add(
                         ExchangeUM(
                             provider = transaction.provider,
-                            statuses = getStatuses(transaction.status?.status),
+                            statuses = getStatuses(statusModel?.status),
                             notification = notifications,
-                            activeStatus = transaction.status?.status,
+                            activeStatus = statusModel?.status,
                             showProviderLink = showProviderLink,
                             fromCryptoCurrency = fromCryptoCurrency,
                             toCryptoCurrency = toCryptoCurrency,
@@ -106,13 +110,13 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return result.toPersistentList()
     }
 
-    fun updateTxStatus(tx: ExchangeUM, statusModel: ExchangeStatusModel?, refundToken: CryptoCurrency?): ExchangeUM {
+    fun updateTxStatus(tx: ExchangeUM, statusModel: ExchangeStatusModel?): ExchangeUM {
         if (statusModel == null || tx.activeStatus == statusModel.status) {
             Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
         }
         val hasFailed = statusModel.status == ExchangeStatus.Failed
-        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, refundToken)
+        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, statusModel.refundCurrency)
         val showProviderLink = getShowProviderLink(notifications, statusModel)
         return tx.copy(
             activeStatus = statusModel.status,
