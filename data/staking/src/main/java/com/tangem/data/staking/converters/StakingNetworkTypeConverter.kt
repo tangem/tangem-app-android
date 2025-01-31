@@ -75,6 +75,7 @@ class StakingNetworkTypeConverter : TwoWayConverter<NetworkTypeDTO, NetworkType>
             NetworkTypeDTO.SOLANA -> NetworkType.SOLANA
             NetworkTypeDTO.TEZOS -> NetworkType.TEZOS
             NetworkTypeDTO.TRON -> NetworkType.TRON
+            NetworkTypeDTO.TON -> NetworkType.TON
             else -> NetworkType.UNKNOWN
         }
     }
@@ -147,6 +148,7 @@ class StakingNetworkTypeConverter : TwoWayConverter<NetworkTypeDTO, NetworkType>
             NetworkType.SOLANA -> NetworkTypeDTO.SOLANA
             NetworkType.TEZOS -> NetworkTypeDTO.TEZOS
             NetworkType.TRON -> NetworkTypeDTO.TRON
+            NetworkType.TON -> NetworkTypeDTO.TON
             else -> NetworkTypeDTO.UNKNOWN
         }
     }
