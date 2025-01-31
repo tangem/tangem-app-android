@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.data.common)
 
     /** Domain modules */
+    implementation(projects.core.configToggles)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.wallets)
