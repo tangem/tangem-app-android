@@ -15,6 +15,9 @@ interface CardSdkConfigRepository {
     @Deprecated("Use CardSdkConfigRepository's methods instead of this property")
     val sdk: TangemSdk
 
+    /** Allow requesting access codes from biometrically protected storage */
+    var isBiometricsRequestPolicy: Boolean
+
     /** Set access code request policy by [isBiometricsRequestPolicy] */
     fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean)
 
