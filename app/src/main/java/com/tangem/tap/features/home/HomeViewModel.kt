@@ -12,10 +12,10 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.ScanCardProcessor
-import com.tangem.domain.card.SetAccessCodeRequestPolicyUseCase
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.settings.ShouldSaveAccessCodesUseCase
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
@@ -39,11 +39,11 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @HiltViewModel
 internal class HomeViewModel @Inject constructor(
-    private val shouldSaveAccessCodesUseCase: ShouldSaveAccessCodesUseCase,
-    private val setAccessCodeRequestPolicyUseCase: SetAccessCodeRequestPolicyUseCase,
     private val scanCardProcessor: ScanCardProcessor,
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val settingsRepository: SettingsRepository,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel() {
@@ -73,7 +73,7 @@ internal class HomeViewModel @Inject constructor(
 
     private fun scanCard() {
         viewModelScope.launch {
-            setAccessCodeRequestPolicyUseCase(isBiometricsRequestPolicy = shouldSaveAccessCodesUseCase())
+            cardSdkConfigRepository.isBiometricsRequestPolicy = settingsRepository.shouldSaveAccessCodes()
 
             scanCardProcessor.scan(
                 analyticsSource = AnalyticsParam.ScreensSources.Intro,

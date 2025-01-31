@@ -26,6 +26,16 @@ internal class DefaultCardSdkConfigRepository(
     override val sdk: TangemSdk
         get() = cardSdkProvider.sdk
 
+    override var isBiometricsRequestPolicy: Boolean
+        get() = sdk.config.userCodeRequestPolicy is UserCodeRequestPolicy.AlwaysWithBiometrics
+        set(value) {
+            sdk.config.userCodeRequestPolicy = if (value) {
+                UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
+            } else {
+                UserCodeRequestPolicy.Default
+            }
+        }
+
     override fun setAccessCodeRequestPolicy(isBiometricsRequestPolicy: Boolean) {
         sdk.config.userCodeRequestPolicy = if (isBiometricsRequestPolicy) {
             UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
