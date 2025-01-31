@@ -1,21 +1,26 @@
 package com.tangem.feature.tester.presentation.actions
 
+import androidx.compose.runtime.Immutable
 import com.tangem.domain.apptheme.model.AppThemeMode
+import java.io.File
 
 internal data class TesterActionsContentState(
-    val hideAllCurrenciesConfig: HideAllCurrenciesConfig,
-    val toggleAppThemeConfig: ToggleAppThemeConfig,
+    val hideAllCurrenciesUM: HideAllCurrenciesUM,
+    val toggleAppThemeUM: ToggleAppThemeUM,
+    val shareLogsUM: ShareLogsUM,
     val onBackClick: () -> Unit,
-    val onApplyChangesClick: () -> Unit,
-)
+) {
+    sealed class HideAllCurrenciesUM {
+        data class Clickable(val onClick: () -> Unit) : HideAllCurrenciesUM()
 
-internal sealed class HideAllCurrenciesConfig {
-    data class Clickable(val onClick: () -> Unit) : HideAllCurrenciesConfig()
+        data object Progress : HideAllCurrenciesUM()
+    }
 
-    data object Progress : HideAllCurrenciesConfig()
+    data class ToggleAppThemeUM(
+        val currentAppTheme: AppThemeMode,
+        val onClick: () -> Unit,
+    )
+
+    @Immutable
+    data class ShareLogsUM(val file: File?)
 }
-
-internal data class ToggleAppThemeConfig(
-    val currentAppTheme: AppThemeMode,
-    val onClick: () -> Unit,
-)
