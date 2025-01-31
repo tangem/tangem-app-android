@@ -40,7 +40,7 @@ internal class NetworkLogsSaveInterceptor(
         try {
             response = chain.proceed(request)
         } catch (e: Exception) {
-            appLogsStore.saveLogMessage("<-- HTTP FAILED: $e")
+            saveLogMessage("<-- HTTP FAILED: $e")
             throw e
         }
 
@@ -53,7 +53,7 @@ internal class NetworkLogsSaveInterceptor(
         val connection = chain.connection()
         val connectionProtocol = if (connection != null) " ${connection.protocol()}" else ""
 
-        appLogsStore.saveLogMessage(
+        saveLogMessage(
             "--> ${request.method} ${request.url}$connectionProtocol\n",
             createRequestEndMessage(request),
         )
@@ -136,7 +136,7 @@ internal class NetworkLogsSaveInterceptor(
 
         val spaceBeforeResponseMessage = if (response.message.isEmpty()) "" else ' ' + response.message
 
-        appLogsStore.saveLogMessage(
+        saveLogMessage(
             "<-- ${response.code}",
             spaceBeforeResponseMessage,
             response.message,
@@ -197,5 +197,9 @@ internal class NetworkLogsSaveInterceptor(
         } catch (e: Exception) {
             null
         }
+    }
+
+    private fun saveLogMessage(vararg messages: String) {
+        appLogsStore.saveLogMessage(tag = "NetworkLogs", *messages)
     }
 }
