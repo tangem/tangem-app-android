@@ -784,7 +784,6 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency) {
-        onDisposeExpressStatus()
         router.openTokenDetails(userWalletId, cryptoCurrency)
     }
 
