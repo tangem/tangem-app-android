@@ -203,5 +203,8 @@ enum class NetworkTypeDTO {
     @Json(name = "tron")
     TRON,
 
+    @Json(name = "ton")
+    TON,
+
     UNKNOWN,
 }
