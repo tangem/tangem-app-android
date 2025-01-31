@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
@@ -11,13 +12,16 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.card.ScanCardProcessor
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.common.util.getBackupCardsCount
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -34,16 +38,23 @@ import com.tangem.wallet.R
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class CardSettingsViewModel @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
     private val tangemSdkManager: TangemSdkManager,
     private val cardSettingsInteractor: CardSettingsInteractor,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
+    private val settingsRepository: SettingsRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    private var previousBiometricsRequestPolicy: Boolean = false
 
     private val userWalletId = savedStateHandle.get<Bundle>(AppRoute.CardSettings.USER_WALLET_ID_KEY)
         ?.unbundle(UserWalletId.serializer())
@@ -52,10 +63,30 @@ internal class CardSettingsViewModel @Inject constructor(
     val screenState: MutableStateFlow<CardSettingsScreenState> = MutableStateFlow(getInitialState())
 
     init {
+        updateAccessCodeRequestPolicy()
+
         cardSettingsInteractor.scannedScanResponse
             .filterNotNull()
             .onEach(::updateCardDetails)
             .launchIn(viewModelScope)
+    }
+
+    override fun onCleared() {
+        // Restore the previous value of access code request policy
+        cardSdkConfigRepository.isBiometricsRequestPolicy = previousBiometricsRequestPolicy
+    }
+
+    private fun updateAccessCodeRequestPolicy() {
+        runBlocking {
+            // !!!IMPORTANT!!!: Do not forget to restore the previous value in onCleared() method
+            previousBiometricsRequestPolicy = cardSdkConfigRepository.isBiometricsRequestPolicy
+
+            val userWallet = getUserWalletUseCase(userWalletId)
+                .getOrElse { error("User wallet $userWalletId not found") }
+
+            cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
+                settingsRepository.shouldSaveAccessCodes()
+        }
     }
 
     private fun getInitialState() = CardSettingsScreenState(
