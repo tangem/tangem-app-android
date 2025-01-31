@@ -32,6 +32,7 @@ dependencies {
     /** Domain modules */
     implementation(projects.domain.appTheme)
     implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.feedback)
 
     /** Other libraries */
     implementation(deps.arrow.core)
