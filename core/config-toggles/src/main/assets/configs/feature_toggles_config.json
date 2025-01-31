@@ -38,5 +38,9 @@
     {
         "name": "ONRAMP_HOT_TOKENS_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "STAKING_TON_ENABLED",
+        "version": "undefined"
     }
 ]
