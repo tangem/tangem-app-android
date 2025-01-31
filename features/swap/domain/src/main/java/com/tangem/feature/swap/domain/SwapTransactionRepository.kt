@@ -30,7 +30,7 @@ interface SwapTransactionRepository {
         txId: String,
     )
 
-    suspend fun storeTransactionState(txId: String, status: ExchangeStatusModel)
+    suspend fun storeTransactionState(txId: String, status: ExchangeStatusModel, refundTokenCurrency: CryptoCurrency?)
 
     suspend fun storeLastSwappedCryptoCurrencyId(userWalletId: UserWalletId, cryptoCurrencyId: CryptoCurrency.ID)
 
