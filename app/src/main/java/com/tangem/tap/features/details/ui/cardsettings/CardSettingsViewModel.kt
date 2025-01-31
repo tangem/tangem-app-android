@@ -63,15 +63,7 @@ internal class CardSettingsViewModel @Inject constructor(
     val screenState: MutableStateFlow<CardSettingsScreenState> = MutableStateFlow(getInitialState())
 
     init {
-        runBlocking {
-            previousBiometricsRequestPolicy = cardSdkConfigRepository.isBiometricsRequestPolicy
-
-            val userWallet = getUserWalletUseCase(userWalletId)
-                .getOrElse { error("User wallet not found") }
-
-            cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
-                settingsRepository.shouldSaveAccessCodes()
-        }
+        updateAccessCodeRequestPolicy()
 
         cardSettingsInteractor.scannedScanResponse
             .filterNotNull()
@@ -80,7 +72,21 @@ internal class CardSettingsViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        // Restore the previous value of access code request policy
         cardSdkConfigRepository.isBiometricsRequestPolicy = previousBiometricsRequestPolicy
+    }
+
+    private fun updateAccessCodeRequestPolicy() {
+        runBlocking {
+            // !!!IMPORTANT!!!: Do not forget to restore the previous value in onCleared() method
+            previousBiometricsRequestPolicy = cardSdkConfigRepository.isBiometricsRequestPolicy
+
+            val userWallet = getUserWalletUseCase(userWalletId)
+                .getOrElse { error("User wallet $userWalletId not found") }
+
+            cardSdkConfigRepository.isBiometricsRequestPolicy = userWallet.scanResponse.card.isAccessCodeSet &&
+                settingsRepository.shouldSaveAccessCodes()
+        }
     }
 
     private fun getInitialState() = CardSettingsScreenState(
