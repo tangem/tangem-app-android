@@ -42,6 +42,7 @@ dependencies {
     /** Core modules */
     implementation(projects.core.utils)
     implementation(projects.core.ui)
+    implementation(projects.core.datasource)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
