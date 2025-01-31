@@ -648,7 +648,7 @@
   <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードやリングからウォレットが完全に削除されます。現在のウォレットを復元したり、カードやリングを使用してアクセスコードを復元することはできません。</string>
   <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードやリングからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
   <string name="ring_promo_text">Tangem Ringユーザーは、11/15日までChangelly経由でスワップを3回手数料ゼロで行えます！</string>
-  <string name="ring_promo_title">今すぐ手数料0%でスワップしましょう！</string>
+  <string name="ring_promo_title">今すぐ手数料0% でスワップしましょう！</string>
   <string name="save_user_wallet_agreement_access_description">アプリにログインして、カードまたはリングをスキャンせずに残高を確認できます</string>
   <string name="save_user_wallet_agreement_access_title">アプリにアクセスする</string>
   <string name="save_user_wallet_agreement_allow_biometrics">生体認証の使用を許可する</string>
@@ -780,6 +780,8 @@
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
   <string name="staking_no_validators_error_message">現在、ステーキングに使用できるアクティブなバリデータは見つかりません。しばらくしてからもう一度お試しください。</string>
+  <string name="staking_notification_additional_ada_deposit_text">Cardanoネットワークでステーキングする場合、残高全体が使用されます。追加の2ADAが予約され、ステーキング解除後に返却されます。ステーキング中はADAはロックされません。</string>
+  <string name="staking_notification_additional_ada_deposit_title">ADAステーキングの詳細</string>
   <string name="staking_notification_claim_rewards_text">獲得した報酬はあなたのアドレスに直接送られ、すぐ使用可能です。</string>
   <string name="staking_notification_earn_rewards_text">安全にステーキングして報酬を獲得しましょう</string>
   <string name="staking_notification_earn_rewards_text_daily">安全にステーキングして、報酬を毎日獲得しましょう</string>
@@ -988,7 +990,7 @@
   <string name="wallet_network_group_title">%sネットワーク</string>
   <string name="wallet_notification_address_copied">アドレスがクリップボードにコピーされました</string>
   <string name="wallet_notification_no_internet">インターネット接続がありません</string>
-  <string name="wallet_promo_banner_button_title">今すぐ10 %オフで購入</string>
+  <string name="wallet_promo_banner_button_title">今すぐ10 % オフで購入</string>
   <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_title">ウォレット設定</string>
