@@ -101,11 +101,9 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         } else {
             val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider)
 
-            val addedRefundToken = addRefundCurrencyIfNeeded(statusModel, swapTx.provider.type)
             swapTransactionsStateConverter.updateTxStatus(
                 tx = swapTx,
                 statusModel = statusModel,
-                refundToken = addedRefundToken,
             )
         }
     }
@@ -116,8 +114,11 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
                 ifLeft = { null },
                 ifRight = { statusModel ->
                     sendStatusUpdateAnalytics(statusModel, provider)
-                    swapTransactionRepository.storeTransactionState(txId, statusModel)
-                    statusModel
+
+                    val refundTokenCurrency = addRefundCurrencyIfNeeded(statusModel, provider.type)
+
+                    swapTransactionRepository.storeTransactionState(txId, statusModel, refundTokenCurrency)
+                    statusModel.copy(refundCurrency = refundTokenCurrency)
                 },
             )
     }
