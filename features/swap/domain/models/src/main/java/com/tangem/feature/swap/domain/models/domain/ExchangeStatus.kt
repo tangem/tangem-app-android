@@ -2,6 +2,8 @@ package com.tangem.feature.swap.domain.models.domain
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 @JsonClass(generateAdapter = true)
 data class ExchangeStatusModel(
@@ -19,6 +21,10 @@ data class ExchangeStatusModel(
     val refundNetwork: String? = null,
     @Json(name = "refundContractAddress")
     val refundContractAddress: String? = null,
+    @Json(name = "refundTokensResponse")
+    val refundTokensResponse: UserTokensResponse.Token? = null,
+    @Json(ignore = true)
+    val refundCurrency: CryptoCurrency? = null,
 )
 
 @JsonClass(generateAdapter = false)
