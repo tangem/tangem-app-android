@@ -44,6 +44,7 @@ import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.toggles.StakingFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -69,6 +70,7 @@ internal class DefaultStakingRepository(
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val stakingFeatureToggles: StakingFeatureToggles,
     moshi: Moshi,
 ) : StakingRepository {
 
@@ -193,6 +195,8 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): StakingAvailability {
+        if (!checkFeatureToggleEnabled(cryptoCurrency.network.id)) return StakingAvailability.Unavailable
+
         if (checkForInvalidCardBatch(userWalletId, cryptoCurrency)) return StakingAvailability.Unavailable
 
         val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
@@ -213,6 +217,13 @@ internal class DefaultStakingRepository(
                 StakingAvailability.TemporaryUnavailable
             }
             else -> StakingAvailability.Unavailable
+        }
+    }
+
+    private fun checkFeatureToggleEnabled(networkId: Network.ID): Boolean {
+        return when (Blockchain.fromId(networkId.value)) {
+            Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
+            else -> true
         }
     }
 
@@ -562,8 +573,7 @@ internal class DefaultStakingRepository(
     }
 
     private fun getTransactionDataType(networkId: String, unsignedTransaction: String): TransactionData.Compiled.Data {
-        val blockchain = Blockchain.fromId(networkId)
-        return when (blockchain) {
+        return when (Blockchain.fromId(networkId)) {
             Blockchain.Solana,
             Blockchain.Cosmos,
             -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
@@ -575,6 +585,7 @@ internal class DefaultStakingRepository(
                     ?: error("Failed to parse Tron StakeKit transaction")
                 TransactionData.Compiled.Data.RawString(tronStakeKitTransaction.rawDataHex)
             }
+            Blockchain.TON -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
             else -> error("Unsupported blockchain")
         }
     }
@@ -621,6 +632,7 @@ internal class DefaultStakingRepository(
     private companion object {
         const val YIELDS_STORE_KEY = "yields"
 
+        const val TON_INTEGRATION_ID = "ton-ton-tonwhales-pools-staking"
         const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
         const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
         const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
@@ -641,6 +653,7 @@ internal class DefaultStakingRepository(
 
         // uncomment items as implementation is ready
         val integrationIdMap = mapOf(
+            Blockchain.TON.run { id + toCoinId() } to TON_INTEGRATION_ID,
             Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
             Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
             Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
