@@ -2,7 +2,6 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.*
 import com.tangem.domain.card.repository.CardRepository
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -21,14 +20,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 internal object CardDomainModule {
-
-    @Provides
-    @Singleton
-    fun provideSetAccessCodeRequestPolicyUseCase(
-        cardSdkConfigRepository: CardSdkConfigRepository,
-    ): SetAccessCodeRequestPolicyUseCase {
-        return SetAccessCodeRequestPolicyUseCase(cardSdkConfigRepository = cardSdkConfigRepository)
-    }
 
     @Provides
     @Singleton
