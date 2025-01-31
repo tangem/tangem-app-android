@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.logs
 
 import android.content.Context
+import com.tangem.datasource.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -58,26 +59,30 @@ class AppLogsStore @Inject constructor(
     fun getFile(): File? = if (file.exists()) file else null
 
     /** Save log [message] */
-    fun saveLogMessage(message: String) {
-        // Temporally logs are not saved
-        return
+    fun saveLogMessage(tag: String, message: String) {
+        // Temporally logs are not saved in prod environment
+        if (!BuildConfig.TESTER_MENU_ENABLED) {
+            return
+        }
 
         launchWithLock {
             createFileIfNotExist()
 
-            writeMessage(message)
+            writeMessage(tag = tag, message)
         }
     }
 
     /** Save log that consists from [messages] */
-    fun saveLogMessage(vararg messages: String) {
-        // Temporally logs are not saved
-        return
+    fun saveLogMessage(tag: String, vararg messages: String) {
+        // Temporally logs are not saved in prod environment
+        if (!BuildConfig.TESTER_MENU_ENABLED) {
+            return
+        }
 
         launchWithLock {
             createFileIfNotExist()
 
-            writeMessage(*messages)
+            writeMessage(tag = tag, *messages)
         }
     }
 
@@ -102,10 +107,10 @@ class AppLogsStore @Inject constructor(
         if (file.exists()) file.delete()
     }
 
-    private fun writeMessage(vararg messages: String) {
+    private fun writeMessage(tag: String, vararg messages: String) {
         BufferedWriter(FileWriter(file, true)).use { writer ->
             writer.append(formatter.print(DateTime.now()))
-            writer.append(": ")
+            writer.append(": $tag ")
             messages.forEach(writer::append)
             writer.newLine()
         }
