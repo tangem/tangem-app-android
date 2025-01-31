@@ -73,6 +73,7 @@ data class Yield(
             DEACTIVATING,
             INACTIVE,
             JAILED,
+            FULL,
             UNKNOWN,
         }
     }
@@ -93,7 +94,7 @@ data class Yield(
         val rewardClaiming: RewardClaiming,
         val defaultValidator: String?,
         val minimumStake: Int?,
-        val supportsMultipleValidators: Boolean,
+        val supportsMultipleValidators: Boolean?,
         val revshare: Enabled,
         val fee: Enabled,
     ) {
