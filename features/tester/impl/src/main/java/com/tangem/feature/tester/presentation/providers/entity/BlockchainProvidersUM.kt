@@ -10,6 +10,7 @@ internal data class BlockchainProvidersUM(
     val topBar: TopBarWithRefreshUM,
     val searchBar: SearchBarUM,
     val blockchainProviders: ImmutableList<ProvidersUM>,
+    val onRestartAppClick: () -> Unit,
 ) {
 
     @Immutable

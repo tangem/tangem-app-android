@@ -1,7 +1,7 @@
 package com.tangem.blockchainsdk.providers
 
 import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -20,7 +20,7 @@ internal class ProdBlockchainProvidersTypesManager @Inject constructor(
     private val blockchainProviderTypesStore: BlockchainProviderTypesStore,
 ) : BlockchainProvidersTypesManager {
 
-    override fun get(): StateFlow<BlockchainProviderTypes> = blockchainProviderTypesStore.get()
+    override fun get(): Flow<BlockchainProviderTypes> = blockchainProviderTypesStore.get()
 
     override suspend fun update() {
         val response = blockchainProvidersResponseLoader.load()
