@@ -1,11 +1,11 @@
 package com.tangem.blockchainsdk.providers
 
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 
 /** Blockchain providers types manager */
 interface BlockchainProvidersTypesManager {
 
-    fun get(): StateFlow<BlockchainProviderTypes>
+    fun get(): Flow<BlockchainProviderTypes>
 
     suspend fun update()
 }
