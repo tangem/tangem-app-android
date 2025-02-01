@@ -3,7 +3,6 @@ package com.tangem.blockchainsdk.providers
 import androidx.core.util.PatternsCompat
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
-import com.tangem.blockchainsdk.utils.createPrivateProviderType
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import timber.log.Timber
 
@@ -48,11 +47,11 @@ internal object BlockchainProvidersResponseMerger {
         return result.guaranteeUrlsEndWithSlash()
     }
 
-    private fun List<ProviderModel>.filterUnsupportedProviders() = filter {
-        val isSupportedType = it !is ProviderModel.UnsupportedType
+    private fun List<ProviderModel>.filterUnsupportedProviders() = filter { model ->
+        val isSupportedType = model !is ProviderModel.UnsupportedType
 
-        val isSupportedPrivateType = if (it is ProviderModel.Private) {
-            createPrivateProviderType(it.name) != null
+        val isSupportedPrivateType = if (model is ProviderModel.Private) {
+            ProviderTypeIdMapping.entries.any { it.id == model.name }
         } else {
             true
         }
