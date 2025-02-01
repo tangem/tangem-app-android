@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.blockchainsdk.providers.BlockchainProvidersTypesManager
 import com.tangem.blockchainsdk.providers.MutableBlockchainProvidersTypesManager
+import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.feature.tester.impl.R
@@ -46,6 +47,7 @@ internal class BlockchainProvidersViewModel @Inject constructor(
                 onActiveChange = {},
             ),
             blockchainProviders = persistentListOf(),
+            onRestartAppClick = {},
         ),
     )
 
@@ -57,10 +59,11 @@ internal class BlockchainProvidersViewModel @Inject constructor(
         subscribeOnBlockchainProviderTypesUpdates()
     }
 
-    fun setupNavigation(router: InnerTesterRouter) {
+    fun setupNavigation(router: InnerTesterRouter, appFinisher: AppFinisher) {
         _state.update { state ->
             state.copy(
                 topBar = state.topBar.copy(onBackClick = router::back),
+                onRestartAppClick = appFinisher::restart,
             )
         }
     }
@@ -116,7 +119,7 @@ internal class BlockchainProvidersViewModel @Inject constructor(
 
     private fun onRefreshClick() {
         viewModelScope.launch {
-            manager.update()
+            manager.recoverInitialState()
         }
     }
 
