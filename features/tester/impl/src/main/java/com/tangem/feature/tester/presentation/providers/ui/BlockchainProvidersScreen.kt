@@ -30,6 +30,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import com.tangem.blockchain.common.network.providers.ProviderType
 import com.tangem.core.ui.components.AdditionalTextInputDialogUM
 import com.tangem.core.ui.components.DialogButtonUM
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.TextInputDialog
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
@@ -59,7 +60,7 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
             .fillMaxSize()
             .background(TangemTheme.colors.background.primary),
     ) {
-        LazyColumn {
+        LazyColumn(contentPadding = PaddingValues(bottom = 64.dp)) {
             stickyHeader {
                 Header(topBar = state.topBar, searchBar = state.searchBar)
             }
@@ -85,6 +86,15 @@ internal fun BlockchainProvidersScreen(state: BlockchainProvidersUM) {
                 itemContent = { BlockchainProvidersItem(it) },
             )
         }
+
+        PrimaryButton(
+            text = stringResourceSafe(id = R.string.restart_app),
+            onClick = state.onRestartAppClick,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .padding(TangemTheme.dimens.spacing16),
+        )
     }
 }
 
@@ -427,6 +437,7 @@ private fun Preview_BlockchainProvidersScreen() {
                         ),
                     ),
                 ),
+                onRestartAppClick = {},
             ),
         )
     }
