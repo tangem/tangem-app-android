@@ -1,45 +1,68 @@
 package com.tangem.blockchainsdk.providers
 
+import androidx.datastore.core.DataStore
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.network.providers.ProviderType
-import javax.inject.Inject
-import javax.inject.Singleton
-import kotlin.properties.Delegates.notNull
+import com.tangem.blockchainsdk.BlockchainProvidersResponse
+import com.tangem.blockchainsdk.converters.BlockchainProviderTypesConverter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import timber.log.Timber
 
 /**
  * Implementation of [BlockchainProvidersTypesManager] in DEV environment
  *
  * @property prodBlockchainProvidersTypesManager prod manager
  * @property blockchainProviderTypesStore        blockchain provider types store
+ * @property changedBlockchainProvidersStore     changed blockchain providers store
  *
 [REDACTED_AUTHOR]
  */
-@Singleton
-internal class DevBlockchainProvidersTypesManager @Inject constructor(
+internal class DevBlockchainProvidersTypesManager(
     private val prodBlockchainProvidersTypesManager: ProdBlockchainProvidersTypesManager,
     private val blockchainProviderTypesStore: BlockchainProviderTypesStore,
-) : BlockchainProvidersTypesManager by prodBlockchainProvidersTypesManager,
-    MutableBlockchainProvidersTypesManager {
+    private val changedBlockchainProvidersStore: DataStore<BlockchainProvidersResponse>,
+) : MutableBlockchainProvidersTypesManager {
 
-    private var primaryResponse: BlockchainProviderTypes by notNull()
+    override fun get(): Flow<BlockchainProviderTypes> = changedBlockchainProvidersStore.data
+        .map(BlockchainProviderTypesConverter::convert)
 
     override suspend fun update() {
         prodBlockchainProvidersTypesManager.update()
 
-        primaryResponse = blockchainProviderTypesStore.get().value
+        val initial = blockchainProviderTypesStore.get().value
+
+        val changed = changedBlockchainProvidersStore.data.firstOrNull().orEmpty()
+
+        if (changed.isEmpty()) {
+            Timber.i("Initialize ChangedBlockchainProvidersStore")
+            changedBlockchainProvidersStore.updateData {
+                BlockchainProviderTypesConverter.convertBack(initial)
+            }
+        }
+    }
+
+    override suspend fun recoverInitialState() {
+        val initial = blockchainProviderTypesStore.get().value
+
+        changedBlockchainProvidersStore.updateData {
+            BlockchainProviderTypesConverter.convertBack(initial)
+        }
     }
 
     override suspend fun update(blockchain: Blockchain, providers: List<ProviderType>) {
-        val currentTypes = blockchainProviderTypesStore.get().value
+        changedBlockchainProvidersStore.updateData {
+            val providerModels = BlockchainProviderTypesConverter.convertBack(value = mapOf(blockchain to providers))
 
-        val updatedTypes = currentTypes + (blockchain to providers)
-
-        blockchainProviderTypesStore.store(value = updatedTypes)
+            it + providerModels
+        }
     }
 
     override suspend fun isMatchWithMerged(): Boolean {
-        val current = blockchainProviderTypesStore.get().value
+        val initial = blockchainProviderTypesStore.get().value
+        val changed = changedBlockchainProvidersStore.data.firstOrNull().orEmpty()
 
-        return current == primaryResponse
+        return initial == BlockchainProviderTypesConverter.convert(changed)
     }
 }
