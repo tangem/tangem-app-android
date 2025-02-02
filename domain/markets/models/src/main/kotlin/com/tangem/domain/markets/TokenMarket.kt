@@ -1,6 +1,7 @@
 package com.tangem.domain.markets
 
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
 data class TokenMarket(
@@ -10,7 +11,7 @@ data class TokenMarket(
     val marketRating: Int?,
     val marketCap: BigDecimal?,
     val isUnderMarketCapLimit: Boolean,
-    val tokenQuotesShort: TokenQuotesShort,
+    val quotes: Quote.Value,
     val tokenCharts: Charts,
     private val imageHost: String,
 ) {

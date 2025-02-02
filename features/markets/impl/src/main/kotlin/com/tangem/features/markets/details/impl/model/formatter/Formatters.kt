@@ -7,7 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
-import com.tangem.domain.markets.TokenQuotes
+import com.tangem.domain.markets.TokenQuotesFull
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -19,7 +19,7 @@ internal fun BigDecimal.formatAsPrice(currency: AppCurrency): String {
     )
 }
 
-internal fun TokenQuotes.getFormattedPercentByInterval(interval: PriceChangeInterval): String {
+internal fun TokenQuotesFull.getFormattedPercentByInterval(interval: PriceChangeInterval): String {
     val percent = when (interval) {
         PriceChangeInterval.H24 -> h24ChangePercent
         PriceChangeInterval.WEEK -> weekChangePercent
@@ -33,7 +33,7 @@ internal fun TokenQuotes.getFormattedPercentByInterval(interval: PriceChangeInte
     return percent?.format { percent() } ?: ""
 }
 
-internal fun TokenQuotes.getPercentByInterval(interval: PriceChangeInterval): BigDecimal? {
+internal fun TokenQuotesFull.getPercentByInterval(interval: PriceChangeInterval): BigDecimal? {
     return when (interval) {
         PriceChangeInterval.H24 -> h24ChangePercent
         PriceChangeInterval.WEEK -> weekChangePercent

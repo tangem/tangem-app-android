@@ -163,7 +163,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
     }
 
     private val currentQuotes = MutableStateFlow(
-        TokenQuotes(
+        TokenQuotesFull(
             currentPrice = params.token.tokenQuotes.currentPrice,
             h24ChangePercent = params.token.tokenQuotes.h24Percent,
             weekChangePercent = params.token.tokenQuotes.weekPercent,
@@ -251,11 +251,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
 
     private fun loadQuotes() {
         modelScope.launch {
-            val result = getTokenFullQuotesUseCase(
-                tokenId = params.token.id,
-                appCurrency = currentAppCurrency.value,
-                tokenSymbol = params.token.symbol,
-            )
+            val result = getTokenFullQuotesUseCase(tokenId = params.token.id)
 
             result.onRight { res ->
                 updateQuotes(res)
@@ -418,7 +414,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
         }
     }
 
-    private suspend fun updateQuotes(newQuotes: TokenQuotes) {
+    private suspend fun updateQuotes(newQuotes: TokenQuotesFull) {
         val populatedNewQuotes = currentQuotes.value.populateWith(newQuotes)
 
         quotesStateUpdater.updateQuotes(newQuotes = populatedNewQuotes)

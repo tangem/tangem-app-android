@@ -2,8 +2,8 @@ package com.tangem.data.markets.converters
 
 import com.tangem.datasource.api.markets.models.response.TokenMarketListResponse
 import com.tangem.domain.markets.TokenMarket
-import com.tangem.domain.markets.TokenQuotesShort
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.converter.Converter
 
 internal object TokenMarketListConverter : Converter<TokenMarketListResponse, List<TokenMarket>> {
@@ -26,8 +26,9 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, Li
                 marketCap = token.marketCap,
                 isUnderMarketCapLimit = token.isUnderMarketCapLimit ?: false,
                 imageHost = imageHost,
-                tokenQuotesShort = TokenQuotesShort(
-                    currentPrice = token.currentPrice,
+                quotes = Quote.Value(
+                    rawCurrencyId = CryptoCurrency.RawID(token.id),
+                    fiatRate = token.currentPrice,
                     h24ChangePercent = token.priceChangePercentage.h24.movePointLeft(2),
                     weekChangePercent = token.priceChangePercentage.week1.movePointLeft(2),
                     monthChangePercent = token.priceChangePercentage.day30.movePointLeft(2),

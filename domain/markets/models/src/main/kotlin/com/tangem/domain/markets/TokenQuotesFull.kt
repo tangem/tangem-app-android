@@ -2,7 +2,7 @@ package com.tangem.domain.markets
 
 import java.math.BigDecimal
 
-data class TokenQuotes(
+data class TokenQuotesFull(
     val currentPrice: BigDecimal,
     val h24ChangePercent: BigDecimal?,
     val weekChangePercent: BigDecimal?,
@@ -13,8 +13,8 @@ data class TokenQuotes(
     val allTimeChangePercent: BigDecimal?,
 )
 
-fun TokenQuotes.populateWith(quotes: TokenQuotes): TokenQuotes {
-    return TokenQuotes(
+fun TokenQuotesFull.populateWith(quotes: TokenQuotesFull): TokenQuotesFull {
+    return TokenQuotesFull(
         currentPrice = quotes.currentPrice,
         h24ChangePercent = quotes.h24ChangePercent ?: this.h24ChangePercent,
         weekChangePercent = quotes.weekChangePercent ?: this.weekChangePercent,

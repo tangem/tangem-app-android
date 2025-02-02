@@ -33,11 +33,7 @@ interface MarketsTokenRepository {
         languageCode: String,
     ): TokenMarketInfo
 
-    suspend fun getTokenQuotes(
-        fiatCurrencyCode: String,
-        tokenId: CryptoCurrency.RawID,
-        tokenSymbol: String,
-    ): TokenQuotes
+    suspend fun getTokenQuotes(tokenId: CryptoCurrency.RawID): TokenQuotesFull
 
     suspend fun createCryptoCurrency(
         userWalletId: UserWalletId,

@@ -6,7 +6,7 @@ import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenQuotes
+import com.tangem.domain.markets.TokenQuotesFull
 import com.tangem.features.markets.details.impl.model.converters.PricePerformanceConverter
 import com.tangem.features.markets.details.impl.model.formatter.*
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
@@ -20,7 +20,7 @@ import java.math.BigDecimal
 internal class QuotesStateUpdater(
     private val currentAppCurrency: Provider<AppCurrency>,
     private val state: MutableStateFlow<MarketsTokenDetailsUM>,
-    private val currentQuotes: MutableStateFlow<TokenQuotes>,
+    private val currentQuotes: MutableStateFlow<TokenQuotesFull>,
     private val lastUpdatedTimestamp: MutableStateFlow<Long>,
     private val currentTokenInfo: MutableStateFlow<TokenMarketInfo?>,
     private val onPricePerformanceIntervalChanged: (PriceChangeInterval) -> Unit,
@@ -30,7 +30,7 @@ internal class QuotesStateUpdater(
         onIntervalChanged = onPricePerformanceIntervalChanged,
     )
 
-    suspend fun updateQuotes(newQuotes: TokenQuotes) {
+    suspend fun updateQuotes(newQuotes: TokenQuotesFull) {
         val triggerPriceChangeType = getFormattedPriceChange(
             currentPrice = currentQuotes.value.currentPrice,
             updatedPrice = newQuotes.currentPrice,

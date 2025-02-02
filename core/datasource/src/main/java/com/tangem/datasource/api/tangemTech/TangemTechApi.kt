@@ -65,7 +65,7 @@ interface TangemTechApi {
     suspend fun getQuotes(
         @Query("currencyId") currencyId: String,
         @Query("coinIds") coinIds: String,
-        @Query("fields") fields: String = "price,priceChange24h,lastUpdatedAt",
+        @Query("fields") fields: String = "price,priceChange24h,priceChange1w,priceChange30d",
     ): ApiResponse<QuotesResponse>
 
     @GET("promotion")
@@ -131,13 +131,4 @@ interface TangemTechApi {
         @Path("story_id") storyId: String,
         @Query("language") language: String,
     ): ApiResponse<StoryContentResponse>
-
-    companion object {
-        val marketsQuoteFields = listOf(
-            "price",
-            "priceChange24h",
-            "priceChange1w",
-            "priceChange30d",
-        )
-    }
 }

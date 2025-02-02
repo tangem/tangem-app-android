@@ -4,16 +4,15 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.common.utils.retryOnError
 import com.tangem.data.markets.analytics.MarketsDataAnalyticsEvent
 import com.tangem.data.markets.converters.TokenMarketChartsConverter
-import com.tangem.data.markets.converters.TokenQuotesShortConverter
 import com.tangem.data.markets.converters.toRequestParam
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketUpdateRequest
+import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchUpdateFetcher
 import com.tangem.pagination.BatchUpdateResult
@@ -23,8 +22,8 @@ import kotlinx.coroutines.launch
 
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
-    private val tangemTechApi: TangemTechApi,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val quotesRepository: QuotesRepository,
     private val onApiError: (ApiResponseError) -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
@@ -72,19 +71,23 @@ internal class MarketsBatchUpdateFetcher(
             is TokenMarketUpdateRequest.UpdateQuotes -> {
                 val quotesRes = retryOnError {
                     catchApiError(onApiError) {
-                        tangemTechApi.getQuotes(
-                            currencyId = updateRequest.currencyId,
-                            coinIds = idsToUpdate.map { it.second }.flatten().joinToString(separator = ","),
-                            fields = marketsQuoteFields.joinToString(separator = ","),
-                        ).getOrThrow()
+                        quotesRepository.getQuotesSync(
+                            currenciesIds = idsToUpdate.map { it.second }.flatten().toSet(),
+                            refresh = true,
+                        )
                     }
-                }
+                }.filterIsInstance<Quote.Value>()
 
                 update {
                     val res = toUpdate.map { batch ->
                         batch.copy(
-                            data = batch.data.map {
-                                it.copy(tokenQuotesShort = TokenQuotesShortConverter.convert(it.id, quotesRes))
+                            data = batch.data.map { batchToken ->
+                                val updatedQuote = quotesRes.firstOrNull { it.rawCurrencyId == batchToken.id }
+                                if (updatedQuote != null) {
+                                    batchToken.copy(quotes = updatedQuote)
+                                } else {
+                                    batchToken
+                                }
                             },
                         )
                     }

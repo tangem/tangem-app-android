@@ -18,11 +18,15 @@ sealed interface Quote {
      *
      * @property rawCurrencyId The unique identifier of the cryptocurrency for which the financial information is provided.
      * @property fiatRate The current fiat exchange rate for the cryptocurrency.
-     * @property priceChange The price change for the cryptocurrency.
+     * @property h24ChangePercent The price change for the cryptocurrency for 24 hours in percent.
+     * @property weekChangePercent The price change for the cryptocurrency for a week in percent.
+     * @property monthChangePercent The price change for the cryptocurrency for a month in percent.
      */
     data class Value(
         override val rawCurrencyId: CryptoCurrency.RawID,
         val fiatRate: BigDecimal,
-        val priceChange: BigDecimal,
+        val h24ChangePercent: BigDecimal,
+        val weekChangePercent: BigDecimal,
+        val monthChangePercent: BigDecimal,
     ) : Quote
 }

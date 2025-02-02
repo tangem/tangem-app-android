@@ -7,7 +7,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.domain.markets.BuildConfig
 import com.tangem.domain.markets.TokenMarketInfo
-import com.tangem.domain.markets.TokenQuotes
+import com.tangem.domain.markets.TokenQuotesFull
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
@@ -35,8 +35,8 @@ internal class TokenMarketInfoConverter(
         }
     }
 
-    private fun TokenMarketInfoResponse.getQuotes(): TokenQuotes {
-        return TokenQuotes(
+    private fun TokenMarketInfoResponse.getQuotes(): TokenQuotesFull {
+        return TokenQuotesFull(
             currentPrice = currentPrice,
             h24ChangePercent = priceChangePercentage?.getPercentageByInterval { day },
             weekChangePercent = priceChangePercentage?.getPercentageByInterval { week },
