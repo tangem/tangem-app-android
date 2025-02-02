@@ -108,7 +108,7 @@ internal class CurrencyStatusOperations(
                 amount = amount,
                 fiatAmount = calculateFiatAmount(amount, quote.fiatRate),
                 fiatRate = quote.fiatRate,
-                priceChange = quote.priceChange,
+                priceChange = quote.h24ChangePercent,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
                 networkAddress = status.address,

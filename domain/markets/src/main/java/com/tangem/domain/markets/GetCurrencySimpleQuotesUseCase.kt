@@ -7,15 +7,11 @@ import com.tangem.domain.tokens.repository.QuotesRepository
 import kotlinx.coroutines.flow.*
 
 @Suppress("UnusedPrivateMember")
-class GetCurrencyQuotesUseCase(
+class GetCurrencySimpleQuotesUseCase(
     private val quotesRepository: QuotesRepository,
 ) {
-    // TODO apply interval parameter [REDACTED_TASK_KEY]
-    operator fun invoke(
-        currencyID: CryptoCurrency.ID,
-        interval: PriceChangeInterval,
-        refresh: Boolean,
-    ): Flow<Option<Quote.Value>> {
+
+    operator fun invoke(currencyID: CryptoCurrency.ID, refresh: Boolean): Flow<Option<Quote.Value>> {
         val rawId = currencyID.rawCurrencyId ?: return flowOf(None)
 
         return quotesRepository.getQuotesUpdates(
