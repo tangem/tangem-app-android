@@ -11,12 +11,13 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.uncapped
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
-import com.tangem.domain.markets.GetCurrencyQuotesUseCase
+import com.tangem.domain.markets.GetCurrencySimpleQuotesUseCase
 import com.tangem.domain.markets.GetTokenPriceChartUseCase
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarketParams
@@ -37,7 +38,7 @@ internal class TokenMarketBlockModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val getTokenPriceChartUseCase: GetTokenPriceChartUseCase,
-    private val getTokenQuotesUseCase: GetCurrencyQuotesUseCase,
+    private val getTokenQuotesUseCase: GetCurrencySimpleQuotesUseCase,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
 ) : Model() {
 
@@ -76,25 +77,23 @@ internal class TokenMarketBlockModel @Inject constructor(
         modelScope.launch {
             getTokenQuotesUseCase(
                 currencyID = params.cryptoCurrency.id,
-                interval = PriceChangeInterval.H24,
                 refresh = true,
             ).collect {
                 it.onSome { res ->
                     quotesState = QuotesState(
                         currentPrice = res.fiatRate,
-                        h24Percent = res.priceChange,
+                        h24Percent = res.h24ChangePercent,
                     )
 
                     state.value = state.value.copy(
-                        currentPrice = BigDecimalFormatter.formatFiatPriceUncapped(
-                            fiatAmount = res.fiatRate,
-                            // TODO get currency from quotes use case [REDACTED_TASK_KEY]
-                            fiatCurrencyCode = currentAppCurrency.value.code,
-                            // TODO get currency from quotes use case [REDACTED_TASK_KEY]
-                            fiatCurrencySymbol = currentAppCurrency.value.symbol,
-                        ),
-                        h24Percent = res.priceChange.format { percent() },
-                        priceChangeType = PriceChangeType.fromBigDecimal(res.priceChange),
+                        currentPrice = res.fiatRate.format {
+                            fiat(
+                                fiatCurrencyCode = currentAppCurrency.value.code,
+                                fiatCurrencySymbol = currentAppCurrency.value.symbol,
+                            ).uncapped()
+                        },
+                        h24Percent = res.h24ChangePercent.format { percent() },
+                        priceChangeType = PriceChangeType.fromBigDecimal(res.h24ChangePercent),
                     )
                 }
             }
