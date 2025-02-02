@@ -28,10 +28,10 @@ fun TokenMarket.toSerializableParam(): TokenMarketParams {
         name = name,
         symbol = symbol,
         tokenQuotes = TokenMarketParams.Quotes(
-            currentPrice = tokenQuotesShort.currentPrice,
-            h24Percent = tokenQuotesShort.h24ChangePercent,
-            weekPercent = tokenQuotesShort.weekChangePercent,
-            monthPercent = tokenQuotesShort.monthChangePercent,
+            currentPrice = quotes.fiatRate,
+            h24Percent = quotes.h24ChangePercent,
+            weekPercent = quotes.weekChangePercent,
+            monthPercent = quotes.monthChangePercent,
         ),
         imageUrl = imageUrlLarge,
     )

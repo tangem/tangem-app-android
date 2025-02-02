@@ -16,13 +16,13 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.TangemTechApi.Companion.marketsQuoteFields
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
@@ -34,13 +34,13 @@ import java.util.concurrent.atomic.AtomicLong
 @Suppress("LongParameterList")
 internal class DefaultMarketsTokenRepository(
     private val marketsApi: TangemTechMarketsApi,
-    private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val excludedBlockchains: ExcludedBlockchains,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
+    private val quotesRepository: QuotesRepository,
 ) : MarketsTokenRepository {
 
     private val tokenMarketInfoConverter: TokenMarketInfoConverter = TokenMarketInfoConverter(excludedBlockchains)
@@ -103,9 +103,9 @@ internal class DefaultMarketsTokenRepository(
         nextBatchSize: Int,
     ): BatchFlow<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
         val tokenMarketsUpdateFetcher = MarketsBatchUpdateFetcher(
-            tangemTechApi = tangemTechApi,
             marketsApi = marketsApi,
             analyticsEventHandler = analyticsEventHandler,
+            quotesRepository = quotesRepository,
             onApiError = {
                 analyticsEventHandler.send(createListErrorEvent(it).toEvent())
             },
@@ -212,23 +212,17 @@ internal class DefaultMarketsTokenRepository(
         return@withContext tokenMarketInfoConverter.convert(resultResponse)
     }
 
-    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: CryptoCurrency.RawID, tokenSymbol: String) =
-        withContext(dispatcherProvider.io) {
-            // for second markets iteration we should use extended api method with all required fields
+    override suspend fun getTokenQuotes(tokenId: CryptoCurrency.RawID) = withContext(dispatcherProvider.io) {
+        // There should be a method call to get full quotes for a token. Unfortunately, it is not implemented on
+        // backend side. So, we have to use the existing method to get quotes for a token and then convert it to full
 
-            val result = catchDetailsErrorAndSendEvent(
-                request = MarketsDataAnalyticsEvent.Details.Error.Request.Info,
-                tokenSymbol = tokenSymbol,
-            ) {
-                tangemTechApi.getQuotes(
-                    currencyId = fiatCurrencyCode,
-                    coinIds = tokenId.value,
-                    fields = marketsQuoteFields.joinToString(separator = ","),
-                ).getOrThrow()
-            }
+        val result = quotesRepository.getQuotesSync(
+            currenciesIds = setOf(tokenId),
+            refresh = true,
+        ).filterIsInstance<Quote.Value>().firstOrNull() ?: error("No quotes for token $tokenId")
 
-            return@withContext TokenQuotesShortConverter.convert(tokenId, result).toFull()
-        }
+        return@withContext result.toFull()
+    }
 
     override suspend fun createCryptoCurrency(
         userWalletId: UserWalletId,
