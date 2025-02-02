@@ -7,7 +7,7 @@ data class TokenMarketInfo(
     val id: String,
     val name: String,
     val symbol: String,
-    val quotes: TokenQuotes,
+    val quotes: TokenQuotesFull,
     val networks: List<Network>?,
     val shortDescription: String?,
     val fullDescription: String?,

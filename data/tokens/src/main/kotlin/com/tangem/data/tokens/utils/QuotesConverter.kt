@@ -25,7 +25,9 @@ internal class QuotesConverter : Converter<QuotesConverterValue, Set<Quote>> {
         return Quote.Value(
             rawCurrencyId = CryptoCurrency.RawID(rawCurrencyId),
             fiatRate = responseQuote.price ?: BigDecimal.ZERO,
-            priceChange = (responseQuote.priceChange24h ?: BigDecimal.ZERO).movePointLeft(2),
+            h24ChangePercent = responseQuote.priceChange24h?.movePointLeft(2) ?: BigDecimal.ZERO,
+            weekChangePercent = responseQuote.priceChange1w?.movePointLeft(2) ?: BigDecimal.ZERO,
+            monthChangePercent = responseQuote.priceChange30d?.movePointLeft(2) ?: BigDecimal.ZERO,
         )
     }
 }
