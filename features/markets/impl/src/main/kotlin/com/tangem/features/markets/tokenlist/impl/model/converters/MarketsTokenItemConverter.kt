@@ -5,11 +5,7 @@ import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.common.ui.charts.state.converter.PriceAndTimePointValuesConverter
 import com.tangem.common.ui.charts.state.sorted
 import com.tangem.core.ui.components.marketprice.PriceChangeType
-import com.tangem.core.ui.format.bigdecimal.compact
-import com.tangem.core.ui.format.bigdecimal.fiat
-import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
@@ -53,17 +49,17 @@ internal class MarketsTokenItemConverter(
             ratingPosition = new.marketRating?.toString(),
             marketCap = ifChanged(prev.marketCap, new.marketCap, prevUI.marketCap) { new.getMarketCap() },
             iconUrl = new.imageUrlLarge,
-            price = ifChanged(prev = prev.tokenQuotesShort, new = new.tokenQuotesShort, prevR = prevUI.price) {
+            price = ifChanged(prev = prev.quotes, new = new.quotes, prevR = prevUI.price) {
                 new.getCurrentPrice(
                     prev = prev,
                 )
             },
             trendPercentText = ifChanged(
-                prev.tokenQuotesShort,
-                new.tokenQuotesShort,
+                prev.quotes,
+                new.quotes,
                 prevUI.trendPercentText,
             ) { new.getTrendPercent() },
-            trendType = ifChanged(prev.tokenQuotesShort, new.tokenQuotesShort, prevUI.trendType) { new.getTrendType() },
+            trendType = ifChanged(prev.quotes, new.quotes, prevUI.trendType) { new.getTrendType() },
             chardData = ifChanged(prev.tokenCharts, new.tokenCharts, prevUI.chardData) { new.getChartData() },
         )
     }
@@ -86,16 +82,14 @@ internal class MarketsTokenItemConverter(
     }
 
     private fun TokenMarket.getCurrentPrice(prev: TokenMarket? = null): MarketsListItemUM.Price {
-        val prevPrice = prev?.tokenQuotesShort?.currentPrice
+        val prevPrice = prev?.quotes?.fiatRate
 
-        val priceText = BigDecimalFormatter.formatFiatPriceUncapped(
-            fiatAmount = tokenQuotesShort.currentPrice,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-        )
+        val priceText = quotes.fiatRate.format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol).uncapped()
+        }
 
         val changeType = if (prevPrice != null) {
-            if (tokenQuotesShort.currentPrice > prevPrice) {
+            if (quotes.fiatRate > prevPrice) {
                 PriceChangeType.UP
             } else {
                 PriceChangeType.DOWN
@@ -130,9 +124,9 @@ internal class MarketsTokenItemConverter(
     @Suppress("MagicNumber")
     private fun TokenMarket.getTrendType(): PriceChangeType {
         val percent = when (currentTrendInterval) {
-            TrendInterval.H24 -> tokenQuotesShort.h24ChangePercent
-            TrendInterval.D7 -> tokenQuotesShort.weekChangePercent
-            TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
+            TrendInterval.H24 -> quotes.h24ChangePercent
+            TrendInterval.D7 -> quotes.weekChangePercent
+            TrendInterval.M1 -> quotes.monthChangePercent
         }
         val scaled = percent.setScale(4, RoundingMode.HALF_UP)
         return when {
@@ -145,9 +139,9 @@ internal class MarketsTokenItemConverter(
 
     private fun TokenMarket.getTrendPercent(): String {
         val percent = when (currentTrendInterval) {
-            TrendInterval.H24 -> tokenQuotesShort.h24ChangePercent
-            TrendInterval.D7 -> tokenQuotesShort.weekChangePercent
-            TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
+            TrendInterval.H24 -> quotes.h24ChangePercent
+            TrendInterval.D7 -> quotes.weekChangePercent
+            TrendInterval.M1 -> quotes.monthChangePercent
         }
 
         return percent.format { percent() }
