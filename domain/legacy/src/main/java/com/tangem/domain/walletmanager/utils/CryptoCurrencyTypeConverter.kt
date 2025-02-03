@@ -15,7 +15,7 @@ internal class CryptoCurrencyTypeConverter : Converter<CryptoCurrency, CryptoCur
                     symbol = value.symbol,
                     contractAddress = value.contractAddress,
                     decimals = value.decimals,
-                    id = value.id.rawCurrencyId,
+                    id = value.id.rawCurrencyId?.value,
                 ),
             )
         }
