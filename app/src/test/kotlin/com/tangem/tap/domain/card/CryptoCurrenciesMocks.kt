@@ -48,7 +48,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
         val network = Network(
             id = Network.ID(blockchain.id),
             backendId = blockchain.toNetworkId(),
-            name = blockchain.getNetworkName(),
+            name = blockchain.fullName,
             isTestnet = blockchain.isTestnet(),
             derivationPath = getNetworkDerivationPath(
                 blockchain,
@@ -76,7 +76,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
             network = Network(
                 id = Network.ID(value = blockchain.id),
                 backendId = "NEVER-MIND",
-                name = blockchain.getNetworkName(),
+                name = blockchain.fullName,
                 currencySymbol = "NEVER-MIND",
                 derivationPath = Network.DerivationPath.Custom(
                     value = derivationBlockchain.derivationPath(
