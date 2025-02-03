@@ -28,7 +28,6 @@ import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingAc
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.StakingInfoBottomSheetConfig
 import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingActionSelectorBottomSheet
 import com.tangem.features.staking.impl.presentation.ui.bottomsheet.StakingInfoBottomSheet
-import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -170,8 +169,6 @@ private fun StakingScreenContent(uiState: StakingUiState, modifier: Modifier = M
                     state = uiState.confirmationState,
                     validatorState = uiState.validatorState,
                     clickIntents = uiState.clickIntents,
-                    type = uiState.actionType,
-                    isSolana = isSolana(uiState.cryptoCurrencyBlockchainId),
                 )
                 StakingStep.RestakeValidator,
                 StakingStep.Validators,
