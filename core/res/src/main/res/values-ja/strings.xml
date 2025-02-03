@@ -86,6 +86,8 @@
   <string name="cardano_max_amount_has_token_title">ADAが不足しています。</string>
   <string name="common_accept">受け入れる</string>
   <string name="common_access_denied">アクセスが拒否されました</string>
+  <string name="common_add_to_portfolio">ポートフォリオに追加</string>
+  <string name="common_add_token">トークンを追加</string>
   <string name="common_all">すべて</string>
   <string name="common_allow">許可する</string>
   <string name="common_analytics">アナリティクス</string>
@@ -335,6 +337,8 @@
   <string name="give_permission_unlimited">無制限</string>
   <string name="home_button_order">Tangemを注文</string>
   <string name="home_button_scan">Tangemをスキャン</string>
+  <string name="hot_crypto_add_token_subtitle">%sへ</string>
+  <string name="hot_crypto_token_network">%s内</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。 \nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_change_passcode_body">パスコードを変更するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
@@ -644,7 +648,7 @@
   <string name="reset_card_with_backup_to_factory_message">工場出荷時設定にリセットすると、選択したカードやリングからウォレットが完全に削除されます。現在のウォレットを復元したり、カードやリングを使用してアクセスコードを復元することはできません。</string>
   <string name="reset_card_without_backup_to_factory_message">工場出荷時の状態にリセットすると、選択したカードやリングからウォレットが完全に削除され、アプリから削除されます。現在のウォレットを復元することはできません。</string>
   <string name="ring_promo_text">Tangem Ringユーザーは、11/15日までChangelly経由でスワップを3回手数料ゼロで行えます！</string>
-  <string name="ring_promo_title">今すぐ手数料0%%でスワップしましょう！</string>
+  <string name="ring_promo_title">今すぐ手数料0% でスワップしましょう！</string>
   <string name="save_user_wallet_agreement_access_description">アプリにログインして、カードまたはリングをスキャンせずに残高を確認できます</string>
   <string name="save_user_wallet_agreement_access_title">アプリにアクセスする</string>
   <string name="save_user_wallet_agreement_allow_biometrics">生体認証の使用を許可する</string>
@@ -776,6 +780,8 @@
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
   <string name="staking_no_validators_error_message">現在、ステーキングに使用できるアクティブなバリデータは見つかりません。しばらくしてからもう一度お試しください。</string>
+  <string name="staking_notification_additional_ada_deposit_text">Cardanoネットワークでステーキングする場合、残高全体が使用されます。追加の2ADAが予約され、ステーキング解除後に返却されます。ステーキング中はADAはロックされません。</string>
+  <string name="staking_notification_additional_ada_deposit_title">ADAステーキングの詳細</string>
   <string name="staking_notification_claim_rewards_text">獲得した報酬はあなたのアドレスに直接送られ、すぐ使用可能です。</string>
   <string name="staking_notification_earn_rewards_text">安全にステーキングして報酬を獲得しましょう</string>
   <string name="staking_notification_earn_rewards_text_daily">安全にステーキングして、報酬を毎日獲得しましょう</string>
@@ -902,6 +908,7 @@
   <string name="token_swap_changelly_promotion_message">このトークンは、2月%2$s-%3$s の間、%1$s のサービス手数料で別のトークンと交換できます。</string>
   <string name="token_swap_changelly_promotion_title">Changellyでスワップ、手数料%s</string>
   <string name="token_swap_promotion_button">今すぐスワップ</string>
+  <string name="tokens_list_hot_crypto_header">ホットな暗号資産🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">買付できません</string>
   <string name="tokens_list_unavailable_to_sell_header">売却できません</string>
   <string name="tokens_list_unavailable_to_swap_header">%sからのスワップは利用できません</string>
@@ -935,7 +942,7 @@
   <string name="user_push_notification_agreement_argument_two">新しいプロモーション情報をいち早く入手しましょう</string>
   <string name="user_push_notification_agreement_header">プッシュ通知を使用しますか?</string>
   <string name="user_wallet_list_add_button">新しいウォレットを追加</string>
-  <string name="user_wallet_list_delete_prompt">本当にこのウォレットを削除してもよろしいですか?</string>
+  <string name="user_wallet_list_delete_prompt">このウォレットを忘れてもよろしいですか？</string>
   <string name="user_wallet_list_error_unable_to_unlock">エラーが発生しました。カードまたはリングをスキャンしてログインしてください。</string>
   <string name="user_wallet_list_error_wallet_already_saved">このウォレットはすでに保存されています。別のウォレットを追加できます。</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">%sという名前のウォレットはすでに存在します。</string>
@@ -983,7 +990,7 @@
   <string name="wallet_network_group_title">%sネットワーク</string>
   <string name="wallet_notification_address_copied">アドレスがクリップボードにコピーされました</string>
   <string name="wallet_notification_no_internet">インターネット接続がありません</string>
-  <string name="wallet_promo_banner_button_title">今すぐ10 %%オフで購入</string>
+  <string name="wallet_promo_banner_button_title">今すぐ10 % オフで購入</string>
   <string name="wallet_promo_banner_description">1.3万種類以上の暗号資産にアクセス。ワンタップで買付、売却、スワップ、ステーキングが可能です。\nバックアップ用に最大3枚のカードを連携できます。</string>
   <string name="wallet_promo_banner_title">Tangemウォレットを見る</string>
   <string name="wallet_settings_title">ウォレット設定</string>
@@ -1034,6 +1041,7 @@
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">取引をキャンセルしてもよろしいですか? 取引を再試行することはできません</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">%1$s %2$sの取引が完了しませんでした。もう一度試して完了してください。</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">未完了の取引があります</string>
+  <string name="warning_last_balance_updated_time">最終更新日は%sです</string>
   <string name="warning_low_signatures_message">このカードには%sの署名のみが残っています。資金をすべて引き出す必要があります。</string>
   <string name="warning_low_signatures_title">署名数が少ないです</string>
   <string name="warning_manage_tokens_legacy_derivation_message">異なるネットワーク上のトークンは、異なるアドレスを持つ場合があります。資金を送金する際には、アドレスがネットワークと一致していることを再確認してください。</string>
@@ -1054,6 +1062,10 @@
   <string name="warning_rate_app_title">Tangemを楽しんでいますか?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">トークンを受け取る前に、トークンを関連付ける必要があります。</string>
   <string name="warning_rent_fee_title">ネットワーク使用料が必要です</string>
+  <string name="warning_seedphrase_issue_answer_no">ありがとうございます。準備完了です。これ以上の操作は必要ありません。</string>
+  <string name="warning_seedphrase_issue_answer_yes">Tangemの公式ウェブサイトに移動します。そちらの指示に従ってください。</string>
+  <string name="warning_seedphrase_issue_message">このアプリ経由でTangemサポートチームに直接連絡したことがありますか？</string>
+  <string name="warning_seedphrase_issue_title">必須のセキュリティアップデート</string>
   <string name="warning_send_blocked_funds_for_fee_message">%1$s は %2$s ネットワーク内のアセットです。%3$s 取引を行うには、ネットワーク手数料のために %4$s (%5$s) を入金する必要があります。</string>
   <string name="warning_send_blocked_funds_for_fee_title">ネットワーク料金をカバーするための%1$sが足りません</string>
   <string name="warning_solana_fee_message">Solanaネットワークが混雑しています。2分以内に取引が完了しない場合は、再度取引を繰り返してください。</string>
@@ -1061,6 +1073,7 @@
   <string name="warning_solana_rent_fee_message">Solana ネットワークは 2 日ごとに%1$sのレンタル料を請求します。レンタル料を支払えないアカウントはネットワークから削除されます。アカウントに%2$s以上入金すると、無料で使用できます。</string>
   <string name="warning_some_networks_unreachable_message">下にスワイプして更新するか、後でもう一度お試しください。</string>
   <string name="warning_some_networks_unreachable_title">一部のネットワークにアクセスできません</string>
+  <string name="warning_some_token_balances_not_updated">一部のトークン残高を更新できませんでした</string>
   <string name="warning_testnet_card_message">これはテストネットカードです。取引処理はできませんので、テストおよび開発目的でのみご利用ください。</string>
   <string name="warning_testnet_card_title">テスト目的のみ</string>
   <string name="welcome_interrupted_backup_alert_discard">破棄</string>
