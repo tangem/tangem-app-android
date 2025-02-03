@@ -18,7 +18,6 @@ import com.tangem.core.ui.components.transactions.TransactionDoneTitle
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.InnerConfirmationStakingState
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
@@ -39,11 +38,8 @@ internal fun StakingConfirmationContent(
     state: StakingStates.ConfirmationState,
     validatorState: StakingStates.ValidatorState,
     clickIntents: StakingClickIntents,
-    type: StakingActionCommonType,
-    isSolana: Boolean, // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
 ) {
     if (state !is StakingStates.ConfirmationState.Data) return
-    val isAmountEditable = type == StakingActionCommonType.Enter || type == StakingActionCommonType.Exit && !isSolana
     val isTransactionSent = state.innerState == InnerConfirmationStakingState.COMPLETED
     val isTransactionInProgress = state.notifications.any { it is StakingNotification.Warning.TransactionInProgress }
     Column(
@@ -65,8 +61,8 @@ internal fun StakingConfirmationContent(
         }
         AmountBlock(
             amountState = amountState,
-            isClickDisabled = !isAmountEditable || isTransactionSent || isTransactionInProgress,
-            isEditingDisabled = !isAmountEditable && state.innerState != InnerConfirmationStakingState.COMPLETED,
+            isClickDisabled = !state.isAmountEditable || isTransactionSent || isTransactionInProgress,
+            isEditingDisabled = !state.isAmountEditable && state.innerState != InnerConfirmationStakingState.COMPLETED,
             onClick = clickIntents::onPrevClick,
         )
         ValidatorBlock(
@@ -90,8 +86,6 @@ private fun Preview_StakingConfirmationContent() {
                 state = ConfirmationStatePreviewData.assentStakingState,
                 validatorState = ValidatorStatePreviewData.validatorState,
                 clickIntents = StakingClickIntentsStub,
-                type = StakingActionCommonType.Enter,
-                isSolana = false,
             )
         }
     }
