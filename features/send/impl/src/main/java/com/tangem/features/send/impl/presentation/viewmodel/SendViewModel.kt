@@ -872,7 +872,7 @@ internal class SendViewModel @Inject constructor(
     override fun onAmountReduceToClick(reduceAmountTo: BigDecimal, notification: Class<out NotificationUM>) {
         uiState.value = amountStateFactory.getOnAmountReduceToState(reduceAmountTo)
         uiState.value = sendNotificationFactory.dismissNotificationState(notification)
-        updateNotifications()
+        feeReload()
     }
 
     override fun onAmountReduceByClick(
@@ -886,7 +886,7 @@ internal class SendViewModel @Inject constructor(
         )
 
         uiState.value = sendNotificationFactory.dismissNotificationState(notification)
-        updateNotifications()
+        feeReload()
     }
 
     override fun onNotificationCancel(clazz: Class<out NotificationUM>) {
