@@ -23,7 +23,7 @@ internal class ScanCardToUnlockWalletClickHandler @Inject constructor(
 
     suspend operator fun invoke(walletId: UserWalletId): Either<ScanCardToUnlockWalletError, Unit> {
         return either {
-            when (val result = scanCardProcessor.scan(analyticsSource = AnalyticsParam.ScreensSources.Main)) {
+            when (val result = scanCardProcessor.scan(analyticsSource = AnalyticsParam.ScreensSources.SignIn)) {
                 is CompletionResult.Failure -> {
                     if (result.error is TangemSdkError.UserCancelled) {
                         scanFailsCounter++
