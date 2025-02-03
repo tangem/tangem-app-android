@@ -11,61 +11,81 @@ internal object MockQuotes {
     val quote1 = Quote.Value(
         rawCurrencyId = MockTokens.token1.id.rawCurrencyId!!,
         fiatRate = BigDecimal("1.23"),
-        priceChange = BigDecimal("0.01"),
+        h24ChangePercent = BigDecimal("0.01"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote2 = Quote.Value(
         rawCurrencyId = MockTokens.token2.id.rawCurrencyId!!,
         fiatRate = BigDecimal("2.34"),
-        priceChange = BigDecimal("-0.02"),
+        h24ChangePercent = BigDecimal("-0.02"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote3 = Quote.Value(
         rawCurrencyId = MockTokens.token3.id.rawCurrencyId!!,
         fiatRate = BigDecimal("3.45"),
-        priceChange = BigDecimal("0.03"),
+        h24ChangePercent = BigDecimal("0.03"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote4 = Quote.Value(
         rawCurrencyId = MockTokens.token4.id.rawCurrencyId!!,
         fiatRate = BigDecimal("4.56"),
-        priceChange = BigDecimal("-0.04"),
+        h24ChangePercent = BigDecimal("-0.04"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote5 = Quote.Value(
         rawCurrencyId = MockTokens.token5.id.rawCurrencyId!!,
         fiatRate = BigDecimal("5.67"),
-        priceChange = BigDecimal("0.05"),
+        h24ChangePercent = BigDecimal("0.05"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote6 = Quote.Value(
         rawCurrencyId = MockTokens.token6.id.rawCurrencyId!!,
         fiatRate = BigDecimal("6.78"),
-        priceChange = BigDecimal("-0.06"),
+        h24ChangePercent = BigDecimal("-0.06"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote7 = Quote.Value(
         rawCurrencyId = MockTokens.token7.id.rawCurrencyId!!,
         fiatRate = BigDecimal("7.89"),
-        priceChange = BigDecimal("0.07"),
+        h24ChangePercent = BigDecimal("0.07"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote8 = Quote.Value(
         rawCurrencyId = MockTokens.token8.id.rawCurrencyId!!,
         fiatRate = BigDecimal("8.90"),
-        priceChange = BigDecimal("-0.08"),
+        h24ChangePercent = BigDecimal("-0.08"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote9 = Quote.Value(
         rawCurrencyId = MockTokens.token9.id.rawCurrencyId!!,
         fiatRate = BigDecimal("9.01"),
-        priceChange = BigDecimal("0.09"),
+        h24ChangePercent = BigDecimal("0.09"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote10 = Quote.Value(
         rawCurrencyId = MockTokens.token10.id.rawCurrencyId!!,
         fiatRate = BigDecimal("10.12"),
-        priceChange = BigDecimal("-0.10"),
+        h24ChangePercent = BigDecimal("-0.10"),
+        weekChangePercent = BigDecimal.ZERO,
+        monthChangePercent = BigDecimal.ZERO,
     )
 
     val quote11 = Quote.Empty(CryptoCurrency.RawID("null"))
