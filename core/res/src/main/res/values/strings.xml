@@ -87,6 +87,8 @@
   <string name="cardano_max_amount_has_token_title">Not enough ADA</string>
   <string name="common_accept">Accept</string>
   <string name="common_access_denied">Access denied</string>
+  <string name="common_add_to_portfolio">Add to portfolio</string>
+  <string name="common_add_token">Add token</string>
   <string name="common_all">All</string>
   <string name="common_allow">Allow</string>
   <string name="common_analytics">Analytics</string>
@@ -140,6 +142,7 @@
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
+  <string name="common_hide">Hide</string>
   <string name="common_hour">hour</string>
   <string name="common_import">Import</string>
   <string name="common_in_progress">In progress</string>
@@ -312,6 +315,9 @@
   <string name="express_status_bought">Bought %s</string>
   <string name="express_status_buying">Buying %s</string>
   <string name="express_status_buying_active">Buying %s...</string>
+  <string name="express_status_hide_button_text">Hide this transaction</string>
+  <string name="express_status_hide_dialog_text">Once hidden, the transaction status cannot be viewed again. You can simply swipe to dismiss instead.</string>
+  <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
@@ -338,6 +344,8 @@
   <string name="give_permission_unlimited">Unlimited</string>
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
+  <string name="hot_crypto_add_token_subtitle">to %s</string>
+  <string name="hot_crypto_token_network">In %s</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -654,7 +662,7 @@
   <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring. You will not be able to restore the current wallet or use the card or ring to recover the access code.</string>
   <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card or ring and remove it from the app. You will not be able to restore the current wallet.</string>
   <string name="ring_promo_text">Ring owners get 3 commission-free swaps on Changelly until 15.11!</string>
-  <string name="ring_promo_title">Swap With 0%% Fees Now!</string>
+  <string name="ring_promo_title">Swap With 0% Fees Now!</string>
   <string name="save_user_wallet_agreement_access_description">Log into the app and check your balance without scanning the card or ring</string>
   <string name="save_user_wallet_agreement_access_title">Access the app</string>
   <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
@@ -786,6 +794,8 @@
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_no_validators_error_message">No active validators available for staking at the moment. Please try again later.</string>
+  <string name="staking_notification_additional_ada_deposit_text">When staking in the Cardano network, the entire balance is used. An additional 2 ADA will be reserved and returned after unstaking. Your ADA is not locked while staking.</string>
+  <string name="staking_notification_additional_ada_deposit_title">ADA Staking Details</string>
   <string name="staking_notification_claim_rewards_text">Earned rewards will be sent to your wallet and available for use immediately</string>
   <string name="staking_notification_earn_rewards_text">Stake securely and start earning your rewards</string>
   <string name="staking_notification_earn_rewards_text_daily">Stake securely and start earning daily rewards</string>
@@ -799,6 +809,8 @@
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_low_staked_balance_text">Your remaining staked balance will be too low to unstake. You’ll need to stake more to meet the minimum unstake amount.</string>
   <string name="staking_notification_low_staked_balance_title">Low staked balance</string>
+  <string name="staking_notification_minimum_balance_error_text">A minimum of %1$s %2$s is required for restaking. Please top up your balance.</string>
+  <string name="staking_notification_minimum_balance_error_title">Not enough %s</string>
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
@@ -912,6 +924,7 @@
   <string name="token_swap_changelly_promotion_message">Exchange this token for another at %1$s service fees from February %2$s-%3$s.</string>
   <string name="token_swap_changelly_promotion_title">Swap with Changelly, %s fees</string>
   <string name="token_swap_promotion_button">Swap now</string>
+  <string name="tokens_list_hot_crypto_header">Hot crypto 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">Unavailable to purchase</string>
   <string name="tokens_list_unavailable_to_sell_header">Unavailable to sell</string>
   <string name="tokens_list_unavailable_to_swap_header">Unavailable for swap from %s</string>
@@ -945,7 +958,7 @@
   <string name="user_push_notification_agreement_argument_two">Be the first to know about new promotions</string>
   <string name="user_push_notification_agreement_header">Would you like to use\nPush-notifications?</string>
   <string name="user_wallet_list_add_button">Add new wallet</string>
-  <string name="user_wallet_list_delete_prompt">Are you sure you want to delete this wallet?</string>
+  <string name="user_wallet_list_delete_prompt">Are you sure you want to forget this wallet?</string>
   <string name="user_wallet_list_error_unable_to_unlock">An error has occurred, please scan your card or ring to log in</string>
   <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
   <string name="user_wallet_list_rename_popup_error_already_exists">The wallet with name %s already exists</string>
@@ -955,7 +968,7 @@
   <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
   <string name="wallet_balance_missing_derivation">Scan card or ring</string>
-  <string name="wallet_been_activated_message">This wallet has already been activated earlier.\nIf it was done not by you please contact support.\nTangem never sells wallets along with the pre-generated access code.</string>
+  <string name="wallet_been_activated_message">This wallet has already been activated earlier.\nIf it was not done by you, please contact support.\nTangem never sells wallets along with pre-generated access codes.</string>
   <string name="wallet_connect_alert_sign_message">Requesting to sign a message.\n\n%s</string>
   <string name="wallet_connect_bnb_sign_message">Dapp %1$s, requesting to\nsign BNB transaction.\n\n%2$s</string>
   <string name="wallet_connect_bnb_trade_order_message">Trade order for %1$s\nPrice: %2$s\nAmount to receive: %3$s\nAmount to pay: %4$s</string>
@@ -993,7 +1006,7 @@
   <string name="wallet_network_group_title">%s network</string>
   <string name="wallet_notification_address_copied">Address was copied to clipboard</string>
   <string name="wallet_notification_no_internet">No internet connection</string>
-  <string name="wallet_promo_banner_button_title">Get now with 10%% off</string>
+  <string name="wallet_promo_banner_button_title">Get now with 10% off</string>
   <string name="wallet_promo_banner_description">Access 13,000+ cryptocurrencies. Buy, sell, swap, and stake with a single tap.\nLink up to three cards for a backup.</string>
   <string name="wallet_promo_banner_title">Discover Tangem Wallet</string>
   <string name="wallet_settings_title">Wallet settings</string>
@@ -1044,6 +1057,7 @@
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Are you sure you want to cancel the transaction? You will not be able to retry the transaction again</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Your transaction with an amount of %1$s %2$s was not completed. You can try again to complete it.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">You have unfinished transaction</string>
+  <string name="warning_last_balance_updated_time">Last update was %s</string>
   <string name="warning_low_signatures_message">Only %s signatures are left on this card. You must withdraw all of your funds.</string>
   <string name="warning_low_signatures_title">Low signature count</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Tokens on different networks can have different addresses. Double-check that your address matches the network when you transfer funds.</string>
@@ -1076,6 +1090,7 @@
   <string name="warning_solana_rent_fee_message">Solana network charges a rent of %1$s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %2$s to use it for free.</string>
   <string name="warning_some_networks_unreachable_message">Swipe down to refresh or try again later.</string>
   <string name="warning_some_networks_unreachable_title">Some networks are unreachable</string>
+  <string name="warning_some_token_balances_not_updated">Some token balances could not be updated</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
