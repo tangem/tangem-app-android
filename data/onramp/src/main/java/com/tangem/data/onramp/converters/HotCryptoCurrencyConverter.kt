@@ -37,7 +37,7 @@ internal class HotCryptoCurrencyConverter(
         val currency = if (contractAddress != null && decimals != null) {
             cryptoCurrencyFactory.createToken(
                 network = network,
-                rawId = value.id,
+                rawId = CryptoCurrency.RawID(value.id),
                 name = value.name,
                 symbol = value.symbol,
                 decimals = decimals,

@@ -17,6 +17,7 @@ import com.tangem.core.ui.event.EventEffect
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.ListUM
 import kotlinx.coroutines.launch
@@ -88,7 +89,7 @@ internal fun MarketsListLazyColumn(
                 is ListUM.Content -> {
                     items(
                         items = state.items,
-                        key = { it.id + TOKEN_LAZY_LIST_ID_SEPARATOR + it.marketCap.toString() },
+                        key = { it.id.value + TOKEN_LAZY_LIST_ID_SEPARATOR + it.marketCap.toString() },
                     ) { item ->
                         MarketsListItem(
                             model = item,
@@ -193,6 +194,7 @@ private fun VisibleItemsTracker(listState: LazyListState, state: ListUM) {
         derivedStateOf {
             listState.layoutInfo.visibleItemsInfo.mapNotNull {
                 (it.key as? String)?.split(TOKEN_LAZY_LIST_ID_SEPARATOR)?.first()
+                    ?.let { rawId -> CryptoCurrency.RawID(rawId) }
             }
         }
     }

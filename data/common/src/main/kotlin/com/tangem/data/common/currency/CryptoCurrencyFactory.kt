@@ -17,7 +17,7 @@ class CryptoCurrencyFactory(
     @Suppress("LongParameterList") // Yep, it's long
     fun createToken(
         network: Network,
-        rawId: String?,
+        rawId: CryptoCurrency.RawID?,
         name: String,
         symbol: String,
         decimals: Int,
@@ -124,7 +124,7 @@ class CryptoCurrencyFactory(
             symbol = cryptoCurrency.symbol,
             contractAddress = cryptoCurrency.contractAddress,
             decimals = cryptoCurrency.decimals,
-            id = cryptoCurrency.id.rawCurrencyId,
+            id = cryptoCurrency.id.rawCurrencyId?.value,
         )
         val blockchain = Blockchain.fromNetworkId(cryptoCurrency.network.backendId) ?: Blockchain.Unknown
         val id = getTokenId(network, sdkToken)
