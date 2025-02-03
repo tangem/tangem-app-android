@@ -133,7 +133,7 @@ internal class SetButtonsStateTransformer(
                             resourceReference(R.string.common_stake)
                         }
                     }
-                    StakingActionCommonType.Exit -> resourceReference(R.string.common_unstake)
+                    is StakingActionCommonType.Exit -> resourceReference(R.string.common_unstake)
                     is StakingActionCommonType.Pending -> confirmationState.pendingAction?.type.getPendingActionTitle()
                 }
             }
