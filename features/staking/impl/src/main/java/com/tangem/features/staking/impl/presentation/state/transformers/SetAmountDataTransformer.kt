@@ -26,7 +26,7 @@ internal class SetAmountDataTransformer(
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val title = if (prevState.actionType == StakingActionCommonType.Exit) {
+        val title = if (prevState.actionType is StakingActionCommonType.Exit) {
             resourceReference(R.string.staking_staked_amount)
         } else {
             stringReference(userWalletProvider().name)
