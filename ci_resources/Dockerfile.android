@@ -39,7 +39,7 @@ RUN wget https://github.com/lzhiyong/android-sdk-tools/releases/download/34.0.3/
     rm -rf /tmp/android-sdk-tools-static-arm /tmp/android-sdk-tools-static-aarch64.zip
 
 RUN gem install bundler:2.5.23
-RUN gem install fastlane -v 2.211.0 -N -V
+RUN gem install fastlane -v 2.225.0 -N -V
 RUN gem install fastlane-plugin-firebase_app_distribution -v 0.9.1 -N -V
 
 COPY ../Gemfile Gemfile.lock ./
