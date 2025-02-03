@@ -3,6 +3,7 @@ package com.tangem.domain.markets
 import arrow.core.Either
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.SupportedLanguages
 
 class GetTokenMarketInfoUseCase(
@@ -11,7 +12,7 @@ class GetTokenMarketInfoUseCase(
 
     suspend operator fun invoke(
         appCurrency: AppCurrency,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
     ): Either<Unit, TokenMarketInfo> {
         return Either.catch {
