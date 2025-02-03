@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface QuotesStore {
 
-    fun get(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<StoredQuote>>
+    fun get(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<StoredQuote>>
 
-    suspend fun getSync(currenciesIds: Set<CryptoCurrency.ID>): Set<StoredQuote>
+    suspend fun getSync(currenciesIds: Set<CryptoCurrency.RawID>): Set<StoredQuote>
 
     suspend fun store(response: QuotesResponse)
 }
