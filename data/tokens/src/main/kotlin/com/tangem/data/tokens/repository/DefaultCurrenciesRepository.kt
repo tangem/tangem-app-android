@@ -486,7 +486,9 @@ internal class DefaultCurrenciesRepository(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
+    override fun getAllWalletsCryptoCurrencies(
+        currencyRawId: CryptoCurrency.RawID,
+    ): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
             userWallets.forEach { fetchTokensIfCacheExpired(userWallet = it, refresh = false) }
 
@@ -496,7 +498,7 @@ internal class DefaultCurrenciesRepository(
                     if (userWallet.isMultiCurrency) {
                         getSavedUserTokensResponse(userWallet.walletId).map { storedTokens ->
                             val filterResponse = storedTokens.tokens.filter {
-                                getL2CompatibilityTokenComparison(it, currencyRawId)
+                                getL2CompatibilityTokenComparison(it, currencyRawId.value)
                             }
 
                             responseCurrenciesFactory.createCurrencies(
