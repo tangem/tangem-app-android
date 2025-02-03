@@ -79,6 +79,8 @@ sealed class AnalyticsParam {
         data object Buy : ScreensSources("Buy")
         data object Swap : ScreensSources("Swap")
         data object Sell : ScreensSources("Sell")
+        data object Backup : ScreensSources("Backup")
+        data object Onboarding : ScreensSources("Onboarding")
     }
 
     sealed class TxSentFrom(val value: String) {
