@@ -2134,14 +2134,17 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote.Value> {
-        val set = ids.toSet().getQuotesOrEmpty(false).filterIsInstance<Quote.Value>()
+        val set = ids.mapNotNull { it.rawCurrencyId }
+            .toSet()
+            .getQuotesOrEmpty(false)
+            .filterIsInstance<Quote.Value>()
 
         return ids
             .mapNotNull { id -> set.find { it.rawCurrencyId == id.rawCurrencyId }?.let { id to it } }
             .toMap()
     }
 
-    private suspend fun Set<CryptoCurrency.ID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
+    private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
         return try {
             quotesRepository.getQuotesSync(this, refresh)
         } catch (t: Throwable) {
