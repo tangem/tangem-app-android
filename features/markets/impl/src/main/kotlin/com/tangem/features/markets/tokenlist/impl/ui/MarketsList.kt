@@ -36,6 +36,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.components.MarketsListLazyColumn
@@ -298,7 +299,7 @@ private fun Preview() {
                         items = MarketChartListItemPreviewDataProvider().values
                             .flatMap { item -> List(size = 10) { item } }
                             .mapIndexed { index, item ->
-                                item.copy(id = index.toString())
+                                item.copy(id = CryptoCurrency.RawID(index.toString()))
                             }
                             .toImmutableList(),
                         showUnder100kTokensNotification = false,
