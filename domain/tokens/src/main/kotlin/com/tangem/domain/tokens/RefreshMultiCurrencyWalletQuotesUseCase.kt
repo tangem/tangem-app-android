@@ -47,7 +47,7 @@ class RefreshMultiCurrencyWalletQuotesUseCase(
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {
         catch(
             block = {
-                quotesRepository.fetchQuotes(currenciesIds)
+                quotesRepository.fetchQuotes(currenciesIds.mapNotNullTo(hashSetOf(), CryptoCurrency.ID::rawCurrencyId))
             },
             catch = { /* Ignore error */ },
         )

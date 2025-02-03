@@ -1,11 +1,12 @@
 package com.tangem.domain.markets
 
 import com.tangem.domain.core.serialization.SerializedBigDecimal
+import com.tangem.domain.tokens.model.CryptoCurrency
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class TokenMarketParams(
-    val id: String,
+    val id: CryptoCurrency.RawID,
     val name: String,
     val symbol: String,
     val tokenQuotes: Quotes,
