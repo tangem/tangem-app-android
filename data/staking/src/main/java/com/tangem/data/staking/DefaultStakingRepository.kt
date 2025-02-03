@@ -256,7 +256,7 @@ internal class DefaultStakingRepository(
                         params,
                     ),
                 )
-                StakingActionCommonType.Exit -> stakeKitApi.createExitAction(
+                is StakingActionCommonType.Exit -> stakeKitApi.createExitAction(
                     createActionRequestBody(
                         userWalletId,
                         network,
@@ -286,7 +286,7 @@ internal class DefaultStakingRepository(
                         params,
                     ),
                 )
-                StakingActionCommonType.Exit -> stakeKitApi.estimateGasOnExit(
+                is StakingActionCommonType.Exit -> stakeKitApi.estimateGasOnExit(
                     createActionRequestBody(
                         userWalletId,
                         network,
