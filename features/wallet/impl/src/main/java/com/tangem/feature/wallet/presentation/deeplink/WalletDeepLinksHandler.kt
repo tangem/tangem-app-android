@@ -68,7 +68,7 @@ internal class WalletDeepLinksHandler @Inject constructor(
     }
 
     private suspend fun onSellCurrencyDeepLink(userWallet: UserWallet, data: SellCurrencyDeepLink.Data) {
-        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet.walletId, data.currencyId).getOrNull()
+        val cryptoCurrency = getCryptoCurrencyUseCase(userWallet, data.currencyId).getOrNull()
 
         if (cryptoCurrency == null) {
             Timber.e("onSellCurrencyDeepLink cryptoCurrency is null")
