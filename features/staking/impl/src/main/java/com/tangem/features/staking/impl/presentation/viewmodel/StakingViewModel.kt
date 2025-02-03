@@ -241,6 +241,7 @@ internal class StakingViewModel @Inject constructor(
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     stakingApproval = stakingApproval,
                     stakingAllowance = stakingAllowance,
+                    yieldArgs = yield.args,
                 ),
             )
         }
@@ -711,7 +712,7 @@ internal class StakingViewModel @Inject constructor(
                 feeValue = fee.orZero(),
                 reduceAmountBy = reduceAmountBy,
             )
-            StakingActionCommonType.Exit,
+            is StakingActionCommonType.Exit,
             is StakingActionCommonType.Pending,
             -> BigDecimal.ZERO
         }
@@ -996,6 +997,7 @@ internal class StakingViewModel @Inject constructor(
                 pendingActions = pendingActions,
                 pendingAction = pendingAction,
                 stakingAllowance = stakingAllowance,
+                yieldArgs = yield.args,
             ),
             ValidatorSelectChangeTransformer(
                 selectedValidator = validator,
