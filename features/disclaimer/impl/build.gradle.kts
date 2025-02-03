@@ -44,6 +44,7 @@ dependencies {
 
     /** Other dependencies */
     implementation(deps.arrow.core)
+    implementation(deps.timber)
 
     /** DI */
     implementation(deps.hilt.android)
