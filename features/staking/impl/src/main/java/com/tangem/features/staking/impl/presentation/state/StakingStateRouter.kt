@@ -2,10 +2,9 @@ package com.tangem.features.staking.impl.presentation.state
 
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
+import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
-import com.tangem.lib.crypto.BlockchainUtils.isSolana
 
 internal class StakingStateRouter(
     private val appRouter: AppRouter,
@@ -23,10 +22,9 @@ internal class StakingStateRouter(
 
     fun onNextClick() {
         when (stateController.value.currentStep) {
-            StakingStep.InitialInfo -> when (stateController.value.actionType) {
+            StakingStep.InitialInfo -> when (val actionType = stateController.value.actionType) {
                 StakingActionCommonType.Enter -> showAmount()
-                // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
-                StakingActionCommonType.Exit -> if (isSolana(stateController.value.cryptoCurrencyBlockchainId)) {
+                is StakingActionCommonType.Exit -> if (actionType.partiallyUnstakeDisabled) {
                     showConfirmation()
                 } else {
                     showAmount()
@@ -54,15 +52,12 @@ internal class StakingStateRouter(
             StakingStep.Amount,
             -> showInitial()
             StakingStep.Confirmation -> {
-                val isEnter = uiState.actionType == StakingActionCommonType.Enter
-                val isExit = uiState.actionType == StakingActionCommonType.Exit
-
-                // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
-                val isSolana = isSolana(uiState.cryptoCurrencyBlockchainId)
-                if (isEnter || isExit && !isSolana) {
-                    showAmount()
-                } else {
-                    showInitial()
+                when (val actionType = uiState.actionType) {
+                    StakingActionCommonType.Enter -> showAmount()
+                    is StakingActionCommonType.Pending -> showInitial()
+                    is StakingActionCommonType.Exit -> {
+                        if (actionType.partiallyUnstakeDisabled) showInitial() else showAmount()
+                    }
                 }
             }
             StakingStep.Validators -> showConfirmation()
