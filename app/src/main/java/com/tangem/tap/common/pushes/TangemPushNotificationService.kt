@@ -38,7 +38,7 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
 
         // TODO refactoring: [REDACTED_JIRA]
         val intent = Intent(applicationContext, MainActivity::class.java)
-        intent.putExtra(OnPushClickedIntentHandler.IS_OPENED_FROM_PUSH, true)
+        intent.putExtra(OnPushClickedIntentHandler.OPENED_FROM_GCM_PUSH, true)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(
             /* context = */ this,
