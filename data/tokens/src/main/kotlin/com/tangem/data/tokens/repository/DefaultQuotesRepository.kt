@@ -37,7 +37,7 @@ internal class DefaultQuotesRepository(
     private val mutex = Mutex()
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Flow<Set<Quote>> {
+    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Flow<Set<Quote>> {
         return appPreferencesStore.getObject<CurrenciesResponse.Currency>(
             key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
         )
@@ -51,7 +51,7 @@ internal class DefaultQuotesRepository(
             .flowOn(dispatchers.io)
     }
 
-    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>) {
+    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {
         withContext(dispatchers.io) {
             val selectedAppCurrency = requireNotNull(
                 value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
@@ -64,7 +64,7 @@ internal class DefaultQuotesRepository(
         }
     }
 
-    override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean): Set<Quote> {
+    override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Set<Quote> {
         return withContext(dispatchers.io) {
             val selectedAppCurrency = requireNotNull(
                 value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
@@ -81,7 +81,7 @@ internal class DefaultQuotesRepository(
         }
     }
 
-    override suspend fun getQuoteSync(currencyId: CryptoCurrency.ID): Quote? {
+    override suspend fun getQuoteSync(currencyId: CryptoCurrency.RawID): Quote? {
         return withContext(dispatchers.io) {
             val setOfCurrencyId = setOf(currencyId)
             val quote = quotesStore.getSync(setOfCurrencyId).firstOrNull()
@@ -90,7 +90,7 @@ internal class DefaultQuotesRepository(
     }
 
     private suspend fun fetchExpiredQuotes(
-        currenciesIds: Set<CryptoCurrency.ID>,
+        currenciesIds: Set<CryptoCurrency.RawID>,
         appCurrencyId: String,
         refresh: Boolean,
     ) {
@@ -110,15 +110,17 @@ internal class DefaultQuotesRepository(
         }
     }
 
-    private suspend fun fetchQuotes(rawCurrenciesIds: Set<String>, appCurrencyId: String) {
-        val replacementIdsResult = quotesUnsupportedCurrenciesAdapter.replaceUnsupportedCurrencies(rawCurrenciesIds)
+    private suspend fun fetchQuotes(rawCurrenciesIds: Set<CryptoCurrency.RawID>, appCurrencyId: String) {
+        val replacementIdsResult = quotesUnsupportedCurrenciesAdapter.replaceUnsupportedCurrencies(
+            rawCurrenciesIds.map { it.value }.toSet(),
+        )
         val response = safeApiCallWithTimeout(
             call = {
                 val coinIds = replacementIdsResult.idsForRequest.joinToString(separator = ",")
                 tangemTechApi.getQuotes(appCurrencyId, coinIds).bind()
             },
             onError = { error ->
-                cacheRegistry.invalidate(rawCurrenciesIds.map(::getQuoteCacheKey))
+                cacheRegistry.invalidate(rawCurrenciesIds.map { getQuoteCacheKey(it) })
 
                 throw error
             },
@@ -132,21 +134,20 @@ internal class DefaultQuotesRepository(
     }
 
     private suspend fun filterExpiredCurrenciesIds(
-        currenciesIds: Set<CryptoCurrency.ID>,
+        currenciesIds: Set<CryptoCurrency.RawID>,
         refresh: Boolean,
-    ): Set<String> {
+    ): Set<CryptoCurrency.RawID> {
         return currenciesIds.fold(hashSetOf()) { acc, currencyId ->
-            val rawCurrencyId = currencyId.rawCurrencyId
-            if (rawCurrencyId != null && rawCurrencyId !in acc) {
+            if (currencyId !in acc) {
                 cacheRegistry.invokeOnExpire(
-                    key = getQuoteCacheKey(rawCurrencyId),
+                    key = getQuoteCacheKey(currencyId),
                     skipCache = refresh,
-                    block = { acc.add(rawCurrencyId) },
+                    block = { acc.add(currencyId) },
                 )
             }
             acc
         }
     }
 
-    private fun getQuoteCacheKey(rawCurrencyId: String): String = "quote_$rawCurrencyId"
+    private fun getQuoteCacheKey(rawCurrencyId: CryptoCurrency.RawID): String = "quote_${rawCurrencyId.value}"
 }
