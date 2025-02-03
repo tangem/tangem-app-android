@@ -15,6 +15,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
@@ -126,20 +127,22 @@ object NotificationsFactory {
     fun MutableList<NotificationUM>.addTransactionLimitErrorNotification(
         utxoLimit: UtxoAmountLimit?,
         cryptoCurrency: CryptoCurrency,
+        feeValue: BigDecimal,
         onReduceClick: (
             reduceAmountTo: BigDecimal,
             notification: Class<out NotificationUM>,
         ) -> Unit,
     ) {
-        if (utxoLimit != null) {
+        val availableToSend = utxoLimit?.availableToSend
+        if (availableToSend != null && !feeValue.isZero()) {
             add(
                 NotificationUM.Error.TransactionLimitError(
                     cryptoCurrency = cryptoCurrency.name,
-                    utxoLimit = utxoLimit.maxLimit.toPlainString(),
-                    amountLimit = utxoLimit.maxAmount.format { crypto(cryptoCurrency) },
+                    utxoLimit = utxoLimit.limit.toPlainString(),
+                    amountLimit = availableToSend.format { crypto(cryptoCurrency) },
                     onConfirmClick = {
                         onReduceClick(
-                            utxoLimit.maxAmount,
+                            availableToSend,
                             NotificationUM.Error.TransactionLimitError::class.java,
                         )
                     },
@@ -402,18 +405,23 @@ object NotificationsFactory {
     ): Boolean {
         val change = when (cryptoCurrencyStatus.currency) {
             is CryptoCurrency.Coin -> {
-                val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+                val balance = cryptoCurrencyStatus.value.amount.orZero()
                 balance - (feeAmount + sendingAmount)
             }
             is CryptoCurrency.Token -> {
-                val balance = feeCurrencyStatus?.value?.amount ?: BigDecimal.ZERO
+                val balance = feeCurrencyStatus?.value?.amount.orZero()
                 balance - feeAmount
             }
         }
 
-        val isChangeLowerThanDust = change < dustValue && change > BigDecimal.ZERO
+        val dust = when (cryptoCurrencyStatus.currency) {
+            is CryptoCurrency.Coin -> dustValue
+            is CryptoCurrency.Token -> BigDecimal.ZERO
+        }
+
+        val isChangeLowerThanDust = change < dust && change > BigDecimal.ZERO
         return when (cryptoCurrencyStatus.currency) {
-            is CryptoCurrency.Coin -> sendingAmount < dustValue || isChangeLowerThanDust
+            is CryptoCurrency.Coin -> sendingAmount < dust || isChangeLowerThanDust
             is CryptoCurrency.Token -> isChangeLowerThanDust
         }
     }
