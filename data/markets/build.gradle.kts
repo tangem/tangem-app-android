@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.tokens)
 
     implementation(projects.data.common)
 
