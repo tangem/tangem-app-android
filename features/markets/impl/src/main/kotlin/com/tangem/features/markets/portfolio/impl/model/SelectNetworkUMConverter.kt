@@ -24,7 +24,7 @@ internal class SelectNetworkUMConverter(
 
     override fun convert(value: TokenMarketParams): SelectNetworkUM {
         return SelectNetworkUM(
-            tokenId = value.id,
+            tokenId = value.id.value,
             iconUrl = value.imageUrl,
             tokenName = value.name,
             tokenCurrencySymbol = value.symbol,
