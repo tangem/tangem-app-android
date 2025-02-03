@@ -409,7 +409,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             currencyStatus = fromTokenStatus,
             amount = amount.value,
             fee = fee,
-            balanceAfterTransaction = balanceAfterTransaction,
+            feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
         )
 
         return currencyCheck

@@ -5,6 +5,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
@@ -246,7 +247,9 @@ class MultiWalletBackupModel @Inject constructor(
     }
 
     private fun showCardVerificationFailedDialog(error: TangemSdkError.CardVerificationFailed) {
-        analyticsEventHandler.send(event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed)
+        analyticsEventHandler.send(
+            event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(AnalyticsParam.ScreensSources.Backup),
+        )
 
         val resource = error.localizedDescriptionRes()
         val resId = resource.resId ?: com.tangem.core.ui.R.string.common_unknown_error
