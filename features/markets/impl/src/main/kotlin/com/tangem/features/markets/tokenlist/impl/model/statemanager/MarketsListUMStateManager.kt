@@ -6,6 +6,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.event.triggeredEvent
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.tokenlist.impl.ui.state.*
 import com.tangem.utils.Provider
@@ -18,9 +19,9 @@ import kotlinx.coroutines.flow.update
 
 @Stable
 internal class MarketsListUMStateManager(
-    private val currentVisibleIds: Provider<List<String>>,
+    private val currentVisibleIds: Provider<List<CryptoCurrency.RawID>>,
     private val onLoadMoreUiItems: () -> Unit,
-    private val visibleItemsChanged: (itemsKeys: List<String>) -> Unit,
+    private val visibleItemsChanged: (itemsKeys: List<CryptoCurrency.RawID>) -> Unit,
     private val onRetryButtonClicked: () -> Unit,
     private val onTokenClick: (MarketsListItemUM) -> Unit,
 ) {
