@@ -31,7 +31,8 @@ internal class CurrenciesStatusesOperations(
                         currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId).toNonEmptyListOrNull()
                             ?: return emptyList<CryptoCurrencyStatus>().right()
                     val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
-                    val quotes = quotesRepository.getQuotesSync(currenciesIds, false).right()
+                    val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
+                    val quotes = quotesRepository.getQuotesSync(rawIds, false).right()
                     val networkStatuses =
                         networksRepository.getNetworkStatusesSync(userWalletId, networks, false).right()
                     val yieldBalances = getYieldBalancesSync(nonEmptyCurrencies)
@@ -60,7 +61,8 @@ internal class CurrenciesStatusesOperations(
                     } else {
                         currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, cryptoCurrencyId)
                     }
-                    val quotes = quotesRepository.getQuoteSync(cryptoCurrencyId)?.right() ?: Error.EmptyQuotes.left()
+                    val quote = cryptoCurrencyId.rawCurrencyId?.let { quotesRepository.getQuoteSync(it) }?.right()
+                        ?: Error.EmptyQuotes.left()
                     val networkStatuses =
                         networksRepository.getNetworkStatusesSync(
                             userWalletId,
@@ -71,7 +73,7 @@ internal class CurrenciesStatusesOperations(
                         }.right()
                     val yieldBalances = getYieldBalanceSync(currency)
 
-                    return createCurrencyStatus(currency, quotes, networkStatuses, yieldBalances)
+                    return createCurrencyStatus(currency, quote, networkStatuses, yieldBalances)
                 },
                 catch = { raise(Error.DataError(it)) },
             )
@@ -104,7 +106,10 @@ internal class CurrenciesStatusesOperations(
             catch = { raise(Error.DataError(it)) },
         )
         val quotes = catch(
-            block = { quotesRepository.getQuoteSync(currency.id)?.right() ?: Error.EmptyQuotes.left() },
+            block = {
+                currency.id.rawCurrencyId?.let { quotesRepository.getQuoteSync(it) }
+                    ?.right() ?: Error.EmptyQuotes.left()
+            },
             catch = { Error.DataError(it).left() },
         )
         val networkStatus = catch(
@@ -176,8 +181,7 @@ internal class CurrenciesStatusesOperations(
     fun getCurrencyStatusFlow(
         currency: CryptoCurrency,
         includeQuotes: Boolean = true,
-    ): Flow<Either<Error,
-            CryptoCurrencyStatus,>,> {
+    ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val (networks, currenciesIds) = getIds(nonEmptyListOf(currency))
 
         val quoteFlow = if (includeQuotes) {
@@ -344,7 +348,8 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<Error, Set<Quote>>> {
-        return quotesRepository.getQuotesUpdates(tokensIds)
+        val rawIds = tokensIds.mapNotNull { it.rawCurrencyId }.toSet()
+        return quotesRepository.getQuotesUpdates(rawIds)
             .map<Set<Quote>, Either<Error, Set<Quote>>> { quotes ->
                 if (quotes.isEmpty()) Error.EmptyQuotes.left() else quotes.right()
             }
