@@ -15,6 +15,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.staking.getCurrentToken
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet

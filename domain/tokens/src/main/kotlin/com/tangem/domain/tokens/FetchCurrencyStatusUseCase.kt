@@ -125,7 +125,7 @@ class FetchCurrencyStatusUseCase(
 
     private suspend fun Raise<CurrencyStatusError>.fetchQuote(currencyId: CryptoCurrency.ID, refresh: Boolean) {
         catch(
-            block = { quotesRepository.getQuotesSync(setOf(currencyId), refresh) },
+            block = { quotesRepository.getQuotesSync(setOfNotNull(currencyId.rawCurrencyId), refresh) },
         ) {
             raise(CurrencyStatusError.DataError(it))
         }
