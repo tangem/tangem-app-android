@@ -29,6 +29,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 internal class SwapNotificationsFactory(
     private val actions: UiActions,
 ) {
@@ -130,6 +131,7 @@ internal class SwapNotificationsFactory(
         }
     }
 
+    @Suppress("LongMethod")
     private fun MutableList<NotificationUM>.maybeAddDomainWarnings(
         quoteModel: SwapState.QuotesLoadedState,
         feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
@@ -199,6 +201,7 @@ internal class SwapNotificationsFactory(
         addTransactionLimitErrorNotification(
             utxoLimit = quoteModel.currencyCheck?.utxoAmountLimit,
             cryptoCurrency = fromCurrencyStatus.currency,
+            feeValue = fee?.feeValue.orZero(),
             onReduceClick = { reduceTo, _ ->
                 actions.onReduceToAmount(amountToRequest.copy(value = reduceTo))
             },
