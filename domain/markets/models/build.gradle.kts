@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+    api(projects.domain.tokens.models)
     implementation(projects.domain.core)
 
     implementation(deps.kotlin.serialization)

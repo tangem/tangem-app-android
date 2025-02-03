@@ -2,6 +2,7 @@ package com.tangem.domain.walletmanager.utils
 
 import com.tangem.blockchain.common.*
 import com.tangem.blockchainsdk.utils.amountToCreateAccount
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.model.Address
 import com.tangem.domain.walletmanager.model.CryptoCurrencyAmount
 import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
@@ -84,7 +85,11 @@ internal class UpdateWalletManagerResultFactory {
         val demoAmounts = hashSetOf<CryptoCurrencyAmount>(CryptoCurrencyAmount.Coin(amountValue))
 
         return tokens.mapTo(demoAmounts) { token ->
-            CryptoCurrencyAmount.Token(token.id, token.contractAddress, amountValue)
+            CryptoCurrencyAmount.Token(
+                tokenId = token.id?.let { CryptoCurrency.RawID(it) },
+                tokenContractAddress = token.contractAddress,
+                value = amountValue,
+            )
         }
     }
 
@@ -107,7 +112,7 @@ internal class UpdateWalletManagerResultFactory {
     private fun createCurrencyAmount(amount: Amount): CryptoCurrencyAmount? {
         return when (val type = amount.type) {
             is AmountType.Token -> CryptoCurrencyAmount.Token(
-                tokenId = type.token.id,
+                tokenId = type.token.id?.let { CryptoCurrency.RawID(it) },
                 tokenContractAddress = type.token.contractAddress,
                 value = getCurrencyAmountValue(amount) ?: return null,
             )
