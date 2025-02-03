@@ -134,7 +134,7 @@ internal class MarketsTokenDetailsModel @Inject constructor(
             modelScope.launch {
                 sendFeedbackEmailUseCase(
                     type = FeedbackEmailType.CurrencyDescriptionError(
-                        currencyId = params.token.id,
+                        currencyId = params.token.id.value,
                         currencyName = params.token.name,
                     ),
                 )
