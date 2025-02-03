@@ -7,17 +7,7 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketInfoResponse
 import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 
-val l2BlockchainsList = listOf(
-    Blockchain.Optimism,
-    Blockchain.Arbitrum,
-    Blockchain.ZkSyncEra,
-    Blockchain.Manta,
-    Blockchain.PolygonZkEVM,
-    Blockchain.Aurora,
-    Blockchain.Base,
-    Blockchain.Blast,
-    Blockchain.Cyber,
-)
+val l2BlockchainsList = Blockchain.entries.filter { it.isL2EthereumNetwork() }
 
 val l2BlockchainsCoinIds = l2BlockchainsList.map { it.toCoinId() }
 
