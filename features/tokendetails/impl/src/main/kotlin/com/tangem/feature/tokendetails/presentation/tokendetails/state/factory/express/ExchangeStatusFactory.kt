@@ -205,7 +205,8 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
 
     private suspend fun Set<CryptoCurrency.ID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
         return try {
-            quotesRepository.getQuotesSync(this, refresh)
+            val rawIds = mapNotNull { it.rawCurrencyId }.toSet()
+            quotesRepository.getQuotesSync(rawIds, refresh)
         } catch (t: Throwable) {
             emptySet()
         }
