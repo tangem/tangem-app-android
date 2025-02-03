@@ -46,7 +46,7 @@ internal class DefaultHotCryptoLoader @Inject constructor(
     override suspend fun update(currencies: List<CryptoCurrency>) {
         updateInternal { hotToken ->
             currencies.none {
-                it.id.rawCurrencyId == hotToken.id &&
+                it.id.rawCurrencyId?.value == hotToken.id &&
                     (it as? CryptoCurrency.Token)?.contractAddress == hotToken.contractAddress &&
                     it.network.id.value == hotToken.networkId
             }
