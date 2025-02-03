@@ -2,7 +2,6 @@ package com.tangem.data.common.currency
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toCoinId
@@ -78,27 +77,12 @@ class ResponseCryptoCurrenciesFactory(
         return CryptoCurrency.Coin(
             id = getCoinId(network, blockchain.toCoinId()),
             network = network,
-            name = blockchain.getNameForCoin(responseToken),
+            name = blockchain.getCoinName(),
             symbol = blockchain.getSymbolForCoin(responseToken),
             decimals = responseToken.decimals,
             iconUrl = getCoinIconUrl(blockchain),
             isCustom = isCustomCoin(network),
         )
-    }
-
-    private fun Blockchain.getNameForCoin(responseToken: UserTokensResponse.Token): String {
-        return when (this) {
-            // workaround: for Blockchains full name different than backend name,
-            // get name and symbol from enum Blockchain until backend renamed
-            // [REDACTED_JIRA]
-            Blockchain.Dischain,
-            Blockchain.Telos,
-            Blockchain.Cronos,
-            Blockchain.TON,
-            in l2BlockchainsList,
-            -> this.fullName
-            else -> responseToken.name
-        }
     }
 
     private fun Blockchain.getSymbolForCoin(responseToken: UserTokensResponse.Token): String {
