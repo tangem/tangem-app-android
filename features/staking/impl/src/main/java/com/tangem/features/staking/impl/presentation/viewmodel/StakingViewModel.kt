@@ -647,7 +647,7 @@ internal class StakingViewModel @Inject constructor(
                 currencyStatus = cryptoCurrencyStatus,
                 amount = amount,
                 fee = fee,
-                balanceAfterTransaction = balanceAfterTransaction,
+                feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
             )
             stateController.update(
                 AddStakingNotificationsTransformer(
@@ -850,13 +850,11 @@ internal class StakingViewModel @Inject constructor(
         )
         getCurrencyStatusUpdatesUseCase(userWalletId, cryptoCurrencyId, false)
             .conflate()
-            .distinctUntilChanged()
+            .distinctUntilChangedBy { it.getOrNull()?.value?.yieldBalance }
             .filter { value.currentStep == StakingStep.InitialInfo }
             .onEach { maybeStatus ->
                 maybeStatus.fold(
                     ifRight = { status ->
-                        if (status.value !is CryptoCurrencyStatus.Loaded) return@fold
-
                         if (!isInitialInfoAnalyticSent) {
                             isInitialInfoAnalyticSent = true
                             val balances = status.value.yieldBalance as? YieldBalance.Data
