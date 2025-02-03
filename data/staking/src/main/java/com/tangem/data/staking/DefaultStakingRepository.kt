@@ -579,9 +579,9 @@ internal class DefaultStakingRepository(
         }
     }
 
-    private fun findPrefetchedYield(yields: List<Yield>, currencyId: String, symbol: String): Yield? {
+    private fun findPrefetchedYield(yields: List<Yield>, currencyId: CryptoCurrency.RawID, symbol: String): Yield? {
         return yields.find { yield ->
-            yield.tokens.any { it.coinGeckoId == currencyId && it.symbol == symbol }
+            yield.tokens.any { it.coinGeckoId == currencyId.value && it.symbol == symbol }
         }
     }
 
