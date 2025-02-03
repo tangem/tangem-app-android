@@ -7,11 +7,34 @@ import arrow.core.raise.either
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 
 class GetCryptoCurrencyUseCase(
     private val currenciesRepository: CurrenciesRepository,
 ) {
+
+    /**
+     * Returns specific cryptocurrency for a given user wallet.
+     *
+     * !!! Important Use only [CryptoCurrency.ID.value] as cryptoCurrencyId
+     *
+     * @param userWallet The user's wallet.
+     * @param cryptoCurrencyId The ID of the cryptocurrency.
+     * @return An [Either] representing success (Right) or an error (Left) in fetching the status.
+     */
+    suspend operator fun invoke(
+        userWallet: UserWallet,
+        cryptoCurrencyId: String,
+    ): Either<CurrencyStatusError, CryptoCurrency> {
+        return either {
+            if (userWallet.isMultiCurrency) {
+                getCurrency(userWallet.walletId, cryptoCurrencyId)
+            } else {
+                getPrimaryCurrency(userWallet.walletId)
+            }
+        }
+    }
 
     /**
      * Returns specific cryptocurrency for a given user wallet.
