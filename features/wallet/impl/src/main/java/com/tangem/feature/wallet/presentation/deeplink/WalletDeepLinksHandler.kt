@@ -37,7 +37,7 @@ internal class WalletDeepLinksHandler @Inject constructor(
             getDeepLinks(userWallet, viewModel.viewModelScope)
         }
         deepLinksRegistry.unregisterByIds(deepLinks.map { it.id })
-        deepLinksRegistry.register(deepLinks)
+        deepLinksRegistry.register(deepLinks = deepLinks)
 
         viewModel.addCloseable {
             deepLinksRegistry.unregister(deepLinks)
@@ -51,6 +51,7 @@ internal class WalletDeepLinksHandler @Inject constructor(
                     onSellCurrencyDeepLink(userWallet, data)
                 }
             },
+            shouldHandleDelayed = true,
         )
 
         return buildList {
