@@ -15,12 +15,14 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
+import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.collectLatest
@@ -54,6 +56,10 @@ internal interface WalletContentClickIntents {
     fun onGoToProviderClick(externalTxId: String)
 
     fun onExpressTransactionClick(txId: String)
+
+    fun onConfirmDisposeExpressStatus()
+
+    fun onDisposeExpressStatus()
 }
 
 @Suppress("LongParameterList")
@@ -70,6 +76,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val shouldShowMarketsTooltipUseCase: ShouldShowMarketsTooltipUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
+    private val walletEventSender: WalletEventSender,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onBackClick() = router.popBackStack()
@@ -185,7 +192,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         val userWalletId = stateHolder.getSelectedWalletId()
         if (stateHolder.getSelectedWallet().bottomSheetConfig?.content is ExpressStatusBottomSheetConfig) {
             viewModelScope.launch(dispatchers.main) {
-                onrampStatusFactory.removeTransactionOnBottomSheetClosed()
+                onrampStatusFactory.removeTransactionOnBottomSheetClosed(forceDispose = false)
             }
         }
         stateHolder.update(CloseBottomSheetTransformer(userWalletId))
@@ -210,5 +217,29 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
                 ),
             )
         }
+    }
+
+    override fun onConfirmDisposeExpressStatus() {
+        walletEventSender.send(
+            WalletEvent.ShowAlert(
+                WalletAlertState.ConfirmExpressStatusHide(
+                    onConfirmClick = {
+                        walletEventSender.onConsume()
+                        onDisposeExpressStatus()
+                    },
+                    onCancelClick = walletEventSender::onConsume,
+                ),
+            ),
+        )
+    }
+
+    override fun onDisposeExpressStatus() {
+        val userWalletId = stateHolder.getSelectedWalletId()
+        if (stateHolder.getSelectedWallet().bottomSheetConfig?.content is ExpressStatusBottomSheetConfig) {
+            viewModelScope.launch(dispatchers.main) {
+                onrampStatusFactory.removeTransactionOnBottomSheetClosed(forceDispose = true)
+            }
+        }
+        stateHolder.update(CloseBottomSheetTransformer(userWalletId))
     }
 }
