@@ -35,7 +35,10 @@ class TangemAppLoggerInitializer(
                 }
 
                 if (PERMITTED_PRIORITY.contains(priority)) {
-                    appLogsStore.saveLogMessage(message)
+                    appLogsStore.saveLogMessage(
+                        tag = tag ?: "TangemAppLogger",
+                        message = message,
+                    )
                 }
             }
         }

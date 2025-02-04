@@ -79,17 +79,20 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                             fromFiatAmount = quote.fiatRate.multiply(fromAmount)
                         }
                     }
-                    val notifications =
-                        getNotification(transaction.status?.status, transaction.status?.txExternalUrl, null)
+                    val statusModel = transaction.status
+                    val notifications = getNotification(
+                        status = statusModel?.status,
+                        txUrl = statusModel?.txExternalUrl,
+                        refundToken = statusModel?.refundCurrency,
+                    )
                     val showProviderLink = getShowProviderLink(notifications, transaction.status)
                     result.add(
                         ExchangeUM(
                             provider = transaction.provider,
-                            statuses = getStatuses(transaction.status?.status),
+                            statuses = getStatuses(statusModel?.status),
                             notification = notifications,
-                            activeStatus = transaction.status?.status,
+                            activeStatus = statusModel?.status,
                             showProviderLink = showProviderLink,
-                            isRefundTerminalStatus = true,
                             fromCryptoCurrency = fromCryptoCurrency,
                             toCryptoCurrency = toCryptoCurrency,
                             info = createStateInfo(
@@ -106,25 +109,19 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return result.toPersistentList()
     }
 
-    fun updateTxStatus(
-        tx: ExchangeUM,
-        statusModel: ExchangeStatusModel?,
-        refundToken: CryptoCurrency?,
-        isRefundTerminalStatus: Boolean,
-    ): ExchangeUM {
+    fun updateTxStatus(tx: ExchangeUM, statusModel: ExchangeStatusModel?): ExchangeUM {
         if (statusModel == null || tx.activeStatus == statusModel.status) {
             Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
         }
         val hasFailed = statusModel.status == ExchangeStatus.Failed
-        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, refundToken)
+        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, statusModel.refundCurrency)
         val showProviderLink = getShowProviderLink(notifications, statusModel)
         return tx.copy(
             activeStatus = statusModel.status,
             notification = notifications,
             statuses = getStatuses(statusModel.status, hasFailed),
             showProviderLink = showProviderLink,
-            isRefundTerminalStatus = isRefundTerminalStatus,
             info = tx.info.copy(txExternalUrl = statusModel.txExternalUrl),
         )
     }
@@ -163,7 +160,8 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             },
             iconState = getIconState(transaction.status?.status),
             status = getStatusState(),
-            notification = null, // fixme https://tangem.atlassian.net/browse/AND-9219
+            notification = null, // fixme https://tangem.atlassian.net/browse/AND-9219,
+            onDisposeExpressStatus = clickIntents::onConfirmDisposeExpressStatus,
         )
     }
 

@@ -20,6 +20,7 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 
 internal class ManagedCryptoCurrencyFactory(
@@ -114,7 +115,11 @@ internal class ManagedCryptoCurrencyFactory(
             )
         } else {
             ManagedCryptoCurrency.Custom.Token(
-                currencyId = getTokenId(network, token.id, contractAddress),
+                currencyId = getTokenId(
+                    network = network,
+                    rawTokenId = token.id?.let { CryptoCurrency.RawID(it) },
+                    contractAddress = contractAddress,
+                ),
                 name = token.name,
                 symbol = token.symbol,
                 iconUrl = token.id?.let { getIconUrl(it) },

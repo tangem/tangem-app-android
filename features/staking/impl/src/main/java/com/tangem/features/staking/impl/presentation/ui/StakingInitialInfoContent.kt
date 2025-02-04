@@ -10,10 +10,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -42,7 +38,7 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -63,7 +59,6 @@ private const val STAKING_REWARD_BLOCK_KEY = "StakingRewardBlock"
 private const val ACTIVE_STAKING_BLOCK_KEY = "ActiveStakingBlock"
 private const val STAKE_PRIMARY_BUTTON_KEY = "StakePrimaryButton"
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun StakingInitialInfoContent(
     state: StakingStates.InitialInfoState,
@@ -73,11 +68,9 @@ internal fun StakingInitialInfoContent(
 ) {
     if (state !is StakingStates.InitialInfoState.Data) return
 
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = state.pullToRefreshConfig.isRefreshing,
-        onRefresh = { state.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState()) },
-    )
-    Box(modifier = Modifier.pullRefresh(pullRefreshState)) {
+    TangemPullToRefreshContainer(
+        config = state.pullToRefreshConfig,
+    ) {
         LazyColumn(
             verticalArrangement = alignLastToBottom(),
             modifier = Modifier
@@ -113,12 +106,6 @@ internal fun StakingInitialInfoContent(
                 StakeButtonBlock(buttonState)
             }
         }
-
-        PullRefreshIndicator(
-            modifier = Modifier.align(Alignment.TopCenter),
-            refreshing = state.pullToRefreshConfig.isRefreshing,
-            state = pullRefreshState,
-        )
     }
 }
 

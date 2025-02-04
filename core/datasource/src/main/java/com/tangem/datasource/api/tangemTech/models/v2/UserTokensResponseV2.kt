@@ -1,13 +1,16 @@
 package com.tangem.datasource.api.tangemTech.models.v2
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 
+@JsonClass(generateAdapter = true)
 data class UserTokensResponseV2(
     @Json(name = "accounts")
     val accounts: List<TokensAccount>,
 ) {
 
+    @JsonClass(generateAdapter = true)
     data class TokensAccount(
         @Json(name = "id")
         val id: Int,

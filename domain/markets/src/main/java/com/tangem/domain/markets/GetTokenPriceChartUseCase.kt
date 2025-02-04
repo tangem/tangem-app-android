@@ -3,6 +3,7 @@ package com.tangem.domain.markets
 import arrow.core.Either
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 class GetTokenPriceChartUseCase(
     private val marketsTokenRepository: MarketsTokenRepository,
@@ -11,7 +12,7 @@ class GetTokenPriceChartUseCase(
     suspend operator fun invoke(
         appCurrency: AppCurrency,
         interval: PriceChangeInterval,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
         preview: Boolean,
     ): Either<Unit, TokenChart> {

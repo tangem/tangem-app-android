@@ -193,7 +193,7 @@ internal object NetworkModule {
             clientBuilder = {
                 addInterceptor(
                     NetworkLogsSaveInterceptor(appLogsStore),
-                )
+                ).applyTimeoutAnnotations()
             },
         )
     }
@@ -214,7 +214,7 @@ internal object NetworkModule {
             clientBuilder = {
                 addInterceptor(
                     NetworkLogsSaveInterceptor(appLogsStore),
-                )
+                ).applyTimeoutAnnotations()
             },
         )
     }

@@ -49,6 +49,22 @@ data class OnrampStatus(
                 -> false
             }
 
+        val isAutoDisposable: Boolean
+            get() = when (this) {
+                Finished,
+                -> true
+                Expired,
+                Failed,
+                Paused,
+                Created,
+                WaitingForPayment,
+                PaymentProcessing,
+                Verifying,
+                Paid,
+                Sending,
+                -> false
+            }
+
         val isHidden: Boolean
             get() = when (this) {
                 Created,
