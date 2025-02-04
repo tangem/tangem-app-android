@@ -19,7 +19,7 @@ internal class AmountMaxValueStateTransformer(
     private val maxEnterAmountConverter = MaxEnterAmountConverter()
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val maxEnterAmount = if (actionType == StakingActionCommonType.Exit) {
+        val maxEnterAmount = if (actionType is StakingActionCommonType.Exit) {
             EnterAmountBoundary(
                 amount = prevState.balanceState?.cryptoAmount,
                 fiatAmount = prevState.balanceState?.fiatAmount,
