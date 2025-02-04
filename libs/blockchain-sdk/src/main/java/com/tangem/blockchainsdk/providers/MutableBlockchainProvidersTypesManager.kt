@@ -13,6 +13,9 @@ interface MutableBlockchainProvidersTypesManager : BlockchainProvidersTypesManag
     /** Update [providers] for [blockchain] */
     suspend fun update(blockchain: Blockchain, providers: List<ProviderType>)
 
+    /** Recover initial state */
+    suspend fun recoverInitialState()
+
     /** Checks that current [BlockchainProviderTypes] was changed */
     suspend fun isMatchWithMerged(): Boolean
 }

@@ -11,6 +11,7 @@ interface OnboardingVisaComponent : ComposableContentComponent, InnerNavigationH
     data class Params(
         val scanResponse: ScanResponse,
         val titleProvider: TitleProvider,
+        val onDone: () -> Unit,
     )
 
     interface Factory : ComponentFactory<Params, OnboardingVisaComponent>

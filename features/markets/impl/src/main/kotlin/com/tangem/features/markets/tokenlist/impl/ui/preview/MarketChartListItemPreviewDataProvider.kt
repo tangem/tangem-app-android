@@ -4,13 +4,14 @@ package com.tangem.features.markets.tokenlist.impl.ui.preview
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.common.ui.charts.state.MarketChartRawData
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.tokenlist.impl.ui.state.MarketsListItemUM
 import kotlinx.collections.immutable.persistentListOf
 
 internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParameterProvider<MarketsListItemUM>(
     collection = listOf(
         MarketsListItemUM(
-            id = "1",
+            id = CryptoCurrency.RawID("1"),
             name = "Bitcoin",
             currencySymbol = "BTC",
             iconUrl = "",
@@ -25,7 +26,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
-            id = "1",
+            id = CryptoCurrency.RawID("1"),
             name = "Bitcoin",
             currencySymbol = "BTC",
             iconUrl = null,
@@ -38,7 +39,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
-            id = "1",
+            id = CryptoCurrency.RawID("1"),
             name = "Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin Bitcoin",
             currencySymbol = "BTC",
             iconUrl = null,
@@ -53,7 +54,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
-            id = "1",
+            id = CryptoCurrency.RawID("1"),
             name = "Bitcoin",
             currencySymbol = "BTC",
             iconUrl = null,
@@ -68,7 +69,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
-            id = "1",
+            id = CryptoCurrency.RawID("1"),
             name = "Bitcoin",
             currencySymbol = "BTC",
             iconUrl = null,
@@ -83,7 +84,7 @@ internal class MarketChartListItemPreviewDataProvider : CollectionPreviewParamet
             isUnder100kMarketCap = false,
         ),
         MarketsListItemUM(
-            id = "1",
+            id = CryptoCurrency.RawID("1"),
             name = "Bitcoin",
             currencySymbol = "BTC",
             iconUrl = null,

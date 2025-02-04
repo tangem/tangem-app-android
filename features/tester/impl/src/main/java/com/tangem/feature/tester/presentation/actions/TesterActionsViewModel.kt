@@ -9,6 +9,9 @@ import arrow.core.getOrElse
 import com.tangem.domain.apptheme.ChangeAppThemeModeUseCase
 import com.tangem.domain.apptheme.GetAppThemeModeUseCase
 import com.tangem.domain.apptheme.model.AppThemeMode
+import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.HideAllCurrenciesUM
+import com.tangem.feature.tester.presentation.actions.TesterActionsContentState.ToggleAppThemeUM
 import com.tangem.feature.tester.presentation.navigation.InnerTesterRouter
 import com.tangem.lib.crypto.UserWalletManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +27,7 @@ internal class TesterActionsViewModel @Inject constructor(
     private val userWalletManager: UserWalletManager,
     private val changeAppThemeModeUseCase: ChangeAppThemeModeUseCase,
     private val getAppThemeModeUseCase: GetAppThemeModeUseCase,
+    private val feedbackRepository: FeedbackRepository,
 ) : ViewModel() {
 
     var uiState: TesterActionsContentState by mutableStateOf(initialState)
@@ -31,10 +35,13 @@ internal class TesterActionsViewModel @Inject constructor(
 
     private val initialState: TesterActionsContentState
         get() = TesterActionsContentState(
-            hideAllCurrenciesConfig = HideAllCurrenciesConfig.Clickable(this::hideAllCurrencies),
-            toggleAppThemeConfig = ToggleAppThemeConfig(AppThemeMode.DEFAULT, this::toggleAppTheme),
+            hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable(this::hideAllCurrencies),
+            toggleAppThemeUM = ToggleAppThemeUM(
+                currentAppTheme = AppThemeMode.DEFAULT,
+                onClick = this::toggleAppTheme,
+            ),
+            shareLogsUM = TesterActionsContentState.ShareLogsUM(file = feedbackRepository.getLogFile()),
             onBackClick = { /* no-op */ },
-            onApplyChangesClick = { /* no-op */ },
         )
 
     init {
@@ -47,17 +54,17 @@ internal class TesterActionsViewModel @Inject constructor(
 
     private fun hideAllCurrencies() = viewModelScope.launch {
         uiState = uiState.copy(
-            hideAllCurrenciesConfig = HideAllCurrenciesConfig.Progress,
+            hideAllCurrenciesUM = HideAllCurrenciesUM.Progress,
         )
         userWalletManager.hideAllTokens()
 
         uiState = uiState.copy(
-            hideAllCurrenciesConfig = HideAllCurrenciesConfig.Clickable(this@TesterActionsViewModel::hideAllCurrencies),
+            hideAllCurrenciesUM = HideAllCurrenciesUM.Clickable(this@TesterActionsViewModel::hideAllCurrencies),
         )
     }
 
     private fun toggleAppTheme() = viewModelScope.launch {
-        val currentAppThemeMode = uiState.toggleAppThemeConfig.currentAppTheme
+        val currentAppThemeMode = uiState.toggleAppThemeUM.currentAppTheme
         val newAppThemeMode = when (currentAppThemeMode) {
             AppThemeMode.FORCE_DARK -> AppThemeMode.FORCE_LIGHT
             AppThemeMode.FORCE_LIGHT -> AppThemeMode.FOLLOW_SYSTEM
@@ -89,13 +96,13 @@ internal class TesterActionsViewModel @Inject constructor(
                 Timber.d(
                     """
                     Current app theme mode updated
-                    |- Previous app theme mode: ${uiState.toggleAppThemeConfig.currentAppTheme}
+                    |- Previous app theme mode: ${uiState.toggleAppThemeUM.currentAppTheme}
                     |- New app theme mode: $maybeAppThemeMode
                     """.trimIndent(),
                 )
 
                 uiState = uiState.copy(
-                    toggleAppThemeConfig = uiState.toggleAppThemeConfig.copy(
+                    toggleAppThemeUM = uiState.toggleAppThemeUM.copy(
                         currentAppTheme = maybeAppThemeMode.getOrElse { error ->
                             Timber.e(
                                 """

@@ -41,6 +41,7 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.domain.settings)
     implementation(projects.domain.onboarding)
+    implementation(projects.domain.visa)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)

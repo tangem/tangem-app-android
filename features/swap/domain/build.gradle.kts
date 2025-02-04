@@ -1,3 +1,5 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -40,6 +42,7 @@ dependencies {
     /** Core modules */
     implementation(projects.core.utils)
     implementation(projects.core.ui)
+    implementation(projects.core.datasource)
 
     /** Feature Apis */
     implementation(projects.features.wallet.api)
@@ -51,4 +54,5 @@ dependencies {
     implementation(deps.tangem.blockchain)
     implementation(deps.tangem.card.core)
     implementation(deps.moshi)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
 }

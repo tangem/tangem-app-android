@@ -1,6 +1,7 @@
 package com.tangem.feature.swap
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.currency.UserTokensResponseFactory
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
@@ -26,6 +27,7 @@ internal class DefaultSwapTransactionRepository(
 ) : SwapTransactionRepository {
 
     private val converter = SavedSwapTransactionListConverter(excludedBlockchains)
+    private val userTokensResponseFactory = UserTokensResponseFactory()
 
     override suspend fun storeTransaction(
         userWalletId: UserWalletId,
@@ -33,7 +35,13 @@ internal class DefaultSwapTransactionRepository(
         toCryptoCurrency: CryptoCurrency,
         transaction: SavedSwapTransactionModel,
     ) {
-        transaction.status?.let { storeTransactionState(transaction.txId, it) }
+        transaction.status?.let {
+            storeTransactionState(
+                txId = transaction.txId,
+                status = it,
+                refundTokenCurrency = null,
+            )
+        }
         appPreferencesStore.editData { mutablePreferences ->
             val savedTransactions: List<SavedSwapTransactionListModelInner>? = mutablePreferences.getObjectList(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_KEY,
@@ -154,14 +162,22 @@ internal class DefaultSwapTransactionRepository(
         }
     }
 
-    override suspend fun storeTransactionState(txId: String, status: ExchangeStatusModel) {
+    override suspend fun storeTransactionState(
+        txId: String,
+        status: ExchangeStatusModel,
+        refundTokenCurrency: CryptoCurrency?,
+    ) {
         appPreferencesStore.editData { mutablePreferences ->
             val savedMap = mutablePreferences.getObjectMap<ExchangeStatusModel>(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,
             )
 
             val updatesMap = savedMap.toMutableMap()
-            updatesMap[txId] = status
+            updatesMap[txId] = status.copy(
+                refundTokensResponse = refundTokenCurrency?.let {
+                    userTokensResponseFactory.createResponseToken(refundTokenCurrency)
+                },
+            )
 
             mutablePreferences.setObjectMap(
                 key = PreferencesKeys.SWAP_TRANSACTIONS_STATUSES_KEY,

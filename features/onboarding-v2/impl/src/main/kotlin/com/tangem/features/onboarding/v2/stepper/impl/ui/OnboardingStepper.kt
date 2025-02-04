@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.stepper.impl.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -15,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.components.progressbar.LinearProgressIndicator
+import com.tangem.core.ui.components.progressbar.TangemLinearProgressIndicator
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
@@ -59,7 +60,7 @@ internal fun OnboardingStepper(
             modifier = modifier,
         )
 
-        LinearProgressIndicator(
+        TangemLinearProgressIndicator(
             modifier = Modifier
                 .alpha(progressAlpha)
                 .padding(horizontal = 16.dp)
@@ -67,15 +68,16 @@ internal fun OnboardingStepper(
                 .fillMaxWidth(),
             progress = { animatedIndicatorFraction },
             color = TangemTheme.colors.icon.primary1,
-            backgroundColor = TangemTheme.colors.background.tertiary,
+            backgroundColor = TangemTheme.colors.icon.primary1.copy(alpha = 0.4f),
             strokeCap = StrokeCap.Round,
         )
     }
 }
 
 @Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview() {
+private fun OnboardingStepper_Preview() {
     TangemThemePreview {
         Box(
             Modifier

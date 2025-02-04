@@ -1,11 +1,17 @@
 package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class ExchangeDataResponseWithTxDetails(
+    @Json(name = "dataResponse")
     val dataResponse: ExchangeDataResponse,
+    @Json(name = "txDetails")
     val txDetails: TxDetails,
 )
+
+@JsonClass(generateAdapter = true)
 data class ExchangeDataResponse(
     @Json(name = "fromAmount")
     val fromAmount: String,
@@ -29,6 +35,7 @@ data class ExchangeDataResponse(
     val signature: String,
 )
 
+@JsonClass(generateAdapter = true)
 data class TxDetails(
     @Json(name = "payoutAddress")
     val payoutAddress: String,
@@ -70,6 +77,7 @@ data class TxDetails(
     val gas: String?,
 )
 
+@JsonClass(generateAdapter = false)
 enum class TxType {
     @Json(name = "send")
     SEND,

@@ -16,8 +16,10 @@ class GetCurrencyQuotesUseCase(
         interval: PriceChangeInterval,
         refresh: Boolean,
     ): Flow<Option<Quote.Value>> {
+        val rawId = currencyID.rawCurrencyId ?: return flowOf(None)
+
         return quotesRepository.getQuotesUpdates(
-            currenciesIds = setOf(currencyID),
+            currenciesIds = setOf(rawId),
             refresh = refresh,
         ).map { it.filterIsInstance<Quote.Value>().firstOrNull().toOption() }.catch { emit(None) }
     }

@@ -33,7 +33,7 @@ interface CustomTokensRepository {
     suspend fun createToken(
         managedCryptoCurrency: ManagedCryptoCurrency.Token,
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork.Default,
-        rawId: String?,
+        rawId: CryptoCurrency.RawID?,
     ): CryptoCurrency.Token
 
     suspend fun createCustomToken(

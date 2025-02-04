@@ -19,13 +19,15 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaAuthChallenge
-import com.tangem.domain.visa.model.VisaCardActivationResponse
+import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
+import com.tangem.operations.sign.SignHashResponse
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 
 @Suppress("TooManyFunctions")
@@ -207,4 +209,12 @@ class MockTangemSdkManager(
     ): CompletionResult<VisaCardActivationResponse> {
         error("Not implemented")
     }
+
+    override suspend fun visaCustomerWalletApprove(
+        visaDataForApprove: VisaDataForApprove,
+    ): CompletionResult<SignHashResponse> {
+        error("Not implemented")
+    }
+
+    // endregion
 }
