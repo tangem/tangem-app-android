@@ -217,7 +217,7 @@ class DefaultWalletManagersFacade(
                             symbol = currency.symbol,
                             contractAddress = currency.contractAddress,
                             decimals = currency.decimals,
-                            id = currency.id.rawCurrencyId,
+                            id = currency.id.rawCurrencyId?.value,
                         )
                         TransactionHistoryRequest.FilterType.Contract(blockchainToken)
                     }
@@ -255,7 +255,7 @@ class DefaultWalletManagersFacade(
                             symbol = currency.symbol,
                             contractAddress = currency.contractAddress,
                             decimals = currency.decimals,
-                            id = currency.id.rawCurrencyId,
+                            id = currency.id.rawCurrencyId?.value,
                         )
                         TransactionHistoryRequest.FilterType.Contract(blockchainToken)
                     }
