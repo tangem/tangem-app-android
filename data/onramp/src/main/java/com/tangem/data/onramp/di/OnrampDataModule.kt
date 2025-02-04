@@ -1,6 +1,8 @@
 package com.tangem.data.onramp.di
 
 import com.squareup.moshi.Moshi
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.onramp.DefaultHotCryptoRepository
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
@@ -10,12 +12,15 @@ import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.onramp.OnrampApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
 import com.tangem.datasource.local.onramp.paymentmethods.OnrampPaymentMethodsStore
 import com.tangem.datasource.local.onramp.quotes.OnrampQuotesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.onramp.repositories.HotCryptoRepository
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
@@ -81,6 +86,20 @@ internal object OnrampDataModule {
         val jsonAdapter = moshi.adapter(ExpressErrorResponse::class.java)
         return DefaultOnrampErrorResolver(
             OnrampErrorConverter(jsonAdapter),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideHotCryptoRepository(
+        excludedBlockchains: ExcludedBlockchains,
+        hotCryptoResponseStore: HotCryptoResponseStore,
+        userWalletsStore: UserWalletsStore,
+    ): HotCryptoRepository {
+        return DefaultHotCryptoRepository(
+            excludedBlockchains = excludedBlockchains,
+            hotCryptoResponseStore = hotCryptoResponseStore,
+            userWalletsStore = userWalletsStore,
         )
     }
 }
