@@ -311,15 +311,12 @@ private class ScanWalletProcessor(
     }
 
     private fun getWalletProductType(card: CardDTO): ProductType {
-        if (RING_BATCH_IDS.contains(card.batchId) || card.batchId.startsWith(RING_BATCH_PREFIX)) {
-            return ProductType.Ring
-        }
-        return if (card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
-            card.settings.isKeysImportAllowed
-        ) {
-            ProductType.Wallet2
-        } else {
-            ProductType.Wallet
+        return when {
+            card.isVisa -> ProductType.Visa
+            RING_BATCH_IDS.contains(card.batchId) || card.batchId.startsWith(RING_BATCH_PREFIX) -> ProductType.Ring
+            card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+                card.settings.isKeysImportAllowed -> ProductType.Wallet2
+            else -> ProductType.Wallet
         }
     }
 
