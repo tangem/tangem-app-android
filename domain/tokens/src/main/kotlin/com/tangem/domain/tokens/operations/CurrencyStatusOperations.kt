@@ -74,7 +74,7 @@ internal class CurrencyStatusOperations(
         val yieldBalanceData = yieldBalance as? YieldBalance.Data
         val isCurrentAddressStaking = yieldBalanceData?.address == status.address.defaultAddress.value
         val filteredTokenBalances = yieldBalanceData?.balance?.items?.filter {
-            it.token.coinGeckoId == currency.id.rawCurrencyId
+            it.token.coinGeckoId == currency.id.rawCurrencyId?.value
         }
         val currentYieldBalance = if (isCurrentAddressStaking && filteredTokenBalances?.isNotEmpty() == true) {
             yieldBalanceData.copy(
