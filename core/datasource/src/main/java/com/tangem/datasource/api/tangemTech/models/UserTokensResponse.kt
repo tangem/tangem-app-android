@@ -1,8 +1,10 @@
 package com.tangem.datasource.api.tangemTech.models
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.tangem.common.extensions.calculateHashCode
 
+@JsonClass(generateAdapter = true)
 data class UserTokensResponse(
     @Json(name = "version") val version: Int = 0,
     @Json(name = "group") val group: GroupType,
@@ -10,6 +12,7 @@ data class UserTokensResponse(
     @Json(name = "tokens") val tokens: List<Token> = emptyList(),
 ) {
 
+    @JsonClass(generateAdapter = true)
     data class Token(
         @Json(name = "id") val id: String? = null,
         @Json(name = "networkId") val networkId: String,
@@ -36,6 +39,7 @@ data class UserTokensResponse(
         )
     }
 
+    @JsonClass(generateAdapter = false)
     enum class GroupType {
         @Json(name = "none")
         NONE,
@@ -47,6 +51,7 @@ data class UserTokensResponse(
         NETWORK,
     }
 
+    @JsonClass(generateAdapter = false)
     enum class SortType {
         @Json(name = "balance")
         BALANCE,
