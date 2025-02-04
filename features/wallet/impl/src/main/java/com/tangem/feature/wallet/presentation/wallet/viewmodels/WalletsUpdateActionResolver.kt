@@ -133,7 +133,7 @@ internal class WalletsUpdateActionResolver @Inject constructor(
 
         val isAnyNameChanged = (newWallets - prevWallets.toSet()).isNotEmpty()
 
-        return prevWalletsIds != newWalletsIds && isAnyNameChanged
+        return prevWalletsIds == newWalletsIds && isAnyNameChanged
     }
 
     private fun getRenameWalletsAction(state: WalletScreenState, wallets: List<UserWallet>): Action.RenameWallets {
