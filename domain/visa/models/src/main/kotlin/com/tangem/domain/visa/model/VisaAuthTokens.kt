@@ -8,5 +8,10 @@ import kotlinx.serialization.Serializable
 @JsonClass(generateAdapter = true)
 data class VisaAuthTokens(
     @Json(name = "accessToken") val accessToken: String,
-    @Json(name = "refreshToken") val refreshToken: String,
-)
+    @Json(name = "refreshToken") val refreshToken: RefreshToken,
+) {
+
+    @Serializable
+    @JvmInline
+    value class RefreshToken(val value: String)
+}
