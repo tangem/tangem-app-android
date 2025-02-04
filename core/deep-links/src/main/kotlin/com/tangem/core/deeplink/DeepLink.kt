@@ -3,7 +3,7 @@ package com.tangem.core.deeplink
 /**
  * Represents a deep link.
  */
-interface DeepLink {
+abstract class DeepLink(val shouldHandleDelayed: Boolean = false) {
 
     /**
      * ID of the deep link.
@@ -25,12 +25,12 @@ interface DeepLink {
      * "tangem://link/{param1}/{param2}" // With path parameters
      * ```
      * */
-    val uri: String
+    abstract val uri: String
 
     /**
      * Method to be called when this deep link is received.
      *
      * @param params Map of parameters received from the deep link.
      * */
-    fun onReceive(params: Map<String, String>)
+    abstract fun onReceive(params: Map<String, String>)
 }
