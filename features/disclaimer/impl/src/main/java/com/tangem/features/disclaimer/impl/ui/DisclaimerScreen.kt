@@ -9,10 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
@@ -22,8 +19,9 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.web.WebView
+import com.google.accompanist.web.WebViewNavigator
+import com.google.accompanist.web.rememberWebViewNavigator
 import com.google.accompanist.web.rememberWebViewState
-import com.google.accompanist.web.rememberWebViewStateWithHTMLData
 import com.tangem.core.ui.components.BottomFade
 import com.tangem.core.ui.components.NavigationBar3ButtonsScrim
 import com.tangem.core.ui.components.PrimaryButton
@@ -42,6 +40,8 @@ import com.tangem.features.disclaimer.impl.entity.DisclaimerUM
 import com.tangem.features.disclaimer.impl.entity.DummyDisclaimer
 import com.tangem.features.disclaimer.impl.local.localTermsOfServices
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.withDebounce
 import java.nio.charset.StandardCharsets
 
 @Composable
@@ -94,35 +94,34 @@ internal fun DisclaimerScreen(state: DisclaimerUM) {
 private fun DisclaimerContent(url: String) {
     val backgroundColor = TangemTheme.colors.background.primary
 
-    val webViewStateUrl = rememberWebViewState(url)
-    val webViewStateData = rememberWebViewStateWithHTMLData(
-        data = localTermsOfServices,
-        mimeType = "text/html",
-        encoding = StandardCharsets.UTF_8.name(),
-    )
+    val loadingTimeoutJobHolder = remember { JobHolder() }
+    var isLoading by remember { mutableStateOf(true) }
 
-    val webViewState by remember {
-        derivedStateOf {
-            if (webViewStateUrl.errorsForCurrentRequest.isNotEmpty()) {
-                webViewStateData
-            } else {
-                webViewStateUrl
-            }
-        }
+    val webViewState = rememberWebViewState(url)
+    val webViewNavigator = rememberWebViewNavigator()
+    val webViewClient = remember {
+        DisclaimerWebViewClient(
+            onLoadingFinished = {
+                loadingTimeoutJobHolder.cancel()
+                isLoading = false
+            },
+        )
     }
 
     Box {
         WebView(
             state = webViewState,
-            captureBackPresses = false,
-            onCreated = WebView::applySafeSettings,
             modifier = Modifier
                 .fillMaxSize()
                 .background(TangemTheme.colors.background.primary),
+            captureBackPresses = false,
+            navigator = webViewNavigator,
+            onCreated = WebView::applySafeSettings,
+            client = webViewClient,
         )
 
         AnimatedVisibility(
-            visible = webViewState.isLoading,
+            visible = isLoading,
             label = "Loading state change animation",
             enter = fadeIn(),
             exit = fadeOut(),
@@ -144,6 +143,28 @@ private fun DisclaimerContent(url: String) {
             }
         }
     }
+
+    LaunchedEffect(loadingTimeoutJobHolder) {
+        withDebounce(jobHolder = loadingTimeoutJobHolder, timeMillis = 30_000) {
+            webViewNavigator.stopLoading()
+
+            webViewNavigator.loadLocalToS()
+        }
+    }
+
+    LaunchedEffect(webViewState.errorsForCurrentRequest) {
+        if (webViewState.errorsForCurrentRequest.isNotEmpty()) {
+            webViewNavigator.loadLocalToS()
+        }
+    }
+}
+
+private fun WebViewNavigator.loadLocalToS() {
+    loadHtml(
+        html = localTermsOfServices,
+        mimeType = "text/html",
+        encoding = StandardCharsets.UTF_8.name(),
+    )
 }
 
 @OptIn(ExperimentalPermissionsApi::class)
