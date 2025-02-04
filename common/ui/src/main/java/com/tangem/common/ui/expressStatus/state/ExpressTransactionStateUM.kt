@@ -30,6 +30,7 @@ data class ExpressTransactionStateInfoUM(
     val timestampFormatted: TextReference,
     val onGoToProviderClick: (String) -> Unit,
     val onClick: () -> Unit,
+    val onDisposeExpressStatus: () -> Unit,
     val iconState: ExpressTransactionStateIconUM,
     val toAmount: TextReference,
     val toFiatAmount: TextReference?,
