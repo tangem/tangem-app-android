@@ -26,7 +26,7 @@ interface OnrampAddToPortfolioComponent : ComposableBottomSheetComponent {
         val userWalletId: UserWalletId,
         val cryptoCurrency: CryptoCurrency,
         val currencyIconState: CurrencyIconState,
-        val onSuccessAdding: () -> Unit,
+        val onSuccessAdding: (CryptoCurrency.ID) -> Unit,
         val onDismiss: () -> Unit,
     )
 
