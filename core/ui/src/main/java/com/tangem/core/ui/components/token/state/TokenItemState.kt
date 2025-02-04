@@ -82,7 +82,7 @@ sealed class TokenItemState {
      * @property titleState        token title
      * @property subtitleState     token subtitle
      * @property fiatAmountState   token fiat amount
-     * @property subtitle2State token crypto amount
+     * @property subtitle2State    token subtitle 2 (example, token crypto amount)
      * @property onItemClick       callback which will be called when an item is clicked
      * @property onItemLongClick   callback which will be called when an item is long clicked
      */
@@ -91,8 +91,8 @@ sealed class TokenItemState {
         override val iconState: CurrencyIconState,
         override val titleState: TitleState,
         override val subtitleState: SubtitleState,
-        override val fiatAmountState: FiatAmountState,
-        override val subtitle2State: Subtitle2State,
+        override val fiatAmountState: FiatAmountState?,
+        override val subtitle2State: Subtitle2State?,
         override val onItemClick: ((TokenItemState) -> Unit)?,
         override val onItemLongClick: ((TokenItemState) -> Unit)?,
     ) : TokenItemState()
