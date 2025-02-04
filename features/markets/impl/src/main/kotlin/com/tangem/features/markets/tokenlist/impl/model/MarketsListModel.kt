@@ -9,6 +9,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.GetMarketsTokenListFlowUseCase
 import com.tangem.domain.markets.TokenMarket
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.tokenlist.impl.analytics.MarketsListAnalyticsEvent
 import com.tangem.features.markets.tokenlist.impl.model.statemanager.MarketsListBatchFlowManager
@@ -48,7 +49,7 @@ internal class MarketsListModel @Inject constructor(
             initialValue = AppCurrency.Default,
         )
 
-    private val visibleItemIds = MutableStateFlow<List<String>>(emptyList())
+    private val visibleItemIds = MutableStateFlow<List<CryptoCurrency.RawID>>(emptyList())
 
     private val marketsListUMStateManager = MarketsListUMStateManager(
         currentVisibleIds = Provider { visibleItemIds.value },
@@ -72,8 +73,8 @@ internal class MarketsListModel @Inject constructor(
         getMarketsTokenListFlowUseCase = getMarketsTokenListFlowUseCase,
         batchFlowType = GetMarketsTokenListFlowUseCase.BatchFlowType.Search,
         currentAppCurrency = Provider { currentAppCurrency.value },
-        currentTrendInterval = Provider { marketsListUMStateManager.selectedInterval }, // FIXME fix on backend
-        currentSortByType = Provider { SortByTypeUM.Rating }, // FIXME maybe fix on backend
+        currentTrendInterval = Provider { marketsListUMStateManager.selectedInterval },
+        currentSortByType = Provider { SortByTypeUM.Rating },
         currentSearchText = Provider { marketsListUMStateManager.searchQuery },
         modelScope = modelScope,
         dispatchers = dispatchers,

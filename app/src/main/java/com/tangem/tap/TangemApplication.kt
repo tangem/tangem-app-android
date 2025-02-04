@@ -222,7 +222,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun updateLogFiles() {
         appLogsStore.deleteOldLogsFile()
-        appLogsStore.deleteLastLogFile()
+
+        if (!BuildConfig.TESTER_MENU_ENABLED) {
+            appLogsStore.deleteLastLogFile()
+        }
 
         // Temporally logs are not saved
         // scope.launch {

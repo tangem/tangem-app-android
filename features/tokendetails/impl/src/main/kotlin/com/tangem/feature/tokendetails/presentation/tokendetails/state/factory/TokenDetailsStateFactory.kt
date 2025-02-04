@@ -340,6 +340,22 @@ internal class TokenDetailsStateFactory(
         return balanceSelectStateConverter.convert(buttonConfig)
     }
 
+    fun getStateWithConfirmHideExpressStatus(): TokenDetailsState {
+        return currentStateProvider().copy(
+            dialogConfig = TokenDetailsDialogConfig(
+                isShow = true,
+                onDismissRequest = clickIntents::onDismissDialog,
+                content = TokenDetailsDialogConfig.DialogContentConfig.ConfirmExpressStatusHideDialogConfig(
+                    onConfirmClick = {
+                        clickIntents.onDisposeExpressStatus()
+                        clickIntents.onDismissDialog()
+                    },
+                    onCancelClick = clickIntents::onDismissDialog,
+                ),
+            ),
+        )
+    }
+
     private fun TokenDetailsAppBarMenuConfig.updateMenu(
         cardTypesResolver: CardTypesResolver,
         hasDerivations: Boolean,

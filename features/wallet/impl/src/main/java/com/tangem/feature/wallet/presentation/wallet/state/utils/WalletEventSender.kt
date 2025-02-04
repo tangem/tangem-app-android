@@ -21,7 +21,7 @@ internal class WalletEventSender @Inject constructor(
         stateHolder.update(transformer = SendEventTransformer(event = event, onConsume = ::onConsume))
     }
 
-    private fun onConsume() {
+    fun onConsume() {
         stateHolder.update {
             it.copy(event = consumedEvent())
         }

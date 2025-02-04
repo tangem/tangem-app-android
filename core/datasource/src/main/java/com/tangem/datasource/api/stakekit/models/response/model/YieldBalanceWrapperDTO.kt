@@ -41,6 +41,7 @@ data class BalanceDTO(
     val providerId: String?,
 ) {
 
+    @JsonClass(generateAdapter = false)
     enum class BalanceTypeDTO {
         @Json(name = "available")
         AVAILABLE,

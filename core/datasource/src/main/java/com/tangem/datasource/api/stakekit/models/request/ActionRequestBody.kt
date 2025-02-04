@@ -1,11 +1,13 @@
 package com.tangem.datasource.api.stakekit.models.request
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.stakekit.models.request.ConstructTransactionRequestBody.GasArgs
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 
+@JsonClass(generateAdapter = true)
 data class PendingActionRequestBody(
     @Json(name = "type")
     val type: StakingActionType,
@@ -19,6 +21,7 @@ data class PendingActionRequestBody(
     val gasArgs: GasArgs? = null, // used only in estimate_gas request
 )
 
+@JsonClass(generateAdapter = true)
 data class ActionRequestBody(
     @Json(name = "integrationId")
     val integrationId: String,
@@ -32,6 +35,7 @@ data class ActionRequestBody(
     val gasArgs: GasArgs? = null, // used only in estimate_gas request
 )
 
+@JsonClass(generateAdapter = true)
 data class ActionRequestBodyArgs(
     @Json(name = "amount")
     val amount: String,
@@ -55,6 +59,7 @@ data class ActionRequestBodyArgs(
     val inputToken: TokenDTO? = null,
 )
 
+@JsonClass(generateAdapter = true)
 data class SignatureVerification(
     @Json(name = "message")
     val message: String,
@@ -62,6 +67,7 @@ data class SignatureVerification(
     val signed: String,
 )
 
+@JsonClass(generateAdapter = false)
 enum class TronResource {
     @Json(name = "ENERGY")
     ENERGY,

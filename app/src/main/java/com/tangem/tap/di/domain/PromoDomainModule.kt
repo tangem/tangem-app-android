@@ -21,12 +21,6 @@ internal object PromoDomainModule {
 
     @Provides
     @Singleton
-    fun provideShouldShowRingPromoUseCase(promoRepository: PromoRepository): ShouldShowRingPromoUseCase {
-        return ShouldShowRingPromoUseCase(promoRepository)
-    }
-
-    @Provides
-    @Singleton
     fun provideShouldShowSwapPromoTokenUseCase(promoRepository: PromoRepository): ShouldShowSwapPromoTokenUseCase {
         return ShouldShowSwapPromoTokenUseCase(promoRepository)
     }

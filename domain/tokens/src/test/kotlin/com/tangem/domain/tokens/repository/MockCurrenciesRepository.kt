@@ -153,7 +153,9 @@ internal class MockCurrenciesRepository(
         error("not implemented")
     }
 
-    override fun getAllWalletsCryptoCurrencies(currencyRawId: String): Flow<Map<UserWallet, List<CryptoCurrency>>> {
+    override fun getAllWalletsCryptoCurrencies(
+        currencyRawId: CryptoCurrency.RawID,
+    ): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return emptyFlow()
     }
 

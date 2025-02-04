@@ -111,7 +111,7 @@ class SaveManagedTokensUseCase(
                         is ManagedCryptoCurrency.SourceNetwork.Default -> customTokensRepository.createToken(
                             managedCryptoCurrency = token,
                             sourceNetwork = sourceNetwork,
-                            rawId = token.id.value,
+                            rawId = CryptoCurrency.RawID(token.id.value),
                         )
                         is ManagedCryptoCurrency.SourceNetwork.Main -> customTokensRepository.createCoin(
                             userWalletId = userWalletId,

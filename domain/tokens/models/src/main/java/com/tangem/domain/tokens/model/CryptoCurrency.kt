@@ -93,7 +93,7 @@ sealed class CryptoCurrency {
             }
 
         /** Represents a raw cryptocurrency ID. If it is a custom token, the value will be `null`. */
-        val rawCurrencyId: String? get() = (suffix as? Suffix.RawID)?.rawId
+        val rawCurrencyId: RawID? get() = (suffix as? Suffix.RawID)?.rawId?.let { RawID(it) }
 
         val contractAddress: String? get() = (suffix as? Suffix.RawID)?.contractAddress
 
@@ -194,6 +194,16 @@ sealed class CryptoCurrency {
             private const val SUFFIX_DELIMITER = ';'
             private const val DERIVATION_PATH_DELIMITER = 'd'
         }
+    }
+
+    /**
+     * Represents a raw cryptocurrency ID. Used for backend calls.
+     * Use with caution, as it does not provide the same level of uniqueness as [ID].
+     */
+    @Serializable
+    @JvmInline
+    value class RawID(val value: String) {
+        override fun toString(): String = value
     }
 
     protected fun checkProperties() {
