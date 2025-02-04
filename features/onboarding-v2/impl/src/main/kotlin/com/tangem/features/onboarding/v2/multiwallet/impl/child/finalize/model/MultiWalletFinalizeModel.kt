@@ -7,6 +7,7 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -17,6 +18,7 @@ import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -30,6 +32,7 @@ import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -48,6 +51,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
+    private val walletsRepository: WalletsRepository,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -248,6 +252,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             // save user wallet for manage tokens screen
             params.multiWalletState.update {
                 it.copy(resultUserWallet = userWallet)
+            }
+
+            if (userWallet.scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported) {
+                launch(NonCancellable) { walletsRepository.markWallet2WasCreated(userWallet.walletId) }
             }
 
             // user wallet is fully created and saved, remove scan response from preferences
