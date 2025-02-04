@@ -18,10 +18,10 @@ data class Yield(
     val isAvailable: Boolean,
 ) {
 
+    val allValidatorsFull: Boolean = validators.all { it.status == Validator.ValidatorStatus.FULL }
+
     val preferredValidators: List<Validator>
         get() = validators.filter { it.preferred }
-
-    fun getCurrentToken(rawCurrencyId: String?) = tokens.firstOrNull { rawCurrencyId == it.coinGeckoId } ?: token
 
     @Serializable
     data class Status(
@@ -75,6 +75,7 @@ data class Yield(
             DEACTIVATING,
             INACTIVE,
             JAILED,
+            FULL,
             UNKNOWN,
         }
     }
@@ -95,7 +96,7 @@ data class Yield(
         val rewardClaiming: RewardClaiming,
         val defaultValidator: String?,
         val minimumStake: Int?,
-        val supportsMultipleValidators: Boolean,
+        val supportsMultipleValidators: Boolean?,
         val revshare: Enabled,
         val fee: Enabled,
     ) {

@@ -1,5 +1,6 @@
 package com.tangem.domain.common
 
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
@@ -8,8 +9,11 @@ import com.tangem.common.extensions.calculateHashCode
 @JsonClass(generateAdapter = true)
 @Deprecated("Use Network model")
 data class BlockchainNetwork(
+    @Json(name = "blockchain")
     val blockchain: Blockchain,
+    @Json(name = "derivationPath")
     val derivationPath: String?,
+    @Json(name = "tokens")
     val tokens: List<Token>,
 ) {
 

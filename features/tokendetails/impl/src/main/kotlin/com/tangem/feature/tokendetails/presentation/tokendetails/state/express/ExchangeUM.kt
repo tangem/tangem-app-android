@@ -15,7 +15,6 @@ internal data class ExchangeUM(
     val statuses: ImmutableList<ExchangeStatusState>,
     val notification: ExchangeStatusNotifications? = null,
     val showProviderLink: Boolean,
-    val isRefundTerminalStatus: Boolean,
     val fromCryptoCurrency: CryptoCurrency,
     val toCryptoCurrency: CryptoCurrency,
 ) : ExpressTransactionStateUM
