@@ -33,10 +33,10 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
 ) : Model() {
 
+    private val params: OnrampAddToPortfolioComponent.Params = paramsContainer.require()
+
     val state: StateFlow<OnrampAddToPortfolioUM> get() = _state
     private val _state = MutableStateFlow(value = getInitialState())
-
-    private val params: OnrampAddToPortfolioComponent.Params = paramsContainer.require()
 
     private fun getInitialState(): OnrampAddToPortfolioUM {
         return OnrampAddToPortfolioUM(
@@ -57,7 +57,7 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
                 userWalletId = params.userWalletId,
                 currencies = listOfNotNull(params.cryptoCurrency),
             )
-                .onRight { params.onSuccessAdding() }
+                .onRight { params.onSuccessAdding(params.cryptoCurrency.id) }
         }
     }
 }
