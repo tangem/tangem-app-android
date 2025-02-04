@@ -15,6 +15,6 @@ internal class TangemBlockchainSDKLogger(
 ) : BlockchainSDKLogger {
 
     override fun log(level: BlockchainSDKLogger.Level, message: String) {
-        appLogsStore.saveLogMessage(message)
+        appLogsStore.saveLogMessage(tag = "BlockchainSDK_${level.name}", message)
     }
 }

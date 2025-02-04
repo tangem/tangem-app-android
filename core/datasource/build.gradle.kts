@@ -1,3 +1,5 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -29,6 +31,7 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.models)
+    implementation(projects.features.onramp.api)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)
@@ -53,6 +56,8 @@ dependencies {
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Time */
     implementation(deps.jodatime)
@@ -62,6 +67,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
+    debugPGImplementation(deps.chucker)
     mockedImplementation(deps.chuckerStub)
     externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)

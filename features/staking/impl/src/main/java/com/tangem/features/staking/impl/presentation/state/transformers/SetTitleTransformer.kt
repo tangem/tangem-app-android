@@ -35,7 +35,7 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
                         R.string.staking_title_stake,
                         wrappedList(prevState.cryptoCurrencyName),
                     )
-                    StakingActionCommonType.Exit -> resourceReference(
+                    is StakingActionCommonType.Exit -> resourceReference(
                         R.string.staking_title_unstake,
                         wrappedList(prevState.cryptoCurrencyName),
                     )

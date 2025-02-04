@@ -1,9 +1,11 @@
 package com.tangem.lib.visa.model
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
+@JsonClass(generateAdapter = true)
 data class VisaTxHistoryResponse(
     @Json(name = "card_wallet_address")
     val cardWalletAddress: String,
@@ -11,6 +13,7 @@ data class VisaTxHistoryResponse(
     val transactions: List<Transaction>,
 ) {
 
+    @JsonClass(generateAdapter = true)
     data class Transaction(
         @Json(name = "auth_code")
         val authCode: String?,
@@ -52,6 +55,7 @@ data class VisaTxHistoryResponse(
         val transactionType: String,
     ) {
 
+        @JsonClass(generateAdapter = true)
         data class Request(
             @Json(name = "billing_amount")
             val billingAmount: BigDecimal,

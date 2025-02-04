@@ -2,6 +2,7 @@ package com.tangem.features.markets.tokenlist.impl.model.statemanager
 
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.*
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.tokenlist.impl.model.converters.MarketsTokenItemConverter
 import com.tangem.features.markets.tokenlist.impl.model.utils.logAction
 import com.tangem.features.markets.tokenlist.impl.model.utils.logStatus
@@ -302,7 +303,7 @@ internal class MarketsListBatchFlowManager(
         }
     }
 
-    fun getBatchKeysByItemIds(ids: List<String>): Set<Int> {
+    fun getBatchKeysByItemIds(ids: List<CryptoCurrency.RawID>): Set<Int> {
         val currentData = batchFlow.state.value.data
 
         return currentData
@@ -311,7 +312,7 @@ internal class MarketsListBatchFlowManager(
             .toSet()
     }
 
-    fun getTokenById(id: String): TokenMarket? {
+    fun getTokenById(id: CryptoCurrency.RawID): TokenMarket? {
         return batchFlow.state.value.data.map { it.data }.flatten().find { it.id == id }
     }
 
