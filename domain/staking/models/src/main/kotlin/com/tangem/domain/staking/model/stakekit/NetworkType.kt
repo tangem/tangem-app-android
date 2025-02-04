@@ -67,5 +67,6 @@ enum class NetworkType {
     SOLANA,
     TEZOS,
     TRON,
+    TON,
     UNKNOWN,
 }

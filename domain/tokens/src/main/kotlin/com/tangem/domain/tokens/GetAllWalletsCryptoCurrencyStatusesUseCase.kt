@@ -41,7 +41,7 @@ class GetAllWalletsCryptoCurrencyStatusesUseCase(
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(
-        currencyRawId: String,
+        currencyRawId: CryptoCurrency.RawID,
     ): Flow<Map<UserWallet, List<Either<CurrencyStatusError, CryptoCurrencyStatus>>>> {
         return currenciesRepository.getAllWalletsCryptoCurrencies(currencyRawId)
             .flatMapLatest { userWalletsWithCurrencies: Map<UserWallet, List<CryptoCurrency>> ->

@@ -2,12 +2,13 @@ package com.tangem.data.markets.converters
 
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.domain.markets.TokenQuotesShort
+import com.tangem.domain.tokens.model.CryptoCurrency
 import java.math.BigDecimal
 
 internal object TokenQuotesShortConverter {
 
-    fun convert(tokenId: String, value: QuotesResponse): TokenQuotesShort {
-        val quote = requireNotNull(value.quotes[tokenId]) {
+    fun convert(tokenId: CryptoCurrency.RawID, value: QuotesResponse): TokenQuotesShort {
+        val quote = requireNotNull(value.quotes[tokenId.value]) {
             "$tokenId is not found in the response. This shouldn't have happened."
         }
         return TokenQuotesShort(

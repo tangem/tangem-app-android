@@ -150,4 +150,6 @@ internal val Blockchain.moonPaySupportedCurrency: MoonPaySupportedCurrency?
         VanarChainTestnet -> null
         OdysseyChain, OdysseyChainTestnet -> null
         Bitrock, BitrockTestnet -> null
+        Sonic, SonicTestnet -> null
+        ApeChain, ApeChainTestnet -> null
     }

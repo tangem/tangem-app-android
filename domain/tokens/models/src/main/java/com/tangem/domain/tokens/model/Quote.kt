@@ -4,14 +4,14 @@ import java.math.BigDecimal
 
 sealed interface Quote {
 
-    val rawCurrencyId: String?
+    val rawCurrencyId: CryptoCurrency.RawID
 
     /**
      * Represents unknown financial information for a specific cryptocurrency.
      *
-     * @property rawCurrencyId The raw cryptocurrency ID. If it is a custom token, the value will be `null`.
+     * @property rawCurrencyId The raw cryptocurrency ID.
      */
-    data class Empty(override val rawCurrencyId: String?) : Quote
+    data class Empty(override val rawCurrencyId: CryptoCurrency.RawID) : Quote
 
     /**
      * Represents financial information for a specific cryptocurrency, including its fiat exchange rate and price change.
@@ -21,7 +21,7 @@ sealed interface Quote {
      * @property priceChange The price change for the cryptocurrency.
      */
     data class Value(
-        override val rawCurrencyId: String,
+        override val rawCurrencyId: CryptoCurrency.RawID,
         val fiatRate: BigDecimal,
         val priceChange: BigDecimal,
     ) : Quote

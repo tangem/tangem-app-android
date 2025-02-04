@@ -53,7 +53,15 @@ internal class SavedSwapTransactionListConverter(
 
             return SavedSwapTransactionListModel(
                 transactions = value.transactions.map { tx ->
-                    tx.copy(status = txStatuses[tx.txId])
+                    val status = txStatuses[tx.txId]
+                    val refundCurrency = status?.refundTokensResponse?.let { id ->
+                        responseCryptoCurrenciesFactory.createCurrency(
+                            responseToken = id,
+                            scanResponse = scanResponse,
+                        )
+                    }
+                    val statusWithRefundCurrency = status?.copy(refundCurrency = refundCurrency)
+                    tx.copy(status = statusWithRefundCurrency)
                 },
                 userWalletId = value.userWalletId,
                 fromCryptoCurrencyId = value.fromCryptoCurrencyId,

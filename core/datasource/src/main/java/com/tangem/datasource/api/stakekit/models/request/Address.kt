@@ -1,7 +1,9 @@
 package com.tangem.datasource.api.stakekit.models.request
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = true)
 data class Address(
     @Json(name = "address")
     val address: String,
@@ -11,6 +13,7 @@ data class Address(
     val explorerUrl: String? = null,
 ) {
 
+    @JsonClass(generateAdapter = true)
     data class AdditionalAddresses(
         // cosmos-specific
         @Json(name = "cosmosPubKey")
