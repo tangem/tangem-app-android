@@ -26,6 +26,7 @@ internal sealed class TokenDetailsBalanceBlockState {
         val displayCryptoBalance: String,
         val displayFiatBalance: String,
         val isBalanceSelectorEnabled: Boolean,
+        val isBalanceFlickering: Boolean,
     ) : TokenDetailsBalanceBlockState()
 
     data class Error(
