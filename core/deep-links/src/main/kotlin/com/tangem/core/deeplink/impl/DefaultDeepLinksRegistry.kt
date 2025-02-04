@@ -13,8 +13,10 @@ import timber.log.Timber
 internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
 
     private var registries: List<DeepLink> = emptyList()
+    private var lastIntent: Intent? = null
 
     override fun launch(intent: Intent): Boolean {
+        lastIntent = intent
         val received = intent.data ?: return false
         var hasMatch = false
 
@@ -33,25 +35,14 @@ internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
 
             val params = getParams(expected, received)
 
-            Timber.i(
-                """
-                    Matched deep link
-                    |- Expected URI: $expected
-                    |- Received URI: $received
-                    |- Params: $params
-                """.trimIndent(),
-            )
+            logMatch(hasMatch, expected, received, params)
+
             deepLink.onReceive(params)
+            lastIntent = null // clear intent if it was handled
         }
 
         if (!hasMatch) {
-            Timber.i(
-                """
-                    No match found for deep link
-                    |- Received URI: $received
-                    |- Registries: $registries
-                """.trimIndent(),
-            )
+            logMatch(hasMatch, null, received, null)
         }
 
         return hasMatch
@@ -123,6 +114,54 @@ internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
         }
 
         register(deepLinks)
+    }
+
+    override fun triggerDelayedDeeplink() {
+        if (lastIntent != null) {
+            val intent = lastIntent
+            val received = intent?.data ?: return
+            var hasMatch = false
+            registries.forEach { deepLink ->
+                if (!deepLink.shouldHandleDelayed) return@forEach
+                val expected = deepLink.uri.toUri()
+                if (!isMatches(expected, received)) return@forEach
+                hasMatch = true
+
+                val params = getParams(expected, received)
+                logMatch(hasMatch, expected, received, params)
+                deepLink.onReceive(params)
+            }
+
+            if (!hasMatch) {
+                logMatch(hasMatch, null, received, null)
+            }
+            lastIntent = null // clear intent in any case handle or not
+        }
+    }
+
+    override fun cancelDelayedDeeplink() {
+        lastIntent = null
+    }
+
+    private fun logMatch(hasMatch: Boolean, expected: Uri?, received: Uri?, params: Map<String, String>?) {
+        if (hasMatch) {
+            Timber.i(
+                """
+                    Matched deep link
+                    |- Expected URI: $expected
+                    |- Received URI: $received
+                    |- Params: $params
+                """.trimIndent(),
+            )
+        } else {
+            Timber.i(
+                """
+                    No match found for deep link
+                    |- Received URI: $received
+                    |- Registries: $registries
+                """.trimIndent(),
+            )
+        }
     }
 
     private fun isMatches(received: Uri, expected: Uri): Boolean {
