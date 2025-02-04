@@ -1,5 +1,6 @@
 package com.tangem.features.details.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
@@ -10,11 +11,17 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.details.component.UserWalletListComponent
+import com.tangem.features.details.component.preview.PreviewUserWalletListComponent
 import com.tangem.features.details.entity.UserWalletListUM
 import com.tangem.features.details.impl.R
 
@@ -86,3 +93,23 @@ private fun AddWalletButton(
         }
     }
 }
+
+// region Preview
+@Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun Preview_UserWalletListBlock(
+    @PreviewParameter(UserWalletListComponentPreviewProvider::class) component: UserWalletListComponent,
+) {
+    TangemThemePreview {
+        component.Content(Modifier)
+    }
+}
+
+private class UserWalletListComponentPreviewProvider : PreviewParameterProvider<UserWalletListComponent> {
+    override val values: Sequence<UserWalletListComponent>
+        get() = sequenceOf(
+            PreviewUserWalletListComponent(),
+        )
+}
+// endregion Preview
