@@ -114,7 +114,7 @@ internal class StakingAnalyticSender(
 
         return when (value.actionType) {
             StakingActionCommonType.Enter -> StakingActionType.STAKE
-            StakingActionCommonType.Exit -> StakingActionType.UNSTAKE
+            is StakingActionCommonType.Exit -> StakingActionType.UNSTAKE
             is StakingActionCommonType.Pending -> confirmationState?.pendingAction?.type ?: StakingActionType.UNKNOWN
         }
     }

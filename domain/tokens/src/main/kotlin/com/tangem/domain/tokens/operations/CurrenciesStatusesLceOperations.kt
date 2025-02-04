@@ -166,7 +166,7 @@ internal class CurrenciesStatusesLceOperations(
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
-        return quotesRepository.getQuotesUpdates(tokensIds)
+        return quotesRepository.getQuotesUpdates(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
             .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
             .retryWhen { cause, _ ->
                 emit(TokenListError.DataError(cause).left())

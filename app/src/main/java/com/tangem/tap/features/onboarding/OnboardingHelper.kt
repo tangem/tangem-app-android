@@ -13,6 +13,7 @@ import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
@@ -42,6 +43,12 @@ object OnboardingHelper {
             store.state.globalState.onboardingState.onboardingManager ?: OnboardingManager(response)
         val cardId = response.card.cardId
         return when {
+            response.cardTypesResolver.isVisaWallet() -> {
+                if (response.visaCardActivationStatus == null) error("Visa card activation status is null")
+
+                response.visaCardActivationStatus !is VisaCardActivationStatus.Activated
+            }
+
             response.cardTypesResolver.isTangemTwins() -> {
                 if (!response.twinsIsTwinned()) {
                     true
@@ -66,7 +73,8 @@ object OnboardingHelper {
     fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
         val newOnboardingSupportTypes = scanResponse.productType == ProductType.Wallet2 ||
             scanResponse.productType == ProductType.Ring ||
-            scanResponse.productType == ProductType.Wallet // AppRoute.OnboardingOther is also supported
+            scanResponse.productType == ProductType.Wallet ||
+            scanResponse.productType == ProductType.Visa // AppRoute.OnboardingOther is also supported
         if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled &&
             newOnboardingSupportTypes
         ) {
