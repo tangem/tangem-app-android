@@ -16,9 +16,11 @@ import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.markets.impl.R
 import com.tangem.features.markets.portfolio.impl.ui.preview.PreviewMyPortfolioUMProvider
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import kotlinx.collections.immutable.persistentListOf
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState as TokenFiatAmountState
 
 @Composable
@@ -96,7 +98,14 @@ private class PortfolioTokenUMProvider : CollectionPreviewParameterProvider<Port
     collection = listOf(
         tokenUM.copy(
             tokenItemState = (tokenUM.tokenItemState as TokenItemState.Content).copy(
-                fiatAmountState = contentFiatAmount.copy(hasStaked = true),
+                fiatAmountState = contentFiatAmount.copy(
+                    icons = persistentListOf(
+                        TokenItemState.FiatAmountState.Content.IconUM(
+                            iconRes = R.drawable.ic_staking_24,
+                            useAccentColor = true,
+                        ),
+                    ),
+                ),
             ),
         ),
         tokenUM.copy(
