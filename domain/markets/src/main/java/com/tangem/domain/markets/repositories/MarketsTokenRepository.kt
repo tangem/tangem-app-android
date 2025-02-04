@@ -15,25 +15,29 @@ interface MarketsTokenRepository {
     suspend fun getChart(
         fiatCurrencyCode: String,
         interval: PriceChangeInterval,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
     ): TokenChart
 
     suspend fun getChartPreview(
         fiatCurrencyCode: String,
         interval: PriceChangeInterval,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
     ): TokenChart
 
     suspend fun getTokenInfo(
         fiatCurrencyCode: String,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
         languageCode: String,
     ): TokenMarketInfo
 
-    suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String): TokenQuotes
+    suspend fun getTokenQuotes(
+        fiatCurrencyCode: String,
+        tokenId: CryptoCurrency.RawID,
+        tokenSymbol: String,
+    ): TokenQuotes
 
     suspend fun createCryptoCurrency(
         userWalletId: UserWalletId,
@@ -46,5 +50,5 @@ interface MarketsTokenRepository {
      *
      * @param tokenId token id
      */
-    suspend fun getTokenExchanges(tokenId: String): List<TokenMarketExchange>
+    suspend fun getTokenExchanges(tokenId: CryptoCurrency.RawID): List<TokenMarketExchange>
 }
