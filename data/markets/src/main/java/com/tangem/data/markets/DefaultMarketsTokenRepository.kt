@@ -125,10 +125,10 @@ internal class DefaultMarketsTokenRepository(
     override suspend fun getChart(
         fiatCurrencyCode: String,
         interval: PriceChangeInterval,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
     ) = withContext(dispatcherProvider.io) {
-        val mappedTokenId = getTokenIdIfL2Network(tokenId)
+        val mappedTokenId = getTokenIdIfL2Network(tokenId.value)
         val response = marketsApi.getCoinChart(
             currency = fiatCurrencyCode,
             coinId = mappedTokenId,
@@ -161,10 +161,10 @@ internal class DefaultMarketsTokenRepository(
     override suspend fun getChartPreview(
         fiatCurrencyCode: String,
         interval: PriceChangeInterval,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
     ) = withContext(dispatcherProvider.io) {
-        val mappedTokenId = getTokenIdIfL2Network(tokenId)
+        val mappedTokenId = getTokenIdIfL2Network(tokenId.value)
 
         val chart = catchListErrorAndSendEvent {
             marketsApi.getCoinsListCharts(
@@ -193,7 +193,7 @@ internal class DefaultMarketsTokenRepository(
 
     override suspend fun getTokenInfo(
         fiatCurrencyCode: String,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         tokenSymbol: String,
         languageCode: String,
     ) = withContext(dispatcherProvider.io) {
@@ -203,16 +203,16 @@ internal class DefaultMarketsTokenRepository(
         ) {
             marketsApi.getCoinMarketData(
                 currency = fiatCurrencyCode,
-                coinId = tokenId,
+                coinId = tokenId.value,
                 language = languageCode,
             ).getOrThrow()
         }
 
-        val resultResponse = result.applyL2Compatibility(tokenId)
+        val resultResponse = result.applyL2Compatibility(tokenId.value)
         return@withContext tokenMarketInfoConverter.convert(resultResponse)
     }
 
-    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: String, tokenSymbol: String) =
+    override suspend fun getTokenQuotes(fiatCurrencyCode: String, tokenId: CryptoCurrency.RawID, tokenSymbol: String) =
         withContext(dispatcherProvider.io) {
             // for second markets iteration we should use extended api method with all required fields
 
@@ -222,7 +222,7 @@ internal class DefaultMarketsTokenRepository(
             ) {
                 tangemTechApi.getQuotes(
                     currencyId = fiatCurrencyCode,
-                    coinIds = tokenId,
+                    coinIds = tokenId.value,
                     fields = marketsQuoteFields.joinToString(separator = ","),
                 ).getOrThrow()
             }
@@ -263,10 +263,10 @@ internal class DefaultMarketsTokenRepository(
         }
     }
 
-    override suspend fun getTokenExchanges(tokenId: String): List<TokenMarketExchange> {
+    override suspend fun getTokenExchanges(tokenId: CryptoCurrency.RawID): List<TokenMarketExchange> {
         return withContext(dispatcherProvider.io) {
             cacheRegistry.invokeOnExpire(key = "coins/$tokenId/exchanges", skipCache = false) {
-                val response = marketsApi.getCoinExchanges(coinId = tokenId).getOrThrow()
+                val response = marketsApi.getCoinExchanges(coinId = tokenId.value).getOrThrow()
 
                 tokenExchangesStore.store(value = response.exchanges)
             }

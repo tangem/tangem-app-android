@@ -61,7 +61,7 @@ internal class AmountRequirementStateTransformer(
                     R.string.staking_amount_tron_integer_error,
                     wrappedList(roundedDownCrypto),
                 )
-                StakingActionCommonType.Exit -> resourceReference(
+                is StakingActionCommonType.Exit -> resourceReference(
                     R.string.staking_amount_tron_integer_error_unstaking,
                     wrappedList(roundedDownCrypto),
                 )
@@ -96,7 +96,7 @@ internal class AmountRequirementStateTransformer(
                 val enterRequirements = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]
                 enterRequirements?.getError(amountDecimal, R.string.staking_amount_requirement_error)
             }
-            StakingActionCommonType.Exit -> {
+            is StakingActionCommonType.Exit -> {
                 val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT)
                 exitRequirements?.getError(amountDecimal, R.string.staking_unstake_amount_requirement_error)
             }
@@ -107,7 +107,7 @@ internal class AmountRequirementStateTransformer(
     private fun isIntegerOnlyError(amountState: AmountState.Data, actionType: StakingActionCommonType): Boolean {
         val cryptoAmountValue = amountState.amountTextField.cryptoAmount.value ?: return false
 
-        val isEnterOrExit = actionType == StakingActionCommonType.Enter || actionType == StakingActionCommonType.Exit
+        val isEnterOrExit = actionType == StakingActionCommonType.Enter || actionType is StakingActionCommonType.Exit
         val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
 
         val isIntegerOnly = cryptoAmountValue.isZero() || cryptoAmountValue.remainder(BigDecimal.ONE).isZero()
