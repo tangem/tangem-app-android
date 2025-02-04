@@ -45,7 +45,7 @@ internal class StakingInfoNotificationsFactory(
 
         when (prevState.actionType) {
             StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
-            StakingActionCommonType.Exit -> addExitInfoNotifications()
+            is StakingActionCommonType.Exit -> addExitInfoNotifications()
             is StakingActionCommonType.Pending -> addPendingInfoNotifications(prevState)
         }
     }
@@ -167,7 +167,7 @@ internal class StakingInfoNotificationsFactory(
         prevState: StakingUiState,
         actionAmount: BigDecimal,
     ) {
-        if (prevState.actionType != StakingActionCommonType.Exit) return
+        if (prevState.actionType !is StakingActionCommonType.Exit) return
 
         val maxAmount = prevState.balanceState?.cryptoAmount ?: return
         val exitRequirements = yield.args.exit?.args?.get(Yield.Args.ArgType.AMOUNT) ?: return
