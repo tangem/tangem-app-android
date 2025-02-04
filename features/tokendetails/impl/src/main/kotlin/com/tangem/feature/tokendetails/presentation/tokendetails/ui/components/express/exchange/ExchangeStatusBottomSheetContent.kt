@@ -9,6 +9,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import com.tangem.common.ui.expressStatus.ExpressEstimate
+import com.tangem.common.ui.expressStatus.ExpressHideButton
 import com.tangem.common.ui.expressStatus.ExpressProvider
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerH10
@@ -70,6 +71,11 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM) {
         if (state.notification != null) {
             Notification(state = state.notification, activeStatus = state.activeStatus)
         }
+        ExpressHideButton(
+            isTerminal = state.activeStatus?.isTerminal == true,
+            isAutoDisposable = state.activeStatus?.isAutoDisposable == true,
+            onClick = state.info.onDisposeExpressStatus,
+        )
         SpacerH24()
     }
 }

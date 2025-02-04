@@ -30,12 +30,12 @@ internal class OnrampStatusFactory @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    suspend fun removeTransactionOnBottomSheetClosed() {
+    suspend fun removeTransactionOnBottomSheetClosed(forceDispose: Boolean) {
         val state = stateHolder.getSelectedWallet()
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
-        if (selectedTx.activeStatus.isTerminal) {
+        if (selectedTx.activeStatus.isAutoDisposable || forceDispose) {
             onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
         }
     }

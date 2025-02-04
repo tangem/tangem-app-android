@@ -16,6 +16,8 @@ internal sealed interface WalletAlertState {
         open val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
         open val isWarningConfirmButton: Boolean = false
         abstract val onConfirmClick: (() -> Unit)?
+        open val cancelButtonText: TextReference? = null
+        open val onCancelClick: (() -> Unit)? = null
     }
 
     @Immutable
@@ -106,5 +108,15 @@ internal sealed interface WalletAlertState {
             resourceReference(id = R.string.action_buttons_swap_no_tokens_added_alert_message)
 
         override val onConfirmClick: (() -> Unit)? = null
+    }
+
+    data class ConfirmExpressStatusHide(
+        override val onConfirmClick: (() -> Unit),
+        override val onCancelClick: (() -> Unit),
+    ) : Basic() {
+        override val title: TextReference = resourceReference(R.string.express_status_hide_dialog_title)
+        override val message: TextReference = resourceReference(R.string.express_status_hide_dialog_text)
+        override val confirmButtonText: TextReference = resourceReference(R.string.common_hide)
+        override val cancelButtonText: TextReference = resourceReference(R.string.common_cancel)
     }
 }
