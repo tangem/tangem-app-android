@@ -1,3 +1,5 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -22,6 +24,7 @@ dependencies {
     implementation(projects.domain.markets)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.tokens)
 
     implementation(projects.data.common)
 
@@ -39,5 +42,7 @@ dependencies {
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
     implementation(deps.tangem.blockchain)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 }

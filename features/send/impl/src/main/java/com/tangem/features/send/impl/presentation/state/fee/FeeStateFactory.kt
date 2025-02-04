@@ -229,7 +229,7 @@ internal class FeeStateFactory(
                     symbol = this.token.symbol,
                     contractAddress = this.token.contractAddress,
                     decimals = this.token.decimals,
-                    id = this.token.id.rawCurrencyId,
+                    id = this.token.id.rawCurrencyId?.value,
                 ),
             )
         }
