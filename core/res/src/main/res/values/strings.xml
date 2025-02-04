@@ -784,6 +784,8 @@
   <string name="staking_details_unbonding_period_info">The period you must wait after requesting to withdraw funds from staking before the tokens become available.</string>
   <string name="staking_details_warmup_period">Warmup period</string>
   <string name="staking_details_warmup_period_info">The allocated time for activating participation in staking.</string>
+  <string name="staking_error_no_validators_message">No available validators at the moment. Please try again later.</string>
+  <string name="staking_error_no_validators_title">Staking Unavailable</string>
   <string name="staking_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the staking.</string>
   <string name="staking_legal">By using staking functionality, you agree with provider’s %1$s and %2$s</string>
   <string name="staking_locked">Locked</string>
