@@ -1,7 +1,10 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
     id("configuration")
 }
 
@@ -22,7 +25,7 @@ dependencies {
     // endregion
 
     // region DI libraries
-    implementation(deps.hilt.core)
+    implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
     // endregion
 
@@ -31,6 +34,8 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 
     // region Firebase libraries
