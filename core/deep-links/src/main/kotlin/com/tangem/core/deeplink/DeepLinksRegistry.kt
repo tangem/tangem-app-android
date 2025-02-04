@@ -60,4 +60,12 @@ interface DeepLinksRegistry {
      * Registers the [deepLinks] and ensures that they are unregistered when the [ViewModel] is closed.
      */
     fun registerWithViewModel(viewModel: ViewModel, deepLinks: Collection<DeepLink>)
+
+    /**
+     * Triggers run last launched [Intent] with deeplink handlers that can handle delayed deeplink
+     * after handle [Intent] clear that and second time no intent will be handled
+     */
+    fun triggerDelayedDeeplink()
+
+    fun cancelDelayedDeeplink()
 }
