@@ -9,8 +9,6 @@ import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
-import com.tangem.common.core.TangemSdkError
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -19,13 +17,11 @@ import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.transaction.R
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
-import com.tangem.domain.transaction.error.SendTransactionError.Companion.USER_CANCELLED_ERROR_CODE
+import com.tangem.domain.transaction.error.parseWrappedError
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.sdk.extensions.localizedDescriptionRes
 
 class SendTransactionUseCase(
     private val demoConfig: DemoConfig,
@@ -129,35 +125,6 @@ class SendTransactionUseCase(
                     code = error.code,
                     message = error.customMessage,
                 )
-            }
-        }
-    }
-}
-
-fun parseWrappedError(error: BlockchainSdkError.WrappedTangemError): SendTransactionError {
-    return if (error.code == USER_CANCELLED_ERROR_CODE) {
-        SendTransactionError.UserCancelledError
-    } else {
-        when (val tangemError = error.tangemError) {
-            is TangemSdkError -> {
-                val resource = tangemError.localizedDescriptionRes()
-                val resId = resource.resId ?: R.string.common_unknown_error
-                val resArgs = resource.args.map { it.value }
-                SendTransactionError.TangemSdkError(tangemError.code, resId, wrappedList(resArgs))
-            }
-            is BlockchainSdkError.WrappedTangemError -> {
-                parseWrappedError(tangemError) // todo remove when sdk errors are revised
-            }
-            is BlockchainSdkError.WrappedThrowable -> {
-                val causeError = tangemError.cause
-                if (causeError is BlockchainSdkError) {
-                    SendTransactionError.BlockchainSdkError(causeError.code, causeError.customMessage)
-                } else {
-                    SendTransactionError.BlockchainSdkError(tangemError.code, tangemError.customMessage)
-                }
-            }
-            else -> {
-                SendTransactionError.BlockchainSdkError(error.code, tangemError.customMessage)
             }
         }
     }

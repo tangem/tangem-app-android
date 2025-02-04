@@ -911,7 +911,6 @@ internal class StateBuilder(
     fun addNotification(uiState: SwapStateHolder, message: TextReference?, onClick: () -> Unit): SwapStateHolder {
         return uiState.copy(
             notifications = notificationsFactory.getGeneralErrorStateNotifications(
-                notifications = uiState.notifications,
                 message = message,
                 onClick = onClick,
             ),
