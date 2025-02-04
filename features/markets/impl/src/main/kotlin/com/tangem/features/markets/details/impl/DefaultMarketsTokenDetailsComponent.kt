@@ -13,6 +13,7 @@ import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent.Params
 import com.tangem.features.markets.details.impl.analytics.MarketDetailsAnalyticsEvent
@@ -38,7 +39,7 @@ internal class DefaultMarketsTokenDetailsComponent @AssistedInject constructor(
     // applying l2 compatibility
     private val updatedParams = params.copy(
         token = params.token.copy(
-            id = getTokenIdIfL2Network(params.token.id),
+            id = CryptoCurrency.RawID(getTokenIdIfL2Network(params.token.id.value)),
         ),
     )
     private val analyticsParams = params.analyticsParams

@@ -95,9 +95,7 @@ class YieldConverter(
             rewardClaiming = convertRewardClaiming(metadataDTO.rewardClaiming.asMandatory("rewardClaiming")),
             defaultValidator = metadataDTO.defaultValidator,
             minimumStake = metadataDTO.minimumStake,
-            supportsMultipleValidators = metadataDTO.supportsMultipleValidators.asMandatory(
-                "supportsMultipleValidators",
-            ),
+            supportsMultipleValidators = metadataDTO.supportsMultipleValidators,
             revshare = convertEnabled(metadataDTO.revshare.asMandatory("revshare")),
             fee = convertEnabled(metadataDTO.fee.asMandatory("fee")),
         )
@@ -146,6 +144,7 @@ class YieldConverter(
             ValidatorStatusDTO.DEACTIVATING -> ValidatorStatus.DEACTIVATING
             ValidatorStatusDTO.INACTIVE -> ValidatorStatus.INACTIVE
             ValidatorStatusDTO.JAILED -> ValidatorStatus.JAILED
+            ValidatorStatusDTO.FULL -> ValidatorStatus.FULL
             else -> ValidatorStatus.UNKNOWN
         }
     }
