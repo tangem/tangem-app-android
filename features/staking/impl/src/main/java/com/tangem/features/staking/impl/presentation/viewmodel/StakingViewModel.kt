@@ -232,18 +232,28 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onNextClick(balanceState: BalanceState?) {
-        if (value.currentStep == StakingStep.InitialInfo && balanceState == null) {
-            stateController.update(
-                SetConfirmationStateInitTransformer(
-                    isEnter = true,
-                    isExplicitExit = false,
-                    balanceState = null,
-                    cryptoCurrencyStatus = cryptoCurrencyStatus,
-                    stakingApproval = stakingApproval,
-                    stakingAllowance = stakingAllowance,
-                    yieldArgs = yield.args,
-                ),
-            )
+        val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
+        val noBalanceState = balanceState == null
+        val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data
+
+        when {
+            isInitialInfoStep && noBalanceState && yield.allValidatorsFull && noYieldBalanceData -> {
+                stakingEventFactory.createStakingValidatorsUnavailableAlert()
+                return
+            }
+            isInitialInfoStep && noBalanceState -> {
+                stateController.update(
+                    SetConfirmationStateInitTransformer(
+                        isEnter = true,
+                        isExplicitExit = false,
+                        balanceState = null,
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                        stakingApproval = stakingApproval,
+                        stakingAllowance = stakingAllowance,
+                        yieldArgs = yield.args,
+                    ),
+                )
+            }
         }
         stakingStateRouter.onNextClick()
     }
