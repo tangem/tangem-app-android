@@ -59,6 +59,11 @@ fun OnrampStatusBottomSheetContent(state: ExpressTransactionStateUM.OnrampUM) {
         SpacerH12()
         ExpressStatusBlock(state = state.info.status)
         ExpressStatusNotificationBlock(state = state.info.notification)
+        ExpressHideButton(
+            isTerminal = state.activeStatus.isTerminal,
+            isAutoDisposable = state.activeStatus.isAutoDisposable,
+            onClick = state.info.onDisposeExpressStatus,
+        )
         SpacerH24()
     }
 }
