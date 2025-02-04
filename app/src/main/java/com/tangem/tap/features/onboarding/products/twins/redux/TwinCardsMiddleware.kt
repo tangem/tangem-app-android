@@ -358,7 +358,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 private fun showCardVerificationFailedDialog(error: TangemError) {
     if (error is TangemSdkError.CardVerificationFailed) {
         Analytics.send(
-            event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(AnalyticsParam.ScreensSources.Backup),
+            event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(
+                AnalyticsParam.ScreensSources.Onboarding,
+            ),
         )
 
         val resource = error.localizedDescriptionRes()
