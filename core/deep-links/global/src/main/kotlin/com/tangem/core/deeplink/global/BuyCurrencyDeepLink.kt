@@ -4,7 +4,7 @@ import com.tangem.core.deeplink.DeepLink
 
 class BuyCurrencyDeepLink(
     val onReceive: (externalTxId: String) -> Unit,
-) : DeepLink {
+) : DeepLink() {
 
     override val uri = BUY_REDIRECT_DEEPLINK
 
