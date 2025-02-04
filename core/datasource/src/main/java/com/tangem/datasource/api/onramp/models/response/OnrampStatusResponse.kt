@@ -60,6 +60,7 @@ data class OnrampStatusResponse(
     val countryCode: String,
 )
 
+@JsonClass(generateAdapter = false)
 enum class Status {
     @Json(name = "created")
     Created,

@@ -1,3 +1,5 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -21,5 +23,7 @@ dependencies {
     /** Other Libraries **/
     implementation(deps.kotlin.serialization)
     implementation(deps.arrow.core)
+    implementation(deps.moshi.kotlin)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
 
 }

@@ -4,7 +4,7 @@ import android.content.res.Configuration
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Scaffold
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,15 +24,15 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
-import com.tangem.feature.swap.domain.models.domain.ExchangeProviderType
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
 import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.preview.SwapSuccessStatePreview
 
 @Composable
 fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
     Scaffold(
         modifier = Modifier.systemBarsPadding(),
-        backgroundColor = TangemTheme.colors.background.secondary,
+        containerColor = TangemTheme.colors.background.secondary,
         content = { padding ->
             SwapSuccessScreenContent(padding = padding, state = state)
         },
@@ -162,32 +162,12 @@ private fun SwapSuccessScreenButtons(
 }
 
 // region preview
-
-private val state = SwapSuccessStateHolder(
-    timestamp = 0L,
-    txUrl = "https://www.google.com/#q=nam",
-    fee = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
-    providerName = TextReference.Str("1inch"),
-    providerType = TextReference.Str(ExchangeProviderType.DEX.providerName),
-    showStatusButton = false,
-    providerIcon = "",
-    fromTokenAmount = TextReference.Str("1 000 DAI"),
-    toTokenAmount = TextReference.Str("1 000 MATIC"),
-    fromTokenFiatAmount = TextReference.Str("1 000 $"),
-    toTokenFiatAmount = TextReference.Str("1 000 $"),
-    fromTokenIconState = CurrencyIconState.Loading,
-    toTokenIconState = CurrencyIconState.Loading,
-    rate = TextReference.Str("1 000 DAI ~ 1 000 MATIC"),
-    onExploreButtonClick = {},
-    onStatusButtonClick = {},
-)
-
 @Preview(showBackground = true)
 @Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview_Success() {
     TangemThemePreview {
-        SwapSuccessScreen(state) {}
+        SwapSuccessScreen(SwapSuccessStatePreview.state) {}
     }
 }
 // endregion preview

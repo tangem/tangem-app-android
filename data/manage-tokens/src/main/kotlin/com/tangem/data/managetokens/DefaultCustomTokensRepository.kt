@@ -122,7 +122,7 @@ internal class DefaultCustomTokensRepository(
             if (coinNetwork != null) {
                 cryptoCurrencyFactory.createToken(
                     network = network,
-                    rawId = coin.id,
+                    rawId = CryptoCurrency.RawID(coin.id),
                     name = coin.name,
                     symbol = coin.symbol,
                     decimals = coinNetwork.decimalCount!!.toInt(),
@@ -154,7 +154,7 @@ internal class DefaultCustomTokensRepository(
     override suspend fun createToken(
         managedCryptoCurrency: ManagedCryptoCurrency.Token,
         sourceNetwork: ManagedCryptoCurrency.SourceNetwork.Default,
-        rawId: String?,
+        rawId: CryptoCurrency.RawID?,
     ): CryptoCurrency.Token {
         return cryptoCurrencyFactory.createToken(
             network = sourceNetwork.network,

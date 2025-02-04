@@ -17,11 +17,13 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.model.VisaActivationInput
 import com.tangem.domain.visa.model.VisaAuthChallenge
-import com.tangem.domain.visa.model.VisaCardActivationResponse
+import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
+import com.tangem.operations.sign.SignHashResponse
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.sdk.api.visa.VisaCardActivationResponse
 
 @Suppress("TooManyFunctions")
 interface TangemSdkManager {
@@ -152,6 +154,8 @@ interface TangemSdkManager {
         challengeToSign: VisaAuthChallenge.Card?,
         activationInput: VisaActivationInput,
     ): CompletionResult<VisaCardActivationResponse>
+
+    suspend fun visaCustomerWalletApprove(visaDataForApprove: VisaDataForApprove): CompletionResult<SignHashResponse>
 
     // endregion
 }

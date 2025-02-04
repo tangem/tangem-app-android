@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.balanceHiding)
     implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.card)
     implementation(projects.domain.demo)
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)

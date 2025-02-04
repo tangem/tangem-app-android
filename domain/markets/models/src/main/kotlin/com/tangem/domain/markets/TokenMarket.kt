@@ -1,9 +1,10 @@
 package com.tangem.domain.markets
 
+import com.tangem.domain.tokens.model.CryptoCurrency
 import java.math.BigDecimal
 
 data class TokenMarket(
-    val id: String,
+    val id: CryptoCurrency.RawID,
     val name: String,
     val symbol: String,
     val marketRating: Int?,

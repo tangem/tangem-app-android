@@ -1,11 +1,17 @@
 package com.tangem.domain.wallets.models
 
+import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class UserWalletId(val stringValue: String) {
+@JsonClass(generateAdapter = true)
+data class UserWalletId(
+    @Json(name = "stringValue")
+    val stringValue: String,
+) {
 
     val value = stringValue.hexToBytes()
 
