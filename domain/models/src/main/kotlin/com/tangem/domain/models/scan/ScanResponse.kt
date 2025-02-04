@@ -28,6 +28,26 @@ data class ScanResponse(
 
 typealias KeyWalletPublicKey = ByteArrayKey
 
+@JsonClass(generateAdapter = false)
 enum class ProductType {
-    Note, Twins, Wallet, Start2Coin, Wallet2, Ring, Visa,
+    @Json(name = "Note")
+    Note,
+
+    @Json(name = "Twins")
+    Twins,
+
+    @Json(name = "Wallet")
+    Wallet,
+
+    @Json(name = "Start2Coin")
+    Start2Coin,
+
+    @Json(name = "Wallet2")
+    Wallet2,
+
+    @Json(name = "Ring")
+    Ring,
+
+    @Json(name = "Visa")
+    Visa,
 }
