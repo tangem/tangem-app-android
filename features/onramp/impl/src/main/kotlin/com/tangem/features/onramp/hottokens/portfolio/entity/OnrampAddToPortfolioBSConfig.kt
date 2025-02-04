@@ -8,6 +8,6 @@ internal sealed class OnrampAddToPortfolioBSConfig {
     data class AddToPortfolio(
         val cryptoCurrency: CryptoCurrency,
         val currencyIconState: CurrencyIconState,
-        val onSuccessAdding: () -> Unit,
+        val onSuccessAdding: (CryptoCurrency.ID) -> Unit,
     ) : OnrampAddToPortfolioBSConfig()
 }
