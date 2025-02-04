@@ -308,8 +308,8 @@ internal class WalletViewModel @Inject constructor(
                     ),
                 )
             }
-            is WalletsUpdateActionResolver.Action.UpdateWalletName -> {
-                stateHolder.update(transformer = RenameWalletTransformer(action.selectedWalletId, action.name))
+            is WalletsUpdateActionResolver.Action.RenameWallets -> {
+                stateHolder.update(transformer = RenameWalletsTransformer(renamedWallets = action.renamedWallets))
             }
             is WalletsUpdateActionResolver.Action.Unknown -> {
                 Timber.w("Unable to perform action: $action")
