@@ -11,8 +11,9 @@ internal class PreviewRenameWalletComponent : RenameWalletComponent {
     private val previewState = RenameWalletUM(
         walletNameValue = TextFieldValue(text = "My Wallet"),
         isConfirmEnabled = false,
-        updateValue = {},
+        onValueChange = {},
         onConfirm = {},
+        error = null,
     )
 
     override fun dismiss() {}
