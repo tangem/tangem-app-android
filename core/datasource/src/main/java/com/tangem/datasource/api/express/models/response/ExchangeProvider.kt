@@ -1,8 +1,10 @@
 package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import java.math.BigDecimal
 
+@JsonClass(generateAdapter = true)
 data class ExchangeProvider(
     @Json(name = "id")
     val id: String,
@@ -32,6 +34,7 @@ data class ExchangeProvider(
     val slippage: BigDecimal?,
 )
 
+@JsonClass(generateAdapter = false)
 enum class ExchangeProviderType {
     @Json(name = "dex")
     DEX,

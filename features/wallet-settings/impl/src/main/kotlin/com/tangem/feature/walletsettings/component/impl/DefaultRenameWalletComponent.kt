@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.wallets.models.UpdateWalletError
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetWalletNamesUseCase
 import com.tangem.domain.wallets.usecase.RenameWalletUseCase
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.feature.walletsettings.entity.RenameWalletUM
@@ -26,17 +27,20 @@ import timber.log.Timber
 internal class DefaultRenameWalletComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
     @Assisted private val params: RenameWalletComponent.Params,
+    getWalletNamesUseCase: GetWalletNamesUseCase,
     private val renameWalletUseCase: RenameWalletUseCase,
 ) : RenameWalletComponent, AppComponentContext by context {
 
-    private val currentWalletName = params.currentName
+    private val initialName = params.currentName
+    private val walletNames by lazy(getWalletNamesUseCase::invoke)
 
     private val stateFlow: MutableStateFlow<RenameWalletUM> = MutableStateFlow(
         value = RenameWalletUM(
             walletNameValue = TextFieldValue(text = params.currentName),
-            updateValue = ::updateValue,
+            onValueChange = ::updateValue,
             isConfirmEnabled = false,
             onConfirm = { renameWallet(params.userWalletId) },
+            error = null,
         ),
     )
 
@@ -48,24 +52,31 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
     override fun Dialog() {
         val model by stateFlow.collectAsStateWithLifecycle()
 
-        RenameWalletDialog(
-            model = model,
-            onDismiss = ::dismiss,
-        )
+        RenameWalletDialog(model = model, onDismiss = ::dismiss)
     }
 
     private fun updateValue(value: TextFieldValue) {
         stateFlow.update {
+            val isNameAlreadyExists = initialName != value.text && walletNames.contains(value.text)
+
             it.copy(
                 walletNameValue = value,
-                isConfirmEnabled = value.text.isNotBlank() && value.text != currentWalletName,
+                isConfirmEnabled = value.text.isNotBlank() &&
+                    value.text != initialName &&
+                    !isNameAlreadyExists,
+                error = if (isNameAlreadyExists) {
+                    resourceReference(
+                        id = R.string.user_wallet_list_rename_popup_error_already_exists,
+                        formatArgs = wrappedList(value.text),
+                    )
+                } else {
+                    null
+                },
             )
         }
     }
 
     private fun renameWallet(userWalletId: UserWalletId) = componentScope.launch {
-        stateFlow.update { it.copy(isConfirmEnabled = false) }
-
         val newName = stateFlow.value.walletNameValue
         val maybeError = renameWalletUseCase(userWalletId, newName.text).leftOrNull()
 
@@ -76,14 +87,14 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
                 is UpdateWalletError.DataError -> resourceReference(id = R.string.common_unknown_error)
                 is UpdateWalletError.NameAlreadyExists -> resourceReference(
                     id = R.string.user_wallet_list_rename_popup_error_already_exists,
-                    formatArgs = wrappedList(newName),
+                    formatArgs = wrappedList(newName.text),
                 )
             }
 
             messageSender.send(message = SnackbarMessage(message))
+        } else {
+            dismiss()
         }
-
-        dismiss()
     }
 
     @AssistedFactory

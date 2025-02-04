@@ -3,6 +3,7 @@ package com.tangem.data.markets.converters
 import com.tangem.datasource.api.markets.models.response.TokenMarketListResponse
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenQuotesShort
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.utils.converter.Converter
 
 internal object TokenMarketListConverter : Converter<TokenMarketListResponse, List<TokenMarket>> {
@@ -18,7 +19,7 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, Li
 
         return value.tokens.map { token ->
             TokenMarket(
-                id = token.id,
+                id = CryptoCurrency.RawID(token.id),
                 name = token.name,
                 symbol = token.symbol,
                 marketRating = token.marketRating,
