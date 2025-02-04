@@ -78,6 +78,7 @@ internal class SetBalancesAndLimitsTransformer(
                 },
                 cardCount = userWallet.getCardsCount(),
                 isZeroBalance = visaCurrency.balances.available.isZero(),
+                isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
             )
         }
     }
