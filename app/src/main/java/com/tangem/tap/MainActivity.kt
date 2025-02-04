@@ -281,7 +281,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         sendStakingUnsubmittedHashes()
         checkGoogleServicesAvailability()
 
-        if (intent != null) {
+        if (intent != null && savedInstanceState == null) {
+            // handle intent only on start, not on recreate
             deepLinksRegistry.launch(intent)
         }
 
