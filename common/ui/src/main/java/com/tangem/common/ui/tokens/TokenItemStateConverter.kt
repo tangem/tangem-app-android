@@ -1,5 +1,6 @@
 package com.tangem.common.ui.tokens
 
+import com.tangem.common.ui.R
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -17,6 +18,7 @@ import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
+import kotlinx.collections.immutable.toImmutableList
 import java.math.BigDecimal
 
 /**
@@ -219,7 +221,14 @@ class TokenItemStateConverter(
                 -> {
                     TokenItemState.FiatAmountState.Content(
                         text = status.getFormattedFiatAmount(appCurrency = appCurrency, includeStaking = true),
-                        hasStaked = !status.getStakedBalance().isZero(),
+                        icons = buildList {
+                            if (!status.getStakedBalance().isZero()) {
+                                TokenItemState.FiatAmountState.Content.IconUM(
+                                    iconRes = R.drawable.ic_staking_24,
+                                    useAccentColor = true,
+                                ).let(::add)
+                            }
+                        }.toImmutableList(),
                     )
                 }
                 is CryptoCurrencyStatus.Unreachable,
