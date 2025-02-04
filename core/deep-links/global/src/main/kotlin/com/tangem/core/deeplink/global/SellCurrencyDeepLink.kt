@@ -2,7 +2,10 @@ package com.tangem.core.deeplink.global
 
 import com.tangem.core.deeplink.DeepLink
 
-class SellCurrencyDeepLink(val onReceive: (data: Data) -> Unit) : DeepLink {
+class SellCurrencyDeepLink(
+    val onReceive: (data: Data) -> Unit,
+    shouldHandleDelayed: Boolean,
+) : DeepLink(shouldHandleDelayed) {
 
     override val uri: String = "tangem://redirect_sell"
 
