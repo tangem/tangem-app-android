@@ -18,6 +18,8 @@ data class Yield(
     val isAvailable: Boolean,
 ) {
 
+    val allValidatorsFull: Boolean = validators.all { it.status == Validator.ValidatorStatus.FULL }
+
     val preferredValidators: List<Validator>
         get() = validators.filter { it.preferred }
 
