@@ -1,7 +1,9 @@
 package com.tangem.datasource.api.stakekit.models.response.model.transaction
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 
+@JsonClass(generateAdapter = false)
 enum class StakingTransactionStatusDTO {
     @Json(name = "NOT_FOUND")
     NOT_FOUND,
