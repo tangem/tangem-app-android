@@ -11,11 +11,9 @@ internal class DefaultQuotesStore(
     private val dataStore: StringKeyDataStore<StoredQuote>,
 ) : QuotesStore {
 
-    override fun get(currenciesIds: Set<CryptoCurrency.ID>): Flow<Set<StoredQuote>> {
+    override fun get(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<StoredQuote>> {
         return channelFlow {
-            val flows = currenciesIds.mapNotNull { currencyId ->
-                currencyId.rawCurrencyId?.let(dataStore::get)
-            }
+            val flows = currenciesIds.map { currencyId -> dataStore.get(currencyId.value) }
 
             if (dataStore.isEmpty() || flows.isEmpty()) {
                 send(emptySet())
@@ -30,12 +28,8 @@ internal class DefaultQuotesStore(
         }
     }
 
-    override suspend fun getSync(currenciesIds: Set<CryptoCurrency.ID>): Set<StoredQuote> {
-        return currenciesIds.mapNotNull { currencyId ->
-            currencyId.rawCurrencyId?.let {
-                dataStore.getSyncOrNull(it)
-            }
-        }.toSet()
+    override suspend fun getSync(currenciesIds: Set<CryptoCurrency.RawID>): Set<StoredQuote> {
+        return currenciesIds.mapNotNull { currencyId -> dataStore.getSyncOrNull(currencyId.value) }.toSet()
     }
 
     override suspend fun store(response: QuotesResponse) {

@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptySetOf
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import java.math.BigDecimal
 
@@ -67,11 +68,10 @@ internal object MockQuotes {
         priceChange = BigDecimal("-0.10"),
     )
 
-    val quote11 = Quote.Empty(null)
-    val quote12 = Quote.Empty("null")
+    val quote11 = Quote.Empty(CryptoCurrency.RawID("null"))
 
     val quotes = nonEmptySetOf(
         quote1, quote2, quote3, quote4, quote5, quote6, quote7, quote8, quote9, quote10,
-        quote11, quote12,
+        quote11,
     )
 }

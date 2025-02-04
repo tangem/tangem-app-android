@@ -31,6 +31,7 @@ internal class OnboardingChildFactory @Inject constructor(
                 params = OnboardingVisaComponent.Params(
                     scanResponse = route.scanResponse,
                     titleProvider = route.titleProvider,
+                    onDone = route.onDone,
                 ),
             )
             is OnboardingRoute.ManageTokens -> onboardingManageTokensComponentFactory.create(

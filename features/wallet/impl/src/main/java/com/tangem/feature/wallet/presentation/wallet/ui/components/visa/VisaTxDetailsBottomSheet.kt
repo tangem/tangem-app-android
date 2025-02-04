@@ -107,32 +107,33 @@ private fun TransactionBlock(transaction: VisaTxDetailsBottomSheetConfig.Transac
     )
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Request, modifier: Modifier = Modifier) {
     BlockContent(
         modifier = modifier,
         title = stringReference(value = "Blockchain request"),
         description = {
-            if (request.onExploreClick == null) return
-
-            Row(
-                modifier = Modifier.clickable(onClick = request.onExploreClick),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_compass_24),
-                    contentDescription = null,
-                    modifier = Modifier.size(size = TangemTheme.dimens.size18),
-                    tint = TangemTheme.colors.icon.informative,
-                )
-                Text(
-                    text = "Explore",
-                    color = TangemTheme.colors.text.tertiary,
-                    style = TangemTheme.typography.caption1,
-                )
+            if (request.onExploreClick != null) {
+                Row(
+                    modifier = Modifier.clickable(onClick = request.onExploreClick),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing4),
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_compass_24),
+                        contentDescription = null,
+                        modifier = Modifier.size(size = TangemTheme.dimens.size18),
+                        tint = TangemTheme.colors.icon.informative,
+                    )
+                    Text(
+                        text = "Explore",
+                        color = TangemTheme.colors.text.tertiary,
+                        style = TangemTheme.typography.caption1,
+                    )
+                }
+                SpacerW12()
             }
-            SpacerW12()
         },
         content = {
             BlockItem(

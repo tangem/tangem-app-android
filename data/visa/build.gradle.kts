@@ -1,3 +1,5 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
@@ -37,6 +39,8 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.moshi.kotlin)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Libs - Tangem */
     implementation(deps.tangem.blockchain)
