@@ -157,11 +157,13 @@ internal class ExpressStatusFactory @AssistedInject constructor(
 
     suspend fun removeTransactionOnBottomSheetClosed(
         expressState: ExpressTransactionStateUM,
-        isForceTerminal: Boolean = false,
+        isForceDispose: Boolean = false,
     ) {
         when (expressState) {
-            is ExchangeUM -> exchangeStatusFactory.removeTransactionOnBottomSheetClosed(isForceTerminal)
-            is ExpressTransactionStateUM.OnrampUM -> onrampStatusFactory.removeTransactionOnBottomSheetClosed()
+            is ExchangeUM -> exchangeStatusFactory.removeTransactionOnBottomSheetClosed(isForceDispose)
+            is ExpressTransactionStateUM.OnrampUM -> onrampStatusFactory.removeTransactionOnBottomSheetClosed(
+                isForceDispose,
+            )
         }
     }
 

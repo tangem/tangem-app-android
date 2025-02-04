@@ -5,8 +5,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.notifications.NoteMigrationNotification
 import com.tangem.core.ui.components.notifications.Notification
-import com.tangem.core.ui.components.notifications.OkxPromoNotification
-import com.tangem.core.ui.components.notifications.RingPromoNotification
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
@@ -28,16 +26,7 @@ internal fun LazyListScope.notifications(configs: ImmutableList<WalletNotificati
             // TODO develop promo banner general component
             when (it) {
                 is WalletNotification.SwapPromo -> {
-                    OkxPromoNotification(
-                        config = it.config,
-                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                    )
-                }
-                is WalletNotification.RingPromo -> {
-                    RingPromoNotification(
-                        config = it.config,
-                        modifier = modifier.animateItem(fadeInSpec = null, fadeOutSpec = null),
-                    )
+                    // Use it on new promo action
                 }
                 is WalletNotification.NoteMigration -> {
                     NoteMigrationNotification(

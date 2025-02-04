@@ -41,4 +41,9 @@ internal class StakingEventFactory(
         )
         stateController.updateEvent(alert)
     }
+
+    fun createStakingValidatorsUnavailableAlert() {
+        val alert = StakingEvent.ShowAlert(alert = StakingAlertUM.ValidatorsUnavailable)
+        stateController.updateEvent(alert)
+    }
 }
