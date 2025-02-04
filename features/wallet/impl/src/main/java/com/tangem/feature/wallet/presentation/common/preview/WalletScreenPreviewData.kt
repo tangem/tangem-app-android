@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.common.preview
 
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -7,7 +8,6 @@ import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
@@ -105,6 +105,7 @@ internal object WalletScreenPreviewData {
             onRenameClick = { _ -> },
             onDeleteClick = {},
             isZeroBalance = false,
+            isBalanceFlickering = false,
         )
     }
     private val multiWalletState by lazy {
