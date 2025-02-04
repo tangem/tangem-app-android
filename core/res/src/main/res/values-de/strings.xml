@@ -314,6 +314,9 @@
   <string name="express_status_bought">Gekauft %s</string>
   <string name="express_status_buying">Kauf %s</string>
   <string name="express_status_buying_active">Kauf %s…</string>
+  <string name="express_status_hide_button_text">Diese Transaktion ausblenden</string>
+  <string name="express_status_hide_dialog_text">Sobald dieser Bildschirm ausgeblendet wurde, kann er nicht mehr aufgerufen werden.</string>
+  <string name="express_status_hide_dialog_title">Bist Du sicher, dass Du die Transaktionsdetails ausblenden willst?</string>
   <string name="express_token_list_empty_search">Keine Token gefunden. Bitte versuche eine andere Anfrage</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaktions-ID kopiert</string>
@@ -790,6 +793,8 @@
   <string name="staking_migrate">Migrieren</string>
   <string name="staking_native">Natives Staking</string>
   <string name="staking_no_validators_error_message">Derzeit sind keine aktiven Validatoren für das Staking verfügbar. Bitte versuchen Sie es später erneut.</string>
+  <string name="staking_notification_additional_ada_deposit_text">Beim Staking im Cardano Netzwerk wird das gesamte Guthaben genutzt. Zusätzlich werden 2 ADA reserviert und nach dem Unstaking zurückgegeben. Deine ADA sind während des Stakings nicht gesperrt.</string>
+  <string name="staking_notification_additional_ada_deposit_title">Einzelheiten zum ADA-Staking</string>
   <string name="staking_notification_claim_rewards_text">Verdiente Belohnungen werden an Deine Wallet gesendet und stehen Dir sofort zur Verfügung</string>
   <string name="staking_notification_earn_rewards_text">Stake sicher und verdienen Belohnungen</string>
   <string name="staking_notification_earn_rewards_text_daily">Sicher staken und tägliche Belohnungen verdienen.</string>
@@ -803,6 +808,8 @@
   <string name="staking_notification_earn_rewards_title">Verdiene Staking-Belohnungen</string>
   <string name="staking_notification_low_staked_balance_text">Dein verbleibender Stakingbetrag ist zu niedrig, um den Einsatz aufzuheben. Du musst mehr Staken, um den Mindestbetrag zum Aufheben des Einsatzes zu erreichen.</string>
   <string name="staking_notification_low_staked_balance_title">Niedriges Stakingguthaben</string>
+  <string name="staking_notification_minimum_balance_error_text">Für erneutes Staking sind mindestens %1$s %2$s erforderlich. Bitte lade Dein Guthaben auf.</string>
+  <string name="staking_notification_minimum_balance_error_title">Nicht genug %s</string>
   <string name="staking_notification_network_error_text">Aufgrund von Netzwerkproblemen ist Staking derzeit nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="staking_notification_new_validator_funds_transfer">Beim Staking im %1$s -Netzwerk mit einem neuen Validator werden alle zuvor eingesetzten Kryptos automatisch an diesen Validator übertragen</string>
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
