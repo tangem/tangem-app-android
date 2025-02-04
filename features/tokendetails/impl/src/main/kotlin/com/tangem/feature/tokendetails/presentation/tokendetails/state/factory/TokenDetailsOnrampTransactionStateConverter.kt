@@ -94,6 +94,7 @@ internal class TokenDetailsOnrampTransactionStateConverter(
                     clickIntents.onGoToProviderClick(it)
                 },
                 onClick = { clickIntents.onExpressTransactionClick(value.txId) },
+                onDisposeExpressStatus = clickIntents::onConfirmDisposeExpressStatus,
             ),
             providerName = value.providerName,
             providerImageUrl = value.providerImageUrl,
