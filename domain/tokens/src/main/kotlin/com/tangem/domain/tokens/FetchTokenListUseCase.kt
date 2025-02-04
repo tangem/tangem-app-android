@@ -105,7 +105,10 @@ class FetchTokenListUseCase(
 
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
         catch(
-            block = { quotesRepository.getQuotesSync(currenciesIds, refresh) },
+            block = {
+                val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
+                quotesRepository.getQuotesSync(rawIds, refresh)
+            },
         ) {
             /* Ignore error */
         }
