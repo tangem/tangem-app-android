@@ -172,7 +172,7 @@ private fun Modifier.tokenClickable(state: TokenItemState): Modifier = composed 
 /**
  * IMPORTANT! All margins that used between children setup like as children paddings.
  */
-@Suppress("LongMethod")
+@Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
 private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val density = LocalDensity.current
@@ -215,20 +215,24 @@ private fun CustomContainer(state: TokenItemState, modifier: Modifier = Modifier
             is TokenItemState.Loading,
             is TokenItemState.Locked,
             -> {
-                fiatAmount = measurables.measureFiatAmount(
-                    state = state,
-                    maxWidth = layoutWidth - icon.width - titleMinWidth,
-                    defaultConstraints = constraints,
-                )
+                if (state.fiatAmountState != null) {
+                    fiatAmount = measurables.measureFiatAmount(
+                        state = state,
+                        maxWidth = layoutWidth - icon.width - titleMinWidth,
+                        defaultConstraints = constraints,
+                    )
+                }
 
-                cryptoAmount = measurables.measureCryptoAmount(
-                    state = state,
-                    maxWidth = layoutWidth - icon.width - priceChangeMinWidth,
-                    defaultConstraints = constraints,
-                )
+                if (state.subtitle2State != null) {
+                    cryptoAmount = measurables.measureCryptoAmount(
+                        state = state,
+                        maxWidth = layoutWidth - icon.width - priceChangeMinWidth,
+                        defaultConstraints = constraints,
+                    )
+                }
 
-                firstRowRemainingFreeSpace = layoutWidth - icon.width - fiatAmount.width
-                secondRowRemainingFreeSpace = layoutWidth - icon.width - cryptoAmount.width
+                firstRowRemainingFreeSpace = layoutWidth - icon.width - (fiatAmount?.width ?: 0)
+                secondRowRemainingFreeSpace = layoutWidth - icon.width - (cryptoAmount?.width ?: 0)
             }
             is TokenItemState.Draggable -> {
                 cryptoAmount = measurables.measureCryptoAmount(
