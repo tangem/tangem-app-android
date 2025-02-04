@@ -23,12 +23,14 @@ import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.components.token.internal.*
 import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.rememberHapticFeedback
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.persistentListOf
 import org.burnoutcrew.reorderable.ReorderableLazyListState
 import java.util.UUID
 import kotlin.math.max
@@ -462,11 +464,18 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                 text = stringReference(value = "PolygonPolygonPolygonPolygonPolygonPolygon"),
                 hasPending = true,
             ),
-            fiatAmountState = TokenItemState.FiatAmountState.Content(
+            fiatAmountState = FiatAmountState.Content(
                 text = "3213123123321312312312312312 $",
-                hasStaked = true,
+                icons = persistentListOf(
+                    FiatAmountState.Content.IconUM(R.drawable.ic_error_sync_24, useAccentColor = false),
+                    stakingIcon,
+                ),
+                isFlickering = true,
             ),
-            subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,4123123213123123123123123123 MATIC"),
+            subtitle2State = TokenItemState.Subtitle2State.TextContent(
+                text = "5,4123123213123123123123123123 MATIC",
+                isFlickering = true,
+            ),
             subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                 price = "312 USD",
                 priceChangePercent = "42.0%",
@@ -511,7 +520,10 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
-            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
+            fiatAmountState = FiatAmountState.Content(
+                text = "321 $",
+                icons = persistentListOf(stakingIcon),
+            ),
             subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
             subtitleState = TokenItemState.SubtitleState.CryptoPriceContent(
                 price = "312 USD",
@@ -525,7 +537,10 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
             id = UUID.randomUUID().toString(),
             iconState = tokenIconState,
             titleState = TokenItemState.TitleState.Content(text = stringReference(value = "Polygon")),
-            fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = false),
+            fiatAmountState = FiatAmountState.Content(
+                text = "321 $",
+                icons = persistentListOf(stakingIcon),
+            ),
             subtitle2State = TokenItemState.Subtitle2State.LabelContent(
                 auditLabelUM = AuditLabelUM(
                     text = TextReference.Str(value = "Trusted"),
@@ -565,6 +580,8 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
 
     companion object {
 
+        val stakingIcon = FiatAmountState.Content.IconUM(R.drawable.ic_staking_24, useAccentColor = true)
+
         val coinIconState
             get() = CurrencyIconState.CoinIcon(
                 url = null,
@@ -599,7 +616,10 @@ private class TokenItemStateProvider : CollectionPreviewParameterProvider<TokenI
                     text = stringReference(value = "Polygon"),
                     hasPending = true,
                 ),
-                fiatAmountState = TokenItemState.FiatAmountState.Content(text = "321 $", hasStaked = true),
+                fiatAmountState = FiatAmountState.Content(
+                    text = "321 $",
+                    icons = persistentListOf(stakingIcon),
+                ),
                 subtitle2State = TokenItemState.Subtitle2State.TextContent(text = "5,412 MATIC"),
                 subtitleState = TokenItemState.SubtitleState.Unknown,
                 onItemClick = {},
