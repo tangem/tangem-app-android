@@ -48,5 +48,6 @@ internal object ConfirmationStatePreviewData {
         allowance = BigDecimal.ZERO,
         reduceAmountBy = null,
         pendingActions = null,
+        isAmountEditable = true,
     )
 }
