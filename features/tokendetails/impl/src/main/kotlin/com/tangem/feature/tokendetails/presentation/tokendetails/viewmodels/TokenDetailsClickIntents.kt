@@ -72,4 +72,8 @@ interface TokenDetailsClickIntents {
     fun onGoToRefundedTokenClick(cryptoCurrency: CryptoCurrency)
 
     fun onOpenUrlClick(url: String)
+
+    fun onConfirmDisposeExpressStatus()
+
+    fun onDisposeExpressStatus()
 }
