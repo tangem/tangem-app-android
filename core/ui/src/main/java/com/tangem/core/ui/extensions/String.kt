@@ -13,6 +13,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import com.tangem.core.res.getPluralStringSafe
 import com.tangem.core.res.getStringSafe
+import com.tangem.utils.StringsSigns.THREE_STARS
 import java.util.Hashtable
 
 /**
@@ -80,5 +81,3 @@ fun String.capitalize(): String = replaceFirstChar { if (it.isLowerCase()) it.ti
 fun String.orMaskWithStars(maskWithStars: Boolean): String {
     return if (maskWithStars) THREE_STARS else this
 }
-
-internal const val THREE_STARS = "\u2217\u2217\u2217"
