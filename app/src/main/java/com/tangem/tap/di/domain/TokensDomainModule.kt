@@ -173,6 +173,24 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
+    fun providesGetCryptoCurrencyStatusSyncUseCase(
+        currenciesRepository: CurrenciesRepository,
+        dispatcherProvider: CoroutineDispatcherProvider,
+        quotesRepository: QuotesRepository,
+        networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
+    ): GetCryptoCurrencyStatusSyncUseCase {
+        return GetCryptoCurrencyStatusSyncUseCase(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
+            dispatchers = dispatcherProvider,
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideGetCryptoCurrencyUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrencyUseCase {
         return GetCryptoCurrencyUseCase(currenciesRepository)
     }
