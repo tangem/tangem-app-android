@@ -68,12 +68,12 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         }
     }
 
-    suspend fun removeTransactionOnBottomSheetClosed() {
+    suspend fun removeTransactionOnBottomSheetClosed(isForceDispose: Boolean) {
         val state = currentStateProvider()
         val bottomSheetConfig = state.bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
-        if (selectedTx.activeStatus.isTerminal) {
+        if (selectedTx.activeStatus.isAutoDisposable || isForceDispose) {
             onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
         }
     }

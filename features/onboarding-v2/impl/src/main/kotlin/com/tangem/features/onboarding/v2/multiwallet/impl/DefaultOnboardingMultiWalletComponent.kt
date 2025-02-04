@@ -54,7 +54,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     private val model: OnboardingMultiWalletModel = getOrCreateModel(params)
     private val stackNavigation = StackNavigation<OnboardingMultiWalletState.Step>()
-    private val artworksState = instanceKeeper.getOrCreateSimple {
+    private val artworksState = instanceKeeper.getOrCreateSimple(key = "artworksState") {
         MutableStateFlow(
             when (model.state.value.currentStep) {
                 CreateWallet -> WalletArtworksState.Folded
@@ -68,9 +68,11 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         )
     }
 
-    private val innerNavigationStateFlow = MutableStateFlow(
-        MultiWalletInnerNavigationState(1, 5),
-    )
+    private val innerNavigationStateFlow = instanceKeeper.getOrCreateSimple(key = "innerNavigationState") {
+        MutableStateFlow(
+            MultiWalletInnerNavigationState(1, 5),
+        )
+    }
 
     private val childParams = MultiWalletChildParams(
         multiWalletState = model.state,

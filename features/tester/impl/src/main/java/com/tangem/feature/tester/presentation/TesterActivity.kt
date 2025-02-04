@@ -135,7 +135,7 @@ internal class TesterActivity : ComposeActivity() {
 
             composable(route = TesterScreen.BLOCKCHAIN_PROVIDERS.name) {
                 val viewModel = hiltViewModel<BlockchainProvidersViewModel>().apply {
-                    setupNavigation(innerTesterRouter)
+                    setupNavigation(innerTesterRouter, appFinisher)
                 }
 
                 val state by viewModel.state.collectAsStateWithLifecycle()

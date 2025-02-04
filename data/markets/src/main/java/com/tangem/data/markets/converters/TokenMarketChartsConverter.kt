@@ -4,16 +4,17 @@ import com.tangem.datasource.api.markets.models.response.TokenMarketChartListRes
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketListConfig
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 internal object TokenMarketChartsConverter {
 
     fun convert(
         chartsToCopy: TokenMarket.Charts,
-        tokenId: String,
+        tokenId: CryptoCurrency.RawID,
         interval: TokenMarketListConfig.Interval,
         value: TokenMarketChartListResponse,
     ): TokenMarket.Charts {
-        val prices = requireNotNull(value[tokenId]) {
+        val prices = requireNotNull(value[tokenId.value]) {
             "$tokenId is not found in the response. This shouldn't have happened."
         }
         return when (interval) {

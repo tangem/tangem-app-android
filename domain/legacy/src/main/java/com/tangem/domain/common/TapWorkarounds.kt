@@ -23,6 +23,9 @@ object TapWorkarounds {
     val CardDTO.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
 
+    val CardDTO.isWallet2: Boolean
+        get() = firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available && settings.isKeysImportAllowed
+
     val CardDTO.isVisa: Boolean
         get() = VisaUtilities.isVisaCard(this)
 

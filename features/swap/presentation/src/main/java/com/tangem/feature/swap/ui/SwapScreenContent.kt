@@ -8,7 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState
 import com.tangem.common.ui.notifications.NotificationUM
@@ -256,14 +257,20 @@ private fun getAnnotatedStringForLegalsWithClick(
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     Card(
-        elevation = TangemTheme.dimens.elevation3,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 2.dp,
+        ),
         shape = CircleShape,
-        backgroundColor = TangemTheme.colors.background.action,
-        contentColor = TangemTheme.colors.text.primary1,
+        colors = CardDefaults.cardColors(
+            containerColor = TangemTheme.colors.background.action,
+            disabledContainerColor = TangemTheme.colors.background.action,
+            contentColor = TangemTheme.colors.text.primary1,
+            disabledContentColor = TangemTheme.colors.text.primary1,
+        ),
         modifier = modifier.size(TangemTheme.dimens.size48),
         onClick = state.onChangeCardsClicked,
         enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
@@ -308,13 +315,6 @@ private fun SwapNotifications(notifications: List<NotificationUM>) {
     ) {
         notifications.forEach { notification ->
             when (notification) {
-                is SwapNotificationUM.Error.GenericError -> {
-                    RefreshableWarningCard(
-                        title = notification.title.resolveReference(),
-                        description = notification.config.subtitle.resolveReference(),
-                        onClick = notification.onConfirmClick,
-                    )
-                }
                 is SwapNotificationUM.Error.ApprovalInProgressWarning,
                 is SwapNotificationUM.Error.TransactionInProgressWarning,
                 -> {
@@ -341,7 +341,9 @@ private fun SwapNotifications(notifications: List<NotificationUM>) {
                             is NotificationUM.Info,
                             is NotificationUM.Warning,
                             -> null
-                            is NotificationUM.Error -> TangemTheme.colors.icon.warning
+                            is SwapNotificationUM.Error.GenericError,
+                            is NotificationUM.Error,
+                            -> TangemTheme.colors.icon.warning
                         },
                     )
                 }

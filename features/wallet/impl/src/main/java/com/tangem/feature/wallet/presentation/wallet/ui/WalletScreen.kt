@@ -15,9 +15,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -61,7 +58,7 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -285,7 +282,7 @@ private fun WalletContent(
 }
 
 @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private inline fun BaseScaffoldWithMarkets(
     state: WalletScreenState,
@@ -387,13 +384,6 @@ private inline fun BaseScaffoldWithMarkets(
                 }
             },
             content = { paddingValues ->
-                val pullRefreshState = rememberPullRefreshState(
-                    refreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                    onRefresh = {
-                        selectedWallet.pullToRefreshConfig.onRefresh(PullToRefreshConfig.ShowRefreshState())
-                    },
-                )
-
                 Box {
                     MarketsHint(
                         modifier = Modifier
@@ -405,16 +395,8 @@ private inline fun BaseScaffoldWithMarkets(
 
                     Column {
                         WalletTopBar(config = state.topBarConfig)
-                        Box(
-                            modifier = Modifier.pullRefresh(pullRefreshState),
-                        ) {
+                        TangemPullToRefreshContainer(config = selectedWallet.pullToRefreshConfig) {
                             content(paddingValues)
-
-                            WalletPullToRefreshIndicator(
-                                isRefreshing = selectedWallet.pullToRefreshConfig.isRefreshing,
-                                state = pullRefreshState,
-                                modifier = Modifier.align(Alignment.TopCenter),
-                            )
                         }
                     }
 

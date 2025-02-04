@@ -2,29 +2,34 @@ package com.tangem.tap.domain.walletconnect2.domain.models.binance
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.tangem.tap.domain.walletconnect2.domain.WcRequestData
 
 @Suppress("LongParameterList")
 @JsonClass(generateAdapter = true)
-class WcBinanceCancelOrder(
+data class WcBinanceCancelOrder(
     @Json(name = "account_number")
-    accountNumber: String,
+    val accountNumber: String,
     @Json(name = "chain_id")
-    chainId: String,
+    val chainId: String,
     @Json(name = "data")
-    data: String?,
+    val data: String?,
     @Json(name = "memo")
-    memo: String?,
+    val memo: String?,
     @Json(name = "sequence")
-    sequence: String,
+    val sequence: String,
     @Json(name = "source")
-    source: String,
+    val source: String,
     @Json(name = "msgs")
-    msgs: List<Message>,
-) : WcBinanceOrder<WcBinanceCancelOrder.Message>(accountNumber, chainId, data, memo, sequence, source, msgs) {
+    val msgs: List<Message>,
+) : WcRequestData {
 
+    @JsonClass(generateAdapter = true)
     data class Message(
+        @Json(name = "refid")
         val refid: String,
+        @Json(name = "sender")
         val sender: String,
+        @Json(name = "symbol")
         val symbol: String,
     )
 }
