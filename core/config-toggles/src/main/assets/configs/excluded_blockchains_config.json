@@ -14,5 +14,13 @@
     {
         "name": "vanar-chain",
         "version": "undefined"
+    },
+    {
+        "name": "sonic",
+        "version": "undefined"
+    },
+    {
+        "name": "apechain",
+        "version": "undefined"
     }
 ]
