@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -28,6 +29,7 @@ internal class SingleWalletWithTokenContentLoader(
     private val tokenListStore: MultiWalletTokenListStore,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
+    private val deepLinksRegistry: DeepLinksRegistry,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -41,6 +43,7 @@ internal class SingleWalletWithTokenContentLoader(
                 tokenListStore = tokenListStore,
                 getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
+                deepLinksRegistry = deepLinksRegistry,
             ),
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
