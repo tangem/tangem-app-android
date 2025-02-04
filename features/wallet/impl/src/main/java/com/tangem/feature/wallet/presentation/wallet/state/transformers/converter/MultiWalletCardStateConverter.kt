@@ -61,6 +61,7 @@ internal class MultiWalletCardStateConverter(
             ),
             isZeroBalance = fiatBalance.amount.isZero(),
             cardCount = selectedWallet.getCardsCount(),
+            isBalanceFlickering = false, // TODO: Implement in https://tangem.atlassian.net/browse/AND-9910
         )
     }
 }
