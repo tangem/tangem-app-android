@@ -11,4 +11,5 @@ object StringsSigns {
     const val INFINITY_SIGN = "∞"
     const val NON_BREAKING_SPACE = '\u00A0'
     const val PERCENT = "%"
+    const val THREE_STARS = "\u2217\u2217\u2217"
 }
