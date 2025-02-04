@@ -89,7 +89,7 @@ internal class RewardsValidatorStateConverter(
             formattedCryptoAmount = cryptoAmount,
             fiatAmount = fiatValue,
             formattedFiatAmount = formattedFiatAmount,
-            rawCurrencyId = cryptoCurrency.id.rawCurrencyId,
+            rawCurrencyId = cryptoCurrency.id.rawCurrencyId?.value,
             pendingActions = balance.pendingActions.toPersistentList(),
             isClickable = true,
             type = balance.type,
