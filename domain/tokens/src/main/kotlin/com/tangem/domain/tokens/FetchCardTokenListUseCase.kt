@@ -37,7 +37,7 @@ class FetchCardTokenListUseCase(
                 }
                 val fetchQuotes = async {
                     fetchQuotes(
-                        currenciesIds = currencies.mapTo(destination = hashSetOf(), transform = CryptoCurrency::id),
+                        currenciesIds = currencies.mapNotNullTo(destination = hashSetOf()) { it.id.rawCurrencyId },
                         refresh = refresh,
                     )
                 }
@@ -79,7 +79,7 @@ class FetchCardTokenListUseCase(
         )
     }
 
-    private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.ID>, refresh: Boolean) {
+    private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean) {
         catch(
             block = { quotesRepository.getQuotesSync(currenciesIds, refresh) },
             catch = { /* Ignore error */ },
