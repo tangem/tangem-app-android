@@ -8,7 +8,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.core.ui.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
@@ -120,6 +120,7 @@ internal sealed class StakingStates {
             val footerText: TextReference,
             val transactionDoneState: TransactionDoneState,
             val isApprovalNeeded: Boolean,
+            val isAmountEditable: Boolean,
             val allowance: BigDecimal,
             val reduceAmountBy: BigDecimal?,
         ) : ConfirmationState()
