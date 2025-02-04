@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
+import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
@@ -28,6 +29,7 @@ internal class MultiWalletTokenListSubscriber(
     walletWithFundsChecker: WalletWithFundsChecker,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
+    deepLinksRegistry: DeepLinksRegistry,
 ) : BasicTokenListSubscriber(
     userWallet = userWallet,
     stateHolder = stateHolder,
@@ -36,6 +38,7 @@ internal class MultiWalletTokenListSubscriber(
     walletWithFundsChecker = walletWithFundsChecker,
     getSelectedAppCurrencyUseCase = getSelectedAppCurrencyUseCase,
     runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
+    deepLinksRegistry = deepLinksRegistry,
 ) {
 
     override fun tokenListFlow(coroutineScope: CoroutineScope): LceFlow<TokenListError, TokenList> {
@@ -46,6 +49,7 @@ internal class MultiWalletTokenListSubscriber(
 
     override suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
         updateSortingIfNeeded(maybeTokenList)
+        super.onTokenListReceived(maybeTokenList)
     }
 
     private suspend fun updateSortingIfNeeded(maybeTokenList: Lce<*, TokenList>) {
