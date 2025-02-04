@@ -142,6 +142,7 @@
   <string name="common_generate_addresses">Synchronize addresses</string>
   <string name="common_go_to_provider">Go to provider</string>
   <string name="common_go_to_token">Go to token</string>
+  <string name="common_hide">Hide</string>
   <string name="common_hour">hour</string>
   <string name="common_import">Import</string>
   <string name="common_in_progress">In progress</string>
@@ -314,6 +315,9 @@
   <string name="express_status_bought">Bought %s</string>
   <string name="express_status_buying">Buying %s</string>
   <string name="express_status_buying_active">Buying %s...</string>
+  <string name="express_status_hide_button_text">Hide this transaction</string>
+  <string name="express_status_hide_dialog_text">Once hidden, the transaction status cannot be viewed again. You can simply swipe to dismiss instead.</string>
+  <string name="express_status_hide_dialog_title">Hide Transaction Status?</string>
   <string name="express_token_list_empty_search">No tokens found. Please try another request</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaction ID copied</string>
@@ -792,6 +796,8 @@
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_no_validators_error_message">No active validators available for staking at the moment. Please try again later.</string>
+  <string name="staking_notification_additional_ada_deposit_text">When staking in the Cardano network, the entire balance is used. An additional 2 ADA will be reserved and returned after unstaking. Your ADA is not locked while staking.</string>
+  <string name="staking_notification_additional_ada_deposit_title">ADA Staking Details</string>
   <string name="staking_notification_claim_rewards_text">Earned rewards will be sent to your wallet and available for use immediately</string>
   <string name="staking_notification_earn_rewards_text">Stake securely and start earning your rewards</string>
   <string name="staking_notification_earn_rewards_text_daily">Stake securely and start earning daily rewards</string>
@@ -805,6 +811,8 @@
   <string name="staking_notification_earn_rewards_title">Earn staking rewards</string>
   <string name="staking_notification_low_staked_balance_text">Your remaining staked balance will be too low to unstake. You’ll need to stake more to meet the minimum unstake amount.</string>
   <string name="staking_notification_low_staked_balance_title">Low staked balance</string>
+  <string name="staking_notification_minimum_balance_error_text">A minimum of %1$s %2$s is required for restaking. Please top up your balance.</string>
+  <string name="staking_notification_minimum_balance_error_title">Not enough %s</string>
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
