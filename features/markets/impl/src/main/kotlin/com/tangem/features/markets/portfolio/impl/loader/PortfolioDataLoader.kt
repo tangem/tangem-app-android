@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.GetAllWalletsCryptoCurrencyStatusesUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
 import com.tangem.domain.tokens.GetWalletTotalBalanceUseCase
 import com.tangem.domain.tokens.error.TokenListError
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -37,7 +38,7 @@ internal class PortfolioDataLoader @Inject constructor(
 
     /** Load data by [currencyRawId] */
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun load(currencyRawId: String): Flow<PortfolioData> {
+    fun load(currencyRawId: CryptoCurrency.RawID): Flow<PortfolioData> {
         return combine(
             flow = getAllWalletsCryptoCurrenciesData(currencyRawId = currencyRawId),
             flow2 = getSelectedAppCurrencyFlow(),
@@ -62,7 +63,7 @@ internal class PortfolioDataLoader @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun getAllWalletsCryptoCurrenciesData(
-        currencyRawId: String,
+        currencyRawId: CryptoCurrency.RawID,
     ): Flow<Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>> {
         return getAllWalletsCryptoCurrencyStatusesUseCase(currencyRawId)
             .distinctUntilChanged()
