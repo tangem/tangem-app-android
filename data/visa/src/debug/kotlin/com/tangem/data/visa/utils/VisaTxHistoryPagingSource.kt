@@ -3,8 +3,11 @@ package com.tangem.data.visa.utils
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
+import com.tangem.datasource.api.common.visa.TangemVisaAuthProvider
 import com.tangem.domain.visa.model.VisaTxHistoryItem
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.lib.visa.api.VisaApi
 import com.tangem.lib.visa.model.VisaTxHistoryResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -16,9 +19,9 @@ import timber.log.Timber
 internal class VisaTxHistoryPagingSource(
     params: Params,
     private val cacheRegistry: CacheRegistry,
-    private val visaApi: VisaApi,
     private val fetchedItems: MutableStateFlow<Map<String, List<VisaTxHistoryResponse.Transaction>>>,
     private val dispatchers: CoroutineDispatcherProvider,
+    val requestTxHistory: suspend (offset: Int, pageSize: Int) -> VisaTxHistoryResponse,
 ) : PagingSource<Int, VisaTxHistoryItem>() {
 
     private val itemsFactory = VisaTxHistoryItemFactory()
@@ -73,11 +76,7 @@ internal class VisaTxHistoryPagingSource(
     }
 
     private suspend fun fetchItems(offset: Int, pageSize: Int) = withContext(dispatchers.io) {
-        val response = visaApi.getTxHistory(
-            cardPublicKey = cardPublicKey,
-            limit = pageSize,
-            offset = offset,
-        ).getOrThrow()
+        val response = requestTxHistory(offset, pageSize)
 
         fetchedItems.update {
             it.toMutableMap().apply {
@@ -97,6 +96,7 @@ internal class VisaTxHistoryPagingSource(
     }
 
     class Params(
+        val userWallet: UserWallet,
         val cardPublicKey: String,
         val pageSize: Int,
         val isRefresh: Boolean,

@@ -30,7 +30,7 @@ class UserTokensResponseFactory {
         val blockchain = getBlockchain(currency.network.id)
 
         return UserTokensResponse.Token(
-            id = currency.id.rawCurrencyId,
+            id = currency.id.rawCurrencyId?.value,
             networkId = blockchain.toNetworkId(),
             derivationPath = currency.network.derivationPath.value,
             name = currency.name,
