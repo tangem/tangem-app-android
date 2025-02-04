@@ -44,6 +44,7 @@ import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
+import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
@@ -289,9 +290,11 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         when (walletCardState) {
             is WalletCardState.Content -> {
                 ResizableText(
+                    modifier = Modifier
+                        .defaultMinSize(minHeight = TangemTheme.dimens.size32)
+                        .flicker(isFlickering = walletCardState.isBalanceFlickering),
                     text = walletCardState.balance.orMaskWithStars(isBalanceHidden),
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
-                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     color = TangemTheme.colors.text.primary1,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
@@ -401,6 +404,9 @@ private fun Preview_WalletCard(
 private class WalletCardStateProvider : CollectionPreviewParameterProvider<WalletCardState>(
     collection = listOf(
         WalletPreviewData.walletCardContentState,
+        WalletPreviewData.walletCardContentState.copy(
+            isBalanceFlickering = true,
+        ),
         WalletPreviewData.walletCardLoadingState,
         WalletPreviewData.walletCardErrorState,
     ),
