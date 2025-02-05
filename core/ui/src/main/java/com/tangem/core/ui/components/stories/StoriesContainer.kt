@@ -53,7 +53,11 @@ inline fun <reified T : StoryConfig> StoriesContainer(
         StoriesClickableArea(
             onPress = { isPressed = it },
             onPreviousStory = storyState::prevStory,
-            onNextStory = storyState::nextStory,
+            onNextStory = {
+                if (storyState.nextStory()) {
+                    config.onClose()
+                }
+            },
         )
 
         currentStoryContent(storyState.currentStory, isPaused)
