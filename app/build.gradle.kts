@@ -97,6 +97,7 @@ dependencies {
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.onramp)
     implementation(projects.domain.promo)
+    implementation(projects.domain.promo.models)
 
     implementation(projects.common)
     implementation(projects.common.routing)
