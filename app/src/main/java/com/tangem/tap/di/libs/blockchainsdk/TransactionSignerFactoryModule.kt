@@ -1,6 +1,6 @@
 package com.tangem.tap.di.libs.blockchainsdk
 
-import com.tangem.blockchainsdk.signer.TransactionSignerFactory
+import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.tap.common.libs.blockchainsdk.DefaultTransactionSignerFactory
 import dagger.Module
 import dagger.Provides
