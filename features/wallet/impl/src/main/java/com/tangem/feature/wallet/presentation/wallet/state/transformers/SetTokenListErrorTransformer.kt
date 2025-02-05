@@ -69,6 +69,7 @@ internal class SetTokenListErrorTransformer(
             ),
             cardCount = selectedWallet.getCardsCount(),
             isZeroBalance = true,
+            isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
         )
     }
 }
