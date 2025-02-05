@@ -16,7 +16,6 @@ import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.TangemTopAppBarHeight
-import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.buttons.common.TangemButton
@@ -44,7 +43,7 @@ fun OnrampAddToPortfolioContent(state: OnrampAddToPortfolioUM) {
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        TopAppBar(text = state.bsTitle)
+        TopAppBar(text = state.bsTitle, subtitle = state.bsSubtitle)
 
         SpacerH(height = 19.dp)
 
@@ -77,13 +76,10 @@ fun OnrampAddToPortfolioContent(state: OnrampAddToPortfolioUM) {
 }
 
 @Composable
-private fun TopAppBar(text: TextReference) {
+private fun TopAppBar(text: TextReference, subtitle: TextReference) {
     TangemTopAppBar(
         title = text.resolveReference(),
-        endButton = TopAppBarButtonUM(
-            iconRes = R.drawable.ic_information_24,
-            onIconClicked = {},
-        ),
+        subtitle = subtitle.resolveReference(),
         iconTint = TangemTheme.colors.icon.informative,
         titleAlignment = Alignment.CenterHorizontally,
         height = TangemTopAppBarHeight.BOTTOM_SHEET,
@@ -143,6 +139,7 @@ private fun PreviewOnrampAddToPortfolioContent() {
             content = {
                 OnrampAddToPortfolioContent(
                     state = OnrampAddToPortfolioUM(
+                        walletName = "Wallet 1",
                         currencyName = "Tether",
                         networkName = "Ethereum",
                         currencyIconState = CurrencyIconState.TokenIcon(
