@@ -27,7 +27,9 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.ShouldShowSwapStoriesUseCase
+import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -89,6 +91,7 @@ internal class SwapViewModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val shouldShowSwapStoriesUseCase: ShouldShowSwapStoriesUseCase,
+    private val getStoryContentUseCase: GetStoryContentUseCase,
     private val featureToggles: SwapFeatureToggles,
     swapInteractorFactory: SwapInteractor.Factory,
     private val savedStateHandle: SavedStateHandle,
@@ -168,16 +171,18 @@ internal class SwapViewModel @Inject constructor(
         get() = swapRouter.currentScreen
 
     init {
-        viewModelScope.launch(dispatchers.io) {
-            val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
-            val toStatus = initialCurrencyTo?.let { getCryptoCurrencyStatusUseCase(userWalletId, it.id).getOrNull() }
-            val wallet = getUserWalletUseCase(userWalletId).getOrNull()
+        viewModelScope.launch {
             val isShowPromoStories = shouldShowSwapStoriesUseCase.invokeSync() && featureToggles.isPromoStoriesEnabled
 
             if (isShowPromoStories) {
                 initStories()
                 swapRouter.openScreen(SwapNavScreen.PromoStories)
             }
+        }
+        viewModelScope.launch(dispatchers.io) {
+            val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
+            val toStatus = initialCurrencyTo?.let { getCryptoCurrencyStatusUseCase(userWalletId, it.id).getOrNull() }
+            val wallet = getUserWalletUseCase(userWalletId).getOrNull()
 
             if (fromStatus == null || wallet == null) {
                 uiState = stateBuilder.addAlert(uiState = uiState, onDismiss = swapRouter::back)
@@ -283,7 +288,16 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun initStories() {
-        uiState = stateBuilder.createStoriesState(uiState)
+        viewModelScope.launch {
+            getStoryContentUseCase(StoryContentIds.STORY_FIRST_TIME_SWAP.id).fold(
+                ifLeft = {
+                    Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
+                },
+                ifRight = {
+                    uiState = stateBuilder.createStoriesState(uiState, it)
+                },
+            )
+        }
     }
 
     private fun applyInitialTokenChoice(
@@ -1131,6 +1145,7 @@ internal class SwapViewModel @Inject constructor(
                 swapRouter.openScreen(SwapNavScreen.Success)
             },
             onStoriesClose = {
+                viewModelScope.launch { shouldShowSwapStoriesUseCase.neverToShow() }
                 swapRouter.openScreen(SwapNavScreen.Main)
             },
         )
