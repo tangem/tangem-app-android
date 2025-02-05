@@ -18,13 +18,15 @@ internal interface OnrampTokenListComponent : ComposableContentComponent {
     /**
      * Params
      *
-     * @property filterOperation operation that is used to filter tokens by availability
-     * @property userWalletId    id of multi-currency wallet
-     * @property onTokenClick    callback for token click
+     * @property filterOperation        operation that is used to filter tokens by availability
+     * @property userWalletId           user wallet id of multi-currency wallet
+     * @property onTokenClick           callback for token click
+     * @property onTokenListInitialized callback for token list initialization
      */
     data class Params(
         val filterOperation: OnrampOperation,
         val userWalletId: UserWalletId,
         val onTokenClick: (TokenItemState, CryptoCurrencyStatus) -> Unit,
+        val onTokenListInitialized: () -> Unit = {},
     )
 }
