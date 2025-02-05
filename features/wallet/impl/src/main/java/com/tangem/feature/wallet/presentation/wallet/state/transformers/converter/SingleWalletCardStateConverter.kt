@@ -65,6 +65,7 @@ internal class SingleWalletCardStateConverter(
             balance = formatFiatAmount(status = status, appCurrency = appCurrency),
             cardCount = selectedWallet.getCardsCount(),
             isZeroBalance = status.fiatAmount?.isZero(),
+            isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
         )
     }
 

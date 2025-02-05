@@ -10,6 +10,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.audits.AuditLabel
+import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -25,15 +26,19 @@ internal fun TokenCryptoAmount(
     when (state) {
         is TokenCryptoAmountState.TextContent -> {
             CryptoAmountText(
-                amount = state.text.orMaskWithStars(isBalanceHidden),
                 modifier = modifier,
+                amount = state.text.orMaskWithStars(isBalanceHidden),
+                isFlickering = state.isFlickering,
             )
         }
         is TokenItemState.Subtitle2State.LabelContent -> {
             AuditLabel(state = state.auditLabelUM, modifier = modifier)
         }
         is TokenCryptoAmountState.Unreachable -> {
-            CryptoAmountText(amount = stringResourceSafe(id = R.string.common_unreachable), modifier = modifier)
+            CryptoAmountText(
+                amount = stringResourceSafe(id = R.string.common_unreachable),
+                modifier = modifier,
+            )
         }
         is TokenCryptoAmountState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
@@ -46,10 +51,10 @@ internal fun TokenCryptoAmount(
 }
 
 @Composable
-private fun CryptoAmountText(amount: String, modifier: Modifier = Modifier) {
+private fun CryptoAmountText(amount: String, modifier: Modifier = Modifier, isFlickering: Boolean = false) {
     Text(
+        modifier = modifier.flicker(isFlickering),
         text = amount,
-        modifier = modifier,
         color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
