@@ -72,6 +72,18 @@ internal class OnrampOperationModel @Inject constructor(
             },
         )
 
+        selectTokenIfDemoModeOff(status)
+    }
+
+    fun onHotTokenClick(status: CryptoCurrencyStatus) {
+        analyticsEventHandler.send(
+            event = MainScreenAnalyticsEvent.HotTokenClicked(currencySymbol = status.currency.symbol),
+        )
+
+        selectTokenIfDemoModeOff(status)
+    }
+
+    private fun selectTokenIfDemoModeOff(status: CryptoCurrencyStatus) {
         if (params is Params.Sell || !onrampFeatureToggles.isFeatureEnabled) {
             showErrorIfDemoModeOrElse { selectToken(status) }
         } else {
