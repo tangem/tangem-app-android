@@ -87,6 +87,8 @@
   <string name="cardano_max_amount_has_token_title">ADA insuffisant</string>
   <string name="common_accept">Accepter</string>
   <string name="common_access_denied">Accès refusé</string>
+    <string name="common_add_to_portfolio">Ajouter au portfolio</string>
+    <string name="common_add_token">Ajouter un jeton</string>
   <string name="common_all">Tous</string>
   <string name="common_allow">Permettre</string>
   <string name="common_analytics">Analytique</string>
@@ -140,6 +142,7 @@
   <string name="common_generate_addresses">Synchroniser les adresses</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
+    <string name="common_hide">Cacher</string>
   <string name="common_hour">heure</string>
   <string name="common_import">Importez</string>
   <string name="common_in_progress">En cours</string>
@@ -312,6 +315,9 @@
   <string name="express_status_bought">Acheté %s</string>
   <string name="express_status_buying">Achat en cours %s</string>
   <string name="express_status_buying_active">Achat en cours %s...</string>
+    <string name="express_status_hide_button_text">Masquer cette transaction</string>
+    <string name="express_status_hide_dialog_text">Une fois masqué, le statut de la transaction ne peut plus être consulté. Vous pouvez simplement faire glisser votre doigt pour le fermer.</string>
+    <string name="express_status_hide_dialog_title">Masquer le statut de la transaction ?</string>
   <string name="express_token_list_empty_search">Aucun jeton trouvé. Veuillez essayer une autre demande</string>
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transaction copié</string>
@@ -338,6 +344,8 @@
   <string name="give_permission_unlimited">Illimité</string>
   <string name="home_button_order">Commandez</string>
   <string name="home_button_scan">Scannez</string>
+    <string name="hot_crypto_add_token_subtitle">à %s</string>
+    <string name="hot_crypto_token_network">Via %s</string>
   <string name="information_generated_with_ai">Ces informations ont été générées avec l\'IA.\nAppuyez ici si vous trouvez des erreurs.</string>
   <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
   <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
@@ -786,6 +794,8 @@
   <string name="staking_migrate">Migrer</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_no_validators_error_message">Aucun validateur actif n\'est disponible pour le staking pour le moment. Veuillez réessayer plus tard.</string>
+    <string name="staking_notification_additional_ada_deposit_text">Lors du staking sur le réseau Cardano, l\'intégralité du solde est utilisée. 2 ADA supplémentaires seront réservés et restitués après le dé-staking. Votre ADA n\'est pas verrouillé pendant le staking.</string>
+    <string name="staking_notification_additional_ada_deposit_title">Détails du ADA staking </string>
   <string name="staking_notification_claim_rewards_text">Récomp. gagnées vous seront envoyées et dispo pour utilisation immédiate</string>
   <string name="staking_notification_earn_rewards_text">Stakez et commencez à gagner vos récompenses</string>
   <string name="staking_notification_earn_rewards_text_daily">Stakez en toute sécurité et commencez à gagner des récompenses quotidiennes</string>
@@ -799,6 +809,8 @@
   <string name="staking_notification_earn_rewards_title">Gagnez des récompenses de staking</string>
   <string name="staking_notification_low_staked_balance_text">Votre solde stakée sera trop faible pour annuler votre staking. Vous devrez staker davantage pour atteindre le montant minimum pour annuler le staking.</string>
   <string name="staking_notification_low_staked_balance_title">Solde de staking faible</string>
+    <string name="staking_notification_minimum_balance_error_text">Un minimum de %1$s %2$s est requis pour le re-staking. Veuillez recharger votre solde.</string>
+    <string name="staking_notification_minimum_balance_error_title">Pas assez de %s</string>
   <string name="staking_notification_network_error_text">L\'option de staking n\'est actuellement pas disponible en raison des conditions du réseau. Veuillez réessayer plus tard.</string>
   <string name="staking_notification_new_validator_funds_transfer">Le staking dans le réseau %1$s avec un nouveau validateur transférera automatiquement tous les fonds précédemment stakés vers ce validateur</string>
   <string name="staking_notification_restake_rewards_text">Réinvestissez vos récompenses gagnées dans le montant que vous avez staké, augmentant ainsi vos gains potentiels.</string>
@@ -1045,6 +1057,7 @@
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Êtes-vous sûr(e) de vouloir annuler la transaction ? Vous ne pourrez plus réessayer.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Votre transaction d\'un montant de %1$s %2$s n\'a pas été finalisée. Vous pouvez réessayer plus tard pour la finaliser.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Vous avez une transaction inachevée</string>
+    <string name="warning_last_balance_updated_time">La dernière mise à jour a été %s</string>
   <string name="warning_low_signatures_message">Il ne reste que %s signatures sur cette carte. Vous devez retirer tous vos fonds.</string>
   <string name="warning_low_signatures_title">Faible nombre de signatures</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Les jetons sur différents réseaux peuvent avoir des adresses différentes. Vérifiez bien que votre adresse correspond au réseau lorsque vous transférez des fonds.</string>
@@ -1077,6 +1090,7 @@
   <string name="warning_solana_rent_fee_message">Le réseau Solana facture un loyer de %1$s tous les 2 jours. Les comptes qui ne peuvent pas se permettre le loyer sont purgés du réseau. Déposez sur votre compte plus de %2$s pour l\'utiliser gratuitement.</string>
   <string name="warning_some_networks_unreachable_message">Certains réseaux sont actuellement inaccessibles. Veuillez réessayer plus tard.</string>
   <string name="warning_some_networks_unreachable_title">Certains réseaux sont inaccessibles</string>
+    <string name="warning_some_token_balances_not_updated">Certains soldes de jetons n\'ont pas pu être mis à jour</string>
   <string name="warning_testnet_card_message">Il s\'agit d\'une carte Testnet. Elle ne peut pas traiter les transactions et ne doit être utilisée qu\'à des fins de test et de développement.</string>
   <string name="warning_testnet_card_title">À des fins de test uniquement</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorer</string>

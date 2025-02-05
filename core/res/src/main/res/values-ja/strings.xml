@@ -139,6 +139,7 @@
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
+    <string name="common_hide">非表示</string>
   <string name="common_hour">時間</string>
   <string name="common_import">インポート</string>
   <string name="common_in_progress">進行中</string>
@@ -311,6 +312,9 @@
   <string name="express_status_bought">%sを買い付けました</string>
   <string name="express_status_buying">%sを買い付けています</string>
   <string name="express_status_buying_active">%sを買い付けています...</string>
+    <string name="express_status_hide_button_text">この取引を非表示にする</string>
+    <string name="express_status_hide_dialog_text">一度非表示にすると、取引状況を再度表示することはできません。代わりに、スワイプして閉じることができます。</string>
+    <string name="express_status_hide_dialog_title">取引状況を非表示にしますか？</string>
   <string name="express_token_list_empty_search">トークンが見つかりません。別のリクエストをお試しください。</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">取引IDをコピーしました</string>
@@ -774,6 +778,8 @@
   <string name="staking_details_unbonding_period_info">ステーキングから資金の引き出しを要求した後、トークンが利用可能になるまでの待機期間。</string>
   <string name="staking_details_warmup_period">ウォームアップ期間</string>
   <string name="staking_details_warmup_period_info">ステーキングへの参加を有効にするために割り当てられた時間。</string>
+    <string name="staking_error_no_validators_message">現在、利用可能なバリデーターは見つかりません。しばらくしてからもう一度お試しください。</string>
+    <string name="staking_error_no_validators_title">ステーキングは利用できません</string>
   <string name="staking_give_permission_fee_footer">ネットワークは、ステーキングのためにトークンの使用を承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="staking_legal">ステーキング機能を使用すると、プロバイダーの%1$sと%2$sに同意したことになります</string>
   <string name="staking_locked">ロック中</string>
@@ -795,6 +801,8 @@
   <string name="staking_notification_earn_rewards_title">ステーキング報酬を獲得</string>
   <string name="staking_notification_low_staked_balance_text">残りのステーキング残高が少なすぎてステーキングを解除できません。最小のステーキング解除残高を満たすには、さらにステーキングする必要があります。</string>
   <string name="staking_notification_low_staked_balance_title">ステーキング残高が低いです</string>
+    <string name="staking_notification_minimum_balance_error_text">再ステーキングには最低%1$s %2$sが必要です。残高を補充してください。</string>
+    <string name="staking_notification_minimum_balance_error_title">%sが足りません</string>
   <string name="staking_notification_network_error_text">ネットワークの状態により、現在ステーキングはご利用いただけません。しばらくしてからもう一度お試しください。</string>
   <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターで%1$sネットワークにステーキングすると、以前にステーキングされた資金はすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
