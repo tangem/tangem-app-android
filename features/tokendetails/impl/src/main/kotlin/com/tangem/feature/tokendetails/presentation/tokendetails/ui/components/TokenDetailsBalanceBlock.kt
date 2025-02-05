@@ -14,6 +14,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
+import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -113,7 +114,7 @@ private fun FiatBalance(
             ),
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier,
+            modifier = modifier.flicker(state.isBalanceFlickering),
             text = state.displayFiatBalance.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
@@ -141,7 +142,7 @@ private fun CryptoBalance(
             ),
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier,
+            modifier = modifier.flicker(state.isBalanceFlickering),
             text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.tertiary,
@@ -202,6 +203,7 @@ private class TokenDetailsBalanceBlockStateProvider : CollectionPreviewParameter
     collection = listOf(
         TokenDetailsPreviewData.balanceLoading,
         TokenDetailsPreviewData.balanceContent,
+        TokenDetailsPreviewData.balanceContent.copy(isBalanceFlickering = true),
         TokenDetailsPreviewData.balanceError,
     ),
 )
