@@ -18,7 +18,7 @@ data class HotCryptoResponse(
         @Json(name = "network_id") val networkId: String,
         @Json(name = "current_price") val currentPrice: BigDecimal,
         @Json(name = "price_change_percentage_24h") val priceChangePercentage: BigDecimal,
-        @Json(name = "contractAddress") val contractAddress: String? = null, // specific for token
+        @Json(name = "contract_address") val contractAddress: String? = null, // specific for token
         @Json(name = "decimal_count") val decimalCount: Int? = null, // specific for token
     )
 }
