@@ -21,6 +21,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
     internal val dispatchers: CoroutineDispatcherProvider,
 ) {
 
+    // multi-currency
     suspend operator fun invoke(
         userWalletId: UserWalletId,
         cryptoCurrencyId: CryptoCurrency.ID,
@@ -38,6 +39,7 @@ class GetCryptoCurrencyStatusSyncUseCase(
             .mapLeft { error -> error.mapToCurrencyError() }
     }
 
+    // single-currency
     suspend operator fun invoke(userWalletId: UserWalletId): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         val operations = CurrenciesStatusesOperations(
             userWalletId = userWalletId,
