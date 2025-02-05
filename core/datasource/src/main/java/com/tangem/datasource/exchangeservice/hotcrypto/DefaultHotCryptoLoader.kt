@@ -1,5 +1,8 @@
 package com.tangem.datasource.exchangeservice.hotcrypto
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
@@ -32,6 +35,7 @@ internal class DefaultHotCryptoLoader @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
     private val dispatchers: CoroutineDispatcherProvider,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : HotCryptoLoader {
 
     override suspend fun fetch(tokens: List<UserTokensResponse.Token>) {
@@ -68,6 +72,12 @@ internal class DefaultHotCryptoLoader @Inject constructor(
             }
             .onFailure {
                 Timber.e(it, "Unable to fetch hot crypto")
+
+                analyticsEventHandler.send(
+                    event = MainScreenAnalyticsEvent.HotTokenError(
+                        errorCode = (it as? ApiResponseError.HttpException)?.code?.code?.toString().orEmpty(),
+                    ),
+                )
             }
     }
 
