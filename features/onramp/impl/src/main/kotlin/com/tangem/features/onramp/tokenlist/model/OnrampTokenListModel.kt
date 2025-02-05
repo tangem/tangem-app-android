@@ -24,6 +24,7 @@ import com.tangem.features.onramp.tokenlist.OnrampTokenListComponent
 import com.tangem.features.onramp.tokenlist.entity.OnrampOperation
 import com.tangem.features.onramp.tokenlist.entity.TokenListUM
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
+import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
 import com.tangem.features.onramp.utils.InputManager
@@ -125,7 +126,7 @@ internal class OnrampTokenListModel @Inject constructor(
                 )
             }
         }
-            .onEach(tokenListUMController::update)
+            .onEach(::updateTokenListUM)
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
     }
@@ -155,6 +156,21 @@ internal class OnrampTokenListModel @Inject constructor(
         OnrampOperation.SELL -> R.string.tokens_list_unavailable_to_sell_header
         OnrampOperation.SWAP -> R.string.tokens_list_unavailable_to_swap_source_header
     }.let(::resourceReference)
+
+    private fun updateTokenListUM(transformer: TokenListUMTransformer) {
+        tokenListUMController.update { prevState ->
+            transformer.transform(prevState).apply {
+                if (isFirstInitialization(prevState = prevState, newState = this)) {
+                    params.onTokenListInitialized()
+                }
+            }
+        }
+    }
+
+    private fun isFirstInitialization(prevState: TokenListUM, newState: TokenListUM): Boolean {
+        return prevState.availableItems.isEmpty() && prevState.unavailableItems.isEmpty() &&
+            (newState.availableItems.isNotEmpty() || newState.unavailableItems.isNotEmpty())
+    }
 
     private fun onSearchQueryChange(newQuery: String) {
         val searchBar = state.value.searchBarUM

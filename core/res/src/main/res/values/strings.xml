@@ -345,7 +345,7 @@
   <string name="home_button_order">Order Tangem</string>
   <string name="home_button_scan">Scan Tangem</string>
   <string name="hot_crypto_add_token_subtitle">to %s</string>
-  <string name="hot_crypto_token_network">In %s</string>
+  <string name="hot_crypto_token_network">In %s network</string>
   <string name="information_generated_with_ai">This information was generated with AI.\nTap here, if you find any errors.</string>
   <string name="initial_message_change_access_code_body">To change the access code tap the card or ring as shown above and do not remove until the end of the operation</string>
   <string name="initial_message_change_passcode_body">To change the passcode tap the card as shown above and do not remove until the end of the operation</string>
@@ -883,6 +883,16 @@
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
+  <string name="swap_story_fifth_subtitle">Feel confident with constant support, ensuring your transactions go smoothly anytime</string>
+  <string name="swap_story_fifth_title">Around-the-Clock Assistance</string>
+  <string name="swap_story_first_subtitle">Trusted exchange providers let you swap assets effortlessly, keeping everything safe in your wallet</string>
+  <string name="swap_story_first_title">Exchange With Us</string>
+  <string name="swap_story_forth_subtitle">Top-level security and verified providers ensure your assets are protected during every swap</string>
+  <string name="swap_story_forth_title">Safer Then Ever</string>
+  <string name="swap_story_second_subtitle">Maximize your value with rates sourced from a wide network of trusted providers, always choosing the best one</string>
+  <string name="swap_story_second_title">Best Rates</string>
+  <string name="swap_story_third_subtitle">Hassle-free and intuitive, allowing you to swap tokens in just a few taps</string>
+  <string name="swap_story_third_title">Easier Than Ever</string>
   <string name="swapping_alert_cex_description">The amount includes:\n• service provider\'s fee\n• network fee for sending %s from the exchange back to the user\'s address.</string>
   <string name="swapping_alert_cex_description_with_slippage">The amount includes:\n• service provider\'s fee\n• network fee for sending %1$s from the exchange back to the user\'s address. \n\nProvider slippage is up to %2$s</string>
   <string name="swapping_alert_dex_description">The amount includes the service provider\'s fee.</string>
