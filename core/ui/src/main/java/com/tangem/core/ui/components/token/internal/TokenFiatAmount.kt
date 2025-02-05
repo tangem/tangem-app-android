@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.token.internal
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,9 +15,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
-import com.tangem.core.ui.R
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.token.state.TokenItemState
+import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState as TokenFiatAmountState
@@ -26,12 +28,13 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
     when (state) {
         is TokenFiatAmountState.Content -> {
             ContentFiatAmount(
-                text = state.text.orMaskWithStars(isBalanceHidden),
-                hasStaked = state.hasStaked,
                 modifier = modifier,
+                text = state.text.orMaskWithStars(isBalanceHidden),
+                icons = state.icons,
+                isAmountFlickering = state.isFlickering,
             )
         }
-        is TokenItemState.FiatAmountState.TextContent -> {
+        is TokenFiatAmountState.TextContent -> {
             FiatAmountText(
                 text = state.text.orMaskWithStars(isBalanceHidden),
                 modifier = modifier,
@@ -39,7 +42,7 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
             )
         }
         is TokenFiatAmountState.Loading -> {
-            RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
+            RectangleShimmer(modifier = modifier.placeholderSize(), radius = 4.dp)
         }
         is TokenFiatAmountState.Locked -> {
             LockedRectangle(modifier = modifier.placeholderSize())
@@ -49,33 +52,53 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
 }
 
 @Composable
-private fun ContentFiatAmount(text: String, hasStaked: Boolean, modifier: Modifier = Modifier) {
+private fun ContentFiatAmount(
+    text: String,
+    icons: List<TokenFiatAmountState.Content.IconUM>,
+    isAmountFlickering: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         AnimatedVisibility(
-            visible = hasStaked,
+            visible = icons.isNotEmpty(),
         ) {
-            Icon(
-                painter = rememberVectorPainter(image = ImageVector.vectorResource(R.drawable.ic_staking_24)),
-                contentDescription = null,
-                tint = TangemTheme.colors.icon.accent,
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing4)
-                    .size(TangemTheme.dimens.size12),
-            )
+            Row(
+                modifier = Modifier.padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                icons.fastForEach { icon ->
+                    Icon(
+                        modifier = Modifier.size(12.dp),
+                        painter = rememberVectorPainter(image = ImageVector.vectorResource(icon.iconRes)),
+                        tint = if (icon.useAccentColor) {
+                            TangemTheme.colors.icon.accent
+                        } else {
+                            TangemTheme.colors.icon.inactive
+                        },
+                        contentDescription = null,
+                    )
+                }
+            }
         }
 
-        FiatAmountText(text = text)
+        FiatAmountText(text = text, isFlickering = isAmountFlickering)
     }
 }
 
 @Composable
-private fun FiatAmountText(text: String, modifier: Modifier = Modifier, isAvailable: Boolean = true) {
+private fun FiatAmountText(
+    text: String,
+    modifier: Modifier = Modifier,
+    isAvailable: Boolean = true,
+    isFlickering: Boolean = false,
+) {
     Text(
+        modifier = modifier.flicker(isFlickering),
         text = text,
-        modifier = modifier,
         color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -85,6 +108,6 @@ private fun FiatAmountText(text: String, modifier: Modifier = Modifier, isAvaila
 
 private fun Modifier.placeholderSize(): Modifier = composed {
     return@composed this
-        .padding(vertical = TangemTheme.dimens.spacing4)
-        .size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12)
+        .padding(vertical = 4.dp)
+        .size(width = 40.dp, height = 12.dp)
 }

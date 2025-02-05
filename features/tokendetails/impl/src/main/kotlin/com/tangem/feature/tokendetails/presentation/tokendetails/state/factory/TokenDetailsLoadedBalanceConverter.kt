@@ -121,6 +121,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 onBalanceSelect = clickIntents::onBalanceSelect,
                 selectedBalanceType = currentState.selectedBalanceType,
                 isBalanceSelectorEnabled = isBalanceSelectorEnabled,
+                isBalanceFlickering = false, // TODO: Implement in https://tangem.atlassian.net/browse/AND-9910
             )
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(
                 actionButtons = currentState.actionButtons,
