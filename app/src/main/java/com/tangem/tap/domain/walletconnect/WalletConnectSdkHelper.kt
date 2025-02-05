@@ -218,6 +218,7 @@ class WalletConnectSdkHelper {
             signer = store.inject(DaggerGraphState::transactionSignerFactory).createTransactionSigner(
                 cardId = cardId,
                 sdk = sdk,
+                twinKey = null, // use null here because twin doesn't support WC
             ),
         )
         return when (result) {
