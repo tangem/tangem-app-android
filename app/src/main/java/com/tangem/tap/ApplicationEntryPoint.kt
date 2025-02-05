@@ -2,7 +2,7 @@ package com.tangem.tap
 
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.blockchainsdk.signer.TransactionSignerFactory
+import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.filter.OneTimeEventFilter
