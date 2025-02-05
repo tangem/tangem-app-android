@@ -142,7 +142,7 @@
   <string name="common_generate_addresses">Adressen synchronisieren</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
-    <string name="common_hide">Ausblenden</string>
+  <string name="common_hide">Ausblenden</string>
   <string name="common_hour">stunde</string>
   <string name="common_import">Importieren</string>
   <string name="common_in_progress">In Arbeit</string>
@@ -316,8 +316,8 @@
   <string name="express_status_buying">Kauf %s</string>
   <string name="express_status_buying_active">Kauf %s…</string>
   <string name="express_status_hide_button_text">Diese Transaktion ausblenden</string>
-    <string name="express_status_hide_dialog_text">Sobald der Transaktionsstatus ausgeblendet ist, kann er nicht mehr angezeigt werden. Stattdessen kannst Du ihn durch einfaches Wischen schließen.</string>
-    <string name="express_status_hide_dialog_title">Diese Transaktion ausblenden</string>
+  <string name="express_status_hide_dialog_text">Sobald der Transaktionsstatus ausgeblendet ist, kann er nicht mehr angezeigt werden. Stattdessen kannst Du ihn durch einfaches Wischen schließen.</string>
+  <string name="express_status_hide_dialog_title">Diese Transaktion ausblenden</string>
   <string name="express_token_list_empty_search">Keine Token gefunden. Bitte versuche eine andere Anfrage</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">Transaktions-ID kopiert</string>
