@@ -36,6 +36,7 @@ internal object WalletPreviewData {
             onDeleteClick = {},
             cardCount = 1,
             isZeroBalance = false,
+            isBalanceFlickering = false,
         )
     }
 
