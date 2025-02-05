@@ -9,6 +9,7 @@ data class UserWalletItemUM(
     val id: UserWalletId,
     val name: TextReference,
     val information: TextReference,
+    val balance: Balance,
     val imageUrl: String,
     val isEnabled: Boolean,
     val endIcon: EndIcon = EndIcon.None,
@@ -18,5 +19,21 @@ data class UserWalletItemUM(
         None,
         Arrow,
         Checkmark,
+    }
+
+    sealed class Balance {
+
+        data object Hidden : Balance()
+
+        data object Locked : Balance()
+
+        data object Failed : Balance()
+
+        data object Loading : Balance()
+
+        data class Loaded(
+            val value: String,
+            val isFlickering: Boolean,
+        ) : Balance()
     }
 }
