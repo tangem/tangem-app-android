@@ -344,6 +344,7 @@
   <string name="give_permission_unlimited">Безлимитно</string>
   <string name="home_button_order">Купить</string>
   <string name="home_button_scan">Сканировать</string>
+  <string name="hot_crypto_token_network">В сети %s</string>
   <string name="information_generated_with_ai">Эта информация была сгенерирована ИИ.\nНажмите здесь, если обнаружили ошибку.</string>
   <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту или кольцо как показано выше и не убирайте до окончания операции</string>
   <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
