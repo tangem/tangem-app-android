@@ -13,6 +13,7 @@ import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddToPortfoli
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -48,7 +49,7 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
             currencyName = params.cryptoCurrency.name,
             networkName = params.cryptoCurrency.network.name,
             currencyIconState = params.currencyIconState,
-            onAddClick = ::onAddClick,
+            addButtonUM = OnrampAddToPortfolioUM.AddButtonUM(isProgress = false, onClick = ::onAddClick),
         )
     }
 
@@ -60,8 +61,12 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
 
     private fun onAddClick() {
         modelScope.launch {
+            changeAddButtonProgressStatus(isProgress = true)
+
             derivePublicKeysUseCase(params.userWalletId, listOfNotNull(params.cryptoCurrency)).getOrElse {
                 Timber.e("Failed to derive public keys: $it")
+
+                changeAddButtonProgressStatus(isProgress = false)
             }
 
             addCryptoCurrenciesUseCase(
@@ -69,6 +74,13 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
                 currencies = listOfNotNull(params.cryptoCurrency),
             )
                 .onRight { params.onSuccessAdding(params.cryptoCurrency.id) }
+                .onLeft { changeAddButtonProgressStatus(isProgress = false) }
+        }
+    }
+
+    private fun changeAddButtonProgressStatus(isProgress: Boolean) {
+        _state.update {
+            it.copy(addButtonUM = it.addButtonUM.copy(isProgress = isProgress))
         }
     }
 }
