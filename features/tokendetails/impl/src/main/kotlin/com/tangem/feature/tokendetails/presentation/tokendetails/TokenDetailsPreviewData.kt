@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails
 
 import androidx.compose.ui.graphics.Color
 import androidx.paging.PagingData
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.marketprice.PriceChangeState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
@@ -11,7 +12,6 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
@@ -129,6 +129,7 @@ internal object TokenDetailsPreviewData {
         displayCryptoBalance = "966,96 XLM",
         displayFiatBalance = "91,50$",
         isBalanceSelectorEnabled = true,
+        isBalanceFlickering = false,
     )
     val balanceError = TokenDetailsBalanceBlockState.Error(
         actionButtons = actionButtons,
