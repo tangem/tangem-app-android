@@ -121,6 +121,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 onBalanceSelect = clickIntents::onBalanceSelect,
                 selectedBalanceType = currentState.selectedBalanceType,
                 isBalanceSelectorEnabled = isBalanceSelectorEnabled,
+                isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
             )
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(
                 actionButtons = currentState.actionButtons,
