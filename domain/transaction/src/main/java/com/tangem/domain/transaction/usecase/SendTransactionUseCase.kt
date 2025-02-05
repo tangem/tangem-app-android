@@ -16,6 +16,7 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
+import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -37,7 +38,10 @@ class SendTransactionUseCase(
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
 
-        val signer = cardSdkConfigRepository.getCommonSigner(cardId = card.cardId.takeIf { isCardNotBackedUp })
+        val signer = cardSdkConfigRepository.getCommonSigner(
+            cardId = card.cardId.takeIf { isCardNotBackedUp },
+            twinKey = TwinKey.getOrNull(scanResponse = userWallet.scanResponse),
+        )
 
         val linkedTerminal = cardSdkConfigRepository.isLinkedTerminal()
         if (userWallet.scanResponse.card.isStart2Coin) {

@@ -5,6 +5,7 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
+import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.scan.isRing
 import com.tangem.tap.domain.tasks.SignHashesTask
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -14,6 +15,7 @@ class TangemSigner(
     private val cardId: String?,
     private val tangemSdk: TangemSdk,
     private val initialMessage: Message,
+    private val twinKey: TwinKey?,
     private val signerCallback: (TangemSignerResponse) -> Unit,
 ) : TransactionSigner {
 
@@ -22,7 +24,7 @@ class TangemSigner(
         publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
         return suspendCancellableCoroutine { continuation ->
-            val task = SignHashesTask(hashes, publicKey)
+            val task = SignHashesTask(hashes, publicKey, twinKey?.getPairKey(publicKey.seedKey))
 
             tangemSdk.startSessionWithRunnable(
                 runnable = task,

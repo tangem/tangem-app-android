@@ -2,6 +2,7 @@ package com.tangem.domain.card.repository
 
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.scan.ProductType
 
 /**
@@ -28,7 +29,7 @@ interface CardSdkConfigRepository {
     fun updateCardIdDisplayFormat(productType: ProductType)
 
     /** Get common signer by [cardId] */
-    fun getCommonSigner(cardId: String?): TransactionSigner
+    fun getCommonSigner(cardId: String?, twinKey: TwinKey?): TransactionSigner
 
     /** Check if linked terminal is enabled */
     fun isLinkedTerminal(): Boolean?
