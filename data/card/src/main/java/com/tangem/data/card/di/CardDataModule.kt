@@ -1,6 +1,6 @@
 package com.tangem.data.card.di
 
-import com.tangem.blockchainsdk.signer.TransactionSignerFactory
+import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.data.card.DefaultCardRepository
 import com.tangem.data.card.DefaultCardSdkConfigRepository
 import com.tangem.data.card.sdk.CardSdkProvider
