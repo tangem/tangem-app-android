@@ -5,6 +5,8 @@ import com.tangem.core.ui.components.audits.AuditLabelUM
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.TextReference
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 /** TokenItem component state */
 @Immutable
@@ -192,10 +194,18 @@ sealed class TokenItemState {
 
     @Immutable
     sealed class FiatAmountState {
+
         data class Content(
             val text: String,
-            val hasStaked: Boolean = false,
-        ) : FiatAmountState()
+            val isFlickering: Boolean = false,
+            val icons: ImmutableList<IconUM> = persistentListOf(),
+        ) : FiatAmountState() {
+
+            data class IconUM(
+                val iconRes: Int,
+                val useAccentColor: Boolean,
+            )
+        }
 
         data class TextContent(val text: String, val isAvailable: Boolean = true) : FiatAmountState()
 
@@ -207,7 +217,10 @@ sealed class TokenItemState {
     @Immutable
     sealed class Subtitle2State {
 
-        data class TextContent(val text: String) : Subtitle2State()
+        data class TextContent(
+            val text: String,
+            val isFlickering: Boolean = false,
+        ) : Subtitle2State()
 
         data class LabelContent(val auditLabelUM: AuditLabelUM) : Subtitle2State()
 
