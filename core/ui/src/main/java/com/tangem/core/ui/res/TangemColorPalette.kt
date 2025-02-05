@@ -7,6 +7,7 @@ object TangemColorPalette {
     // region Base
     val Black = Color(0xFF000000)
     val White = Color(0xFFFFFFFF)
+    val SoftWhite = Color(0xFFF1F1F1)
     // endregion Base
 
     // region Dark
