@@ -27,6 +27,7 @@ import com.tangem.features.onramp.selecttoken.entity.OnrampOperationUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -98,6 +99,7 @@ internal class OnrampOperationModel @Inject constructor(
                 is Params.Sell -> R.string.common_sell
             },
             onBackClick = ::onBackClick,
+            isHotCryptoVisible = false,
         )
     }
 
@@ -142,6 +144,13 @@ internal class OnrampOperationModel @Inject constructor(
             messageSender.send(message)
         } else {
             action()
+        }
+    }
+
+    fun onTokenListInitialized() {
+        // Makes HotCrypto tokens visible when token list is initialized to synchronize UI
+        _state.update {
+            it.copy(isHotCryptoVisible = true)
         }
     }
 }
