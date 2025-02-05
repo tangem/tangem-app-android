@@ -16,6 +16,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.converters.SwapTransactionErrorStateConverter
@@ -125,19 +126,40 @@ internal class StateBuilder(
         )
     }
 
-    fun createStoriesState(uiStateHolder: SwapStateHolder): SwapStateHolder {
+    // WARNING! Be careful with indices. Temporary solution.
+    // Use all data from v1/stories api (image url, title, subtitle)
+    @Suppress("MagicNumber")
+    fun createStoriesState(uiStateHolder: SwapStateHolder, swapStory: StoryContent): SwapStateHolder {
+        val storyOrderedImageUrls = swapStory.getImageUrls()
+        if (storyOrderedImageUrls.size != 5) return uiStateHolder
+
         return uiStateHolder.copy(
-            // todo stories [REDACTED_TASK_KEY] fix when design is ready
             storiesConfig = SwapStoriesContentConfig(
                 stories = persistentListOf(
                     SwapStoryConfig(
-                        imageRes = R.drawable.img_card_with_ring,
+                        imageUrl = storyOrderedImageUrls[0],
+                        title = resourceReference(R.string.swap_story_first_title),
+                        subtitle = resourceReference(R.string.swap_story_first_subtitle),
                     ),
                     SwapStoryConfig(
-                        imageRes = R.drawable.ill_businessman_3d,
+                        imageUrl = storyOrderedImageUrls[1],
+                        title = resourceReference(R.string.swap_story_second_title),
+                        subtitle = resourceReference(R.string.swap_story_second_subtitle),
                     ),
                     SwapStoryConfig(
-                        imageRes = R.drawable.ill_one_inch_powered,
+                        imageUrl = storyOrderedImageUrls[2],
+                        title = resourceReference(R.string.swap_story_third_title),
+                        subtitle = resourceReference(R.string.swap_story_third_subtitle),
+                    ),
+                    SwapStoryConfig(
+                        imageUrl = storyOrderedImageUrls[3],
+                        title = resourceReference(R.string.swap_story_forth_title),
+                        subtitle = resourceReference(R.string.swap_story_forth_subtitle),
+                    ),
+                    SwapStoryConfig(
+                        imageUrl = storyOrderedImageUrls[4],
+                        title = resourceReference(R.string.swap_story_fifth_title),
+                        subtitle = resourceReference(R.string.swap_story_fifth_subtitle),
                     ),
                 ),
                 onClose = actions.onStoriesClose,
