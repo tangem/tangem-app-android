@@ -59,7 +59,7 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
                 context = child(key = "hot_crypto"),
                 params = HotCryptoComponent.Params(
                     userWalletId = params.userWalletId,
-                    onTokenClick = model::onTokenClick,
+                    onTokenClick = model::onHotTokenClick,
                 ),
             )
         } else {
