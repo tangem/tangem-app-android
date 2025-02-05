@@ -2,6 +2,7 @@ package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.promotion.models.PromotionInfoResponse
+import com.tangem.datasource.api.promotion.models.StoryContentResponse
 import com.tangem.datasource.api.tangemTech.models.*
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.local.config.providers.models.ProviderModel
@@ -124,6 +125,12 @@ interface TangemTechApi {
 
     @GET("hot_crypto")
     suspend fun getHotCrypto(@Query("currency") currencyId: String): ApiResponse<HotCryptoResponse>
+
+    @GET("stories/{story_id}")
+    suspend fun getStoryById(
+        @Path("story_id") storyId: String,
+        @Query("language") language: String,
+    ): ApiResponse<StoryContentResponse>
 
     companion object {
         val marketsQuoteFields = listOf(
