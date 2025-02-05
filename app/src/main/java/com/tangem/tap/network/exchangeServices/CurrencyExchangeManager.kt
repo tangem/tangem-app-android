@@ -104,6 +104,7 @@ class CurrencyExchangeManager(
     }
 }
 
+@Deprecated("Useless")
 suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, destinationAddress: String) {
     walletManager.safeUpdate(card.isDemoCard())
 
@@ -123,6 +124,7 @@ suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletMa
         cardId = card.cardId.takeIf { isCardNotBackedUp },
         tangemSdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk,
         initialMessage = Message(),
+        twinKey = null,
     ) { signResponse ->
         store.dispatch(
             GlobalAction.UpdateWalletSignedHashes(
