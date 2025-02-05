@@ -2,6 +2,7 @@ package com.tangem.core.analytics.models.event
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ERROR_CODE
 import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 /**
@@ -70,6 +71,16 @@ sealed class MainScreenAnalyticsEvent(
     data class ButtonClose(val source: AnalyticsParam.ScreensSources) : MainScreenAnalyticsEvent(
         event = "Button - Close",
         params = mapOf(AnalyticsParam.SOURCE to source.value),
+    )
+
+    data class HotTokenClicked(val currencySymbol: String) : MainScreenAnalyticsEvent(
+        event = "Hot Token Clicked",
+        params = mapOf(TOKEN_PARAM to currencySymbol),
+    )
+
+    data class HotTokenError(val errorCode: String) : MainScreenAnalyticsEvent(
+        event = "Hot Token Error",
+        params = mapOf(ERROR_CODE to errorCode),
     )
     // endregion
 }
