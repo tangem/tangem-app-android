@@ -9,6 +9,7 @@ import com.tangem.features.onramp.impl.R
 /**
  * Onramp add to portfolio UM
  *
+ * @property walletName        wallet name
  * @property currencyName      currency name
  * @property networkName       network name
  * @property currencyIconState currency icon state
@@ -17,6 +18,7 @@ import com.tangem.features.onramp.impl.R
 [REDACTED_AUTHOR]
  */
 data class OnrampAddToPortfolioUM(
+    val walletName: String,
     val currencyName: String,
     val networkName: String,
     val currencyIconState: CurrencyIconState,
@@ -24,6 +26,11 @@ data class OnrampAddToPortfolioUM(
 ) {
 
     val bsTitle: TextReference = resourceReference(id = R.string.common_add_token)
+
+    val bsSubtitle: TextReference = resourceReference(
+        id = R.string.hot_crypto_add_token_subtitle,
+        formatArgs = wrappedList(walletName),
+    )
 
     val subtitle: TextReference = resourceReference(
         id = R.string.hot_crypto_token_network,
