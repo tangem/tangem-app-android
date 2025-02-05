@@ -66,8 +66,7 @@ fun OnrampAddToPortfolioContent(state: OnrampAddToPortfolioUM) {
         SpacerH24()
 
         AddToPortfolioButton(
-            text = state.addButtonText,
-            onClick = state.onAddClick,
+            state = state.addButtonUM,
             modifier = Modifier.padding(horizontal = 16.dp),
         )
 
@@ -109,13 +108,13 @@ private fun CurrencyNetworkName(text: TextReference, modifier: Modifier = Modifi
 }
 
 @Composable
-private fun AddToPortfolioButton(text: TextReference, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AddToPortfolioButton(state: OnrampAddToPortfolioUM.AddButtonUM, modifier: Modifier = Modifier) {
     TangemButton(
-        text = text.resolveReference(),
+        text = state.text.resolveReference(),
         icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_tangem_24),
-        onClick = onClick,
+        onClick = state.onClick,
         colors = TangemButtonsDefaults.primaryButtonColors,
-        showProgress = false,
+        showProgress = state.isProgress,
         enabled = true,
         modifier = modifier.fillMaxWidth(),
         size = TangemButtonSize.WideAction,
@@ -150,7 +149,7 @@ private fun PreviewOnrampAddToPortfolioContent() {
                             isGrayscale = false,
                             showCustomBadge = false,
                         ),
-                        onAddClick = {},
+                        addButtonUM = OnrampAddToPortfolioUM.AddButtonUM(isProgress = false, onClick = {}),
                     ),
                 )
             },
