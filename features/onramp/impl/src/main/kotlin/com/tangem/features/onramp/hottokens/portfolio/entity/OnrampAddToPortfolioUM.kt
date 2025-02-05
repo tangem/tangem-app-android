@@ -13,7 +13,7 @@ import com.tangem.features.onramp.impl.R
  * @property currencyName      currency name
  * @property networkName       network name
  * @property currencyIconState currency icon state
- * @property onAddClick        lambda be invoked when add button is clicked
+ * @property addButtonUM       add button UM
  *
 [REDACTED_AUTHOR]
  */
@@ -22,7 +22,7 @@ data class OnrampAddToPortfolioUM(
     val currencyName: String,
     val networkName: String,
     val currencyIconState: CurrencyIconState,
-    val onAddClick: () -> Unit,
+    val addButtonUM: AddButtonUM,
 ) {
 
     val bsTitle: TextReference = resourceReference(id = R.string.common_add_token)
@@ -37,5 +37,8 @@ data class OnrampAddToPortfolioUM(
         formatArgs = wrappedList(networkName),
     )
 
-    val addButtonText: TextReference = resourceReference(R.string.common_add_to_portfolio)
+    data class AddButtonUM(val isProgress: Boolean, val onClick: () -> Unit) {
+
+        val text: TextReference = resourceReference(R.string.common_add_to_portfolio)
+    }
 }
