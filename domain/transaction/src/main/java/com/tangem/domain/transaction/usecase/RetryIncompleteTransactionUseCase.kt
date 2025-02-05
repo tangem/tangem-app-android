@@ -23,7 +23,10 @@ class RetryIncompleteTransactionUseCase(
         currency: CryptoCurrency,
     ): Either<IncompleteTransactionError, Unit> {
         return either {
-            val signer = cardSdkConfigRepository.getCommonSigner(cardId = null)
+            val signer = cardSdkConfigRepository.getCommonSigner(
+                cardId = null,
+                twinKey = null, // use null here because no assets support for Twin cards
+            )
 
             catch(
                 block = {
