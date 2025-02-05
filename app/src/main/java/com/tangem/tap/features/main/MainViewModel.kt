@@ -10,6 +10,7 @@ import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.R
+import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.BottomSheetMessage
 import com.tangem.core.ui.message.EventMessageAction
@@ -20,6 +21,8 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.promo.GetStoryContentUseCase
+import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
 import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
@@ -50,6 +53,8 @@ internal class MainViewModel @Inject constructor(
     @GlobalUiMessageSender private val messageSender: UiMessageSender,
     private val keyboardValidator: KeyboardValidator,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val getStoryContentUseCase: GetStoryContentUseCase,
+    private val imagePreloader: ImagePreloader,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -80,6 +85,8 @@ internal class MainViewModel @Inject constructor(
         deleteDeprecatedLogsUseCase()
 
         sendKeyboardIdentifierEvent()
+
+        preloadImages()
     }
 
     /** Loading the resources needed to run the application */
@@ -276,6 +283,22 @@ internal class MainViewModel @Inject constructor(
             } else {
                 Timber.e("Unable to get keyboard identifier")
             }
+        }
+    }
+
+    // Preload stories to display on startup before navigation to targeted screen
+    private fun preloadImages() {
+        try {
+            viewModelScope.launch {
+                val swapStories = getStoryContentUseCase(StoryContentIds.STORY_FIRST_TIME_SWAP.id).getOrNull()
+                    ?: return@launch
+                val storiesImages = swapStories.getImageUrls()
+
+                // try to preload images for stories
+                storiesImages.forEach(imagePreloader::preload)
+            }
+        } catch (ex: Exception) {
+            Timber.e(ex.message)
         }
     }
 }
