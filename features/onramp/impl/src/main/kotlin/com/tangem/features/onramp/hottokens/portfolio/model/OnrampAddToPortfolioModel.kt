@@ -6,6 +6,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.hottokens.portfolio.OnrampAddToPortfolioComponent
 import com.tangem.features.onramp.hottokens.portfolio.entity.OnrampAddToPortfolioUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,6 +24,7 @@ import javax.inject.Inject
  * @property dispatchers                dispatchers
  * @property derivePublicKeysUseCase    use case for deriving public key
  * @property addCryptoCurrenciesUseCase use case for adding crypto currency
+ * @property getUserWalletUseCase       use case for getting user wallet by id
  *
 [REDACTED_AUTHOR]
  */
@@ -31,6 +34,7 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val derivePublicKeysUseCase: DerivePublicKeysUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
 ) : Model() {
 
     private val params: OnrampAddToPortfolioComponent.Params = paramsContainer.require()
@@ -40,11 +44,18 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
 
     private fun getInitialState(): OnrampAddToPortfolioUM {
         return OnrampAddToPortfolioUM(
+            walletName = getUserWalletName(),
             currencyName = params.cryptoCurrency.name,
             networkName = params.cryptoCurrency.network.name,
             currencyIconState = params.currencyIconState,
             onAddClick = ::onAddClick,
         )
+    }
+
+    private fun getUserWalletName(): String {
+        return getUserWalletUseCase(params.userWalletId)
+            .onLeft { Timber.e("Unable to get wallet name by id [${params.userWalletId}]: $it") }
+            .fold(ifLeft = { "" }, ifRight = UserWallet::name)
     }
 
     private fun onAddClick() {
