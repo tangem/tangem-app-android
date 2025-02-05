@@ -11,6 +11,7 @@ import androidx.compose.ui.text.AnnotatedString.Builder
 import androidx.compose.ui.text.buildAnnotatedString
 import com.tangem.core.res.getPluralStringSafe
 import com.tangem.core.res.getStringSafe
+import com.tangem.utils.StringsSigns.THREE_STARS
 import org.intellij.markdown.MarkdownElementTypes
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -72,9 +73,6 @@ sealed interface TextReference {
 
         /** Empty string as [TextReference] */
         val EMPTY: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = "") }
-
-        /** Stars string as [TextReference] */
-        val STARS: TextReference by lazy(mode = LazyThreadSafetyMode.NONE) { Str(value = THREE_STARS) }
     }
 }
 
