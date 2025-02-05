@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.models
 
-import androidx.annotation.DrawableRes
 import com.tangem.core.ui.components.stories.model.StoriesContentConfig
 import com.tangem.core.ui.components.stories.model.StoryConfig
+import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 data class SwapStoriesContentConfig(
@@ -13,7 +13,9 @@ data class SwapStoriesContentConfig(
 }
 
 data class SwapStoryConfig(
-    @DrawableRes val imageRes: Int,
+    val imageUrl: String,
+    val title: TextReference,
+    val subtitle: TextReference,
 ) : StoryConfig {
     override val duration: Int = 2000
 }
