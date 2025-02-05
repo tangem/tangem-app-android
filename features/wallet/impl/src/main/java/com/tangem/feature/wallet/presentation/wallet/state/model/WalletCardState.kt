@@ -48,6 +48,7 @@ internal sealed interface WalletCardState {
         override val imageResId: Int?,
         override val onRenameClick: (UserWalletId) -> Unit,
         override val onDeleteClick: (UserWalletId) -> Unit,
+        val isBalanceFlickering: Boolean,
         val cardCount: Int?,
         val balance: String,
         val isZeroBalance: Boolean?,

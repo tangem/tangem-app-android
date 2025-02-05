@@ -25,7 +25,8 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
     val userWallet = UserWalletItemUM(
         id = UserWalletId("1"),
         name = stringReference("Wallet 1"),
-        information = stringReference("3 cards, 10,123$"),
+        information = stringReference("3 cards"),
+        balance = UserWalletItemUM.Balance.Loading,
         imageUrl = "",
         isEnabled = true,
         endIcon = UserWalletItemUM.EndIcon.Arrow,
