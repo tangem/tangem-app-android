@@ -66,7 +66,7 @@ internal class ManagedCryptoCurrencyFactory(
                     createSource(
                         networkId = network.id,
                         contractAddress = network.address,
-                        decimals = network.decimalCount ?: return@mapNotNull null,
+                        decimals = network.decimalCount,
                         scanResponse = scanResponse,
                     )
                 } ?: emptyList(),
