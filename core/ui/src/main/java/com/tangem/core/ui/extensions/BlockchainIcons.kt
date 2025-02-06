@@ -32,7 +32,7 @@ fun getActiveIconRes(blockchainId: String): Int {
         "Kusama" -> R.drawable.img_kusama_22
         "OPTIMISM", "OPTIMISM/test" -> R.drawable.img_optimism_22
         "DASH" -> R.drawable.img_dash_22
-        "KAS" -> R.drawable.img_kaspa_22
+        "KAS", "KAS/test" -> R.drawable.img_kaspa_22
         "The-Open-Network", "The-Open-Network/test" -> R.drawable.img_ton_22
         "KAVA", "KAVA/test" -> R.drawable.img_kava_22
         "ravencoin", "ravencoin/test" -> R.drawable.img_ravencoin_22
@@ -122,7 +122,7 @@ fun getActiveIconResByCoinId(coinId: String): Int {
         "ethereumfair", "dischain" -> R.drawable.img_dischain_22
         "kusama" -> R.drawable.img_kusama_22
         "dash" -> R.drawable.img_dash_22
-        "kaspa" -> R.drawable.img_kaspa_22
+        "kaspa", "kaspa/test" -> R.drawable.img_kaspa_22
         "ton" -> R.drawable.img_ton_22
         "kava" -> R.drawable.img_kava_22
         "ravencoin" -> R.drawable.img_ravencoin_22
@@ -209,7 +209,7 @@ fun getGreyedOutIconRes(blockchainId: String): Int {
         "Kusama" -> R.drawable.ic_kusama_16
         "OPTIMISM", "OPTIMISM/test" -> R.drawable.ic_optimism_22
         "DASH" -> R.drawable.ic_dash_22
-        "KAS" -> R.drawable.ic_kaspa_22
+        "KAS", "KAS/test" -> R.drawable.ic_kaspa_22
         "The-Open-Network", "The-Open-Network/test" -> R.drawable.ic_ton_22
         "KAVA", "KAVA/test" -> R.drawable.ic_kava_22
         "ravencoin", "ravencoin/test" -> R.drawable.ic_ravencoin_22
