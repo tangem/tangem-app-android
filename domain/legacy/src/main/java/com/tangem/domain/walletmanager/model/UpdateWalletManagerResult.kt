@@ -4,7 +4,7 @@ import java.math.BigDecimal
 
 sealed class UpdateWalletManagerResult {
 
-    object MissedDerivation : UpdateWalletManagerResult()
+    data object MissedDerivation : UpdateWalletManagerResult()
 
     data class Unreachable(
         val selectedAddress: String? = null,

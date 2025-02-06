@@ -181,7 +181,7 @@ internal class CurrenciesStatusesLceOperations(
         userWalletId: UserWalletId,
         networks: NonEmptySet<Network>,
     ): EitherFlow<TokenListError, Set<NetworkStatus>> {
-        return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
+        return networksRepository.getNetworkStatusesUpdatesLegacy(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<TokenListError, Set<NetworkStatus>>> { it.right() }
             .catch { emit(TokenListError.DataError(it).left()) }
             .distinctUntilChanged()
