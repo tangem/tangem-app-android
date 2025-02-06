@@ -403,11 +403,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             is TxFeeState.SingleFeeState -> feeState.fee.feeValue
         }
         val balanceAfterTransaction = getCoinBalanceAfterTransaction(fromTokenStatus, amount, includeFeeInAmount, fee)
-
+        val amountToRequest = if (includeFeeInAmount is IncludeFeeInAmount.Included) {
+            includeFeeInAmount.amountSubtractFee
+        } else {
+            amount
+        }
         val currencyCheck = getCurrencyCheckUseCase(
             userWalletId = userWalletId,
             currencyStatus = fromTokenStatus,
-            amount = amount.value,
+            amount = amountToRequest.value,
             fee = fee,
             feeCurrencyBalanceAfterTransaction = balanceAfterTransaction,
         )
