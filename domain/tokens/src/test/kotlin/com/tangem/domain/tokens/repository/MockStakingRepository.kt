@@ -157,6 +157,13 @@ class MockStakingRepository : StakingRepository {
     override fun getMultiYieldBalanceUpdates(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
+    ): Flow<YieldBalanceList> {
+        return flowOf(YieldBalanceList.Data(listOf(YieldBalance.Error)))
+    }
+
+    override fun getMultiYieldBalanceUpdatesLegacy(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = flowOf()
 
     override suspend fun getMultiYieldBalanceSync(

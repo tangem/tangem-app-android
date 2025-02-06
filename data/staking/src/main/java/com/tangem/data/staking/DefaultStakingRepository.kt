@@ -30,12 +30,18 @@ import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionStatusDTO
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSet
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.NetworkType
+import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
@@ -66,6 +72,7 @@ internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingBalanceStore: StakingBalanceStore,
+    private val appPreferencesStore: AppPreferencesStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
@@ -473,11 +480,30 @@ internal class DefaultStakingRepository(
                 )
 
                 stakingBalanceStore.store(userWalletId, yieldBalances)
+                storeYieldBalances(userWalletId, yieldBalances)
             },
         )
     }
 
+    private suspend fun storeYieldBalances(userWalletId: UserWalletId, yieldBalances: Set<YieldBalanceWrapperDTO>) {
+        val key = PreferencesKeys.getYieldBalancesKey(userWalletId)
+        appPreferencesStore.editData { preferences ->
+            preferences.setObjectSet(key, yieldBalances)
+        }
+    }
+
     override fun getMultiYieldBalanceUpdates(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): Flow<YieldBalanceList> {
+        return appPreferencesStore.getObjectSet<YieldBalanceWrapperDTO>(
+            PreferencesKeys.getYieldBalancesKey(userWalletId),
+        )
+            .map(yieldBalanceListConverter::convert)
+            .flowOn(dispatchers.io)
+    }
+
+    override fun getMultiYieldBalanceUpdatesLegacy(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = channelFlow {
