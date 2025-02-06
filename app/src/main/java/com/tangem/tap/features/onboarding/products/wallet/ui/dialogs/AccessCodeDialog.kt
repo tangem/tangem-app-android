@@ -27,8 +27,10 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
     }
 
     override fun setOnDismissListener(listener: DialogInterface.OnDismissListener?) {
-        super.setOnDismissListener(listener)
-        binding = null
+        super.setOnDismissListener {
+            listener?.onDismiss(it)
+            binding = null
+        }
     }
 
     fun showInfoScreen() = with(binding!!) {
