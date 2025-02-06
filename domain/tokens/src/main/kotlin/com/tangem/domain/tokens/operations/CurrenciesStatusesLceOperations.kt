@@ -17,7 +17,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
@@ -35,7 +34,6 @@ internal class CurrenciesStatusesLceOperations(
         )
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun transformToCurrenciesStatuses(
         userWalletId: UserWalletId,
         currenciesFlow: EitherFlow<TokenListError, List<CryptoCurrency>>,
@@ -166,7 +164,7 @@ internal class CurrenciesStatusesLceOperations(
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
-        return quotesRepository.getQuotesUpdates(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
+        return quotesRepository.getQuotesUpdatesLegacy(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
             .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
             .retryWhen { cause, _ ->
                 emit(TokenListError.DataError(cause).left())

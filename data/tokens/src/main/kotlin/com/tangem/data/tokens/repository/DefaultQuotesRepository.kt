@@ -2,19 +2,23 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.common.cache.CacheRegistry
+import com.tangem.data.tokens.entity.QuoteDM
 import com.tangem.data.tokens.utils.QuotesConverter
 import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
+import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
+import com.tangem.datasource.local.preferences.utils.getObjectSet
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
@@ -36,8 +40,40 @@ internal class DefaultQuotesRepository(
     private var quotesFetchedForAppCurrency: String? = null
     private val mutex = Mutex()
 
+    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
+        return appPreferencesStore
+            .getObjectSet<QuoteDM>(PreferencesKeys.QUOTES_KEY)
+            .map { quotes ->
+                currenciesIds.mapTo(hashSetOf()) { id ->
+                    quotes.firstOrNull { it.rawCurrencyId == id }
+                        ?.let { quote ->
+                            Quote.Value(
+                                rawCurrencyId = id,
+                                fiatRate = quote.fiatRate,
+                                priceChange = quote.priceChange,
+                            )
+                        }
+                        ?: Quote.Empty(id)
+                }
+            }
+            .flowOn(dispatchers.io)
+    }
+
+    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean) {
+        withContext(dispatchers.io) {
+            val selectedAppCurrency = requireNotNull(
+                value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
+                    key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+                ),
+                lazyMessage = { "Unable to get selected application currency to update quotes" },
+            )
+
+            fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, refresh)
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Flow<Set<Quote>> {
+    override fun getQuotesUpdatesLegacy(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Flow<Set<Quote>> {
         return appPreferencesStore.getObject<CurrenciesResponse.Currency>(
             key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
         )
@@ -49,19 +85,6 @@ internal class DefaultQuotesRepository(
             }
             .cancellable()
             .flowOn(dispatchers.io)
-    }
-
-    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {
-        withContext(dispatchers.io) {
-            val selectedAppCurrency = requireNotNull(
-                value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
-                    key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
-                ),
-                lazyMessage = { "Unable to get selected application currency to update quotes" },
-            )
-
-            fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, true)
-        }
     }
 
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Set<Quote> {
@@ -130,7 +153,28 @@ internal class DefaultQuotesRepository(
             response,
             replacementIdsResult.idsFiltered,
         )
+
         quotesStore.store(updatedResponse)
+        storeQuotes(updatedResponse.quotes)
+    }
+
+    private suspend fun storeQuotes(quotes: Map<String, QuotesResponse.Quote>) {
+        val newQuotes = quotes.mapTo(mutableSetOf()) { (currencyId, quote) ->
+            QuoteDM(
+                rawCurrencyId = CryptoCurrency.RawID(currencyId),
+                fiatRate = quote.price.orZero(),
+                priceChange = quote.priceChange24h.orZero(),
+            )
+        }
+        val key = PreferencesKeys.QUOTES_KEY
+
+        appPreferencesStore.editData { preferences ->
+            val storedQuotes = preferences.getObjectSet<QuoteDM>(key) ?: emptySet()
+            // Replace old quotes with new ones and discard duplicates
+            val updatedQuotes = (newQuotes + storedQuotes).distinctBy { it.rawCurrencyId }.toSet()
+
+            preferences.setObjectSet(key, updatedQuotes)
+        }
     }
 
     private suspend fun filterExpiredCurrenciesIds(
