@@ -122,6 +122,8 @@ object PreferencesKeys {
 
     val SHOULD_SHOW_SWAP_STORIES_KEY by lazy { booleanPreferencesKey("shouldShowSwapStories") }
 
+    val QUOTES_KEY by lazy { stringPreferencesKey("quotes") }
+
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
 
