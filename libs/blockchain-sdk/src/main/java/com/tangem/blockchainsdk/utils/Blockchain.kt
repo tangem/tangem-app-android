@@ -156,6 +156,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "sonic/test" -> Blockchain.SonicTestnet
         "apechain" -> Blockchain.ApeChain
         "apechain/test" -> Blockchain.ApeChainTestnet
+        "kaspa/test" -> Blockchain.KaspaTestnet
         else -> null
     }
 }
@@ -208,6 +209,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OptimismTestnet -> "optimistic-ethereum/test"
         Blockchain.Dash -> "dash"
         Blockchain.Kaspa -> "kaspa"
+        Blockchain.KaspaTestnet -> "kaspa/test"
         Blockchain.TON -> "the-open-network"
         Blockchain.TONTestnet -> "the-open-network/test"
         Blockchain.Kava -> "kava"
@@ -344,7 +346,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "optimistic-ethereum"
         Blockchain.Dash -> "dash"
-        Blockchain.Kaspa -> "kaspa"
+        Blockchain.Kaspa, Blockchain.KaspaTestnet -> "kaspa"
         Blockchain.TON, Blockchain.TONTestnet -> "the-open-network"
         Blockchain.Kava, Blockchain.KavaTestnet -> "kava"
         Blockchain.Ravencoin, Blockchain.RavencoinTestnet -> "ravencoin"
