@@ -76,9 +76,6 @@ internal class MultiWalletSeedPhraseComponent(
 
         DisableScreenshotsDisposableEffect()
 
-        MultiWalletSeedPhrase(
-            modifier = modifier,
-            state = state,
-        )
+        MultiWalletSeedPhrase(modifier = modifier, state = state)
     }
 }
