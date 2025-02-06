@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.model.MultiWalletAccessCodeModel
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.accesscode.ui.MultiWalletAccessCodeBS
@@ -16,7 +17,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
-@Suppress("UnusedPrivateMember")
 class MultiWalletAccessCodeComponent(
     context: AppComponentContext,
     params: MultiWalletChildParams,
@@ -62,6 +62,8 @@ class MultiWalletAccessCodeComponent(
             state = state,
             onBack = { model.onBack() },
         )
+
+        DisableScreenshotsDisposableEffect()
     }
 
     @JvmInline
