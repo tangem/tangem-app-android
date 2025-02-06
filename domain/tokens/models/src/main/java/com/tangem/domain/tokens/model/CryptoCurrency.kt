@@ -171,7 +171,7 @@ sealed class CryptoCurrency {
                     get() = buildString {
                         append(rawId)
                         if (contractAddress != null) {
-                            append(SUFFIX_DELIMITER)
+                            append(CONTRACT_ADDRESS_DELIMITER)
                             append(contractAddress)
                         }
                     }
@@ -188,11 +188,55 @@ sealed class CryptoCurrency {
             return "ID(value='$value')"
         }
 
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            other as ID
+
+            return value == other.value
+        }
+
+        override fun hashCode(): Int {
+            return value.hashCode()
+        }
+
         companion object {
             // should use delimiters that could be used in URL not like path or query delimiters
-            private const val PREFIX_DELIMITER = '_'
-            private const val SUFFIX_DELIMITER = ';'
-            private const val DERIVATION_PATH_DELIMITER = 'd'
+            private const val PREFIX_DELIMITER = '\u27E8' // ⟨
+            private const val SUFFIX_DELIMITER = '\u27E9' // ⟩
+            private const val CONTRACT_ADDRESS_DELIMITER = '\u2693' // ⚓
+            private const val DERIVATION_PATH_DELIMITER = '\u2192' // →
+
+            private const val ID_PARTS_COUNT = 3
+
+            /**
+             * Creates an [ID] from a string [value].
+             * */
+            fun fromValue(value: String): ID {
+                val parts = value.split(PREFIX_DELIMITER, SUFFIX_DELIMITER)
+
+                require(value = parts.size == ID_PARTS_COUNT) { "Invalid ID format: $value" }
+
+                val prefix = Prefix.entries.firstOrNull { it.value == parts[0] }
+                requireNotNull(prefix) { "Invalid ID prefix: ${parts[0]}" }
+
+                val bodyParts = parts[1].split(DERIVATION_PATH_DELIMITER)
+                val body = when (bodyParts.size) {
+                    1 -> Body.NetworkId(bodyParts[0])
+                    2 -> Body.NetworkIdWithDerivationPath(bodyParts[0], bodyParts[1])
+                    else -> error("Invalid ID body: ${parts[1]}")
+                }
+
+                val suffixParts = parts[2].split(CONTRACT_ADDRESS_DELIMITER)
+                val suffix = when (suffixParts.size) {
+                    1 -> Suffix.ContractAddress(suffixParts[0])
+                    2 -> Suffix.RawID(suffixParts[0], suffixParts[1])
+                    else -> error("Invalid ID suffix: ${parts[2]}")
+                }
+
+                return ID(prefix, body, suffix)
+            }
         }
     }
 
