@@ -214,6 +214,7 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.EthereumPow,
         Blockchain.EthereumPowTestnet,
         Blockchain.Kaspa,
+        Blockchain.KaspaTestnet,
         Blockchain.Telos,
         Blockchain.TelosTestnet,
         Blockchain.TONTestnet,

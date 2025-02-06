@@ -904,6 +904,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 EthereumPow,
                 EthereumPowTestnet,
                 Kaspa,
+                KaspaTestnet,
                 Telos,
                 TelosTestnet,
                 TON,
