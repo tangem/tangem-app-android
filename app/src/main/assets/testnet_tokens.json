@@ -13,6 +13,16 @@
             ]
         },
         {
+            "id" : "kaspa",
+            "symbol" : "KAS",
+            "name" : "Kaspa",
+            "networks" : [
+                {
+                    "networkId" : "kaspa/test"
+                }
+            ]
+        },
+        {
             "id" : "Dai Stablecoin-DAI",
             "symbol" : "DAI",
             "name" : "Dai Stablecoin",
