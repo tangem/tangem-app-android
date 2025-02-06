@@ -54,6 +54,7 @@ class MoshiModule {
                 ExtendedPublicKeysMapAdapter(),
                 CardBackupStatusAdapter(),
                 DerivationPathAdapterWithMigration(),
+                DateTimeAdapter(),
             )
 
         val typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters()
