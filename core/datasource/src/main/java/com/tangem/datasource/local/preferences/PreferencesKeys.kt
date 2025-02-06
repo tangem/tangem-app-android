@@ -13,6 +13,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys.USED_CARDS_INFO_K
 import com.tangem.datasource.local.preferences.PreferencesKeys.USER_WAS_INTERACT_WITH_RATING_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_APPLICATION_STOPPED_KEY
 import com.tangem.datasource.local.preferences.PreferencesKeys.WAS_TWINS_ONBOARDING_SHOWN
+import com.tangem.domain.wallets.models.UserWalletId
 
 /**
  * All preferences keys that DataStore<Preferences> is stored.
@@ -129,6 +130,10 @@ object PreferencesKeys {
     // endregion
 
     fun getUserTokensKey(userWalletId: String) = stringPreferencesKey(name = "user_tokens_$userWalletId")
+
+    fun getNetworkStatusesKey(userWalletId: UserWalletId) = stringPreferencesKey(
+        name = "networkBalances_${userWalletId.stringValue}",
+    )
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
