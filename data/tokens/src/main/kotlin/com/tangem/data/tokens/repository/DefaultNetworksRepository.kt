@@ -1,17 +1,21 @@
 package com.tangem.data.tokens.repository
 
+import arrow.fx.coroutines.parZip
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.cache.CacheRegistry
 import com.tangem.data.common.currency.ResponseCryptoCurrenciesFactory
+import com.tangem.data.tokens.entity.NetworkStatusDM
 import com.tangem.data.tokens.utils.CardCryptoCurrenciesFactory
 import com.tangem.data.tokens.utils.NetworkStatusFactory
+import com.tangem.data.tokens.utils.NetworkStatusMapper
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectSetSync
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
@@ -25,6 +29,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -49,6 +54,69 @@ internal class DefaultNetworksRepository(
     private val networkStatusFactory = NetworkStatusFactory()
 
     override fun getNetworkStatusesUpdates(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+    ): Flow<Set<NetworkStatus>> = channelFlow {
+        val persistenceStatuses = getNetworkStatusesFromPersistenceStore(userWalletId, networks)
+
+        if (persistenceStatuses.isNotEmpty()) {
+            send(persistenceStatuses)
+        }
+
+        networksStatusesStore.get(userWalletId)
+            .onEach { runtimeStatuses ->
+                if (persistenceStatuses.isEmpty()) {
+                    send(runtimeStatuses)
+                } else {
+                    val mergedStatuses = persistenceStatuses.toMutableList()
+
+                    runtimeStatuses.forEach { runtimeStatus ->
+                        val index = mergedStatuses.indexOfFirst { it.network == runtimeStatus.network }
+                        if (index != -1) {
+                            mergedStatuses[index] = runtimeStatus
+                        } else {
+                            mergedStatuses.add(runtimeStatus)
+                        }
+                    }
+
+                    send(mergedStatuses.toSet())
+                }
+            }
+            .launchIn(scope = this + dispatchers.io)
+    }
+
+    private suspend fun getNetworkStatusesFromPersistenceStore(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+    ): Set<NetworkStatus> {
+        val (statuses, currencies) = parZip(
+            {
+                appPreferencesStore.getObjectSetSync<NetworkStatusDM>(
+                    key = PreferencesKeys.getNetworkStatusesKey(userWalletId),
+                )
+            },
+            {
+                getCurrencies(userWalletId, networks)
+            },
+            { statuses, currencies -> statuses to currencies },
+        )
+
+        return statuses.mapNotNullTo(mutableSetOf()) { status ->
+            val network = networks
+                .firstOrNull { it.id == status.networkId }
+                ?: return@mapNotNullTo null
+
+            NetworkStatusMapper.toDomainModel(network, currencies, status)
+        }
+    }
+
+    override suspend fun fetchNetworkStatuses(userWalletId: UserWalletId, networks: Set<Network>, refresh: Boolean) {
+        withContext(dispatchers.io) {
+            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
+        }
+    }
+
+    override fun getNetworkStatusesUpdatesLegacy(
         userWalletId: UserWalletId,
         networks: Set<Network>,
     ): Flow<Set<NetworkStatus>> = channelFlow {
@@ -156,12 +224,13 @@ internal class DefaultNetworksRepository(
         network: Network,
         currencies: Sequence<CryptoCurrency>,
     ) {
+        val networkCurrencies = currencies.filter { it.network == network }
+
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
             network = network,
-            extraTokens = currencies
+            extraTokens = networkCurrencies
                 .filterIsInstance<CryptoCurrency.Token>()
-                .filter { it.network == network }
                 .toSet(),
         )
 
@@ -172,10 +241,28 @@ internal class DefaultNetworksRepository(
         val networkStatus = networkStatusFactory.createNetworkStatus(
             network = network,
             result = result,
-            currencies = currencies.toSet(),
+            currencies = networkCurrencies.toSet(),
         )
 
         networksStatusesStore.store(userWalletId, networkStatus)
+        storeNetworkStatusInPersistence(userWalletId, networkStatus)
+    }
+
+    private suspend fun storeNetworkStatusInPersistence(userWalletId: UserWalletId, networkStatus: NetworkStatus) {
+        val status = networkStatus.value
+        val network = networkStatus.network
+
+        if (status !is NetworkStatus.Verified) return
+
+        val key = PreferencesKeys.getNetworkStatusesKey(userWalletId)
+        appPreferencesStore.editData { preferences ->
+            val storedStatuses = preferences.getObjectSet<NetworkStatusDM>(key) ?: emptySet()
+            val updatedStatuses = storedStatuses.addOrReplace(NetworkStatusMapper.toDataModel(network, status)) {
+                it.networkId == network.id
+            }
+
+            preferences.setObjectSet(key, updatedStatuses)
+        }
     }
 
     private suspend fun fetchNetworkPendingTransactions(
@@ -203,7 +290,7 @@ internal class DefaultNetworksRepository(
 
     private suspend fun getCurrencies(userWalletId: UserWalletId, networks: Set<Network>): Sequence<CryptoCurrency> {
         val currencies = getCurrencies(userWalletId)
-        return currencies.filter { networks.contains(it.network) }
+        return currencies.filter { it.network in networks }
     }
 
     private suspend fun getCurrencies(userWalletId: UserWalletId): Sequence<CryptoCurrency> {
