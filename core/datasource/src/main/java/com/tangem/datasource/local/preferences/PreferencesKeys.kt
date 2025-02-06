@@ -136,6 +136,10 @@ object PreferencesKeys {
     fun getNetworkStatusesKey(userWalletId: UserWalletId) = stringPreferencesKey(
         name = "networkBalances_${userWalletId.stringValue}",
     )
+
+    fun getYieldBalancesKey(userWalletId: UserWalletId) = stringPreferencesKey(
+        name = "yieldBalances_${userWalletId.stringValue}",
+    )
 }
 
 /** Preferences keys set that should be migrated from "PreferencesDataSource" to a new DataStore<Preferences> */
