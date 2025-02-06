@@ -60,7 +60,6 @@ import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.OnboardingMenuProvider
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
-import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -72,6 +71,7 @@ import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
@@ -452,6 +452,11 @@ class OnboardingWalletFragment :
             setOnCancelListener {
                 store.dispatch(BackupAction.OnAccessCodeDialogClosed)
             }
+
+            setOnShowListener { setSecurityMode(true) }
+
+            setOnDismissListener { setSecurityMode(false) }
+
             show()
             showInfoScreen()
             val view =
@@ -666,17 +671,21 @@ class OnboardingWalletFragment :
             }
 
             override fun allowScreenshots(allow: Boolean) {
-                mainScope.launch {
-                    if (allow) {
-                        requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    } else {
-                        requireActivity().window.setFlags(
-                            WindowManager.LayoutParams.FLAG_SECURE,
-                            WindowManager.LayoutParams.FLAG_SECURE,
-                        )
-                    }
-                }
+                setSecurityMode(value = !allow)
             }
+        }
+    }
+
+    private fun setSecurityMode(value: Boolean) {
+        Timber.d("Security mode: ${if (value) "enabled" else "disabled"}")
+
+        if (value) {
+            requireActivity().window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE,
+            )
+        } else {
+            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
 }
