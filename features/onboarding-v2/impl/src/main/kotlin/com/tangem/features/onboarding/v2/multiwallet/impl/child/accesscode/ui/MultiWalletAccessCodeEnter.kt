@@ -13,10 +13,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.OutlineTextFieldWithIcon
+import com.tangem.core.ui.components.OutlineTextField
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -57,17 +56,10 @@ internal fun MultiWalletAccessCodeEnter(
 
         val focusRequester = remember { FocusRequester() }
 
-        OutlineTextFieldWithIcon(
+        OutlineTextField(
             modifier = modifier
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),
-            iconResId = if (state.accessCodeHidden) {
-                R.drawable.ic_eye_outline_24
-            } else {
-                R.drawable.ic_eye_off_outline_24
-            },
-            iconColor = TangemTheme.colors.icon.primary1,
-            onIconClick = state.onAccessCodeHideClick,
             value = if (reEnterAccessCodeState) {
                 state.accessCodeSecond
             } else {
@@ -80,11 +72,7 @@ internal fun MultiWalletAccessCodeEnter(
             },
             label = stringResourceSafe(id = R.string.onboarding_wallet_info_title_third),
             isError = state.codesNotMatchError || state.atLeast4CharError,
-            visualTransformation = if (state.accessCodeHidden) {
-                PasswordVisualTransformation()
-            } else {
-                VisualTransformation.None
-            },
+            visualTransformation = PasswordVisualTransformation(),
             caption = when {
                 state.codesNotMatchError && reEnterAccessCodeState ->
                     stringResourceSafe(R.string.onboarding_access_codes_doesnt_match)
