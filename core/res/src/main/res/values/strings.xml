@@ -206,7 +206,6 @@
   <string name="common_yes">Yes</string>
   <string name="contract_address_copied_message">Contract address copied!</string>
   <string name="currency_subtitle_expanded">Available networks</string>
-  <string name="custom_token_add_token">Add token</string>
   <string name="custom_token_contract_address_input_title">Contract address</string>
   <string name="custom_token_creation_error_invalid_contract_address">Contract address is invalid</string>
   <string name="custom_token_creation_error_network_not_selected">Please select the network</string>
@@ -396,7 +395,6 @@
   <string name="markets_add_to_my_portfolio_description">To buy, exchange, or receive this asset, add it to your portfolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">This asset is currently not supported in the wallet</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">This asset is not available for this wallet</string>
-  <string name="markets_add_to_portfolio_button">Add to portfolio</string>
   <string name="markets_add_token">Add</string>
   <string name="markets_available_networks">Available networks</string>
   <string name="markets_common_my_portfolio">My portfolio</string>
@@ -796,7 +794,7 @@
   <string name="staking_migrate">Migrate</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_no_validators_error_message">No active validators available for staking at the moment. Please try again later.</string>
-  <string name="staking_notification_additional_ada_deposit_text">When staking in the Cardano network, the entire balance is used. An additional 2 ADA will be reserved and returned after unstaking. Your ADA is not locked while staking.</string>
+  <string name="staking_notification_additional_ada_deposit_text">When staking on the Cardano network, your entire balance is used. An additional 2 ADA will be reserved and returned after unstaking. Your ADA remains unlocked while staking.</string>
   <string name="staking_notification_additional_ada_deposit_title">ADA Staking Details</string>
   <string name="staking_notification_claim_rewards_text">Earned rewards will be sent to your wallet and available for use immediately</string>
   <string name="staking_notification_earn_rewards_text">Stake securely and start earning your rewards</string>
@@ -814,7 +812,7 @@
   <string name="staking_notification_minimum_balance_error_text">A minimum of %1$s %2$s is required for restaking. Please top up your balance.</string>
   <string name="staking_notification_minimum_balance_error_title">Not enough %s</string>
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
-  <string name="staking_notification_new_validator_funds_transfer">Staking in the %1$s network with a new validator will automatically transfer all previously staked funds to this validator</string>
+  <string name="staking_notification_new_validator_funds_transfer">Staking on the %1$s network with a new validator will automatically transfer all previously staked funds to this validator.</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
@@ -918,7 +916,7 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">You do not have funds to sell. Top up your account to be able to sell funds from it.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not supported by current providers, but we are working to add more options.</string>
-  <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) in network %s is complete</string>
+  <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) on the %s network is complete.</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not supported by current providers, but we are working to add more options.</string>
   <string name="token_button_unavailability_reason_staking_unavailable">Staking %s is not supported by current providers, but we are working to add more options.</string>
