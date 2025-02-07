@@ -38,16 +38,6 @@ internal sealed interface WalletAlertState {
         override val onConfirmClick: (() -> Unit)?,
     ) : Basic()
 
-    // TODO: reuse RenameWalletComponent [REDACTED_JIRA]
-    data class RenameWalletAlert(
-        override val text: String,
-        override val onConfirmClick: (String) -> Unit,
-        override val errorTextProvider: (String) -> TextReference?,
-    ) : TextInput() {
-        override val title: TextReference = resourceReference(id = R.string.user_wallet_list_rename_popup_title)
-        override val label: TextReference = resourceReference(id = R.string.user_wallet_list_rename_popup_placeholder)
-    }
-
     data class RemoveWalletAlert(override val onConfirmClick: (() -> Unit)?) : Basic() {
         override val title: TextReference? = null
         override val message: TextReference = resourceReference(id = R.string.user_wallet_list_delete_prompt)
