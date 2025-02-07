@@ -206,7 +206,6 @@
   <string name="common_yes">Oui</string>
   <string name="contract_address_copied_message">Adresse du contrat copiée !</string>
   <string name="currency_subtitle_expanded">Réseaux disponibles</string>
-  <string name="custom_token_add_token">Ajouter un jeton</string>
   <string name="custom_token_contract_address_input_title">Adresse du contrat</string>
   <string name="custom_token_creation_error_invalid_contract_address">L\'adresse du contrat n\'est pas valide</string>
   <string name="custom_token_creation_error_network_not_selected">Veuillez sélectionner le réseau</string>
@@ -396,7 +395,6 @@
   <string name="markets_add_to_my_portfolio_description">Pour acheter, échanger ou recevoir cet actif, ajoutez-le à votre portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Cet actif n\'est pas pris en charge dans le portefeuille</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Cet actif n\'est pas disponible pour ce portefeuille</string>
-  <string name="markets_add_to_portfolio_button">Ajouter au portfolio</string>
   <string name="markets_add_token">Ajoutez un jeton</string>
   <string name="markets_available_networks">Réseaux disponibles</string>
   <string name="markets_common_my_portfolio">Mon portfolio</string>
