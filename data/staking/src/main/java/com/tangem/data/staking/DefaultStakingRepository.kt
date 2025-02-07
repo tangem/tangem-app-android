@@ -35,7 +35,10 @@ import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
-import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.NetworkType
+import com.tangem.domain.staking.model.stakekit.Yield
+import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
@@ -478,6 +481,13 @@ internal class DefaultStakingRepository(
     }
 
     override fun getMultiYieldBalanceUpdates(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): Flow<YieldBalanceList> {
+        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+    }
+
+    override fun getMultiYieldBalanceUpdatesLegacy(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> = channelFlow {
