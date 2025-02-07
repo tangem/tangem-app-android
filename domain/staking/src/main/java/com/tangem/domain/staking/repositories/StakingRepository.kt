@@ -63,6 +63,11 @@ interface StakingRepository {
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList>
 
+    fun getMultiYieldBalanceUpdatesLegacy(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): Flow<YieldBalanceList>
+
     suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
