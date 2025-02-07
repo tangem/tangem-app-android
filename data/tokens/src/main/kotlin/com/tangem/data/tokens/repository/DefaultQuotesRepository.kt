@@ -36,8 +36,25 @@ internal class DefaultQuotesRepository(
     private var quotesFetchedForAppCurrency: String? = null
     private val mutex = Mutex()
 
+    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
+        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+    }
+
+    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean) {
+        withContext(dispatchers.io) {
+            val selectedAppCurrency = requireNotNull(
+                value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
+                    key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+                ),
+                lazyMessage = { "Unable to get selected application currency to update quotes" },
+            )
+
+            fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, refresh)
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Flow<Set<Quote>> {
+    override fun getQuotesUpdatesLegacy(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Flow<Set<Quote>> {
         return appPreferencesStore.getObject<CurrenciesResponse.Currency>(
             key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
         )
@@ -49,19 +66,6 @@ internal class DefaultQuotesRepository(
             }
             .cancellable()
             .flowOn(dispatchers.io)
-    }
-
-    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {
-        withContext(dispatchers.io) {
-            val selectedAppCurrency = requireNotNull(
-                value = appPreferencesStore.getObjectSyncOrNull<CurrenciesResponse.Currency>(
-                    key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
-                ),
-                lazyMessage = { "Unable to get selected application currency to update quotes" },
-            )
-
-            fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, true)
-        }
     }
 
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Set<Quote> {
