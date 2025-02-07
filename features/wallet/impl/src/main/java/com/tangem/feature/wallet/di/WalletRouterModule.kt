@@ -1,29 +1,18 @@
 package com.tangem.feature.wallet.di
 
-import com.tangem.common.routing.AppRouter
-import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.feature.wallet.presentation.router.DefaultWalletRouter
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.wallet.navigation.WalletRouter
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.android.scopes.ActivityScoped
 
 @Module
 @InstallIn(ActivityComponent::class)
-internal object WalletRouterModule {
+internal interface WalletRouterModule {
 
-    @Provides
+    @Binds
     @ActivityScoped
-    fun provideWalletRouter(
-        appRouter: AppRouter,
-        urlOpener: UrlOpener,
-        reduxStateHolder: ReduxStateHolder,
-        onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
-    ): WalletRouter {
-        return DefaultWalletRouter(appRouter, urlOpener, reduxStateHolder, onboardingV2FeatureToggles)
-    }
+    fun bindsWalletRouter(defaultWalletRouter: DefaultWalletRouter): WalletRouter
 }
