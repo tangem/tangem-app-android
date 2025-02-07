@@ -169,7 +169,7 @@ private fun AddFirstTokenContent(state: MyPortfolioUM.AddFirstToken, modifier: M
 
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResourceSafe(R.string.markets_add_to_portfolio_button),
+            text = stringResourceSafe(R.string.common_add_to_portfolio),
             onClick = state.onAddClick,
         )
     }
