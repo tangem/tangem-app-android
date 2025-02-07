@@ -349,7 +349,7 @@ internal class CurrenciesStatusesOperations(
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<Error, Set<Quote>>> {
         val rawIds = tokensIds.mapNotNull { it.rawCurrencyId }.toSet()
-        return quotesRepository.getQuotesUpdates(rawIds)
+        return quotesRepository.getQuotesUpdatesLegacy(rawIds)
             .map<Set<Quote>, Either<Error, Set<Quote>>> { quotes ->
                 if (quotes.isEmpty()) Error.EmptyQuotes.left() else quotes.right()
             }
@@ -360,7 +360,7 @@ internal class CurrenciesStatusesOperations(
     }
 
     private fun getNetworksStatuses(networks: NonEmptySet<Network>): Flow<Either<Error, Set<NetworkStatus>>> {
-        return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
+        return networksRepository.getNetworkStatusesUpdatesLegacy(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<Error, Set<NetworkStatus>>> { it.right() }
             .catch { emit(Error.DataError(it).left()) }
             .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
