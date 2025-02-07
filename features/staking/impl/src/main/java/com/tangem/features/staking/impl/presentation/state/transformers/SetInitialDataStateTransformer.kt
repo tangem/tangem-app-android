@@ -223,7 +223,9 @@ internal class SetInitialDataStateTransformer(
     private fun getAprRange(validators: List<Yield.Validator>): TextReference {
         val aprValues = validators
             .filter { it.preferred }
-            .mapNotNull { it.apr }
+            .takeIf { it.isNotEmpty() }
+            ?.mapNotNull { it.apr }
+            ?: validators.mapNotNull { it.apr }
 
         val minApr = aprValues.min()
         val maxApr = aprValues.max()
