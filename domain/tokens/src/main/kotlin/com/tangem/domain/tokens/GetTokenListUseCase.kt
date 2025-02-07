@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.operations.CurrenciesStatusesCachedOperations
 import com.tangem.domain.tokens.operations.CurrenciesStatusesLceOperations
 import com.tangem.domain.tokens.operations.TokenListOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -28,15 +29,24 @@ class GetTokenListUseCase(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun launch(userWalletId: UserWalletId): LceFlow<TokenListError, TokenList> {
-        val operations = CurrenciesStatusesLceOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-        )
+    fun launch(userWalletId: UserWalletId, usePersistenceCache: Boolean = false): LceFlow<TokenListError, TokenList> {
+        val statusesFlow = if (usePersistenceCache) {
+            CurrenciesStatusesCachedOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+            ).getCurrenciesStatuses(userWalletId)
+        } else {
+            CurrenciesStatusesLceOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+            ).getCurrenciesStatuses(userWalletId)
+        }
 
-        return operations.getCurrenciesStatuses(userWalletId).transformLatest { maybeCurrencies ->
+        return statusesFlow.transformLatest { maybeCurrencies ->
             maybeCurrencies.fold(
                 ifLoading = { maybeContent ->
                     if (maybeContent != null) {

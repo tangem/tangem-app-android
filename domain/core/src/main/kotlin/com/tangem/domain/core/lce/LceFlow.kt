@@ -28,10 +28,10 @@ typealias LceFlow<E, C> = Flow<Lce<E, C>>
  * @property producerScope The [ProducerScope] instance that this class wraps.
  * @property ifLoading The function to call if a loading state is raised.
  */
-class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
+class LceFlowRaise<E : Any, C : Any> @PublishedApi internal constructor(
     private val raise: LceRaise<E>,
     private val producerScope: ProducerScope<Lce<E, C>>,
-    private val ifLoading: suspend LceFlowScope<E, C>.(C?) -> Unit,
+    private val ifLoading: suspend LceFlowRaise<E, C>.(C?) -> Unit,
 ) : Raise<E>, CoroutineScope by producerScope {
 
     val isLoading: AtomicBoolean = AtomicBoolean(value = true)
@@ -92,25 +92,25 @@ class LceFlowScope<E : Any, C : Any> @PublishedApi internal constructor(
 }
 
 /**
- * Creates a [LceFlow] by executing the given [block] within a [LceFlowScope] context.
+ * Creates a [LceFlow] by executing the given [block] within a [LceFlowRaise] context.
  *
  * Flow starts with a [Lce.Loading] state.
  *
  * @param ifLoading The function to call if received a loading content.
  * By default, it creates a new [Lce.Loading] state with the value returned by the [block].
- * @param block The block to execute within a [LceFlowScope] context.
+ * @param block The block to execute within a [LceFlowRaise] context.
  * @return A [LceFlow] representing the result of the [block].
  */
 @OptIn(ExperimentalTypeInference::class)
 fun <E : Any, C : Any> lceFlow(
-    ifLoading: suspend LceFlowScope<E, C>.(C?) -> Unit = { send(lceLoading(partialContent = it)) },
-    @BuilderInference block: suspend LceFlowScope<E, C>.() -> Unit,
+    ifLoading: suspend LceFlowRaise<E, C>.(C?) -> Unit = { send(lceLoading(partialContent = it)) },
+    @BuilderInference block: suspend LceFlowRaise<E, C>.() -> Unit,
 ): LceFlow<E, C> {
     return channelFlow {
         trySend(lceLoading())
 
         lce {
-            val scope = LceFlowScope(
+            val scope = LceFlowRaise(
                 raise = this@lce,
                 producerScope = this@channelFlow,
                 ifLoading = ifLoading,
