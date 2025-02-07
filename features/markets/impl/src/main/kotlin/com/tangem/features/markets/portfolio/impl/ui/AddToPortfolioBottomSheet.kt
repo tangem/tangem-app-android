@@ -53,7 +53,7 @@ internal fun AddToPortfolioBottomSheet(config: TangemBottomSheetConfig) {
         config = config,
         containerColor = TangemTheme.colors.background.tertiary,
         addBottomInsets = false,
-        titleText = resourceReference(R.string.markets_add_to_portfolio_button),
+        titleText = resourceReference(R.string.common_add_to_portfolio),
     ) {
         Content(
             modifier = Modifier.fillMaxWidth(),
