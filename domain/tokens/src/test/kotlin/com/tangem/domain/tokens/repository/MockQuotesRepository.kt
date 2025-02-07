@@ -13,18 +13,24 @@ internal class MockQuotesRepository(
     private val quotes: Flow<Either<DataError, Set<Quote>>>,
 ) : QuotesRepository {
 
-    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Flow<Set<Quote>> {
+    override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
+        return quotes.map { it.getOrElse { e -> throw e } }
+    }
+
+    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean) {
+        /* no-op */
+    }
+
+    override fun getQuotesUpdatesLegacy(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Flow<Set<Quote>> {
         return quotes.map { it.getOrElse { e -> throw e } }
     }
 
     override suspend fun getQuotesSync(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean): Set<Quote> {
-        return getQuotesUpdates(currenciesIds).first()
+        return getQuotesUpdatesLegacy(currenciesIds).first()
     }
 
     override suspend fun getQuoteSync(currencyId: CryptoCurrency.RawID): Quote {
         return quotes.map { it.getOrElse { e -> throw e } }.first()
             .first { it.rawCurrencyId == currencyId }
     }
-
-    override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {}
 }
