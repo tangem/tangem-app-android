@@ -189,7 +189,7 @@ internal class CurrenciesStatusesLceOperations(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): EitherFlow<TokenListError, YieldBalanceList> {
-        return stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
+        return stakingRepository.getMultiYieldBalanceUpdatesLegacy(userWalletId, cryptoCurrencies)
             .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
             .catch { emit(TokenListError.DataError(it).left()) }
             .distinctUntilChanged()
