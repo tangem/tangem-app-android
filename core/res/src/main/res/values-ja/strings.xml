@@ -203,7 +203,6 @@
   <string name="common_yes">はい</string>
   <string name="contract_address_copied_message">コントラクトアドレスをコピーしました!</string>
   <string name="currency_subtitle_expanded">利用可能なネットワーク</string>
-  <string name="custom_token_add_token">トークンを追加</string>
   <string name="custom_token_contract_address_input_title">コントラクトアドレス</string>
   <string name="custom_token_creation_error_invalid_contract_address">コントラクトアドレスが無効です</string>
   <string name="custom_token_creation_error_network_not_selected">ネットワークを選択してください</string>
@@ -342,7 +341,7 @@
   <string name="home_button_order">Tangemを注文</string>
   <string name="home_button_scan">Tangemをスキャン</string>
   <string name="hot_crypto_add_token_subtitle">%sへ</string>
-  <string name="hot_crypto_token_network">%s内</string>
+  <string name="hot_crypto_token_network">%sネットワーク</string>
   <string name="information_generated_with_ai">この情報はAIで生成されました。 \nエラーが見つかった場合は、ここをタップしてください。</string>
   <string name="initial_message_change_access_code_body">アクセスコードを変更するには、上図のようにカードまたはリングをタップし、操作が終了するまで取り外さないでください。</string>
   <string name="initial_message_change_passcode_body">パスコードを変更するには、上記のようにカードをタップし、操作が終了するまで取り外さないでください。</string>
@@ -392,7 +391,6 @@
   <string name="markets_add_to_my_portfolio_description">このアセットを購入・交換・受け取るには、ポートフォリオに追加してください。</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">このアセットは現在ウォレットで利用できません</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">このアセットはこのウォレットでは使用できません。</string>
-  <string name="markets_add_to_portfolio_button">ポートフォリオに追加</string>
   <string name="markets_add_token">追加</string>
   <string name="markets_available_networks">利用可能なネットワーク</string>
   <string name="markets_common_my_portfolio">私のポートフォリオ</string>
@@ -786,7 +784,7 @@
   <string name="staking_migrate">移行</string>
   <string name="staking_native">ネイティブステーキング</string>
   <string name="staking_no_validators_error_message">現在、ステーキングに使用できるアクティブなバリデータは見つかりません。しばらくしてからもう一度お試しください。</string>
-  <string name="staking_notification_additional_ada_deposit_text">Cardanoネットワークでステーキングする場合、残高全体が使用されます。追加の2ADAが予約され、ステーキング解除後に返却されます。ステーキング中はADAはロックされません。</string>
+  <string name="staking_notification_additional_ada_deposit_text">Cardanoネットワークでステーキングする場合、残高全体が使用されます。追加の2ADAは確保され、ステーキング解除後に返却されます。ステーキング中、ADAはロック解除されたままです。</string>
   <string name="staking_notification_additional_ada_deposit_title">ADAステーキングの詳細</string>
   <string name="staking_notification_claim_rewards_text">獲得した報酬はあなたのアドレスに直接送られ、すぐ使用可能です。</string>
   <string name="staking_notification_earn_rewards_text">安全にステーキングして報酬を獲得しましょう</string>
@@ -804,7 +802,7 @@
   <string name="staking_notification_minimum_balance_error_text">再ステーキングには最低%1$s %2$sが必要です。残高を補充してください。</string>
   <string name="staking_notification_minimum_balance_error_title">%sが足りません</string>
   <string name="staking_notification_network_error_text">ネットワークの状態により、現在ステーキングはご利用いただけません。しばらくしてからもう一度お試しください。</string>
-  <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターで%1$sネットワークにステーキングすると、以前にステーキングされた資金はすべてこのバリデーターに自動的に転送されます。</string>
+  <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターを使用して%1$sネットワークにステーキングすると、以前にステーキングされた資金がすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
@@ -873,6 +871,16 @@
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
   <string name="swap_promo_title">新しいスワッププロバイダーが利用可能になりました！</string>
+  <string name="swap_story_fifth_subtitle">継続的なサポートで、いつでもスムーズに取引を行うことができます</string>
+  <string name="swap_story_fifth_title">24時間体制のサポート</string>
+  <string name="swap_story_first_subtitle">信頼できる交換プロバイダーは、ウォレット内の資産を安全に保管しながら、簡単に交換できるようにします。</string>
+  <string name="swap_story_first_title">当社の交換機能をご利用ください</string>
+  <string name="swap_story_forth_subtitle">トップレベルのセキュリティと認証済みプロバイダーが、スワップ時にユーザーの資産を確実に保護します。</string>
+  <string name="swap_story_forth_title">最高に安全</string>
+  <string name="swap_story_second_subtitle">幅広いネットワークの中から、常に最適なプロバイダーと料金レートを選択します</string>
+  <string name="swap_story_second_title">ベストレート</string>
+  <string name="swap_story_third_subtitle">手間がかからず直感的に操作でき、数回タップするだけでトークンを交換できます。</string>
+  <string name="swap_story_third_title">最高に簡単</string>
   <string name="swapping_alert_cex_description">この金額には以下が含まれます：\n- サービスプロバイダーの手数料\n- 取引所からユーザーのアドレスに%s を送り返すためのネットワーク手数料。</string>
   <string name="swapping_alert_cex_description_with_slippage">金額には以下が含まれます: \n • サービス プロバイダーの手数料\n • 取引所からユーザーのアドレスに%1$sを送金するためのネットワーク手数料。 \n\nプロバイダーのスリッページは最大%2$sです</string>
   <string name="swapping_alert_dex_description">この金額には、サービスプロバイダーの手数料が含まれています。</string>
@@ -898,7 +906,7 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">売却できる資金がありません。アカウントに入金して、売却できるようにしてください。</string>
   <string name="token_button_unavailability_reason_empty_balance_send">送金する資金がありません。アカウントに入金して、送金できるようにしてください。</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%sのスワップは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
-  <string name="token_button_unavailability_reason_pending_transaction_sell">ネットワーク%s内の保留中の取引が完了すると、資金の売却が可能になります。</string>
+  <string name="token_button_unavailability_reason_pending_transaction_sell">%sネットワーク上の保留中の取引が完了すると、資金の売却が可能になります。</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">ネットワーク%s内の保留中の取引が完了すると、送金が可能になります。</string>
   <string name="token_button_unavailability_reason_sell_unavailable">%sの売却は、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_button_unavailability_reason_staking_unavailable">%sのステーキングは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
