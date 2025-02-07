@@ -14,7 +14,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,9 +35,6 @@ internal class WalletFragment : ComposeFragment() {
     internal lateinit var walletRouter: WalletRouter
 
     @Inject
-    internal lateinit var marketsEntryComponentFactory: MarketsEntryComponent.Factory
-
-    @Inject
     internal lateinit var coroutineDispatcherProvider: CoroutineDispatcherProvider
 
     @Inject
@@ -51,8 +47,6 @@ internal class WalletFragment : ComposeFragment() {
     @GlobalUiMessageSender
     internal lateinit var messageSender: UiMessageSender
 
-    private lateinit var marketsEntryComponent: MarketsEntryComponent
-
     private val _walletRouter: InnerWalletRouter
         get() = requireNotNull(walletRouter as? InnerWalletRouter) {
             "_walletRouter should be instance of InnerWalletRouter"
@@ -61,15 +55,15 @@ internal class WalletFragment : ComposeFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val appContext = DefaultAppComponentContext(
-            componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
-            messageSender = messageSender,
-            dispatchers = coroutineDispatcherProvider,
-            hiltComponentBuilder = componentBuilder,
-            replaceRouter = appRouter.asRouter(),
+        _walletRouter.initializeResources(
+            appComponentContext = DefaultAppComponentContext(
+                componentContext = defaultComponentContext(requireActivity().onBackPressedDispatcher),
+                messageSender = messageSender,
+                dispatchers = coroutineDispatcherProvider,
+                hiltComponentBuilder = componentBuilder,
+                replaceRouter = appRouter.asRouter(),
+            ),
         )
-
-        marketsEntryComponent = marketsEntryComponentFactory.create(appContext)
     }
 
     @Composable
@@ -80,7 +74,6 @@ internal class WalletFragment : ComposeFragment() {
                     requireActivity().finish()
                 }
             },
-            marketsEntryComponent = marketsEntryComponent,
         )
     }
 
