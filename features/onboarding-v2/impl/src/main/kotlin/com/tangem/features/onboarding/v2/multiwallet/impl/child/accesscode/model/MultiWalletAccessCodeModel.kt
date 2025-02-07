@@ -73,14 +73,7 @@ internal class MultiWalletAccessCodeModel @Inject constructor(
         onAccessCodeFirstChange = ::onAccessCodeFirstChange,
         onAccessCodeSecondChange = ::onAccessCodeSecondChange,
         onContinue = ::onContinue,
-        onAccessCodeHideClick = ::onAccessCodeHideClick,
     )
-
-    private fun onAccessCodeHideClick() {
-        _uiState.update {
-            it.copy(accessCodeHidden = !it.accessCodeHidden)
-        }
-    }
 
     private fun onAccessCodeFirstChange(textFieldValue: TextFieldValue) {
         _uiState.update {
