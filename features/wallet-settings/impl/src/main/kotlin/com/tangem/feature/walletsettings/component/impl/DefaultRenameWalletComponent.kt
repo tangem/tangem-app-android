@@ -19,9 +19,11 @@ import com.tangem.feature.walletsettings.ui.RenameWalletDialog
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal class DefaultRenameWalletComponent @AssistedInject constructor(
@@ -76,25 +78,32 @@ internal class DefaultRenameWalletComponent @AssistedInject constructor(
         }
     }
 
-    private fun renameWallet(userWalletId: UserWalletId) = componentScope.launch {
-        val newName = stateFlow.value.walletNameValue
-        val maybeError = renameWalletUseCase(userWalletId, newName.text).leftOrNull()
+    private fun renameWallet(userWalletId: UserWalletId) {
+        componentScope.launch {
+            withContext(NonCancellable) {
+                val newName = stateFlow.value.walletNameValue
 
-        if (maybeError != null) {
-            Timber.e("Unable to rename wallet: $maybeError")
-
-            val message = when (maybeError) {
-                is UpdateWalletError.DataError -> resourceReference(id = R.string.common_unknown_error)
-                is UpdateWalletError.NameAlreadyExists -> resourceReference(
-                    id = R.string.user_wallet_list_rename_popup_error_already_exists,
-                    formatArgs = wrappedList(newName.text),
-                )
+                renameWalletUseCase(userWalletId, newName.text)
+                    .onLeft {
+                        Timber.e("Unable to rename wallet: $it")
+                        showRenameWalletError(error = it, updatedName = newName.text)
+                    }
             }
-
-            messageSender.send(message = SnackbarMessage(message))
-        } else {
-            dismiss()
         }
+
+        dismiss()
+    }
+
+    private fun showRenameWalletError(error: UpdateWalletError, updatedName: String) {
+        val message = when (error) {
+            is UpdateWalletError.DataError -> resourceReference(id = R.string.common_unknown_error)
+            is UpdateWalletError.NameAlreadyExists -> resourceReference(
+                id = R.string.user_wallet_list_rename_popup_error_already_exists,
+                formatArgs = wrappedList(updatedName),
+            )
+        }
+
+        messageSender.send(message = SnackbarMessage(message))
     }
 
     @AssistedFactory

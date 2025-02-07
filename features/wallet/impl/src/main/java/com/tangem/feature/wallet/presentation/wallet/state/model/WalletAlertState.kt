@@ -37,15 +37,6 @@ internal sealed interface WalletAlertState {
         override val message: TextReference,
         override val onConfirmClick: (() -> Unit)?,
     ) : Basic()
-// [REDACTED_TODO_COMMENT]
-    data class RenameWalletAlert(
-        override val text: String,
-        override val onConfirmClick: (String) -> Unit,
-        override val errorTextProvider: (String) -> TextReference?,
-    ) : TextInput() {
-        override val title: TextReference = resourceReference(id = R.string.user_wallet_list_rename_popup_title)
-        override val label: TextReference = resourceReference(id = R.string.user_wallet_list_rename_popup_placeholder)
-    }
 
     data class RemoveWalletAlert(override val onConfirmClick: (() -> Unit)?) : Basic() {
         override val title: TextReference? = null
