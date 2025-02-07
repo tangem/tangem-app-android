@@ -89,7 +89,7 @@ internal fun CustomTokenFormContent(model: CustomTokenFormUM, modifier: Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = TangemTheme.dimens.spacing16 + bottomBarHeight)
                 .fillMaxWidth(),
-            text = stringResourceSafe(id = R.string.custom_token_add_token),
+            text = stringResourceSafe(id = R.string.common_add_token),
             colors = TangemButtonsDefaults.primaryButtonColors,
             enabled = model.canAddToken,
             showProgress = model.isValidating,
