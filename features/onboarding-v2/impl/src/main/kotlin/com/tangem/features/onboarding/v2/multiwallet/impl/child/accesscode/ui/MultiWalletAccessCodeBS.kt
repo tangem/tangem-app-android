@@ -21,10 +21,7 @@ internal fun MultiWalletAccessCodeBS(
     state: MultiWalletAccessCodeUM,
     onBack: () -> Unit,
 ) {
-    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
-        config = config,
-        onBack = onBack,
-    ) { _ ->
+    TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(config = config, onBack = onBack) { _ ->
         Content(state)
     }
 }
