@@ -209,7 +209,6 @@
   <string name="common_yes">Так</string>
   <string name="contract_address_copied_message">Адреса контракту скопійована!</string>
   <string name="currency_subtitle_expanded">Доступні мережі</string>
-  <string name="custom_token_add_token">Додати токен</string>
   <string name="custom_token_contract_address_input_title">Адреса контракту</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адреса контракту недійсна</string>
   <string name="custom_token_creation_error_network_not_selected">Будь ласка, оберіть мережу</string>
@@ -396,7 +395,6 @@
   <string name="markets_add_to_my_portfolio_description">Щоб купити, обміняти або отримати цей актив, додайте його до свого портфоліо</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Цей актив наразі не підтримується в гаманці</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Цей токен недоступний для цього гаманця</string>
-  <string name="markets_add_to_portfolio_button">Додати в портфоліо</string>
   <string name="markets_add_token">Додати</string>
   <string name="markets_available_networks">Доступні мережі</string>
   <string name="markets_common_my_portfolio">Моє портфоліо</string>
