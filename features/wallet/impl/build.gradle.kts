@@ -3,6 +3,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.kotlin.serialization)
     id("configuration")
 }
 
@@ -33,6 +34,7 @@ dependencies {
 
     /** Other libraries */
     implementation(deps.arrow.core)
+    implementation(deps.decompose.ext.compose)
     implementation(deps.googlePlay.review)
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
@@ -95,17 +97,18 @@ dependencies {
     implementation(projects.features.onboarding)
 
     /** Feature Apis */
-    implementation(projects.features.wallet.api)
-    implementation(projects.features.tokendetails.api)
-    implementation(projects.features.send.api)
-    implementation(projects.features.tester.api)
-    implementation(projects.features.manageTokens.api)
     implementation(projects.features.details.api)
-    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.manageTokens.api)
     implementation(projects.features.markets.api)
-    implementation(projects.features.onramp.api)
     implementation(projects.features.onboardingV2.api)
+    implementation(projects.features.onramp.api)
+    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.send.api)
     implementation(projects.features.swap.api)
+    implementation(projects.features.tester.api)
+    implementation(projects.features.tokendetails.api)
+    implementation(projects.features.wallet.api)
+    implementation(projects.features.walletSettings.api)
 
     /** Common modules */
     implementation(projects.common)
