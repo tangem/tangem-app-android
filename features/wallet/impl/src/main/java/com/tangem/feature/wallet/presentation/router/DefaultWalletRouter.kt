@@ -3,9 +3,9 @@ package com.tangem.feature.wallet.presentation.router
 import android.annotation.SuppressLint
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.fragment.app.Fragment
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,10 +13,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.value.Value
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
@@ -25,27 +35,53 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.WalletFragment
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensScreen
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensViewModel
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.wallet.presentation.wallet.viewmodels.WalletViewModel
+import com.tangem.feature.walletsettings.component.RenameWalletComponent
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
+import javax.inject.Inject
 import kotlin.properties.Delegates
 
 /** Default implementation of wallet feature router */
-internal class DefaultWalletRouter(
+internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
     private val reduxStateHolder: ReduxStateHolder,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+    private val marketsEntryComponentFactory: MarketsEntryComponent.Factory,
+    private val renameWalletComponentFactory: RenameWalletComponent.Factory,
 ) : InnerWalletRouter {
 
     private var navController: NavHostController by Delegates.notNull()
     private var onFinish: () -> Unit = {}
 
+    private lateinit var marketsEntryComponent: MarketsEntryComponent
+    private lateinit var dialog: Value<ChildSlot<WalletDialogConfig, ComposableDialogComponent>>
+
+    override val dialogNavigation: SlotNavigation<WalletDialogConfig> = SlotNavigation()
+
+    override fun initializeResources(appComponentContext: AppComponentContext) {
+        marketsEntryComponent = marketsEntryComponentFactory.create(appComponentContext)
+        dialog = appComponentContext.childSlot(
+            source = dialogNavigation,
+            serializer = WalletDialogConfig.serializer(),
+            handleBackButton = true,
+            childFactory = { dialogConfig, componentContext ->
+                dialogChild(
+                    appContext = appComponentContext,
+                    dialogConfig = dialogConfig,
+                    componentContext = componentContext,
+                )
+            },
+        )
+    }
+
     override fun getEntryFragment(): Fragment = WalletFragment.create()
 
     @Composable
-    override fun Initialize(onFinish: () -> Unit, marketsEntryComponent: MarketsEntryComponent) {
+    override fun Initialize(onFinish: () -> Unit) {
         this.onFinish = onFinish
 
         NavHost(
@@ -58,10 +94,14 @@ internal class DefaultWalletRouter(
                     subscribeToLifecycle(LocalLifecycleOwner.current)
                 }
 
+                val dialog by dialog.subscribeAsState()
+
                 WalletScreen(
                     state = viewModel.uiState.collectAsStateWithLifecycle().value,
                     marketsEntryComponent = marketsEntryComponent,
                 )
+
+                dialog.child?.instance?.Dialog()
             }
 
             composable(
@@ -174,6 +214,23 @@ internal class DefaultWalletRouter(
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {
         reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
+    }
+
+    private fun dialogChild(
+        appContext: AppComponentContext,
+        dialogConfig: WalletDialogConfig,
+        componentContext: ComponentContext,
+    ): ComposableDialogComponent = when (dialogConfig) {
+        is WalletDialogConfig.RenameWallet -> {
+            renameWalletComponentFactory.create(
+                context = appContext.childByContext(componentContext),
+                params = RenameWalletComponent.Params(
+                    userWalletId = dialogConfig.userWalletId,
+                    currentName = dialogConfig.currentName,
+                    onDismiss = dialogNavigation::dismiss,
+                ),
+            )
+        }
     }
 
     private companion object {
