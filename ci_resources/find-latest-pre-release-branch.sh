@@ -10,40 +10,54 @@ if [ -z "$1" ]; then
 fi
 base_branch=$1
 
-# Initialize variables to store the latest release branch and merge base
-latest_branch=""
-latest_merge_base=""
+# Initialize arrays to store branch-commit mapping
+declare -a branches
+declare -a commits
 
 # Source refs to find branches from
 local_refs="refs/heads/releases/*"  # For debug and development
-remote_refs=$(git for-each-ref --sort=-committerdate --format="%(refname:short)" refs/remotes/origin/ | grep -E "origin/[a-zA-Z0-9._-]+_pre_release$")
+#TODO remove pre_release branches matching after 5.21 release
+remote_refs=$(git for-each-ref --sort=-committerdate --format="%(refname:short)" refs/remotes/origin/ | grep -E "origin/([a-zA-Z0-9._-]+_pre_release|releases/[a-zA-Z0-9._-]+)$")
 
-# Iterate over all remote release branches sorted by commit date (most recent first)
+# Iterate over all remote release branches, sorted by commit date (most recent first)
+index=0
 for branch in $remote_refs; do
-    # Find the common ancestor (merge base) between the base branch and the current branch
-    merge_base=$(git merge-base "$base_branch" "$branch")
+    # Find the latest commit that is an ancestor of base_branch using --first-parent strategy
+    candidate_commit=$(git rev-list --first-parent "$branch..$base_branch" | tail -1)
 
-    echo "Merge base for branches '$branch' and '$base_branch' is '$merge_base'"
-
-    # Update the latest branch and merge base if the current merge base is a descendant of the latest merge base
-    if [ -z "$latest_merge_base" ] || git merge-base --is-ancestor "$latest_merge_base" "$merge_base"; then
-        latest_branch="$branch"
-        latest_merge_base="$merge_base"
+    if [ -n "$candidate_commit" ]; then
+        branches[$index]="$branch"
+        commits[$index]="$candidate_commit"
+        index=$((index + 1))
     fi
 done
 
-echo "Latest branch: $latest_branch"
-echo "Latest merge base: $latest_merge_base"
+# Debug output of branches and commits
+echo "Branches and their corresponding commits:" >&2
+for i in "${!branches[@]}"; do
+    echo "${branches[$i]} -> ${commits[$i]}" >&2
+done
 
+# Find the branch with the most recent commit
+latest_branch=""
+latest_commit=""
+for i in "${!branches[@]}"; do
+    branch=${branches[$i]}
+    commit=${commits[$i]}
+    if [ -z "$latest_commit" ] || [ "$(git rev-list --count $latest_commit..$commit)" -gt 0 ]; then
+        latest_branch=$branch
+        latest_commit=$commit
+    fi
+done
 
 # Output validation
 if [ -z "$latest_branch" ]; then
-  echo "Error: Can't find the latest 'pre_release' branch for the base branch '$base_branch'"
+  echo "Error: Can't find the latest 'release/*' branch for the base branch '$base_branch'" >&2
   exit 2
 fi
 
 # Stripping 'origin/' prefix if needed
 latest_branch="${latest_branch#origin/}"
 
-echo "$latest_branch" > "find-latest-pre-release-branch.output"
-echo "Latest 'pre_release' branch created from '$base_branch' or its ancestor: '$latest_branch'"
+echo "$latest_branch" > "find-latest-release-branch.output"
+echo "Latest release branch created directly from '$base_branch' or its ancestor: '$latest_branch'"
