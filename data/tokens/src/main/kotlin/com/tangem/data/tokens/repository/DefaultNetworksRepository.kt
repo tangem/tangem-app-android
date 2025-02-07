@@ -48,7 +48,18 @@ internal class DefaultNetworksRepository(
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val networkStatusFactory = NetworkStatusFactory()
 
+    override suspend fun fetchNetworkStatuses(userWalletId: UserWalletId, networks: Set<Network>, refresh: Boolean) {
+        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+    }
+
     override fun getNetworkStatusesUpdates(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+    ): Flow<Set<NetworkStatus>> {
+        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+    }
+
+    override fun getNetworkStatusesUpdatesLegacy(
         userWalletId: UserWalletId,
         networks: Set<Network>,
     ): Flow<Set<NetworkStatus>> = channelFlow {
