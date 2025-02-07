@@ -87,7 +87,6 @@
   <string name="common_yes">是</string>
   <string name="contract_address_copied_message">已複製代幣地址</string>
   <string name="currency_subtitle_expanded">支持的網路</string>
-  <string name="custom_token_add_token">添加代幣</string>
   <string name="custom_token_contract_address_input_title">代幣地址</string>
   <string name="custom_token_creation_error_invalid_contract_address">無效地址</string>
   <string name="custom_token_creation_error_network_not_selected">請選擇網路</string>
