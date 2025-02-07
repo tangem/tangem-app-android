@@ -209,7 +209,6 @@
   <string name="common_yes">Да</string>
   <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
   <string name="currency_subtitle_expanded">Доступные сети</string>
-  <string name="custom_token_add_token">Добавить токен</string>
   <string name="custom_token_contract_address_input_title">Адрес контракта</string>
   <string name="custom_token_creation_error_invalid_contract_address">Адрес контракта некорректен</string>
   <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
@@ -396,7 +395,6 @@
   <string name="markets_add_to_my_portfolio_description">Чтобы купить, обменять или получить данный токен, вам нужно добавить его к себе в портфель</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Этот актив в настоящее время не поддерживается в кошельке</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Этот токен не доступен для данного кошелька</string>
-  <string name="markets_add_to_portfolio_button">Добавить в портфель</string>
   <string name="markets_add_token">Добавить</string>
   <string name="markets_available_networks">Доступные сети</string>
   <string name="markets_common_my_portfolio">Мой портфель</string>
@@ -887,6 +885,16 @@
   <string name="swap_give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
+  <string name="swap_story_fifth_subtitle">Надёжная поддержка 24/7, чтобы ваши финансовые операции были быстрыми и безопасными!</string>
+  <string name="swap_story_fifth_title">Круглосуточная поддержка</string>
+  <string name="swap_story_first_subtitle">Надёжные провайдеры позволяют легко обменивать активы, обеспечивая полную безопасность в вашем кошельке</string>
+  <string name="swap_story_first_title">Обменивайте с нами</string>
+  <string name="swap_story_forth_subtitle">Высший уровень безопасности и проверенные поставщики гарантируют защиту ваших активов при каждой сделке</string>
+  <string name="swap_story_forth_title">Безопаснее, чем когда-либо</string>
+  <string name="swap_story_second_subtitle">Получайте максимальную выгоду с лучшими курсами от надёжных поставщиков</string>
+  <string name="swap_story_second_title">Лучшие курсы</string>
+  <string name="swap_story_third_subtitle">Просто и удобно — обмен токенов всего в несколько касаний</string>
+  <string name="swap_story_third_title">Проще, чем когда-либо</string>
   <string name="swapping_alert_cex_description">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %s от биржи обратно на адрес пользователя.</string>
   <string name="swapping_alert_cex_description_with_slippage">В сумму включено: \n• комиссия провайдера сервиса\n• комиссия сети за отправку %1$s от биржи обратно на адрес пользователя \n\nПроскальзывание провайдера составляет до %2$s</string>
   <string name="swapping_alert_dex_description">В сумму включена комиссия провайдера сервиса.</string>
