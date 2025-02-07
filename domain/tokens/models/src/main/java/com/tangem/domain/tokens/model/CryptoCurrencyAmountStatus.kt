@@ -9,5 +9,5 @@ sealed class CryptoCurrencyAmountStatus {
 
     data class Loaded(val value: BigDecimal) : CryptoCurrencyAmountStatus()
 
-    object NotFound : CryptoCurrencyAmountStatus()
+    data object NotFound : CryptoCurrencyAmountStatus()
 }
