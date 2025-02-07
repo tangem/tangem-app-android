@@ -203,7 +203,6 @@
   <string name="common_yes">Sí</string>
   <string name="contract_address_copied_message">Dirección del contract copiada</string>
   <string name="currency_subtitle_expanded">Redes disponibles</string>
-  <string name="custom_token_add_token">Agregue un token</string>
   <string name="custom_token_contract_address_input_title">Dirección del contract</string>
   <string name="custom_token_creation_error_invalid_contract_address">La dirección del contract no es válida</string>
   <string name="custom_token_creation_error_network_not_selected">Por favor, seleccione la red</string>
@@ -388,7 +387,6 @@
   <string name="markets_add_to_my_portfolio_description">Para comprar, intercambiar o recibir este activo, agréguelo a su portafolio</string>
   <string name="markets_add_to_my_portfolio_unavailable_description">Este activo no está disponible en la billetera</string>
   <string name="markets_add_to_my_portfolio_unavailable_for_wallet_description">Este activo no está disponible para esta billetera</string>
-  <string name="markets_add_to_portfolio_button">Añadir al portafolio</string>
   <string name="markets_add_token">Añadir</string>
   <string name="markets_available_networks">Redes disponibles</string>
   <string name="markets_common_my_portfolio">Mi portafolio</string>
