@@ -7,7 +7,6 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.StartReferralBody
-import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
@@ -24,15 +23,11 @@ internal class ReferralRepositoryImpl @Inject constructor(
     private val referralApi: TangemTechApi,
     private val referralConverter: ReferralConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
-    private val demoModeDatasource: DemoModeDatasource,
     private val userWalletsStore: UserWalletsStore,
     excludedBlockchains: ExcludedBlockchains,
 ) : ReferralRepository {
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
-
-    override val isDemoMode: Boolean
-        get() = demoModeDatasource.isDemoModeActive
 
     override suspend fun getReferralData(walletId: String): ReferralData {
         return withContext(coroutineDispatcher.io) {
@@ -65,7 +60,9 @@ internal class ReferralRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getCryptoCurrency(userWalletId: UserWalletId, tokenData: TokenData): CryptoCurrency? {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("Wallet $userWalletId not found")
+        val userWallet = withContext(coroutineDispatcher.io) {
+            userWalletsStore.getSyncOrNull(userWalletId) ?: error("Wallet $userWalletId not found")
+        }
 
         val blockchain = Blockchain.fromNetworkId(tokenData.networkId)
             ?: error("Blockchain ${tokenData.networkId} not found")

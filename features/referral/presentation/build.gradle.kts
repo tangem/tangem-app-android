@@ -33,6 +33,8 @@ dependencies {
     implementation(deps.compose.ui.tooling)
 
     /** Domain */
+    implementation(projects.domain.demo)
+    implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.features.referral.domain)
 
