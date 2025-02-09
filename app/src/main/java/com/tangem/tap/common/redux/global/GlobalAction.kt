@@ -58,8 +58,6 @@ sealed class GlobalAction : Action {
 
     data class SaveScanResponse(val scanResponse: ScanResponse) : GlobalAction()
 
-    data class SetIfCardVerifiedOnline(val verified: Boolean) : GlobalAction()
-
     data class ChangeAppCurrency(val appCurrency: AppCurrency) : GlobalAction()
     object RestoreAppCurrency : GlobalAction() {
         data class Success(val appCurrency: AppCurrency) : GlobalAction()
