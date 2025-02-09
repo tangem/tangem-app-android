@@ -8,7 +8,6 @@ import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
-import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
@@ -23,6 +22,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.settings.SettingsManager
 import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.data.card.TransactionSignerFactory
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import com.tangem.datasource.connection.NetworkConnectionManager
@@ -274,7 +274,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private fun createReduxStore(): Store<AppState> {
         return Store(
-            reducer = { action, state -> appReducer(action, state, appStateHolder) },
+            reducer = { action, state -> appReducer(action, state) },
             middleware = AppState.getMiddleware(),
             state = AppState(
                 daggerGraphState = DaggerGraphState(
