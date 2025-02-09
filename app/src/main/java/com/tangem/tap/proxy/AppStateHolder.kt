@@ -1,10 +1,8 @@
 package com.tangem.tap.proxy
 
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
@@ -20,10 +18,7 @@ import javax.inject.Inject
  */
 class AppStateHolder @Inject constructor() : ReduxStateHolder {
 
-    @Deprecated("Use scan response from selected user wallet")
-    var scanResponse: ScanResponse? = null
     var mainStore: Store<AppState>? = null
-    var tangemSdkManager: TangemSdkManager? = null
     var exchangeService: ExchangeService? = null
     var buyService: ExchangeService? = null
     var sellService: ExchangeService? = null
