@@ -119,6 +119,10 @@ sealed class WalletConnectDialog : StateDialog {
         val data: WcPreparedRequest.SignTransaction,
     ) : WalletConnectDialog()
 
+    data class SignTransactionsDialog(
+        val data: WcPreparedRequest.SignTransactions,
+    ) : WalletConnectDialog()
+
     data class PairConnectErrorDialog(val error: Throwable) : WalletConnectDialog()
 }
 
