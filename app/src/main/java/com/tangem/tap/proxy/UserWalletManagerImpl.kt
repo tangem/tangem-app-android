@@ -8,12 +8,15 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.ProxyAmount
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 
 class UserWalletManagerImpl(
     private val walletManagersFacade: WalletManagersFacade,
     private val userWalletsListManager: UserWalletsListManager,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletManager {
 
     override fun getWalletId(): String {
@@ -61,11 +64,13 @@ class UserWalletManagerImpl(
         val selectedUserWallet = requireNotNull(
             userWalletsListManager.selectedUserWalletSync,
         ) { "userWallet or userWalletsListManager is null" }
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            selectedUserWallet.walletId,
-            blockchain,
-            derivationPath,
-        )
+        val walletManager = withContext(dispatchers.io) {
+            walletManagersFacade.getOrCreateWalletManager(
+                selectedUserWallet.walletId,
+                blockchain,
+                derivationPath,
+            )
+        }
 
         return requireNotNull(walletManager) {
             "No wallet manager found"
