@@ -360,7 +360,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private fun installActivityDependencies() {
         cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
-        appStateHolder.tangemSdkManager = tangemSdkManager
 
         if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
             backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
