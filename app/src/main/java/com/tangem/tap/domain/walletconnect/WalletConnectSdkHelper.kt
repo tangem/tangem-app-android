@@ -427,7 +427,7 @@ class WalletConnectSdkHelper {
     }
 
     /**
-     * Returns result of signing prepared to send
+     * Returns result of signing prepared to send in WC request
      */
     suspend fun signTransaction(
         hashToSign: ByteArray,
@@ -468,11 +468,12 @@ class WalletConnectSdkHelper {
     }
 
     /**
-     * Returns result of signing prepared to send
+     * Returns result of signing prepared to send in WC request
      */
     suspend fun signTransactions(
         hashesToSign: List<ByteArray>,
         networkId: String,
+        type: TransactionType,
         derivationPath: String?,
         cardId: String?,
     ): String? {
@@ -491,17 +492,31 @@ class WalletConnectSdkHelper {
                 null
             }
             is CompletionResult.Success -> {
-                val result = signingResult.data.mapIndexed { index, bytes ->
-                    byteArrayOf(1) + bytes + hashesToSign[index]
+                when (type) {
+                    TransactionType.SOLANA_TX -> {
+                        val result = signingResult.data.mapIndexed { index, bytes ->
+                            byteArrayOf(1) + bytes + hashesToSign[index]
+                        }
+                        getSolanaResultTxHashesString(result)
+                    }
                 }
-                getSolanaResultTxHashesString(result)
             }
-            else -> {null}
+            else -> {
+                null
+            }
         }
     }
 
     private fun getSolanaResultString(signedHash: ByteArray) = "{ signature: \"${signedHash.encodeBase58()}\" }"
 
+    /**
+     * Build json object
+     * {
+     *   "transactions": [
+     *     "signed_tx_hash"
+     *   ]
+     * }
+     */
     private fun getSolanaResultTxHashesString(signedHashes: List<ByteArray>): String {
         val result = StringBuilder()
         result.append("{\"transactions\":")

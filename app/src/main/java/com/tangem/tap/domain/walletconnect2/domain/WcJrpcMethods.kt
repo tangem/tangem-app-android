@@ -133,7 +133,7 @@ data class WcEthereumTransaction(
 data class SolanaTransactionsRequest(
     @Json(name = "transactions")
     val transactions: List<String>,
-): WcRequestData
+) : WcRequestData
 
 interface WcRequestData
 

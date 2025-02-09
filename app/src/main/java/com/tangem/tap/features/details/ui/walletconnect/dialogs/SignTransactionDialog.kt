@@ -10,7 +10,7 @@ import com.tangem.wallet.R
 
 internal object SignTransactionDialog {
 
-    fun create(preparedData: WcPreparedRequest.SignTransaction, context: Context): AlertDialog {
+    fun create(preparedData: WcPreparedRequest.SolanaSignTransaction, context: Context): AlertDialog {
         val signMessage = context.getString(R.string.wallet_connect_alert_sign_message, "")
         val message = "${preparedData.preparedRequestData.dAppName}\n$signMessage"
         return AlertDialog.Builder(context).apply {
