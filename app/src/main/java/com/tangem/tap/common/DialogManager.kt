@@ -131,6 +131,10 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 preparedData = state.dialog.data,
                 context = context,
             )
+            is WalletConnectDialog.SignTransactionsDialog -> SignTransactionsDialog.create(
+                preparedData = state.dialog.data,
+                context = context,
+            )
             is WalletConnectDialog.PairConnectErrorDialog -> SimpleAlertDialog.create(
                 titleRes = R.string.wallet_connect_title,
                 message = state.dialog.error.message,
