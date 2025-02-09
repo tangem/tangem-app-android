@@ -2,7 +2,6 @@ package com.tangem.feature.referral.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.demo.DemoModeDatasource
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.data.ReferralRepositoryImpl
@@ -24,7 +23,6 @@ class ReferralRepositoryModule {
         tangemTechApi: TangemTechApi,
         referralConverter: ReferralConverter,
         coroutineDispatcherProvider: CoroutineDispatcherProvider,
-        demoModeDatasource: DemoModeDatasource,
         userWalletsStore: UserWalletsStore,
         excludedBlockchains: ExcludedBlockchains,
     ): ReferralRepository {
@@ -32,7 +30,6 @@ class ReferralRepositoryModule {
             referralApi = tangemTechApi,
             referralConverter = referralConverter,
             coroutineDispatcher = coroutineDispatcherProvider,
-            demoModeDatasource = demoModeDatasource,
             userWalletsStore = userWalletsStore,
             excludedBlockchains = excludedBlockchains,
         )
