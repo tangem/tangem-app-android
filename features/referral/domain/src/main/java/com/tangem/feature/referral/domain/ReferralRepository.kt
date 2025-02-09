@@ -7,8 +7,6 @@ import com.tangem.feature.referral.domain.models.TokenData
 
 interface ReferralRepository {
 
-    val isDemoMode: Boolean
-
     /** Returns data object of [ReferralData] depends on user program status */
     suspend fun getReferralData(walletId: String): ReferralData
 

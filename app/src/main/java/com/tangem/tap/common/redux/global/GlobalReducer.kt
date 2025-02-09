@@ -2,12 +2,11 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.utils.extensions.replaceBy
 import org.rekotlin.Action
 
 @Suppress("LongMethod", "ComplexMethod")
-fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolder): GlobalState {
+fun globalReducer(action: Action, state: AppState): GlobalState {
     if (action !is GlobalAction) return state.globalState
 
     val globalState = state.globalState
@@ -35,7 +34,6 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             globalState.copy(scanCardFailsCounter = 0)
         }
         is GlobalAction.SaveScanResponse -> {
-            appStateHolder.scanResponse = action.scanResponse
             globalState.copy(scanResponse = action.scanResponse)
         }
         is GlobalAction.ChangeAppCurrency -> {
@@ -72,8 +70,6 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
         is GlobalAction.ExchangeManager.Init.Success -> {
             globalState.copy(exchangeManager = action.exchangeManager)
         }
-        is GlobalAction.SetIfCardVerifiedOnline ->
-            globalState.copy(cardVerifiedOnline = action.verified)
         else -> globalState
     }
 }
