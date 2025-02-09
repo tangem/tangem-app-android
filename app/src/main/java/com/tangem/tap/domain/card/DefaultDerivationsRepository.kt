@@ -58,7 +58,9 @@ internal class DefaultDerivationsRepository(
     }
 
     override suspend fun derivePublicKeysByNetworks(userWalletId: UserWalletId, networks: List<Network>) {
-        val userWallet = userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
+        val userWallet = withContext(dispatchers.io) {
+            userWalletsStore.getSyncOrNull(userWalletId) ?: error("User wallet not found")
+        }
 
         if (!userWallet.scanResponse.card.settings.isHDWalletAllowed) {
             Timber.d("Nothing to derive")
