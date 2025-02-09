@@ -117,8 +117,8 @@ internal class WcSessionRequestConverter(
             is WcRequest.SolanaSignRequest -> {
                 val transaction = request.data.transaction
 
-                WcPreparedRequest.SignTransaction(
-                    preparedRequestData = WcGenericTransactionData(
+                WcPreparedRequest.SolanaSignTransaction(
+                    preparedRequestData = GenericTransactionData.SingleHash(
                         hashToSign = transaction.prepareSolanaTransaction(),
                         dAppName = sessionRequest.metaName,
                         type = TransactionType.SOLANA_TX,
@@ -130,9 +130,9 @@ internal class WcSessionRequestConverter(
             }
             is WcRequest.SolanaSignTransactions -> {
                 val transactions = request.data.transactions
-                WcPreparedRequest.SignTransactions(
-                    preparedRequestData = WcGenericTransactionsData(
-                        hashesToSign = transactions.map { it.prepareSolanaTransaction() },//
+                WcPreparedRequest.SolanaSignMultipleTransactions(
+                    preparedRequestData = GenericTransactionData.MultipleHashes(
+                        hashesToSign = transactions.map { it.prepareSolanaTransaction() }, //
                         dAppName = sessionRequest.metaName,
                         type = TransactionType.SOLANA_TX,
                     ),

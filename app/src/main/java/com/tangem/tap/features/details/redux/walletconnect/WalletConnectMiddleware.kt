@@ -171,9 +171,9 @@ class WalletConnectMiddleware {
                     is WcPreparedRequest.BnbTransaction -> WalletConnectDialog.BnbTransactionDialog(request)
                     is WcPreparedRequest.EthTransaction -> WalletConnectDialog.RequestTransaction(request)
                     is WcPreparedRequest.EthSign -> WalletConnectDialog.PersonalSign(request)
-                    is WcPreparedRequest.SignTransaction ->
+                    is WcPreparedRequest.SolanaSignTransaction ->
                         WalletConnectDialog.SignTransactionDialog(request)
-                    is WcPreparedRequest.SignTransactions ->
+                    is WcPreparedRequest.SolanaSignMultipleTransactions ->
                         WalletConnectDialog.SignTransactionsDialog(request)
                 }
                 store.dispatch(GlobalAction.ShowDialog(dialog))
