@@ -12,7 +12,9 @@ import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.analytics.ReferralEvents
 import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.errors.ReferralError
@@ -24,20 +26,20 @@ import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
 import com.tangem.feature.referral.router.ReferralRouter
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class ReferralViewModel @Inject constructor(
     private val referralInteractor: ReferralInteractor,
-    private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val shareManager: ShareManager,
     private val urlOpener: UrlOpener,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -78,8 +80,8 @@ internal class ReferralViewModel @Inject constructor(
 
     private fun loadReferralData() {
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
-        viewModelScope.launch(dispatchers.main) {
-            runCatching(dispatchers.io) {
+        viewModelScope.launch {
+            runCatching {
                 referralInteractor.getReferralStatus(userWalletId).apply {
                     lastReferralData = this
                 }
@@ -90,13 +92,15 @@ internal class ReferralViewModel @Inject constructor(
     }
 
     private fun participate() {
-        if (referralInteractor.isDemoMode) {
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("User wallet not found")
+
+        if (isDemoCardUseCase(cardId = userWallet.cardId)) {
             showErrorSnackbar(DemoModeException())
         } else {
             analyticsEventHandler.send(ReferralEvents.ClickParticipate)
             uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
-            viewModelScope.launch(dispatchers.main) {
-                runCatching(dispatchers.io) { referralInteractor.startReferral(userWalletId) }
+            viewModelScope.launch {
+                runCatching { referralInteractor.startReferral(userWalletId) }
                     .onSuccess(::showContent)
                     .onFailure { throwable ->
                         if (throwable is ReferralError.UserCancelledException) {
