@@ -426,6 +426,9 @@ class WalletConnectSdkHelper {
         }
     }
 
+    /**
+     * Returns result of signing prepared to send
+     */
     suspend fun signTransaction(
         hashToSign: ByteArray,
         networkId: String,
@@ -464,7 +467,56 @@ class WalletConnectSdkHelper {
         }
     }
 
+    /**
+     * Returns result of signing prepared to send
+     */
+    suspend fun signTransactions(
+        hashesToSign: List<ByteArray>,
+        networkId: String,
+        derivationPath: String?,
+        cardId: String?,
+    ): String? {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+        val wallet = getWalletManager(blockchain, derivationPath)?.wallet ?: return null
+        val sdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk
+
+        val signer = store.inject(DaggerGraphState::transactionSignerFactory).createTransactionSigner(
+            cardId = cardId,
+            sdk = sdk,
+        )
+
+        return when (val signingResult = signer.sign(hashesToSign, wallet.publicKey)) {
+            is CompletionResult.Failure -> {
+                Timber.e(signingResult.error.customMessage)
+                null
+            }
+            is CompletionResult.Success -> {
+                val result = signingResult.data.mapIndexed { index, bytes ->
+                    byteArrayOf(1) + bytes + hashesToSign[index]
+                }
+                getSolanaResultTxHashesString(result)
+            }
+            else -> {null}
+        }
+    }
+
     private fun getSolanaResultString(signedHash: ByteArray) = "{ signature: \"${signedHash.encodeBase58()}\" }"
+
+    private fun getSolanaResultTxHashesString(signedHashes: List<ByteArray>): String {
+        val result = StringBuilder()
+        result.append("{\"transactions\":")
+        result.append("[")
+        val iterator = signedHashes.iterator()
+        while (iterator.hasNext()) {
+            result.append("\"${iterator.next().encodeBase64()}\"")
+            if (iterator.hasNext()) {
+                result.append(",")
+            }
+        }
+        result.append("]")
+        result.append("}")
+        return result.toString()
+    }
 
     private fun getBnbResultString(publicKey: String, signature: String) =
         "{\"signature\":\"$signature\",\"publicKey\":\"$publicKey\"}"

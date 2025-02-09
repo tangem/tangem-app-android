@@ -315,28 +315,34 @@ class WalletConnectInteractor(
         if (currentRequest == null || request.topic != currentRequest.topic) return
 
         val networkId = blockchainHelper.chainIdToNetworkIdOrNull(currentRequest.chainId.orEmpty()) ?: return
-        val signedHash = when (request) {
+        val signingResultData = when (request) {
             is WcPreparedRequest.BnbTransaction -> sdkHelper.signBnbTransaction(
-                data = request.preparedRequestData.data.data,
-                networkId = networkId,
-                derivationPath = request.derivationPath,
-                cardId = cardId,
-            )
+                    data = request.preparedRequestData.data.data,
+                    networkId = networkId,
+                    derivationPath = request.derivationPath,
+                    cardId = cardId,
+                )
             is WcPreparedRequest.EthTransaction -> sdkHelper.completeTransaction(
-                data = request.preparedRequestData,
-                cardId = cardId,
-            )
+                    data = request.preparedRequestData,
+                    cardId = cardId,
+                )
             is WcPreparedRequest.EthSign -> sdkHelper.signPersonalMessage(
-                hashToSign = request.preparedRequestData.hash,
-                networkId = networkId,
-                type = request.preparedRequestData.type,
-                derivationPath = request.derivationPath,
-                cardId = cardId,
-            )
+                    hashToSign = request.preparedRequestData.hash,
+                    networkId = networkId,
+                    type = request.preparedRequestData.type,
+                    derivationPath = request.derivationPath,
+                    cardId = cardId,
+                )
             is WcPreparedRequest.SignTransaction -> sdkHelper.signTransaction(
-                hashToSign = request.preparedRequestData.hashToSign,
+                    hashToSign = request.preparedRequestData.hashToSign,
+                    networkId = networkId,
+                    type = request.preparedRequestData.type,
+                    derivationPath = request.derivationPath,
+                    cardId = cardId,
+                )
+            is WcPreparedRequest.SignTransactions -> sdkHelper.signTransactions(
+                hashesToSign = request.preparedRequestData.hashesToSign,
                 networkId = networkId,
-                type = request.preparedRequestData.type,
                 derivationPath = request.derivationPath,
                 cardId = cardId,
             )
@@ -349,12 +355,12 @@ class WalletConnectInteractor(
             method = currentRequest.method,
         )
 
-        if (signedHash == null) {
+        if (signingResultData == null) {
             walletConnectRepository.rejectRequest(requestData, WalletConnectError.SigningError)
         } else {
             walletConnectRepository.sendRequest(
                 requestData = requestData,
-                result = signedHash,
+                result = signingResultData,
             )
         }
     }

@@ -128,6 +128,19 @@ internal class WcSessionRequestConverter(
                     derivationPath = derivationPath,
                 )
             }
+            is WcRequest.SolanaSignTransactions -> {
+                val transactions = request.data.transactions
+                WcPreparedRequest.SignTransactions(
+                    preparedRequestData = WcGenericTransactionsData(
+                        hashesToSign = transactions.map { it.prepareSolanaTransaction() },//
+                        dAppName = sessionRequest.metaName,
+                        type = TransactionType.SOLANA_TX,
+                    ),
+                    topic = sessionRequest.topic,
+                    requestId = sessionRequest.id,
+                    derivationPath = derivationPath,
+                )
+            }
             else -> throw WalletConnectError.UnsupportedMethod
         }
     }

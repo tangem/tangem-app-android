@@ -37,10 +37,23 @@ sealed class WcPreparedRequest(
         requestId: Long,
         derivationPath: String?,
     ) : WcPreparedRequest(preparedRequestData, topic, requestId, derivationPath)
+
+    class SignTransactions(
+        override val preparedRequestData: WcGenericTransactionsData,
+        topic: String,
+        requestId: Long,
+        derivationPath: String?,
+    ) : WcPreparedRequest(preparedRequestData, topic, requestId, derivationPath)
 }
 
 data class WcGenericTransactionData(
     val hashToSign: ByteArray,
+    val dAppName: String,
+    val type: TransactionType,
+)
+
+data class WcGenericTransactionsData(
+    val hashesToSign: List<ByteArray>,
     val dAppName: String,
     val type: TransactionType,
 )
