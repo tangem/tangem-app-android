@@ -7,6 +7,7 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.TransactionManagerImpl
 import com.tangem.tap.proxy.UserWalletManagerImpl
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -28,10 +29,12 @@ internal object ProxyModule {
     fun provideUserWalletManager(
         walletManagersFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
+        dispatchers: CoroutineDispatcherProvider,
     ): UserWalletManager {
         return UserWalletManagerImpl(
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
+            dispatchers = dispatchers,
         )
     }
 
