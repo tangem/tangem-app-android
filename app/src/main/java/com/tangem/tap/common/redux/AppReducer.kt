@@ -10,16 +10,15 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsReducer
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletReducer
 import com.tangem.tap.features.saveWallet.redux.SaveWalletReducer
 import com.tangem.tap.features.welcome.redux.WelcomeReducer
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphReducer
 import org.rekotlin.Action
 
-fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder): AppState {
+fun appReducer(action: Action, state: AppState?): AppState {
     requireNotNull(state)
     if (action is AppAction.RestoreState) return action.state
 
     return AppState(
-        globalState = globalReducer(action, state, appStateHolder),
+        globalState = globalReducer(action, state),
         homeState = HomeReducer.reduce(action, state),
         onboardingNoteState = OnboardingNoteReducer.reduce(action, state),
         onboardingWalletState = OnboardingWalletReducer.reduce(action, state),
