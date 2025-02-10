@@ -64,7 +64,6 @@ internal class FeeStateFactory(
                 } else {
                     FeeSelectorState.Loading
                 },
-                notifications = persistentListOf(),
                 isPrimaryButtonEnabled = false,
             ),
         )
