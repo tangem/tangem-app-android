@@ -78,6 +78,7 @@ enum class ExchangeStatus {
             this == Finished ||
             this == Cancelled ||
             this == TxFailed ||
+            this == Paused ||
             this == Unknown
 
     val isAutoDisposable: Boolean
