@@ -1,12 +1,12 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.getOrElse
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
@@ -122,7 +122,7 @@ internal class TokenDetailsSkeletonStateConverter(
             TokenDetailsActionButton.Send(dimContent = false, onClick = {}),
             TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
             TokenDetailsActionButton.Sell(dimContent = false, onClick = {}),
-            TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
+            TokenDetailsActionButton.Swap(dimContent = false, onClick = {}, showBadge = false),
         )
     }
 
