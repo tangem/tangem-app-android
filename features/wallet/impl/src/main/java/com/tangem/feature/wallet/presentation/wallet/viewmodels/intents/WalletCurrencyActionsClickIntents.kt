@@ -28,6 +28,8 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.promo.ShouldShowSwapStoriesUseCase
+import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
@@ -51,6 +53,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensLis
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
@@ -110,6 +113,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
+    private val shouldShowSwapStoriesUseCase: ShouldShowSwapStoriesUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
@@ -119,6 +123,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    private val swapFeatureToggles: SwapFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -430,11 +435,16 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             return
         }
 
-        onMultiWalletActionClick(
-            statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
-            route = AppRoute.SwapCrypto(userWalletId = userWalletId),
-            eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
-        )
+        viewModelScope.launch {
+            val swapRoute = getSwapRoute(
+                AppRoute.SwapCrypto(userWalletId = userWalletId),
+            )
+            onMultiWalletActionClick(
+                statusFlow = rampStateManager.getExpressInitializationStatus(userWalletId),
+                route = swapRoute,
+                eventCreator = MainScreenAnalyticsEvent::ButtonSwap,
+            )
+        }
     }
 
     override fun onMultiWalletBuyClick(userWalletId: UserWalletId) {
@@ -596,5 +606,20 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         walletEventSender.send(
             event = WalletEvent.ShowAlert(state = WalletAlertState.ProvidersStillLoading),
         )
+    }
+
+    private suspend fun getSwapRoute(targetRoute: AppRoute): AppRoute {
+        val isSwapStoriesEnabled = swapFeatureToggles.isPromoStoriesEnabled
+        val shouldShowSwapStories = shouldShowSwapStoriesUseCase.invokeSync()
+        val showSwapStories = shouldShowSwapStories && isSwapStoriesEnabled
+
+        return if (showSwapStories) {
+            AppRoute.Stories(
+                storyId = StoryContentIds.STORY_FIRST_TIME_SWAP.id,
+                nextScreen = targetRoute,
+            )
+        } else {
+            targetRoute
+        }
     }
 }
