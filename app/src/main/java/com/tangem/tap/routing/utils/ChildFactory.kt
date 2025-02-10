@@ -4,6 +4,7 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.referral.ReferralFragment
+import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.component.DetailsComponent
@@ -56,6 +57,7 @@ internal class ChildFactory @Inject constructor(
     private val swapSelectTokensComponentFactory: SwapSelectTokensComponent.Factory,
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val welcomeComponentFactory: WelcomeComponent.Factory,
+    private val storiesComponentFactory: StoriesComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -197,6 +199,16 @@ internal class ChildFactory @Inject constructor(
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
+                )
+            }
+            is AppRoute.Stories -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = StoriesComponent.Params(
+                        storyId = route.storyId,
+                        nextScreen = route.nextScreen,
+                    ),
+                    componentFactory = storiesComponentFactory,
                 )
             }
             is AppRoute.AccessCodeRecovery,
@@ -405,6 +417,16 @@ internal class ChildFactory @Inject constructor(
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
+                )
+            }
+            is AppRoute.Stories -> {
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = StoriesComponent.Params(
+                        storyId = route.storyId,
+                        nextScreen = route.nextScreen,
+                    ),
+                    componentFactory = storiesComponentFactory,
                 )
             }
         }
