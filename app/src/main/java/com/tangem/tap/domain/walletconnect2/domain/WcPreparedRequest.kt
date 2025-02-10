@@ -31,19 +31,37 @@ sealed class WcPreparedRequest(
         derivationPath: String?,
     ) : WcPreparedRequest(preparedRequestData, topic, requestId, derivationPath)
 
-    class SignTransaction(
-        override val preparedRequestData: WcGenericTransactionData,
+    class SolanaSignTransaction(
+        override val preparedRequestData: GenericTransactionData.SingleHash,
+        topic: String,
+        requestId: Long,
+        derivationPath: String?,
+    ) : WcPreparedRequest(preparedRequestData, topic, requestId, derivationPath)
+
+    class SolanaSignMultipleTransactions(
+        override val preparedRequestData: GenericTransactionData.MultipleHashes,
         topic: String,
         requestId: Long,
         derivationPath: String?,
     ) : WcPreparedRequest(preparedRequestData, topic, requestId, derivationPath)
 }
 
-data class WcGenericTransactionData(
-    val hashToSign: ByteArray,
-    val dAppName: String,
-    val type: TransactionType,
-)
+sealed interface GenericTransactionData {
+    val dAppName: String
+    val type: TransactionType
+
+    data class SingleHash(
+        val hashToSign: ByteArray,
+        override val dAppName: String,
+        override val type: TransactionType,
+    ) : GenericTransactionData
+
+    data class MultipleHashes(
+        val hashesToSign: List<ByteArray>,
+        override val dAppName: String,
+        override val type: TransactionType,
+    ) : GenericTransactionData
+}
 
 enum class TransactionType {
     SOLANA_TX,
