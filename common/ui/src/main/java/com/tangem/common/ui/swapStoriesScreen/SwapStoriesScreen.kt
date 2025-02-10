@@ -1,4 +1,4 @@
-package com.tangem.feature.swap.ui
+package com.tangem.common.ui.swapStoriesScreen
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
@@ -33,15 +33,15 @@ import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.swap.models.SwapStoriesContentConfig
-import com.tangem.feature.swap.models.SwapStoryConfig
 import kotlinx.collections.immutable.persistentListOf
 
 private val SubtitleColor = Color(0xFF868692)
 private const val STORIES_RELATIVE_PADDING = 0.7
 
 @Composable
-internal fun SwapStoriesScreen(config: SwapStoriesContentConfig) {
+fun SwapStoriesScreen(config: SwapStoriesUM) {
+    if (config !is SwapStoriesUM.Content) return
+
     BackHandler(onBack = config.onClose)
     SystemBarsIconsDisposable(darkIcons = false)
 
@@ -106,9 +106,9 @@ internal fun SwapStoriesScreen(config: SwapStoriesContentConfig) {
 private fun SwapStoriesScreen_Preview() {
     TangemThemePreview {
         SwapStoriesScreen(
-            SwapStoriesContentConfig(
+            SwapStoriesUM.Content(
                 stories = persistentListOf(
-                    SwapStoryConfig(
+                    SwapStoriesUM.Content.Config(
                         imageUrl = "https://devweb.tangem.com/images/stories/swap/image1.png",
                         title = stringReference("Exchange With Us"),
                         subtitle = stringReference(
