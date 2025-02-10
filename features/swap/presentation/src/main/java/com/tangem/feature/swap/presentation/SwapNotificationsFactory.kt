@@ -199,8 +199,10 @@ internal class SwapNotificationsFactory(
             onReduceByAmount = actions.onReduceByAmount,
         )
         addTransactionLimitErrorNotification(
-            utxoLimit = quoteModel.currencyCheck?.utxoAmountLimit,
-            cryptoCurrency = fromCurrencyStatus.currency,
+            currencyCheck = quoteModel.currencyCheck,
+            sendingAmount = amountToRequest.value,
+            cryptoCurrencyStatus = fromCurrencyStatus,
+            feeCurrencyStatus = feeCryptoCurrencyStatus,
             feeValue = fee?.feeValue.orZero(),
             onReduceClick = { reduceTo, _ ->
                 actions.onReduceToAmount(amountToRequest.copy(value = reduceTo))
