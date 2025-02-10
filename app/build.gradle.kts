@@ -145,7 +145,7 @@ dependencies {
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)
     implementation(projects.features.swap.api)
-    implementation(projects.features.swap.presentation)
+    implementation(projects.features.swap.impl)
     implementation(projects.features.swap.domain)
     implementation(projects.features.swap.domain.api)
     implementation(projects.features.swap.data)
