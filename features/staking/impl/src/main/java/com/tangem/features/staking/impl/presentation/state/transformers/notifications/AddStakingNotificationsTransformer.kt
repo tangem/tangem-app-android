@@ -168,8 +168,10 @@ internal class AddStakingNotificationsTransformer(
             )
         }
         addTransactionLimitErrorNotification(
-            utxoLimit = currencyCheck.utxoAmountLimit,
-            cryptoCurrency = cryptoCurrency,
+            currencyCheck = currencyCheck,
+            sendingAmount = sendingAmount,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            feeCurrencyStatus = feeCryptoCurrencyStatus,
             feeValue = feeValue,
             onReduceClick = prevState.clickIntents::onAmountReduceToClick,
         )
