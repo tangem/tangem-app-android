@@ -143,6 +143,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
         override val dimContent: Boolean,
         override val onClick: () -> Unit,
         val isInProgress: Boolean = false,
+        val showBadge: Boolean = false,
     ) : WalletManageButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.swapping_swap_action),
@@ -151,6 +152,7 @@ internal sealed class WalletManageButton(val config: ActionButtonConfig) {
             enabled = enabled,
             dimContent = dimContent,
             isInProgress = isInProgress,
+            showBadge = showBadge,
         ),
     )
 }
