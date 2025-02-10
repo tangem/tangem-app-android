@@ -5,6 +5,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.common.ui.bottomsheet.permission.state.*
 import com.tangem.common.ui.notifications.NotificationUM
+import com.tangem.common.ui.swapStoriesScreen.SwapStoriesFactory
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.event.consumedEvent
@@ -126,43 +127,11 @@ internal class StateBuilder(
         )
     }
 
-    // WARNING! Be careful with indices. Temporary solution.
-    // Use all data from v1/stories api (image url, title, subtitle)
-    @Suppress("MagicNumber")
     fun createStoriesState(uiStateHolder: SwapStateHolder, swapStory: StoryContent): SwapStateHolder {
-        val storyOrderedImageUrls = swapStory.getImageUrls()
-        if (storyOrderedImageUrls.size != 5) return uiStateHolder
-
         return uiStateHolder.copy(
-            storiesConfig = SwapStoriesContentConfig(
-                stories = persistentListOf(
-                    SwapStoryConfig(
-                        imageUrl = storyOrderedImageUrls[0],
-                        title = resourceReference(R.string.swap_story_first_title),
-                        subtitle = resourceReference(R.string.swap_story_first_subtitle),
-                    ),
-                    SwapStoryConfig(
-                        imageUrl = storyOrderedImageUrls[1],
-                        title = resourceReference(R.string.swap_story_second_title),
-                        subtitle = resourceReference(R.string.swap_story_second_subtitle),
-                    ),
-                    SwapStoryConfig(
-                        imageUrl = storyOrderedImageUrls[2],
-                        title = resourceReference(R.string.swap_story_third_title),
-                        subtitle = resourceReference(R.string.swap_story_third_subtitle),
-                    ),
-                    SwapStoryConfig(
-                        imageUrl = storyOrderedImageUrls[3],
-                        title = resourceReference(R.string.swap_story_forth_title),
-                        subtitle = resourceReference(R.string.swap_story_forth_subtitle),
-                    ),
-                    SwapStoryConfig(
-                        imageUrl = storyOrderedImageUrls[4],
-                        title = resourceReference(R.string.swap_story_fifth_title),
-                        subtitle = resourceReference(R.string.swap_story_fifth_subtitle),
-                    ),
-                ),
-                onClose = actions.onStoriesClose,
+            storiesConfig = SwapStoriesFactory.createStoriesState(
+                swapStory = swapStory,
+                onStoriesClose = actions.onStoriesClose,
             ),
         )
     }
