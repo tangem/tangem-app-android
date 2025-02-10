@@ -8,3 +8,13 @@ plugins {
 android {
     namespace = "com.tangem.features.swap.api"
 }
+
+dependencies {
+    /** Project - Core */
+    implementation(projects.core.decompose)
+    implementation(projects.core.ui)
+
+    /** Project - Domain */
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
+}
