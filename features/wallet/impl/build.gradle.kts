@@ -105,6 +105,7 @@ dependencies {
     implementation(projects.features.markets.api)
     implementation(projects.features.onramp.api)
     implementation(projects.features.onboardingV2.api)
+    implementation(projects.features.swap.api)
 
     /** Common modules */
     implementation(projects.common)
