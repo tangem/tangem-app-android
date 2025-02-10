@@ -12,7 +12,7 @@ internal class PreviewRenameWalletComponent : RenameWalletComponent {
         walletNameValue = TextFieldValue(text = "My Wallet"),
         isConfirmEnabled = false,
         onValueChange = {},
-        onConfirm = {},
+        onConfirmClick = {},
         error = null,
     )
 
