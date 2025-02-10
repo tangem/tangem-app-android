@@ -100,7 +100,7 @@ internal object TokenDetailsPreviewData {
         TokenDetailsActionButton.Buy(dimContent = false, onClick = {}),
         TokenDetailsActionButton.Send(dimContent = false, onClick = {}),
         TokenDetailsActionButton.Receive(onClick = {}, onLongClick = null),
-        TokenDetailsActionButton.Swap(dimContent = false, onClick = {}),
+        TokenDetailsActionButton.Swap(dimContent = false, onClick = {}, showBadge = true),
     )
 
     private val balanceSegmentedButtonConfig = persistentListOf(
