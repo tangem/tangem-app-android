@@ -12,7 +12,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.blockchains.UtxoAmountLimit
+import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.utils.extensions.isZero
@@ -124,17 +124,29 @@ object NotificationsFactory {
         }
     }
 
+    @Suppress("LongParameterList")
     fun MutableList<NotificationUM>.addTransactionLimitErrorNotification(
-        utxoLimit: UtxoAmountLimit?,
-        cryptoCurrency: CryptoCurrency,
+        currencyCheck: CryptoCurrencyCheck?,
+        sendingAmount: BigDecimal,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        feeCurrencyStatus: CryptoCurrencyStatus?,
         feeValue: BigDecimal,
         onReduceClick: (
             reduceAmountTo: BigDecimal,
             notification: Class<out NotificationUM>,
         ) -> Unit,
     ) {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val utxoLimit = currencyCheck?.utxoAmountLimit
         val availableToSend = utxoLimit?.availableToSend
-        if (availableToSend != null && !feeValue.isZero()) {
+        val isDustLimit = checkDustLimits(
+            feeAmount = feeValue,
+            sendingAmount = sendingAmount,
+            dustValue = currencyCheck?.dustValue.orZero(),
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            feeCurrencyStatus = feeCurrencyStatus,
+        )
+        if (availableToSend != null && !feeValue.isZero() && !isDustLimit) {
             add(
                 NotificationUM.Error.TransactionLimitError(
                     cryptoCurrency = cryptoCurrency.name,
