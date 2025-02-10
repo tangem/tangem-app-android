@@ -178,6 +178,9 @@ dependencies {
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.onboardingV2.impl)
 
+    /** DataSources */
+    implementation(projects.datasource.quotes)
+
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
     implementation(deps.androidx.core.splashScreen)
