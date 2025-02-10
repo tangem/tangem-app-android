@@ -13,6 +13,8 @@ import com.tangem.core.ui.extensions.TextReference
  * @property enabled   enabled
  * @property dimContent determines whether the button content will be dimmed. This property will be ignored if [enabled]
  * is `false`.
+ * @property isInProgress indicates progress state of button
+ * @property showBadge display dot in upper right corner
  *
 [REDACTED_AUTHOR]
  */
@@ -24,4 +26,5 @@ data class ActionButtonConfig(
     val enabled: Boolean = true,
     val dimContent: Boolean = false,
     val isInProgress: Boolean = false,
+    val showBadge: Boolean = false,
 )
