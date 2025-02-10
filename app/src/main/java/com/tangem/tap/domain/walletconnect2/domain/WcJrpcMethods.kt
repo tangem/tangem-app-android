@@ -28,6 +28,7 @@ internal enum class WcJrpcMethods(val code: String) {
 
     SOLANA_SIGN_TX("solana_signTransaction"),
     SOLANA_SIGN_MESSAGE("solana_signMessage"),
+    SOLANA_SIGN_ALL_TX("solana_signAllTransactions"),
     ;
 
     companion object {
@@ -130,6 +131,12 @@ data class WcEthereumTransaction(
     val data: String,
 ) : WcRequestData
 
+@JsonClass(generateAdapter = true)
+data class SolanaTransactionsRequest(
+    @Json(name = "transactions")
+    val transactions: List<String>,
+) : WcRequestData
+
 interface WcRequestData
 
 data class WcCustomRequestData(val data: String) : WcRequestData
@@ -146,6 +153,7 @@ sealed class WcRequest(open val data: WcRequestData) {
     data class AddChain(override val data: WcAddChain) : WcRequest(data)
     data class CustomRequest(override val data: WcCustomRequestData) : WcRequest(data)
     data class SolanaSignRequest(override val data: SolanaTransactionRequest) : WcRequest(data)
+    data class SolanaSignTransactions(override val data: SolanaTransactionsRequest) : WcRequest(data)
 }
 
 @Singleton
@@ -241,6 +249,11 @@ internal class WcJrpcRequestsDeserializer @Inject constructor(@SdkMoshi private 
                 )
 
                 WcRequest.EthSign(data = data)
+            }
+            WcJrpcMethods.SOLANA_SIGN_ALL_TX -> {
+                val transactionsToSign = moshi.adapter(SolanaTransactionsRequest::class.java)
+                    .fromJsonOrNull(params) ?: return customRequest
+                WcRequest.SolanaSignTransactions(transactionsToSign)
             }
         }
     }
