@@ -205,6 +205,9 @@ include(":features:markets:impl")
 
 include(":features:onramp:api")
 include(":features:onramp:impl")
+
+include(":features:stories:api")
+include(":features:stories:impl")
 // endregion Feature modules
 
 // region Domain modules
