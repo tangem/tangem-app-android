@@ -25,3 +25,14 @@ private fun WalletState.MultiCurrency.Content.changeAvailability(enabled: Boolea
         }
         .toPersistentList()
 }
+
+internal fun WalletState.MultiCurrency.Content.showSwapBadge(showBadge: Boolean): PersistentList<WalletManageButton> {
+    return buttons
+        .map { action ->
+            when (action) {
+                is WalletManageButton.Swap -> action.copy(showBadge = showBadge)
+                else -> action
+            }
+        }
+        .toPersistentList()
+}
