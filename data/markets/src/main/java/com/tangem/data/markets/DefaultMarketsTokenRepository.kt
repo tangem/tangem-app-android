@@ -18,11 +18,11 @@ import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketExchangesResponse
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.datasource.quotes.QuotesDataSource
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.pagination.*
 import com.tangem.pagination.fetcher.LimitOffsetBatchFetcher
@@ -40,7 +40,7 @@ internal class DefaultMarketsTokenRepository(
     private val excludedBlockchains: ExcludedBlockchains,
     private val cacheRegistry: CacheRegistry,
     private val tokenExchangesStore: RuntimeStateStore<List<TokenMarketExchangesResponse.Exchange>>,
-    private val quotesRepository: QuotesRepository,
+    private val quotesDataSource: QuotesDataSource,
 ) : MarketsTokenRepository {
 
     private val tokenMarketInfoConverter: TokenMarketInfoConverter = TokenMarketInfoConverter(excludedBlockchains)
@@ -105,7 +105,7 @@ internal class DefaultMarketsTokenRepository(
         val tokenMarketsUpdateFetcher = MarketsBatchUpdateFetcher(
             marketsApi = marketsApi,
             analyticsEventHandler = analyticsEventHandler,
-            quotesRepository = quotesRepository,
+            quotesDataSource = quotesDataSource,
             onApiError = {
                 analyticsEventHandler.send(createListErrorEvent(it).toEvent())
             },
@@ -216,7 +216,7 @@ internal class DefaultMarketsTokenRepository(
         // There should be a method call to get full quotes for a token. Unfortunately, it is not implemented on
         // backend side. So, we have to use the existing method to get quotes for a token and then convert it to full
 
-        val result = quotesRepository.getQuotesSync(
+        val result = quotesDataSource.getQuotesSync(
             currenciesIds = setOf(tokenId),
             refresh = true,
         ).filterIsInstance<Quote.Value>().firstOrNull() ?: error("No quotes for token $tokenId")
