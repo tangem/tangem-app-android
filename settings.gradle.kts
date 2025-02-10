@@ -165,7 +165,7 @@ include(":features:swap:data")
 include(":features:swap:domain")
 include(":features:swap:domain:models")
 include(":features:swap:domain:api")
-include(":features:swap:presentation")
+include(":features:swap:impl")
 
 include(":features:tester:api")
 include(":features:tester:impl")
