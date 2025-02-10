@@ -17,7 +17,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -29,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -81,6 +85,7 @@ fun ActionButton(
     config: ActionButtonConfig,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
+    containerColor: Color = TangemTheme.colors.background.secondary,
 ) {
     ActionBaseButton(
         config = config,
@@ -97,6 +102,7 @@ fun ActionButton(
         },
         modifier = modifier,
         color = color,
+        containerColor = containerColor,
     )
 }
 
@@ -108,6 +114,7 @@ fun ActionBaseButton(
     content: @Composable (modifier: Modifier) -> Unit,
     modifier: Modifier = Modifier,
     color: Color = TangemTheme.colors.button.secondary,
+    containerColor: Color = TangemTheme.colors.background.secondary,
 ) {
     val context = LocalContext.current
     val backgroundColor by animateColorAsState(
@@ -119,6 +126,12 @@ fun ActionBaseButton(
         modifier = modifier
             .heightIn(min = 36.dp)
             .widthIn(min = 100.dp)
+            .drawWithContent {
+                drawContent()
+                if (config.showBadge) {
+                    drawBadge(containerColor = containerColor)
+                }
+            }
             .clip(shape)
             .combinedClickable(
                 enabled = config.enabled,
@@ -212,6 +225,20 @@ fun getTextColor(config: ActionButtonConfig): Color {
     }
 }
 
+private fun DrawScope.drawBadge(containerColor: Color) {
+    val width = size.width
+    drawCircle(
+        color = containerColor,
+        center = Offset(x = width - 2.dp.toPx(), y = 2.dp.toPx()),
+        radius = 5.dp.toPx(),
+    )
+    drawCircle(
+        color = TangemColorPalette.Azure,
+        center = Offset(x = width - 2.dp.toPx(), y = 2.dp.toPx()),
+        radius = 3.dp.toPx(),
+    )
+}
+
 @Preview(group = "RoundedActionButton", showBackground = true)
 @Preview(group = "RoundedActionButton", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
@@ -237,6 +264,7 @@ private class ActionStateProvider : CollectionPreviewParameterProvider<ActionBut
             iconResId = R.drawable.ic_arrow_up_24,
             enabled = true,
             onClick = {},
+            showBadge = true,
         ),
         ActionButtonConfig(
             text = TextReference.Str(value = "Dimmed"),
