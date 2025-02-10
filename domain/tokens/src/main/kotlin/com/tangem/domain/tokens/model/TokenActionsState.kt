@@ -26,7 +26,10 @@ data class TokenActionsState(
             val yield: Yield?,
         ) : ActionState()
 
-        data class Swap(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
+        data class Swap(
+            override val unavailabilityReason: ScenarioUnavailabilityReason,
+            val showBadge: Boolean,
+        ) : ActionState()
 
         data class Send(override val unavailabilityReason: ScenarioUnavailabilityReason) : ActionState()
 
