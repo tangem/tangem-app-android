@@ -36,6 +36,8 @@ import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionReque
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import org.json.JSONArray
+import org.json.JSONObject
 import timber.log.Timber
 import java.math.BigDecimal
 import com.tangem.core.analytics.models.AnalyticsParam as CoreAnalyticsParam
@@ -427,6 +429,9 @@ class WalletConnectSdkHelper {
         }
     }
 
+    /**
+     * Returns result of signing prepared to send in WC request
+     */
     suspend fun signTransaction(
         hashToSign: ByteArray,
         networkId: String,
@@ -465,7 +470,66 @@ class WalletConnectSdkHelper {
         }
     }
 
+    /**
+     * Returns result of signing prepared to send in WC request
+     */
+    suspend fun signTransactions(
+        hashesToSign: List<ByteArray>,
+        networkId: String,
+        type: TransactionType,
+        derivationPath: String?,
+        cardId: String?,
+    ): String? {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+        val wallet = getWalletManager(blockchain, derivationPath)?.wallet ?: return null
+        val sdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk
+
+        val signer = store.inject(DaggerGraphState::transactionSignerFactory).createTransactionSigner(
+            cardId = cardId,
+            sdk = sdk,
+            twinKey = null,
+        )
+
+        return when (val signingResult = signer.sign(hashesToSign, wallet.publicKey)) {
+            is CompletionResult.Failure -> {
+                Timber.e(signingResult.error.customMessage)
+                null
+            }
+            is CompletionResult.Success -> {
+                when (type) {
+                    TransactionType.SOLANA_TX -> {
+                        val result = signingResult.data.mapIndexed { index, bytes ->
+                            byteArrayOf(1) + bytes + hashesToSign[index]
+                        }
+                        getSolanaResultTxHashesString(result)
+                    }
+                }
+            }
+            else -> {
+                null
+            }
+        }
+    }
+
     private fun getSolanaResultString(signedHash: ByteArray) = "{ signature: \"${signedHash.encodeBase58()}\" }"
+
+    /**
+     * Build json object
+     * {
+     *   "transactions": [
+     *     "signed_tx_hash"
+     *   ]
+     * }
+     */
+    private fun getSolanaResultTxHashesString(signedHashes: List<ByteArray>): String {
+        val result = JSONObject()
+        val transactions = JSONArray()
+        signedHashes.forEach {
+            transactions.put(it.encodeBase64())
+        }
+        result.put("transactions", transactions)
+        return result.toString()
+    }
 
     private fun getBnbResultString(publicKey: String, signature: String) =
         "{\"signature\":\"$signature\",\"publicKey\":\"$publicKey\"}"
