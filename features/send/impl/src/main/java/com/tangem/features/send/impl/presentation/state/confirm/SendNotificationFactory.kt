@@ -211,8 +211,10 @@ internal class SendNotificationFactory(
             )
         }
         addTransactionLimitErrorNotification(
-            utxoLimit = currencyCheck.utxoAmountLimit,
-            cryptoCurrency = currency,
+            currencyCheck = currencyCheck,
+            sendingAmount = sendingAmount,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            feeCurrencyStatus = feeCryptoCurrencyStatusProvider(),
             feeValue = feeValue,
             onReduceClick = clickIntents::onAmountReduceToClick,
         )
