@@ -9,10 +9,10 @@ import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.api.markets.models.response.TokenMarketChartListResponse
+import com.tangem.datasource.quotes.QuotesDataSource
 import com.tangem.domain.markets.TokenMarket
 import com.tangem.domain.markets.TokenMarketUpdateRequest
 import com.tangem.domain.tokens.model.Quote
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.pagination.Batch
 import com.tangem.pagination.BatchUpdateFetcher
 import com.tangem.pagination.BatchUpdateResult
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 internal class MarketsBatchUpdateFetcher(
     private val marketsApi: TangemTechMarketsApi,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val quotesRepository: QuotesRepository,
+    private val quotesDataSource: QuotesDataSource,
     private val onApiError: (ApiResponseError) -> Unit,
 ) : BatchUpdateFetcher<Int, List<TokenMarket>, TokenMarketUpdateRequest> {
 
@@ -71,7 +71,7 @@ internal class MarketsBatchUpdateFetcher(
             is TokenMarketUpdateRequest.UpdateQuotes -> {
                 val quotesRes = retryOnError {
                     catchApiError(onApiError) {
-                        quotesRepository.getQuotesSync(
+                        quotesDataSource.getQuotesSync(
                             currenciesIds = idsToUpdate.map { it.second }.flatten().toSet(),
                             refresh = true,
                         )

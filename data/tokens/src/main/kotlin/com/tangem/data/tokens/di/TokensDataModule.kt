@@ -8,8 +8,8 @@ import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoLoader
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.network.NetworksStatusesStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.quote.QuotesStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.datasource.quotes.QuotesDataSource
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -51,19 +51,9 @@ internal object TokensDataModule {
 
     @Provides
     @Singleton
-    fun provideQuotesRepository(
-        tangemTechApi: TangemTechApi,
-        appPreferencesStore: AppPreferencesStore,
-        quotesStore: QuotesStore,
-        cacheRegistry: CacheRegistry,
-        dispatchers: CoroutineDispatcherProvider,
-    ): QuotesRepository {
+    fun provideQuotesRepository(quotesDataSource: QuotesDataSource): QuotesRepository {
         return DefaultQuotesRepository(
-            tangemTechApi = tangemTechApi,
-            appPreferencesStore = appPreferencesStore,
-            quotesStore = quotesStore,
-            cacheRegistry = cacheRegistry,
-            dispatchers = dispatchers,
+            quotesDataSource = quotesDataSource,
         )
     }
 

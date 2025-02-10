@@ -8,22 +8,13 @@ plugins {
 }
 
 android {
-    namespace = "com.tangem.data.tokens"
+    namespace = "com.tangem.datasource.quotes"
 }
 
 dependencies {
-    /** DataSource */
-    implementation(projects.datasource.quotes)
 
     /** Project - Domain */
-    implementation(projects.domain.core)
-    implementation(projects.domain.demo)
-    implementation(projects.domain.models)
-    implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
-    implementation(projects.domain.txhistory.models)
-    implementation(projects.domain.wallets.models)
-    implementation(projects.domain.staking.models)
 
     /** Project - Data */
     implementation(projects.core.datasource)
@@ -47,6 +38,7 @@ dependencies {
 
     /** Other */
     implementation(deps.kotlin.coroutines)
+    implementation(deps.arrow.core)
     implementation(deps.moshi.kotlin)
     implementation(deps.jodatime)
     implementation(deps.timber)

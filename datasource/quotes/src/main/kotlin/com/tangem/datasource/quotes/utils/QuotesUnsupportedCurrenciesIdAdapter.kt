@@ -1,4 +1,4 @@
-package com.tangem.data.tokens.utils
+package com.tangem.datasource.quotes.utils
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsCoinIds
