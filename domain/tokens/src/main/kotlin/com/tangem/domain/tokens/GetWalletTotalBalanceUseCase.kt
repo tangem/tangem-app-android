@@ -21,6 +21,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transformLatest
+import timber.log.Timber
 
 class GetWalletTotalBalanceUseCase(
     private val currenciesRepository: CurrenciesRepository,
@@ -42,7 +43,14 @@ class GetWalletTotalBalanceUseCase(
         return combine(flows) { balances ->
             lce {
                 balances.fold(mutableMapOf()) { acc, (userWalletId, maybeBalance) ->
-                    val balance = maybeBalance.bindOrNull() ?: TotalFiatBalance.Loading
+                    val balance = maybeBalance.fold(
+                        ifLoading = { TotalFiatBalance.Loading },
+                        ifContent = { it },
+                        ifError = {
+                            Timber.e("failed to load balances with error: $it")
+                            TotalFiatBalance.Failed
+                        },
+                    )
 
                     isLoading.update { it || balance is TotalFiatBalance.Loading }
 
