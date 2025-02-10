@@ -13,6 +13,10 @@ android {
 }
 
 dependencies {
+    /** DataSource */
+    implementation(projects.datasource.quotes)
+
+    /** Core */
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
     implementation(projects.core.pagination)
@@ -20,14 +24,16 @@ dependencies {
     implementation(projects.core.analytics.models)
     implementation(projects.core.configToggles)
 
+    /** Domain */
     implementation(projects.domain.legacy)
     implementation(projects.domain.markets)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
-    implementation(projects.domain.tokens)
 
+    /** Data */
     implementation(projects.data.common)
 
+    /** Libs */
     implementation(projects.libs.blockchainSdk)
 
     // region DI
