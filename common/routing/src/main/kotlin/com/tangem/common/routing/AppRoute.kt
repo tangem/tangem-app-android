@@ -341,4 +341,12 @@ sealed class AppRoute(val path: String) : Route {
             AddBackup, // continue backup process for existing wallet 1
         }
     }
+
+    @Serializable
+    data class Stories(
+        val storyId: String,
+        val nextScreen: AppRoute,
+    ) : AppRoute(path = "/stories$storyId"), RouteBundleParams {
+        override fun getBundle(): Bundle = bundle(serializer())
+    }
 }
