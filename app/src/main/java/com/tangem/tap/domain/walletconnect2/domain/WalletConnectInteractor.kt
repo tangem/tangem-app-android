@@ -315,7 +315,7 @@ class WalletConnectInteractor(
         if (currentRequest == null || request.topic != currentRequest.topic) return
 
         val networkId = blockchainHelper.chainIdToNetworkIdOrNull(currentRequest.chainId.orEmpty()) ?: return
-        val signedHash = when (request) {
+        val signingResultData = when (request) {
             is WcPreparedRequest.BnbTransaction -> sdkHelper.signBnbTransaction(
                 data = request.preparedRequestData.data.data,
                 networkId = networkId,
@@ -333,8 +333,15 @@ class WalletConnectInteractor(
                 derivationPath = request.derivationPath,
                 cardId = cardId,
             )
-            is WcPreparedRequest.SignTransaction -> sdkHelper.signTransaction(
+            is WcPreparedRequest.SolanaSignTransaction -> sdkHelper.signTransaction(
                 hashToSign = request.preparedRequestData.hashToSign,
+                networkId = networkId,
+                type = request.preparedRequestData.type,
+                derivationPath = request.derivationPath,
+                cardId = cardId,
+            )
+            is WcPreparedRequest.SolanaSignMultipleTransactions -> sdkHelper.signTransactions(
+                hashesToSign = request.preparedRequestData.hashesToSign,
                 networkId = networkId,
                 type = request.preparedRequestData.type,
                 derivationPath = request.derivationPath,
@@ -349,12 +356,12 @@ class WalletConnectInteractor(
             method = currentRequest.method,
         )
 
-        if (signedHash == null) {
+        if (signingResultData == null) {
             walletConnectRepository.rejectRequest(requestData, WalletConnectError.SigningError)
         } else {
             walletConnectRepository.sendRequest(
                 requestData = requestData,
-                result = signedHash,
+                result = signingResultData,
             )
         }
     }
