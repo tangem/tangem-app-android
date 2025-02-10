@@ -9,6 +9,6 @@ internal data class RenameWalletUM(
     val walletNameValue: TextFieldValue,
     val onValueChange: (value: TextFieldValue) -> Unit,
     val isConfirmEnabled: Boolean,
-    val onConfirm: () -> Unit,
+    val onConfirmClick: () -> Unit,
     val error: TextReference?,
 )
