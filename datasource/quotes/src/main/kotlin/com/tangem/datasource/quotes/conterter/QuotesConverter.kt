@@ -1,4 +1,4 @@
-package com.tangem.data.tokens.utils
+package com.tangem.datasource.quotes.conterter
 
 import com.tangem.datasource.local.quote.model.StoredQuote
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.converter.Converter
 import java.math.BigDecimal
 
-typealias QuotesConverterValue = Pair<Set<CryptoCurrency.RawID>, Set<StoredQuote>>
+internal typealias QuotesConverterValue = Pair<Set<CryptoCurrency.RawID>, Set<StoredQuote>>
 
 internal class QuotesConverter : Converter<QuotesConverterValue, Set<Quote>> {
 

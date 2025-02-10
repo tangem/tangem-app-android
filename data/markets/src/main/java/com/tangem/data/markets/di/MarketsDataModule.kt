@@ -7,8 +7,8 @@ import com.tangem.data.markets.DefaultMarketsTokenRepository
 import com.tangem.datasource.api.markets.TangemTechMarketsApi
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.datasource.quotes.QuotesDataSource
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -29,7 +29,7 @@ internal object MarketsDataModule {
         analyticsEventHandler: AnalyticsEventHandler,
         cacheRegistry: CacheRegistry,
         excludedBlockchains: ExcludedBlockchains,
-        quotesRepository: QuotesRepository,
+        quotesDataSource: QuotesDataSource,
     ): MarketsTokenRepository {
         return DefaultMarketsTokenRepository(
             marketsApi = marketsApi,
@@ -39,7 +39,7 @@ internal object MarketsDataModule {
             cacheRegistry = cacheRegistry,
             tokenExchangesStore = RuntimeStateStore(defaultValue = emptyList()),
             excludedBlockchains = excludedBlockchains,
-            quotesRepository = quotesRepository,
+            quotesDataSource = quotesDataSource,
         )
     }
 }
