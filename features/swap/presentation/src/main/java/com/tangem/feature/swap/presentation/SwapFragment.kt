@@ -6,13 +6,13 @@ import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
+import com.tangem.common.ui.swapStoriesScreen.SwapStoriesScreen
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.swap.router.SwapNavScreen
 import com.tangem.feature.swap.ui.SwapScreen
 import com.tangem.feature.swap.ui.SwapSelectTokenScreen
-import com.tangem.feature.swap.ui.SwapStoriesScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.feature.swap.viewmodels.SwapViewModel
 import dagger.hilt.android.AndroidEntryPoint
