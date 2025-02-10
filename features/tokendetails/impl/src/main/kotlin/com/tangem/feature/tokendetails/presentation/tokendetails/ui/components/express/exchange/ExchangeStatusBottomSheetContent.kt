@@ -3,6 +3,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components.
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -26,7 +28,11 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.E
 
 @Composable
 internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM) {
-    Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .verticalScroll(rememberScrollState()),
+    ) {
         SpacerH10()
         Text(
             text = stringResourceSafe(id = R.string.express_exchange_status_title),
