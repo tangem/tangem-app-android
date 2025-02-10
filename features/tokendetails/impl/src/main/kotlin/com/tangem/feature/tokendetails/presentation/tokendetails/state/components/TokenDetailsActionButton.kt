@@ -83,12 +83,17 @@ internal sealed class TokenDetailsActionButton(val config: ActionButtonConfig) {
      * @property dimContent determines whether the button content will be dimmed
      * @property onClick lambda be invoked when Swap button is clicked
      */
-    data class Swap(val dimContent: Boolean, override val onClick: () -> Unit) : TokenDetailsActionButton(
+    data class Swap(
+        val dimContent: Boolean,
+        val showBadge: Boolean,
+        override val onClick: () -> Unit,
+    ) : TokenDetailsActionButton(
         config = ActionButtonConfig(
             text = TextReference.Res(id = R.string.swapping_swap_action),
             iconResId = R.drawable.ic_exchange_vertical_24,
             onClick = onClick,
             dimContent = dimContent,
+            showBadge = showBadge,
         ),
     )
 }
