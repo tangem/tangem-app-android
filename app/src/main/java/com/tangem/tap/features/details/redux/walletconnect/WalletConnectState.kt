@@ -116,7 +116,11 @@ sealed class WalletConnectDialog : StateDialog {
     ) : WalletConnectDialog()
 
     data class SignTransactionDialog(
-        val data: WcPreparedRequest.SignTransaction,
+        val data: WcPreparedRequest.SolanaSignTransaction,
+    ) : WalletConnectDialog()
+
+    data class SignTransactionsDialog(
+        val data: WcPreparedRequest.SolanaSignMultipleTransactions,
     ) : WalletConnectDialog()
 
     data class PairConnectErrorDialog(val error: Throwable) : WalletConnectDialog()
