@@ -1,10 +1,12 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -227,6 +229,8 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
+        promoRepository: PromoRepository,
+        swapFeatureToggles: SwapFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
     ): GetCryptoCurrencyActionsUseCase {
         return GetCryptoCurrencyActionsUseCase(
@@ -236,6 +240,8 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
+            promoRepository = promoRepository,
+            swapFeatureToggles = swapFeatureToggles,
             dispatchers = dispatchers,
         )
     }
