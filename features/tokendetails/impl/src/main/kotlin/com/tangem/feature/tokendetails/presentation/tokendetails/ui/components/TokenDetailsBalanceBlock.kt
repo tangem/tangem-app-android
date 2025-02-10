@@ -94,6 +94,7 @@ internal fun TokenDetailsBalanceBlock(
                         end.linkTo(anchor = parent.end)
                         bottom.linkTo(anchor = parent.bottom, margin = spacing12)
                     },
+                containerColor = TangemTheme.colors.background.primary,
                 contentPadding = PaddingValues(horizontal = TangemTheme.dimens.spacing12),
             )
         }
