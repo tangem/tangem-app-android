@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.visa
 
+import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.CardWallet
 import com.tangem.common.core.CardSession
@@ -10,6 +11,7 @@ import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.common.visa.VisaUtilities
+import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -43,7 +45,12 @@ internal class VisaCardScanHandler @Inject constructor(
             return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
         }
 
-        val visaActivationRepository = visaActivationRepositoryFactory.create(card.cardId)
+        val visaActivationRepository = visaActivationRepositoryFactory.create(
+            VisaCardId(
+                cardId = card.cardId,
+                cardPublicKey = card.cardPublicKey.toHexString(),
+            ),
+        )
 
         val context = SessionContext(
             visaActivationRepository = visaActivationRepository,
@@ -53,7 +60,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: run {
             val activationInput =
-                VisaActivationInput(card.cardId, card.cardPublicKey, card.isAccessCodeSet)
+                VisaActivationInput(card.cardId, card.cardPublicKey.toHexString(), card.isAccessCodeSet)
             val activationStatus = VisaCardActivationStatus.NotStartedActivation(activationInput)
             return CompletionResult.Success(activationStatus)
         }
@@ -119,14 +126,21 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }
 
+        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnVisaCurve(extendedPublicKey.publicKey)
+            .getOrElse {
+                return CompletionResult.Failure(
+                    TangemSdkError.Underlying("Cannot generate address on Visa curve"),
+                )
+            }
+
         Timber.i("Requesting challenge for wallet authorization")
         val challengeResponse = runCatching {
-            visaAuthRepository.getCustomerWalletAuthChallenge(
-                cardId = card.cardId,
-                walletPublicKey = extendedPublicKey.publicKey.toHexString(),
-            )
+            visaAuthRepository.getCardWalletAuthChallenge(cardWalletAddress = walletAddress.value)
         }.getOrElse {
-            return CompletionResult.Failure(TangemSdkError.Underlying(it.message ?: "Unknown error"))
+            Timber.i(
+                "Failed to get Access token for Wallet public key authoziation. Authorizing using Card Pub key",
+            )
+            return handleCardAuthorization()
         }
 
         val signChallengeResult = signChallengeWithWallet(
@@ -161,11 +175,6 @@ internal class VisaCardScanHandler @Inject constructor(
             )
             return handleCardAuthorization()
         }
-
-        visaAuthTokenStorage.store(
-            cardId = cardId,
-            tokens = authorizationTokensResponse,
-        )
 
         Timber.i("Authorized using Wallet public key successfully")
 
@@ -240,7 +249,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val activationInput = VisaActivationInput(
             cardId = card.cardId,
-            cardPublicKey = card.cardPublicKey,
+            cardPublicKey = card.cardPublicKey.toHexString(),
             isAccessCodeSet = card.isAccessCodeSet,
         )
 
