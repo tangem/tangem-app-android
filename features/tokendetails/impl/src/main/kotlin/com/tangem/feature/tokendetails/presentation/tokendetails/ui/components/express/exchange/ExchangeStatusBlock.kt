@@ -25,6 +25,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
+import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
 import com.tangem.features.tokendetails.impl.R
 import kotlinx.collections.immutable.ImmutableList
@@ -117,8 +118,10 @@ private fun ExchangeStatusStep(
                             isDone = false,
                         )
                     }
-                    state.status == ExchangeStatus.Failed || state.status == ExchangeStatus.Refunded ||
-                        state.status == ExchangeStatus.Paused -> {
+                    state.status.isFailed() ||
+                        state.status == ExchangeStatus.Refunded ||
+                        state.status == ExchangeStatus.Paused
+                    -> {
                         ExchangeStep(
                             iconRes = R.drawable.ic_close_24,
                             color = TangemTheme.colors.icon.warning,
@@ -155,7 +158,7 @@ private fun ExchangeStatusStepText(stepStatus: ExchangeStatusState) {
         status == ExchangeStatus.Cancelled || status == ExchangeStatus.Refunded || status == ExchangeStatus.Paused -> {
             TangemTheme.colors.icon.warning
         }
-        status == ExchangeStatus.Failed && !stepStatus.isDone -> TangemTheme.colors.icon.warning
+        status.isFailed() && !stepStatus.isDone -> TangemTheme.colors.icon.warning
         status == ExchangeStatus.Verifying && !stepStatus.isDone -> TangemTheme.colors.icon.attention
         stepStatus.isDone -> TangemTheme.colors.text.primary1
         !stepStatus.isActive -> TangemTheme.colors.text.disabled
