@@ -36,24 +36,22 @@ internal class DefaultVisaAuthRepository @Inject constructor(
             )
         }
 
-    override suspend fun getCustomerWalletAuthChallenge(
-        cardId: String,
-        walletPublicKey: String,
-    ): VisaAuthChallenge.Wallet = withContext(dispatchers.io) {
-        // val response = visaAuthApi.generateNonceByWalletAddress(
-        //     customerId = cardId,
-        //     customerWalletAddress = walletPublicKey,
-        // )
-        //
-        // VisaAuthChallenge.Wallet(
-        //     challenge = response.nonce,
-        //     session = VisaAuthSession(response.sessionId),
-        // )
-        VisaAuthChallenge.Wallet(
-            challenge = CryptoUtils.generateRandomBytes(length = 32).toHexString(),
-            session = VisaAuthSession("session"),
-        )
-    }
+    override suspend fun getCardWalletAuthChallenge(cardWalletAddress: String): VisaAuthChallenge.Wallet =
+        withContext(dispatchers.io) {
+            // val response = visaAuthApi.generateNonceByWalletAddress(
+            //     customerId = cardId,
+            //     customerWalletAddress = walletPublicKey,
+            // )
+            //
+            // VisaAuthChallenge.Wallet(
+            //     challenge = response.nonce,
+            //     session = VisaAuthSession(response.sessionId),
+            // )
+            VisaAuthChallenge.Wallet(
+                challenge = CryptoUtils.generateRandomBytes(length = 32).toHexString(),
+                session = VisaAuthSession("session"),
+            )
+        }
 
     override suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): VisaAuthTokens =
         withContext(dispatchers.io) {
