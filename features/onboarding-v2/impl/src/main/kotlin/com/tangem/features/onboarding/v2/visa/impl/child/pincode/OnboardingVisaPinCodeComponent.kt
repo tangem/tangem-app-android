@@ -11,6 +11,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.security.DisableScreenshotsDisposableEffect
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaActivationOrderInfo
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.model.OnboardingVisaPinCodeModel
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.OnboardingVisaPinCode
@@ -46,7 +47,7 @@ internal class OnboardingVisaPinCodeComponent(
 
     data class Config(
         val scanResponse: ScanResponse,
-        val activationOrderId: String,
+        val activationOrderInfo: VisaActivationOrderInfo,
     )
 
     data class Params(
