@@ -1,5 +1,8 @@
 package com.tangem.domain.visa.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class VisaDataToSignByCardWallet(
     val request: VisaCardWalletDataToSignRequest,
     val hashToSign: String,
