@@ -83,4 +83,8 @@ enum class ExchangeStatus {
 
     val isAutoDisposable: Boolean
         get() = this == Finished
+
+    companion object {
+        fun ExchangeStatus?.isFailed(): Boolean = this == Failed || this == TxFailed
+    }
 }
