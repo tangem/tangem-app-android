@@ -35,9 +35,11 @@ internal class StoriesModel @Inject constructor(
         initStories()
     }
 
-    private fun openScreen() {
+    private fun openScreen(hideStories: Boolean = true) {
         modelScope.launch {
-            shouldShowSwapStoriesUseCase.neverToShow()
+            if (hideStories) {
+                shouldShowSwapStoriesUseCase.neverToShow()
+            }
             router.pop()
             router.push(params.nextScreen)
         }
@@ -48,7 +50,7 @@ internal class StoriesModel @Inject constructor(
             getStoryContentUseCase(params.storyId).fold(
                 ifLeft = {
                     Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
-                    openScreen() // Fallback to target screen
+                    openScreen(hideStories = false) // Fallback to target screen
                 },
                 ifRight = { swapStory ->
                     _state.update {
