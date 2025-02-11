@@ -126,7 +126,13 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaInProgressComponent.Params(
                     childParams = childParams,
-                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.PinCode) },
+                    onDone = {
+                        model.stackNavigation.push(
+                            OnboardingVisaRoute.PinCode(
+                                activationOrderId = "TODO", // TODO [REDACTED_TASK_KEY] [Visa] In progress screen after pin code
+                            ),
+                        )
+                    },
                 ),
             )
             is OnboardingVisaRoute.OtherWalletApproveOption -> OnboardingVisaOtherWalletComponent(
@@ -137,13 +143,20 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
-                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.PinCode) },
+                    onDone = {
+                        model.stackNavigation.push(
+                            OnboardingVisaRoute.PinCode(
+                                activationOrderId = route.visaDataForApprove.dataToSign.request.orderId,
+                            ),
+                        )
+                    },
                 ),
             )
-            OnboardingVisaRoute.PinCode -> OnboardingVisaPinCodeComponent(
+            is OnboardingVisaRoute.PinCode -> OnboardingVisaPinCodeComponent(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaPinCodeComponent.Config(
                     scanResponse = model.currentScanResponse.value,
+                    activationOrderId = route.activationOrderId,
                 ),
                 params = OnboardingVisaPinCodeComponent.Params(
                     childParams = childParams,
