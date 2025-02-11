@@ -9,6 +9,7 @@ import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.common.util.derivationStyleProvider
@@ -18,16 +19,17 @@ import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility.findKeyWithoutDe
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.visa.model.VisaActivationError
 import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
+import com.tangem.domain.visa.model.sign
 import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.sign.SignHashCommand
-import com.tangem.operations.sign.SignHashResponse
 
 class VisaCustomerWalletApproveTask(
     private val visaDataForApprove: VisaDataForApprove,
-) : CardSessionRunnable<SignHashResponse> {
+) : CardSessionRunnable<VisaSignedDataByCustomerWallet> {
 
-    override fun run(session: CardSession, callback: CompletionCallback<SignHashResponse>) {
+    override fun run(session: CardSession, callback: CompletionCallback<VisaSignedDataByCustomerWallet>) {
         val card = session.environment.card ?: run {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return
@@ -54,7 +56,11 @@ class VisaCustomerWalletApproveTask(
         }
     }
 
-    private fun proceedApprove(card: Card, session: CardSession, callback: CompletionCallback<SignHashResponse>) {
+    private fun proceedApprove(
+        card: Card,
+        session: CardSession,
+        callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
+    ) {
         val cardDTO = CardDTO(card)
 
         val derivationStyle = cardDTO.derivationStyleProvider.getDerivationStyle() ?: run {
@@ -108,7 +114,7 @@ class VisaCustomerWalletApproveTask(
         extendedPublicKey: ExtendedPublicKey,
         derivationPath: DerivationPath,
         session: CardSession,
-        callback: CompletionCallback<SignHashResponse>,
+        callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
         val validationResult = VisaWalletPublicKeyUtility.validateExtendedPublicKey(
             targetAddress = visaDataForApprove.targetAddress,
@@ -131,7 +137,7 @@ class VisaCustomerWalletApproveTask(
     private fun proceedApproveWithLegacyCard(
         card: Card,
         session: CardSession,
-        callback: CompletionCallback<SignHashResponse>,
+        callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
         val publicKey = findKeyWithoutDerivation(
             targetAddress = visaDataForApprove.targetAddress,
@@ -153,10 +159,10 @@ class VisaCustomerWalletApproveTask(
         targetWalletPublicKey: ByteArray,
         derivationPath: DerivationPath?,
         session: CardSession,
-        callback: CompletionCallback<SignHashResponse>,
+        callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
         val signTask = SignHashCommand(
-            hash = visaDataForApprove.approveHash.hexToBytes(),
+            hash = visaDataForApprove.dataToSign.hashToSign.hexToBytes(),
             walletPublicKey = targetWalletPublicKey,
             derivationPath = derivationPath,
         )
@@ -165,9 +171,12 @@ class VisaCustomerWalletApproveTask(
             when (result) {
                 is CompletionResult.Success -> {
                     scanCard(
-                        signHashResponse = result.data,
                         session = session,
                         callback = callback,
+                        signedData = visaDataForApprove.dataToSign.sign(
+                            signature = result.data.signature.toHexString(),
+                            customerWalletAddress = visaDataForApprove.targetAddress,
+                        ),
                     )
                 }
                 is CompletionResult.Failure -> {
@@ -178,15 +187,15 @@ class VisaCustomerWalletApproveTask(
     }
 
     private fun scanCard(
-        signHashResponse: SignHashResponse,
+        signedData: VisaSignedDataByCustomerWallet,
         session: CardSession,
-        callback: CompletionCallback<SignHashResponse>,
+        callback: CompletionCallback<VisaSignedDataByCustomerWallet>,
     ) {
         val scanTask = ScanTask()
         scanTask.run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    callback(CompletionResult.Success(signHashResponse))
+                    callback(CompletionResult.Success(signedData))
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
