@@ -7,17 +7,14 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.domain.common.visa.VisaUtilities
-import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
-import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
-import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
+import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -37,7 +34,6 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     @Suppress("UnusedPrivateMember")
     private val tangemSdkManager: TangemSdkManager,
     private val visaAuthRepository: VisaAuthRepository,
-    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     private val params: OnboardingVisaAccessCodeComponent.Config = paramsContainer.require()
@@ -55,7 +51,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()
     val onBack = MutableSharedFlow<Unit>()
-    val onDone = MutableSharedFlow<OnboardingVisaAccessCodeComponent.DoneEvent>()
+    val onDone = MutableSharedFlow<ActivationReadyEvent>()
 
     fun onBack() {
         if (uiState.value.buttonLoading) return
@@ -166,59 +162,23 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                 return@launch
             }
 
-            // load data to sign by customer wallet for the next step
-            val dataToSign = runCatching {
-                visaActivationRepository.getCustomerWalletAcceptanceData(
-                    VisaCustomerWalletDataToSignRequest(
-                        orderId = result.data.signedActivationData.dataToSign.request.orderId,
-                        cardWalletAddress = result.data.signedActivationData.cardWalletAddress,
-                    ),
-                )
-            }.getOrElse {
-                loading(false)
-                // TODO show alert
-                return@launch
-            }
-
             val targetAddress = result.data.signedActivationData.dataToSign.request.customerWalletAddress
-            val foundCardId = tryToFindExistingWalletCardId(targetAddress)
 
             modelScope.launch {
                 onDone.emit(
-                    OnboardingVisaAccessCodeComponent.DoneEvent(
-                        visaDataForApprove = VisaDataForApprove(
-                            targetAddress = targetAddress,
-                            customerWalletCardId = foundCardId,
-                            dataToSign = dataToSign,
+                    ActivationReadyEvent(
+                        customerWalletDataToSignRequest = VisaCustomerWalletDataToSignRequest(
+                            orderId = result.data.signedActivationData.dataToSign.request.orderId,
+                            cardWalletAddress = result.data.signedActivationData.cardWalletAddress,
                         ),
-                        walletFound = foundCardId != null,
                         newScanResponse = params.scanResponse.copy(
                             card = result.data.newCardDTO,
                         ),
+                        customerWalletTargetAddress = targetAddress,
                     ),
                 )
             }
         }
-    }
-
-    private fun tryToFindExistingWalletCardId(targetAddress: String): String? {
-        val wallets = getWalletsUseCase.invokeSync().filter { it.isLocked.not() }
-
-        return wallets.firstOrNull { wallet ->
-            wallet.scanResponse.card.wallets.any {
-                val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false
-
-                VisaWalletPublicKeyUtility.validateExtendedPublicKey(
-                    targetAddress = targetAddress,
-                    extendedPublicKey = derivedKey,
-                ).onLeft {
-                    return@any VisaWalletPublicKeyUtility.findKeyWithoutDerivation(
-                        targetAddress = targetAddress,
-                        card = wallet.scanResponse.card,
-                    ).isRight()
-                }.isRight()
-            }
-        }?.cardId
     }
 
     private fun loading(state: Boolean) {
