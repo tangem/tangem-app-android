@@ -7,6 +7,7 @@ import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.visa.model.VisaCardId
+import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.OnboardingVisaApproveComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.ui.state.OnboardingVisaApproveUM
@@ -51,8 +52,20 @@ internal class OnboardingVisaApproveModel @Inject constructor(
         loading(true)
 
         modelScope.launch {
+            val dataToSign = runCatching {
+                visaActivationRepository.getCustomerWalletAcceptanceData(params.preparationDataForApprove.request)
+            }.getOrElse {
+                loading(false)
+                // TODO show dialog
+                return@launch
+            }
+
             val result = tangemSdkManager.visaCustomerWalletApprove(
-                visaDataForApprove = params.visaDataForApprove,
+                visaDataForApprove = VisaDataForApprove(
+                    customerWalletCardId = params.customerWalletCardId,
+                    targetAddress = params.preparationDataForApprove.customerWalletAddress,
+                    dataToSign = dataToSign,
+                ),
             ) as? CompletionResult.Success ?: run {
                 loading(false)
                 // TODO show dialog
