@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.blockchain.common.address.Address
+import com.tangem.blockchain.common.address.AddressType
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 
@@ -28,19 +29,7 @@ object VisaWalletPublicKeyUtility {
         wallet.publicKey
     }
 
-    private fun findWalletOnVisaCurve(card: CardDTO): Either<Error, CardDTO.Wallet> = either {
-        card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: raise(Error.MissingWalletOnTargetCurve)
-    }
-
-    private fun validatePublicKey(targetAddress: String, publicKey: ByteArray): Either<Error, Unit> = either {
-        val address = generateAddressOnVisaCurve(publicKey).bind()
-
-        if (address.value != targetAddress) {
-            raise(Error.AddressNotMatched)
-        }
-    }
-
-    private fun generateAddressOnVisaCurve(walletPublicKey: ByteArray): Either<Error, Address> = either {
+    fun generateAddressOnVisaCurve(walletPublicKey: ByteArray): Either<Error, Address> = either {
         val addresses = catch(
             block = {
                 VisaUtilities.visaBlockchain.makeAddresses(
@@ -52,7 +41,19 @@ object VisaWalletPublicKeyUtility {
             catch = { raise(Error.FailedToCreateAddress) },
         )
 
-        addresses.firstOrNull() ?: raise(Error.FailedToCreateAddress)
+        addresses.firstOrNull { it.type == AddressType.Default } ?: raise(Error.FailedToCreateAddress)
+    }
+
+    private fun findWalletOnVisaCurve(card: CardDTO): Either<Error, CardDTO.Wallet> = either {
+        card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: raise(Error.MissingWalletOnTargetCurve)
+    }
+
+    private fun validatePublicKey(targetAddress: String, publicKey: ByteArray): Either<Error, Unit> = either {
+        val address = generateAddressOnVisaCurve(publicKey).bind()
+
+        if (address.value != targetAddress) {
+            raise(Error.AddressNotMatched)
+        }
     }
 
     enum class Error(val message: String) {
