@@ -10,12 +10,16 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.model.VisaCardId
+import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
 import com.tangem.sdk.api.TangemSdkManager
+import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +32,7 @@ import javax.inject.Inject
 @ComponentScoped
 internal class OnboardingVisaAccessCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    visaActivationRepositoryFactory: VisaActivationRepository.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
     @Suppress("UnusedPrivateMember")
     private val tangemSdkManager: TangemSdkManager,
@@ -36,11 +41,18 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
 ) : Model() {
 
     private val params: OnboardingVisaAccessCodeComponent.Config = paramsContainer.require()
+    private val visaActivationRepository = visaActivationRepositoryFactory.create(
+        VisaCardId(
+            cardId = params.scanResponse.card.cardId,
+            cardPublicKey = params.scanResponse.card.cardPublicKey.toHexString(),
+        ),
+    )
     private val activationStatus =
         params.scanResponse.visaCardActivationStatus as? VisaCardActivationStatus.NotStartedActivation
             ?: error("Visa activation status is not set or incorrect for this step")
 
     private val _uiState = MutableStateFlow(getInitialState())
+
     val uiState = _uiState.asStateFlow()
     val onBack = MutableSharedFlow<Unit>()
     val onDone = MutableSharedFlow<OnboardingVisaAccessCodeComponent.DoneEvent>()
@@ -126,46 +138,65 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
             val challengeToSign = runCatching {
                 visaAuthRepository.getCardAuthChallenge(
                     cardId = activationStatus.activationInput.cardId,
-                    cardPublicKey = activationStatus.activationInput.cardPublicKey.toHexString(),
+                    cardPublicKey = activationStatus.activationInput.cardPublicKey,
                 )
             }.getOrElse {
                 loading(false)
-                // show alert
+                // TODO show alert
                 return@launch
             }
 
             val result = tangemSdkManager.activateVisaCard(
-                accessCode = accessCode,
-                challengeToSign = challengeToSign,
+                mode = VisaCardActivationTaskMode.Full(
+                    accessCode = accessCode,
+                    authorizationChallenge = challengeToSign,
+                ),
                 activationInput = activationStatus.activationInput,
-            )
-            //
-            when (result) {
-                is CompletionResult.Success -> {
-                    // TODO load approve data from backend
-                    val targetAddress = "x9F65354e595284956599F2892fA4A4a87653D6E6"
-                    val foundCardId = tryToFindExistingWalletCardId(targetAddress)
+            ) as? CompletionResult.Success ?: run {
+                loading(false)
+                // TODO show alert
+                return@launch
+            }
 
-                    modelScope.launch {
-                        onDone.emit(
-                            OnboardingVisaAccessCodeComponent.DoneEvent(
-                                visaDataForApprove = VisaDataForApprove(
-                                    targetAddress = targetAddress,
-                                    approveHash = "48b55c482123a10ad9022f9f4c5dd95c",
-                                    customerWalletCardId = foundCardId,
-                                ),
-                                walletFound = foundCardId != null,
-                                newScanResponse = params.scanResponse.copy(
-                                    card = result.data.newCardDTO,
-                                ),
-                            ),
-                        )
-                    }
-                }
-                is CompletionResult.Failure -> {
-                    loading(false)
-                    // show alert
-                }
+            runCatching {
+                visaActivationRepository.activateCard(result.data.signedActivationData)
+            }.onFailure {
+                loading(false)
+                // TODO show alert
+                return@launch
+            }
+
+            // load data to sign by customer wallet for the next step
+            val dataToSign = runCatching {
+                visaActivationRepository.getCustomerWalletAcceptanceData(
+                    VisaCustomerWalletDataToSignRequest(
+                        orderId = result.data.signedActivationData.dataToSign.request.orderId,
+                        cardWalletAddress = result.data.signedActivationData.cardWalletAddress,
+                    ),
+                )
+            }.getOrElse {
+                loading(false)
+                // TODO show alert
+                return@launch
+            }
+
+            val targetAddress = result.data.signedActivationData.dataToSign.request.customerWalletAddress
+            val foundCardId = tryToFindExistingWalletCardId(targetAddress)
+
+            modelScope.launch {
+                onDone.emit(
+                    OnboardingVisaAccessCodeComponent.DoneEvent(
+                        visaDataForApprove = VisaDataForApprove(
+                            targetAddress = targetAddress,
+                            customerWalletCardId = foundCardId,
+                            dataToSign = dataToSign,
+                        ),
+                        walletFound = foundCardId != null,
+                        newScanResponse = params.scanResponse.copy(
+                            card = result.data.newCardDTO,
+                        ),
+                    ),
+                )
             }
         }
     }
