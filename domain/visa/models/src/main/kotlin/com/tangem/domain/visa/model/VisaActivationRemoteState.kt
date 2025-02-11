@@ -13,14 +13,16 @@ sealed class VisaActivationRemoteState {
 
     @Serializable
     data class CustomerWalletSignatureRequired(
-        val request: VisaCardWalletDataToSignRequest,
+        val activationOrderInfo: VisaActivationOrderInfo,
     ) : VisaActivationRemoteState()
 
     @Serializable
     data object PaymentAccountDeploying : VisaActivationRemoteState()
 
     @Serializable
-    data object WaitingPinCode : VisaActivationRemoteState()
+    data class WaitingPinCode(
+        val activationOrderInfo: VisaActivationOrderInfo,
+    ) : VisaActivationRemoteState()
 
     @Serializable
     data object WaitingForActivationFinishing : VisaActivationRemoteState()
@@ -39,7 +41,8 @@ sealed class VisaActivationRemoteState {
 @Suppress("ClassNaming")
 class VisaActivationRemoteState_Json(
     @Json(name = "type") val type: VisaActivationRemoteState_Type,
-    @Json(name = "request") val request: VisaCardWalletDataToSignRequest? = null,
+    @Json(name = "requestCardWallet") val requestCardWallet: VisaCardWalletDataToSignRequest? = null,
+    @Json(name = "activationOrderInfo") val activationOrderInfo: VisaActivationOrderInfo? = null,
 )
 
 @Suppress("ClassNaming")
@@ -62,11 +65,12 @@ class VisaActivationRemoteState_JsonAdapter {
     fun fromJson(value: VisaActivationRemoteState_Json): VisaActivationRemoteState {
         return when (value.type) {
             VisaActivationRemoteState_Type.CardWalletSignatureRequired ->
-                VisaActivationRemoteState.CardWalletSignatureRequired(value.request!!)
+                VisaActivationRemoteState.CardWalletSignatureRequired(value.requestCardWallet!!)
             VisaActivationRemoteState_Type.CustomerWalletSignatureRequired ->
-                VisaActivationRemoteState.CustomerWalletSignatureRequired(value.request!!)
+                VisaActivationRemoteState.CustomerWalletSignatureRequired(value.activationOrderInfo!!)
             VisaActivationRemoteState_Type.PaymentAccountDeploying -> VisaActivationRemoteState.PaymentAccountDeploying
-            VisaActivationRemoteState_Type.WaitingPinCode -> VisaActivationRemoteState.WaitingPinCode
+            VisaActivationRemoteState_Type.WaitingPinCode ->
+                VisaActivationRemoteState.WaitingPinCode(value.activationOrderInfo!!)
             VisaActivationRemoteState_Type.WaitingForActivationFinishing ->
                 VisaActivationRemoteState.WaitingForActivationFinishing
             VisaActivationRemoteState_Type.Activated -> VisaActivationRemoteState.Activated
@@ -80,17 +84,20 @@ class VisaActivationRemoteState_JsonAdapter {
             is VisaActivationRemoteState.CardWalletSignatureRequired ->
                 VisaActivationRemoteState_Json(
                     type = VisaActivationRemoteState_Type.CardWalletSignatureRequired,
-                    request = value.request,
+                    requestCardWallet = value.request,
                 )
             is VisaActivationRemoteState.CustomerWalletSignatureRequired ->
                 VisaActivationRemoteState_Json(
                     type = VisaActivationRemoteState_Type.CustomerWalletSignatureRequired,
-                    request = value.request,
+                    activationOrderInfo = value.activationOrderInfo,
                 )
             is VisaActivationRemoteState.PaymentAccountDeploying ->
                 VisaActivationRemoteState_Json(VisaActivationRemoteState_Type.PaymentAccountDeploying)
             is VisaActivationRemoteState.WaitingPinCode ->
-                VisaActivationRemoteState_Json(VisaActivationRemoteState_Type.WaitingPinCode)
+                VisaActivationRemoteState_Json(
+                    VisaActivationRemoteState_Type.WaitingPinCode,
+                    activationOrderInfo = value.activationOrderInfo,
+                )
             is VisaActivationRemoteState.WaitingForActivationFinishing ->
                 VisaActivationRemoteState_Json(VisaActivationRemoteState_Type.WaitingForActivationFinishing)
             is VisaActivationRemoteState.Activated -> VisaActivationRemoteState_Json(
