@@ -272,13 +272,19 @@ dependencies {
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.truth)
     androidTestImplementation(deps.test.junit.android)
-    androidTestImplementation(deps.test.espresso)
+    androidTestImplementation(deps.test.espresso){
+        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
+    }
     androidTestImplementation(deps.test.espresso.intents)
-    androidTestImplementation(deps.test.kaspresso)
-    androidTestImplementation(deps.test.kaspresso.compose)
+    {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
+    }
     androidTestImplementation(deps.test.compose.junit)
     androidTestImplementation(deps.test.hamcrest)
     androidTestImplementation(deps.test.hilt)
+    androidTestImplementation(deps.test.ultron.android)
+    androidTestImplementation(deps.test.ultron.compose)
+    androidTestImplementation(deps.test.ultron.allure)
     kaptAndroidTest(deps.test.hilt.compiler)
 
     /** Chucker */
