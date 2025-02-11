@@ -36,8 +36,8 @@ private val API_CONFIGS = setOf(
     Express(configManager, expressAuthProvider, appVersionProvider),
     TangemTech(appVersionProvider, appAuthProvider),
     StakeKit(stakeKitAuthProvider),
-    TangemVisaAuth(),
-    TangemVisa(),
+    TangemVisaAuth(appVersionProvider),
+    TangemVisa(appVersionProvider),
 )
 
 /**
@@ -188,6 +188,10 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.STAGE,
                     baseUrl = "https://api-s.tangem.org/",
+                    headers = mapOf(
+                        "version" to ProviderSuspend { VERSION_NAME },
+                        "platform" to ProviderSuspend { "Android" },
+                    ),
                 ),
             )
         }
@@ -198,7 +202,10 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://bff.tangem.com/",
-                    headers = mapOf(),
+                    headers = mapOf(
+                        "version" to ProviderSuspend { VERSION_NAME },
+                        "platform" to ProviderSuspend { "Android" },
+                    ),
                 ),
             )
         }
