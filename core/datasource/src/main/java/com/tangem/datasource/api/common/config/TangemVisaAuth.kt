@@ -1,8 +1,11 @@
 package com.tangem.datasource.api.common.config
 
 import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.version.AppVersionProvider
 
-internal class TangemVisaAuth : ApiConfig() {
+internal class TangemVisaAuth(
+    private val appVersionProvider: AppVersionProvider,
+) : ApiConfig() {
 
     override val defaultEnvironment: ApiEnvironment = ApiEnvironment.STAGE
 
@@ -16,5 +19,8 @@ internal class TangemVisaAuth : ApiConfig() {
         headers = createHeaders(),
     )
 
-    private fun createHeaders() = mapOf<String, ProviderSuspend<String>>()
+    private fun createHeaders() = mapOf(
+        "version" to ProviderSuspend { appVersionProvider.versionName },
+        "platform" to ProviderSuspend { "Android" },
+    )
 }
