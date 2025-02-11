@@ -7,12 +7,17 @@ import com.arkivanov.decompose.router.stack.push
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.domain.common.visa.VisaUtilities
+import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.OnboardingVisaInnerNavigationState
-import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.OnboardingVisaChooseWalletComponent
+import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
+import com.tangem.features.onboarding.v2.visa.impl.common.PreparationDataForApprove
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
 import com.tangem.features.onboarding.v2.visa.impl.route.stepNum
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -25,6 +30,7 @@ import javax.inject.Inject
 internal class OnboardingVisaModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")
@@ -49,37 +55,24 @@ internal class OnboardingVisaModel @Inject constructor(
         )
     }
 
-    fun navigateFromWelcome(route: OnboardingVisaRoute.Welcome) {
-        if (route.isWelcomeBack) {
-            val scanResponse = _currentScanResponse.value
-            val activationStatus = scanResponse.visaCardActivationStatus
-                as? VisaCardActivationStatus.ActivationStarted
-                ?: error("Activation status is not correct for welcome back route")
-
-            when (activationStatus.remoteState) {
-                is VisaActivationRemoteState.CardWalletSignatureRequired,
-                is VisaActivationRemoteState.CustomerWalletSignatureRequired,
-                -> OnboardingVisaRoute.AccessCode
-                VisaActivationRemoteState.WaitingPinCode -> OnboardingVisaRoute.PinCode
-                VisaActivationRemoteState.WaitingForActivationFinishing -> OnboardingVisaRoute.InProgress
-                VisaActivationRemoteState.PaymentAccountDeploying -> OnboardingVisaRoute.InProgress
-                else -> error("Remote state is not correct for welcome back route")
-            }
-        } else {
-            stackNavigation.push(OnboardingVisaRoute.AccessCode)
-        }
-    }
-
-    fun navigateFromAccessCode(result: OnboardingVisaAccessCodeComponent.DoneEvent) {
+    fun navigateFromActivationScreen(result: ActivationReadyEvent) {
         _currentScanResponse.value = result.newScanResponse
+        val foundWalletCardId = tryToFindExistingWalletCardId(result.customerWalletTargetAddress)
+        val preparationDataForApprove = PreparationDataForApprove(
+            customerWalletAddress = result.customerWalletTargetAddress,
+            request = result.customerWalletDataToSignRequest,
+        )
         stackNavigation.push(
-            if (result.walletFound) {
+            if (foundWalletCardId != null) {
                 OnboardingVisaRoute.TangemWalletApproveOption(
-                    visaDataForApprove = result.visaDataForApprove,
+                    foundWalletCardId = foundWalletCardId,
+                    preparationDataForApprove = preparationDataForApprove,
                     allowNavigateBack = false,
                 )
             } else {
-                OnboardingVisaRoute.ChooseWallet(result.visaDataForApprove)
+                OnboardingVisaRoute.ChooseWallet(
+                    preparationDataForApprove = preparationDataForApprove,
+                )
             },
         )
     }
@@ -92,11 +85,14 @@ internal class OnboardingVisaModel @Inject constructor(
             when (event) {
                 OnboardingVisaChooseWalletComponent.Params.Event.TangemWallet ->
                     OnboardingVisaRoute.TangemWalletApproveOption(
-                        visaDataForApprove = route.visaDataForApprove,
+                        preparationDataForApprove = route.preparationDataForApprove,
+                        foundWalletCardId = null,
                         allowNavigateBack = true,
                     )
                 OnboardingVisaChooseWalletComponent.Params.Event.OtherWallet ->
-                    OnboardingVisaRoute.OtherWalletApproveOption(route.visaDataForApprove)
+                    OnboardingVisaRoute.OtherWalletApproveOption(
+                        preparationDataForApprove = route.preparationDataForApprove,
+                    )
             },
         )
     }
@@ -116,6 +112,7 @@ internal class OnboardingVisaModel @Inject constructor(
                     stackNavigation.pop()
                 }
             }
+            is OnboardingVisaRoute.WelcomeBack,
             is OnboardingVisaRoute.Welcome,
             is OnboardingVisaRoute.ChooseWallet,
             OnboardingVisaRoute.InProgress,
@@ -129,9 +126,72 @@ internal class OnboardingVisaModel @Inject constructor(
         val activationStatus = params.scanResponse.visaCardActivationStatus
 
         return when (activationStatus) {
-            is VisaCardActivationStatus.ActivationStarted -> OnboardingVisaRoute.Welcome(isWelcomeBack = true)
-            is VisaCardActivationStatus.NotStartedActivation -> OnboardingVisaRoute.Welcome(isWelcomeBack = false)
+            is VisaCardActivationStatus.ActivationStarted -> {
+                when (val remoteState = activationStatus.remoteState) {
+                    is VisaActivationRemoteState.CardWalletSignatureRequired -> OnboardingVisaRoute.WelcomeBack(
+                        activationInput = activationStatus.activationInput,
+                        dataToSignByCardWalletRequest = remoteState.request,
+                    )
+                    is VisaActivationRemoteState.CustomerWalletSignatureRequired ->
+                        remoteState.getRoute(activationStatus)
+                    VisaActivationRemoteState.PaymentAccountDeploying -> OnboardingVisaRoute.InProgress // TODO
+                    VisaActivationRemoteState.WaitingForActivationFinishing -> OnboardingVisaRoute.InProgress // TODO
+                    is VisaActivationRemoteState.WaitingPinCode -> OnboardingVisaRoute.PinCode(
+                        activationOrderInfo = remoteState.activationOrderInfo,
+                    )
+                    VisaActivationRemoteState.Activated,
+                    VisaActivationRemoteState.BlockedForActivation,
+                    -> error("Activation status is not correct for onboarding flow")
+                }
+            }
+            is VisaCardActivationStatus.NotStartedActivation -> OnboardingVisaRoute.Welcome
             else -> error("Visa activation status is not correct for onboarding flow")
         }
+    }
+
+    private fun VisaActivationRemoteState.CustomerWalletSignatureRequired.getRoute(
+        activationStatus: VisaCardActivationStatus.ActivationStarted,
+    ): OnboardingVisaRoute {
+        val foundWalletCardId = tryToFindExistingWalletCardId(this.activationOrderInfo.customerWalletAddress)
+        val request = VisaCustomerWalletDataToSignRequest(
+            orderId = this.activationOrderInfo.orderId,
+            cardWalletAddress = activationStatus.cardWalletAddress,
+        )
+        val preparationDataForApprove = PreparationDataForApprove(
+            customerWalletAddress = this.activationOrderInfo.customerWalletAddress,
+            request = request,
+        )
+
+        return if (foundWalletCardId != null) {
+            OnboardingVisaRoute.TangemWalletApproveOption(
+                preparationDataForApprove = preparationDataForApprove,
+                foundWalletCardId = foundWalletCardId,
+                allowNavigateBack = false,
+            )
+        } else {
+            OnboardingVisaRoute.ChooseWallet(
+                preparationDataForApprove = preparationDataForApprove,
+            )
+        }
+    }
+
+    private fun tryToFindExistingWalletCardId(targetAddress: String): String? {
+        val wallets = getWalletsUseCase.invokeSync().filter { it.isLocked.not() }
+
+        return wallets.firstOrNull { wallet ->
+            wallet.scanResponse.card.wallets.any {
+                val derivedKey = it.derivedKeys[VisaUtilities.visaDefaultDerivationPath] ?: return@any false
+
+                VisaWalletPublicKeyUtility.validateExtendedPublicKey(
+                    targetAddress = targetAddress,
+                    extendedPublicKey = derivedKey,
+                ).onLeft {
+                    return@any VisaWalletPublicKeyUtility.findKeyWithoutDerivation(
+                        targetAddress = targetAddress,
+                        card = wallet.scanResponse.card,
+                    ).isRight()
+                }.isRight()
+            }
+        }?.cardId
     }
 }
