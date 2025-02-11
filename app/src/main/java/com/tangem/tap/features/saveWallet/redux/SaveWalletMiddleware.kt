@@ -16,7 +16,6 @@ import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
-import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -90,9 +89,9 @@ internal class SaveWalletMiddleware {
                     Timber.e(error, "Unable to save user wallet")
                 }
                 .doOnSuccess {
-                    mainScope.launch { store.onUserWalletSelected(userWallet) }
+                    store.onUserWalletSelected(userWallet)
                     if (!shouldNavigateToWallet) {
-                        store.dispatch(OnboardingWalletAction.WalletSaved(userWallet.walletId))
+                        store.dispatchWithMain(OnboardingWalletAction.WalletSaved(userWallet.walletId))
                     }
                 }
                 .doOnResult { if (shouldNavigateToWallet) navigateToWallet() }

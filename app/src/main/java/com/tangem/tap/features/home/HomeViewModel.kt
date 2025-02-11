@@ -24,6 +24,7 @@ import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.home.redux.HIDE_PROGRESS_DELAY
 import com.tangem.tap.features.home.redux.HomeAction
@@ -114,7 +115,7 @@ internal class HomeViewModel @Inject constructor(
             },
         )
 
-        store.dispatch(HomeAction.ScanInProgress(scanInProgress = false))
+        store.dispatchWithMain(HomeAction.ScanInProgress(scanInProgress = false))
         delay(HIDE_PROGRESS_DELAY)
 
         store.dispatchNavigationAction { push(AppRoute.Wallet) }
