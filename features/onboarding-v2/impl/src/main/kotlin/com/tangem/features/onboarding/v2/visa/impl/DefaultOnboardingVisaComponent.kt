@@ -96,17 +96,36 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         return when (route) {
             is OnboardingVisaRoute.Welcome -> OnboardingVisaWelcomeComponent(
                 appComponentContext = factoryContext,
+                config = OnboardingVisaWelcomeComponent.Config.Welcome,
                 params = OnboardingVisaWelcomeComponent.Params(
-                    isWelcomeBack = route.isWelcomeBack,
                     childParams = childParams,
-                    onDone = { model.navigateFromWelcome(route) },
+                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.AccessCode) },
+                ),
+            )
+            is OnboardingVisaRoute.WelcomeBack -> OnboardingVisaWelcomeComponent(
+                appComponentContext = factoryContext,
+                config = OnboardingVisaWelcomeComponent.Config.WelcomeBack(
+                    activationInput = route.activationInput,
+                    dataToSignRequest = route.dataToSignByCardWalletRequest,
+                    scanResponse = model.currentScanResponse.value,
+                ),
+                params = OnboardingVisaWelcomeComponent.Params(
+                    childParams = childParams,
+                    onDone = {
+                        val activationReadyEvent =
+                            (it as? OnboardingVisaWelcomeComponent.DoneEvent.WelcomeBackDone)?.activationReadyEvent
+
+                        if (activationReadyEvent != null) {
+                            model.navigateFromActivationScreen(activationReadyEvent)
+                        }
+                    },
                 ),
             )
             OnboardingVisaRoute.AccessCode -> OnboardingVisaAccessCodeComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingVisaAccessCodeComponent.Params(
                     childParams = childParams,
-                    onDone = { model.navigateFromAccessCode(it) },
+                    onDone = { model.navigateFromActivationScreen(it) },
                 ),
                 config = OnboardingVisaAccessCodeComponent.Config(
                     scanResponse = model.currentScanResponse.value,
@@ -129,7 +148,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                     onDone = {
                         model.stackNavigation.push(
                             OnboardingVisaRoute.PinCode(
-                                activationOrderId = "TODO", // TODO [REDACTED_TASK_KEY] [Visa] In progress screen after pin code
+                                activationOrderInfo = TODO(), // TODO [REDACTED_TASK_KEY] [Visa] In progress screen after pin code
                             ),
                         )
                     },
@@ -139,14 +158,14 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaOtherWalletComponent.Config(
                     scanResponse = model.currentScanResponse.value,
-                    visaDataForApprove = route.visaDataForApprove,
+                    preparationDataForApprove = route.preparationDataForApprove,
                 ),
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
                     onDone = {
                         model.stackNavigation.push(
                             OnboardingVisaRoute.PinCode(
-                                activationOrderId = route.visaDataForApprove.dataToSign.request.orderId,
+                                activationOrderInfo = TODO(),
                             ),
                         )
                     },
@@ -156,7 +175,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaPinCodeComponent.Config(
                     scanResponse = model.currentScanResponse.value,
-                    activationOrderId = route.activationOrderId,
+                    activationOrderInfo = route.activationOrderInfo,
                 ),
                 params = OnboardingVisaPinCodeComponent.Params(
                     childParams = childParams,
@@ -166,7 +185,8 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
             is OnboardingVisaRoute.TangemWalletApproveOption -> OnboardingVisaApproveComponent(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaApproveComponent.Config(
-                    visaDataForApprove = route.visaDataForApprove,
+                    customerWalletCardId = route.foundWalletCardId,
+                    preparationDataForApprove = route.preparationDataForApprove,
                     scanResponse = model.currentScanResponse.value,
                 ),
                 params = OnboardingVisaApproveComponent.Params(
