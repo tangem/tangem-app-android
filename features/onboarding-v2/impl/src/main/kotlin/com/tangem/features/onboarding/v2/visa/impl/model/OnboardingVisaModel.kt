@@ -119,7 +119,7 @@ internal class OnboardingVisaModel @Inject constructor(
             is OnboardingVisaRoute.Welcome,
             is OnboardingVisaRoute.ChooseWallet,
             OnboardingVisaRoute.InProgress,
-            OnboardingVisaRoute.PinCode,
+            is OnboardingVisaRoute.PinCode,
             -> {
             }
         }

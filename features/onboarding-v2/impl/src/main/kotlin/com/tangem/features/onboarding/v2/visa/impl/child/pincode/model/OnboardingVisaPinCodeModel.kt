@@ -1,12 +1,15 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.pincode.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.SetVisaPinCodeUseCase
 import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
@@ -24,6 +27,7 @@ import javax.inject.Inject
 
 @Stable
 @ComponentScoped
+@Suppress("LongParameterList")
 internal class OnboardingVisaPinCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -31,9 +35,14 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val authTokenStorage: VisaAuthTokenStorage,
     private val otpStorage: VisaAuthTokenStorage,
+    private val setVisaPinCodeUseCase: SetVisaPinCodeUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingVisaPinCodeComponent.Config>()
+    private val visaCardId = VisaCardId(
+        cardId = params.scanResponse.card.cardId,
+        cardPublicKey = params.scanResponse.card.cardPublicKey.toHexString(),
+    )
     private val _uiState = MutableStateFlow(getInitialState())
 
     val uiState = _uiState.asStateFlow()
@@ -41,6 +50,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
 
     private fun getInitialState(): OnboardingVisaPinCodeUM {
         return OnboardingVisaPinCodeUM(
+            submitButtonEnabled = false,
             onPinCodeChange = ::onPinCodeChange,
             onSubmitClick = ::onSubmitClick,
         )
@@ -63,8 +73,15 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
         modelScope.launch {
             loading(true)
 
-            // TODO
-            // make backend call
+            setVisaPinCodeUseCase(
+                pinCode = _uiState.value.pinCode,
+                visaCardId = visaCardId,
+                activationOrderId = params.activationOrderId,
+            ).onLeft {
+                loading(false)
+                return@launch
+            }
+
             saveWallet()
 
             loading(false)
