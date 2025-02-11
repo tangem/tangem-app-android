@@ -1,7 +1,6 @@
 package com.tangem.domain.visa.repository
 
-import com.tangem.domain.visa.model.ActivationOrder
-import com.tangem.domain.visa.model.VisaActivationRemoteState
+import com.tangem.domain.visa.model.*
 
 interface VisaActivationRepository {
 
@@ -9,9 +8,17 @@ interface VisaActivationRepository {
 
     suspend fun getActivationRemoteStateLongPoll(): VisaActivationRemoteState
 
-    suspend fun getActivationOrderToSign(): ActivationOrder
+    suspend fun getCardWalletAcceptanceData(request: VisaCardWalletDataToSignRequest): VisaDataToSignByCardWallet
+
+    suspend fun getCustomerWalletAcceptanceData(
+        request: VisaCustomerWalletDataToSignRequest,
+    ): VisaDataToSignByCustomerWallet
+
+    suspend fun activateCard(signedData: VisaSignedActivationDataByCardWallet)
+
+    suspend fun approveByCustomerWallet(signedData: VisaSignedDataByCustomerWallet)
 
     interface Factory {
-        fun create(cardId: String): VisaActivationRepository
+        fun create(cardId: VisaCardId): VisaActivationRepository
     }
 }

@@ -154,6 +154,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaApproveComponent.Config(
                     visaDataForApprove = route.visaDataForApprove,
+                    scanResponse = model.currentScanResponse.value,
                 ),
                 params = OnboardingVisaApproveComponent.Params(
                     childParams = childParams,

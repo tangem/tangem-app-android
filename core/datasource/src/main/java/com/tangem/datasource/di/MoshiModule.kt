@@ -10,6 +10,7 @@ import com.tangem.datasource.api.common.adapter.LocalDateAdapter
 import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.domain.models.scan.serialization.*
+import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
 import dagger.Module
 import dagger.Provides
@@ -35,8 +36,9 @@ class MoshiModule {
             .add(BigDecimalAdapter())
             .add(LocalDateAdapter())
             .add(DateTimeAdapter())
+            .add(VisaActivationRemoteState.jsonAdapter)
             .add(VisaCardActivationStatus.jsonAdapter)
-            .add(KotlinJsonAdapterFactory())
+            .addLast(KotlinJsonAdapterFactory())
             .addStakeKitEnumFallbackAdapters()
             .build()
     }
@@ -59,10 +61,11 @@ class MoshiModule {
         val typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters()
 
         return Moshi.Builder().apply {
+            add(VisaActivationRemoteState.jsonAdapter)
             add(VisaCardActivationStatus.jsonAdapter)
             adapters.forEach { this.add(it) }
             typedAdapters.forEach { add(it.key, it.value) }
-            add(KotlinJsonAdapterFactory())
+            addLast(KotlinJsonAdapterFactory())
         }.build()
     }
 
