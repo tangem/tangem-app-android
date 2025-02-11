@@ -2,6 +2,8 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
 import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
+import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.TextReference
@@ -18,13 +20,12 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
+import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
@@ -115,7 +116,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
             Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
         }
-        val hasFailed = statusModel.status == ExchangeStatus.Failed
+        val hasFailed = statusModel.status.isFailed()
         val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, statusModel.refundCurrency)
         val showProviderLink = getShowProviderLink(notifications, statusModel)
         return tx.copy(
@@ -185,7 +186,9 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         refundToken: CryptoCurrency?,
     ): ExchangeStatusNotifications? {
         return when (status) {
-            ExchangeStatus.Failed -> {
+            ExchangeStatus.Failed,
+            ExchangeStatus.TxFailed,
+            -> {
                 if (txUrl == null) return null
                 ExchangeStatusNotifications.Failed {
                     analyticsEventsHandler.send(
@@ -221,7 +224,10 @@ internal class TokenDetailsSwapTransactionsStateConverter(
     private fun getIconState(status: ExchangeStatus?): ExpressTransactionStateIconUM {
         return when (status) {
             ExchangeStatus.Verifying -> ExpressTransactionStateIconUM.Warning
-            ExchangeStatus.Failed, ExchangeStatus.Cancelled -> ExpressTransactionStateIconUM.Error
+            ExchangeStatus.Failed,
+            ExchangeStatus.TxFailed,
+            ExchangeStatus.Cancelled,
+            -> ExpressTransactionStateIconUM.Error
             else -> ExpressTransactionStateIconUM.None
         }
     }
@@ -243,7 +249,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         val isConfirming = status == ExchangeStatus.Confirming
         val isVerifying = status == ExchangeStatus.Verifying
         val isExchanging = status == ExchangeStatus.Exchanging
-        val isFailed = status == ExchangeStatus.Failed
+        val isFailed = status.isFailed()
         val isSending = status == ExchangeStatus.Sending
         val isRefunded = status == ExchangeStatus.Refunded
         val isPaused = status == ExchangeStatus.Paused
