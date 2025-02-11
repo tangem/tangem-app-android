@@ -104,7 +104,7 @@ private fun proceedWithScanResponse(scanResponse: ScanResponse) = scope.launch {
         }
         .doOnSuccess {
             sendSignedInCardAnalyticsEvent(scanResponse)
-            scope.launch { store.onUserWalletSelected(userWallet = userWallet) }
+            store.onUserWalletSelected(userWallet = userWallet)
         }
         .doOnResult {
             navigateTo(AppRoute.Wallet)
