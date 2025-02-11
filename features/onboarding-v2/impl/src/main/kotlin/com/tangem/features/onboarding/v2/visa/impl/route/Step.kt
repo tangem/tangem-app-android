@@ -2,7 +2,9 @@ package com.tangem.features.onboarding.v2.visa.impl.route
 
 @Suppress("MagicNumber")
 internal fun OnboardingVisaRoute.stepNum() = when (this) {
-    is OnboardingVisaRoute.Welcome -> 1
+    is OnboardingVisaRoute.Welcome,
+    is OnboardingVisaRoute.WelcomeBack,
+    -> 1
     OnboardingVisaRoute.AccessCode -> 2
     is OnboardingVisaRoute.ChooseWallet -> 3
     is OnboardingVisaRoute.OtherWalletApproveOption -> 4
