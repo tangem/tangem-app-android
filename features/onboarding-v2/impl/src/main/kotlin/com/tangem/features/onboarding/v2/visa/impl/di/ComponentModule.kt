@@ -10,6 +10,7 @@ import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.model.Onbo
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.model.OnboardingVisaInProgressModel
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.model.OnboardingVisaOtherWalletModel
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.model.OnboardingVisaPinCodeModel
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.OnboardingVisaWelcomeModel
 import com.tangem.features.onboarding.v2.visa.impl.model.OnboardingVisaModel
 import dagger.Binds
 import dagger.Module
@@ -66,4 +67,9 @@ internal interface ModelModule {
     @IntoMap
     @ClassKey(OnboardingVisaModel::class)
     fun provideModel7(model: OnboardingVisaModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(OnboardingVisaWelcomeModel::class)
+    fun provideModel8(model: OnboardingVisaWelcomeModel): Model
 }
