@@ -80,7 +80,6 @@ fun StoriesProgressBar(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
-            .statusBarsPadding()
             .padding(
                 start = 16.dp,
                 end = 16.dp,
