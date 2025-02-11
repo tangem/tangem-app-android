@@ -10,5 +10,7 @@ internal fun OnboardingVisaRoute.screenTitle(): TextReference = when (this) {
     is OnboardingVisaRoute.OtherWalletApproveOption -> TextReference.Str("Wallet connection")
     is OnboardingVisaRoute.PinCode -> TextReference.Str("PIN code")
     is OnboardingVisaRoute.TangemWalletApproveOption -> TextReference.Str("Wallet connection")
-    is OnboardingVisaRoute.Welcome -> TextReference.Str("Getting started")
+    is OnboardingVisaRoute.Welcome,
+    is OnboardingVisaRoute.WelcomeBack,
+    -> TextReference.Str("Getting started")
 }
