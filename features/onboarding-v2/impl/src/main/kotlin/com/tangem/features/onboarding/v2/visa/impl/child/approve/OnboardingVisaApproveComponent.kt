@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.model.OnboardingVisaApproveModel
@@ -43,6 +44,7 @@ internal class OnboardingVisaApproveComponent(
 
     data class Config(
         val visaDataForApprove: VisaDataForApprove,
+        val scanResponse: ScanResponse,
     )
 
     data class Params(

@@ -1,10 +1,12 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.inprogress.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.visa.model.VisaActivationRemoteState
+import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -17,12 +19,17 @@ import javax.inject.Inject
 @ComponentScoped
 internal class OnboardingVisaInProgressModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    visaActivationRepositoryFactory: VisaActivationRepository.Factory,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingVisaInProgressComponent.Config>()
-    private val visaActivationRepository = visaActivationRepositoryFactory.create(params.scanResponse.card.cardId)
+    private val visaActivationRepository = visaActivationRepositoryFactory.create(
+        VisaCardId(
+            cardId = params.scanResponse.card.cardId,
+            cardPublicKey = params.scanResponse.card.cardPublicKey.toHexString(),
+        ),
+    )
     val onDone = MutableSharedFlow<Unit>()
 
     init {
