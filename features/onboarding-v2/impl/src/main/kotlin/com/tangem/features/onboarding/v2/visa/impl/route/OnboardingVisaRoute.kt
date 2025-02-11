@@ -28,5 +28,5 @@ sealed class OnboardingVisaRoute {
     data object InProgress : OnboardingVisaRoute()
 
     @Serializable
-    data object PinCode : OnboardingVisaRoute()
+    data class PinCode(val activationOrderId: String) : OnboardingVisaRoute()
 }
