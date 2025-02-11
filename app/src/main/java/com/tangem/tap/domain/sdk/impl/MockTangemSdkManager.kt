@@ -18,16 +18,16 @@ import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.preflightread.PreflightReadFilter
-import com.tangem.operations.sign.SignHashResponse
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
+import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.domain.sdk.mocks.MockProvider
 
 @Suppress("TooManyFunctions")
@@ -203,8 +203,7 @@ class MockTangemSdkManager(
     // region Visa-specific
 
     override suspend fun activateVisaCard(
-        accessCode: String,
-        challengeToSign: VisaAuthChallenge.Card?,
+        mode: VisaCardActivationTaskMode,
         activationInput: VisaActivationInput,
     ): CompletionResult<VisaCardActivationResponse> {
         error("Not implemented")
@@ -212,7 +211,7 @@ class MockTangemSdkManager(
 
     override suspend fun visaCustomerWalletApprove(
         visaDataForApprove: VisaDataForApprove,
-    ): CompletionResult<SignHashResponse> {
+    ): CompletionResult<VisaSignedDataByCustomerWallet> {
         error("Not implemented")
     }
 
