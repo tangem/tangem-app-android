@@ -76,7 +76,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
             setVisaPinCodeUseCase(
                 pinCode = _uiState.value.pinCode,
                 visaCardId = visaCardId,
-                activationOrderId = params.activationOrderId,
+                activationOrderId = params.activationOrderInfo.orderId,
             ).onLeft {
                 loading(false)
                 return@launch
