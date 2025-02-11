@@ -3,32 +3,37 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.visa.GetVisaTxDetailsUseCase
 import com.tangem.domain.visa.GetVisaTxHistoryUseCase
+import com.tangem.domain.visa.SetVisaPinCodeUseCase
+import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
-import dagger.hilt.android.scopes.ViewModelScoped
+import dagger.hilt.components.SingletonComponent
 
 @Module
-@InstallIn(ViewModelComponent::class)
+@InstallIn(SingletonComponent::class)
 internal object VisaDomainModule {
 
     @Provides
-    @ViewModelScoped
     fun provideVisaCurrencyUseCase(visaRepository: VisaRepository): GetVisaCurrencyUseCase {
         return GetVisaCurrencyUseCase(visaRepository)
     }
 
     @Provides
-    @ViewModelScoped
     fun provideGetVisaTxHistoryUseCase(visaRepository: VisaRepository): GetVisaTxHistoryUseCase {
         return GetVisaTxHistoryUseCase(visaRepository)
     }
 
     @Provides
-    @ViewModelScoped
     fun provideGetVisaTxDetailsUseCase(visaRepository: VisaRepository): GetVisaTxDetailsUseCase {
         return GetVisaTxDetailsUseCase(visaRepository)
+    }
+
+    @Provides
+    fun provideSetVisaPinCodeUseCase(
+        visaActivationRepositoryFactory: VisaActivationRepository.Factory,
+    ): SetVisaPinCodeUseCase {
+        return SetVisaPinCodeUseCase(visaActivationRepositoryFactory)
     }
 }
