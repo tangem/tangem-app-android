@@ -8,7 +8,7 @@ interface VisaAuthRepository {
 
     suspend fun getCardAuthChallenge(cardId: String, cardPublicKey: String): VisaAuthChallenge.Card
 
-    suspend fun getCustomerWalletAuthChallenge(cardId: String, walletPublicKey: String): VisaAuthChallenge.Wallet
+    suspend fun getCardWalletAuthChallenge(cardWalletAddress: String): VisaAuthChallenge.Wallet
 
     suspend fun getAccessTokens(signedChallenge: VisaAuthSignedChallenge): VisaAuthTokens
 
