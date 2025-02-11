@@ -25,8 +25,8 @@ import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.model.VisaActivationInput
-import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.model.VisaSignedDataByCustomerWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
@@ -35,12 +35,12 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.preflightread.PreflightReadFilter
-import com.tangem.operations.sign.SignHashResponse
 import com.tangem.operations.usersetttings.SetUserCodeRecoveryAllowedTask
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
+import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
 import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
@@ -480,15 +480,13 @@ internal class DefaultTangemSdkManager(
     // region Visa-specific
 
     override suspend fun activateVisaCard(
-        accessCode: String,
-        challengeToSign: VisaAuthChallenge.Card?,
+        mode: VisaCardActivationTaskMode,
         activationInput: VisaActivationInput,
     ): CompletionResult<VisaCardActivationResponse> {
         return coroutineScope {
             runTaskAsyncReturnOnMain(
                 runnable = visaCardActivationTaskFactory.create(
-                    accessCode = accessCode,
-                    challengeToSign = challengeToSign,
+                    mode = mode,
                     activationInput = activationInput,
                     coroutineScope = this,
                 ),
@@ -499,7 +497,7 @@ internal class DefaultTangemSdkManager(
 
     override suspend fun visaCustomerWalletApprove(
         visaDataForApprove: VisaDataForApprove,
-    ): CompletionResult<SignHashResponse> {
+    ): CompletionResult<VisaSignedDataByCustomerWallet> {
         return runTaskAsyncReturnOnMain(
             runnable = VisaCustomerWalletApproveTask(
                 visaDataForApprove = visaDataForApprove,
