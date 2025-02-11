@@ -18,7 +18,7 @@ class MockVisaActivationRepository @AssistedInject constructor(
     }
 
     override suspend fun getActivationRemoteStateLongPoll(): VisaActivationRemoteState {
-        return VisaActivationRemoteState.WaitingPinCode
+        return VisaActivationRemoteState.PaymentAccountDeploying
     }
 
     override suspend fun getCardWalletAcceptanceData(

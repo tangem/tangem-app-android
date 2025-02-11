@@ -33,7 +33,6 @@ internal class VisaCardScanHandler @Inject constructor(
 
     private class SessionContext(
         val visaActivationRepository: VisaActivationRepository,
-        val cardId: String,
         val session: CardSession,
     )
 
@@ -54,7 +53,6 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val context = SessionContext(
             visaActivationRepository = visaActivationRepository,
-            cardId = card.cardId,
             session = session,
         )
 
@@ -140,7 +138,9 @@ internal class VisaCardScanHandler @Inject constructor(
             Timber.i(
                 "Failed to get Access token for Wallet public key authoziation. Authorizing using Card Pub key",
             )
-            return handleCardAuthorization()
+            return handleCardAuthorization(
+                cardWalletAddress = walletAddress.value,
+            )
         }
 
         val signChallengeResult = signChallengeWithWallet(
@@ -153,6 +153,7 @@ internal class VisaCardScanHandler @Inject constructor(
             is CompletionResult.Success -> {
                 Timber.i("Challenge signed with Wallet public key")
                 handleWalletAuthorizationTokens(
+                    cardWalletAddress = walletAddress.value,
                     signedChallenge = challengeResponse
                         .toSignedChallenge(signChallengeResult.data.signature.toHexString()),
                 )
@@ -165,6 +166,7 @@ internal class VisaCardScanHandler @Inject constructor(
     }
 
     private suspend fun SessionContext.handleWalletAuthorizationTokens(
+        cardWalletAddress: String,
         signedChallenge: VisaAuthSignedChallenge,
     ): CompletionResult<VisaCardActivationStatus> {
         val authorizationTokensResponse = runCatching {
@@ -173,7 +175,9 @@ internal class VisaCardScanHandler @Inject constructor(
             Timber.i(
                 "Failed to get Access token for Wallet public key authoziation. Authorizing using Card Pub key",
             )
-            return handleCardAuthorization()
+            return handleCardAuthorization(
+                cardWalletAddress = cardWalletAddress,
+            )
         }
 
         Timber.i("Authorized using Wallet public key successfully")
@@ -181,7 +185,9 @@ internal class VisaCardScanHandler @Inject constructor(
         return CompletionResult.Success(VisaCardActivationStatus.Activated(authorizationTokensResponse))
     }
 
-    private suspend fun SessionContext.handleCardAuthorization(): CompletionResult<VisaCardActivationStatus> {
+    private suspend fun SessionContext.handleCardAuthorization(
+        cardWalletAddress: String,
+    ): CompletionResult<VisaCardActivationStatus> {
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         Timber.i("Requesting authorization challenge to sign")
@@ -258,6 +264,7 @@ internal class VisaCardScanHandler @Inject constructor(
                 activationInput = activationInput,
                 authTokens = authorizationTokensResponse,
                 remoteState = activationRemoteState,
+                cardWalletAddress = cardWalletAddress,
             ),
         )
     }

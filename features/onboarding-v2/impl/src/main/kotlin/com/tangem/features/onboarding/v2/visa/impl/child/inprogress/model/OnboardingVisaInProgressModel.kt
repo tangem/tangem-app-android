@@ -39,7 +39,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     visaActivationRepository.getActivationRemoteStateLongPoll()
                 }.getOrNull()
 
-                if (result == VisaActivationRemoteState.WaitingPinCode) {
+                if (result is VisaActivationRemoteState.WaitingPinCode) {
                     onDone.emit(Unit)
                     break
                 }
