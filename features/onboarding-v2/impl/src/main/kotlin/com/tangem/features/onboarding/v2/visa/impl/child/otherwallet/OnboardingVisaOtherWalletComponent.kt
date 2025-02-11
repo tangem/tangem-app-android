@@ -10,10 +10,10 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.model.OnboardingVisaOtherWalletModel
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.ui.OnboardingVisaOtherWallet
+import com.tangem.features.onboarding.v2.visa.impl.common.PreparationDataForApprove
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -45,7 +45,7 @@ internal class OnboardingVisaOtherWalletComponent(
 
     data class Config(
         val scanResponse: ScanResponse,
-        val visaDataForApprove: VisaDataForApprove,
+        val preparationDataForApprove: PreparationDataForApprove,
     )
 
     data class Params(
