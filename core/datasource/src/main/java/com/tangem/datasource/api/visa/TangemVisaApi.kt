@@ -4,6 +4,7 @@ import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.api.visa.models.request.ActivationByCardWalletRequest
 import com.tangem.datasource.api.visa.models.request.ActivationByCustomerWalletRequest
+import com.tangem.datasource.api.visa.models.request.SetPinCodeRequest
 import com.tangem.datasource.api.visa.models.response.CardActivationRemoteStateResponse
 import com.tangem.datasource.api.visa.models.response.CardWalletDataToSignResponse
 import com.tangem.datasource.api.visa.models.response.CustomerWalletDataToSignResponse
@@ -63,5 +64,11 @@ interface TangemVisaApi {
     suspend fun activateByCustomerWallet(
         @Header("Authorization") authHeader: String,
         @Body body: ActivationByCustomerWalletRequest,
+    ): ApiResponse<Unit>
+
+    @POST("product_instance/issuer_activation")
+    suspend fun setPinCode(
+        @Header("Authorization") authHeader: String,
+        @Body body: SetPinCodeRequest,
     ): ApiResponse<Unit>
 }
