@@ -7,6 +7,7 @@ import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.visa.TangemVisaApi
 import com.tangem.datasource.api.visa.models.request.ActivationByCardWalletRequest
 import com.tangem.datasource.api.visa.models.request.ActivationByCustomerWalletRequest
+import com.tangem.datasource.api.visa.models.request.SetPinCodeRequest
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.visa.exception.RefreshTokenExpiredException
 import com.tangem.domain.visa.model.*
@@ -160,6 +161,30 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                                 address = signedData.customerWalletAddress,
                                 deployAcceptanceSignature = signedData.signature,
                             ),
+                        ),
+                    ),
+                )
+            }
+        }
+    }
+
+    override suspend fun sendPinCode(pinCode: VisaEncryptedPinCode) {
+        withContext(dispatcherProvider.io) {
+            request {
+                val authTokens =
+                    checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
+                val accessCodeData = accessCodeDataConverter.convert(authTokens)
+
+                visaApi.setPinCode(
+                    authHeader = authTokens.getAuthHeader(),
+                    body = SetPinCodeRequest(
+                        customerId = accessCodeData.customerId,
+                        productInstanceId = accessCodeData.productInstanceId,
+                        activationOrderId = pinCode.activationOrderId,
+                        data = SetPinCodeRequest.Data(
+                            sessionKey = pinCode.sessionId,
+                            iv = pinCode.iv,
+                            encryptedPin = pinCode.encryptedPin,
                         ),
                     ),
                 )
