@@ -1,5 +1,6 @@
 package com.tangem.common.ui.swapStoriesScreen
 
+import com.tangem.core.ui.components.stories.inner.STORY_DURATION
 import com.tangem.core.ui.components.stories.model.StoriesContentConfig
 import com.tangem.core.ui.components.stories.model.StoryConfig
 import com.tangem.core.ui.extensions.TextReference
@@ -20,7 +21,7 @@ sealed class SwapStoriesUM {
             val title: TextReference,
             val subtitle: TextReference,
         ) : StoryConfig {
-            override val duration: Int = 2000
+            override val duration: Int = STORY_DURATION
         }
     }
 }
