@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -51,11 +52,13 @@
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
 
+        <receiver android:name="com.tangem.tap.AlarmReceiver" />
+
         <activity
             android:name="com.tangem.tap.MainActivity"
             android:configChanges="uiMode"
             android:exported="true"
-            android:launchMode="singleTop"
+            android:launchMode="standard"
             android:screenOrientation="portrait"
             android:theme="@style/SplashTheme"
             android:windowSoftInputMode="adjustResize">
@@ -97,6 +100,9 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data android:scheme="wc" />
+                <data android:scheme="https" />
+                <data android:host="tangem.com" />
+                <data android:pathPrefix="/redirect" />
             </intent-filter>
 
             <intent-filter>
