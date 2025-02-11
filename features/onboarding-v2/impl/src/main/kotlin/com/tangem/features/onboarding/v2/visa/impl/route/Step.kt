@@ -8,7 +8,7 @@ internal fun OnboardingVisaRoute.stepNum() = when (this) {
     is OnboardingVisaRoute.OtherWalletApproveOption -> 4
     is OnboardingVisaRoute.TangemWalletApproveOption -> 4
     OnboardingVisaRoute.InProgress -> 5
-    OnboardingVisaRoute.PinCode -> 6
+    is OnboardingVisaRoute.PinCode -> 6
 }
 
 internal const val ONBOARDING_VISA_STEPS_COUNT = 7
