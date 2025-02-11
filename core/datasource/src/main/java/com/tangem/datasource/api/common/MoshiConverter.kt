@@ -15,7 +15,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 object MoshiConverter {
 
     val networkMoshi: Moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
+        .addLast(KotlinJsonAdapterFactory())
         .add(BigDecimalAdapter())
         .add(TangemSdkAdapter.ByteArrayAdapter())
         .build()
