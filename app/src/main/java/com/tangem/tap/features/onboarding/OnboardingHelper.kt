@@ -263,7 +263,7 @@ object OnboardingHelper {
             }
             .doOnSuccess {
                 mainScope.launch { store.onUserWalletSelected(userWallet) }
-                store.dispatch(OnboardingWalletAction.WalletSaved(userWallet.walletId))
+                store.dispatchWithMain(OnboardingWalletAction.WalletSaved(userWallet.walletId))
             }
     }
 }
