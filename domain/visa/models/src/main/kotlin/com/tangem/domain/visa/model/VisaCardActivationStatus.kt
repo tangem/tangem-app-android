@@ -19,6 +19,7 @@ sealed class VisaCardActivationStatus {
         val activationInput: VisaActivationInput,
         val authTokens: VisaAuthTokens,
         val remoteState: VisaActivationRemoteState,
+        val cardWalletAddress: String,
     ) : VisaCardActivationStatus()
 
     @Serializable
@@ -43,6 +44,7 @@ class VisaCardActivationStatus_Json(
     @Json(name = "activationInput") val activationInput: VisaActivationInput? = null,
     @Json(name = "authTokens") val authTokens: VisaAuthTokens? = null,
     @Json(name = "remoteState") val remoteState: VisaActivationRemoteState? = null,
+    @Json(name = "cardWalletAddress") val cardWalletAddress: String? = null,
 )
 
 // do not rename instances
@@ -67,6 +69,7 @@ class VisaCardActivationStatus_JsonAdapter {
                 value.activationInput!!,
                 value.authTokens!!,
                 value.remoteState!!,
+                value.cardWalletAddress!!,
             )
             VisaCardActivationStatus_Type.NotStartedActivation -> VisaCardActivationStatus.NotStartedActivation(
                 value.activationInput!!,
@@ -88,6 +91,7 @@ class VisaCardActivationStatus_JsonAdapter {
                 value.activationInput,
                 value.authTokens,
                 value.remoteState,
+                value.cardWalletAddress,
             )
             is VisaCardActivationStatus.NotStartedActivation -> VisaCardActivationStatus_Json(
                 VisaCardActivationStatus_Type.NotStartedActivation,
