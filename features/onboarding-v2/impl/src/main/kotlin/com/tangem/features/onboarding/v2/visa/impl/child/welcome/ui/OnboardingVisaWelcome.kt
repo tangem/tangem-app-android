@@ -81,7 +81,8 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
                     modifier = Modifier
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                         .fillMaxWidth(),
-                    text = "Start Activation",
+                    text = "Continue Activation",
+                    showProgress = state.continueButtonLoading,
                     iconResId = R.drawable.ic_tangem_24,
                     onClick = state.onContinueClick,
                 )

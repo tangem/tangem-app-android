@@ -1,32 +1,46 @@
 package com.tangem.features.onboarding.v2.visa.impl.route
 
-import com.tangem.domain.visa.model.VisaDataForApprove
+import com.tangem.domain.visa.model.VisaActivationInput
+import com.tangem.domain.visa.model.VisaActivationOrderInfo
+import com.tangem.domain.visa.model.VisaCardWalletDataToSignRequest
+import com.tangem.features.onboarding.v2.visa.impl.common.PreparationDataForApprove
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed class OnboardingVisaRoute {
+internal sealed class OnboardingVisaRoute {
 
     @Serializable
-    data class Welcome(val isWelcomeBack: Boolean) : OnboardingVisaRoute()
+    data object Welcome : OnboardingVisaRoute()
+
+    @Serializable
+    data class WelcomeBack(
+        val activationInput: VisaActivationInput,
+        val dataToSignByCardWalletRequest: VisaCardWalletDataToSignRequest,
+    ) : OnboardingVisaRoute()
 
     @Serializable
     data object AccessCode : OnboardingVisaRoute()
 
     @Serializable
-    data class ChooseWallet(val visaDataForApprove: VisaDataForApprove) : OnboardingVisaRoute()
+    data class ChooseWallet(
+        val preparationDataForApprove: PreparationDataForApprove,
+    ) : OnboardingVisaRoute()
 
     @Serializable
     data class TangemWalletApproveOption(
-        val visaDataForApprove: VisaDataForApprove,
+        val preparationDataForApprove: PreparationDataForApprove,
+        val foundWalletCardId: String?,
         val allowNavigateBack: Boolean,
     ) : OnboardingVisaRoute()
 
     @Serializable
-    data class OtherWalletApproveOption(val visaDataForApprove: VisaDataForApprove) : OnboardingVisaRoute()
+    data class OtherWalletApproveOption(
+        val preparationDataForApprove: PreparationDataForApprove,
+    ) : OnboardingVisaRoute()
 
     @Serializable
     data object InProgress : OnboardingVisaRoute()
 
     @Serializable
-    data class PinCode(val activationOrderId: String) : OnboardingVisaRoute()
+    data class PinCode(val activationOrderInfo: VisaActivationOrderInfo) : OnboardingVisaRoute()
 }
