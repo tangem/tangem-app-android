@@ -52,12 +52,13 @@ internal class OnboardingVisaModel @Inject constructor(
     fun navigateFromWelcome(route: OnboardingVisaRoute.Welcome) {
         if (route.isWelcomeBack) {
             val scanResponse = _currentScanResponse.value
-            val activationStatus = scanResponse.visaCardActivationStatus as? VisaCardActivationStatus
-            .ActivationStarted ?: error("Activation status is not correct for welcome back route")
+            val activationStatus = scanResponse.visaCardActivationStatus
+                as? VisaCardActivationStatus.ActivationStarted
+                ?: error("Activation status is not correct for welcome back route")
 
             when (activationStatus.remoteState) {
-                VisaActivationRemoteState.CardWalletSignatureRequired,
-                VisaActivationRemoteState.CustomerWalletSignatureRequired,
+                is VisaActivationRemoteState.CardWalletSignatureRequired,
+                is VisaActivationRemoteState.CustomerWalletSignatureRequired,
                 -> OnboardingVisaRoute.AccessCode
                 VisaActivationRemoteState.WaitingPinCode -> OnboardingVisaRoute.PinCode
                 VisaActivationRemoteState.WaitingForActivationFinishing -> OnboardingVisaRoute.InProgress
