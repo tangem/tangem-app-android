@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.net.Uri
+import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
 import android.view.MotionEvent
@@ -39,6 +41,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.di.RootAppComponentContext
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.navigation.email.EmailSender
+import com.tangem.core.navigation.finisher.AppFinisher
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
@@ -221,6 +224,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     internal lateinit var uiDependencies: UiDependencies
 
+    @Inject
+    internal lateinit var appFinisher: AppFinisher
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -235,6 +241,39 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        Timber.e("packageName = $packageName")
+        Timber.e("callingPackage = $callingPackage")
+        Timber.e("parentActivityIntent = $parentActivityIntent")
+        Timber.e("intent = ${this.intent.dataString}")
+
+        if (intent?.action == NfcAdapter.ACTION_NDEF_DISCOVERED) {
+            val data: Uri? = intent.data
+            if (data != null && data.toString() == "https://tangem.com/ndef/CB79") {
+                // val alarmService = getSystemService(AlarmManager::class.java).apply {
+                //     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                //         canScheduleExactAlarms()
+                //     }
+                // }
+                //
+                // alarmService.setExact(
+                //     AlarmManager.ELAPSED_REALTIME,
+                //     SystemClock.elapsedRealtime(),
+                //     PendingIntent.getBroadcast(
+                //         this,
+                //         0,
+                //         Intent(this, AlarmReceiver::class.java),
+                //         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+                //     )
+                // )
+
+                startActivity(
+                    Intent(applicationContext, MainActivity::class.java).apply {
+                        addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    },
+                )
+            }
+        }
+
         // We need to call it before onCreate to prevent unnecessary activity recreation
         installAppTheme()
 
@@ -266,6 +305,14 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         installActivityDependencies()
         observeAppThemeModeUpdates()
+
+        // if (intent?.action == NfcAdapter.ACTION_NDEF_DISCOVERED) {
+        //     val data: Uri? = intent.data
+        //     if (data != null && data.toString() == "https://tangem.com/ndef/CB79") {
+        //         finishAffinity()
+        //         return
+        //     }
+        // }
 
         if (routingFeatureToggles.isNavigationRefactoringEnabled) {
             setRootContent()
@@ -509,6 +556,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+
+        Timber.e("packageName = $packageName")
+        Timber.e("callingPackage = $callingPackage")
+        Timber.e("parentActivityIntent = $parentActivityIntent")
 
         lifecycleScope.launch {
             intentProcessor.handleIntent(intent = intent, isFromForeground = true)
