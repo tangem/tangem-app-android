@@ -1,22 +1,31 @@
 package com.tangem.core.ui.components.stories
 
 import android.content.res.Configuration
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.R
 import com.tangem.core.ui.components.stories.inner.StoriesClickableArea
 import com.tangem.core.ui.components.stories.inner.StoriesProgressBar
 import com.tangem.core.ui.components.stories.inner.StoriesStepStateMachine
 import com.tangem.core.ui.components.stories.model.StoriesContentConfig
 import com.tangem.core.ui.components.stories.model.StoryConfig
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -62,17 +71,36 @@ inline fun <reified T : StoryConfig> StoriesContainer(
 
         currentStoryContent(storyState.currentStory, isPaused)
 
-        StoriesProgressBar(
-            steps = storyState.steps,
-            currentStep = storyState.currentIndex.intValue,
-            stepDuration = storyState.currentStory.duration,
-            paused = isPaused,
-            onStepFinish = {
-                if (storyState.nextStory()) {
-                    config.onClose()
-                }
-            },
-        )
+        Column(
+            modifier = Modifier.statusBarsPadding(),
+        ) {
+            StoriesProgressBar(
+                steps = storyState.steps,
+                currentStep = storyState.currentIndex.intValue,
+                stepDuration = storyState.currentStory.duration,
+                paused = isPaused,
+                onStepFinish = {
+                    if (storyState.nextStory()) {
+                        config.onClose()
+                    }
+                },
+            )
+            Icon(
+                painter = rememberVectorPainter(
+                    image = ImageVector.vectorResource(R.drawable.ic_close_24),
+                ),
+                tint = TangemTheme.colors.icon.constant,
+                contentDescription = null,
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(top = 14.dp, end = 16.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = LocalIndication.current,
+                        onClick = config.onClose,
+                    ),
+            )
+        }
     }
 }
 
