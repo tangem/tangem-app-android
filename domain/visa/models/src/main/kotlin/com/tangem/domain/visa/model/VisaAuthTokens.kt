@@ -15,3 +15,7 @@ data class VisaAuthTokens(
     @JvmInline
     value class RefreshToken(val value: String)
 }
+
+fun VisaAuthTokens.getAuthHeader(): String {
+    return "Bearer $accessToken"
+}
