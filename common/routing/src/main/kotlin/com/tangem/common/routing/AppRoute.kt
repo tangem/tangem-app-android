@@ -257,17 +257,7 @@ sealed class AppRoute(val path: String) : Route {
         val userWalletId: UserWalletId,
         val cryptoCurrencyId: CryptoCurrency.ID,
         val yield: Yield,
-    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/${yield.id}"),
-        RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val USER_WALLET_ID_KEY = "userWalletId"
-            const val CRYPTO_CURRENCY_ID_KEY = "cryptoCurrencyId"
-            const val YIELD_KEY = "yield"
-        }
-    }
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/${yield.id}")
 
     @Serializable
     data object PushNotification : AppRoute(path = "/push_notification")
