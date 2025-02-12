@@ -53,7 +53,7 @@ internal class PreviewUserWalletListComponent : UserWalletListComponent {
                 ),
             ),
             addNewWalletText = resourceReference(R.string.user_wallet_list_add_button),
-            isWalletSavingInProgress = false,
+            isWalletSavingInProgress = true,
             onAddNewWalletClick = {},
         ),
     )
