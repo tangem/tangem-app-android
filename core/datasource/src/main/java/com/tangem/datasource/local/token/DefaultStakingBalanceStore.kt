@@ -1,31 +1,32 @@
 package com.tangem.datasource.local.token
 
+import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
+import com.tangem.datasource.local.token.entity.YieldBalanceWrappersDTO
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 
 internal class DefaultStakingBalanceStore(
-    private val dataStore: StringKeyDataStore<Set<YieldBalanceWrapperDTO>>,
+    private val dataStore: DataStore<YieldBalanceWrappersDTO>,
 ) : StakingBalanceStore {
 
-    private val mutex = Mutex()
-
     override fun get(userWalletId: UserWalletId): Flow<Set<YieldBalanceWrapperDTO>> {
-        return dataStore.get(userWalletId.stringValue)
+        return dataStore.data.map { it[userWalletId.stringValue].orEmpty() }
     }
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId): Set<YieldBalanceWrapperDTO>? {
-        return dataStore.getSyncOrNull(userWalletId.stringValue)
+        return dataStore.data.firstOrNull()
+            ?.get(userWalletId.stringValue)
     }
 
     override suspend fun store(userWalletId: UserWalletId, items: Set<YieldBalanceWrapperDTO>) {
-        mutex.withLock {
-            dataStore.store(userWalletId.stringValue, items)
+        dataStore.updateData { current ->
+            current.toMutableMap().apply {
+                this[userWalletId.stringValue] = items
+            }
         }
     }
 
@@ -34,7 +35,7 @@ internal class DefaultStakingBalanceStore(
         address: String,
         integrationId: String,
     ): Flow<YieldBalanceWrapperDTO?> {
-        return dataStore.get(userWalletId.stringValue)
+        return get(userWalletId)
             .map { balances ->
                 balances.firstOrNull { it.integrationId == integrationId && it.addresses.address == address }
             }
@@ -45,7 +46,7 @@ internal class DefaultStakingBalanceStore(
         address: String,
         integrationId: String,
     ): YieldBalanceWrapperDTO? {
-        return dataStore.getSyncOrNull(userWalletId.stringValue)
+        return getSyncOrNull(userWalletId)
             ?.firstOrNull { it.integrationId == integrationId && it.addresses.address == address }
     }
 
@@ -55,12 +56,10 @@ internal class DefaultStakingBalanceStore(
         address: String,
         item: YieldBalanceWrapperDTO,
     ) {
-        mutex.withLock {
-            val balances = dataStore.getSyncOrNull(userWalletId.stringValue)
-                ?.addOrReplace(item) { it.integrationId == integrationId && it.addresses.address == address }
-                ?: setOf(item)
+        val balances = getSyncOrNull(userWalletId)
+            ?.addOrReplace(item) { it.integrationId == integrationId && it.addresses.address == address }
+            ?: setOf(item)
 
-            dataStore.store(userWalletId.stringValue, balances)
-        }
+        store(userWalletId, balances)
     }
 }
