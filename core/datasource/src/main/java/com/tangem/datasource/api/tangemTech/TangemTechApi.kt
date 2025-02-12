@@ -127,10 +127,7 @@ interface TangemTechApi {
     suspend fun getHotCrypto(@Query("currency") currencyId: String): ApiResponse<HotCryptoResponse>
 
     @GET("stories/{story_id}")
-    suspend fun getStoryById(
-        @Path("story_id") storyId: String,
-        @Query("language") language: String,
-    ): ApiResponse<StoryContentResponse>
+    suspend fun getStoryById(@Path("story_id") storyId: String): ApiResponse<StoryContentResponse>
 
     companion object {
         val marketsQuoteFields = listOf(
