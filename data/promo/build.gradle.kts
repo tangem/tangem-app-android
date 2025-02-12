@@ -14,6 +14,8 @@ dependencies {
     implementation(deps.androidx.datastore)
 
     implementation(deps.jodatime)
+    implementation(deps.timber)
+
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
 
