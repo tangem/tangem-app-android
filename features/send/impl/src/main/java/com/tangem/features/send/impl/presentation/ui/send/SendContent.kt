@@ -3,7 +3,6 @@ package com.tangem.features.send.impl.presentation.ui.send
 import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.animation.core.MutableTransitionState
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -104,7 +103,6 @@ private fun LazyListScope.blocks(uiState: SendUiState) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modifier) {
     item(key = TAP_HELP_KEY) {
         val animationState = remember { MutableTransitionState(false) }
@@ -122,11 +120,10 @@ private fun LazyListScope.tapHelp(isDisplay: Boolean, modifier: Modifier = Modif
             ).plus(fadeIn()),
             exit = slideOutVertically().plus(fadeOut()),
         ) {
-            modifier
-                .fillMaxWidth()
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
+                modifier = modifier
+                    .fillMaxWidth()
                     .animateItem(fadeInSpec = null, fadeOutSpec = null)
                     .padding(top = TangemTheme.dimens.spacing20),
             ) {
