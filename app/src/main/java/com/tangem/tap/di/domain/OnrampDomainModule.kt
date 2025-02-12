@@ -236,4 +236,10 @@ internal object OnrampDomainModule {
     fun provideGetHotCryptoTokensUseCase(hotCryptoRepository: HotCryptoRepository): GetHotCryptoUseCase {
         return GetHotCryptoUseCase(hotCryptoRepository)
     }
+
+    @Provides
+    @Singleton
+    fun provideFetchHotCryptoUseCase(hotCryptoRepository: HotCryptoRepository): FetchHotCryptoUseCase {
+        return FetchHotCryptoUseCase(hotCryptoRepository)
+    }
 }
