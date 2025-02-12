@@ -1,5 +1,6 @@
 package com.tangem.common.ui.expressStatus
 
+import android.content.res.Configuration
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
@@ -203,8 +204,9 @@ private fun StepSeparator() {
     )
 }
 
-@Preview
 @Composable
+@Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun Preview_ExchangeStatusBlock() {
     val state = ExpressStatusUM(
         title = resourceReference(R.string.express_exchange_status_title),
