@@ -4,6 +4,7 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
@@ -48,6 +49,7 @@ internal class WalletClickIntents @Inject constructor(
     private val rampStateManager: RampStateManager,
     private val dispatchers: CoroutineDispatcherProvider,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -133,6 +135,10 @@ internal class WalletClickIntents @Inject constructor(
                 }
 
                 async { rampStateManager.fetchSellServiceData() }.let(::add)
+
+                if (onrampFeatureToggles.isHotTokensEnabled) {
+                    async { fetchHotCryptoUseCase() }.let(::add)
+                }
             }
                 .awaitAll()
 
