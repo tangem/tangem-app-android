@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import coil.ImageLoader
 import coil.memory.MemoryCache
+import coil.request.CachePolicy
 import coil.util.Logger
 import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import okhttp3.OkHttpClient
@@ -24,6 +25,7 @@ fun createCoilImageLoader(context: Context, logEnabled: Boolean = false): ImageL
                     .build()
             }
         }
+        .memoryCachePolicy(CachePolicy.ENABLED)
         .memoryCache {
             MemoryCache.Builder(context)
                 .maxSizePercent(COIL_MEMORY_CACHE_SIZE)
