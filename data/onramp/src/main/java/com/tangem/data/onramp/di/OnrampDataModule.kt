@@ -2,6 +2,7 @@ package com.tangem.data.onramp.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.onramp.DefaultHotCryptoRepository
 import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
@@ -10,6 +11,7 @@ import com.tangem.data.onramp.converters.error.OnrampErrorConverter
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.onramp.OnrampApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
@@ -95,11 +97,19 @@ internal object OnrampDataModule {
         excludedBlockchains: ExcludedBlockchains,
         hotCryptoResponseStore: HotCryptoResponseStore,
         userWalletsStore: UserWalletsStore,
+        tangemTechApi: TangemTechApi,
+        appPreferencesStore: AppPreferencesStore,
+        dispatchers: CoroutineDispatcherProvider,
+        analyticsEventHandler: AnalyticsEventHandler,
     ): HotCryptoRepository {
         return DefaultHotCryptoRepository(
             excludedBlockchains = excludedBlockchains,
             hotCryptoResponseStore = hotCryptoResponseStore,
             userWalletsStore = userWalletsStore,
+            tangemTechApi = tangemTechApi,
+            appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatchers,
+            analyticsEventHandler = analyticsEventHandler,
         )
     }
 }

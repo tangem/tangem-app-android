@@ -32,7 +32,6 @@ dependencies {
     implementation(projects.domain.staking.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.models)
-    implementation(projects.features.onramp.api)
 
     /** Tangem libraries */
     implementation(deps.tangem.blockchain)
