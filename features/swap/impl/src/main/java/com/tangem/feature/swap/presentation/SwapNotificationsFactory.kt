@@ -160,7 +160,7 @@ internal class SwapNotificationsFactory(
         addExistentialWarningNotification(
             existentialDeposit = quoteModel.currencyCheck?.existentialDeposit,
             feeAmount = fee?.feeValue.orZero(),
-            sendingAmount = amount.value,
+            sendingAmount = amountToRequest.value,
             cryptoCurrencyStatus = fromCurrencyStatus,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
                 actions.onReduceByAmount(
