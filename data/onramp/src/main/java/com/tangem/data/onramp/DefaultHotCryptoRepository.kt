@@ -1,6 +1,8 @@
 package com.tangem.data.onramp
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.data.onramp.converters.HotCryptoCurrencyConverter
@@ -15,8 +17,12 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObject
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.common.extensions.canHandleBlockchain
+import com.tangem.domain.common.extensions.canHandleToken
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.onramp.repositories.HotCryptoRepository
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
@@ -64,9 +70,9 @@ internal class DefaultHotCryptoRepository(
         ) { walletsWithTokens, hotCrypto ->
             hotCrypto ?: return@combine emptyMap()
 
-            walletsWithTokens.mapValues { (_, tokens) ->
-                hotCrypto.filterTokens(tokens)
-            }
+            walletsWithTokens
+                .mapValues { hotCrypto.filterTokens(it) }
+                .mapKeys { it.key.walletId }
         }
             .onEach(hotCryptoResponseStore::store)
             .launchIn(scope = coroutineScope)
@@ -91,13 +97,13 @@ internal class DefaultHotCryptoRepository(
             }
     }
 
-    private fun getWalletsWithTokensFlow(): Flow<Map<UserWalletId, List<UserTokensResponse.Token>>> {
+    private fun getWalletsWithTokensFlow(): Flow<Map<UserWallet, List<UserTokensResponse.Token>>> {
         return userWalletsStore.userWallets.flatMapLatest { userWallets ->
             val flows = userWallets.map { userWallet ->
                 appPreferencesStore.getObject<UserTokensResponse>(
                     key = PreferencesKeys.getUserTokensKey(userWallet.walletId.stringValue),
                 )
-                    .map { userWallet.walletId to it?.tokens.orEmpty() }
+                    .map { userWallet to it?.tokens.orEmpty() }
             }
 
             combine(flows) { it.toMap() }
@@ -129,14 +135,42 @@ internal class DefaultHotCryptoRepository(
             }
     }
 
-    private fun HotCryptoResponse.filterTokens(tokens: List<UserTokensResponse.Token>): HotCryptoResponse {
+    private fun HotCryptoResponse.filterTokens(
+        walletWithTokens: Map.Entry<UserWallet, List<UserTokensResponse.Token>>,
+    ): HotCryptoResponse {
+        val (userWallet, tokens) = walletWithTokens
+
         return copy(
             tokens = this.tokens.filter { hotToken ->
-                tokens.none {
-                    it.id == hotToken.id && it.contractAddress == hotToken.contractAddress &&
-                        it.networkId == hotToken.networkId
-                }
+                !tokens.hasAlreadyAdded(hotToken) && userWallet.canHandleHotCrypto(hotToken)
             },
         )
+    }
+
+    private fun List<UserTokensResponse.Token>.hasAlreadyAdded(hotToken: HotCryptoResponse.Token): Boolean {
+        return any { token ->
+            token.id == hotToken.id && token.contractAddress == hotToken.contractAddress &&
+                token.networkId == hotToken.networkId
+        }
+    }
+
+    // TODO: [REDACTED_JIRA]
+    private fun UserWallet.canHandleHotCrypto(hotToken: HotCryptoResponse.Token): Boolean {
+        val isToken = hotToken.contractAddress != null && hotToken.decimalCount != null
+        val blockchain = hotToken.networkId?.let { Blockchain.fromNetworkId(it) } ?: return false
+
+        return if (isToken) {
+            scanResponse.card.canHandleToken(
+                blockchain = blockchain,
+                cardTypesResolver = cardTypesResolver,
+                excludedBlockchains = excludedBlockchains,
+            )
+        } else {
+            scanResponse.card.canHandleBlockchain(
+                blockchain = blockchain,
+                cardTypesResolver = cardTypesResolver,
+                excludedBlockchains = excludedBlockchains,
+            )
+        }
     }
 }
