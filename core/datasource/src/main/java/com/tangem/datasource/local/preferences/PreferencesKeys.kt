@@ -119,7 +119,7 @@ object PreferencesKeys {
 
     val WAS_LOG_FILE_CLEARED by lazy { booleanPreferencesKey(name = "wasLogFileCleared") }
 
-    val SHOULD_SHOW_SWAP_STORIES_KEY by lazy { booleanPreferencesKey("shouldShowSwapStories") }
+    fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")
 
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
