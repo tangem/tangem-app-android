@@ -21,6 +21,7 @@ import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.balancehiding.ListenToFlipsUseCase
 import com.tangem.domain.balancehiding.UpdateBalanceHidingSettingsUseCase
+import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.settings.DeleteDeprecatedLogsUseCase
@@ -28,6 +29,7 @@ import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -55,6 +57,8 @@ internal class MainViewModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
+    private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
+    onrampFeatureToggles: OnrampFeatureToggles,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -73,6 +77,10 @@ internal class MainViewModel @Inject constructor(
             fetchUserCountryUseCase().onLeft {
                 Timber.e("Unable to fetch the user country code $it")
             }
+        }
+
+        if (onrampFeatureToggles.isHotTokensEnabled) {
+            viewModelScope.launch { fetchHotCryptoUseCase() }
         }
 
         updateAppCurrencies()
