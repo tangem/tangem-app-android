@@ -74,8 +74,10 @@ internal class HotCryptoCurrencyConverter(
     }
 
     private fun createNetwork(networkId: String): Network? {
+        val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+
         return getNetwork(
-            blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)),
+            blockchain = blockchain,
             extraDerivationPath = null,
             scanResponse = scanResponse,
             excludedBlockchains = excludedBlockchains,
