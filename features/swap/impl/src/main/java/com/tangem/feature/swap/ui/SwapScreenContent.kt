@@ -3,16 +3,22 @@ package com.tangem.feature.swap.ui
 import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -259,31 +265,27 @@ private fun getAnnotatedStringForLegalsWithClick(
 
 @Composable
 private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
-    Card(
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 2.dp,
-        ),
-        shape = CircleShape,
-        colors = CardDefaults.cardColors(
-            containerColor = TangemTheme.colors.background.action,
-            disabledContainerColor = TangemTheme.colors.background.action,
-            contentColor = TangemTheme.colors.text.primary1,
-            disabledContentColor = TangemTheme.colors.text.primary1,
-        ),
-        modifier = modifier.size(TangemTheme.dimens.size48),
-        onClick = state.onChangeCardsClicked,
-        enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
+    Box(
+        modifier = modifier
+            .size(TangemTheme.dimens.size48)
+            .shadow(elevation = 2.dp, shape = CircleShape)
+            .background(TangemTheme.colors.background.action)
+            .clickable(
+                enabled = state.changeCardsButtonState == ChangeCardsButtonState.ENABLED,
+                onClick = state.onChangeCardsClicked,
+                indication = ripple(),
+                interactionSource = remember { MutableInteractionSource() },
+            ),
     ) {
         when (state.changeCardsButtonState) {
             ChangeCardsButtonState.UPDATE_IN_PROGRESS -> {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .size(TangemTheme.dimens.size16)
-                        .padding(TangemTheme.dimens.spacing14),
-                    color = TangemTheme.colors.icon.primary1,
-                    strokeWidth = TangemTheme.dimens.size2,
-                )
+                Box {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(TangemTheme.dimens.spacing12),
+                        color = TangemTheme.colors.icon.primary1,
+                        strokeWidth = TangemTheme.dimens.size2,
+                    )
+                }
             }
             ChangeCardsButtonState.ENABLED -> {
                 Icon(
