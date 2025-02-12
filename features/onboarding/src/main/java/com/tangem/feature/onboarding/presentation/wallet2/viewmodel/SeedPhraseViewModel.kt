@@ -417,7 +417,10 @@ class SeedPhraseViewModel @Inject constructor(
             updateUi {
                 val mediateState = uiBuilder.importSeedPhrase.insertSuggestionWord(uiState, insertResult)
                 uiBuilder.importSeedPhrase.updateSuggestions(mediateState, persistentListOf())
+                // copy of TextFieldValue has no effect for textChange callback and seed validation doesn't work
+                // call validation force
             }
+            validateMnemonic(uiState.importSeedPhraseState.fieldSeedPhrase.textFieldValue.text)
         }
     }
 
