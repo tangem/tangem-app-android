@@ -15,7 +15,6 @@ import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRA
 import com.tangem.datasource.api.express.models.request.LeastTokenInfo
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
-import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoLoader
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
@@ -47,7 +46,6 @@ internal class DefaultCurrenciesRepository(
     private val cacheRegistry: CacheRegistry,
     private val appPreferencesStore: AppPreferencesStore,
     private val expressServiceLoader: ExpressServiceLoader,
-    private val hotCryptoLoader: HotCryptoLoader,
     private val dispatchers: CoroutineDispatcherProvider,
     excludedBlockchains: ExcludedBlockchains,
 ) : CurrenciesRepository {
@@ -606,7 +604,6 @@ internal class DefaultCurrenciesRepository(
 
         coroutineScope {
             launch { expressServiceLoader.update(userWalletId, tokens) }
-            launch { hotCryptoLoader.fetch(tokens = userTokens.tokens) }
         }
     }
 
@@ -628,7 +625,6 @@ internal class DefaultCurrenciesRepository(
             block = {
                 coroutineScope {
                     launch { expressServiceLoader.update(userWalletId, tokens) }
-                    launch { hotCryptoLoader.update(cryptoCurrencies) }
                 }
             },
         )
