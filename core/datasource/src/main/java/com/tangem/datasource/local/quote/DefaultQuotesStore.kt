@@ -1,42 +1,55 @@
 package com.tangem.datasource.local.quote
 
+import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
-import com.tangem.datasource.local.quote.model.StoredQuote
+import com.tangem.datasource.local.quote.model.QuoteDM
+import com.tangem.datasource.local.quote.model.QuotesDM
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.utils.extensions.addOrReplace
-import kotlinx.coroutines.flow.*
+import com.tangem.domain.tokens.model.Quote
+import com.tangem.utils.extensions.orZero
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 
 internal class DefaultQuotesStore(
-    private val dataStore: StringKeyDataStore<StoredQuote>,
+    private val dataStore: DataStore<QuotesDM>,
 ) : QuotesStore {
 
-    override fun get(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<StoredQuote>> {
-        return channelFlow {
-            val flows = currenciesIds.map { currencyId -> dataStore.get(currencyId.value) }
+    override fun get(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
+        return dataStore.data
+            .map { quotes -> createQuotes(currenciesIds, quotes) }
+    }
 
-            if (dataStore.isEmpty() || flows.isEmpty()) {
-                send(emptySet())
-            }
+    override suspend fun getSync(currenciesIds: Set<CryptoCurrency.RawID>): Set<Quote> {
+        val quotes = dataStore.data.firstOrNull().orEmpty()
 
-            merge(*flows.toTypedArray())
-                .scan<StoredQuote, Set<StoredQuote>>(emptySet()) { acc, quote ->
-                    acc.addOrReplace(quote) { it.rawCurrencyId == quote.rawCurrencyId }
+        return createQuotes(currenciesIds, quotes)
+    }
+
+    private fun createQuotes(currenciesIds: Set<CryptoCurrency.RawID>, quoteEntities: Set<QuoteDM>): Set<Quote> =
+        currenciesIds.mapTo(mutableSetOf()) { id ->
+            quoteEntities.firstOrNull { it.rawCurrencyId == id }
+                ?.let { quote ->
+                    Quote.Value(
+                        rawCurrencyId = id,
+                        fiatRate = quote.fiatRate,
+                        priceChange = quote.priceChange,
+                    )
                 }
-                .filter(Set<StoredQuote>::isNotEmpty)
-                .collect(::send)
+                ?: Quote.Empty(id)
         }
-    }
-
-    override suspend fun getSync(currenciesIds: Set<CryptoCurrency.RawID>): Set<StoredQuote> {
-        return currenciesIds.mapNotNull { currencyId -> dataStore.getSyncOrNull(currencyId.value) }.toSet()
-    }
 
     override suspend fun store(response: QuotesResponse) {
-        val quotes = response.quotes.mapValues { (id, quote) ->
-            StoredQuote(id, quote)
+        val newQuotes = response.quotes.mapTo(mutableSetOf()) { (currencyId, quote) ->
+            QuoteDM(
+                rawCurrencyId = CryptoCurrency.RawID(currencyId),
+                fiatRate = quote.price.orZero(),
+                priceChange = quote.priceChange24h.orZero().movePointLeft(2),
+            )
         }
 
-        dataStore.store(quotes)
+        dataStore.updateData { storedQuotes ->
+            (newQuotes + storedQuotes).distinctBy { it.rawCurrencyId }.toSet()
+        }
     }
 }
