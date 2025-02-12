@@ -35,7 +35,9 @@ internal class DefaultHotCryptoRepository(
                     scanResponse = userWallet.scanResponse,
                     imageHost = it.imageHost,
                     excludedBlockchains = excludedBlockchains,
-                ).convertList(input = it.tokens)
+                )
+                    .convertList(input = it.tokens)
+                    .filterNotNull()
             }
     }
 }
