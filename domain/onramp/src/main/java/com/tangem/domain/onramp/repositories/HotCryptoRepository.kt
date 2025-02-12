@@ -11,6 +11,9 @@ import kotlinx.coroutines.flow.Flow
  */
 interface HotCryptoRepository {
 
+    /** Fetch hot crypto */
+    fun fetchHotCrypto()
+
     /** Get currencies by [userWalletId] */
     fun getCurrencies(userWalletId: UserWalletId): Flow<List<HotCryptoCurrency>>
 }
