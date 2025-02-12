@@ -28,7 +28,7 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.promo.ShouldShowSwapStoriesUseCase
+import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -90,7 +90,7 @@ internal class SwapViewModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
-    private val shouldShowSwapStoriesUseCase: ShouldShowSwapStoriesUseCase,
+    private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val featureToggles: SwapFeatureToggles,
     swapInteractorFactory: SwapInteractor.Factory,
@@ -172,9 +172,7 @@ internal class SwapViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val isShowPromoStories = shouldShowSwapStoriesUseCase.invokeSync() && featureToggles.isPromoStoriesEnabled
-
-            if (isShowPromoStories) {
+            if (featureToggles.isPromoStoriesEnabled) {
                 initStories()
                 swapRouter.openScreen(SwapNavScreen.PromoStories)
             }
@@ -289,12 +287,14 @@ internal class SwapViewModel @Inject constructor(
 
     private fun initStories() {
         viewModelScope.launch {
-            getStoryContentUseCase(StoryContentIds.STORY_FIRST_TIME_SWAP.id).fold(
+            getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id).fold(
                 ifLeft = {
                     Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
                 },
-                ifRight = {
-                    uiState = stateBuilder.createStoriesState(uiState, it)
+                ifRight = { story ->
+                    story?.let {
+                        uiState = stateBuilder.createStoriesState(uiState, story)
+                    }
                 },
             )
         }
@@ -1145,7 +1145,7 @@ internal class SwapViewModel @Inject constructor(
                 swapRouter.openScreen(SwapNavScreen.Success)
             },
             onStoriesClose = {
-                viewModelScope.launch { shouldShowSwapStoriesUseCase.neverToShow() }
+                viewModelScope.launch { shouldShowStoriesUseCase.neverToShow(StoryContentIds.STORY_FIRST_TIME_SWAP.id) }
                 swapRouter.openScreen(SwapNavScreen.Main)
             },
         )
