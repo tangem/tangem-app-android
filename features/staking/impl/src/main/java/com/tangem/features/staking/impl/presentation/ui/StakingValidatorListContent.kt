@@ -31,7 +31,7 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.ValidatorStatePreviewData
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
-import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.utils.extensions.orZero
 
 /**
