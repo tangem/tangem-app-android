@@ -28,7 +28,7 @@ import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.promo.ShouldShowSwapStoriesUseCase
+import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -113,7 +113,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val removeCurrencyUseCase: RemoveCurrencyUseCase,
     private val getExploreUrlUseCase: GetExploreUrlUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val shouldShowSwapStoriesUseCase: ShouldShowSwapStoriesUseCase,
+    private val getStoryContentUseCase: GetStoryContentUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
@@ -610,8 +610,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private suspend fun getSwapRoute(targetRoute: AppRoute): AppRoute {
         val isSwapStoriesEnabled = swapFeatureToggles.isPromoStoriesEnabled
-        val shouldShowSwapStories = shouldShowSwapStoriesUseCase.invokeSync()
-        val showSwapStories = shouldShowSwapStories && isSwapStoriesEnabled
+        val maybeSwapStories = getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
+        val showSwapStories = maybeSwapStories.getOrNull() != null && isSwapStoriesEnabled
 
         return if (showSwapStories) {
             AppRoute.Stories(
