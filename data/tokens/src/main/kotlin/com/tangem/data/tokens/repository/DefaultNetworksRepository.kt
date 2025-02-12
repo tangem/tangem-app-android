@@ -26,10 +26,7 @@ import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -48,15 +45,18 @@ internal class DefaultNetworksRepository(
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val networkStatusFactory = NetworkStatusFactory()
 
-    override suspend fun fetchNetworkStatuses(userWalletId: UserWalletId, networks: Set<Network>, refresh: Boolean) {
-        TODO("Will be implemented in [REDACTED_TASK_KEY]")
-    }
-
     override fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: Set<Network>,
     ): Flow<Set<NetworkStatus>> {
-        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+        return networksStatusesStore.get(userWalletId, networks)
+            .flowOn(dispatchers.io)
+    }
+
+    override suspend fun fetchNetworkStatuses(userWalletId: UserWalletId, networks: Set<Network>, refresh: Boolean) {
+        withContext(dispatchers.io) {
+            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
+        }
     }
 
     override fun getNetworkStatusesUpdatesLegacy(
@@ -167,12 +167,13 @@ internal class DefaultNetworksRepository(
         network: Network,
         currencies: Sequence<CryptoCurrency>,
     ) {
+        val networkCurrencies = currencies.filter { it.network == network }
+
         val result = walletManagersFacade.update(
             userWalletId = userWalletId,
             network = network,
-            extraTokens = currencies
+            extraTokens = networkCurrencies
                 .filterIsInstance<CryptoCurrency.Token>()
-                .filter { it.network == network }
                 .toSet(),
         )
 
@@ -183,7 +184,7 @@ internal class DefaultNetworksRepository(
         val networkStatus = networkStatusFactory.createNetworkStatus(
             network = network,
             result = result,
-            currencies = currencies.toSet(),
+            currencies = networkCurrencies.toSet(),
         )
 
         networksStatusesStore.store(userWalletId, networkStatus)
@@ -214,7 +215,7 @@ internal class DefaultNetworksRepository(
 
     private suspend fun getCurrencies(userWalletId: UserWalletId, networks: Set<Network>): Sequence<CryptoCurrency> {
         val currencies = getCurrencies(userWalletId)
-        return currencies.filter { networks.contains(it.network) }
+        return currencies.filter { it.network in networks }
     }
 
     private suspend fun getCurrencies(userWalletId: UserWalletId): Sequence<CryptoCurrency> {
