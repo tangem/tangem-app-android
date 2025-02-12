@@ -1,5 +1,6 @@
 package com.tangem.datasource.local.network
 
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -7,6 +8,8 @@ import kotlinx.coroutines.flow.Flow
 interface NetworksStatusesStore {
 
     fun get(key: UserWalletId): Flow<Set<NetworkStatus>>
+
+    fun get(key: UserWalletId, networks: Set<Network>): Flow<Set<NetworkStatus>>
 
     suspend fun getSyncOrNull(key: UserWalletId): Set<NetworkStatus>?
 
