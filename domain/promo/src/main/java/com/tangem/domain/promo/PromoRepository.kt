@@ -16,12 +16,14 @@ interface PromoRepository {
     // endregion
 
     // region Stories
-    suspend fun getStoryById(id: String): StoryContent
+    fun getStoryById(id: String): Flow<StoryContent?>
 
-    fun isReadyToShowSwapStories(): Flow<Boolean>
+    suspend fun getStoryByIdSync(id: String): StoryContent?
 
-    suspend fun isReadyToShowSwapStoriesSync(): Boolean
+    fun isReadyToShowStories(storyId: String): Flow<Boolean>
 
-    suspend fun setNeverToShowSwapStories()
+    suspend fun isReadyToShowStoriesSync(storyId: String): Boolean
+
+    suspend fun setNeverToShowStories(storyId: String)
     // endregion
 }
