@@ -484,7 +484,9 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> {
-        TODO("Will be implemented in AND-9911")
+        return stakingBalanceStore.get(userWalletId)
+            .map(yieldBalanceListConverter::convert)
+            .flowOn(dispatchers.io)
     }
 
     override fun getMultiYieldBalanceUpdatesLegacy(
