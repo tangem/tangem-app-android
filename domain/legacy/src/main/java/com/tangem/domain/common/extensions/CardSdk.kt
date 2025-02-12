@@ -9,6 +9,8 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.configs.CardConfig
 import com.tangem.domain.models.scan.CardDTO
 
+// TODO: refactor [REDACTED_JIRA]
+
 /**
 [REDACTED_AUTHOR]
  */
