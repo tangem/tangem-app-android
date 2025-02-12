@@ -2,7 +2,6 @@ package com.tangem.data.tokens.repository
 
 import com.tangem.data.common.api.safeApiCallWithTimeout
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.tokens.utils.QuotesConverter
 import com.tangem.data.tokens.utils.QuotesUnsupportedCurrenciesIdAdapter
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
@@ -29,7 +28,6 @@ internal class DefaultQuotesRepository(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : QuotesRepository {
 
-    private val quotesConverter = QuotesConverter()
     private val quotesUnsupportedCurrenciesAdapter = QuotesUnsupportedCurrenciesIdAdapter()
 
     @Volatile
@@ -37,7 +35,8 @@ internal class DefaultQuotesRepository(
     private val mutex = Mutex()
 
     override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
-        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+        return quotesStore.get(currenciesIds)
+            .flowOn(dispatchers.io)
     }
 
     override suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean) {
@@ -62,7 +61,7 @@ internal class DefaultQuotesRepository(
             .filterNotNull()
             .flatMapLatest { appCurrency ->
                 fetchExpiredQuotes(currenciesIds, appCurrency.id, refresh = refresh)
-                quotesStore.get(currenciesIds).map { quotesConverter.convert(currenciesIds to it) }
+                quotesStore.get(currenciesIds)
             }
             .cancellable()
             .flowOn(dispatchers.io)
@@ -79,17 +78,15 @@ internal class DefaultQuotesRepository(
 
             fetchExpiredQuotes(currenciesIds, selectedAppCurrency.id, refresh)
 
-            val quotes = quotesStore.getSync(currenciesIds)
-
-            quotesConverter.convert(currenciesIds to quotes)
+            quotesStore.getSync(currenciesIds)
         }
     }
 
     override suspend fun getQuoteSync(currencyId: CryptoCurrency.RawID): Quote? {
         return withContext(dispatchers.io) {
             val setOfCurrencyId = setOf(currencyId)
-            val quote = quotesStore.getSync(setOfCurrencyId).firstOrNull()
-            quote?.let { quotesConverter.convert(setOfCurrencyId to setOf(it)).firstOrNull() }
+
+            quotesStore.getSync(setOfCurrencyId).firstOrNull()
         }
     }
 
@@ -134,6 +131,7 @@ internal class DefaultQuotesRepository(
             response,
             replacementIdsResult.idsFiltered,
         )
+
         quotesStore.store(updatedResponse)
     }
 
