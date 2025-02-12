@@ -484,7 +484,9 @@ internal class DefaultStakingRepository(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> {
-        TODO("Will be implemented in [REDACTED_TASK_KEY]")
+        return stakingBalanceStore.get(userWalletId)
+            .map(yieldBalanceListConverter::convert)
+            .flowOn(dispatchers.io)
     }
 
     override fun getMultiYieldBalanceUpdatesLegacy(
