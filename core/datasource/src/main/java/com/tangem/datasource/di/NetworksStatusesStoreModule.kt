@@ -29,7 +29,7 @@ internal object NetworksStatusesStoreModule {
     ): NetworksStatusesStore {
         return DefaultNetworksStatusesStore(
             runtimeDataStore = RuntimeDataStore(),
-            persistneceDataStore = DataStoreFactory.create(
+            persistenceDataStore = DataStoreFactory.create(
                 serializer = NetworkStatusesSerializer(moshi),
                 produceFile = { context.dataStoreFile(fileName = "networks_statuses") },
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
