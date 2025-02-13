@@ -10,6 +10,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.model.VisaActivationOrderInfo
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.model.OnboardingVisaOtherWalletModel
 import com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.ui.OnboardingVisaOtherWallet
@@ -27,7 +28,7 @@ internal class OnboardingVisaOtherWalletComponent(
 
     init {
         model.onDone
-            .onEach { params.onDone() }
+            .onEach { params.onDone(it) }
             .launchIn(componentScope)
     }
 
@@ -50,6 +51,6 @@ internal class OnboardingVisaOtherWalletComponent(
 
     data class Params(
         val childParams: DefaultOnboardingVisaComponent.ChildParams,
-        val onDone: () -> Unit,
+        val onDone: (VisaActivationOrderInfo) -> Unit,
     )
 }
