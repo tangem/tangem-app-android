@@ -89,6 +89,8 @@
   <string name="cardano_max_amount_has_token_title">Недостатньо ADA</string>
   <string name="common_accept">Прийняти</string>
   <string name="common_access_denied">Доступ заборонено</string>
+  <string name="common_add_to_portfolio">Додати у портфель</string>
+  <string name="common_add_token">Додати токен</string>
   <string name="common_all">Усе</string>
   <string name="common_allow">Дозволити</string>
   <string name="common_analytics">Аналітика</string>
@@ -146,6 +148,7 @@
   <string name="common_generate_addresses">Синхронізувати адреси</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
+  <string name="common_hide">Приховати</string>
   <string name="common_hour">година</string>
   <string name="common_import">Імпортувати</string>
   <string name="common_in_progress">В процесі</string>
@@ -317,6 +320,9 @@
   <string name="express_status_bought">Купив %s</string>
   <string name="express_status_buying">Купівля %s</string>
   <string name="express_status_buying_active">Купівля %s...</string>
+  <string name="express_status_hide_button_text">Приховати цю транзакцію</string>
+  <string name="express_status_hide_dialog_text">Після приховування статус транзакції більше не можна буде переглянути. Замість цього ви можете просто провести пальцем, щоб закрити.</string>
+  <string name="express_status_hide_dialog_title">Приховати статус транзакції?</string>
   <string name="express_token_list_empty_search">Токенів не знайдено. Будь ласка, спробуйте інший запит</string>
   <string name="express_transaction_id">ID: %s</string>
   <string name="express_transaction_id_copied">ID транзакції скопійовано</string>
@@ -343,6 +349,8 @@
   <string name="give_permission_unlimited">Необмежено</string>
   <string name="home_button_order">Купити</string>
   <string name="home_button_scan">Сканувати</string>
+  <string name="hot_crypto_add_token_subtitle">в %s</string>
+  <string name="hot_crypto_token_network">В мережі %s</string>
   <string name="information_generated_with_ai">Ця інформація була створена за допомогою ШІ.\nНатисніть тут, якщо знайшли помилку.</string>
   <string name="initial_message_change_access_code_body">Щоб змінити код доступу, прикладіть картку або кільце, як показано вище, і не прибирайте її до закінчення операції</string>
   <string name="initial_message_change_passcode_body">Щоб змінити пароль, прикладіть картку, як показано вище, і не прибирайте її до закінчення операції</string>
@@ -798,12 +806,16 @@
   <string name="staking_details_unbonding_period_info">Період, який ви повинні чекати після запиту на виведення коштів зі стейкінгу, перш ніж токени стануть доступними.</string>
   <string name="staking_details_warmup_period">Період блокування</string>
   <string name="staking_details_warmup_period_info">Відведений час для активації участі в стейкінгу.</string>
+  <string name="staking_error_no_validators_message">Наразі немає вільних валідаторів. Повторіть спробу пізніше.</string>
+  <string name="staking_error_no_validators_title">Стейкінг недоступний</string>
   <string name="staking_give_permission_fee_footer">Комісія за схвалення токену, щоб верифікувати, що саме ви дозволяєте використання токена для стейкінгу.</string>
   <string name="staking_legal">Використовуючи функцію стейкінгу, ви погоджуєтесь з %1$s та %2$s</string>
   <string name="staking_locked">Заблоковано</string>
   <string name="staking_migrate">Перемістити</string>
   <string name="staking_native">Нативний стейкінг</string>
   <string name="staking_no_validators_error_message">На даний момент немає доступних активних валідаторів для стейкінгу. Будь ласка, спробуйте пізніше.</string>
+  <string name="staking_notification_additional_ada_deposit_text">Під час стейкінгу в мережі Cardano використовується весь ваш баланс. Додаткові 2 ADA будуть зарезервовані та повернуті після скасування стейкінгу. Ваша ADA залишається розблокованою під час стейкінгу.</string>
+  <string name="staking_notification_additional_ada_deposit_title">Деталі стейкінгу ADA</string>
   <string name="staking_notification_claim_rewards_text">Зароблені винагороди будуть надіслані на ваш гаманець і доступні для використання відразу</string>
   <string name="staking_notification_earn_rewards_text">Стейкайте безпечно та почніть отримувати ваші винагороди</string>
   <string name="staking_notification_earn_rewards_text_daily">Стейкайте безпечно та почніть отримувати винагороди щоденно</string>
@@ -817,6 +829,8 @@
   <string name="staking_notification_earn_rewards_title">Отримуйте винагороду за стейкінг</string>
   <string name="staking_notification_low_staked_balance_text">Ваш баланс стейкінгу, що залишився, буде занадто низьким, щоб вивести його зі стейкінгу. Вам потрібно буде застейкати більше, щоб досягти мінімальної суми для виводу.</string>
   <string name="staking_notification_low_staked_balance_title">Низький баланс стейкінгу</string>
+  <string name="staking_notification_minimum_balance_error_text">Мінімум %1$s %2$s потрібно для рестейкінгу. Будь ласка, поповніть баланс.</string>
+  <string name="staking_notification_minimum_balance_error_title">Недостатньо %s</string>
   <string name="staking_notification_network_error_text">Стейкінг тимчасово недоступний через проблеми в мережі. Будь ласка, спробуйте пізніше.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкінг в мережі %1$s з новим валідатором автоматично переведе всі раніше застейкані кошти до цього валідатора</string>
   <string name="staking_notification_restake_rewards_text">Реінвестуйте зароблені винагороди у суму стейкінгу, щоб збільшити потенційний прибуток.</string>
@@ -887,6 +901,16 @@
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_promo_text">Обмінюйте більше токенів за вигіднішим курсом прямо у своєму гаманці.</string>
   <string name="swap_promo_title">З\'явився новий провайдер обмінів!</string>
+  <string name="swap_story_fifth_subtitle">Надійна підтримка 24/7, щоб ваші фінансові операції були швидкими та надійними!</string>
+  <string name="swap_story_fifth_title">Цілодобова підтримка</string>
+  <string name="swap_story_first_subtitle">Надійні провайдери дозволяють легко обмінювати активи, забезпечуючи повну безпеку у вашому гаманці</string>
+  <string name="swap_story_first_title">Обмінюйте з нами</string>
+  <string name="swap_story_forth_subtitle">Найвищий рівень безпеки та перевірені провайдери гарантують захист ваших активів при кожному обміні.</string>
+  <string name="swap_story_forth_title">Безпечніше, ніж будь-коли</string>
+  <string name="swap_story_second_subtitle">Отримуйте максимальну вигоду з кращими курсами від надійних провайдерів</string>
+  <string name="swap_story_second_title">Найкращі тарифи</string>
+  <string name="swap_story_third_subtitle">Просто та зручно — обмін токенів в декілька дотиків</string>
+  <string name="swap_story_third_title">Легше, ніж будь-коли</string>
   <string name="swapping_alert_cex_description">Сума включає: \n• комісію постачальника послуг\n• комісію мережі за відправлення %s з біржі назад на адресу користувача.</string>
   <string name="swapping_alert_cex_description_with_slippage">У суму входить:\n- комісія провайдера\n- мережева комісія за відправку %1$s з біржі назад на адресу користувача. \n\nПроскакування провайдера становить до %2$s</string>
   <string name="swapping_alert_dex_description">Сума включає комісію постачальника послуг.</string>
@@ -1063,6 +1087,7 @@
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">Ви впевнені, що хочете скасувати цю транзакцію? Ви не зможете відправити її ще раз</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Ваша транзакція %1$s %2$s не була завершена. Ви можете спробувати відправити її ще раз.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">У вас є незавершена транзакція</string>
+  <string name="warning_last_balance_updated_time">Останнє оновлення було %s</string>
   <string name="warning_low_signatures_message">На цій картці залишається лише %s підписів. Ви повинні вивести всі свої кошти.</string>
   <string name="warning_low_signatures_title">Низька кількість підписів</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Токени в різних мережах можуть мати різні адреси. Переконайтеся, що ваша адреса відповідає мережі, коли переказуєте кошти.</string>
@@ -1097,6 +1122,7 @@
   <string name="warning_solana_rent_fee_message">Мережа Solana стягує орендну плату у розмірі %1$s кожні 2 дні. Акаунти, які не можуть дозволити собі орендну плату, видаляються з мережі. Поповніть свій рахунок на суму понад %2$s, щоб не платити орендну плату.</string>
   <string name="warning_some_networks_unreachable_message">Проведіть пальцем вниз для оновлення або спробуйте пізніше.</string>
   <string name="warning_some_networks_unreachable_title">Деякі мережі недоступні</string>
+  <string name="warning_some_token_balances_not_updated">Деякі баланси токенів не вдалося оновити</string>
   <string name="warning_testnet_card_message">Це картка Testnet. Вона не може обробляти транзакції і повинна використовуватися лише для тестування та розробки.</string>
   <string name="warning_testnet_card_title">Лише для цілей тестування</string>
   <string name="welcome_interrupted_backup_alert_discard">Відмовитися</string>
