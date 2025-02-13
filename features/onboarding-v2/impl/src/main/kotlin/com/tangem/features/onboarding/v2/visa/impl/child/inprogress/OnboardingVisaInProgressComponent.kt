@@ -11,6 +11,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.model.OnboardingVisaInProgressModel
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.ui.OnboardingVisaInProgress
+import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
@@ -24,7 +25,7 @@ internal class OnboardingVisaInProgressComponent(
 
     init {
         model.onDone
-            .onEach { params.onDone() }
+            .onEach { params.onDone(it) }
             .launchIn(componentScope)
     }
 
@@ -43,6 +44,12 @@ internal class OnboardingVisaInProgressComponent(
 
     data class Params(
         val childParams: DefaultOnboardingVisaComponent.ChildParams,
-        val onDone: () -> Unit,
-    )
+        val onDone: (DoneEvent) -> Unit,
+    ) {
+
+        sealed class DoneEvent {
+            data class NavigateTo(val route: OnboardingVisaRoute) : DoneEvent()
+            data object Activated : DoneEvent()
+        }
+    }
 }
