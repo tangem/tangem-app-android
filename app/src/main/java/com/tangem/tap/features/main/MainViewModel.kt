@@ -30,6 +30,7 @@ import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -58,6 +59,7 @@ internal class MainViewModel @Inject constructor(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val imagePreloader: ImagePreloader,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
+    private val swapFeatureToggles: SwapFeatureToggles,
     onrampFeatureToggles: OnrampFeatureToggles,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
@@ -298,12 +300,16 @@ internal class MainViewModel @Inject constructor(
     private fun preloadImages() {
         try {
             viewModelScope.launch {
-                val swapStories = getStoryContentUseCase(StoryContentIds.STORY_FIRST_TIME_SWAP.id).getOrNull()
-                    ?: return@launch
-                val storiesImages = swapStories.getImageUrls()
+                val swapStories = if (swapFeatureToggles.isPromoStoriesEnabled) {
+                    getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
+                        .getOrNull()
+                } else {
+                    null
+                }
 
+                val storiesImages = swapStories?.getImageUrls()
                 // try to preload images for stories
-                storiesImages.forEach(imagePreloader::preload)
+                storiesImages?.forEach(imagePreloader::preload)
             }
         } catch (ex: Exception) {
             Timber.e(ex.message)
