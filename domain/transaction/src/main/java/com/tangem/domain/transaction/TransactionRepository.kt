@@ -1,9 +1,6 @@
 package com.tangem.domain.transaction
 
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionExtras
-import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
@@ -65,6 +62,7 @@ interface TransactionRepository {
         signer: TransactionSigner,
         userWalletId: UserWalletId,
         network: Network,
+        sendMode: TransactionSender.MultipleTransactionSendMode = TransactionSender.MultipleTransactionSendMode.DEFAULT,
     ): com.tangem.blockchain.extensions.Result<TransactionsSendResult>
 
     fun createTransactionDataExtras(
