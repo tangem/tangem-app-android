@@ -6,7 +6,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.promo.GetStoryContentUseCase
-import com.tangem.domain.promo.ShouldShowSwapStoriesUseCase
+import com.tangem.domain.promo.ShouldShowStoriesUseCase
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -22,7 +22,7 @@ internal class StoriesModel @Inject constructor(
     private val router: Router,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val shouldShowSwapStoriesUseCase: ShouldShowSwapStoriesUseCase,
+    private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
 ) : Model() {
     val state: StateFlow<SwapStoriesUM> get() = _state
 
@@ -38,7 +38,7 @@ internal class StoriesModel @Inject constructor(
     private fun openScreen(hideStories: Boolean = true) {
         modelScope.launch {
             if (hideStories) {
-                shouldShowSwapStoriesUseCase.neverToShow()
+                shouldShowStoriesUseCase.neverToShow(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
             }
             router.pop()
             router.push(params.nextScreen)
@@ -47,17 +47,21 @@ internal class StoriesModel @Inject constructor(
 
     private fun initStories() {
         modelScope.launch {
-            getStoryContentUseCase(params.storyId).fold(
+            getStoryContentUseCase.invokeSync(params.storyId).fold(
                 ifLeft = {
                     Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
                     openScreen(hideStories = false) // Fallback to target screen
                 },
                 ifRight = { swapStory ->
-                    _state.update {
-                        SwapStoriesFactory.createStoriesState(
-                            swapStory = swapStory,
-                            onStoriesClose = ::openScreen,
-                        )
+                    if (swapStory == null) {
+                        openScreen(hideStories = false) // Fallback to target screen
+                    } else {
+                        _state.update {
+                            SwapStoriesFactory.createStoriesState(
+                                swapStory = swapStory,
+                                onStoriesClose = ::openScreen,
+                            )
+                        }
                     }
                 },
             )
