@@ -15,6 +15,7 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
@@ -44,6 +45,7 @@ internal class OnrampOperationModel @Inject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    private val rampStateManager: RampStateManager,
 ) : Model() {
 
     val state: StateFlow<OnrampOperationUM> get() = _state
@@ -76,11 +78,21 @@ internal class OnrampOperationModel @Inject constructor(
     }
 
     fun onHotTokenClick(status: CryptoCurrencyStatus) {
-        analyticsEventHandler.send(
-            event = MainScreenAnalyticsEvent.HotTokenClicked(currencySymbol = status.currency.symbol),
-        )
+        modelScope.launch {
+            val isAvailable = rampStateManager.availableForBuy(
+                scanResponse = selectedUserWallet.scanResponse,
+                userWalletId = params.userWalletId,
+                cryptoCurrency = status.currency,
+            )
 
-        selectTokenIfDemoModeOff(status)
+            if (isAvailable) {
+                analyticsEventHandler.send(
+                    event = MainScreenAnalyticsEvent.HotTokenClicked(currencySymbol = status.currency.symbol),
+                )
+
+                selectTokenIfDemoModeOff(status)
+            }
+        }
     }
 
     private fun selectTokenIfDemoModeOff(status: CryptoCurrencyStatus) {
