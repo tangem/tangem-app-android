@@ -3,6 +3,7 @@ package com.tangem.tap.domain.visa
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.CardWallet
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
@@ -56,7 +57,7 @@ internal class VisaCardScanHandler @Inject constructor(
             session = session,
         )
 
-        val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: run {
+        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
             val activationInput =
                 VisaActivationInput(card.cardId, card.cardPublicKey.toHexString(), card.isAccessCodeSet)
             val activationStatus = VisaCardActivationStatus.NotStartedActivation(activationInput)
@@ -110,7 +111,7 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: run {
+        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
             Timber.e("Failed to find extended public key while handling wallet authorization")
             return CompletionResult.Failure(
                 TangemSdkError.Underlying(VisaCardScanHandlerError.FailedToFindDerivedWalletKey.errorDescription),
@@ -124,7 +125,7 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }
 
-        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnVisaCurve(extendedPublicKey.publicKey)
+        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(extendedPublicKey.publicKey)
             .getOrElse {
                 return CompletionResult.Failure(
                     TangemSdkError.Underlying("Cannot generate address on Visa curve"),
