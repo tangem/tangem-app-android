@@ -16,7 +16,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class DefaultNetworksStatusesStore(
     private val runtimeDataStore: RuntimeDataStore<Set<NetworkStatus>>,
-    private val persistneceDataStore: DataStore<NetworkStatusesDM>,
+    private val persistenceDataStore: DataStore<NetworkStatusesDM>,
 ) : NetworksStatusesStore {
 
     private val mutex = Mutex()
@@ -26,7 +26,7 @@ internal class DefaultNetworksStatusesStore(
     }
 
     override fun get(key: UserWalletId, networks: Set<Network>): Flow<Set<NetworkStatus>> = channelFlow {
-        val cachedStatuses = persistneceDataStore.data.firstOrNull()
+        val cachedStatuses = persistenceDataStore.data.firstOrNull()
             ?.get(key.stringValue)
             ?.mapNotNullTo(mutableSetOf()) { status ->
                 val network = networks
@@ -43,22 +43,12 @@ internal class DefaultNetworksStatusesStore(
 
         runtimeDataStore.get(provideStringKey(key))
             .onEach { runtimeStatuses ->
-                if (cachedStatuses.isEmpty()) {
-                    send(runtimeStatuses)
-                } else {
-                    val mergedStatuses = cachedStatuses.toMutableList()
+                val mergedStatuses = mergeStatuses(
+                    cachedStatuses = cachedStatuses,
+                    runtimeStatuses = runtimeStatuses,
+                )
 
-                    runtimeStatuses.forEach { runtimeStatus ->
-                        val index = mergedStatuses.indexOfFirst { it.network == runtimeStatus.network }
-                        if (index != -1) {
-                            mergedStatuses[index] = runtimeStatus
-                        } else {
-                            mergedStatuses.add(runtimeStatus)
-                        }
-                    }
-
-                    send(mergedStatuses.toSet())
-                }
+                send(mergedStatuses)
             }
             .launchIn(scope = this)
     }
@@ -97,13 +87,28 @@ internal class DefaultNetworksStatusesStore(
         }
     }
 
+    /**
+     * Merge [cachedStatuses] with [runtimeStatuses]
+     * The resulting set contains statuses from both sets.
+     * If a status with the same network is in both sets, the status from [runtimeStatuses] is used.
+     */
+    private fun mergeStatuses(
+        cachedStatuses: Set<NetworkStatus>,
+        runtimeStatuses: Set<NetworkStatus>,
+    ): Set<NetworkStatus> {
+        val runtimeMap = runtimeStatuses.associateBy { it.network }
+        val mergedCached = cachedStatuses.filter { it.network !in runtimeMap.keys }
+
+        return mergedCached.toSet() + runtimeStatuses
+    }
+
     private suspend fun storeNetworkStatusInPersistence(userWalletId: UserWalletId, networkStatus: NetworkStatus) {
         val status = networkStatus.value
         val network = networkStatus.network
 
         if (status !is NetworkStatus.Verified) return
 
-        persistneceDataStore.updateData { storedStatuses ->
+        persistenceDataStore.updateData { storedStatuses ->
             val userWalletStatuses = storedStatuses[userWalletId.stringValue] ?: emptySet()
             val updatedStatuses = userWalletStatuses.addOrReplace(status.toDataModel(network)) {
                 it.networkId == network.id
