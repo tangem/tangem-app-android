@@ -2,13 +2,12 @@ package com.tangem.features.staking.impl.presentation.state.helpers
 
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
-import com.tangem.domain.staking.GetStakingTransactionUseCase
-import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
-import com.tangem.domain.staking.SubmitHashUseCase
+import com.tangem.domain.staking.*
 import com.tangem.domain.staking.model.SubmitHashData
+import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.StakingError
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -44,7 +43,7 @@ import java.math.BigDecimal
 internal class StakingTransactionSender @AssistedInject constructor(
     private val stateController: StakingStateController,
     private val stakingBalanceUpdater: StakingBalanceUpdater.Factory,
-    private val getStakingTransactionUseCase: GetStakingTransactionUseCase,
+    private val getStakingTransactionsUseCase: GetStakingTransactionsUseCase,
     private val getConstructedStakingTransactionUseCase: GetConstructedStakingTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
@@ -192,7 +191,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         val validatorAddress = validatorState.chosenValidator.address
         val amount = getAmount(amountState, fee, confirmationState.reduceAmountBy)
 
-        return getStakingTransactionUseCase(
+        return getStakingTransactionsUseCase(
             userWalletId = userWallet.walletId,
             network = cryptoCurrencyStatus.currency.network,
             params = ActionParams(
@@ -216,19 +215,36 @@ internal class StakingTransactionSender @AssistedInject constructor(
         onSendSuccess: (txUrl: String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
     ) {
+        if (fullTransactionsData.isEmpty()) return
+
+        val sortedTransactions = fullTransactionsData.sortedBy { it.stakeKitTransaction.stepIndex }
+
+        val firstTransaction = sortedTransactions.first()
+        val network = firstTransaction.stakeKitTransaction.network
+
+        val sendMode = if (network == NetworkType.SOLANA &&
+            firstTransaction.stakeKitTransaction.type == StakingTransactionType.SPLIT
+        ) {
+            TransactionSender.MultipleTransactionSendMode.WAIT_AFTER_FIRST
+        } else {
+            TransactionSender.MultipleTransactionSendMode.DEFAULT
+        }
+
         sendTransactionUseCase(
-            txsData = fullTransactionsData.map { it.tangemTransaction },
+            txsData = sortedTransactions.map { it.tangemTransaction },
             userWallet = userWallet,
             network = cryptoCurrencyStatus.currency.network,
+            sendMode = sendMode,
         ).fold(
             ifLeft = { error ->
                 onSendError(error)
             },
             ifRight = { transactionHashes ->
                 submitHash(
-                    transactions = fullTransactionsData.map { it.stakeKitTransaction },
+                    transactions = sortedTransactions.map { it.stakeKitTransaction },
                     transactionHashes = transactionHashes,
                 )
+
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
                     networkId = cryptoCurrencyStatus.currency.network.id,
