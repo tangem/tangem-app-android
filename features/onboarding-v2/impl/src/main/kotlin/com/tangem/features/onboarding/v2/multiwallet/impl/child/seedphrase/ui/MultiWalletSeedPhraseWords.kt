@@ -19,6 +19,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.GeneratedWordsType
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM.GenerateSeedPhrase.MnemonicGridItem
 import kotlinx.collections.immutable.ImmutableList
@@ -67,19 +68,24 @@ internal fun MultiWalletSeedPhraseWords(
 private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifier: Modifier = Modifier) {
     SegmentedButtons(
         modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing76),
-        config = persistentListOf(0, 1),
-        initialSelectedItem = if (state.words24OptionSelected.not()) 0 else 1,
+        config = persistentListOf(GeneratedWordsType.Words12, GeneratedWordsType.Words24),
+        initialSelectedItem = state.option,
         onClick = {
-            if (state.words24OptionSelected && it == 0 || state.words24OptionSelected.not() && it == 1) {
-                state.onWords24OptionSwitch()
+            when {
+                state.option == GeneratedWordsType.Words12 && it == GeneratedWordsType.Words24 -> {
+                    state.onOptionChange(it)
+                }
+                state.option == GeneratedWordsType.Words24 && it == GeneratedWordsType.Words12 -> {
+                    state.onOptionChange(it)
+                }
             }
         },
     ) {
         Text(
             text = pluralStringResourceSafe(
                 id = R.plurals.onboarding_seed_generate_words_count,
-                count = if (it == 0) 12 else 24,
-                if (it == 0) 12 else 24,
+                count = state.option.length,
+                state.option.length,
             ),
             modifier = Modifier
                 .padding(vertical = TangemTheme.dimens.spacing10)
@@ -110,8 +116,8 @@ private fun TitleBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, modifi
         Text(
             text = pluralStringResourceSafe(
                 id = R.plurals.onboarding_seed_generate_message_words_count,
-                count = if (state.words24OptionSelected.not()) 12 else 24,
-                if (state.words24OptionSelected.not()) 12 else 24,
+                count = state.option.length,
+                state.option.length,
             ),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
