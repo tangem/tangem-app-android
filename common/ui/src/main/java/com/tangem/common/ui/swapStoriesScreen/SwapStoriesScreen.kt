@@ -3,10 +3,7 @@ package com.tangem.common.ui.swapStoriesScreen
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,8 +20,8 @@ import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import coil.request.CachePolicy
 import coil.request.ImageRequest
-import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SystemBarsIconsDisposable
 import com.tangem.core.ui.components.stories.StoriesContainer
 import com.tangem.core.ui.extensions.resolveReference
@@ -35,7 +32,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import kotlinx.collections.immutable.persistentListOf
 
-private val SubtitleColor = Color(0xFF868692)
+private val SubtitleColor = Color(0xFFB0B0B0)
 private const val STORIES_RELATIVE_PADDING = 0.7
 
 @Composable
@@ -60,42 +57,54 @@ fun SwapStoriesScreen(config: SwapStoriesUM) {
                     .data(current.imageUrl)
                     .crossfade(enable = false)
                     .allowHardware(true)
+                    .memoryCacheKey(current.imageUrl)
+                    .memoryCachePolicy(CachePolicy.ENABLED)
                     .build(),
                 loading = { },
                 error = { },
                 contentDescription = null,
             )
-            val height = LocalWindowSize.current.height.value
-            val textAlign = (height.dp.value * STORIES_RELATIVE_PADDING).dp
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(
-                        top = textAlign,
-                        start = 56.dp,
-                        end = 56.dp,
-                    ),
-            ) {
-                Text(
-                    text = current.title.resolveReference(),
-                    style = TangemTheme.typography.head,
-                    color = TangemColorPalette.SoftWhite,
-                    textAlign = TextAlign.Center,
-                )
-                SpacerH16()
-                Text(
-                    text = current.subtitle.resolveReference(),
-                    style = TextStyle(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal,
-                        letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
-                        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
-                    ),
-                    color = SubtitleColor,
-                    textAlign = TextAlign.Center,
-                )
-            }
+            SwapStoriesText(current)
         }
+    }
+}
+
+@Composable
+private fun SwapStoriesText(current: SwapStoriesUM.Content.Config) {
+    val height = LocalWindowSize.current.height.value
+    val textAlign = (height.dp.value * STORIES_RELATIVE_PADDING).dp
+    Column(
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .padding(
+                top = textAlign,
+                start = 44.dp,
+                end = 44.dp,
+            ),
+    ) {
+        Text(
+            text = current.title.resolveReference(),
+            style = TextStyle(
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
+                lineHeight = TextUnit(value = 34f, type = TextUnitType.Sp),
+            ),
+            color = TangemTheme.colors.text.constantWhite,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = current.subtitle.resolveReference(),
+            style = TextStyle(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
+                lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
+            ),
+            color = SubtitleColor,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
