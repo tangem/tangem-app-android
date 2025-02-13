@@ -9,8 +9,13 @@ internal fun OnboardingVisaRoute.stepNum() = when (this) {
     is OnboardingVisaRoute.ChooseWallet -> 3
     is OnboardingVisaRoute.OtherWalletApproveOption -> 4
     is OnboardingVisaRoute.TangemWalletApproveOption -> 4
-    OnboardingVisaRoute.InProgress -> 5
     is OnboardingVisaRoute.PinCode -> 6
+    is OnboardingVisaRoute.InProgress -> {
+        when (this.from) {
+            OnboardingVisaRoute.InProgress.From.Approve -> 5
+            OnboardingVisaRoute.InProgress.From.PinCode -> 7
+        }
+    }
 }
 
-internal const val ONBOARDING_VISA_STEPS_COUNT = 7
+internal const val ONBOARDING_VISA_STEPS_COUNT = 8
