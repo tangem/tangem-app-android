@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
@@ -81,7 +82,7 @@ class VisaCustomerWalletApproveTask(
             return
         }
 
-        val wallet = card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve } ?: run {
+        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
             callback(CompletionResult.Failure(TangemSdkError.Underlying(VisaActivationError.MissingWallet.message)))
             return
         }
