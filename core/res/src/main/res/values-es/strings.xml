@@ -87,6 +87,8 @@
   <string name="cardano_max_amount_has_token_title">ADA insuficiente</string>
   <string name="common_accept">Aceptar</string>
   <string name="common_access_denied">Acceso denegado</string>
+  <string name="common_add_to_portfolio">Añadir al portafolio</string>
+  <string name="common_add_token">Agregar token</string>
   <string name="common_all">Todos</string>
   <string name="common_allow">Autorizar</string>
   <string name="common_analytics">Analítica</string>
@@ -140,6 +142,7 @@
   <string name="common_generate_addresses">Sincronizar direcciones</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
+  <string name="common_hide">Ocultar</string>
   <string name="common_hour">hora</string>
   <string name="common_import">Importe</string>
   <string name="common_in_progress">En progreso</string>
@@ -311,6 +314,9 @@
   <string name="express_status_bought">Comprado %s</string>
   <string name="express_status_buying">Comprando %s</string>
   <string name="express_status_buying_active">Comprando %s...</string>
+  <string name="express_status_hide_button_text">Ocultar esta transacción</string>
+  <string name="express_status_hide_dialog_text">Una vez oculto, el estado de la transacción no se puede volver a ver. En su lugar, basta con deslizar el dedo para descartarla.</string>
+  <string name="express_status_hide_dialog_title">¿Ocultar el estado de la transacción?</string>
   <string name="express_token_list_empty_search">No se encontraron fichas. Por favor intenta con otra solicitud</string>
   <string name="express_transaction_id">ID : %s</string>
   <string name="express_transaction_id_copied">ID de transacción copiado</string>
@@ -337,6 +343,8 @@
   <string name="give_permission_unlimited">Ilimitado</string>
   <string name="home_button_order">Pedir Tangem</string>
   <string name="home_button_scan">Escanee</string>
+  <string name="hot_crypto_add_token_subtitle">a %s</string>
+  <string name="hot_crypto_token_network">En la red %s</string>
   <string name="information_generated_with_ai">Esta información fue generada con IA.\nPulse aquí si encuentra algún error.</string>
   <string name="initial_message_change_access_code_body">Para cambiar el código de acceso coloque la tarjeta o el anillo como se muestra arriba y no lo retire hasta el fin de la operación</string>
   <string name="initial_message_change_passcode_body">Toque para cambiar la contraseña</string>
@@ -778,12 +786,16 @@
   <string name="staking_details_unbonding_period_info">El período que debes esperar después de solicitar el retiro de fondos del staking antes de que los tokens estén disponibles.</string>
   <string name="staking_details_warmup_period">Periodo de calentamiento</string>
   <string name="staking_details_warmup_period_info">El tiempo permitido para activar la participación en la apuesta.</string>
+  <string name="staking_error_no_validators_message">No hay validadores disponibles en este momento. Por favor, inténtelo de nuevo más tarde.</string>
+  <string name="staking_error_no_validators_title">Staking no disponible</string>
   <string name="staking_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que usted está autorizando el uso de su token para el staking.</string>
   <string name="staking_legal">Al utilizar la función de staking, usted acepta %1$s y %2$s del proveedor</string>
   <string name="staking_locked">Bloqueado</string>
   <string name="staking_migrate">Migrar</string>
   <string name="staking_native">Native staking</string>
   <string name="staking_no_validators_error_message">No hay validadores activos disponibles para hacer staking en este momento. Por favor, inténtalo de nuevo más tarde.</string>
+  <string name="staking_notification_additional_ada_deposit_text">Al hacer staking en la red Cardano, se utiliza todo su saldo. Se reservarán 2 ADA adicionales y se devolverán después del staking. Su ADA permanece desbloqueado mientras hace staking.</string>
+  <string name="staking_notification_additional_ada_deposit_title">Detalles del staking de ADA</string>
   <string name="staking_notification_claim_rewards_text">Recomp. won se le enviará y estará disponible para su uso inmediato</string>
   <string name="staking_notification_earn_rewards_text">Haga staking de forma segura y comience a ganar recompensas</string>
   <string name="staking_notification_earn_rewards_text_daily">Haga de forma segura y comience a ganar recompensas diarias</string>
@@ -797,6 +809,8 @@
   <string name="staking_notification_earn_rewards_title">Gane recompensas por staking</string>
   <string name="staking_notification_low_staked_balance_text">Su saldo de staking será demasiado bajo para cancelar el staking. Necesitará hacer staking más para alcanzar la cantidad mínima para cancelarlo.</string>
   <string name="staking_notification_low_staked_balance_title">Saldo de staking bajo</string>
+  <string name="staking_notification_minimum_balance_error_text">Un mínimo de %1$s %2$s es necesario para añadir más staking. Por favor recargue su saldo.</string>
+  <string name="staking_notification_minimum_balance_error_title">No tiene suficiente %s</string>
   <string name="staking_notification_network_error_text">El staking no está disponible actualmente debido a las condiciones de la red. Inténtelo de nuevo más tarde.</string>
   <string name="staking_notification_new_validator_funds_transfer">El staking en la red %1$s con un nuevo validador transferirá automáticamente todos los fondos previamente en staking a este validador.</string>
   <string name="staking_notification_restake_rewards_text">Reinvierta las recompensas obtenidas en el monto apostado, aumentando las ganancias potenciales.</string>
@@ -867,6 +881,16 @@
   <string name="swap_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que está autorizando el uso de su token para el swap.</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
   <string name="swap_promo_title">¡Nuevo proveedor de intercambio disponible!</string>
+  <string name="swap_story_fifth_subtitle">Siéntase seguro con un soporte constante, lo que garantiza que sus transacciones se realicen sin problemas en cualquier momento</string>
+  <string name="swap_story_fifth_title">Asistencia 24 horas al día</string>
+  <string name="swap_story_first_subtitle">Los proveedores de intercambio de confianza le permiten intercambiar activos sin esfuerzo, manteniendo todo seguro en su billetera</string>
+  <string name="swap_story_first_title">Intercambie con nosotros</string>
+  <string name="swap_story_forth_subtitle">La seguridad de alto nivel y los proveedores verificados garantizan la protección de sus activos en cada intercambio</string>
+  <string name="swap_story_forth_title">Más seguro que nunca</string>
+  <string name="swap_story_second_subtitle">Maximice su valor con tarifas de una amplia red de proveedores de confianza, eligiendo siempre la mejor</string>
+  <string name="swap_story_second_title">Las mejores tarifas</string>
+  <string name="swap_story_third_subtitle">Sencillo e intuitivo, permite cambiar tokens con solo unos cuantos toques</string>
+  <string name="swap_story_third_title">Más fácil que nunca</string>
   <string name="swapping_alert_cex_description">La cantidad incluye:\n• Tarifas del proveedor de servicios\n• Tarifas de red por enviar %s desde el intercambio a la dirección del usuario.</string>
   <string name="swapping_alert_cex_description_with_slippage">El monto incluye:\n• tarifas del proveedor de servicios\n• tarifas de red por enviar %1$s desde el intercambio a la dirección del usuario. \n\nEl slippage del proveedor puede alcanzar el %2$s</string>
   <string name="swapping_alert_dex_description">El importe incluye los honorarios del proveedor de servicios.</string>
@@ -1043,6 +1067,7 @@
   <string name="warning_kaspa_unfinished_token_transaction_discard_message">¿Está seguro(a) de que desea cancelar la transacción? No podrá volver a intentar realizarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_message">Su transacción con un importe de %1$s %2$s no se ha completado. Puede volver a intentarlo para completarla.</string>
   <string name="warning_kaspa_unfinished_token_transaction_title">Tiene una transacción sin terminar</string>
+  <string name="warning_last_balance_updated_time">Última actualización hace %s</string>
   <string name="warning_low_signatures_message">Solo quedan %s firmas en esta tarjeta. Deba retirar todos sus fondos.</string>
   <string name="warning_low_signatures_title">Recuento de firmas bajo</string>
   <string name="warning_manage_tokens_legacy_derivation_message">Los tokens en diferentes redes pueden tener direcciones diferentes. Verifique que su dirección coincida con la red cuando transfieras fondos.</string>
@@ -1075,6 +1100,7 @@
   <string name="warning_solana_rent_fee_message">La red Solana cobra un alquiler de %1$s cada %2$s días. Las cuentas que no pueden pagar el alquiler son eliminadas de la red. Deposite en su cuenta más de 2 para usarla de forma gratuita.</string>
   <string name="warning_some_networks_unreachable_message">Deslice hacia abajo para refrescar o inténtelo de nuevo más tarde.</string>
   <string name="warning_some_networks_unreachable_title">Algunas redes no están disponibles</string>
+  <string name="warning_some_token_balances_not_updated">No se han podido actualizar los saldos de algunos tokens</string>
   <string name="warning_testnet_card_message">Esta es una tarjeta de Testnet. No puede procesar transacciones y solo deba usarse para pruebas y desarrollo.</string>
   <string name="warning_testnet_card_title">Solo para fines de prueba</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorar</string>
