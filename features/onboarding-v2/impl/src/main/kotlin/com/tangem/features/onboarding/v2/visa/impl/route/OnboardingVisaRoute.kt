@@ -39,7 +39,13 @@ internal sealed class OnboardingVisaRoute {
     ) : OnboardingVisaRoute()
 
     @Serializable
-    data object InProgress : OnboardingVisaRoute()
+    data class InProgress(
+        val from: From,
+    ) : OnboardingVisaRoute() {
+        enum class From {
+            Approve, PinCode
+        }
+    }
 
     @Serializable
     data class PinCode(val activationOrderInfo: VisaActivationOrderInfo) : OnboardingVisaRoute()

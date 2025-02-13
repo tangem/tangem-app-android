@@ -1,9 +1,11 @@
 package com.tangem.features.onboarding.v2.visa.impl.model
 
 import androidx.compose.runtime.Stable
+import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -16,13 +18,16 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.OnboardingVisaInnerNavigationState
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.OnboardingVisaChooseWalletComponent
+import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent
 import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
 import com.tangem.features.onboarding.v2.visa.impl.common.PreparationDataForApprove
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
 import com.tangem.features.onboarding.v2.visa.impl.route.stepNum
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
@@ -48,6 +53,8 @@ internal class OnboardingVisaModel @Inject constructor(
     val currentScanResponse = _currentScanResponse.asStateFlow()
 
     val innerNavigationState = _innerNavigationState.asStateFlow()
+
+    val onDone = MutableSharedFlow<Unit>()
 
     fun updateStepForNewRoute(route: OnboardingVisaRoute) {
         _innerNavigationState.value = innerNavigationState.value.copy(
@@ -75,6 +82,18 @@ internal class OnboardingVisaModel @Inject constructor(
                 )
             },
         )
+    }
+
+    @OptIn(ExperimentalDecomposeApi::class)
+    fun navigateFromInProgress(event: OnboardingVisaInProgressComponent.Params.DoneEvent) {
+        when (event) {
+            OnboardingVisaInProgressComponent.Params.DoneEvent.Activated -> {
+                modelScope.launch { onDone.emit(Unit) }
+            }
+            is OnboardingVisaInProgressComponent.Params.DoneEvent.NavigateTo -> {
+                stackNavigation.pushNew(event.route)
+            }
+        }
     }
 
     fun navigateFromChooseWallet(
@@ -115,7 +134,7 @@ internal class OnboardingVisaModel @Inject constructor(
             is OnboardingVisaRoute.WelcomeBack,
             is OnboardingVisaRoute.Welcome,
             is OnboardingVisaRoute.ChooseWallet,
-            OnboardingVisaRoute.InProgress,
+            is OnboardingVisaRoute.InProgress,
             is OnboardingVisaRoute.PinCode,
             -> {
             }
@@ -123,22 +142,27 @@ internal class OnboardingVisaModel @Inject constructor(
     }
 
     private fun initializeRoute(): OnboardingVisaRoute {
-        val activationStatus = params.scanResponse.visaCardActivationStatus
-
-        return when (activationStatus) {
+        return when (val activationStatus = params.scanResponse.visaCardActivationStatus) {
             is VisaCardActivationStatus.ActivationStarted -> {
                 when (val remoteState = activationStatus.remoteState) {
-                    is VisaActivationRemoteState.CardWalletSignatureRequired -> OnboardingVisaRoute.WelcomeBack(
-                        activationInput = activationStatus.activationInput,
-                        dataToSignByCardWalletRequest = remoteState.request,
-                    )
-                    is VisaActivationRemoteState.CustomerWalletSignatureRequired ->
+                    is VisaActivationRemoteState.CardWalletSignatureRequired -> {
+                        OnboardingVisaRoute.WelcomeBack(
+                            activationInput = activationStatus.activationInput,
+                            dataToSignByCardWalletRequest = remoteState.request,
+                        )
+                    }
+                    is VisaActivationRemoteState.CustomerWalletSignatureRequired -> {
                         remoteState.getRoute(activationStatus)
-                    VisaActivationRemoteState.PaymentAccountDeploying -> OnboardingVisaRoute.InProgress // TODO
-                    VisaActivationRemoteState.WaitingForActivationFinishing -> OnboardingVisaRoute.InProgress // TODO
-                    is VisaActivationRemoteState.WaitingPinCode -> OnboardingVisaRoute.PinCode(
-                        activationOrderInfo = remoteState.activationOrderInfo,
-                    )
+                    }
+                    VisaActivationRemoteState.PaymentAccountDeploying -> {
+                        OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.Approve)
+                    }
+                    VisaActivationRemoteState.WaitingForActivationFinishing -> {
+                        OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.PinCode)
+                    }
+                    is VisaActivationRemoteState.WaitingPinCode -> {
+                        OnboardingVisaRoute.PinCode(activationOrderInfo = remoteState.activationOrderInfo)
+                    }
                     VisaActivationRemoteState.Activated,
                     VisaActivationRemoteState.BlockedForActivation,
                     -> error("Activation status is not correct for onboarding flow")
