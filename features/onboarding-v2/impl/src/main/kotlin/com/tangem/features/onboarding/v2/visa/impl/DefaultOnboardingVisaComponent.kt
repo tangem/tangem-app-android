@@ -80,6 +80,10 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
     }
 
     init {
+        componentScope.launch {
+            model.onDone.collect { params.onDone() }
+        }
+
         // sets title and stepper value
         childStack.observe(lifecycle) { stack ->
             val currentRoute = stack.active.configuration
@@ -138,20 +142,14 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                     onEvent = { event -> model.navigateFromChooseWallet(route, event) },
                 ),
             )
-            OnboardingVisaRoute.InProgress -> OnboardingVisaInProgressComponent(
+            is OnboardingVisaRoute.InProgress -> OnboardingVisaInProgressComponent(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaInProgressComponent.Config(
                     scanResponse = model.currentScanResponse.value,
                 ),
                 params = OnboardingVisaInProgressComponent.Params(
                     childParams = childParams,
-                    onDone = {
-                        model.stackNavigation.push(
-                            OnboardingVisaRoute.PinCode(
-                                activationOrderInfo = TODO(), // TODO [REDACTED_TASK_KEY] [Visa] In progress screen after pin code
-                            ),
-                        )
-                    },
+                    onDone = { model.navigateFromInProgress(it) },
                 ),
             )
             is OnboardingVisaRoute.OtherWalletApproveOption -> OnboardingVisaOtherWalletComponent(
@@ -163,11 +161,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
                     onDone = {
-                        model.stackNavigation.push(
-                            OnboardingVisaRoute.PinCode(
-                                activationOrderInfo = TODO(),
-                            ),
-                        )
+                        model.stackNavigation.push(OnboardingVisaRoute.PinCode(activationOrderInfo = it))
                     },
                 ),
             )
@@ -179,7 +173,11 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaPinCodeComponent.Params(
                     childParams = childParams,
-                    onDone = { params.onDone() },
+                    onDone = {
+                        model.stackNavigation.push(
+                            OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.PinCode),
+                        )
+                    },
                 ),
             )
             is OnboardingVisaRoute.TangemWalletApproveOption -> OnboardingVisaApproveComponent(
@@ -191,7 +189,11 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 ),
                 params = OnboardingVisaApproveComponent.Params(
                     childParams = childParams,
-                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.InProgress) },
+                    onDone = {
+                        model.stackNavigation.push(
+                            OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.Approve),
+                        )
+                    },
                 ),
             )
         }
