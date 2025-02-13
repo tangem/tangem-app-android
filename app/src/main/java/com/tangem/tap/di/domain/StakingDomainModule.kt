@@ -100,11 +100,11 @@ internal object StakingDomainModule {
 
     @Provides
     @Singleton
-    fun provideInitializeStakingProcessUseCase(
+    fun provideGetStakingTransactionsUseCase(
         stakingRepository: StakingRepository,
         stakingErrorResolver: StakingErrorResolver,
-    ): GetStakingTransactionUseCase {
-        return GetStakingTransactionUseCase(
+    ): GetStakingTransactionsUseCase {
+        return GetStakingTransactionsUseCase(
             stakingRepository = stakingRepository,
             stakingErrorResolver = stakingErrorResolver,
         )
