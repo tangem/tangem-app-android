@@ -74,4 +74,7 @@ interface StakeKitApi {
         @Path("transactionId") transactionId: String,
         @Body body: SubmitTransactionHashRequestBody,
     ): ApiResponse<Unit>
+
+    @GET("transactions/{transactionId}")
+    suspend fun getTransaction(@Path("transactionId") transactionId: String): ApiResponse<StakingTransactionDTO>
 }
