@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 internal class ImportSeedPhraseUiStateBuilder(
     private val modelScope: CoroutineScope,
     private val mnemonicRepository: MnemonicRepository,
+    private val readyToImport: (Boolean) -> Unit,
     private val updateUiState: ((MultiWalletSeedPhraseUM.Import) -> MultiWalletSeedPhraseUM.Import) -> Unit,
     private val importWallet: (mnemonic: Mnemonic, passphrase: String?) -> Unit,
 ) {
@@ -100,6 +101,8 @@ internal class ImportSeedPhraseUiStateBuilder(
     }
 
     private fun interceptWords(wordsField: TextFieldValue) {
+        readyToImport(false)
+
         updateUiState {
             it.copy(
                 createWalletEnabled = false,
@@ -133,7 +136,9 @@ internal class ImportSeedPhraseUiStateBuilder(
                     createWalletEnabled = true,
                 )
             }
+            readyToImport(true)
         } catch (ex: TangemSdkError.MnemonicException) {
+            readyToImport(false)
             val error = ex.mnemonicResult
             if (error is MnemonicErrorResult.InvalidChecksum) {
                 updateUiState {
