@@ -10,7 +10,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBalance
-import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -45,10 +44,10 @@ internal class SetConfirmationStateInitTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         val actionType = when {
             isEnter -> StakingActionCommonType.Enter
-            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled(prevState))
+            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled())
             else -> when (pendingAction?.type) {
                 StakingActionType.STAKE -> StakingActionCommonType.Enter
-                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled(prevState))
+                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled())
                 StakingActionType.CLAIM_REWARDS,
                 StakingActionType.RESTAKE_REWARDS,
                 -> StakingActionCommonType.Pending.Rewards
@@ -81,12 +80,7 @@ internal class SetConfirmationStateInitTransformer(
         )
     }
 
-    private fun isPartiallyUnstakeDisabled(state: StakingUiState): Boolean {
-        // TODO staking [REDACTED_TASK_KEY] support solana multisize hashes signing
-        if (BlockchainUtils.isSolana(state.cryptoCurrencyBlockchainId)) {
-            return true
-        }
-
+    private fun isPartiallyUnstakeDisabled(): Boolean {
         val exitArgs = yieldArgs.exit ?: return false
         val exitAmount = exitArgs.args[Yield.Args.ArgType.AMOUNT] ?: return false
         val min = exitAmount.minimum ?: return false
