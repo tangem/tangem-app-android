@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
@@ -173,10 +174,10 @@ class VisaCardActivationTask @AssistedInject constructor(
 
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        return if (card.wallets.any { it.curve == VisaUtilities.mandatoryCurve }) {
+        return if (card.wallets.any { it.curve == EllipticCurve.Secp256k1 }) {
             createOTP()
         } else {
-            val createWalletTask = CreateWalletTask(VisaUtilities.mandatoryCurve)
+            val createWalletTask = CreateWalletTask(EllipticCurve.Secp256k1)
 
             val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
                 suspendCancellableCoroutine { continuation ->
@@ -241,13 +242,13 @@ class VisaCardActivationTask @AssistedInject constructor(
         val card =
             session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
         val wallet =
-            card.wallets.firstOrNull { it.curve == VisaUtilities.mandatoryCurve }
+            card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
                 ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         val derivedPublicKey = wallet.derivedKeys[VisaUtilities.visaDefaultDerivationPath]
             ?: return CompletionResult.Failure(TangemSdkError.Underlying(VisaActivationError.MissingWallet.message))
 
-        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnVisaCurve(derivedPublicKey.publicKey)
+        val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(derivedPublicKey.publicKey)
             .getOrElse { return CompletionResult.Failure(TangemSdkError.Underlying(it.message)) }
             .value
 
