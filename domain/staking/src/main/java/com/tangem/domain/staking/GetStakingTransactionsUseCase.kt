@@ -13,7 +13,7 @@ import kotlinx.coroutines.delay
 /**
  * Use case for creating enter action
  */
-class GetStakingTransactionUseCase(
+class GetStakingTransactionsUseCase(
     private val stakingRepository: StakingRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
