@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.visa.model.VisaActivationOrderInfo
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.repository.VisaActivationRepository
@@ -40,7 +41,7 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
     private val _uiState = MutableStateFlow(getInitialState())
 
     val uiState = _uiState.asStateFlow()
-    val onDone = MutableSharedFlow<Unit>()
+    val onDone = MutableSharedFlow<VisaActivationOrderInfo>()
 
     init {
         modelScope.launch {
@@ -50,7 +51,7 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
                 }.getOrNull()
 
                 if (result is VisaActivationRemoteState.WaitingPinCode) {
-                    onDone.emit(Unit)
+                    onDone.emit(result.activationOrderInfo)
                     break
                 }
 
