@@ -5,6 +5,7 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.extensions.Result
@@ -34,6 +35,7 @@ class SendTransactionUseCase(
         txsData: List<TransactionData>,
         userWallet: UserWallet,
         network: Network,
+        sendMode: TransactionSender.MultipleTransactionSendMode,
     ): Either<SendTransactionError?, List<String>> {
         val card = userWallet.scanResponse.card
         val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
@@ -61,6 +63,7 @@ class SendTransactionUseCase(
                     signer = signer,
                     userWalletId = userWallet.walletId,
                     network = network,
+                    sendMode = sendMode,
                 )
                 when (sendResult) {
                     is Result.Failure -> handleError(sendResult).left()
@@ -84,7 +87,7 @@ class SendTransactionUseCase(
         userWallet: UserWallet,
         network: Network,
     ): Either<SendTransactionError?, String> {
-        return invoke(listOf(txData), userWallet, network)
+        return invoke(listOf(txData), userWallet, network, TransactionSender.MultipleTransactionSendMode.DEFAULT)
             .map { it.first() }
     }
 
