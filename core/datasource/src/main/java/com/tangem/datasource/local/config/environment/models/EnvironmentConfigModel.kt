@@ -35,6 +35,7 @@ class EnvironmentConfigModel(
     @Json(name = "bittensorDwellirKey") val bittensorDwellirApiKey: String?,
     @Json(name = "bittensorOnfinalityKey") val bittensorOnfinalityKey: String?,
     @Json(name = "koinosProApiKey") val koinosProApiKey: String?,
+    @Json(name = "alephiumTangemApiKey") val alephiumTangemApiKey: String?,
 )
 
 @JsonClass(generateAdapter = true)
