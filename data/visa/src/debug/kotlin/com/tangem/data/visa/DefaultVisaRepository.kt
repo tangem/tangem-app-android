@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import arrow.fx.coroutines.parZip
 import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.data.common.cache.CacheRegistry
@@ -195,7 +196,7 @@ internal class DefaultVisaRepository @Inject constructor(
         if (VisaConstants.IS_DEMO_MODE_ENABLED) return getDemoPublicKey()
 
         val cardWallet = userWallet.scanResponse.card.wallets.firstOrNull {
-            it.curve == VisaUtilities.mandatoryCurve
+            it.curve == EllipticCurve.Secp256k1
         }
         requireNotNull(cardWallet) { "Visa card wallet not found" }
 
