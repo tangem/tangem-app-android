@@ -50,8 +50,8 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
     private val multiWalletState get() = params.multiWalletState
-    private val state = MutableStateFlow(SeedPhraseState())
-    private val _uiState = MutableStateFlow(getStartState())
+    private val state = MutableStateFlow(getInitialSeedPhraseState())
+    private val _uiState = MutableStateFlow(getInitialUIState())
 
     private val generateSeedPhraseUiStateBuilder = GenerateSeedPhraseUiStateBuilder(
         updateUiState = { block -> updateUiStateSpecific(block) },
@@ -60,7 +60,9 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         // =============================================
         // | DON'T FIXME  !!! MODIFY WITH CAUTION !!!  |
         // =============================================
-        changeWords24Option = { state.update { it.copy(words24Option = it.words24Option) } },
+        changeGeneratedWordsType = { newType ->
+            state.update { st -> st.copy(generatedWordsType = newType) }
+        },
         // =============================================
     )
 
@@ -75,10 +77,9 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         // =============================================
         importWallet = importWallet@{
             importWallet(
-                mnemonic = if (state.value.words24Option) {
-                    state.value.generatedWords24 ?: return@importWallet
-                } else {
-                    state.value.generatedWords12 ?: return@importWallet
+                mnemonic = when (state.value.generatedWordsType) {
+                    GeneratedWordsType.Words12 -> state.value.generatedWords12 ?: return@importWallet
+                    GeneratedWordsType.Words24 -> state.value.generatedWords24 ?: return@importWallet
                 },
                 passphrase = null,
                 generatedSeedPhrase = true,
@@ -91,6 +92,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         modelScope = modelScope,
         mnemonicRepository = mnemonicRepository,
         updateUiState = { block -> updateUiStateSpecific(block) },
+        readyToImport = { ready -> state.update { it.copy(readyToImport = ready) } },
         importWallet = { mnemonic, passphrase ->
             importWallet(
                 mnemonic = mnemonic,
@@ -112,8 +114,8 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
             is MultiWalletSeedPhraseUM.Import,
             is MultiWalletSeedPhraseUM.GenerateSeedPhrase,
             -> {
-                _uiState.value = getStartState()
-                state.value = SeedPhraseState()
+                _uiState.value = getInitialUIState()
+                state.value = getInitialSeedPhraseState()
             }
             is MultiWalletSeedPhraseUM.GeneratedWordsCheck -> {
                 openGeneratedSeedPhrase()
@@ -121,7 +123,16 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         }
     }
 
-    private fun getStartState(): MultiWalletSeedPhraseUM {
+    private fun getInitialSeedPhraseState(): SeedPhraseState {
+        return SeedPhraseState(
+            generatedWords12 = null,
+            generatedWords24 = null,
+            generatedWordsType = GeneratedWordsType.Words12,
+            readyToImport = false,
+        )
+    }
+
+    private fun getInitialUIState(): MultiWalletSeedPhraseUM {
         return MultiWalletSeedPhraseUM.Start(
             onImportSeedPhraseClicked = {
                 openImportSeedPhrase()
@@ -143,6 +154,7 @@ internal class MultiWalletSeedPhraseModel @Inject constructor(
         _uiState.value = generateSeedPhraseUiStateBuilder.getState(
             generatedWords12 = words12,
             generatedWords24 = words24,
+            option = state.value.generatedWordsType,
         )
     }
 
