@@ -9,7 +9,7 @@ import com.tangem.sdk.extensions.getWordlist
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-class MnemonicRepository @Inject constructor(
+internal class MnemonicRepository @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
     private val wordlist = Wordlist.getWordlist(context)
