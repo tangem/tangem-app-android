@@ -43,6 +43,7 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
     override suspend fun sendMultiple(
         transactionDataList: List<TransactionData>,
         signer: TransactionSigner,
+        sendMode: TransactionSender.MultipleTransactionSendMode,
     ): Result<TransactionsSendResult> = Result.Failure(Exception(ID).toBlockchainSdkError())
 
     private fun getDataToSign(): ByteArray {
