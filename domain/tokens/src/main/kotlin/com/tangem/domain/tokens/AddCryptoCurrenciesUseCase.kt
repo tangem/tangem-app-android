@@ -131,7 +131,6 @@ class AddCryptoCurrenciesUseCase(
                 networksRepository.getNetworkStatusesSync(
                     userWalletId = userWalletId,
                     networks = networksToUpdate + networkToUpdate,
-                    refresh = true,
                 )
             },
         ) {
