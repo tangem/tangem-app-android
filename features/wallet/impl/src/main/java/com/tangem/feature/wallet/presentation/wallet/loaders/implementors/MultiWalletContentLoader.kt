@@ -2,7 +2,7 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
-import com.tangem.domain.promo.ShouldShowSwapStoriesUseCase
+import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -34,13 +34,13 @@ internal class MultiWalletContentLoader(
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
-    private val shouldShowSwapStoriesUseCase: ShouldShowSwapStoriesUseCase,
+    private val getStoryContentUseCase: GetStoryContentUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val deepLinksRegistry: DeepLinksRegistry,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
-        return listOfNotNull(
+        return buildList {
             MultiWalletTokenListSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
@@ -52,7 +52,7 @@ internal class MultiWalletContentLoader(
                 applyTokenListSortingUseCase = applyTokenListSortingUseCase,
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
                 deepLinksRegistry = deepLinksRegistry,
-            ),
+            ).let(::add)
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,
@@ -60,13 +60,14 @@ internal class MultiWalletContentLoader(
                 getMultiWalletWarningsFactory = getMultiWalletWarningsFactory,
                 walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
                 walletWarningsSingleEventSender = walletWarningsSingleEventSender,
-            ),
-            MultiWalletActionButtonsSubscriber(
-                userWallet = userWallet,
-                stateHolder = stateHolder,
-                shouldShowSwapStoriesUseCase = shouldShowSwapStoriesUseCase,
-                swapFeatureToggles = swapFeatureToggles,
-            ),
-        )
+            ).let(::add)
+            if (swapFeatureToggles.isPromoStoriesEnabled) {
+                MultiWalletActionButtonsSubscriber(
+                    userWallet = userWallet,
+                    stateHolder = stateHolder,
+                    getStoryContentUseCase = getStoryContentUseCase,
+                ).let(::add)
+            }
+        }
     }
 }
