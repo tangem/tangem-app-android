@@ -786,6 +786,8 @@
   <string name="staking_details_unbonding_period_info">La période que vous devez attendre après avoir demandé le retrait des fonds du staking avant que les jetons ne soient disponibles.</string>
   <string name="staking_details_warmup_period">Période d\'échauffement</string>
   <string name="staking_details_warmup_period_info">Le temps imparti pour activer la participation au staking.</string>
+  <string name="staking_error_no_validators_message">Aucun validateur disponible pour le moment. Veuillez réessayer plus tard.</string>
+  <string name="staking_error_no_validators_title">Staking indisponible</string>
   <string name="staking_give_permission_fee_footer">Le réseau facturera des frais d’approbation de jeton pour vérifier que vous autorisez l’utilisation de votre jeton pour le jalonnement.</string>
   <string name="staking_legal">En utilisant la fonctionnalité de staking, vous acceptez les %1$s et %2$s du fournisseur</string>
   <string name="staking_locked">Bloqué</string>
@@ -879,6 +881,16 @@
   <string name="swap_give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
   <string name="swap_promo_title">Nouveau fournisseur d\'échange disponible !</string>
+  <string name="swap_story_fifth_subtitle">Ayez confiance en bénéficiant d\'un support constant, garantissant que vos transactions se déroulent sans problème à tout moment</string>
+  <string name="swap_story_fifth_title">Assistance 24 heures sur 24</string>
+  <string name="swap_story_first_subtitle">Les fournisseurs d\'échange de confiance vous permettent d\'échanger des actifs sans effort, en gardant tout en sécurité dans votre portefeuille</string>
+  <string name="swap_story_first_title">Échangez Avec Nous</string>
+  <string name="swap_story_forth_subtitle">Une sécurité de haut niveau et des fournisseurs vérifiés garantissant que vos actifs sont protégés à chaque échange</string>
+  <string name="swap_story_forth_title">Plus Sûr Que Jamais</string>
+  <string name="swap_story_second_subtitle">Maximisez votre valeur avec des tarifs provenant d\'un large réseau de fournisseurs de confiance, en choisissant toujours le meilleur</string>
+  <string name="swap_story_second_title">Meilleurs Tarifs</string>
+  <string name="swap_story_third_subtitle">Simple et intuitif, vous permettant d\'échanger des jetons en quelques clics</string>
+  <string name="swap_story_third_title">Plus Simple Que Jamais</string>
   <string name="swapping_alert_cex_description">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %s depuis l\'échange vers l\'adresse de l\'utilisateur.</string>
   <string name="swapping_alert_cex_description_with_slippage">Le montant comprend :\n• les frais du fournisseur de services\n• les frais de réseau pour l\'envoi de %1$s depuis l\'échange vers l\'adresse de l\'utilisateur. \n\nLe slippage du fournisseur peut atteindre %2$s</string>
   <string name="swapping_alert_dex_description">Le montant comprend les frais du fournisseur de services.</string>
