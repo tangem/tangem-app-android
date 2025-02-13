@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder
 
 import androidx.compose.ui.text.input.TextFieldValue
+import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.GeneratedWordsType
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.SeedPhraseState
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
 import kotlinx.collections.immutable.toImmutableList
@@ -93,10 +94,9 @@ internal class SeedPhraseCheckUiStateBuilder(
         currentState.generatedWords12 ?: return false
         currentState.generatedWords24 ?: return false
 
-        val wordList = if (currentState.words24Option) {
-            currentState.generatedWords24
-        } else {
-            currentState.generatedWords12
+        val wordList = when (currentState.generatedWordsType) {
+            GeneratedWordsType.Words12 -> currentState.generatedWords12
+            GeneratedWordsType.Words24 -> currentState.generatedWords24
         }.mnemonicComponents
 
         return wordList[shownIndex - 1] == word
