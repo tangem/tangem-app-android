@@ -3,6 +3,7 @@ package com.tangem.domain.tokens
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
@@ -66,14 +67,14 @@ class GetCryptoCurrencyActionsUseCase(
             }
             val flow = combine(
                 flow = networkFlow,
-                flow2 = promoRepository.isReadyToShowSwapStories().distinctUntilChanged(),
-            ) { maybeCoinStatus, shouldShowSwapStories ->
+                flow2 = promoRepository.getStoryById(StoryContentIds.STORY_FIRST_TIME_SWAP.id).conflate(),
+            ) { maybeCoinStatus, maybeSwapStories ->
                 createTokenActionsState(
                     userWallet = userWallet,
                     coinStatus = maybeCoinStatus.getOrNull(),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     requirements = requirements,
-                    shouldShowSwapStories = shouldShowSwapStories,
+                    shouldShowSwapStories = maybeSwapStories != null,
                 )
             }
 
