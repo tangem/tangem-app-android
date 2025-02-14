@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.features.swap.api)
 
     /** Project - Other */
+    implementation(projects.core.configToggles)
     implementation(projects.core.utils)
     implementation(projects.libs.crypto)
 
