@@ -38,6 +38,12 @@ object BlockchainUtils {
         return blockchain == Blockchain.Bitcoin || blockchain == Blockchain.BitcoinTestnet
     }
 
+    /** If current [networkId] is use custom fee */
+    fun isUseBitcoinFeeConverter(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return isBitcoin(blockchainId) || blockchain == Blockchain.Fact0rn
+    }
+
     /** If current [blockchainId] is Tezos */
     fun isTezos(blockchainId: String): Boolean {
         val blockchain = Blockchain.fromId(blockchainId)
