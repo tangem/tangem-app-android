@@ -42,5 +42,9 @@
     {
         "name": "STAKING_TON_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "BALANCES_CACHING_ENABLED",
+        "version": "5.21.0"
     }
 ]
