@@ -10,6 +10,6 @@ internal data class SeedPhraseState(
 )
 
 internal enum class GeneratedWordsType(val length: Int) {
-    Words12(12),
-    Words24(24),
+    Words12(length = 12),
+    Words24(length = 24),
 }
