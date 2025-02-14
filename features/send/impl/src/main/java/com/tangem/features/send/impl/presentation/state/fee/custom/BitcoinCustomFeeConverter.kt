@@ -35,7 +35,7 @@ internal class BitcoinCustomFeeConverter(
         val feeValue = value.amount.value
         val feeCurrency = feeCryptoCurrencyStatusProvider()?.value
         val network = feeCryptoCurrencyStatusProvider()?.currency?.network?.id?.value
-        return if (network != null && (isUseBitcoinFeeConverter(network))) {
+        return if (network != null && isUseBitcoinFeeConverter(network)) {
             persistentListOf(
                 SendTextField.CustomFee(
                     value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
