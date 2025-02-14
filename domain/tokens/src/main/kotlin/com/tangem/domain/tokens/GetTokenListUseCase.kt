@@ -26,11 +26,12 @@ class GetTokenListUseCase(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun launch(userWalletId: UserWalletId, usePersistenceCache: Boolean = false): LceFlow<TokenListError, TokenList> {
-        val statusesFlow = if (usePersistenceCache) {
+    fun launch(userWalletId: UserWalletId): LceFlow<TokenListError, TokenList> {
+        val statusesFlow = if (tokensFeatureToggles.isBalancesCachingEnabled) {
             CurrenciesStatusesCachedOperations(
                 currenciesRepository = currenciesRepository,
                 quotesRepository = quotesRepository,
