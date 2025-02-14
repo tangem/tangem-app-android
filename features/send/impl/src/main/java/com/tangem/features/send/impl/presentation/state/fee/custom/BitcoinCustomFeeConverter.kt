@@ -16,7 +16,7 @@ import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.checkExceedBalance
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
-import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
+import com.tangem.lib.crypto.BlockchainUtils.isUseBitcoinFeeConverter
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -35,7 +35,7 @@ internal class BitcoinCustomFeeConverter(
         val feeValue = value.amount.value
         val feeCurrency = feeCryptoCurrencyStatusProvider()?.value
         val network = feeCryptoCurrencyStatusProvider()?.currency?.network?.id?.value
-        return if (network != null && isBitcoin(network)) {
+        return if (network != null && (isUseBitcoinFeeConverter(network))) {
             persistentListOf(
                 SendTextField.CustomFee(
                     value = feeValue?.parseBigDecimal(value.amount.decimals).orEmpty(),
