@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -7,6 +8,7 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.swap.SwapFeatureToggles
+import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -52,17 +54,25 @@ internal object TokensDomainModule {
 
     @Provides
     @Singleton
+    fun provideTokensFeatureToggles(featureTogglesManager: FeatureTogglesManager): TokensFeatureToggles {
+        return DefaultTokensFeatureToggles(featureTogglesManager = featureTogglesManager)
+    }
+
+    @Provides
+    @Singleton
     fun provideGetTokenListUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): GetTokenListUseCase {
         return GetTokenListUseCase(
-            currenciesRepository,
-            quotesRepository,
-            networksRepository,
-            stakingRepository,
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
