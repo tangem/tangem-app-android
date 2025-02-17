@@ -29,7 +29,7 @@ import com.tangem.features.staking.impl.presentation.state.stub.StakingClickInte
 import com.tangem.features.staking.impl.presentation.ui.block.NotificationsBlock
 import com.tangem.features.staking.impl.presentation.ui.block.StakingFeeBlock
 import com.tangem.features.staking.impl.presentation.ui.block.ValidatorBlock
-import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 
 @Suppress("LongParameterList")
 @Composable
