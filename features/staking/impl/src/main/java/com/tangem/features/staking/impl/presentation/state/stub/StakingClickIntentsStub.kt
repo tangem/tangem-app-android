@@ -6,7 +6,7 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
-import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
