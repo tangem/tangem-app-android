@@ -8,10 +8,12 @@ import java.math.BigDecimal
  *
  * @property network The network for which the status is provided.
  * @property value The specific status value, represented as a sealed class to encapsulate the various possible states of the network.
+ * @property isCached flag that determines whether the status is a cache
  */
 data class NetworkStatus(
     val network: Network,
     val value: Value,
+    val isCached: Boolean,
 ) {
 
     /**
