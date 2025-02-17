@@ -17,14 +17,14 @@
     },
     {
         "name": "sonic",
-        "version": "undefined"
+        "version": "5.21.0"
     },
     {
         "name": "apechain",
-        "version": "undefined"
+        "version": "5.21.0"
     },
     {
         "name": "alephium",
-        "version": "undefined"
+        "version": "5.21.0"
     }
 ]
