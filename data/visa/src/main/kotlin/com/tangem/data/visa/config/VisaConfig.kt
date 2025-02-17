@@ -11,6 +11,8 @@ internal data class VisaConfig(
     val mainnet: Addresses,
     @Json(name = "txHistoryAPIAdditionalHeaders")
     val header: Header,
+    @Json(name = "rsaPublicKey")
+    val rsaPublicKey: String,
 ) {
 
     @JsonClass(generateAdapter = true)

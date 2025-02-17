@@ -3,13 +3,9 @@ package com.tangem.data.visa.utils
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.datasource.api.common.response.ApiResponseError
-import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.common.visa.TangemVisaAuthProvider
+import com.tangem.datasource.api.visa.models.response.VisaTxHistoryResponse
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.lib.visa.api.VisaApi
-import com.tangem.lib.visa.model.VisaTxHistoryResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
