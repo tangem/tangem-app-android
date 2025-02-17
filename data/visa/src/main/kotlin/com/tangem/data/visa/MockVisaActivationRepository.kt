@@ -45,6 +45,10 @@ class MockVisaActivationRepository @AssistedInject constructor(
 
     override suspend fun sendPinCode(pinCode: VisaEncryptedPinCode) {}
 
+    override suspend fun getPinCodeRsaEncryptionPublicKey(): String {
+        return CryptoUtils.generateRandomBytes(length = 32).toHexString()
+    }
+
     @AssistedFactory
     interface Factory : VisaActivationRepository.Factory {
         override fun create(cardId: VisaCardId): MockVisaActivationRepository

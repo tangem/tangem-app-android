@@ -21,7 +21,14 @@ import java.util.concurrent.TimeUnit
 
 interface VisaContractInfoProvider {
 
-    suspend fun getContractInfo(walletAddress: String): VisaContractInfo
+    /**
+     * Fetches Visa contract info for the given wallet address.
+     *
+     * @param walletAddress Wallet address to fetch contract info for.
+     * @param paymentAccountAddress Payment account address to fetch data from. If null,
+     * it will be fetched from the registry.
+     */
+    suspend fun getContractInfo(walletAddress: String, paymentAccountAddress: String?): VisaContractInfo
 
     class Builder(
         private val useTestnetRpc: Boolean,
