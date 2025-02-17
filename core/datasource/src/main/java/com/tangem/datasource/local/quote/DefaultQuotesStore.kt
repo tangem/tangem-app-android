@@ -2,54 +2,82 @@ package com.tangem.datasource.local.quote
 
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
-import com.tangem.datasource.local.quote.model.QuoteDM
-import com.tangem.datasource.local.quote.model.QuotesDM
+import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.datasource.local.quote.converter.QuoteConverter
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
-import com.tangem.utils.extensions.orZero
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
+internal typealias QuotesByCurrencyId = Map<String, QuotesResponse.Quote>
+
+/**
+ * Default implementation of [QuotesStore]
+ *
+ * @property persistenceStore persistence quotes store
+ * @property runtimeStore     runtime quotes store
+ */
 internal class DefaultQuotesStore(
-    private val dataStore: DataStore<QuotesDM>,
+    private val persistenceStore: DataStore<QuotesByCurrencyId>,
+    private val runtimeStore: RuntimeSharedStore<Set<Quote>>,
 ) : QuotesStore {
 
-    override fun get(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
-        return dataStore.data
-            .map { quotes -> createQuotes(currenciesIds, quotes) }
+    override fun get(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> = channelFlow {
+        val cachedQuotes = getCachedQuotes(currenciesIds = currenciesIds)
+
+        if (cachedQuotes.isNotEmpty()) {
+            send(cachedQuotes)
+        }
+
+        runtimeStore.get()
+            .onEach {
+                val mergedQuotes = mergeQuotes(cachedQuotes = cachedQuotes, runtimeQuotes = it)
+                send(element = mergedQuotes)
+            }
+            .launchIn(scope = this)
     }
 
     override suspend fun getSync(currenciesIds: Set<CryptoCurrency.RawID>): Set<Quote> {
-        val quotes = dataStore.data.firstOrNull().orEmpty()
-
-        return createQuotes(currenciesIds, quotes)
+        return runtimeStore.getSyncOrDefault(default = emptySet())
+            .filter { it.rawCurrencyId in currenciesIds }
+            .toSet()
     }
 
-    private fun createQuotes(currenciesIds: Set<CryptoCurrency.RawID>, quoteEntities: Set<QuoteDM>): Set<Quote> =
-        currenciesIds.mapTo(mutableSetOf()) { id ->
-            quoteEntities.firstOrNull { it.rawCurrencyId == id }
-                ?.let { quote ->
-                    Quote.Value(
-                        rawCurrencyId = id,
-                        fiatRate = quote.fiatRate,
-                        priceChange = quote.priceChange,
-                    )
-                }
-                ?: Quote.Empty(id)
-        }
-
     override suspend fun store(response: QuotesResponse) {
-        val newQuotes = response.quotes.mapTo(mutableSetOf()) { (currencyId, quote) ->
-            QuoteDM(
-                rawCurrencyId = CryptoCurrency.RawID(currencyId),
-                fiatRate = quote.price.orZero(),
-                priceChange = quote.priceChange24h.orZero().movePointLeft(2),
-            )
+        coroutineScope {
+            launch { storeInRuntimeStore(response = response) }
+            launch { storeInPersistenceStore(response = response) }
         }
+    }
 
-        dataStore.updateData { storedQuotes ->
-            (newQuotes + storedQuotes).distinctBy { it.rawCurrencyId }.toSet()
+    private suspend fun getCachedQuotes(currenciesIds: Set<CryptoCurrency.RawID>): Set<Quote.Value> {
+        val ids = currenciesIds.map(CryptoCurrency.RawID::value).toSet()
+        val cachedQuotes = persistenceStore.data.firstOrNull().orEmpty().filterKeys { it in ids }
+
+        return QuoteConverter(isCached = true).convertSet(input = cachedQuotes.entries)
+    }
+
+    private fun mergeQuotes(cachedQuotes: Set<Quote.Value>, runtimeQuotes: Set<Quote>): Set<Quote> {
+        return runtimeQuotes.map { runtimeQuote ->
+            if (runtimeQuote is Quote.Empty) {
+                cachedQuotes.firstOrNull { runtimeQuote.rawCurrencyId == it.rawCurrencyId } ?: runtimeQuote
+            } else {
+                runtimeQuote
+            }
         }
+            .toSet()
+    }
+
+    private suspend fun storeInRuntimeStore(response: QuotesResponse) {
+        val new = QuoteConverter(isCached = false).convertSet(input = response.quotes.entries)
+
+        runtimeStore.update(default = emptySet()) { saved ->
+            (saved + new).distinctBy { it.rawCurrencyId }.toSet()
+        }
+    }
+
+    private suspend fun storeInPersistenceStore(response: QuotesResponse) {
+        persistenceStore.updateData { storedQuotes -> storedQuotes + response.quotes }
     }
 }
