@@ -1,4 +1,4 @@
-package com.tangem.feature.swap.presentation
+package com.tangem.feature.swap.model
 
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
