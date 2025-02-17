@@ -32,7 +32,7 @@ internal fun NetworkStatus.Verified.toDataModel(network: Network): NetworkStatus
     )
 }
 
-internal fun NetworkStatusDM.toDomainModel(network: Network): NetworkStatus {
+internal fun NetworkStatusDM.toDomainModel(network: Network, isCached: Boolean): NetworkStatus {
     return NetworkStatus(
         network = network,
         value = NetworkStatus.Verified(
@@ -40,6 +40,7 @@ internal fun NetworkStatusDM.toDomainModel(network: Network): NetworkStatus {
             amounts = mapToDomainAmounts(amounts),
             pendingTransactions = mapOf(),
         ),
+        isCached = isCached,
     )
 }
 
