@@ -120,8 +120,17 @@ internal class DefaultNetworksRepository(
         refresh: Boolean,
     ) = coroutineScope {
         if (refresh) {
-            val statusesToRefresh = networks.map { NetworkStatus(it, NetworkStatus.Refreshing) }
-            networksStatusesStore.storeAll(userWalletId, statusesToRefresh)
+            val statusesToRefresh = networksStatusesStore.getSyncOrNull(userWalletId)?.mapNotNull {
+                if (it.network in networks) {
+                    it.copy(value = NetworkStatus.Refreshing)
+                } else {
+                    null
+                }
+            }
+
+            if (statusesToRefresh != null) {
+                networksStatusesStore.storeAll(key = userWalletId, values = statusesToRefresh)
+            }
         }
 
         val currencies = getCurrencies(userWalletId, networks)
