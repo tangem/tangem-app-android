@@ -4,7 +4,7 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import java.math.BigDecimal
 
 @Suppress("TooManyFunctions")
