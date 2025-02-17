@@ -65,7 +65,6 @@ import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.send.api.navigation.SendRouter
-import com.tangem.features.staking.api.navigation.StakingRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.google.GoogleServicesHelper
@@ -177,9 +176,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var emailSender: EmailSender
-
-    @Inject
-    lateinit var stakingRouter: StakingRouter
 
     @Inject
     @RootAppComponentContext
