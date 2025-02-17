@@ -14,7 +14,7 @@ import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
-import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.features.send.api.SendComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.tester.api.TesterRouter
@@ -58,9 +58,9 @@ internal class ChildFactory @Inject constructor(
     private val onboardingEntryComponentFactory: OnboardingEntryComponent.Factory,
     private val welcomeComponentFactory: WelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
+    private val sendComponentFactory: SendComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
-    private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
     private val qrScanningRouter: QrScanningRouter,
@@ -235,10 +235,23 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = swapComponentFactory,
                 )
             }
+            is AppRoute.Send -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = SendComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.currency,
+                        transactionId = route.transactionId,
+                        amount = route.amount,
+                        tag = route.tag,
+                        destinationAddress = route.destinationAddress,
+                    ),
+                    componentFactory = sendComponentFactory,
+                )
+            }
             is AppRoute.AccessCodeRecovery,
             is AppRoute.AppCurrencySelector,
             is AppRoute.SaveWallet,
-            is AppRoute.Send,
             is AppRoute.AppSettings,
             is AppRoute.CardSettings,
             is AppRoute.DetailsSecurity,
@@ -278,7 +291,18 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { SaveWalletBottomSheetFragment() })
             }
             is AppRoute.Send -> {
-                route.asFragmentChild(Provider { sendRouter.getEntryFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = SendComponent.Params(
+                        userWalletId = route.userWalletId,
+                        currency = route.currency,
+                        transactionId = route.transactionId,
+                        amount = route.amount,
+                        tag = route.tag,
+                        destinationAddress = route.destinationAddress,
+                    ),
+                    componentFactory = sendComponentFactory,
+                )
             }
             is AppRoute.AppSettings -> {
                 route.asFragmentChild(Provider { AppSettingsFragment() })
