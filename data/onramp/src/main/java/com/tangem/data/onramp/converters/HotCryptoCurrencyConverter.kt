@@ -94,6 +94,7 @@ internal class HotCryptoCurrencyConverter(
                 rawCurrencyId = rawCurrencyId,
                 fiatRate = fiatRate,
                 priceChange = priceChange.movePointLeft(2),
+                isCached = false, // It doesn't matter
             )
         } else {
             Quote.Empty(rawCurrencyId)
