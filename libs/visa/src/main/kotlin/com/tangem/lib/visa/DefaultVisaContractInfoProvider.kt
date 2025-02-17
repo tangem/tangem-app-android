@@ -20,27 +20,38 @@ internal class DefaultVisaContractInfoProvider(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaContractInfoProvider {
 
-    override suspend fun getContractInfo(walletAddress: String): VisaContractInfo {
+    override suspend fun getContractInfo(walletAddress: String, paymentAccountAddress: String?): VisaContractInfo {
         return parZip(
             dispatchers.io,
-            { loadPaymentAccount(walletAddress) },
+            { loadPaymentAccount(walletAddress = walletAddress, paymentAccountAddress = paymentAccountAddress) },
             { loadPaymentTokenInfo() },
             { paymentAccount, paymentToken ->
-                fetchBalancesAndLimits(paymentAccount, paymentToken)
+                fetchBalancesAndLimits(
+                    paymentAccount = paymentAccount,
+                    paymentToken = paymentToken,
+                    walletAddress = walletAddress,
+                )
             },
         )
     }
 
-    private fun loadPaymentAccount(walletAddress: String): TangemPaymentAccount {
+    private fun loadPaymentAccount(walletAddress: String, paymentAccountAddress: String?): TangemPaymentAccount {
+        return TangemPaymentAccount.load(
+            /* contractAddress = */ paymentAccountAddress ?: getPaymentAccountAddressFromRegistry(walletAddress),
+            /* web3j = */ web3j,
+            /* transactionManager = */ transactionManager,
+            /* contractGasProvider = */ gasProvider,
+        )
+    }
+
+    private fun getPaymentAccountAddressFromRegistry(walletAddress: String): String {
         val paymentAccountRegistry = TangemPaymentAccountRegistry.load(
             /* contractAddress = */ paymentAccountRegistryAddress,
             /* web3j = */ web3j,
             /* transactionManager = */ transactionManager,
             /* contractGasProvider = */ gasProvider,
         )
-        val paymentAccountAddress = paymentAccountRegistry.paymentAccountByCard(walletAddress).send()
-
-        return TangemPaymentAccount.load(paymentAccountAddress, web3j, transactionManager, gasProvider)
+        return paymentAccountRegistry.paymentAccountByCard(walletAddress).send()
     }
 
     private fun loadPaymentTokenInfo(): PaymentTokenInfo {
@@ -63,11 +74,12 @@ internal class DefaultVisaContractInfoProvider(
     private suspend fun fetchBalancesAndLimits(
         paymentAccount: TangemPaymentAccount,
         paymentToken: PaymentTokenInfo,
+        walletAddress: String,
     ): VisaContractInfo = parZip(
         dispatchers.io,
         { fetchToken(paymentAccount) },
         { fetchBalances(paymentAccount, paymentToken) },
-        { fetchLimits(paymentAccount, paymentToken) },
+        { fetchLimits(paymentAccount, paymentToken, walletAddress) },
         { token, balances, (oldLimit, newLimit, changeDate) ->
             VisaContractInfo(token, balances, oldLimit, newLimit, changeDate)
         },
@@ -123,19 +135,15 @@ internal class DefaultVisaContractInfoProvider(
     private fun fetchLimits(
         paymentAccount: TangemPaymentAccount,
         paymentToken: PaymentTokenInfo,
+        walletAddress: String,
     ): Triple<Limits, Limits, Instant> {
-        TODO() // TODO: AND-10048
-        // val (
-        //     oldLimit,
-        //     newLimit,
-        //     changeDateSeconds,
-        // ) = paymentAccount.cards("").send().component5()
-        //
-        // return Triple(
-        //     first = getLimits(oldLimit, paymentToken),
-        //     second = getLimits(newLimit, paymentToken),
-        //     third = changeDateSeconds.toInstant(),
-        // )
+        val limits = paymentAccount.cards(walletAddress).send().component5()
+
+        return Triple(
+            first = getLimits(limits.oldValue, paymentToken),
+            second = getLimits(limits.newValue, paymentToken),
+            third = limits.changeTimestamp.toInstant(),
+        )
     }
 
     @Suppress("UnusedPrivateMember")

@@ -15,9 +15,9 @@ internal object VisaConstants {
     )
 
     /*
-    * Must be `false` in production
-    * Don't forget to change CardTypesResolver.isVisaWallet
-    * */
+     * Must be `false` in production
+     * Don't forget to change CardTypesResolver.isVisaWallet
+     * */
     const val IS_DEMO_MODE_ENABLED = false
 
     const val USE_TEST_ENV = true
@@ -40,5 +40,7 @@ internal fun getDemoAddress(): String {
 internal fun getDemoPublicKey(): String {
     return if (VisaConstants.USE_TEST_ENV) {
         VisaConstants.DEMO_TESTNET_PUBLIC_KEY
-    } else VisaConstants.DEMO_MAINNET_PUBLIC_KEY
+    } else {
+        VisaConstants.DEMO_MAINNET_PUBLIC_KEY
+    }
 }
