@@ -1,14 +1,9 @@
-package com.tangem.features.staking.impl.presentation.viewmodel
+package com.tangem.features.staking.impl.presentation.model
 
-import android.os.Bundle
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
@@ -17,6 +12,9 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomS
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
@@ -52,6 +50,7 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.analytics.StakingParamsInterceptor
 import com.tangem.features.staking.impl.analytics.utils.StakingAnalyticSender
 import com.tangem.features.staking.impl.navigation.InnerStakingRouter
@@ -77,7 +76,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
 import com.tangem.utils.extensions.orZero
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
@@ -89,11 +87,13 @@ import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
-@Suppress("LargeClass", "LongParameterList", "TooManyFunctions")
-@HiltViewModel
-internal class StakingViewModel @Inject constructor(
+@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
+@Stable
+@ComponentScoped
+internal class StakingModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     private val stateController: StakingStateController,
-    private val dispatchers: CoroutineDispatcherProvider,
+    override val dispatchers: CoroutineDispatcherProvider,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
@@ -122,33 +122,30 @@ internal class StakingViewModel @Inject constructor(
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel(), DefaultLifecycleObserver, StakingClickIntents {
+    private val innerRouter: InnerStakingRouter,
+    private val appRouter: AppRouter,
+) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
     val value: StakingUiState get() = uiState.value
 
-    private var stakingStateRouter: StakingStateRouter by Delegates.notNull()
+    private val params = paramsContainer.require<StakingComponent.Params>()
 
-    private val cryptoCurrencyId: CryptoCurrency.ID =
-        savedStateHandle.get<Bundle>(AppRoute.Staking.CRYPTO_CURRENCY_ID_KEY)
-            ?.unbundle(CryptoCurrency.ID.serializer())
-            ?: error("This screen can't be opened without `CryptoCurrency.ID`")
+    private var stakingStateRouter: StakingStateRouter = StakingStateRouter(
+        appRouter = appRouter,
+        stateController = stateController,
+        analyticsEventsHandler = analyticsEventHandler,
+    )
 
-    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Staking.USER_WALLET_ID_KEY)
-        ?.unbundle(UserWalletId.serializer())
-        ?: error("This screen can't be opened without `UserWalletId`")
-
-    private val yield: Yield = savedStateHandle.get<Bundle>(AppRoute.Staking.YIELD_KEY)
-        ?.unbundle(Yield.serializer())
-        ?: error("This screen can't be opened without `Yield`")
+    private val cryptoCurrencyId: CryptoCurrency.ID = params.cryptoCurrencyId
+    private val userWalletId: UserWalletId = params.userWalletId
+    private val yield: Yield = params.yield
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var processingActions: List<StakingAction> = emptyList()
     private var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     private var minimumTransactionAmount: EnterAmountBoundary? = null
 
-    private var innerRouter: InnerStakingRouter by Delegates.notNull()
     private var userWallet: UserWallet by Delegates.notNull()
     private var appCurrency: AppCurrency by Delegates.notNull()
 
@@ -218,8 +215,8 @@ internal class StakingViewModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
     }
 
-    override fun onCleared() {
-        super.onCleared()
+    override fun onDestroy() {
+        super.onDestroy()
         paramsInterceptorHolder.removeParamsInterceptor(StakingParamsInterceptor.ID)
         approvalJobHolder.cancel()
         feeJobHolder.cancel()
@@ -266,7 +263,7 @@ internal class StakingViewModel @Inject constructor(
                 cryptoCurrency = cryptoCurrencyStatus.currency,
             ),
         )
-        viewModelScope.launch {
+        modelScope.launch {
             feeLoader.getFee(
                 onStakingFee = { gasEstimate ->
                     stateController.update(
@@ -303,7 +300,7 @@ internal class StakingViewModel @Inject constructor(
 
     override fun onActionClick() {
         if (isAssentState()) {
-            viewModelScope.launch {
+            modelScope.launch {
                 stakingAnalyticSender.sendTransactionStakingClickedAnalytics(value)
                 stateController.update(SetConfirmationStateInProgressTransformer())
                 transactionSender.constructAndSendTransactions(
@@ -546,7 +543,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onApprovalClick() {
-        viewModelScope.launch {
+        modelScope.launch {
             stateController.update(
                 SetApprovalBottomSheetInProgressTransformer {
                     stateController.update(DismissBottomSheetStateTransformer)
@@ -619,7 +616,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     private fun updateNotifications(feeError: GetFeeError? = null) {
-        viewModelScope.launch {
+        modelScope.launch {
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
             val feeState = confirmationState?.feeState as? FeeState.Content
             val amountState = value.amountState as? AmountState.Data
@@ -733,7 +730,7 @@ internal class StakingViewModel @Inject constructor(
     private fun awaitForAllowance() {
         val approval = stakingApproval as? StakingApproval.Needed ?: return
         allowanceTaskScheduler.scheduleTask(
-            scope = viewModelScope,
+            scope = modelScope,
             task = PeriodicTask(
                 delay = ALLOWANCE_UPDATE_DELAY,
                 task = {
@@ -783,7 +780,7 @@ internal class StakingViewModel @Inject constructor(
     }
 
     override fun onFailedTxEmailClick(errorMessage: String) {
-        viewModelScope.launch {
+        modelScope.launch {
             val network = cryptoCurrencyStatus.currency.network
 
             val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrElse { error("CardInfo must be not null") }
@@ -820,11 +817,6 @@ internal class StakingViewModel @Inject constructor(
 
     override fun openTokenDetails(cryptoCurrency: CryptoCurrency) {
         innerRouter.openTokenDetails(userWalletId, cryptoCurrency)
-    }
-
-    fun setRouter(router: InnerStakingRouter, stateRouter: StakingStateRouter) {
-        innerRouter = router
-        this.stakingStateRouter = stateRouter
     }
 
     private suspend fun setupApprovalNeeded() {
@@ -903,7 +895,7 @@ internal class StakingViewModel @Inject constructor(
                 )
             }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnBalanceHiding() {
@@ -914,7 +906,7 @@ internal class StakingViewModel @Inject constructor(
                 stateController.update(transformer = HideBalanceStateTransformer(it.isBalanceHidden))
             }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnSelectedAppCurrency() {
@@ -925,7 +917,7 @@ internal class StakingViewModel @Inject constructor(
                 appCurrency = maybeAppCurrency.getOrElse { AppCurrency.Default }
             }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnStepChanges() {
@@ -951,7 +943,7 @@ internal class StakingViewModel @Inject constructor(
                 }
             }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
             .saveIn(stepChangesJobHolder)
     }
 
@@ -971,13 +963,13 @@ internal class StakingViewModel @Inject constructor(
                 }
             }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun updateInitialData() {
         stateController.updateAll(
             SetInitialDataStateTransformer(
-                clickIntents = this@StakingViewModel,
+                clickIntents = this@StakingModel,
                 yield = yield,
                 isAnyTokenStaked = isAnyTokenStaked,
                 cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },

@@ -33,9 +33,9 @@ import com.tangem.feature.swap.models.*
 import com.tangem.feature.swap.models.states.*
 import com.tangem.feature.swap.models.states.events.SwapEvent
 import com.tangem.feature.swap.presentation.R
-import com.tangem.feature.swap.presentation.SwapNotificationsFactory
+import com.tangem.feature.swap.model.SwapNotificationsFactory
 import com.tangem.feature.swap.utils.formatToUIRepresentation
-import com.tangem.feature.swap.viewmodels.SwapProcessDataState
+import com.tangem.feature.swap.model.SwapProcessDataState
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.StringsSigns.PERCENT

@@ -12,7 +12,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
-import com.tangem.features.staking.impl.presentation.viewmodel.StakingClickIntents
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.transformer.Transformer
 
