@@ -7,7 +7,10 @@ import com.squareup.moshi.Moshi
 import com.tangem.datasource.local.datastore.RuntimeDataStore
 import com.tangem.datasource.local.network.DefaultNetworksStatusesStore
 import com.tangem.datasource.local.network.NetworksStatusesStore
-import com.tangem.datasource.local.network.utils.NetworkStatusesSerializer
+import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.datasource.utils.setTypes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -30,7 +33,11 @@ internal object NetworksStatusesStoreModule {
         return DefaultNetworksStatusesStore(
             runtimeDataStore = RuntimeDataStore(),
             persistenceDataStore = DataStoreFactory.create(
-                serializer = NetworkStatusesSerializer(moshi),
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
+                    defaultValue = emptyMap(),
+                ),
                 produceFile = { context.dataStoreFile(fileName = "networks_statuses") },
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
             ),
