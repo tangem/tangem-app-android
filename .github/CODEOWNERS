@@ -8,7 +8,7 @@
 # precedence.
 
 # Region Global
-* @atkachev_tangem @ahohlov_tangem @vkozarez_tangem
+* @ahohlov_tangem @vkozarez_tangem
 
 # Region CI/CD
 
@@ -17,44 +17,35 @@ ci_resources/ @ishulgin_tangem @vkozarez_tangem
 fastlane @ishulgin_tangem @vkozarez_tangem
 
 # Region App Legacy
-app/ @atkachev_tangem @ahohlov_tangem @vkozarez_tangem
+app/ @ahohlov_tangem @vkozarez_tangem
 
 # Region Test
 app/src/androidTest/ @tnagmetulla_tangem @ishulgin_tangem
-
 
 # Region Common
 
 common/ui/ @mismoilov_tangem
 
-common/routing/ @atkachev_tangem
-
 common/ui-charts/ @nsamoylov_tangem @mismoilov_tangem
 
 # Region Core
 
-core/decompose/ @nsamoylov_tangem @atkachev_tangem
-
-core/navigation/ @atkachev_tangem
+core/decompose/ @nsamoylov_tangem
 
 core/pagination/ @nsamoylov_tangem
 
 core/ui/ @mismoilov_tangem
 
-core/utils/ @atkachev_tangem @ahohlov_tangem
+core/utils/ @ahohlov_tangem
 
 
 # Region features
 
-**/details/ @atkachev_tangem
-
 **/disclaimer/ @mismoilov_tangem
-
-**/manage-tokens/ @atkachev_tangem
 
 **/markets/ @nsamoylov_tangem
 
-**/onboarding/ @atkachev_tangem  @ahohlov_tangem
+**/onboarding/ @ahohlov_tangem
 
 **/onboarding-v2/ @nsamoylov_tangem
 
@@ -77,5 +68,3 @@ core/utils/ @atkachev_tangem @ahohlov_tangem
 **/tokendetails/ @dkamalov_tangem
 
 **/wallet/ @ahohlov_tangem
-
-**/wallet-settings/ @atkachev_tangem
