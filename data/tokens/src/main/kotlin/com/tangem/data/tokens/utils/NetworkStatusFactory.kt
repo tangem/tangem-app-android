@@ -36,6 +36,7 @@ internal class NetworkStatusFactory {
                     ),
                 )
             },
+            isCached = false,
         )
     }
 
