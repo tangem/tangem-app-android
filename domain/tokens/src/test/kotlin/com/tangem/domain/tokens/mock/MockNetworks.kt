@@ -8,7 +8,6 @@ import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.NetworkStatus
 import java.math.BigDecimal
 
-@Suppress("MemberVisibilityCanBePrivate")
 internal object MockNetworks {
 
     val amountToCreateAccount: BigDecimal = BigDecimal.TEN
@@ -52,17 +51,26 @@ internal object MockNetworks {
         transactionExtrasType = Network.TransactionExtrasType.NONE,
     )
 
-    val networkStatus1 = NetworkStatus(
+    val verifiedNetworksStatuses: NonEmptySet<NetworkStatus>
+        get() = nonEmptySetOf(
+            verifiedNetworkStatus1,
+            verifiedNetworkStatus2,
+            verifiedNetworkStatus3,
+        )
+
+    private val networkStatus1 = NetworkStatus(
         network = network1,
         value = NetworkStatus.Unreachable(address = null),
+        isCached = false,
     )
 
-    val networkStatus2 = NetworkStatus(
+    private val networkStatus2 = NetworkStatus(
         network = network2,
         value = NetworkStatus.MissedDerivation,
+        isCached = false,
     )
 
-    val networkStatus3 = NetworkStatus(
+    private val networkStatus3 = NetworkStatus(
         network = network3,
         value = NetworkStatus.NoAccount(
             amountToCreateAccount = amountToCreateAccount,
@@ -71,11 +79,10 @@ internal object MockNetworks {
             ),
             errorMessage = "",
         ),
+        isCached = false,
     )
 
-    val errorNetworksStatuses = nonEmptySetOf(networkStatus1, networkStatus2, networkStatus3)
-
-    val verifiedNetworkStatus1: NetworkStatus
+    private val verifiedNetworkStatus1: NetworkStatus
         get() = networkStatus1.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
@@ -90,7 +97,7 @@ internal object MockNetworks {
             ),
         )
 
-    val verifiedNetworkStatus2: NetworkStatus
+    private val verifiedNetworkStatus2: NetworkStatus
         get() = networkStatus2.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
@@ -105,7 +112,7 @@ internal object MockNetworks {
             ),
         )
 
-    val verifiedNetworkStatus3: NetworkStatus
+    private val verifiedNetworkStatus3: NetworkStatus
         get() = networkStatus3.copy(
             value = NetworkStatus.Verified(
                 amounts = mapOf(
@@ -119,12 +126,5 @@ internal object MockNetworks {
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
             ),
-        )
-
-    val verifiedNetworksStatuses: NonEmptySet<NetworkStatus>
-        get() = nonEmptySetOf(
-            verifiedNetworkStatus1,
-            verifiedNetworkStatus2,
-            verifiedNetworkStatus3,
         )
 }
