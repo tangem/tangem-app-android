@@ -2,7 +2,7 @@ package com.tangem.datasource.local.network
 
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.network.entity.NetworkStatusesDM
+import com.tangem.datasource.local.network.entity.NetworkStatusesByWalletId
 import com.tangem.datasource.local.network.utils.toDataModel
 import com.tangem.datasource.local.network.utils.toDomainModel
 import com.tangem.domain.tokens.model.Network
@@ -16,7 +16,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class DefaultNetworksStatusesStore(
     private val runtimeDataStore: RuntimeDataStore<Set<NetworkStatus>>,
-    private val persistenceDataStore: DataStore<NetworkStatusesDM>,
+    private val persistenceDataStore: DataStore<NetworkStatusesByWalletId>,
 ) : NetworksStatusesStore {
 
     private val mutex = Mutex()
@@ -33,7 +33,7 @@ internal class DefaultNetworksStatusesStore(
                     .firstOrNull { it.id == status.networkId }
                     ?: return@mapNotNullTo null
 
-                status.toDomainModel(network)
+                status.toDomainModel(network = network, isCached = true)
             }
             .orEmpty()
 
@@ -110,7 +110,7 @@ internal class DefaultNetworksStatusesStore(
 
         persistenceDataStore.updateData { storedStatuses ->
             val userWalletStatuses = storedStatuses[userWalletId.stringValue] ?: emptySet()
-            val updatedStatuses = userWalletStatuses.addOrReplace(status.toDataModel(network)) {
+            val updatedStatuses = userWalletStatuses.addOrReplace(item = status.toDataModel(network)) {
                 it.networkId == network.id
             }
 
