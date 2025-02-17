@@ -1,4 +1,4 @@
-package com.tangem.feature.swap.viewmodels
+package com.tangem.feature.swap.model
 
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
