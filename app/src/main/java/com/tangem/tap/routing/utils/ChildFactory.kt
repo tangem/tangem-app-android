@@ -5,7 +5,6 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.stories.api.StoriesComponent
-import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.disclaimer.api.components.DisclaimerComponent
@@ -16,6 +15,7 @@ import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
+import com.tangem.features.swap.SwapComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
@@ -59,6 +59,7 @@ internal class ChildFactory @Inject constructor(
     private val welcomeComponentFactory: WelcomeComponent.Factory,
     private val storiesComponentFactory: StoriesComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
+    private val swapComponentFactory: SwapComponent.Factory,
     private val sendRouter: SendRouter,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
@@ -222,6 +223,18 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = stakingComponentFactory,
                 )
             }
+            is AppRoute.Swap -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = SwapComponent.Params(
+                        currencyFrom = route.currencyFrom,
+                        currencyTo = route.currencyTo,
+                        userWalletId = route.userWalletId,
+                        isInitialReverseOrder = route.isInitialReverseOrder,
+                    ),
+                    componentFactory = swapComponentFactory,
+                )
+            }
             is AppRoute.AccessCodeRecovery,
             is AppRoute.AppCurrencySelector,
             is AppRoute.SaveWallet,
@@ -237,7 +250,6 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.QrScanning,
             is AppRoute.ReferralProgram,
             is AppRoute.ResetToFactory,
-            is AppRoute.Swap,
             is AppRoute.Wallet,
             is AppRoute.WalletConnectSessions,
             is AppRoute.CurrencyDetails,
@@ -329,7 +341,16 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { ResetCardFragment() })
             }
             is AppRoute.Swap -> {
-                route.asFragmentChild(Provider { SwapFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = SwapComponent.Params(
+                        currencyFrom = route.currencyFrom,
+                        currencyTo = route.currencyTo,
+                        userWalletId = route.userWalletId,
+                        isInitialReverseOrder = route.isInitialReverseOrder,
+                    ),
+                    componentFactory = swapComponentFactory,
+                )
             }
             is AppRoute.Wallet -> {
                 route.asFragmentChild(Provider { walletRouter.getEntryFragment() })
