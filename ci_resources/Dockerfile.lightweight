@@ -3,6 +3,7 @@ FROM ubuntu:24.04
 RUN apt-get update && apt-get install -y \
     curl \
     git \
+    unzip \
     && apt-get clean
 
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg && \
@@ -15,5 +16,11 @@ RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.d
         apt-get install -y git-lfs && \
         git lfs install && \
         apt-get clean
+
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip" && \
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf awscliv2.zip aws && \
+    apt-get clean
 
 CMD ["bash"]
