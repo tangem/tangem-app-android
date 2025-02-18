@@ -4,9 +4,13 @@ import android.content.Context
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.token.*
-import com.tangem.datasource.local.token.utils.YieldBalancesSerializer
+import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.mapWithStringKeyTypes
+import com.tangem.datasource.utils.setTypes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -35,11 +39,16 @@ internal object StakingStoreModule {
         dispatchers: CoroutineDispatcherProvider,
     ): StakingBalanceStore {
         return DefaultStakingBalanceStore(
-            dataStore = DataStoreFactory.create(
-                serializer = YieldBalancesSerializer(moshi),
+            persistenceStore = DataStoreFactory.create(
+                serializer = MoshiDataStoreSerializer(
+                    moshi = moshi,
+                    types = mapWithStringKeyTypes(valueTypes = setTypes<YieldBalanceWrapperDTO>()),
+                    defaultValue = emptyMap(),
+                ),
                 produceFile = { context.dataStoreFile(fileName = "yield_balances") },
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
             ),
+            runtimeStore = RuntimeSharedStore(),
         )
     }
 
