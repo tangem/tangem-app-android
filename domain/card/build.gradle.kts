@@ -20,8 +20,8 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.blockchain) {
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
 
