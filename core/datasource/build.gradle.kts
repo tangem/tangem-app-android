@@ -34,8 +34,8 @@ dependencies {
     implementation(projects.domain.models)
 
     /** Tangem libraries */
-    implementation(deps.tangem.blockchain)
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 
     /** DI */
     implementation(deps.hilt.android)
