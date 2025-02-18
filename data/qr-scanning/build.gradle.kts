@@ -20,7 +20,7 @@ dependencies {
     implementation(projects.core.ui)
 
     /** SdK */
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 
     /** DI */
     implementation(deps.hilt.android)
