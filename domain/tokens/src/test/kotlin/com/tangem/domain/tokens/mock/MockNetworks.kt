@@ -61,13 +61,11 @@ internal object MockNetworks {
     private val networkStatus1 = NetworkStatus(
         network = network1,
         value = NetworkStatus.Unreachable(address = null),
-        isCached = false,
     )
 
     private val networkStatus2 = NetworkStatus(
         network = network2,
         value = NetworkStatus.MissedDerivation,
-        isCached = false,
     )
 
     private val networkStatus3 = NetworkStatus(
@@ -78,8 +76,8 @@ internal object MockNetworks {
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
             errorMessage = "",
+            isCached = false,
         ),
-        isCached = false,
     )
 
     private val verifiedNetworkStatus1: NetworkStatus
@@ -94,6 +92,7 @@ internal object MockNetworks {
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
+                isCached = false,
             ),
         )
 
@@ -109,6 +108,7 @@ internal object MockNetworks {
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
+                isCached = false,
             ),
         )
 
@@ -125,6 +125,7 @@ internal object MockNetworks {
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
+                isCached = false,
             ),
         )
 }
