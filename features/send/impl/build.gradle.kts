@@ -39,8 +39,8 @@ dependencies {
     implementation(deps.compose.constraintLayout)
 
     /** Tangem SDKs */
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
 
     /** Core modules */
     implementation(projects.core.configToggles)
