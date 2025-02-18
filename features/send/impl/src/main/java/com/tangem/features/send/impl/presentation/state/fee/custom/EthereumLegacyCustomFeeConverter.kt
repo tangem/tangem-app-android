@@ -18,7 +18,7 @@ import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCusto
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter.Companion.GAS_DECIMALS
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter.Companion.GIGA_DECIMALS
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
