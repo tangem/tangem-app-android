@@ -13,9 +13,9 @@ dependencies {
     implementation(projects.core.ui)
 
     /** Compose */
-    implementation(deps.tangem.vico.core)
-    implementation(deps.tangem.vico.compose)
-    implementation(deps.tangem.vico.compose.m3)
+    implementation(tangemDeps.vico.core)
+    implementation(tangemDeps.vico.compose)
+    implementation(tangemDeps.vico.compose.m3)
 
     implementation(deps.lifecycle.compose)
     implementation(deps.compose.foundation)
