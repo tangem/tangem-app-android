@@ -22,8 +22,8 @@ dependencies {
     implementation(projects.core.res)
 
     /** Tangem libraries */
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.card.android) {
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
 
