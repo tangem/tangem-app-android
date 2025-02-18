@@ -39,8 +39,8 @@ dependencies {
     implementation(deps.jodatime)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.reKotlin)
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain)
     implementation(deps.timber)
     implementation(deps.firebase.perf) {
         exclude(group = "com.google.firebase", module = "protolite-well-known-types")
