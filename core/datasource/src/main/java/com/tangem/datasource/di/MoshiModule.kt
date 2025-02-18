@@ -9,6 +9,7 @@ import com.tangem.datasource.api.common.adapter.DateTimeAdapter
 import com.tangem.datasource.api.common.adapter.LocalDateAdapter
 import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
 import com.tangem.datasource.local.config.providers.models.ProviderModel
+import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.scan.serialization.*
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
@@ -16,6 +17,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dev.onenowy.moshipolymorphicadapter.NamePolymorphicAdapterFactory
 import javax.inject.Singleton
 
 @Module
@@ -38,6 +40,11 @@ class MoshiModule {
             .add(DateTimeAdapter())
             .add(VisaActivationRemoteState.jsonAdapter)
             .add(VisaCardActivationStatus.jsonAdapter)
+            .add(
+                NamePolymorphicAdapterFactory.of(NetworkStatusDM::class.java)
+                    .withSubtype(NetworkStatusDM.Verified::class.java, "amounts")
+                    .withSubtype(NetworkStatusDM.NoAccount::class.java, "amount_to_create_account"),
+            )
             .addLast(KotlinJsonAdapterFactory())
             .addStakeKitEnumFallbackAdapters()
             .build()
