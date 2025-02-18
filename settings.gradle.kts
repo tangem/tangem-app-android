@@ -113,7 +113,11 @@ dependencyResolutionManagement {
         create("deps") {
             from(files("gradle/dependencies.toml"))
         }
+        create("tangemDeps") {
+            from(files("gradle/tangem_dependencies.toml"))
+        }
     }
+
 }
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
