@@ -25,8 +25,8 @@ dependencies {
     implementation(project(":data:common"))
 
     /** Tangem libraries */
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.card.android) {
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
 
@@ -50,7 +50,7 @@ dependencies {
     implementation(deps.compose.coil)
     implementation(deps.compose.shimmer)
 
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.card.core)
 
     /** Other libraries */
     implementation(deps.compose.shimmer)
