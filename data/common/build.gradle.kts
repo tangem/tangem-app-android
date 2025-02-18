@@ -19,8 +19,8 @@ dependencies {
     implementation(projects.domain.tokens.models)
 
     /* Libs - SDK */
-    implementation(deps.tangem.blockchain)
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
     implementation(projects.libs.blockchainSdk)
 
     /* DI */
