@@ -41,7 +41,7 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
     kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
