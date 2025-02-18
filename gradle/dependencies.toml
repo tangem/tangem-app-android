@@ -59,6 +59,7 @@ kotsonGsonExt = "2.5.0"
 lottie = "3.4.0"
 lottie-compose = "6.6.0"
 moshi = "1.15.1"
+moshiAdaptersExt = "0.1.5"
 okhttp = "4.9.3"
 rekotlin = "1.0.4"
 retrofit = "2.11.0"
@@ -224,6 +225,7 @@ material = { module = "com.google.android.material:material", version.ref = "goo
 moshi = { module = "com.squareup.moshi:moshi", version.ref = "moshi" }
 moshi-kotlin = { module = "com.squareup.moshi:moshi-kotlin", version.ref = "moshi" }
 moshi-adapters = { module = "com.squareup.moshi:moshi-adapters", version.ref = "moshi" }
+moshi-adapters-ext = { module = "dev.onenowy.moshipolymorphicadapter:moshi-polymorphic-adapter", version.ref = "moshiAdaptersExt" }
 moshi-kotlin-codegen = { module = "com.squareup.moshi:moshi-kotlin-codegen", version.ref = "moshi" }
 okHttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okHttp-prettyLogging = { module = "com.github.ihsanbal:LoggingInterceptor", version.ref = "okHttp-prettyLogging" }
