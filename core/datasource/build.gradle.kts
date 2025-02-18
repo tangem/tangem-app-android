@@ -52,6 +52,7 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.moshi.adapters)
+    implementation(deps.moshi.adapters.ext)
     implementation(deps.okHttp)
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
