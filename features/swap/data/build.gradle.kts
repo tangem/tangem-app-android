@@ -44,7 +44,7 @@ dependencies {
     implementation(projects.data.common)
 
     /** Tangem SDKs */
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 
     /** Others */
     implementation(deps.timber)
