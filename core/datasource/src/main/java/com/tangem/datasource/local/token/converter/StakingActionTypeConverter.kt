@@ -1,11 +1,11 @@
-package com.tangem.data.staking.converters.action
+package com.tangem.datasource.local.token.converter
 
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.utils.converter.Converter
 
 @Suppress("CyclomaticComplexMethod")
-class StakingActionTypeConverter : Converter<StakingActionTypeDTO, StakingActionType> {
+object StakingActionTypeConverter : Converter<StakingActionTypeDTO, StakingActionType> {
 
     override fun convert(value: StakingActionTypeDTO): StakingActionType {
         return when (value) {
