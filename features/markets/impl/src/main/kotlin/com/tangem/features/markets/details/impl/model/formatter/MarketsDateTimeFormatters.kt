@@ -8,14 +8,13 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.formatAsDateTime
 import com.tangem.domain.markets.PriceChangeInterval
 import com.tangem.features.markets.impl.R
+import com.tangem.utils.H24_MILLIS
+import com.tangem.utils.WEEK_MILLIS
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import java.math.BigDecimal
 
 internal object MarketsDateTimeFormatters {
-
-    private const val H24_MILLIS = 24L * 60 * 60 * 1000
-    private const val WEEK_MILLIS = 7L * H24_MILLIS
 
     private val dateTimeMMMFormatter by lazy {
         DateTimeFormatters.getBestFormatterBySkeleton("dd MMM Hm")
