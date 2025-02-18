@@ -9,6 +9,6 @@ android {
 }
 
 dependencies {
-    implementation(deps.tangem.blockchain)
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 }
