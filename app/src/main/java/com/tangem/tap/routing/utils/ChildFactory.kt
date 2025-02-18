@@ -26,7 +26,7 @@ import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
-import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
+import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.features.home.api.HomeComponent
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
@@ -63,6 +63,7 @@ internal class ChildFactory @Inject constructor(
     private val swapComponentFactory: SwapComponent.Factory,
     private val homeComponentFactory: HomeComponent.Factory,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
+    private val walletConnectComponentFactory: WalletConnectComponent.Factory,
     private val walletRouter: WalletRouter,
     private val qrScanningRouter: QrScanningRouter,
     private val testerRouter: TesterRouter,
@@ -267,6 +268,13 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = homeComponentFactory,
                 )
             }
+            is AppRoute.WalletConnectSessions -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = walletConnectComponentFactory,
+                )
+            }
             is AppRoute.AccessCodeRecovery,
             is AppRoute.AppCurrencySelector,
             is AppRoute.SaveWallet,
@@ -281,7 +289,6 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.ReferralProgram,
             is AppRoute.ResetToFactory,
             is AppRoute.Wallet,
-            is AppRoute.WalletConnectSessions,
             is AppRoute.PushNotification,
             -> error("Unsupported route: $route")
         }
@@ -400,7 +407,11 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { walletRouter.getEntryFragment() })
             }
             is AppRoute.WalletConnectSessions -> {
-                route.asFragmentChild(Provider { WalletConnectFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = walletConnectComponentFactory,
+                )
             }
             is AppRoute.CurrencyDetails -> {
                 route.asComponentChild(
