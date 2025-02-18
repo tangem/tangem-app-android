@@ -3,9 +3,11 @@ name: Create Pull request from release branch to develop
 on:
   push:
     branches:
-      - 'releases/**'
+      - 'feature/AND-10031_improve_create_pr_action'
 jobs:
-  trigger-reusable-workflow:
-    uses: tangem-developments/actions/.github/workflows/create_pr_to_develop.yml@feature/IOS-8785_ci_cd_create_release
+  create-pr-to-develop:
+    uses: tangem-developments/actions/.github/workflows/create_pr_to_develop.yml@feature/AND-9908_fix_create_pr_workflow
     with:
       source_branch: ${{ github.ref_name }}
+    secrets:
+      AUTO_MERGE_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}
