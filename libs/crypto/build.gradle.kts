@@ -16,7 +16,7 @@ dependencies {
     implementation(deps.kotlin.coroutines)
 
     /** SDK */
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 
     /** Core */
     implementation(projects.core.utils)
