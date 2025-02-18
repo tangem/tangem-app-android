@@ -26,6 +26,7 @@ internal class NetworkStatusFactory {
                     address = getNetworkAddress(result.selectedAddress, result.addresses),
                     amountToCreateAccount = result.amountToCreateAccount,
                     errorMessage = result.errorMessage,
+                    isCached = false,
                 )
                 is UpdateWalletManagerResult.Verified -> NetworkStatus.Verified(
                     address = getNetworkAddress(result.selectedAddress, result.addresses),
@@ -34,9 +35,9 @@ internal class NetworkStatusFactory {
                         transactions = result.currentTransactions,
                         currencies = currencies,
                     ),
+                    isCached = false,
                 )
             },
-            isCached = false,
         )
     }
 
