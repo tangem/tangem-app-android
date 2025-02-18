@@ -51,8 +51,8 @@ dependencies {
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
     implementation(deps.timber)
-    implementation(deps.tangem.blockchain)
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
     implementation(deps.moshi)
     kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
 }
