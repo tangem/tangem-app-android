@@ -51,7 +51,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.NoteMigration -> MainScreen.NotePromo
             is WalletNotification.SwapPromo -> TokenSwapPromoAnalyticsEvent.NoticePromotionBanner(
                 source = AnalyticsParam.ScreensSources.Main,
-                programName = TokenSwapPromoAnalyticsEvent.ProgramName.Empty, // Use it on new promo action
+                programName = ProgramName.Empty, // Use it on new promo action
             )
             is WalletNotification.UnlockWallets -> null // See [SelectedWalletAnalyticsSender]
             is WalletNotification.Informational.NoAccount,
@@ -60,6 +60,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.NetworksUnreachable,
             -> null
             is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
+            is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond
         }
     }
 }

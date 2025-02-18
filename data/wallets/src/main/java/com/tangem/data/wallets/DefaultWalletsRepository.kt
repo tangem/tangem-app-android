@@ -9,12 +9,15 @@ import com.tangem.datasource.api.tangemTech.models.SeedPhraseNotificationDTO.Sta
 import com.tangem.datasource.local.datastore.RuntimeStateStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFICATION_SHOW_TIME
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.utils.WEEK_MILLIS
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import kotlinx.coroutines.flow.Flow
@@ -23,11 +26,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
+typealias SeedPhraseNotificationsStatuses = Map<UserWalletId, SeedPhraseNotificationsStatus>
+
 internal class DefaultWalletsRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val tangemTechApi: TangemTechApi,
     private val userWalletsStore: UserWalletsStore,
-    private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<Map<UserWalletId, Boolean>>,
+    private val seedPhraseNotificationVisibilityStore: RuntimeStateStore<SeedPhraseNotificationsStatuses>,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletsRepository {
 
@@ -57,11 +62,16 @@ internal class DefaultWalletsRepository(
         }
     }
 
-    override fun seedPhraseNotificationStatus(userWalletId: UserWalletId): Flow<Boolean> {
+    override fun seedPhraseNotificationStatus(userWalletId: UserWalletId): Flow<SeedPhraseNotificationsStatus> {
         return channelFlow {
             launch {
                 seedPhraseNotificationVisibilityStore.get()
-                    .map { it.getOrDefault(key = userWalletId, defaultValue = false) }
+                    .map {
+                        it.getOrDefault(
+                            key = userWalletId,
+                            defaultValue = SeedPhraseNotificationsStatus.NOT_NEEDED,
+                        )
+                    }
                     .collectLatest(::send)
             }
 
@@ -73,18 +83,53 @@ internal class DefaultWalletsRepository(
         val userWallet = userWalletsStore.getSyncOrNull(key = userWalletId)
 
         val status = if (userWallet?.isImported == false) {
-            false
+            Status.NOT_NEEDED
         } else {
             runCatching(dispatchers.io) {
                 tangemTechApi.getSeedPhraseNotificationStatus(walletId = userWalletId.stringValue).getOrThrow()
-            }
-                .fold(
-                    onSuccess = { it.status == Status.NOTIFIED },
-                    onFailure = { it is HttpException && it.code == HttpException.Code.NOT_FOUND },
-                )
+            }.fold(
+                onSuccess = { it.status },
+                onFailure = {
+                    if (it is HttpException && it.code == HttpException.Code.NOT_FOUND) {
+                        Status.NOTIFIED
+                    } else {
+                        Status.NOT_NEEDED
+                    }
+                },
+            )
         }
 
-        updateNotificationVisibility(id = userWalletId, value = status)
+        when {
+            status == Status.NOTIFIED -> updateNotificationVisibility(
+                id = userWalletId,
+                value = SeedPhraseNotificationsStatus.SHOW_FIRST,
+            )
+            status == Status.CONFIRMED && checkNeedFetchSecondNotification() ->
+                fetchSeedPhraseSecondNotificationStatus(userWalletId)
+            else -> updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
+        }
+    }
+
+    private suspend fun fetchSeedPhraseSecondNotificationStatus(userWalletId: UserWalletId) {
+        val status = runCatching(dispatchers.io) {
+            tangemTechApi.getSeedPhraseSecondNotificationStatus(walletId = userWalletId.stringValue).getOrThrow()
+        }.fold(
+            onSuccess = { it.status },
+            onFailure = { Status.NOT_NEEDED },
+        )
+
+        val showStatus = when (status) {
+            Status.CONFIRMED -> SeedPhraseNotificationsStatus.SHOW_SECOND
+            else -> SeedPhraseNotificationsStatus.NOT_NEEDED
+        }
+
+        updateNotificationVisibility(id = userWalletId, value = showStatus)
+    }
+
+    private suspend fun checkNeedFetchSecondNotification(): Boolean {
+        val firstNotificationTime =
+            appPreferencesStore.getSyncOrDefault(SEED_FIRST_NOTIFICATION_SHOW_TIME, default = 0L)
+        return System.currentTimeMillis() - firstNotificationTime > WEEK_MILLIS
     }
 
     override suspend fun notifiedSeedPhraseNotification(userWalletId: UserWalletId) {
@@ -102,9 +147,10 @@ internal class DefaultWalletsRepository(
                 walletId = userWalletId.stringValue,
                 body = SeedPhraseNotificationDTO(status = Status.CONFIRMED),
             ).getOrThrow()
+            appPreferencesStore.store(key = SEED_FIRST_NOTIFICATION_SHOW_TIME, value = System.currentTimeMillis())
         }
 
-        updateNotificationVisibility(id = userWalletId, value = false)
+        updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
     }
 
     override suspend fun declineSeedPhraseNotification(userWalletId: UserWalletId) {
@@ -113,9 +159,10 @@ internal class DefaultWalletsRepository(
                 walletId = userWalletId.stringValue,
                 body = SeedPhraseNotificationDTO(status = Status.DECLINED),
             ).getOrThrow()
+            appPreferencesStore.store(key = SEED_FIRST_NOTIFICATION_SHOW_TIME, value = System.currentTimeMillis())
         }
 
-        updateNotificationVisibility(id = userWalletId, value = false)
+        updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
     }
 
     override suspend fun markWallet2WasCreated(userWalletId: UserWalletId) {
@@ -126,7 +173,29 @@ internal class DefaultWalletsRepository(
         }
     }
 
-    private suspend fun updateNotificationVisibility(id: UserWalletId, value: Boolean) {
+    override suspend fun rejectSeedPhraseSecondNotification(userWalletId: UserWalletId) {
+        runCatching(dispatchers.io) {
+            tangemTechApi.updateSeedPhraseSecondNotificationStatus(
+                walletId = userWalletId.stringValue,
+                body = SeedPhraseNotificationDTO(status = Status.REJECTED),
+            ).getOrThrow()
+        }
+
+        updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
+    }
+
+    override suspend fun acceptSeedPhraseSecondNotification(userWalletId: UserWalletId) {
+        runCatching(dispatchers.io) {
+            tangemTechApi.updateSeedPhraseSecondNotificationStatus(
+                walletId = userWalletId.stringValue,
+                body = SeedPhraseNotificationDTO(status = Status.ACCEPTED),
+            ).getOrThrow()
+        }
+
+        updateNotificationVisibility(id = userWalletId, value = SeedPhraseNotificationsStatus.NOT_NEEDED)
+    }
+
+    private suspend fun updateNotificationVisibility(id: UserWalletId, value: SeedPhraseNotificationsStatus) {
         return seedPhraseNotificationVisibilityStore.update {
             it.toMutableMap().apply {
                 this[id] = value
