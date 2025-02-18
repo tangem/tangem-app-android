@@ -6,9 +6,14 @@ import java.math.BigDecimal
 
 sealed class YieldBalance {
 
+    abstract val integrationId: String?
+    abstract val address: String?
+
     data class Data(
+        override val integrationId: String?,
+        override val address: String,
         val balance: YieldBalanceItem,
-        val address: String,
+        val isCached: Boolean,
     ) : YieldBalance() {
         fun getTotalWithRewardsStakingBalance(): BigDecimal {
             return balance.items.sumOf { it.amount }
@@ -34,9 +39,13 @@ sealed class YieldBalance {
         }
     }
 
-    data object Empty : YieldBalance()
+    data class Empty(
+        override val integrationId: String?,
+        override val address: String,
+        val isCached: Boolean,
+    ) : YieldBalance()
 
-    data object Error : YieldBalance()
+    data class Error(override val integrationId: String?, override val address: String?) : YieldBalance()
 }
 
 data class YieldBalanceItem(
