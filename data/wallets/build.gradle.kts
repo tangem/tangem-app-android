@@ -13,7 +13,7 @@ android {
 dependencies {
 
     /** Tangem libraries */
-    implementation(deps.tangem.blockchain) // android-library
+    implementation(tangemDeps.blockchain) // android-library
 
     /** Core */
     implementation(projects.core.datasource)
