@@ -27,7 +27,7 @@ import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRe
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
-import com.tangem.tap.features.home.HomeFragment
+import com.tangem.tap.features.home.api.HomeComponent
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragment
@@ -61,6 +61,7 @@ internal class ChildFactory @Inject constructor(
     private val sendComponentFactory: SendComponent.Factory,
     private val stakingComponentFactory: StakingComponent.Factory,
     private val swapComponentFactory: SwapComponent.Factory,
+    private val homeComponentFactory: HomeComponent.Factory,
     private val tokenDetailsRouter: TokenDetailsRouter,
     private val walletRouter: WalletRouter,
     private val qrScanningRouter: QrScanningRouter,
@@ -249,13 +250,20 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = sendComponentFactory,
                 )
             }
+            is AppRoute.Home -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = homeComponentFactory,
+                )
+            }
             is AppRoute.AccessCodeRecovery,
             is AppRoute.AppCurrencySelector,
             is AppRoute.SaveWallet,
             is AppRoute.AppSettings,
             is AppRoute.CardSettings,
             is AppRoute.DetailsSecurity,
-            is AppRoute.Home,
+
             is AppRoute.OnboardingNote,
             is AppRoute.OnboardingOther,
             is AppRoute.OnboardingTwins,
@@ -328,7 +336,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Home -> {
-                route.asFragmentChild(Provider { HomeFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = homeComponentFactory,
+                )
             }
             is AppRoute.ManageTokens -> {
                 val source = when (route.source) {
