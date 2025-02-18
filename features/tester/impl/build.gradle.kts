@@ -50,7 +50,7 @@ dependencies {
     implementation(projects.features.tester.api)
 
     /* SDK */
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 
     /** Other modules */
     implementation(projects.common.routing)
