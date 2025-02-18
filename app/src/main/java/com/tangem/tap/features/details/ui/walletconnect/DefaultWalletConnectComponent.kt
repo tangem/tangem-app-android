@@ -27,13 +27,13 @@ internal class DefaultWalletConnectComponent @AssistedInject constructor(
 
     private val model: WalletConnectModel = getOrCreateModel()
 
-    private var screenState: MutableState<WalletConnectScreenState>? = null
+    private var screenState: MutableState<WalletConnectScreenState> =
+        mutableStateOf(model.updateState(store.state.walletConnectState))
 
     init {
         lifecycle.subscribe(
             onCreate = {
                 Analytics.send(WalletConnect.ScreenOpened())
-                screenState = mutableStateOf(model.updateState(store.state.walletConnectState))
             },
             onStart = {
                 store.subscribe(this) { state ->
@@ -54,10 +54,9 @@ internal class DefaultWalletConnectComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state = screenState?.value ?: return
         WalletConnectScreen(
             modifier = modifier,
-            state = state,
+            state = screenState.value,
             onBackClick = {
                 store.dispatchNavigationAction(AppRouter::pop)
             },
