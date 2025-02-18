@@ -72,6 +72,10 @@ internal interface WalletWarningsClickIntents {
     fun onSeedPhraseNotificationConfirm()
 
     fun onSeedPhraseNotificationDecline()
+
+    fun onSeedPhraseSecondNotificationAccept()
+
+    fun onSeedPhraseSecondNotificationReject()
 }
 
 @Suppress("LongParameterList")
@@ -310,6 +314,39 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 ),
             ),
         )
+    }
+
+    override fun onSeedPhraseSecondNotificationAccept() {
+        val userWallet = getSelectedUserWallet() ?: return
+
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonUsed)
+
+        walletEventSender.send(
+            event = WalletEvent.ShowAlert(
+                state = WalletAlertState.SimpleOkAlert(
+                    message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
+                    onOkClick = {
+                        viewModelScope.launch {
+                            seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
+
+                            urlOpener.openUrl(
+                                url = TangemBlogUrlBuilder.build(post = TangemBlogUrlBuilder.Post.SeedNotifySecond),
+                            )
+                        }
+                    },
+                ),
+            ),
+        )
+    }
+
+    override fun onSeedPhraseSecondNotificationReject() {
+        val userWallet = getSelectedUserWallet() ?: return
+
+        analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonDeclined)
+
+        viewModelScope.launch {
+            seedPhraseNotificationUseCase.rejectSecond(userWalletId = userWallet.walletId)
+        }
     }
 
     private fun getSelectedUserWallet(): UserWallet? {
