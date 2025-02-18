@@ -38,5 +38,5 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /** Tangem deps */
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 }

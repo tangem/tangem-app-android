@@ -45,9 +45,9 @@ dependencies {
 
     /* SDK */
 // [REDACTED_TODO_COMMENT]
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.card.core)
     // For image resolving
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)

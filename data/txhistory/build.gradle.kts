@@ -25,7 +25,7 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
     implementation(deps.timber)
     implementation(deps.jodatime)
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
