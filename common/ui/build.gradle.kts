@@ -38,8 +38,8 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.promo.models)
 
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.blockchain) {
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
 }

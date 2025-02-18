@@ -32,7 +32,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.jodatime)
     implementation(deps.timber)
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.card.core)
 
     /** DI */
     implementation(deps.hilt.android)
