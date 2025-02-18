@@ -23,7 +23,7 @@ dependencies {
 
     implementation(projects.features.staking.api)
 
-    implementation(deps.tangem.blockchain) {
+    implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
 }
