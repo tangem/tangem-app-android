@@ -88,15 +88,6 @@ markdown = "0.7.2"
 markdownComposeView = "0.5.4"
 # endregion Other libraries
 
-# region Tangem
-tangemBlockchainSdk = "release-app_5.21-955"
-#tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.21-435"
-#tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
-tangemVico = "2.0.0-alpha.25-tangem-developments8"
-#tangemVico = "0.0.1" # Keep it! - used for local builds ^
-# endregion Tangem
-
 # region Tools
 detektComposeRules = "1.3.0"
 detekt = "1.22.0"
@@ -187,16 +178,6 @@ firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics-ktx"
 firebase-messaging = { module = "com.google.firebase:firebase-messaging-ktx" }
 firebase-perf = { module = "com.google.firebase:firebase-perf" }
 # endregion Firebase
-
-# region Tangem
-tangem-blockchain = { module = "com.tangem:blockchain", version.ref = "tangemBlockchainSdk" }
-tangem-card-android = { module = "com.tangem.tangem-sdk-kotlin:android", version.ref = "tangemCardSdk" }
-tangem-card-core = { module = "com.tangem.tangem-sdk-kotlin:core", version.ref = "tangemCardSdk" }
-
-tangem-vico-compose = { group = "com.tangem.vico", name = "compose", version.ref = "tangemVico" }
-tangem-vico-compose-m3 = { group = "com.tangem.vico", name = "compose-m3", version.ref = "tangemVico" }
-tangem-vico-core = { group = "com.tangem.vico", name = "core", version.ref = "tangemVico" }
-# endregion Tangem
 
 # region Detekt
 detekt-compose = { module = "ru.kode:detekt-rules-compose", version.ref = "detektComposeRules" }
