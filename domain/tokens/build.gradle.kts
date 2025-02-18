@@ -50,7 +50,7 @@ dependencies {
     /** Tests */
     testImplementation(deps.test.junit)
     testImplementation(deps.test.coroutine)
-    testImplementation(deps.tangem.blockchain) {
+    testImplementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
 }
