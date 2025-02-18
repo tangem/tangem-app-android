@@ -13,8 +13,8 @@ android {
 dependencies {
 
     /** Tangem SDKs */
-    implementation(deps.tangem.blockchain)
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 
     /** Core */
     implementation(projects.core.datasource)
