@@ -129,8 +129,14 @@ sealed class WalletScreenAnalyticsEvent {
 
         data object NoticeSeedPhraseSupport : MainScreen(event = "Notice - Seed Phrase Support")
 
+        data object NoticeSeedPhraseSupportSecond : MainScreen(event = "Notice - Seed Phrase Support2")
+
         data object NoticeSeedPhraseSupportButtonNo : MainScreen(event = "Button - Support No")
 
         data object NoticeSeedPhraseSupportButtonYes : MainScreen(event = "Button - Support Yes")
+
+        data object NoticeSeedPhraseSupportButtonUsed : MainScreen(event = "Button - Support Used")
+
+        data object NoticeSeedPhraseSupportButtonDeclined : MainScreen(event = "Button - Support Declined")
     }
 }
