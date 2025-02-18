@@ -222,11 +222,11 @@ dependencies {
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
     }
     /** Tangem libraries */
-    implementation(deps.tangem.blockchain) {
+    implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.card.android) {
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
 
