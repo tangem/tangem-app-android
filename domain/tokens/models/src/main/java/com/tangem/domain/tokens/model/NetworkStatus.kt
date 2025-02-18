@@ -8,12 +8,10 @@ import java.math.BigDecimal
  *
  * @property network The network for which the status is provided.
  * @property value The specific status value, represented as a sealed class to encapsulate the various possible states of the network.
- * @property isCached flag that determines whether the status is a cache
  */
 data class NetworkStatus(
     val network: Network,
     val value: Value,
-    val isCached: Boolean,
 ) {
 
     /**
@@ -21,24 +19,33 @@ data class NetworkStatus(
      *
      * This sealed class includes different states like unreachable, missed derivation, verified, and no account.
      */
-    sealed class Value
+    sealed class Value {
+
+        abstract val isCached: Boolean
+    }
 
     /**
      * Represents the state where the network is refreshing.
      */
-    data object Refreshing : Value()
+    data object Refreshing : Value() {
+        override val isCached: Boolean = false
+    }
 
     /**
      * Represents the state where the network is unreachable.
      *
      * @property address Network addresses.
      */
-    data class Unreachable(val address: NetworkAddress?) : Value()
+    data class Unreachable(val address: NetworkAddress?) : Value() {
+        override val isCached: Boolean = false
+    }
 
     /**
      * Represents the state where a derivation has been missed.
      */
-    data object MissedDerivation : Value()
+    data object MissedDerivation : Value() {
+        override val isCached: Boolean = false
+    }
 
     /**
      * Represents the verified state of the network, including the amounts associated with different cryptocurrencies
@@ -47,12 +54,14 @@ data class NetworkStatus(
      * @property address Network addresses.
      * @property amounts A map containing the amounts associated with different cryptocurrencies within the network.
      * @property pendingTransactions A map containing pending transactions associated with different cryptocurrencies
+     * @property isCached flag that determines whether the status is a cache
      * within the network.
      */
     data class Verified(
         val address: NetworkAddress,
         val amounts: Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>,
         val pendingTransactions: Map<CryptoCurrency.ID, Set<TxHistoryItem>>,
+        override val isCached: Boolean,
     ) : Value()
 
     /**
@@ -61,10 +70,12 @@ data class NetworkStatus(
      * @property address Network addresses.
      * @property amountToCreateAccount The amount required to create an account within the network.
      * @property errorMessage error message
+     * @property isCached flag that determines whether the status is a cache
      */
     data class NoAccount(
         val address: NetworkAddress,
         val amountToCreateAccount: BigDecimal,
         val errorMessage: String,
+        override val isCached: Boolean,
     ) : Value()
 }
