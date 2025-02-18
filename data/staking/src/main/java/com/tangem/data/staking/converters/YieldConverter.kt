@@ -4,6 +4,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.AddressArgumentD
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.MetadataDTO.RewardScheduleDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO.ValidatorDTO.ValidatorStatusDTO
+import com.tangem.datasource.local.token.converter.TokenConverter
 import com.tangem.domain.staking.model.stakekit.AddressArgument
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.Yield.Metadata.RewardSchedule
@@ -11,15 +12,20 @@ import com.tangem.domain.staking.model.stakekit.Yield.Validator.ValidatorStatus
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toImmutableList
 
-class YieldConverter(
-    private val tokenConverter: TokenConverter,
-) : Converter<YieldDTO, Yield> {
+internal object YieldConverter : Converter<YieldDTO, Yield> {
+
+    private val PARTNERS = listOf(
+        "cosmosvaloper1wrx0x9m9ykdhw9sg04v7uljme53wuj03aa5d4f",
+        "H2tJNyMHnRF6ahCQLQ1sSycM4FGchymuzyYzUqKEuydk",
+    )
+
+    private val PARTNERS_NAMES = listOf("Meria")
 
     override fun convert(value: YieldDTO): Yield {
         return Yield(
             id = value.id.asMandatory("id"),
-            token = tokenConverter.convert(value.token.asMandatory("token")),
-            tokens = value.tokens.asMandatory("tokens").map { tokenConverter.convert(it) },
+            token = TokenConverter.convert(value.token.asMandatory("token")),
+            tokens = value.tokens.asMandatory("tokens").map(TokenConverter::convert),
             args = convertArgs(value.args.asMandatory("args")),
             status = convertStatus(value.status.asMandatory("status")),
             apy = value.apy.asMandatory("apy"),
@@ -85,9 +91,9 @@ class YieldConverter(
             logoUri = metadataDTO.logoUri.asMandatory("logoUri"),
             description = metadataDTO.description.asMandatory("description"),
             documentation = metadataDTO.documentation,
-            gasFeeToken = tokenConverter.convert(metadataDTO.gasFeeTokenDTO.asMandatory("gasFeeTokenDTO")),
-            token = tokenConverter.convert(metadataDTO.tokenDTO.asMandatory("tokenDTO")),
-            tokens = metadataDTO.tokensDTO.asMandatory("tokensDTO").map { tokenConverter.convert(it) },
+            gasFeeToken = TokenConverter.convert(metadataDTO.gasFeeTokenDTO.asMandatory("gasFeeTokenDTO")),
+            token = TokenConverter.convert(metadataDTO.tokenDTO.asMandatory("tokenDTO")),
+            tokens = metadataDTO.tokensDTO.asMandatory("tokensDTO").map(TokenConverter::convert),
             type = metadataDTO.type.asMandatory("type"),
             rewardSchedule = convertRewardSchedule(metadataDTO.rewardSchedule.asMandatory("rewardSchedule")),
             cooldownPeriod = metadataDTO.cooldownPeriod?.let { convertPeriod(it) },
@@ -182,15 +188,5 @@ class YieldConverter(
 
     private fun isStrategicPartner(validatorAddress: String?, validatorName: String): Boolean {
         return PARTNERS.any { it == validatorAddress } || PARTNERS_NAMES.any { it.equals(validatorName, true) }
-    }
-
-    private companion object {
-        val PARTNERS = listOf(
-            "cosmosvaloper1wrx0x9m9ykdhw9sg04v7uljme53wuj03aa5d4f",
-            "H2tJNyMHnRF6ahCQLQ1sSycM4FGchymuzyYzUqKEuydk",
-        )
-        val PARTNERS_NAMES = listOf(
-            "Meria",
-        )
     }
 }
