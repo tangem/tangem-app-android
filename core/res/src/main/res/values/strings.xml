@@ -674,6 +674,8 @@
   <string name="scan_card_settings_message">Scan the card or ring to change its settings. The changes will impact only the card or ring you\'ve scanned and will not affect other devices tied to your wallet.</string>
   <string name="scan_card_settings_title">Get your Tangem ready!</string>
   <string name="security_alert_title">Security Alert</string>
+  <string name="seed_warning_no">No, I did not</string>
+  <string name="seed_warning_yes">Yes, guide me</string>
   <string name="selling_insufficient_balance_alert_message">You don’t have enough funds in your balance to sell cryptocurrency. Please deposit the desired asset to proceed.</string>
   <string name="selling_insufficient_balance_alert_title">Insufficient Balance</string>
   <string name="selling_regional_restriction_alert_message">Selling cryptocurrency is unavailable in your region at the moment. We’re actively working to bring this option to you soon—stay tuned!</string>
@@ -1089,6 +1091,8 @@
   <string name="warning_rate_app_title">Enjoying Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
   <string name="warning_rent_fee_title">Network rent fee required</string>
+  <string name="warning_seedphrase_action_required_title">Action required</string>
+  <string name="warning_seedphrase_contacted_support">Did you contact support via the app or email within 7 days of creating a wallet? If you did or are unsure, follow and complete the instructions.</string>
   <string name="warning_seedphrase_issue_answer_no">Thank you! All set! No further actions required.</string>
   <string name="warning_seedphrase_issue_answer_yes">You will now be redirected to the official Tangem website. Please read and follow instructions there.</string>
   <string name="warning_seedphrase_issue_message">Have you ever contacted the Tangem support team directly through this application?</string>
