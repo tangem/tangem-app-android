@@ -45,9 +45,9 @@ dependencies {
 
     /* SDK */
     // TODO: For TangemError model, should be removed after card domain scanning refactoring
-    implementation(deps.tangem.card.core)
+    implementation(tangemDeps.card.core)
     // For image resolving
-    implementation(deps.tangem.blockchain)
+    implementation(tangemDeps.blockchain)
 
     /* AndroidX */
     implementation(deps.androidx.activity.compose)
