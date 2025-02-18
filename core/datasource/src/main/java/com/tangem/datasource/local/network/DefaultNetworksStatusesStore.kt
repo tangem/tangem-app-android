@@ -2,9 +2,9 @@ package com.tangem.datasource.local.network
 
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.local.datastore.RuntimeDataStore
-import com.tangem.datasource.local.network.entity.NetworkStatusesByWalletId
-import com.tangem.datasource.local.network.utils.toDataModel
-import com.tangem.datasource.local.network.utils.toDomainModel
+import com.tangem.datasource.local.network.converter.NetworkStatusConverter
+import com.tangem.datasource.local.network.converter.NetworkStatusDataModelConverter
+import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
@@ -13,6 +13,8 @@ import com.tangem.utils.extensions.replaceBy
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+
+private typealias NetworkStatusesByWalletId = Map<String, Set<NetworkStatusDM>>
 
 internal class DefaultNetworksStatusesStore(
     private val runtimeDataStore: RuntimeDataStore<Set<NetworkStatus>>,
@@ -33,7 +35,7 @@ internal class DefaultNetworksStatusesStore(
                     .firstOrNull { it.id == status.networkId }
                     ?: return@mapNotNullTo null
 
-                status.toDomainModel(network = network, isCached = true)
+                NetworkStatusConverter(network = network, isCached = true).convert(value = status)
             }
             .orEmpty()
 
@@ -103,16 +105,14 @@ internal class DefaultNetworksStatusesStore(
     }
 
     private suspend fun storeNetworkStatusInPersistence(userWalletId: UserWalletId, networkStatus: NetworkStatus) {
-        val status = networkStatus.value
         val network = networkStatus.network
-
-        if (status !is NetworkStatus.Verified) return
 
         persistenceDataStore.updateData { storedStatuses ->
             val userWalletStatuses = storedStatuses[userWalletId.stringValue] ?: emptySet()
-            val updatedStatuses = userWalletStatuses.addOrReplace(item = status.toDataModel(network)) {
-                it.networkId == network.id
-            }
+            val updatedStatuses = userWalletStatuses.addOrReplace(
+                item = NetworkStatusDataModelConverter.convert(value = networkStatus),
+                predicate = { it.networkId == network.id },
+            )
 
             storedStatuses.toMutableMap().apply {
                 this[userWalletId.stringValue] = updatedStatuses
