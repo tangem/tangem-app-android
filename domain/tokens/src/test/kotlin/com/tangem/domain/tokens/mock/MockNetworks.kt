@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.mock
 
 import arrow.core.NonEmptySet
 import arrow.core.nonEmptySetOf
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.CryptoCurrencyAmountStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkAddress
@@ -76,7 +77,7 @@ internal object MockNetworks {
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
             errorMessage = "",
-            isCached = false,
+            source = StatusSource.ACTUAL,
         ),
     )
 
@@ -92,7 +93,7 @@ internal object MockNetworks {
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
-                isCached = false,
+                source = StatusSource.ACTUAL,
             ),
         )
 
@@ -108,7 +109,7 @@ internal object MockNetworks {
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
-                isCached = false,
+                source = StatusSource.ACTUAL,
             ),
         )
 
@@ -125,7 +126,7 @@ internal object MockNetworks {
                 address = NetworkAddress.Single(
                     defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                 ),
-                isCached = false,
+                source = StatusSource.ACTUAL,
             ),
         )
 }
