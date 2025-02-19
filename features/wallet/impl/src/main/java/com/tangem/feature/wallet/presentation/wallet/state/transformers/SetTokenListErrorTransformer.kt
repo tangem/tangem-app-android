@@ -60,8 +60,7 @@ internal class SetTokenListErrorTransformer(
             title = title,
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = selectedWallet),
             imageResId = imageResId,
-            onRenameClick = onRenameClick,
-            onDeleteClick = onDeleteClick,
+            dropDownItems = dropDownItems,
             balance = BigDecimalFormatter.formatFiatAmount(
                 fiatAmount = BigDecimal.ZERO,
                 fiatCurrencyCode = appCurrency.code,
