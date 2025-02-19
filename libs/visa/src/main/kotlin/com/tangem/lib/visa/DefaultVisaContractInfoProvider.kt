@@ -102,8 +102,7 @@ internal class DefaultVisaContractInfoProvider(
             { paymentAccount.availableForDebtPayment().send() },
             { paymentAccount.blockedAmount().send() },
             { paymentAccount.debtAmount().send() },
-            { paymentAccount.pendingRefundTotal().send() },
-        ) { total, verified, payment, withdrawal, debtPayment, blocked, debt, refund ->
+        ) { total, verified, payment, withdrawal, debtPayment, blocked, debt ->
             val decimals = paymentToken.decimals
 
             Balances(
@@ -116,40 +115,42 @@ internal class DefaultVisaContractInfoProvider(
                 ),
                 blocked = blocked.toBigDecimal(decimals),
                 debt = debt.toBigDecimal(decimals),
-                pendingRefund = refund.toBigDecimal(decimals),
             )
         }
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun fetchLimits(
         paymentAccount: TangemPaymentAccount,
         paymentToken: PaymentTokenInfo,
     ): Triple<Limits, Limits, Instant> {
-        val (
-            oldLimit,
-            newLimit,
-            changeDateSeconds,
-        ) = paymentAccount.limits().send()
-
-        return Triple(
-            first = getLimits(oldLimit, paymentToken),
-            second = getLimits(newLimit, paymentToken),
-            third = changeDateSeconds.toInstant(),
-        )
+        TODO() // TODO: [REDACTED_TASK_KEY]
+        // val (
+        //     oldLimit,
+        //     newLimit,
+        //     changeDateSeconds,
+        // ) = paymentAccount.cards("").send().component5()
+        //
+        // return Triple(
+        //     first = getLimits(oldLimit, paymentToken),
+        //     second = getLimits(newLimit, paymentToken),
+        //     third = changeDateSeconds.toInstant(),
+        // )
     }
 
+    @Suppress("UnusedPrivateMember")
     private fun getLimits(limit: TangemPaymentAccount.Limits, paymentToken: PaymentTokenInfo): Limits = Limits(
-        spendLimit = limit._01_spendLimit.toLimit(paymentToken.decimals),
-        noOtpLimit = limit._02_noOtpSpendLimit.toLimit(paymentToken.decimals),
-        singleTransactionLimit = limit._00_singleTransactionLimit.toBigDecimal(paymentToken.decimals),
-        expirationDate = limit._03_spendLimitsTimer.expireTimestamp.toInstant(),
-        spendPeriodSeconds = limit._04_spendLimitsPeriod,
+        spendLimit = limit.spendLimit.toLimit(paymentToken.decimals),
+        noOtpLimit = limit.noConfirmationSpendLimit.toLimit(paymentToken.decimals),
+        singleTransactionLimit = limit.singleTransactionLimit.toBigDecimal(paymentToken.decimals),
+        expirationDate = limit.spendLimitsTimer.expireTimestamp.toInstant(),
+        spendPeriodSeconds = limit.spendLimitsPeriod,
     )
 
     private fun TangemPaymentAccount.Limit.toLimit(decimals: Int): Limits.Limit {
         return Limits.Limit(
-            limit = _00_limit.toBigDecimal(decimals),
-            spent = _01_spent.toBigDecimal(decimals),
+            limit = limit.toBigDecimal(decimals),
+            spent = spent.toBigDecimal(decimals),
         )
     }
 
