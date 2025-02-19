@@ -64,7 +64,6 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
@@ -139,9 +138,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var walletRouter: WalletRouter
-
-    @Inject
-    lateinit var tokenDetailsRouter: TokenDetailsRouter
 
     @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
