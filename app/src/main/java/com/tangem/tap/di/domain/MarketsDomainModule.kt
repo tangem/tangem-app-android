@@ -1,11 +1,13 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -61,6 +63,18 @@ object MarketsDomainModule {
             marketsTokenRepository = marketsTokenRepository,
             currenciesRepository = currenciesRepository,
             networksRepository = networksRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideFilterNetworksUseCase(
+        userWalletsListManager: UserWalletsListManager,
+        excludedBlockchains: ExcludedBlockchains,
+    ): FilterAvailableNetworksForWalletUseCase {
+        return FilterAvailableNetworksForWalletUseCase(
+            userWalletsListManager = userWalletsListManager,
+            excludedBlockchains = excludedBlockchains,
         )
     }
 
