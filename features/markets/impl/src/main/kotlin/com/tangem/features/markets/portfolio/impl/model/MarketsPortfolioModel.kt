@@ -18,6 +18,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.card.HasMissedDerivationsUseCase
 import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
 import com.tangem.domain.managetokens.model.CurrencyUnsupportedState
+import com.tangem.domain.markets.FilterAvailableNetworksForWalletUseCase
 import com.tangem.domain.markets.SaveMarketTokensUseCase
 import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.domain.wallets.models.UserWalletId
@@ -49,6 +50,7 @@ internal class MarketsPortfolioModel @Inject constructor(
     private val portfolioDataLoader: PortfolioDataLoader,
     private val hasMissedDerivationsUseCase: HasMissedDerivationsUseCase,
     private val saveMarketTokensUseCase: SaveMarketTokensUseCase,
+    private val filterAvailableNetworks: FilterAvailableNetworksForWalletUseCase,
     private val addToPortfolioManager: AddToPortfolioManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
@@ -175,10 +177,16 @@ internal class MarketsPortfolioModel @Inject constructor(
             flow2 = selectedMultiWalletIdFlow,
             flow3 = addToPortfolioManager.getAddToPortfolioData(),
             transform = { portfolioBSVisibilityModel, selectedWalletId, addToPortfolioData ->
+                val filteredNetworks = selectedWalletId?.let {
+                    filterAvailableNetworks(selectedWalletId, addToPortfolioData.availableNetworks ?: emptySet())
+                } ?: emptySet()
+
                 PortfolioUIData(
                     portfolioBSVisibilityModel = portfolioBSVisibilityModel,
                     selectedWalletId = selectedWalletId,
-                    addToPortfolioData = addToPortfolioData,
+                    addToPortfolioData = addToPortfolioData.copy(
+                        availableNetworks = filteredNetworks,
+                    ),
                     hasMissedDerivations = hasMissedDerivations(selectedWalletId, addToPortfolioData),
                 )
             },
