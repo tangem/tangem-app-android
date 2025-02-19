@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.network.converter
 
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.utils.converter.Converter
@@ -28,7 +29,7 @@ internal class NetworkStatusConverter(
                     address = address,
                     amounts = NetworkAmountsConverter.convert(value = value.amounts),
                     pendingTransactions = mapOf(),
-                    isCached = isCached,
+                    source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
                 )
             }
             is NetworkStatusDM.NoAccount -> {
@@ -36,7 +37,7 @@ internal class NetworkStatusConverter(
                     address = address,
                     amountToCreateAccount = value.amountToCreateAccount,
                     errorMessage = value.errorMessage,
-                    isCached = isCached,
+                    source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
                 )
             }
         }
