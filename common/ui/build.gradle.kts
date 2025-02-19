@@ -30,6 +30,7 @@ dependencies {
 
     /** Project - Domain */
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.staking.models)
     implementation(projects.domain.tokens.models)
