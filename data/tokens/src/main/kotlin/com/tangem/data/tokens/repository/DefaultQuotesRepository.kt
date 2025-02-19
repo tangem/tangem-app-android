@@ -122,6 +122,7 @@ internal class DefaultQuotesRepository(
             },
             onError = { error ->
                 cacheRegistry.invalidate(rawCurrenciesIds.map { getQuoteCacheKey(it) })
+                quotesStore.storeEmptyQuotes(currenciesIds = rawCurrenciesIds)
 
                 throw error
             },
