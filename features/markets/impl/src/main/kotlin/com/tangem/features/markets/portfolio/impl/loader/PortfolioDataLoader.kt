@@ -65,7 +65,7 @@ internal class PortfolioDataLoader @Inject constructor(
     private fun getAllWalletsCryptoCurrenciesData(
         currencyRawId: CryptoCurrency.RawID,
     ): Flow<Map<UserWallet, List<PortfolioData.CryptoCurrencyData>>> {
-        return getAllWalletsCryptoCurrencyStatusesUseCase(currencyRawId)
+        return getAllWalletsCryptoCurrencyStatusesUseCase(currencyRawId, true)
             .distinctUntilChanged()
             .map { walletsWithMaybeStatuses ->
                 walletsWithMaybeStatuses.mapValues { entry ->
@@ -94,20 +94,21 @@ internal class PortfolioDataLoader @Inject constructor(
                             }
                         }
                     }
+                }.onEmpty {
+                    emit(
+                        walletsWithStatuses.mapValues { (wallet, statuses) ->
+                            statuses.map {
+                                PortfolioData.CryptoCurrencyData(
+                                    userWallet = wallet,
+                                    status = it,
+                                    actions = emptyList(),
+                                )
+                            }
+                        },
+                    )
                 }
-                    .onEmpty {
-                        emit(
-                            walletsWithStatuses.mapValues { (wallet, statuses) ->
-                                statuses.map {
-                                    PortfolioData.CryptoCurrencyData(
-                                        userWallet = wallet,
-                                        status = it,
-                                        actions = emptyList(),
-                                    )
-                                }
-                            },
-                        )
-                    }
+            }.onEmpty {
+                emit(emptyMap())
             }
             .distinctUntilChanged()
     }
