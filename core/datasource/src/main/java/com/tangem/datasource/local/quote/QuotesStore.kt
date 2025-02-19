@@ -16,4 +16,7 @@ interface QuotesStore {
 
     /** Store [response] from remote */
     suspend fun store(response: QuotesResponse)
+
+    /** Store [Quote.Empty] for [currenciesIds] */
+    suspend fun storeEmptyQuotes(currenciesIds: Set<CryptoCurrency.RawID>)
 }
