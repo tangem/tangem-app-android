@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
 
@@ -21,14 +22,14 @@ data class NetworkStatus(
      */
     sealed class Value {
 
-        abstract val isCached: Boolean
+        abstract val source: StatusSource
     }
 
     /**
      * Represents the state where the network is refreshing.
      */
     data object Refreshing : Value() {
-        override val isCached: Boolean = false
+        override val source: StatusSource = StatusSource.ACTUAL
     }
 
     /**
@@ -37,14 +38,14 @@ data class NetworkStatus(
      * @property address Network addresses.
      */
     data class Unreachable(val address: NetworkAddress?) : Value() {
-        override val isCached: Boolean = false
+        override val source: StatusSource = StatusSource.ACTUAL
     }
 
     /**
      * Represents the state where a derivation has been missed.
      */
     data object MissedDerivation : Value() {
-        override val isCached: Boolean = false
+        override val source: StatusSource = StatusSource.ACTUAL
     }
 
     /**
@@ -54,14 +55,14 @@ data class NetworkStatus(
      * @property address Network addresses.
      * @property amounts A map containing the amounts associated with different cryptocurrencies within the network.
      * @property pendingTransactions A map containing pending transactions associated with different cryptocurrencies
-     * @property isCached flag that determines whether the status is a cache
+     * @property source source of data
      * within the network.
      */
     data class Verified(
         val address: NetworkAddress,
         val amounts: Map<CryptoCurrency.ID, CryptoCurrencyAmountStatus>,
         val pendingTransactions: Map<CryptoCurrency.ID, Set<TxHistoryItem>>,
-        override val isCached: Boolean,
+        override val source: StatusSource,
     ) : Value()
 
     /**
@@ -70,12 +71,12 @@ data class NetworkStatus(
      * @property address Network addresses.
      * @property amountToCreateAccount The amount required to create an account within the network.
      * @property errorMessage error message
-     * @property isCached flag that determines whether the status is a cache
+     * @property source source of data
      */
     data class NoAccount(
         val address: NetworkAddress,
         val amountToCreateAccount: BigDecimal,
         val errorMessage: String,
-        override val isCached: Boolean,
+        override val source: StatusSource,
     ) : Value()
 }
