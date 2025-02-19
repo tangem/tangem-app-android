@@ -58,6 +58,7 @@ internal class WalletWarningsAnalyticsSender @Inject constructor(
             is WalletNotification.Warning.LowSignatures,
             is WalletNotification.Warning.SomeNetworksUnreachable,
             is WalletNotification.Warning.NetworksUnreachable,
+            is WalletNotification.UsedOutdatedData,
             -> null
             is WalletNotification.Critical.SeedPhraseNotification -> MainScreen.NoticeSeedPhraseSupport
             is WalletNotification.Critical.SeedPhraseSecondNotification -> MainScreen.NoticeSeedPhraseSupportSecond
