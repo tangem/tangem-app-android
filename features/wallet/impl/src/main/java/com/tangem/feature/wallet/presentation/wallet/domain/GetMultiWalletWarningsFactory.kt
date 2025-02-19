@@ -4,6 +4,7 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -45,6 +46,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             flow4 = seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
         ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, seedPhraseIssueStatus ->
             buildList {
+                addUsedOutdatedDataNotification(maybeTokenList)
+
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
@@ -60,6 +63,22 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 }
             }.toImmutableList()
         }
+    }
+
+    private fun MutableList<WalletNotification>.addUsedOutdatedDataNotification(
+        maybeTokenList: Lce<TokenListError, TokenList>,
+    ) {
+        val tokenList = maybeTokenList.getOrNull(isPartialContentAccepted = false)?.flattenCurrencies().orEmpty()
+
+        val hasOnlyCachedData = tokenList.any {
+            when (val value = it.value) {
+                is CryptoCurrencyStatus.Loaded -> value.source == StatusSource.ONLY_CACHE
+                is CryptoCurrencyStatus.NoAccount -> value.source == StatusSource.ONLY_CACHE
+                else -> false
+            }
+        }
+
+        addIf(element = WalletNotification.UsedOutdatedData, condition = hasOnlyCachedData)
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(

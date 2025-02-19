@@ -234,4 +234,11 @@ sealed class WalletNotification(val config: NotificationConfig) {
             ),
         ),
     )
+
+    data object UsedOutdatedData : WalletNotification(
+        config = NotificationConfig(
+            subtitle = resourceReference(R.string.warning_some_token_balances_not_updated),
+            iconResId = R.drawable.ic_error_sync_24,
+        ),
+    )
 }
