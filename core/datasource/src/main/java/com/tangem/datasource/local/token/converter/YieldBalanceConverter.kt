@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.token.converter
 
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceItem
@@ -13,7 +14,7 @@ internal class YieldBalanceConverter(private val isCached: Boolean) : Converter<
             YieldBalance.Empty(
                 integrationId = value.integrationId,
                 address = value.addresses.address,
-                isCached = isCached,
+                source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
             )
         } else {
             YieldBalance.Data(
@@ -39,7 +40,7 @@ internal class YieldBalanceConverter(private val isCached: Boolean) : Converter<
                         .sortedWith(compareBy({ it.type }, { it.amount })),
                     integrationId = value.integrationId,
                 ),
-                isCached = isCached,
+                source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
             )
         }
     }
