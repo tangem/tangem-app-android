@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.token.converter.YieldBalanceConverter
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
@@ -146,14 +147,23 @@ internal class DefaultStakingBalanceStore(
     ): Set<YieldBalance> {
         return runtimeBalances
             .map { runtime ->
-                if (runtime is YieldBalance.Error) {
-                    cachedBalances.getBalance(address = runtime.address, integrationId = runtime.integrationId)
-                        ?: runtime
-                } else {
-                    runtime
-                }
+                runtime.takeIf { runtime !is YieldBalance.Error }
+                    ?: getCachedBalanceIfPossible(cachedBalances, runtime)
             }
             .toSet()
+    }
+
+    private fun getCachedBalanceIfPossible(cachedBalances: Set<YieldBalance>, runtime: YieldBalance): YieldBalance {
+        val cached = cachedBalances.getBalance(address = runtime.address, integrationId = runtime.integrationId)
+            ?: return runtime
+
+        val updatedCached = when (cached) {
+            is YieldBalance.Data -> cached.copy(source = StatusSource.ONLY_CACHE)
+            is YieldBalance.Empty -> cached.copy(source = StatusSource.ONLY_CACHE)
+            is YieldBalance.Error -> null
+        }
+
+        return updatedCached ?: runtime
     }
 
     private fun Set<YieldBalance>.getBalance(address: String?, integrationId: String?): YieldBalance? {
