@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.quote.converter.QuoteConverter
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import kotlinx.coroutines.coroutineScope
@@ -32,7 +33,12 @@ internal class DefaultQuotesStore(
 
         runtimeStore.get()
             .onEach {
-                val mergedQuotes = mergeQuotes(cachedQuotes = cachedQuotes, runtimeQuotes = it)
+                val mergedQuotes = mergeQuotes(
+                    currenciesIds = currenciesIds,
+                    cachedQuotes = cachedQuotes,
+                    runtimeQuotes = it,
+                )
+
                 send(element = mergedQuotes)
             }
             .launchIn(scope = this)
@@ -51,6 +57,14 @@ internal class DefaultQuotesStore(
         }
     }
 
+    override suspend fun storeEmptyQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {
+        runtimeStore.update(default = emptySet()) { saved ->
+            val new = currenciesIds.map { Quote.Empty(it) }
+
+            (saved + new).distinctBy { it.rawCurrencyId }.toSet()
+        }
+    }
+
     private suspend fun getCachedQuotes(currenciesIds: Set<CryptoCurrency.RawID>): Set<Quote.Value> {
         val ids = currenciesIds.map(CryptoCurrency.RawID::value).toSet()
         val cachedQuotes = persistenceStore.data.firstOrNull().orEmpty().filterKeys { it in ids }
@@ -58,15 +72,27 @@ internal class DefaultQuotesStore(
         return QuoteConverter(isCached = true).convertSet(input = cachedQuotes.entries)
     }
 
-    private fun mergeQuotes(cachedQuotes: Set<Quote.Value>, runtimeQuotes: Set<Quote>): Set<Quote> {
-        return runtimeQuotes.map { runtimeQuote ->
-            if (runtimeQuote is Quote.Empty) {
-                cachedQuotes.firstOrNull { runtimeQuote.rawCurrencyId == it.rawCurrencyId } ?: runtimeQuote
-            } else {
-                runtimeQuote
+    private fun mergeQuotes(
+        currenciesIds: Set<CryptoCurrency.RawID>,
+        cachedQuotes: Set<Quote.Value>,
+        runtimeQuotes: Set<Quote>,
+    ): Set<Quote> {
+        return currenciesIds
+            .mapTo(hashSetOf()) { currencyId ->
+                val runtimeQuote = runtimeQuotes.firstOrNull { it.rawCurrencyId == currencyId }
+
+                if (runtimeQuote == null || runtimeQuote is Quote.Empty) {
+                    getCachedQuoteIfPossible(cachedStatuses = cachedQuotes, currencyId = currencyId)
+                } else {
+                    runtimeQuote
+                }
             }
-        }
-            .toSet()
+    }
+
+    private fun getCachedQuoteIfPossible(cachedStatuses: Set<Quote.Value>, currencyId: CryptoCurrency.RawID): Quote {
+        return cachedStatuses.firstOrNull { it.rawCurrencyId == currencyId }
+            ?.copy(source = StatusSource.ONLY_CACHE)
+            ?: Quote.Empty(currencyId)
     }
 
     private suspend fun storeInRuntimeStore(response: QuotesResponse) {
