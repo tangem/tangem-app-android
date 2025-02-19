@@ -36,8 +36,7 @@ internal class SingleWalletCardStateConverter(
             id = id,
             title = title,
             imageResId = imageResId,
-            onRenameClick = onRenameClick,
-            onDeleteClick = onDeleteClick,
+            dropDownItems = dropDownItems,
         )
     }
 
@@ -46,8 +45,7 @@ internal class SingleWalletCardStateConverter(
             id = id,
             title = title,
             imageResId = imageResId,
-            onRenameClick = onRenameClick,
-            onDeleteClick = onDeleteClick,
+            dropDownItems = dropDownItems,
         )
     }
 
@@ -60,8 +58,7 @@ internal class SingleWalletCardStateConverter(
                 currencyAmount = status.amount,
             ),
             imageResId = imageResId,
-            onRenameClick = onRenameClick,
-            onDeleteClick = onDeleteClick,
+            dropDownItems = dropDownItems,
             balance = formatFiatAmount(status = status, appCurrency = appCurrency),
             cardCount = selectedWallet.getCardsCount(),
             isZeroBalance = status.fiatAmount?.isZero(),
