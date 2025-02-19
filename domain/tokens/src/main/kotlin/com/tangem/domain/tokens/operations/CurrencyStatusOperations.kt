@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.operations
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
@@ -49,17 +50,27 @@ internal class CurrencyStatusOperations(
         )
     }
 
-    private fun createNoAccountStatus(status: NetworkStatus.NoAccount): CryptoCurrencyStatus.NoAccount =
-        CryptoCurrencyStatus.NoAccount(
+    private fun createNoAccountStatus(status: NetworkStatus.NoAccount): CryptoCurrencyStatus.NoAccount {
+        return CryptoCurrencyStatus.NoAccount(
             amountToCreateAccount = status.amountToCreateAccount,
             fiatAmount = if (quote == null) null else BigDecimal.ZERO,
             priceChange = quote?.priceChange,
             fiatRate = quote?.fiatRate,
             networkAddress = status.address,
+            source = getResultStatusSource(
+                sources = listOf(
+                    status.source,
+                    (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+                ),
+            ),
         )
+    }
 
-    private fun createStatus(status: NetworkStatus.Verified, yieldBalance: YieldBalance?): CryptoCurrencyStatus.Value {
-        val amount = when (val amount = status.amounts[currency.id]) {
+    private fun createStatus(
+        networkStatusValue: NetworkStatus.Verified,
+        yieldBalance: YieldBalance?,
+    ): CryptoCurrencyStatus.Value {
+        val amount = when (val amount = networkStatusValue.amounts[currency.id]) {
             null -> {
                 return CryptoCurrencyStatus.Loading
             }
@@ -69,10 +80,10 @@ internal class CurrencyStatusOperations(
             is CryptoCurrencyAmountStatus.Loaded -> amount.value
         }
 
-        val hasCurrentNetworkTransactions = status.pendingTransactions.isNotEmpty()
-        val currentTransactions = status.pendingTransactions.getOrElse(currency.id, ::emptySet)
+        val hasCurrentNetworkTransactions = networkStatusValue.pendingTransactions.isNotEmpty()
+        val currentTransactions = networkStatusValue.pendingTransactions.getOrElse(currency.id, ::emptySet)
         val yieldBalanceData = yieldBalance as? YieldBalance.Data
-        val isCurrentAddressStaking = yieldBalanceData?.address == status.address.defaultAddress.value
+        val isCurrentAddressStaking = yieldBalanceData?.address == networkStatusValue.address.defaultAddress.value
         val filteredTokenBalances = yieldBalanceData?.balance?.items?.filter {
             it.token.coinGeckoId == currency.id.rawCurrencyId?.value
         }
@@ -94,14 +105,14 @@ internal class CurrencyStatusOperations(
                 priceChange = quote?.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
-                networkAddress = status.address,
+                networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
             )
             quote is Quote.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
-                networkAddress = status.address,
+                networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
             )
             quote is Quote.Value -> CryptoCurrencyStatus.Loaded(
@@ -111,8 +122,15 @@ internal class CurrencyStatusOperations(
                 priceChange = quote.priceChange,
                 hasCurrentNetworkTransactions = hasCurrentNetworkTransactions,
                 pendingTransactions = currentTransactions,
-                networkAddress = status.address,
+                networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
+                source = getResultStatusSource(
+                    sources = listOf(
+                        networkStatusValue.source,
+                        currentYieldBalance?.source ?: StatusSource.ACTUAL,
+                        quote.source,
+                    ),
+                ),
             )
             else -> CryptoCurrencyStatus.Loading
         }
@@ -126,5 +144,19 @@ internal class CurrencyStatusOperations(
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
         return amount * fiatRate
+    }
+
+    /*
+     * ACTUAL, ACTUAL, ACTUAL     -> ACTUAL
+     * ACTUAL, ACTUAL, CACHE      -> CACHE
+     * ACTUAL, ACTUAL, ONLY_CACHE -> ONLY_CACHE
+     * ACTUAL, CACHE,  ONLY_CACHE -> ONLY_CACHE
+     */
+    private fun getResultStatusSource(sources: List<StatusSource>): StatusSource {
+        return when {
+            sources.any { it == StatusSource.ONLY_CACHE } -> StatusSource.ONLY_CACHE
+            sources.any { it == StatusSource.CACHE } -> StatusSource.CACHE
+            else -> StatusSource.ACTUAL
+        }
     }
 }
