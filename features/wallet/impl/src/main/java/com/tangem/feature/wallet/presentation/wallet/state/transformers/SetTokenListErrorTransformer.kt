@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.tokens.error.TokenListError
@@ -61,14 +62,12 @@ internal class SetTokenListErrorTransformer(
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = selectedWallet),
             imageResId = imageResId,
             dropDownItems = dropDownItems,
-            balance = BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = BigDecimal.ZERO,
-                fiatCurrencyCode = appCurrency.code,
-                fiatCurrencySymbol = appCurrency.symbol,
-            ),
+            balance = BigDecimal.ZERO.format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            },
             cardCount = selectedWallet.getCardsCount(),
             isZeroBalance = true,
-            isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
+            isBalanceFlickering = false,
         )
     }
 }
