@@ -129,7 +129,7 @@ internal class DefaultNetworksRepository(
             }
 
             if (statusesToRefresh != null) {
-                networksStatusesStore.storeAll(key = userWalletId, values = statusesToRefresh)
+                networksStatusesStore.storeAll(key = userWalletId, values = statusesToRefresh.toSet())
             }
         }
 
