@@ -10,8 +10,11 @@ android {
 }
 
 dependencies {
-    implementation(projects.domain.tokens.models)
+    /** Core */
+    implementation(projects.core.decompose)
+    implementation(projects.core.ui)
 
-    /** AndroidX */
-    implementation(deps.androidx.fragment.ktx)
+    /** Domain models */
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
 }
