@@ -1,4 +1,4 @@
-package com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels
+package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import com.tangem.core.ui.extensions.TextReference
