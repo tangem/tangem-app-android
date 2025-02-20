@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.quote.converter
 
 import com.tangem.datasource.api.tangemTech.models.QuotesResponse
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.converter.Converter
@@ -23,7 +24,7 @@ internal class QuoteConverter(private val isCached: Boolean) :
             rawCurrencyId = CryptoCurrency.RawID(currencyId),
             fiatRate = quote.price.orZero(),
             priceChange = quote.priceChange24h.orZero().movePointLeft(2),
-            isCached = isCached,
+            source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
         )
     }
 }
