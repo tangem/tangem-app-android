@@ -65,3 +65,11 @@ inline fun <T> MutableList<T>.addOrReplace(item: T, predicate: (T) -> Boolean) {
         add(item)
     }
 }
+
+fun <T> List<T>.filterIf(condition: Boolean, predicate: (T) -> Boolean): List<T> {
+    return if (condition) {
+        this.filter(predicate)
+    } else {
+        this
+    }
+}
