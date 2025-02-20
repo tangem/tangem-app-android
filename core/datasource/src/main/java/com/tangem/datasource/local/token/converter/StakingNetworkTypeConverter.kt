@@ -1,11 +1,11 @@
-package com.tangem.data.staking.converters
+package com.tangem.datasource.local.token.converter
 
 import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.utils.converter.TwoWayConverter
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
-class StakingNetworkTypeConverter : TwoWayConverter<NetworkTypeDTO, NetworkType> {
+object StakingNetworkTypeConverter : TwoWayConverter<NetworkTypeDTO, NetworkType> {
 
     override fun convert(value: NetworkTypeDTO): NetworkType {
         return when (value) {

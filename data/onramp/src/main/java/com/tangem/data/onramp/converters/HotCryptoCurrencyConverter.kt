@@ -6,6 +6,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.api.tangemTech.models.HotCryptoResponse
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.model.HotCryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -94,7 +95,7 @@ internal class HotCryptoCurrencyConverter(
                 rawCurrencyId = rawCurrencyId,
                 fiatRate = fiatRate,
                 priceChange = priceChange.movePointLeft(2),
-                isCached = false, // It doesn't matter
+                source = StatusSource.ACTUAL, // It doesn't matter
             )
         } else {
             Quote.Empty(rawCurrencyId)
