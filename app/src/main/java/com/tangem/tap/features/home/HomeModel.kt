@@ -1,7 +1,6 @@
 package com.tangem.tap.features.home
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Stable
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import com.tangem.common.routing.AppRoute
@@ -10,6 +9,8 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardSdkConfigRepository
@@ -30,7 +31,7 @@ import com.tangem.tap.features.home.redux.HIDE_PROGRESS_DELAY
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeMiddleware.NEW_BUY_WALLET_URL
 import com.tangem.tap.store
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -38,8 +39,10 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@HiltViewModel
-internal class HomeViewModel @Inject constructor(
+@Stable
+@ComponentScoped
+internal class HomeModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
     private val scanCardProcessor: ScanCardProcessor,
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
@@ -47,7 +50,7 @@ internal class HomeViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : ViewModel() {
+) : Model() {
 
     private val tangemErrorHandler = TangemTangemErrorsHandler(store)
 
@@ -73,7 +76,7 @@ internal class HomeViewModel @Inject constructor(
     }
 
     private fun scanCard() {
-        viewModelScope.launch {
+        modelScope.launch {
             cardSdkConfigRepository.isBiometricsRequestPolicy = settingsRepository.shouldSaveAccessCodes()
 
             scanCardProcessor.scan(
