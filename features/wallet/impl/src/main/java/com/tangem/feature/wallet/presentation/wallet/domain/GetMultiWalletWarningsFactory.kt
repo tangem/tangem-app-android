@@ -4,11 +4,13 @@ import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
@@ -44,6 +46,8 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
             flow4 = seedPhraseNotificationUseCase(userWalletId = userWallet.walletId),
         ) { maybeTokenList, isReadyToShowRating, isNeedToBackup, seedPhraseIssueStatus ->
             buildList {
+                addUsedOutdatedDataNotification(maybeTokenList)
+
                 addCriticalNotifications(userWallet, seedPhraseIssueStatus, clickIntents)
 
                 addInformationalNotifications(cardTypesResolver, maybeTokenList, clickIntents)
@@ -61,23 +65,28 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
         }
     }
 
+    private fun MutableList<WalletNotification>.addUsedOutdatedDataNotification(
+        maybeTokenList: Lce<TokenListError, TokenList>,
+    ) {
+        val tokenList = maybeTokenList.getOrNull(isPartialContentAccepted = false)?.flattenCurrencies().orEmpty()
+
+        val hasOnlyCachedData = tokenList.any {
+            when (val value = it.value) {
+                is CryptoCurrencyStatus.Loaded -> value.source == StatusSource.ONLY_CACHE
+                is CryptoCurrencyStatus.NoAccount -> value.source == StatusSource.ONLY_CACHE
+                else -> false
+            }
+        }
+
+        addIf(element = WalletNotification.UsedOutdatedData, condition = hasOnlyCachedData)
+    }
+
     private fun MutableList<WalletNotification>.addCriticalNotifications(
         userWallet: UserWallet,
-        seedPhraseIssueStatus: Boolean,
+        seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
         clickIntents: WalletClickIntents,
     ) {
-        addIf(
-            element = WalletNotification.Critical.SeedPhraseNotification(
-                onDeclineClick = clickIntents::onSeedPhraseNotificationDecline,
-                onConfirmClick = clickIntents::onSeedPhraseNotificationConfirm,
-            ),
-            condition = with(userWallet) {
-                val isDemo = isDemoCardUseCase(cardId = userWallet.cardId)
-                val isWalletWithSeedPhrase = scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported
-
-                !isDemo && isWalletWithSeedPhrase && seedPhraseIssueStatus
-            },
-        )
+        addSeedNotificationIfNeeded(userWallet, seedPhraseIssueStatus, clickIntents)
 
         val cardTypesResolver = userWallet.scanResponse.cardTypesResolver
         addIf(
@@ -100,6 +109,39 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
                 element = WalletNotification.Warning.LowSignatures(count = remainingSignatures),
                 condition = remainingSignatures <= MAX_REMAINING_SIGNATURES_COUNT,
             )
+        }
+    }
+
+    private fun MutableList<WalletNotification>.addSeedNotificationIfNeeded(
+        userWallet: UserWallet,
+        seedPhraseIssueStatus: SeedPhraseNotificationsStatus,
+        clickIntents: WalletClickIntents,
+    ) {
+        val isNotificationAvailable = with(userWallet) {
+            val isDemo = isDemoCardUseCase(cardId = userWallet.cardId)
+            val isWalletWithSeedPhrase = scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported
+
+            !isDemo && isWalletWithSeedPhrase
+        }
+
+        when (seedPhraseIssueStatus) {
+            SeedPhraseNotificationsStatus.SHOW_FIRST -> addIf(
+                element = WalletNotification.Critical.SeedPhraseNotification(
+                    onDeclineClick = clickIntents::onSeedPhraseNotificationDecline,
+                    onConfirmClick = clickIntents::onSeedPhraseNotificationConfirm,
+                ),
+                condition = isNotificationAvailable,
+            )
+            SeedPhraseNotificationsStatus.SHOW_SECOND -> addIf(
+                element = WalletNotification.Critical.SeedPhraseSecondNotification(
+                    onDeclineClick = clickIntents::onSeedPhraseSecondNotificationReject,
+                    onConfirmClick = clickIntents::onSeedPhraseSecondNotificationAccept,
+                ),
+                condition = isNotificationAvailable,
+            )
+            SeedPhraseNotificationsStatus.NOT_NEEDED -> {
+                // do nothing
+            }
         }
     }
 
