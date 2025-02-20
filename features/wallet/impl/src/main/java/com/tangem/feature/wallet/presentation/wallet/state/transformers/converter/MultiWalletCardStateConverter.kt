@@ -1,8 +1,10 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
@@ -54,14 +56,12 @@ internal class MultiWalletCardStateConverter(
             imageResId = imageResId,
             onRenameClick = onRenameClick,
             onDeleteClick = onDeleteClick,
-            balance = BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = fiatBalance.amount,
-                fiatCurrencyCode = appCurrency.code,
-                fiatCurrencySymbol = appCurrency.symbol,
-            ),
+            balance = fiatBalance.amount.format {
+                fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+            },
             isZeroBalance = fiatBalance.amount.isZero(),
             cardCount = selectedWallet.getCardsCount(),
-            isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
+            isBalanceFlickering = fiatBalance.source == StatusSource.CACHE,
         )
     }
 }
