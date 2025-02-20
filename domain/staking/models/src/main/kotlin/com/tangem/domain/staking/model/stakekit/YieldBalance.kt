@@ -1,14 +1,20 @@
 package com.tangem.domain.staking.model.stakekit
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import org.joda.time.DateTime
 import java.math.BigDecimal
 
 sealed class YieldBalance {
 
+    abstract val integrationId: String?
+    abstract val address: String?
+
     data class Data(
+        override val integrationId: String?,
+        override val address: String,
         val balance: YieldBalanceItem,
-        val address: String,
+        val source: StatusSource,
     ) : YieldBalance() {
         fun getTotalWithRewardsStakingBalance(): BigDecimal {
             return balance.items.sumOf { it.amount }
@@ -34,9 +40,13 @@ sealed class YieldBalance {
         }
     }
 
-    data object Empty : YieldBalance()
+    data class Empty(
+        override val integrationId: String?,
+        override val address: String,
+        val source: StatusSource,
+    ) : YieldBalance()
 
-    data object Error : YieldBalance()
+    data class Error(override val integrationId: String?, override val address: String?) : YieldBalance()
 }
 
 data class YieldBalanceItem(
