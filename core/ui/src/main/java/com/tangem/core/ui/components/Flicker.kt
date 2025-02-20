@@ -1,7 +1,9 @@
 package com.tangem.core.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -10,7 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
-import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -27,26 +29,28 @@ fun Modifier.flicker(
     targetTextAlpha: Float = 0.4f,
     animationDurationMillis: Int = 1200,
 ): Modifier = composed {
-    val infiniteTransition = rememberInfiniteTransition()
-    val defaultAlpha = remember { mutableFloatStateOf(value = 1f) }
+    var alphaChange by remember { mutableStateOf(false) }
 
-    val alpha: Float by if (isFlickering) {
-        infiniteTransition.animateFloat(
-            initialValue = 1f,
-            targetValue = targetTextAlpha,
-            animationSpec = infiniteRepeatable(
-                animation = tween(
-                    durationMillis = animationDurationMillis,
-                    easing = CubicBezierEasing(a = 0.45f, b = 0.0f, c = 0.55f, d = 1.0f),
-                ),
-                repeatMode = RepeatMode.Reverse,
-            ),
-        )
-    } else {
-        defaultAlpha
+    val alpha: Float by animateFloatAsState(
+        targetValue = if (alphaChange) targetTextAlpha else 1f,
+        animationSpec = tween(
+            durationMillis = animationDurationMillis,
+            easing = CubicBezierEasing(a = 0.45f, b = 0.0f, c = 0.55f, d = 1.0f),
+        ),
+        finishedListener = {
+            alphaChange = it == 1f && isFlickering
+        },
+    )
+
+    LaunchedEffect(isFlickering) {
+        if (isFlickering) {
+            alphaChange = true
+        }
     }
 
-    this.then(alpha(alpha))
+    this.graphicsLayer {
+        this.alpha = alpha
+    }
 }
 
 // region Preview
