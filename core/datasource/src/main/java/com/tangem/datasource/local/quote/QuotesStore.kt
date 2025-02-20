@@ -19,4 +19,6 @@ interface QuotesStore {
 
     /** Store [Quote.Empty] for [currenciesIds] */
     suspend fun storeEmptyQuotes(currenciesIds: Set<CryptoCurrency.RawID>)
+
+    suspend fun refresh(currenciesIds: Set<CryptoCurrency.RawID>)
 }
