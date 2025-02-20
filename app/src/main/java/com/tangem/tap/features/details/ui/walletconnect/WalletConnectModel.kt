@@ -1,31 +1,34 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
-import androidx.lifecycle.*
+import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@HiltViewModel
-internal class WalletConnectViewModel @Inject constructor(
+@Stable
+@ComponentScoped
+internal class WalletConnectModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val clipboardManager: ClipboardManager,
-) : ViewModel(), DefaultLifecycleObserver {
+) : Model() {
 
-    override fun onCreate(owner: LifecycleOwner) {
-        viewModelScope.launch {
+    init {
+        modelScope.launch {
             listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
                 .getOrElse { emptyFlow() }
-                .flowWithLifecycle(owner.lifecycle, minActiveState = Lifecycle.State.CREATED)
                 .collect { store.dispatch(WalletConnectAction.OpenSession(it)) }
         }
     }
