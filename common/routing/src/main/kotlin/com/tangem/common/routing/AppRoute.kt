@@ -93,20 +93,7 @@ sealed class AppRoute(val path: String) : Route {
             "&$amount" +
             "&$tag" +
             "&$destinationAddress",
-    ),
-        RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val USER_WALLET_ID_KEY = "userWalletId"
-            const val CRYPTO_CURRENCY_KEY = "currency"
-            const val TRANSACTION_ID_KEY = "transactionId"
-            const val AMOUNT_KEY = "amount"
-            const val TAG_KEY = "tag"
-            const val DESTINATION_ADDRESS_KEY = "destinationAddress"
-        }
-    }
+    )
 
     @Serializable
     data class Details(
@@ -196,15 +183,7 @@ sealed class AppRoute(val path: String) : Route {
     data class QrScanning(
         val source: SourceType,
         val networkName: String? = null,
-    ) : AppRoute(path = "/$source/qr_scanning${if (networkName != null) "/$networkName" else ""}"), RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val SOURCE_KEY = "source"
-            const val NETWORK_KEY = "networkName"
-        }
-    }
+    ) : AppRoute(path = "/$source/qr_scanning${if (networkName != null) "/$networkName" else ""}")
 
     @Serializable
     data class ReferralProgram(
@@ -230,18 +209,7 @@ sealed class AppRoute(val path: String) : Route {
             "/${currencyTo?.id?.value}" +
             "/${userWalletId.stringValue}" +
             "/$isInitialReverseOrder",
-    ),
-        RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val CURRENCY_FROM_KEY = "currencyFrom"
-            const val CURRENCY_TO_KEY = "currencyTo"
-            const val USER_WALLET_ID_KEY = "userWalletId"
-            const val IS_INITIAL_REVERSE_ORDER = "isInitialReverseOrder"
-        }
-    }
+    )
 
     @Serializable
     data object TesterMenu : AppRoute(path = "/tester_menu")
