@@ -9,6 +9,12 @@ plugins {
 
 android {
     namespace = "com.tangem.libs.visa"
+
+    packaging {
+        resources {
+            excludes += "/META-INF/*"
+        }
+    }
 }
 
 dependencies {
