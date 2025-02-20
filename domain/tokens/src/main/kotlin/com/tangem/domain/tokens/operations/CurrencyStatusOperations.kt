@@ -30,7 +30,6 @@ internal class CurrencyStatusOperations(
     private fun createStatus(): CryptoCurrencyStatus.Value {
         return when (val status = networkStatus?.value) {
             null,
-            is NetworkStatus.Refreshing,
             -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
             is NetworkStatus.Unreachable -> createUnreachableStatus(status)
