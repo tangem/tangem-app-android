@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
@@ -34,14 +35,14 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.NoAmount,
                 -> {
                     if (BlockchainUtils.isIncludeToBalanceOnError(token.currency.network.id.value)) {
-                        fiatBalance = recalculateNoAccountBalance(fiatBalance)
+                        fiatBalance = recalculateNoAccountBalance(status, fiatBalance)
                     } else {
                         fiatBalance = TotalFiatBalance.Failed
                         break
                     }
                 }
                 is CryptoCurrencyStatus.NoAccount -> {
-                    fiatBalance = recalculateNoAccountBalance(fiatBalance)
+                    fiatBalance = recalculateNoAccountBalance(status, fiatBalance)
                 }
                 is CryptoCurrencyStatus.Loaded -> {
                     fiatBalance = recalculateBalance(status, fiatBalance)
@@ -55,11 +56,15 @@ internal class TokenListFiatBalanceOperations(
         return fiatBalance
     }
 
-    private fun recalculateNoAccountBalance(currentBalance: TotalFiatBalance): TotalFiatBalance {
+    private fun recalculateNoAccountBalance(
+        status: CryptoCurrencyStatus.Value,
+        currentBalance: TotalFiatBalance,
+    ): TotalFiatBalance {
         return (currentBalance as? TotalFiatBalance.Loaded)?.copy(isAllAmountsSummarized = false)
             ?: TotalFiatBalance.Loaded(
                 amount = BigDecimal.ZERO,
                 isAllAmountsSummarized = false,
+                source = (status as? CryptoCurrencyStatus.NoAccount)?.source ?: StatusSource.ACTUAL,
             )
     }
 
@@ -77,6 +82,7 @@ internal class TokenListFiatBalanceOperations(
             ) ?: TotalFiatBalance.Loaded(
                 amount = status.fiatAmount + fiatStakingBalance,
                 isAllAmountsSummarized = true,
+                source = status.source,
             )
         }
     }
@@ -95,6 +101,7 @@ internal class TokenListFiatBalanceOperations(
             ) ?: TotalFiatBalance.Loaded(
                 amount = status.fiatAmount.orZero() + fiatYieldBalance,
                 isAllAmountsSummarized = isTokenAmountCanBeSummarized,
+                source = StatusSource.ACTUAL,
             )
         }
     }

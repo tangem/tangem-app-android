@@ -155,6 +155,7 @@ internal class MockCurrenciesRepository(
 
     override fun getAllWalletsCryptoCurrencies(
         currencyRawId: CryptoCurrency.RawID,
+        needFilterByAvailable: Boolean,
     ): Flow<Map<UserWallet, List<CryptoCurrency>>> {
         return emptyFlow()
     }

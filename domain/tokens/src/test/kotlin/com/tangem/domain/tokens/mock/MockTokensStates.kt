@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
 
@@ -74,6 +75,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
+            source = StatusSource.ACTUAL,
         ),
     )
 
@@ -87,6 +89,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
+            source = StatusSource.ACTUAL,
         ),
     )
 
@@ -100,6 +103,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
+            source = StatusSource.ACTUAL,
         ),
     )
 
@@ -113,6 +117,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
+            source = StatusSource.ACTUAL,
         ),
     )
 
@@ -157,6 +162,7 @@ internal object MockTokensStates {
                 hasCurrentNetworkTransactions = false,
                 networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
                 yieldBalance = null,
+                source = StatusSource.ACTUAL,
             )
         }
         status.copy(value = value)
