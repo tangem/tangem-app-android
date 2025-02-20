@@ -17,11 +17,20 @@ dependencies {
     api(projects.domain.core)
     api(projects.domain.markets.models)
     api(projects.domain.wallets.models)
+    api(projects.domain.models)
+    api(projects.domain.legacy)
+    api(projects.domain.wallets)
 
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.tokens)
 
     api(projects.core.pagination)
+
+    /* Libs */
+    api(projects.libs.blockchainSdk)
+
+    /* SDK */
+    implementation(tangemDeps.blockchain)
 
     /* Utils */
     implementation(deps.kotlin.serialization)
