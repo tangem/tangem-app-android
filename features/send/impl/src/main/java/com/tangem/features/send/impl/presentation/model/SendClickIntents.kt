@@ -1,4 +1,4 @@
-package com.tangem.features.send.impl.presentation.viewmodel
+package com.tangem.features.send.impl.presentation.model
 
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.notifications.NotificationUM
