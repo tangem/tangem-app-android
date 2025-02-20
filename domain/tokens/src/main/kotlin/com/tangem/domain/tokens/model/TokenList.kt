@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.StatusSource
 import java.math.BigDecimal
 
 /**
@@ -47,6 +48,7 @@ sealed class TokenList {
         override val totalFiatBalance: TotalFiatBalance = TotalFiatBalance.Loaded(
             amount = BigDecimal.ZERO,
             isAllAmountsSummarized = true,
+            source = StatusSource.ACTUAL,
         )
     }
 
