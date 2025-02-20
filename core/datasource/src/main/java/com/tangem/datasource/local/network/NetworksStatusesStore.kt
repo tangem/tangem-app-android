@@ -15,5 +15,5 @@ interface NetworksStatusesStore {
 
     suspend fun store(key: UserWalletId, value: NetworkStatus)
 
-    suspend fun storeAll(key: UserWalletId, values: Collection<NetworkStatus>)
+    suspend fun storeAll(key: UserWalletId, values: Set<NetworkStatus>)
 }
