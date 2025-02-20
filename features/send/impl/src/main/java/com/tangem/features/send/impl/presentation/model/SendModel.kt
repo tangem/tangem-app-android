@@ -1,20 +1,21 @@
-package com.tangem.features.send.impl.presentation.viewmodel
+package com.tangem.features.send.impl.presentation.model
 
-import android.os.Bundle
 import android.os.SystemClock
-import androidx.lifecycle.*
+import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.left
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.bundle.unbundle
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -47,6 +48,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.impl.navigation.InnerSendRouter
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
@@ -63,7 +65,6 @@ import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.extensions.stripZeroPlainString
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import timber.log.Timber
@@ -73,9 +74,10 @@ import javax.inject.Inject
 import kotlin.properties.Delegates
 
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
-@HiltViewModel
-internal class SendViewModel @Inject constructor(
-    private val dispatchers: CoroutineDispatcherProvider,
+@Stable
+@ComponentScoped
+internal class SendModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -109,31 +111,31 @@ internal class SendViewModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
+    private val innerRouter: InnerSendRouter,
+    private val appRouter: AppRouter,
+    paramsContainer: ParamsContainer,
     validateTransactionUseCase: ValidateTransactionUseCase,
     getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     isFeeApproximateUseCase: IsFeeApproximateUseCase,
     getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel(), DefaultLifecycleObserver, SendClickIntents {
+) : Model(), SendClickIntents {
 
-    private val userWalletId: UserWalletId = savedStateHandle.get<Bundle>(AppRoute.Send.USER_WALLET_ID_KEY)
-        ?.unbundle(UserWalletId.serializer())
-        ?: error("This screen can't open without `UserWalletId`")
+    private val params = paramsContainer.require<SendComponent.Params>()
 
-    private val cryptoCurrency: CryptoCurrency = savedStateHandle.get<Bundle>(AppRoute.Send.CRYPTO_CURRENCY_KEY)
-        ?.unbundle(CryptoCurrency.serializer())
-        ?: error("This screen can't open without `CryptoCurrency`")
-
-    private val transactionId: String? = savedStateHandle[AppRoute.Send.TRANSACTION_ID_KEY]
-    private val amount: String? = savedStateHandle[AppRoute.Send.AMOUNT_KEY]
-    private val destinationAddress: String? = savedStateHandle[AppRoute.Send.DESTINATION_ADDRESS_KEY]
-    private val memo: String? = savedStateHandle[AppRoute.Send.TAG_KEY]
+    private val userWalletId: UserWalletId = params.userWalletId
+    private val cryptoCurrency: CryptoCurrency = params.currency
+    private val transactionId: String? = params.transactionId
+    private val amount: String? = params.amount
+    private val destinationAddress: String? = params.destinationAddress
+    private val memo: String? = params.tag
 
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
-    private var innerRouter: InnerSendRouter by Delegates.notNull()
-    var stateRouter: StateRouter by Delegates.notNull()
-        private set
+    val stateRouter = StateRouter(
+        appRouter = appRouter,
+        isEditingDisabled = transactionId != null,
+        analyticsEventsHandler = analyticsEventHandler,
+    )
 
     private val stateFactory = SendStateFactory(
         clickIntents = this,
@@ -234,33 +236,26 @@ internal class SendViewModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
         subscribeOnBalanceHidden()
         getTapHelpPreviewAvailability()
-    }
 
-    override fun onCreate(owner: LifecycleOwner) {
         onStateActive()
     }
 
-    override fun onCleared() {
-        super.onCleared()
+    override fun onDestroy() {
+        super.onDestroy()
         balanceHidingJobHolder.cancel()
         balanceJobHolder.cancel()
         stateRouter.clear()
-    }
-
-    fun setRouter(router: InnerSendRouter, stateRouter: StateRouter) {
-        innerRouter = router
-        this.stateRouter = stateRouter
     }
 
     private fun subscribeOnQRScannerResult() {
         listenToQrScanningUseCase(SourceType.SEND)
             .getOrElse { emptyFlow() }
             .onEach(::onQrCodeScanned)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
-        viewModelScope.launch {
+        modelScope.launch {
             getUserWalletUseCase(userWalletId).fold(
                 ifRight = { wallet ->
                     userWallet = wallet
@@ -289,7 +284,7 @@ internal class SendViewModel @Inject constructor(
             .onEach {
                 uiState.value = stateFactory.getOnHideBalanceState(isBalanceHidden = it.isBalanceHidden)
             }
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
             .saveIn(balanceHidingJobHolder)
     }
 
@@ -310,7 +305,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun getTapHelpPreviewAvailability() {
-        viewModelScope.launch {
+        modelScope.launch {
             isTapHelpPreviewEnabled = isSendTapHelpEnabledUseCase().getOrElse { false }
         }
     }
@@ -362,7 +357,7 @@ internal class SendViewModel @Inject constructor(
                 maybeAppCurrency.getOrElse { AppCurrency.Default }
             }
             .stateIn(
-                scope = viewModelScope,
+                scope = modelScope,
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
@@ -395,13 +390,13 @@ internal class SendViewModel @Inject constructor(
 
     private fun getWalletsAndRecent() {
         getUserWallets()
-        viewModelScope.launch {
+        modelScope.launch {
             getTxHistory()
         }
     }
 
     private fun getUserWallets() {
-        viewModelScope.launch {
+        modelScope.launch {
             runCatching {
                 waitForDelay(delay = RECENT_LOAD_DELAY) {
                     getWalletsUseCase.invokeSync()
@@ -466,7 +461,7 @@ internal class SendViewModel @Inject constructor(
                     else -> Unit
                 }
             }
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun updateNotifications() {
@@ -475,7 +470,7 @@ internal class SendViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { uiState.value = stateFactory.getSendNotificationState(notifications = it) }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
             .saveIn(sendNotificationsJobHolder)
     }
 
@@ -485,7 +480,7 @@ internal class SendViewModel @Inject constructor(
             .distinctUntilChanged()
             .onEach { uiState.value = feeStateFactory.getFeeNotificationState(notifications = it) }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
             .saveIn(feeNotificationsJobHolder)
     }
 
@@ -573,7 +568,7 @@ internal class SendViewModel @Inject constructor(
 
         val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
 
-        viewModelScope.launch {
+        modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
         }
     }
@@ -615,7 +610,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun cancelFeeRequest() {
-        viewModelScope.launch {
+        modelScope.launch {
             feeJobHolder.cancel()
         }
     }
@@ -660,7 +655,7 @@ internal class SendViewModel @Inject constructor(
 // region recipient state clicks
 
     override fun onRecipientAddressValueChange(value: String, type: EnterAddressSource?) {
-        viewModelScope.launch {
+        modelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
                 uiState.value = recipientStateFactory.onRecipientAddressValueChange(value, isValuePasted = type != null)
                 uiState.value = recipientStateFactory.getOnRecipientAddressValidationStarted()
@@ -680,7 +675,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     override fun onRecipientMemoValueChange(value: String, isValuePasted: Boolean) {
-        viewModelScope.launch {
+        modelScope.launch {
             if (!checkIfXrpAddressValue(value)) {
                 uiState.value = recipientStateFactory.getOnRecipientMemoValueChange(value, isValuePasted)
                 uiState.value = recipientStateFactory.getOnRecipientAddressValidationStarted()
@@ -758,7 +753,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun loadFee() {
-        viewModelScope.launch {
+        modelScope.launch {
             val isShowStatus = uiState.value.feeState?.fee == null
             if (isShowStatus) {
                 uiState.value = feeStateFactory.onFeeOnLoadingState()
@@ -911,7 +906,7 @@ internal class SendViewModel @Inject constructor(
             reduceAmountBy = uiState.value.sendState?.reduceAmountBy ?: BigDecimal.ZERO,
         )
 
-        viewModelScope.launch {
+        modelScope.launch {
             createTransactionUseCase(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
@@ -969,7 +964,7 @@ internal class SendViewModel @Inject constructor(
 
         val receivingUserWallet = userWallets.firstOrNull { it.address == destinationAddress } ?: return
 
-        viewModelScope.launch {
+        modelScope.launch {
             addCryptoCurrenciesUseCase(
                 userWalletId = receivingUserWallet.userWalletId,
                 cryptoCurrency = cryptoCurrency,
@@ -1031,7 +1026,7 @@ internal class SendViewModel @Inject constructor(
         val noErrorNotifications = sendState.notifications.none { it is NotificationUM.Error }
 
         if (!isSuccess && noErrorNotifications) {
-            viewModelScope.launch {
+            modelScope.launch {
                 val feeUpdatedState = callFeeUseCase()?.fold(
                     ifRight = {
                         uiState.value = stateFactory.getSendingStateUpdate(isSending = false)
@@ -1065,7 +1060,7 @@ internal class SendViewModel @Inject constructor(
     }
 
     private fun setNeverToShowTapHelp() {
-        viewModelScope.launch {
+        modelScope.launch {
             neverShowTapHelpUseCase()
         }
         uiState.value = stateFactory.getHiddenTapHelpState()
