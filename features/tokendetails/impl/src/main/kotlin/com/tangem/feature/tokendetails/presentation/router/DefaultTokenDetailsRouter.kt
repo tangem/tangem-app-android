@@ -1,22 +1,21 @@
 package com.tangem.feature.tokendetails.presentation.router
 
-import androidx.fragment.app.Fragment
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.tokendetails.presentation.TokenDetailsFragment
+import javax.inject.Inject
 
-internal class DefaultTokenDetailsRouter(
+@ComponentScoped
+internal class DefaultTokenDetailsRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
 ) : InnerTokenDetailsRouter {
-
-    override fun getEntryFragment(): Fragment = TokenDetailsFragment()
 
     override fun popBackStack() {
         router.pop()
