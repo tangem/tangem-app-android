@@ -16,4 +16,6 @@ interface NetworksStatusesStore {
     suspend fun store(key: UserWalletId, value: NetworkStatus)
 
     suspend fun storeAll(key: UserWalletId, values: Set<NetworkStatus>)
+
+    suspend fun refresh(key: UserWalletId, networks: Set<Network>)
 }
