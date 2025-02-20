@@ -2,7 +2,7 @@ package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.feature.qrscanning.QrScanningRouter
+import com.tangem.feature.qrscanning.QrScanningComponent
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
@@ -64,8 +64,8 @@ internal class ChildFactory @Inject constructor(
     private val homeComponentFactory: HomeComponent.Factory,
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
     private val walletConnectComponentFactory: WalletConnectComponent.Factory,
+    private val qrScanningComponentFactory: QrScanningComponent.Factory,
     private val walletRouter: WalletRouter,
-    private val qrScanningRouter: QrScanningRouter,
     private val testerRouter: TesterRouter,
     private val pushNotificationRouter: PushNotificationsRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
@@ -275,6 +275,16 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = walletConnectComponentFactory,
                 )
             }
+            is AppRoute.QrScanning -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = QrScanningComponent.Params(
+                        source = route.source,
+                        networkName = route.networkName,
+                    ),
+                    componentFactory = qrScanningComponentFactory,
+                )
+            }
             is AppRoute.AccessCodeRecovery,
             is AppRoute.AppCurrencySelector,
             is AppRoute.SaveWallet,
@@ -285,7 +295,6 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.OnboardingOther,
             is AppRoute.OnboardingTwins,
             is AppRoute.OnboardingWallet,
-            is AppRoute.QrScanning,
             is AppRoute.ReferralProgram,
             is AppRoute.ResetToFactory,
             is AppRoute.Wallet,
@@ -383,7 +392,14 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { OnboardingWalletFragment() })
             }
             is AppRoute.QrScanning -> {
-                route.asFragmentChild(Provider { qrScanningRouter.getEntryFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = QrScanningComponent.Params(
+                        source = route.source,
+                        networkName = route.networkName,
+                    ),
+                    componentFactory = qrScanningComponentFactory,
+                )
             }
             is AppRoute.ReferralProgram -> {
                 route.asFragmentChild(Provider { ReferralFragment() })
