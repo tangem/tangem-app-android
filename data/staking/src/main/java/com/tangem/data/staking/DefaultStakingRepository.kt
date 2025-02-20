@@ -402,6 +402,10 @@ internal class DefaultStakingRepository(
         cryptoCurrencies: List<CryptoCurrency>,
         refresh: Boolean,
     ) = withContext(dispatchers.io) {
+        if (refresh) {
+            stakingBalanceStore.refresh(userWalletId = userWalletId)
+        }
+
         cacheRegistry.invokeOnExpire(
             key = getYieldBalancesKey(userWalletId),
             skipCache = refresh,
