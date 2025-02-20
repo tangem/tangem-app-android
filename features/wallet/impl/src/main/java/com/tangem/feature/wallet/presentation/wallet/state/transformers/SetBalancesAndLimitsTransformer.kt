@@ -4,8 +4,8 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.wallets.models.UserWallet
@@ -78,17 +78,20 @@ internal class SetBalancesAndLimitsTransformer(
                 },
                 cardCount = userWallet.getCardsCount(),
                 isZeroBalance = visaCurrency.balances.available.isZero(),
-                isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
+                isBalanceFlickering = false,
             )
         }
     }
 
     private fun createAdditionalInfo(visaCurrency: VisaCurrency): WalletAdditionalInfo {
-        val fiatAmount = BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = visaCurrency.fiatRate?.let { visaCurrency.balances.available.multiply(it) },
-            fiatCurrencyCode = visaCurrency.fiatCurrency.code,
-            fiatCurrencySymbol = visaCurrency.fiatCurrency.symbol,
-        )
+        val fiatAmount = visaCurrency.fiatRate?.let { visaCurrency.balances.available.multiply(it) }
+            .format {
+                fiat(
+                    fiatCurrencyCode = visaCurrency.fiatCurrency.code,
+                    fiatCurrencySymbol = visaCurrency.fiatCurrency.symbol,
+                )
+            }
+
         val infoContent = stringReference(
             value = buildString {
                 append(fiatAmount)
