@@ -881,13 +881,13 @@
   <string name="swap_give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
   <string name="swap_promo_title">Nouveau fournisseur d\'échange disponible !</string>
-  <string name="swap_story_fifth_subtitle">Ayez confiance en bénéficiant d\'un support constant, garantissant que vos transactions se déroulent sans problème à tout moment</string>
+  <string name="swap_story_fifth_subtitle">Ayez confiance en notre assistance 24 heures sur 24 pour vous aider à résoudre tous vos problèmes</string>
   <string name="swap_story_fifth_title">Assistance 24 heures sur 24</string>
-  <string name="swap_story_first_subtitle">Les fournisseurs d\'échange de confiance vous permettent d\'échanger des actifs sans effort, en gardant tout en sécurité dans votre portefeuille</string>
+  <string name="swap_story_first_subtitle">Plusieurs fournisseurs de confiance en un seul endroit : échangez n\'importe quel actif facilement</string>
   <string name="swap_story_first_title">Échangez Avec Nous</string>
   <string name="swap_story_forth_subtitle">Une sécurité de haut niveau et des fournisseurs vérifiés garantissant que vos actifs sont protégés à chaque échange</string>
   <string name="swap_story_forth_title">Plus Sûr Que Jamais</string>
-  <string name="swap_story_second_subtitle">Maximisez votre valeur avec des tarifs provenant d\'un large réseau de fournisseurs de confiance, en choisissant toujours le meilleur</string>
+  <string name="swap_story_second_subtitle">Maximisez votre valeur avec des tarifs d\'un large réseau de fournisseurs de confiance</string>
   <string name="swap_story_second_title">Meilleurs Tarifs</string>
   <string name="swap_story_third_subtitle">Simple et intuitif, vous permettant d\'échanger des jetons en quelques clics</string>
   <string name="swap_story_third_title">Plus Simple Que Jamais</string>
