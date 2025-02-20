@@ -59,13 +59,10 @@ import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import com.tangem.features.send.api.navigation.SendRouter
-import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
@@ -142,16 +139,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var walletRouter: WalletRouter
 
     @Inject
-    lateinit var tokenDetailsRouter: TokenDetailsRouter
-
-    @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
-
-    @Inject
-    lateinit var sendRouter: SendRouter
-
-    @Inject
-    lateinit var qrScanningRouter: QrScanningRouter
 
     @Inject
     lateinit var deepLinksRegistry: DeepLinksRegistry
