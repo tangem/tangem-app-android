@@ -72,12 +72,23 @@ internal class DefaultStakingBalanceStore(
     override suspend fun store(userWalletId: UserWalletId, items: Set<YieldBalanceWrapperDTO>) {
         coroutineScope {
             launch {
-                storeInRuntimeStore(
-                    userWalletId = userWalletId,
-                    items = YieldBalanceConverter(isCached = false).convertSet(input = items),
-                )
+                updateRuntimeStore(userWalletId = userWalletId) {
+                    YieldBalanceConverter(isCached = false).convertSet(input = items)
+                }
             }
             launch { storeInPersistenceStore(userWalletId = userWalletId, items = items) }
+        }
+    }
+
+    override suspend fun refresh(userWalletId: UserWalletId) {
+        updateRuntimeStore(userWalletId = userWalletId) { saved ->
+            saved.mapTo(hashSetOf()) {
+                when (it) {
+                    is YieldBalance.Data -> it.copy(source = StatusSource.CACHE)
+                    is YieldBalance.Empty -> it.copy(source = StatusSource.CACHE)
+                    is YieldBalance.Error -> it
+                }
+            }
         }
     }
 
@@ -107,13 +118,16 @@ internal class DefaultStakingBalanceStore(
             ?.addOrReplace(newBalance) { it.integrationId == integrationId && it.address == address }
             ?: setOf(newBalance)
 
-        storeInRuntimeStore(userWalletId = userWalletId, items = balances)
+        updateRuntimeStore(userWalletId = userWalletId) { balances }
     }
 
-    private suspend fun storeInRuntimeStore(userWalletId: UserWalletId, items: Set<YieldBalance>) {
-        runtimeStore.update(default = emptyMap()) {
-            it.toMutableMap().apply {
-                this[userWalletId] = items
+    private suspend fun updateRuntimeStore(
+        userWalletId: UserWalletId,
+        function: (Set<YieldBalance>) -> Set<YieldBalance>,
+    ) {
+        runtimeStore.update(default = emptyMap()) { saved ->
+            saved.toMutableMap().apply {
+                this[userWalletId] = function(this[userWalletId].orEmpty())
             }
         }
     }
