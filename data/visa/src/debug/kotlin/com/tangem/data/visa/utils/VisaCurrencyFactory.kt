@@ -32,7 +32,6 @@ internal class VisaCurrencyFactory {
                     available = balances.available.forPayment,
                     blocked = balances.blocked,
                     debt = balances.debt,
-                    pendingRefund = balances.pendingRefund,
                 )
             },
             limits = VisaCurrency.Limits(
