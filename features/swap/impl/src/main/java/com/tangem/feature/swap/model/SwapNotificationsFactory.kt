@@ -164,7 +164,8 @@ internal class SwapNotificationsFactory(
             cryptoCurrencyStatus = fromCurrencyStatus,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
                 actions.onReduceByAmount(
-                    amount.copy(value = amount.value.minus(reduceByDiff)),
+                    // use in swap notification amountToRequest because fee is already subtracted
+                    amountToRequest.copy(value = amountToRequest.value.minus(reduceByDiff)),
                     reduceBy,
                 )
             },
