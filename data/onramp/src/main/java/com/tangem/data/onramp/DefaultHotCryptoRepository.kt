@@ -2,6 +2,8 @@ package com.tangem.data.onramp
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.blockchainsdk.utils.NEW_POLYGON_NAME
+import com.tangem.blockchainsdk.utils.OLD_POLYGON_NAME
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
@@ -141,9 +143,11 @@ internal class DefaultHotCryptoRepository(
         val (userWallet, tokens) = walletWithTokens
 
         return copy(
-            tokens = this.tokens.filter { hotToken ->
-                !tokens.hasAlreadyAdded(hotToken) && userWallet.canHandleHotCrypto(hotToken)
-            },
+            tokens = this.tokens
+                .filter { hotToken ->
+                    !tokens.hasAlreadyAdded(hotToken) && userWallet.canHandleHotCrypto(hotToken)
+                }
+                .applyTokensIdMigrations(),
         )
     }
 
@@ -151,6 +155,16 @@ internal class DefaultHotCryptoRepository(
         return any { token ->
             token.id == hotToken.id && token.contractAddress == hotToken.contractAddress &&
                 token.networkId == hotToken.networkId
+        }
+    }
+
+    private fun List<HotCryptoResponse.Token>.applyTokensIdMigrations(): List<HotCryptoResponse.Token> {
+        return this.map {
+            if (it.id == OLD_POLYGON_NAME) {
+                it.copy(id = NEW_POLYGON_NAME)
+            } else {
+                it
+            }
         }
     }
 
