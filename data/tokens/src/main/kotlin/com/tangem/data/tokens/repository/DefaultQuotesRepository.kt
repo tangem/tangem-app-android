@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 internal class DefaultQuotesRepository(
     private val tangemTechApi: TangemTechApi,
@@ -115,24 +116,26 @@ internal class DefaultQuotesRepository(
         val replacementIdsResult = quotesUnsupportedCurrenciesAdapter.replaceUnsupportedCurrencies(
             rawCurrenciesIds.map { it.value }.toSet(),
         )
-        val response = safeApiCallWithTimeout(
+
+        safeApiCallWithTimeout(
             call = {
                 val coinIds = replacementIdsResult.idsForRequest.joinToString(separator = ",")
-                tangemTechApi.getQuotes(appCurrencyId, coinIds).bind()
+                val response = tangemTechApi.getQuotes(appCurrencyId, coinIds).bind()
+
+                val updatedResponse = quotesUnsupportedCurrenciesAdapter.getResponseWithUnsupportedCurrencies(
+                    response = response,
+                    filteredIds = replacementIdsResult.idsFiltered,
+                )
+
+                quotesStore.store(updatedResponse)
             },
             onError = { error ->
-                cacheRegistry.invalidate(rawCurrenciesIds.map { getQuoteCacheKey(it) })
+                Timber.e(error)
 
-                throw error
+                cacheRegistry.invalidate(rawCurrenciesIds.map { getQuoteCacheKey(it) })
+                quotesStore.storeEmptyQuotes(currenciesIds = rawCurrenciesIds)
             },
         )
-
-        val updatedResponse = quotesUnsupportedCurrenciesAdapter.getResponseWithUnsupportedCurrencies(
-            response,
-            replacementIdsResult.idsFiltered,
-        )
-
-        quotesStore.store(updatedResponse)
     }
 
     private suspend fun filterExpiredCurrenciesIds(

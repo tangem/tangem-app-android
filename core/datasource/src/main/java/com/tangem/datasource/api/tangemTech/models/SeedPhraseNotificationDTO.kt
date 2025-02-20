@@ -19,6 +19,12 @@ data class SeedPhraseNotificationDTO(val status: Status) {
         @Json(name = "confirmed")
         CONFIRMED,
 
+        @Json(name = "rejected")
+        REJECTED,
+
+        @Json(name = "accepted")
+        ACCEPTED,
+
         ;
     }
 }
