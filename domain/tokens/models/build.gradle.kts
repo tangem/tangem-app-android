@@ -9,6 +9,7 @@ dependencies {
     implementation(projects.core.analytics.models)
 
     /** Project - Domain */
+    implementation(projects.domain.models)
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.staking.models)
 
