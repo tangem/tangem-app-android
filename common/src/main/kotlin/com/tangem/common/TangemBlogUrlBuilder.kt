@@ -24,5 +24,9 @@ object TangemBlogUrlBuilder {
         data object SeedNotify : Post {
             override val path: String = "seed-notify"
         }
+
+        data object SeedNotifySecond : Post {
+            override val path: String = "tangem-resolves-log-issue"
+        }
     }
 }
