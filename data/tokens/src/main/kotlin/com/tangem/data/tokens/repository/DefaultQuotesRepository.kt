@@ -100,6 +100,10 @@ internal class DefaultQuotesRepository(
         //  it changes after filterExpiredCurrenciesIds
         //  calls with different coroutines and lead to fetchQuotes
         mutex.withLock {
+            if (refresh) {
+                quotesStore.refresh(currenciesIds)
+            }
+
             val expiredCurrenciesIds = filterExpiredCurrenciesIds(
                 currenciesIds = currenciesIds,
                 refresh = refresh || quotesFetchedForAppCurrency != appCurrencyId,
