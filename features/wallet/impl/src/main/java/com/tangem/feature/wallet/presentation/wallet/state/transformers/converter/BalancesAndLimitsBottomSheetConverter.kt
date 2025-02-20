@@ -27,7 +27,6 @@ internal class BalancesAndLimitsBottomSheetConverter(
                 availableBalance = value.balances.available.let(::formatAmount),
                 blockedBalance = value.balances.blocked.let(::formatAmount),
                 debit = value.balances.debt.let(::formatAmount),
-                pending = value.balances.pendingRefund.let(::formatAmount),
                 amlVerified = value.balances.verified.let(::formatAmount),
                 onInfoClick = this::showBalanceInfo,
             ),
