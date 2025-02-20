@@ -20,6 +20,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.SpacerW6
+import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.components.marketprice.PriceChangeType
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -37,6 +38,7 @@ internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) 
                 price = state.price,
                 type = state.type,
                 priceChangePercent = state.priceChangePercent,
+                isFlickering = state.isFlickering,
             )
         }
         is TokenPriceState.TextContent -> {
@@ -58,11 +60,12 @@ internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) 
 @Composable
 private fun PriceBlock(
     price: String,
+    isFlickering: Boolean,
     modifier: Modifier = Modifier,
     type: PriceChangeType? = null,
     priceChangePercent: String? = null,
 ) {
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    Row(modifier = modifier.flicker(isFlickering), verticalAlignment = Alignment.CenterVertically) {
         PriceText(text = price, modifier = Modifier.weight(weight = 1f, fill = false))
 
         SpacerW6()
@@ -149,16 +152,19 @@ private class TokenPriceChangeStateProvider : CollectionPreviewParameterProvider
             price = "1.234",
             priceChangePercent = "2.5%",
             type = PriceChangeType.UP,
+            isFlickering = false,
         ),
         TokenPriceState.CryptoPriceContent(
             price = "1.234",
             priceChangePercent = "2.5%",
             type = PriceChangeType.DOWN,
+            isFlickering = false,
         ),
         TokenPriceState.CryptoPriceContent(
             price = "1.234",
             priceChangePercent = "2.5%",
             type = PriceChangeType.NEUTRAL,
+            isFlickering = false,
         ),
         TokenPriceState.TextContent(value = stringReference(value = "Subtitle"), isAvailable = true),
         TokenPriceState.Unknown,

@@ -123,6 +123,17 @@ interface TangemTechApi {
         @Body body: SeedPhraseNotificationDTO,
     ): ApiResponse<Unit>
 
+    @GET("seedphrase-notification/{wallet_id}/confirmed")
+    suspend fun getSeedPhraseSecondNotificationStatus(
+        @Path("wallet_id") walletId: String,
+    ): ApiResponse<SeedPhraseNotificationDTO>
+
+    @PUT("seedphrase-notification/{wallet_id}/confirmed")
+    suspend fun updateSeedPhraseSecondNotificationStatus(
+        @Path("wallet_id") walletId: String,
+        @Body body: SeedPhraseNotificationDTO,
+    ): ApiResponse<Unit>
+
     @GET("hot_crypto")
     suspend fun getHotCrypto(@Query("currency") currencyId: String): ApiResponse<HotCryptoResponse>
 
