@@ -1,16 +1,14 @@
-package com.tangem.data.staking.converters.action
+package com.tangem.datasource.local.token.converter
 
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.utils.converter.Converter
 
-internal class PendingActionConverter : Converter<BalanceDTO.PendingAction, PendingAction> {
-
-    private val stakingActionTypeConverter by lazy(LazyThreadSafetyMode.NONE) { StakingActionTypeConverter() }
+internal object PendingActionConverter : Converter<BalanceDTO.PendingAction, PendingAction> {
 
     override fun convert(value: BalanceDTO.PendingAction): PendingAction {
         return PendingAction(
-            type = stakingActionTypeConverter.convert(value.type),
+            type = StakingActionTypeConverter.convert(value.type),
             passthrough = value.passthrough,
             args = with(value.args) {
                 PendingAction.PendingActionArgs(

@@ -138,13 +138,13 @@ class MockStakingRepository : StakingRepository {
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): Flow<YieldBalance> = channelFlow {
-        send(YieldBalance.Error)
+        send(YieldBalance.Error(integrationId = null, address = null))
     }
 
     override suspend fun getSingleYieldBalanceSync(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): YieldBalance = YieldBalance.Error
+    ): YieldBalance = YieldBalance.Error(integrationId = null, address = null)
 
     override suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
@@ -158,7 +158,11 @@ class MockStakingRepository : StakingRepository {
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> {
-        return flowOf(YieldBalanceList.Data(listOf(YieldBalance.Error)))
+        return flowOf(
+            YieldBalanceList.Data(
+                balances = listOf(YieldBalance.Error(integrationId = null, address = null)),
+            ),
+        )
     }
 
     override fun getMultiYieldBalanceUpdatesLegacy(
@@ -170,7 +174,7 @@ class MockStakingRepository : StakingRepository {
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList = YieldBalanceList.Data(
-        balances = listOf(YieldBalance.Error),
+        balances = listOf(YieldBalance.Error(integrationId = null, address = null)),
     )
 
     override suspend fun createAction(

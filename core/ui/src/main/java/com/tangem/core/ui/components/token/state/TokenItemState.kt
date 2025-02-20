@@ -181,6 +181,7 @@ sealed class TokenItemState {
             val price: String,
             val priceChangePercent: String,
             val type: PriceChangeType,
+            val isFlickering: Boolean = false,
         ) : SubtitleState()
 
         data class TextContent(val value: TextReference, val isAvailable: Boolean = true) : SubtitleState()

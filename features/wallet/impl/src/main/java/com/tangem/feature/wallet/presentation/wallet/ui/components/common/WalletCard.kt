@@ -266,21 +266,21 @@ private fun TitleText(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     AnimatedContent(
-        targetState = state,
+        targetState = (state as? WalletCardState.Content)?.balance?.orMaskWithStars(isBalanceHidden).orEmpty(),
         label = "Update the balance",
         modifier = modifier,
         transitionSpec = {
             fadeIn(animationSpec = tween(durationMillis = 220, delayMillis = 90)) togetherWith
                 fadeOut(animationSpec = tween(durationMillis = 90))
         },
-    ) { walletCardState ->
-        when (walletCardState) {
+    ) { balance ->
+        when (state) {
             is WalletCardState.Content -> {
                 ResizableText(
                     modifier = Modifier
                         .defaultMinSize(minHeight = TangemTheme.dimens.size32)
-                        .flicker(isFlickering = walletCardState.isBalanceFlickering),
-                    text = walletCardState.balance.orMaskWithStars(isBalanceHidden),
+                        .flicker(isFlickering = state.isBalanceFlickering),
+                    text = balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                     color = TangemTheme.colors.text.primary1,
                     overflow = TextOverflow.Ellipsis,

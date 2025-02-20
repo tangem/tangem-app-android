@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
@@ -83,6 +84,7 @@ data class CryptoCurrencyStatus(
      * Represents a state where there is no account associated with the cryptocurrency
      *
      * @property amountToCreateAccount base reserve amount for account creation
+     * @property source source of data
      */
     data class NoAccount(
         val amountToCreateAccount: BigDecimal,
@@ -90,6 +92,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
         override val networkAddress: NetworkAddress,
+        val source: StatusSource,
     ) : Value(isError = false) {
 
         override val amount: BigDecimal = BigDecimal.ZERO
@@ -105,6 +108,7 @@ data class CryptoCurrencyStatus(
      * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
      * cryptocurrency network.
      * @property pendingTransactions The current cryptocurrency transactions.
+     * @property source source of data
      */
     data class Loaded(
         override val amount: BigDecimal,
@@ -115,6 +119,7 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
+        val source: StatusSource,
     ) : Value(isError = false)
 
     /**

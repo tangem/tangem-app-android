@@ -12,6 +12,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.StringsSigns.DASH_SIGN
@@ -40,7 +41,7 @@ class TokenItemStateConverter(
         createSubtitleState(it, appCurrency)
     },
     private val subtitle2StateProvider: (CryptoCurrencyStatus) -> TokenItemState.Subtitle2State? = {
-        createSubtitle2State(currencyStatus = it)
+        createSubtitle2State(status = it)
     },
     private val fiatAmountStateProvider: (CryptoCurrencyStatus) -> TokenItemState.FiatAmountState? = {
         createFiatAmountState(status = it, appCurrency = appCurrency)
@@ -147,7 +148,7 @@ class TokenItemStateConverter(
             return totalAmount.format { crypto(currency) }
         }
 
-        fun CryptoCurrencyStatus.getStakedBalance() =
+        private fun CryptoCurrencyStatus.getStakedBalance() =
             (value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance().orZero()
 
         private fun createTitleState(currencyStatus: CryptoCurrencyStatus): TokenItemState.TitleState {
@@ -190,15 +191,16 @@ class TokenItemStateConverter(
             }
         }
 
-        private fun createSubtitle2State(currencyStatus: CryptoCurrencyStatus): TokenItemState.Subtitle2State? {
-            return when (currencyStatus.value) {
+        private fun createSubtitle2State(status: CryptoCurrencyStatus): TokenItemState.Subtitle2State? {
+            return when (status.value) {
                 is CryptoCurrencyStatus.Loaded,
                 is CryptoCurrencyStatus.Custom,
                 is CryptoCurrencyStatus.NoQuote,
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.Subtitle2State.TextContent(
-                        text = currencyStatus.getFormattedCryptoAmount(includeStaking = true),
+                        text = status.getFormattedCryptoAmount(includeStaking = true),
+                        isFlickering = status.value.isFlickering(),
                     )
                 }
                 is CryptoCurrencyStatus.Loading,
@@ -221,11 +223,18 @@ class TokenItemStateConverter(
                 -> {
                     TokenItemState.FiatAmountState.Content(
                         text = status.getFormattedFiatAmount(appCurrency = appCurrency, includeStaking = true),
+                        isFlickering = status.value.isFlickering(),
                         icons = buildList {
                             if (!status.getStakedBalance().isZero()) {
                                 TokenItemState.FiatAmountState.Content.IconUM(
                                     iconRes = R.drawable.ic_staking_24,
                                     useAccentColor = true,
+                                ).let(::add)
+                            }
+                            if (status.value.getStatusSource() == StatusSource.ONLY_CACHE) {
+                                TokenItemState.FiatAmountState.Content.IconUM(
+                                    iconRes = R.drawable.ic_error_sync_24,
+                                    useAccentColor = false,
                                 ).let(::add)
                             }
                         }.toImmutableList(),
@@ -248,6 +257,7 @@ class TokenItemStateConverter(
                     price = fiatRate.getFormattedCryptoPrice(appCurrency),
                     priceChangePercent = priceChange.format { percent() },
                     type = priceChange.getPriceChangeType(),
+                    isFlickering = value.isFlickering(),
                 )
             } else {
                 TokenItemState.SubtitleState.Unknown
@@ -262,6 +272,16 @@ class TokenItemStateConverter(
 
         private fun BigDecimal.getPriceChangeType(): PriceChangeType {
             return PriceChangeConverter.fromBigDecimal(value = this)
+        }
+
+        private fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = getStatusSource() == StatusSource.CACHE
+
+        private fun CryptoCurrencyStatus.Value.getStatusSource(): StatusSource? {
+            return when (this) {
+                is CryptoCurrencyStatus.Loaded -> source
+                is CryptoCurrencyStatus.NoAccount -> source
+                else -> null
+            }
         }
     }
 }

@@ -302,4 +302,10 @@ internal enum class Wallet2CobrandImage(
         cards3ResId = R.drawable.ill_locked_money_card3_120_106,
         batchIds = setOf("AF63"),
     ),
+
+    Ghoad(
+        cards2ResId = R.drawable.ill_ghoad_card2_120_106,
+        cards3ResId = R.drawable.ill_ghoad_card3_120_106,
+        batchIds = setOf("AF89"),
+    ),
 }
