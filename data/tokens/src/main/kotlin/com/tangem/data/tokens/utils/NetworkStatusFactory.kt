@@ -1,5 +1,6 @@
 package com.tangem.data.tokens.utils
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.walletmanager.model.Address
@@ -26,6 +27,7 @@ internal class NetworkStatusFactory {
                     address = getNetworkAddress(result.selectedAddress, result.addresses),
                     amountToCreateAccount = result.amountToCreateAccount,
                     errorMessage = result.errorMessage,
+                    source = StatusSource.ACTUAL,
                 )
                 is UpdateWalletManagerResult.Verified -> NetworkStatus.Verified(
                     address = getNetworkAddress(result.selectedAddress, result.addresses),
@@ -34,6 +36,7 @@ internal class NetworkStatusFactory {
                         transactions = result.currentTransactions,
                         currencies = currencies,
                     ),
+                    source = StatusSource.ACTUAL,
                 )
             },
         )
