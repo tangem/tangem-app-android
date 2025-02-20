@@ -87,8 +87,7 @@ internal object WalletScreenPreviewData {
                 content = TextReference.Str("Locked"),
             ),
             imageResId = R.drawable.ill_note_btc_120_106,
-            onRenameClick = { _ -> },
-            onDeleteClick = {},
+            dropDownItems = persistentListOf(),
         )
     }
     private val miltiUnreachableCard by lazy {
@@ -102,8 +101,7 @@ internal object WalletScreenPreviewData {
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             cardCount = 3,
             balance = DASH_SIGN,
-            onRenameClick = { _ -> },
-            onDeleteClick = {},
+            dropDownItems = persistentListOf(),
             isZeroBalance = false,
             isBalanceFlickering = false,
         )
