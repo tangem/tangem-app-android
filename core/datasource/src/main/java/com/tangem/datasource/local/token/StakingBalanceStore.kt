@@ -26,4 +26,6 @@ interface StakingBalanceStore {
 
     /** Store [item] by [userWalletId], [integrationId] and [address] */
     suspend fun store(userWalletId: UserWalletId, integrationId: String, address: String, item: YieldBalanceWrapperDTO)
+
+    suspend fun refresh(userWalletId: UserWalletId)
 }
