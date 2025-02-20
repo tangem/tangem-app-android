@@ -1,12 +1,15 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
 
@@ -65,17 +68,15 @@ internal class SingleWalletCardStateConverter(
             balance = formatFiatAmount(status = status, appCurrency = appCurrency),
             cardCount = selectedWallet.getCardsCount(),
             isZeroBalance = status.fiatAmount?.isZero(),
-            isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
+            isBalanceFlickering = (status as? CryptoCurrencyStatus.Loaded)?.source == StatusSource.CACHE,
         )
     }
 
     private fun formatFiatAmount(status: CryptoCurrencyStatus.Value, appCurrency: AppCurrency): String {
-        val fiatAmount = status.fiatAmount ?: return BigDecimalFormatter.EMPTY_BALANCE_SIGN
+        val fiatAmount = status.fiatAmount ?: return DASH_SIGN
 
-        return BigDecimalFormatter.formatFiatAmount(
-            fiatAmount = fiatAmount,
-            fiatCurrencyCode = appCurrency.code,
-            fiatCurrencySymbol = appCurrency.symbol,
-        )
+        return fiatAmount.format {
+            fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
+        }
     }
 }
