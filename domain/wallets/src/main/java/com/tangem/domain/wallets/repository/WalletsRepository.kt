@@ -1,5 +1,6 @@
 package com.tangem.domain.wallets.repository
 
+import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
@@ -15,13 +16,17 @@ interface WalletsRepository {
 
     suspend fun setHasWalletsWithRing(userWalletId: UserWalletId)
 
-    fun seedPhraseNotificationStatus(userWalletId: UserWalletId): Flow<Boolean>
+    fun seedPhraseNotificationStatus(userWalletId: UserWalletId): Flow<SeedPhraseNotificationsStatus>
 
     suspend fun notifiedSeedPhraseNotification(userWalletId: UserWalletId)
 
     suspend fun confirmSeedPhraseNotification(userWalletId: UserWalletId)
 
     suspend fun declineSeedPhraseNotification(userWalletId: UserWalletId)
+
+    suspend fun rejectSeedPhraseSecondNotification(userWalletId: UserWalletId)
+
+    suspend fun acceptSeedPhraseSecondNotification(userWalletId: UserWalletId)
 
     suspend fun markWallet2WasCreated(userWalletId: UserWalletId)
 }
