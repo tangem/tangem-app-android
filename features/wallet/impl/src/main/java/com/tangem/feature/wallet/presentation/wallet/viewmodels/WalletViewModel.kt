@@ -299,12 +299,6 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private suspend fun initializeWallets(action: WalletsUpdateActionResolver.Action.InitializeWallets) {
-        walletScreenContentLoader.load(
-            userWallet = action.selectedWallet,
-            clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
-        )
-
         stateHolder.update(
             transformer = InitializeWalletsTransformer(
                 selectedWalletIndex = action.selectedWalletIndex,
@@ -313,6 +307,12 @@ internal class WalletViewModel @Inject constructor(
                 walletImageResolver = walletImageResolver,
                 walletFeatureToggles = walletFeatureToggles,
             ),
+        )
+
+        walletScreenContentLoader.load(
+            userWallet = action.selectedWallet,
+            clickIntents = clickIntents,
+            coroutineScope = viewModelScope,
         )
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
