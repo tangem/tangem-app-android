@@ -15,10 +15,10 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toCompressedPublicKey
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.common.cache.CacheRegistry
-import com.tangem.data.staking.converters.*
+import com.tangem.data.staking.converters.YieldBalanceListConverter
+import com.tangem.data.staking.converters.YieldConverter
 import com.tangem.data.staking.converters.action.ActionStatusConverter
 import com.tangem.data.staking.converters.action.EnterActionResponseConverter
-import com.tangem.data.staking.converters.action.StakingActionTypeConverter
 import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
@@ -32,6 +32,8 @@ import com.tangem.datasource.api.stakekit.models.response.model.action.StakingAc
 import com.tangem.datasource.api.stakekit.models.response.model.transaction.tron.TronStakeKitTransaction
 import com.tangem.datasource.local.token.StakingBalanceStore
 import com.tangem.datasource.local.token.StakingYieldsStore
+import com.tangem.datasource.local.token.converter.StakingNetworkTypeConverter
+import com.tangem.datasource.local.token.converter.TokenConverter
 import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
@@ -77,35 +79,18 @@ internal class DefaultStakingRepository(
     moshi: Moshi,
 ) : StakingRepository {
 
-    private val stakingNetworkTypeConverter = StakingNetworkTypeConverter()
-    private val networkTypeConverter = StakingNetworkTypeConverter()
     private val transactionStatusConverter = StakingTransactionStatusConverter()
     private val transactionTypeConverter = StakingTransactionTypeConverter()
     private val actionStatusConverter = ActionStatusConverter()
-    private val stakingActionTypeConverter = StakingActionTypeConverter()
-    private val tokenConverter = TokenConverter(
-        stakingNetworkTypeConverter = stakingNetworkTypeConverter,
-    )
-    private val yieldConverter = YieldConverter(
-        tokenConverter = tokenConverter,
-    )
-    private val gasEstimateConverter = GasEstimateConverter(
-        tokenConverter = tokenConverter,
-    )
+
     private val transactionConverter = StakingTransactionConverter(
-        networkTypeConverter = networkTypeConverter,
         transactionStatusConverter = transactionStatusConverter,
         transactionTypeConverter = transactionTypeConverter,
-        gasEstimateConverter = gasEstimateConverter,
     )
     private val enterActionResponseConverter = EnterActionResponseConverter(
         actionStatusConverter = actionStatusConverter,
-        stakingActionTypeConverter = stakingActionTypeConverter,
         transactionConverter = transactionConverter,
     )
-
-    private val yieldBalanceConverter = YieldBalanceConverter()
-    private val yieldBalanceListConverter = YieldBalanceListConverter(yieldBalanceConverter)
 
     private val tronStakeKitTransactionAdapter by lazy { moshi.adapter(TronStakeKitTransaction::class.java) }
     private val networkTypeAdapter by lazy { moshi.adapter(NetworkTypeDTO::class.java) }
@@ -157,7 +142,7 @@ internal class DefaultStakingRepository(
         return withContext(dispatchers.io) {
             val address = walletManagersFacade.getDefaultAddress(userWalletId, cryptoCurrency.network).orEmpty()
 
-            val networkTypeDto = networkTypeConverter.convertBack(networkType)
+            val networkTypeDto = StakingNetworkTypeConverter.convertBack(networkType)
             val networkTypeString = networkTypeDto.extractJsonName()
 
             val actionStatusDTO = actionStatusConverter.convertBack(stakingActionStatus)
@@ -301,7 +286,7 @@ internal class DefaultStakingRepository(
                 )
             }
 
-            gasEstimateConverter.convert(gasEstimateDTO.getOrThrow())
+            GasEstimateConverter.convert(gasEstimateDTO.getOrThrow())
         }
     }
 
@@ -382,7 +367,7 @@ internal class DefaultStakingRepository(
                 .distinctUntilChanged()
                 .collectLatest {
                     if (it != null) {
-                        send(yieldBalanceConverter.convert(it))
+                        send(it)
                     } else {
                         error("No yield balance available for currency ${cryptoCurrency.id.value}")
                     }
@@ -408,10 +393,8 @@ internal class DefaultStakingRepository(
         val integrationId = integrationIdMap[getIntegrationKey(cryptoCurrency.id)]
             ?: error("Could not get integrationId")
 
-        val result = stakingBalanceStore.getSyncOrNull(userWalletId, address, integrationId)
-            ?: return@withContext YieldBalance.Error
-
-        yieldBalanceConverter.convert(result)
+        stakingBalanceStore.getSyncOrNull(userWalletId, address, integrationId)
+            ?: YieldBalance.Error(integrationId, address)
     }
 
     override suspend fun fetchMultiYieldBalance(
@@ -434,7 +417,7 @@ internal class DefaultStakingRepository(
                     return@invokeOnExpire
                 }
 
-                val yields = yieldConverter.convertListIgnoreErrors(
+                val yields = YieldConverter.convertListIgnoreErrors(
                     input = yieldDTOs,
                     onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
                 )
@@ -485,7 +468,7 @@ internal class DefaultStakingRepository(
         cryptoCurrencies: List<CryptoCurrency>,
     ): Flow<YieldBalanceList> {
         return stakingBalanceStore.get(userWalletId)
-            .map(yieldBalanceListConverter::convert)
+            .map(YieldBalanceListConverter::convert)
             .flowOn(dispatchers.io)
     }
 
@@ -495,7 +478,7 @@ internal class DefaultStakingRepository(
     ): Flow<YieldBalanceList> = channelFlow {
         stakingBalanceStore.get(userWalletId)
             .onEach {
-                val balances = yieldBalanceListConverter.convert(it)
+                val balances = YieldBalanceListConverter.convert(it)
                 send(balances)
             }
             .launchIn(scope = this + dispatchers.io)
@@ -510,15 +493,19 @@ internal class DefaultStakingRepository(
         cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList = withContext(dispatchers.io) {
         fetchMultiYieldBalance(userWalletId, cryptoCurrencies)
-        val result = stakingBalanceStore.getSyncOrNull(userWalletId) ?: return@withContext YieldBalanceList.Error
-        yieldBalanceListConverter.convert(result)
+
+        stakingBalanceStore.getSyncOrNull(userWalletId)?.let(YieldBalanceListConverter::convert)
+            ?: YieldBalanceList.Error
     }
 
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean {
         return withContext(dispatchers.io) {
             stakingBalanceStore.getSyncOrNull(userWalletId)
                 ?.let {
-                    it.isNotEmpty() && it.any { yieldBalance -> yieldBalance.balances.isNotEmpty() }
+                    it.isNotEmpty() &&
+                        it.any { yieldBalance ->
+                            (yieldBalance as? YieldBalance.Data)?.balance?.items?.isNotEmpty() == true
+                        }
                 }
                 ?: false
         }
@@ -537,7 +524,7 @@ internal class DefaultStakingRepository(
             ),
             args = ActionRequestBodyArgs(
                 amount = params.amount.toPlainString(),
-                inputToken = tokenConverter.convertBack(params.token),
+                inputToken = TokenConverter.convertBack(params.token),
                 validatorAddress = params.validatorAddress,
                 validatorAddresses = listOf(params.validatorAddress), // check on other networks
                 tronResource = getTronResource(network),
@@ -609,7 +596,7 @@ internal class DefaultStakingRepository(
     }
 
     private suspend fun getEnabledYieldsSync(): List<Yield> {
-        return yieldConverter.convertListIgnoreErrors(
+        return YieldConverter.convertListIgnoreErrors(
             input = stakingYieldsStore.getSync(),
             onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
         )
