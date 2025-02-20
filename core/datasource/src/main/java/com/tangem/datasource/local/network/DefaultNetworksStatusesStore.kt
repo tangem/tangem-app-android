@@ -10,10 +10,9 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.extensions.addOrReplace
-import com.tangem.utils.extensions.replaceBy
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.launch
 
 private typealias NetworkStatusesByWalletId = Map<String, Set<NetworkStatusDM>>
 
@@ -21,8 +20,6 @@ internal class DefaultNetworksStatusesStore(
     private val runtimeDataStore: RuntimeDataStore<Set<NetworkStatus>>,
     private val persistenceDataStore: DataStore<NetworkStatusesByWalletId>,
 ) : NetworksStatusesStore {
-
-    private val mutex = Mutex()
 
     override fun get(key: UserWalletId): Flow<Set<NetworkStatus>> {
         return runtimeDataStore.get(provideStringKey(key))
@@ -42,11 +39,20 @@ internal class DefaultNetworksStatusesStore(
 
         if (cachedStatuses.isNotEmpty()) {
             send(cachedStatuses)
+
+            /**
+             * Required for storing cache data.
+             * This will help to recognize networks that are still uploaded.
+             *
+             * @see mergeStatuses
+             */
+            storeAll(key = key, values = cachedStatuses)
         }
 
         runtimeDataStore.get(provideStringKey(key))
             .onEach { runtimeStatuses ->
                 val mergedStatuses = mergeStatuses(
+                    networks = networks,
                     cachedStatuses = cachedStatuses,
                     runtimeStatuses = runtimeStatuses,
                 )
@@ -57,36 +63,20 @@ internal class DefaultNetworksStatusesStore(
     }
 
     override suspend fun getSyncOrNull(key: UserWalletId): Set<NetworkStatus>? {
-        return runtimeDataStore.getSyncOrNull(provideStringKey(key))
+        return runtimeDataStore.getSyncOrNull(key = provideStringKey(key))
     }
 
     override suspend fun store(key: UserWalletId, value: NetworkStatus) {
-        mutex.withLock {
-            val newValues = getSyncOrNull(key)
-                ?.addOrReplace(value) { it.network == value.network }
-                ?: setOf(value)
-
-            runtimeDataStore.store(provideStringKey(key), newValues)
-            storeNetworkStatusInPersistence(key, value)
-        }
+        storeAll(key = key, values = setOf(value))
     }
 
-    override suspend fun storeAll(key: UserWalletId, values: Collection<NetworkStatus>) {
-        mutex.withLock {
-            val currentValues = getSyncOrNull(key) ?: emptySet()
-            val updatedValues = currentValues.toMutableSet()
+    override suspend fun storeAll(key: UserWalletId, values: Set<NetworkStatus>) {
+        coroutineScope {
+            val updatedValues = getSyncOrNull(key).orEmpty()
+                .addOrReplace(items = values) { prev, new -> prev.network == new.network }
 
-            values.forEach { newValue ->
-                val isReplaced = updatedValues.replaceBy(newValue) {
-                    it.network == newValue.network
-                }
-
-                if (!isReplaced) {
-                    updatedValues.add(newValue)
-                }
-            }
-
-            runtimeDataStore.store(provideStringKey(key), updatedValues)
+            launch { runtimeDataStore.store(key = provideStringKey(key), value = updatedValues) }
+            launch { storeNetworkStatusInPersistence(userWalletId = key, statuses = updatedValues) }
         }
     }
 
@@ -96,19 +86,24 @@ internal class DefaultNetworksStatusesStore(
      * If a status with the same network is in both sets, the status from [runtimeStatuses] is used.
      */
     private fun mergeStatuses(
+        networks: Set<Network>,
         cachedStatuses: Set<NetworkStatus>,
         runtimeStatuses: Set<NetworkStatus>,
     ): Set<NetworkStatus> {
-        return runtimeStatuses
-            .map { runtime ->
-                runtime.takeIf { it.value !is NetworkStatus.Unreachable }
-                    ?: getCachedStatusIfPossible(cachedStatuses = cachedStatuses, runtime = runtime)
+        return networks.mapNotNullTo(hashSetOf()) { network ->
+            val runtimeStatus = runtimeStatuses.firstOrNull { it.network == network }
+
+            if (runtimeStatus == null || runtimeStatus.value is NetworkStatus.Unreachable) {
+                getCachedStatusIfPossible(cachedStatuses = cachedStatuses, network = network)
+                    ?: runtimeStatus
+            } else {
+                runtimeStatus
             }
-            .toSet()
+        }
     }
 
-    private fun getCachedStatusIfPossible(cachedStatuses: Set<NetworkStatus>, runtime: NetworkStatus): NetworkStatus {
-        val cached = cachedStatuses.firstOrNull { it.network == runtime.network } ?: return runtime
+    private fun getCachedStatusIfPossible(cachedStatuses: Set<NetworkStatus>, network: Network): NetworkStatus? {
+        val cached = cachedStatuses.firstOrNull { it.network == network } ?: return null
 
         val updatedCachedStatus = when (val status = cached.value) {
             is NetworkStatus.NoAccount -> status.copy(source = StatusSource.ONLY_CACHE)
@@ -122,22 +117,17 @@ internal class DefaultNetworksStatusesStore(
         return if (updatedCachedStatus != null) {
             cached.copy(value = updatedCachedStatus)
         } else {
-            runtime
+            null
         }
     }
 
-    private suspend fun storeNetworkStatusInPersistence(userWalletId: UserWalletId, networkStatus: NetworkStatus) {
-        val network = networkStatus.network
-
+    private suspend fun storeNetworkStatusInPersistence(userWalletId: UserWalletId, statuses: Set<NetworkStatus>) {
         // Converter will return null if the network status is not supported
-        val newStatus = NetworkStatusDataModelConverter.convert(value = networkStatus) ?: return
+        val newStatuses = NetworkStatusDataModelConverter.convertSet(input = statuses).filterNotNull().toSet()
 
         persistenceDataStore.updateData { storedStatuses ->
-            val userWalletStatuses = storedStatuses[userWalletId.stringValue].orEmpty()
-            val updatedStatuses = userWalletStatuses.addOrReplace(item = newStatus) { it.networkId == network.id }
-
             storedStatuses.toMutableMap().apply {
-                this[userWalletId.stringValue] = updatedStatuses
+                this[userWalletId.stringValue] = newStatuses
             }
         }
     }
