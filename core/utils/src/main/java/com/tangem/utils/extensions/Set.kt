@@ -37,3 +37,15 @@ inline fun <T> Set<T>.addOrReplace(item: T, predicate: (T) -> Boolean): Set<T> {
 
     return mutableList
 }
+
+inline fun <T> Set<T>.addOrReplace(items: Set<T>, predicate: (T, T) -> Boolean): Set<T> {
+    val updatedValues = this.toMutableSet()
+
+    items.forEach { newValue ->
+        val isReplaced = updatedValues.replaceBy(item = newValue, predicate = { predicate(it, newValue) })
+
+        if (!isReplaced) updatedValues.add(newValue)
+    }
+
+    return updatedValues
+}
