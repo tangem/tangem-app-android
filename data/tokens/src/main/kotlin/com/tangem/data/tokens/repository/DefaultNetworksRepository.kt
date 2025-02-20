@@ -50,6 +50,7 @@ internal class DefaultNetworksRepository(
         networks: Set<Network>,
     ): Flow<Set<NetworkStatus>> {
         return networksStatusesStore.get(userWalletId, networks)
+            .distinctUntilChanged()
             .flowOn(dispatchers.io)
     }
 
@@ -120,17 +121,7 @@ internal class DefaultNetworksRepository(
         refresh: Boolean,
     ) = coroutineScope {
         if (refresh) {
-            val statusesToRefresh = networksStatusesStore.getSyncOrNull(userWalletId)?.mapNotNull {
-                if (it.network in networks) {
-                    it.copy(value = NetworkStatus.Refreshing)
-                } else {
-                    null
-                }
-            }
-
-            if (statusesToRefresh != null) {
-                networksStatusesStore.storeAll(key = userWalletId, values = statusesToRefresh.toSet())
-            }
+            networksStatusesStore.refresh(key = userWalletId, networks = networks)
         }
 
         val currencies = getCurrencies(userWalletId, networks)
