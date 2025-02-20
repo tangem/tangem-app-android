@@ -12,6 +12,7 @@ import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
@@ -121,7 +122,7 @@ internal class TokenDetailsLoadedBalanceConverter(
                 onBalanceSelect = clickIntents::onBalanceSelect,
                 selectedBalanceType = currentState.selectedBalanceType,
                 isBalanceSelectorEnabled = isBalanceSelectorEnabled,
-                isBalanceFlickering = false, // TODO: Implement in [REDACTED_JIRA]
+                isBalanceFlickering = status.value.isFlickering(),
             )
             is CryptoCurrencyStatus.Loading -> TokenDetailsBalanceBlockState.Loading(
                 actionButtons = currentState.actionButtons,
@@ -342,6 +343,16 @@ internal class TokenDetailsLoadedBalanceConverter(
             )
             RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
             RewardBlockType.RewardUnavailable -> TextReference.EMPTY
+        }
+    }
+
+    private fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = getStatusSource() == StatusSource.CACHE
+
+    private fun CryptoCurrencyStatus.Value.getStatusSource(): StatusSource? {
+        return when (this) {
+            is CryptoCurrencyStatus.Loaded -> source
+            is CryptoCurrencyStatus.NoAccount -> source
+            else -> null
         }
     }
 }
