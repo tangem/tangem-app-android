@@ -23,13 +23,16 @@ data class NetworkStatus(
     sealed class Value {
 
         abstract val source: StatusSource
-    }
 
-    /**
-     * Represents the state where the network is refreshing.
-     */
-    data object Refreshing : Value() {
-        override val source: StatusSource = StatusSource.ACTUAL
+        fun copySealed(source: StatusSource): Value {
+            return when (this) {
+                is NoAccount -> copy(source = source)
+                is Verified -> copy(source = source)
+                is Unreachable,
+                is MissedDerivation,
+                -> this
+            }
+        }
     }
 
     /**
