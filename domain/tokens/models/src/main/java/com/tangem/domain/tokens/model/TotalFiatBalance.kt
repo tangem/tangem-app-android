@@ -1,5 +1,6 @@
 package com.tangem.domain.tokens.model
 
+import com.tangem.domain.models.StatusSource
 import java.math.BigDecimal
 
 /**
@@ -27,5 +28,6 @@ sealed class TotalFiatBalance {
     data class Loaded(
         val amount: BigDecimal,
         val isAllAmountsSummarized: Boolean,
+        val source: StatusSource,
     ) : TotalFiatBalance()
 }
