@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.mock
 
 import arrow.core.NonEmptyList
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.mock.MockNetworksGroups.failedNetworksGroups
 import com.tangem.domain.tokens.mock.MockNetworksGroups.loadedNetworksGroups
 import com.tangem.domain.tokens.mock.MockNetworksGroups.sortedNetworksGroups
@@ -79,6 +80,7 @@ internal object MockTokenLists {
                 totalFiatBalance = TotalFiatBalance.Loaded(
                     amount = tokens.sumOf { it.value.fiatAmount ?: BigDecimal.ZERO },
                     isAllAmountsSummarized = true,
+                    source = StatusSource.ACTUAL,
                 ),
             )
         }
@@ -95,6 +97,7 @@ internal object MockTokenLists {
                         .flatMap { it.currencies as NonEmptyList<CryptoCurrencyStatus> }
                         .sumOf { it.value.fiatAmount ?: BigDecimal.ZERO },
                     isAllAmountsSummarized = true,
+                    source = StatusSource.ACTUAL,
                 ),
             )
         }
