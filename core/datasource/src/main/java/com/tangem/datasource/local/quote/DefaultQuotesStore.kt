@@ -52,17 +52,30 @@ internal class DefaultQuotesStore(
 
     override suspend fun store(response: QuotesResponse) {
         coroutineScope {
-            launch { storeInRuntimeStore(response = response) }
+            launch {
+                storeInRuntimeStore(
+                    values = QuoteConverter(isCached = false).convertSet(input = response.quotes.entries),
+                )
+            }
             launch { storeInPersistenceStore(response = response) }
         }
     }
 
     override suspend fun storeEmptyQuotes(currenciesIds: Set<CryptoCurrency.RawID>) {
-        runtimeStore.update(default = emptySet()) { saved ->
-            val new = currenciesIds.map { Quote.Empty(it) }
+        storeInRuntimeStore(values = currenciesIds.map(Quote::Empty).toSet())
+    }
 
-            (saved + new).distinctBy { it.rawCurrencyId }.toSet()
-        }
+    override suspend fun refresh(currenciesIds: Set<CryptoCurrency.RawID>) {
+        val currentStatuses = getSync(currenciesIds)
+
+        storeInRuntimeStore(
+            values = currentStatuses.mapTo(hashSetOf()) { quote ->
+                when (quote) {
+                    is Quote.Empty -> quote
+                    is Quote.Value -> quote.copy(source = StatusSource.CACHE)
+                }
+            },
+        )
     }
 
     private suspend fun getCachedQuotes(currenciesIds: Set<CryptoCurrency.RawID>): Set<Quote.Value> {
@@ -95,11 +108,9 @@ internal class DefaultQuotesStore(
             ?: Quote.Empty(currencyId)
     }
 
-    private suspend fun storeInRuntimeStore(response: QuotesResponse) {
-        val new = QuoteConverter(isCached = false).convertSet(input = response.quotes.entries)
-
+    private suspend fun storeInRuntimeStore(values: Set<Quote>) {
         runtimeStore.update(default = emptySet()) { saved ->
-            (saved + new).distinctBy { it.rawCurrencyId }.toSet()
+            (saved + values).distinctBy { it.rawCurrencyId }.toSet()
         }
     }
 
