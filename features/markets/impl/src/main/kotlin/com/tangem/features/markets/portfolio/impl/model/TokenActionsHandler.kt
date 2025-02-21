@@ -1,6 +1,7 @@
 package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -155,6 +156,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
                 currencyFrom = cryptoCurrencyData.status.currency,
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 isInitialReverseOrder = true,
+                screenSource = AnalyticsParam.ScreensSources.Markets.value,
             ),
         )
     }
