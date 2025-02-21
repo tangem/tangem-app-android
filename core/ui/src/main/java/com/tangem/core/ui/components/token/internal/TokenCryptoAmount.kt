@@ -10,7 +10,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.audits.AuditLabel
-import com.tangem.core.ui.components.flicker
+import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -53,12 +53,14 @@ internal fun TokenCryptoAmount(
 @Composable
 private fun CryptoAmountText(amount: String, modifier: Modifier = Modifier, isFlickering: Boolean = false) {
     Text(
-        modifier = modifier.flicker(isFlickering),
+        modifier = modifier,
         text = amount,
-        color = TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        style = TangemTheme.typography.caption2,
+        style = TangemTheme.typography.caption2.applyBladeBrush(
+            isEnabled = isFlickering,
+            textColor = TangemTheme.colors.text.tertiary,
+        ),
     )
 }
 
