@@ -81,6 +81,8 @@ sealed class AnalyticsParam {
         data object Sell : ScreensSources("Sell")
         data object Backup : ScreensSources("Backup")
         data object Onboarding : ScreensSources("Onboarding")
+        data object LongTap : ScreensSources("Long Tap")
+        data object Markets : ScreensSources("Markets")
     }
 
     sealed class TxSentFrom(val value: String) {
@@ -207,5 +209,6 @@ sealed class AnalyticsParam {
         const val PLACE = "Place"
         const val RESIDENCE = "Residence"
         const val PAYMENT_METHOD = "Payment Method"
+        const val WATCHED = "Watched"
     }
 }
