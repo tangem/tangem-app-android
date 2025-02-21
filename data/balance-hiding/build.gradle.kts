@@ -12,6 +12,7 @@ android {
 
 dependencies {
     implementation(deps.androidx.datastore)
+    implementation(deps.androidx.appCompat)
 
     /** DI */
     implementation(deps.hilt.android)
