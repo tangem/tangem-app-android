@@ -111,14 +111,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class CardSettings(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/card_settings/${userWalletId.stringValue}"), RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val USER_WALLET_ID_KEY = "userWalletId"
-        }
-    }
+    ) : AppRoute(path = "/card_settings/${userWalletId.stringValue}")
 
     @Serializable
     data object AppSettings : AppRoute(path = "/app_settings")
