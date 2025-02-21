@@ -3,7 +3,7 @@ package com.tangem.feature.qrscanning.presentation.transformers
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.feature.qrscanning.presentation.CameraDeniedBottomSheetConfig
 import com.tangem.feature.qrscanning.presentation.QrScanningState
-import com.tangem.feature.qrscanning.viewmodel.QrScanningClickIntents
+import com.tangem.feature.qrscanning.model.QrScanningClickIntents
 
 internal class ShowCameraDeniedBottomSheetTransformer(
     private val clickIntents: QrScanningClickIntents,
