@@ -22,6 +22,7 @@ import com.tangem.core.ui.components.SpacerW4
 import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.flicker
 import com.tangem.core.ui.components.marketprice.PriceChangeType
+import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
@@ -42,10 +43,15 @@ internal fun TokenPrice(state: TokenPriceState?, modifier: Modifier = Modifier) 
             )
         }
         is TokenPriceState.TextContent -> {
-            PriceText(text = state.value.resolveReference(), modifier = modifier, isAvailable = state.isAvailable)
+            PriceText(
+                text = state.value.resolveReference(),
+                isFlickering = false,
+                modifier = modifier,
+                isAvailable = state.isAvailable,
+            )
         }
         is TokenPriceState.Unknown -> {
-            PriceText(text = DASH_SIGN, modifier = modifier)
+            PriceText(text = DASH_SIGN, isFlickering = false, modifier = modifier)
         }
         is TokenPriceState.Loading -> {
             RectangleShimmer(modifier = modifier.placeholderSize(), radius = TangemTheme.dimens.radius4)
@@ -65,37 +71,62 @@ private fun PriceBlock(
     type: PriceChangeType? = null,
     priceChangePercent: String? = null,
 ) {
-    Row(modifier = modifier.flicker(isFlickering), verticalAlignment = Alignment.CenterVertically) {
-        PriceText(text = price, modifier = Modifier.weight(weight = 1f, fill = false))
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PriceText(
+            modifier = Modifier.weight(weight = 1f, fill = false),
+            text = price,
+            isFlickering = isFlickering,
+        )
 
         SpacerW6()
 
         if (type != null) {
-            PriceChangeIcon(type = type)
+            PriceChangeIcon(
+                modifier = Modifier.flicker(isFlickering),
+                type = type,
+            )
             SpacerW4()
         }
 
-        PriceChangeText(type = type, text = priceChangePercent)
-    }
-}
-
-@Composable
-private fun PriceText(text: String, modifier: Modifier = Modifier, isAvailable: Boolean = true) {
-    AnimatedContent(targetState = text, label = "Update the price text", modifier = modifier) { animatedText ->
-        Text(
-            text = animatedText,
-            color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = TangemTheme.typography.caption2,
+        PriceChangeText(
+            type = type,
+            isFlickering = isFlickering,
+            text = priceChangePercent,
         )
     }
 }
 
 @Composable
-private fun PriceChangeIcon(type: PriceChangeType) {
-    AnimatedContent(targetState = type, label = "Update the price change's arrow") { animatedType ->
+private fun PriceText(
+    text: String,
+    isFlickering: Boolean,
+    modifier: Modifier = Modifier,
+    isAvailable: Boolean = true,
+) {
+    AnimatedContent(targetState = text, label = "Update the price text", modifier = modifier) { animatedText ->
+        Text(
+            text = animatedText,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = TangemTheme.typography.caption2.applyBladeBrush(
+                isEnabled = isFlickering,
+                textColor = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun PriceChangeIcon(type: PriceChangeType, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        targetState = type,
+        label = "Update the price change's arrow",
+    ) { animatedType ->
         Icon(
+            modifier = modifier,
             painter = painterResource(
                 id = when (animatedType) {
                     PriceChangeType.UP -> R.drawable.ic_arrow_up_8
@@ -114,19 +145,26 @@ private fun PriceChangeIcon(type: PriceChangeType) {
 }
 
 @Composable
-private fun PriceChangeText(type: PriceChangeType?, text: String?, modifier: Modifier = Modifier) {
+private fun PriceChangeText(
+    type: PriceChangeType?,
+    text: String?,
+    isFlickering: Boolean,
+    modifier: Modifier = Modifier,
+) {
     AnimatedContent(targetState = text, modifier = modifier, label = "Update the price change's text") { animatedText ->
         Text(
             text = animatedText ?: DASH_SIGN,
-            color = when (type) {
-                PriceChangeType.UP -> TangemTheme.colors.text.accent
-                PriceChangeType.DOWN -> TangemTheme.colors.text.warning
-                PriceChangeType.NEUTRAL -> TangemTheme.colors.text.disabled
-                null -> TangemTheme.colors.text.tertiary
-            },
             overflow = TextOverflow.Ellipsis,
             maxLines = 1,
-            style = TangemTheme.typography.caption2,
+            style = TangemTheme.typography.caption2.applyBladeBrush(
+                isEnabled = isFlickering,
+                textColor = when (type) {
+                    PriceChangeType.UP -> TangemTheme.colors.text.accent
+                    PriceChangeType.DOWN -> TangemTheme.colors.text.warning
+                    PriceChangeType.NEUTRAL -> TangemTheme.colors.text.disabled
+                    null -> TangemTheme.colors.text.tertiary
+                },
+            ),
         )
     }
 }
