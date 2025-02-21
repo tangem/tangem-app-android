@@ -22,8 +22,8 @@ import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorFragment
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
-import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
-import com.tangem.tap.features.details.ui.cardsettings.coderecovery.AccessCodeRecoveryFragment
+import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
+import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCodeRecoveryComponent
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
@@ -65,6 +65,8 @@ internal class ChildFactory @Inject constructor(
     private val tokenDetailsComponentFactory: TokenDetailsComponent.Factory,
     private val walletConnectComponentFactory: WalletConnectComponent.Factory,
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
+    private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
+    private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
     private val walletRouter: WalletRouter,
     private val testerRouter: TesterRouter,
     private val pushNotificationRouter: PushNotificationsRouter,
@@ -285,11 +287,23 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = qrScanningComponentFactory,
                 )
             }
-            is AppRoute.AccessCodeRecovery,
+            is AppRoute.AccessCodeRecovery -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = accessCodeRecoveryComponentFactory,
+                )
+            }
+            is AppRoute.CardSettings -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = CardSettingsComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = cardSettingsComponentFactory,
+                )
+            }
             is AppRoute.AppCurrencySelector,
             is AppRoute.SaveWallet,
             is AppRoute.AppSettings,
-            is AppRoute.CardSettings,
             is AppRoute.DetailsSecurity,
             is AppRoute.OnboardingNote,
             is AppRoute.OnboardingOther,
@@ -314,7 +328,11 @@ internal class ChildFactory @Inject constructor(
                 Child.Initial
             }
             is AppRoute.AccessCodeRecovery -> {
-                route.asFragmentChild(Provider { AccessCodeRecoveryFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = accessCodeRecoveryComponentFactory,
+                )
             }
             is AppRoute.AppCurrencySelector -> {
                 route.asFragmentChild(Provider { AppCurrencySelectorFragment() })
@@ -340,7 +358,11 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { AppSettingsFragment() })
             }
             is AppRoute.CardSettings -> {
-                route.asFragmentChild(Provider { CardSettingsFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = CardSettingsComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = cardSettingsComponentFactory,
+                )
             }
             is AppRoute.Details -> {
                 route.asComponentChild(
