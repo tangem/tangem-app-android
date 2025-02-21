@@ -6,6 +6,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -31,6 +32,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
+    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val deepLinksRegistry: DeepLinksRegistry,
@@ -51,6 +53,7 @@ internal class MultiWalletContentLoaderFactory @Inject constructor(
             applyTokenListSortingUseCase = applyTokenListSortingUseCase,
             runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
             getStoryContentUseCase = getStoryContentUseCase,
+            shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
             swapFeatureToggles = swapFeatureToggles,
             deepLinksRegistry = deepLinksRegistry,
         )
