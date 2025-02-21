@@ -46,6 +46,7 @@ import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
@@ -205,6 +206,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     @Inject
     internal lateinit var uiDependencies: UiDependencies
 
+    @Inject
+    internal lateinit var defaultDeviceFlipDetector: DefaultDeviceFlipDetector
+
     internal val viewModel: MainViewModel by viewModels()
 
     private lateinit var appThemeModeFlow: SharedFlow<AppThemeMode>
@@ -271,6 +275,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
+        lifecycle.addObserver(defaultDeviceFlipDetector)
     }
 
     private fun installEventMessageEffect() {
