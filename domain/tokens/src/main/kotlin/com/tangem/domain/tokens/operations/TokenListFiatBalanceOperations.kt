@@ -2,6 +2,7 @@ package com.tangem.domain.tokens.operations
 
 import arrow.core.NonEmptyList
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
@@ -53,7 +54,9 @@ internal class TokenListFiatBalanceOperations(
             }
         }
 
-        return fiatBalance
+        return (fiatBalance as? TotalFiatBalance.Loaded)?.copy(
+            source = currencies.map { it.value.source }.getResultStatusSource(),
+        ) ?: fiatBalance
     }
 
     private fun recalculateNoAccountBalance(
