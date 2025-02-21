@@ -6,7 +6,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.utils.converter.Converter
 
 internal class SendRecipientAddressFieldConverter(
