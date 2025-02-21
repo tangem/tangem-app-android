@@ -989,6 +989,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 Bitrock, BitrockTestnet,
                 Sonic, SonicTestnet,
                 ApeChain, ApeChainTestnet,
+                Scroll, ScrollTestnet,
+                ZkLinkNova, ZkLinkNovaTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
