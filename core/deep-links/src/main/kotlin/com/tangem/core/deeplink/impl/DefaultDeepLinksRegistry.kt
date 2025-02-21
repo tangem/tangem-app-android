@@ -3,11 +3,8 @@ package com.tangem.core.deeplink.impl
 import android.content.Intent
 import android.net.Uri
 import androidx.core.net.toUri
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
 import com.tangem.core.deeplink.DeepLink
 import com.tangem.core.deeplink.DeepLinksRegistry
-import com.tangem.core.deeplink.utils.DeepLinksLifecycleObserver
 import timber.log.Timber
 
 internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
@@ -101,19 +98,6 @@ internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
                 |- Registries: $registries
             """.trimIndent(),
         )
-    }
-
-    override fun registerWithLifecycle(owner: LifecycleOwner, deepLinks: Collection<DeepLink>) {
-        val observer = DeepLinksLifecycleObserver(deepLinksRegistry = this, deepLinks)
-        owner.lifecycle.addObserver(observer)
-    }
-
-    override fun registerWithViewModel(viewModel: ViewModel, deepLinks: Collection<DeepLink>) {
-        viewModel.addCloseable {
-            unregister(deepLinks)
-        }
-
-        register(deepLinks)
     }
 
     override fun triggerDelayedDeeplink() {
