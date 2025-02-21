@@ -11,7 +11,7 @@ import kotlinx.collections.immutable.ImmutableList
 interface StoriesContentConfig<T : StoryConfig> {
     val stories: ImmutableList<T>
     val isRestartable: Boolean
-    val onClose: () -> Unit
+    val onClose: (Int) -> Unit
 }
 
 interface StoryConfig {
