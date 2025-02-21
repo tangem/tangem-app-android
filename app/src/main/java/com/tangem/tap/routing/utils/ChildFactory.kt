@@ -15,8 +15,8 @@ import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.send.api.navigation.SendRouter
-import com.tangem.features.swap.SwapComponent
 import com.tangem.features.staking.api.StakingComponent
+import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
 import com.tangem.features.wallet.navigation.WalletRouter
@@ -208,6 +208,7 @@ internal class ChildFactory @Inject constructor(
                     params = StoriesComponent.Params(
                         storyId = route.storyId,
                         nextScreen = route.nextScreen,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = storiesComponentFactory,
                 )
@@ -231,6 +232,7 @@ internal class ChildFactory @Inject constructor(
                         currencyTo = route.currencyTo,
                         userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -348,6 +350,7 @@ internal class ChildFactory @Inject constructor(
                         currencyTo = route.currencyTo,
                         userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -464,6 +467,7 @@ internal class ChildFactory @Inject constructor(
                     params = StoriesComponent.Params(
                         storyId = route.storyId,
                         nextScreen = route.nextScreen,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = storiesComponentFactory,
                 )
