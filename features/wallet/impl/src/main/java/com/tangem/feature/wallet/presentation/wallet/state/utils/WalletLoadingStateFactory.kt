@@ -90,8 +90,7 @@ internal class WalletLoadingStateFactory(
             title = name,
             additionalInfo = if (isMultiCurrency) WalletAdditionalInfoFactory.resolve(wallet = this) else null,
             imageResId = walletImageResolver.resolve(userWallet = this),
-            onRenameClick = clickIntents::onRenameBeforeConfirmationClick,
-            onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
+            dropDownItems = persistentListOf(),
         )
     }
 
