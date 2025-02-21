@@ -36,6 +36,7 @@ import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.model.OnrampSource
+import com.tangem.domain.promo.ShouldShowSwapPromoTokenUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
@@ -73,7 +74,6 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenBala
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsStateFactory
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.express.ExpressStatusFactory
-import com.tangem.domain.promo.ShouldShowSwapPromoTokenUseCase
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
@@ -645,7 +645,13 @@ internal class TokenDetailsViewModel @Inject constructor(
             return
         }
 
-        appRouter.push(AppRoute.Swap(currencyFrom = cryptoCurrency, userWalletId = userWalletId))
+        appRouter.push(
+            AppRoute.Swap(
+                currencyFrom = cryptoCurrency,
+                userWalletId = userWalletId,
+                screenSource = AnalyticsParam.ScreensSources.Token.value,
+            ),
+        )
     }
 
     override fun onDismissDialog() {
