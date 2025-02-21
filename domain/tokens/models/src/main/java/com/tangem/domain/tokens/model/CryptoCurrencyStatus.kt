@@ -50,6 +50,8 @@ data class CryptoCurrencyStatus(
 
         /** Staking yield balance */
         open val yieldBalance: YieldBalance? = null
+
+        open val source: StatusSource = StatusSource.ACTUAL
     }
 
     /** Represents the Loading state of a cryptocurrency, typically while fetching its details. */
@@ -92,7 +94,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
         override val networkAddress: NetworkAddress,
-        val source: StatusSource,
+        override val source: StatusSource,
     ) : Value(isError = false) {
 
         override val amount: BigDecimal = BigDecimal.ZERO
@@ -119,7 +121,7 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-        val source: StatusSource,
+        override val source: StatusSource,
     ) : Value(isError = false)
 
     /**
@@ -142,6 +144,7 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
+        override val source: StatusSource,
     ) : Value(isError = false)
 
     /**
@@ -158,5 +161,8 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-    ) : Value(isError = false)
+    ) : Value(isError = false) {
+
+        override val source: StatusSource = StatusSource.CACHE
+    }
 }
