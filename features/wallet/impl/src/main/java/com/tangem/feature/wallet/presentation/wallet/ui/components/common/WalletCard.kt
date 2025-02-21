@@ -44,7 +44,7 @@ import androidx.constraintlayout.compose.Dimension
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.ResizableText
-import com.tangem.core.ui.components.flicker
+import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
@@ -290,15 +290,16 @@ private fun Balance(state: WalletCardState, isBalanceHidden: Boolean, modifier: 
         when (state) {
             is WalletCardState.Content -> {
                 ResizableText(
-                    modifier = Modifier
-                        .defaultMinSize(minHeight = TangemTheme.dimens.size32)
-                        .flicker(isFlickering = state.isBalanceFlickering),
+                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size32),
                     text = balance,
                     fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
-                    color = TangemTheme.colors.text.primary1,
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
-                    style = TangemTheme.typography.h2,
+                    style = TangemTheme.typography.h2
+                        .applyBladeBrush(
+                            isEnabled = state.isBalanceFlickering,
+                            textColor = TangemTheme.colors.text.primary1,
+                        ),
                 )
             }
             is WalletCardState.Error -> NonContentBalanceText(
