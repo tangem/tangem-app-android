@@ -14,7 +14,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.buttons.HorizontalActionChips
 import com.tangem.core.ui.components.buttons.segmentedbutton.SegmentedButtons
-import com.tangem.core.ui.components.flicker
+import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -115,10 +115,12 @@ private fun FiatBalance(
             ),
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier.flicker(state.isBalanceFlickering),
+            modifier = modifier,
             text = state.displayFiatBalance.orMaskWithStars(isBalanceHidden),
-            style = TangemTheme.typography.h2,
-            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.h2.applyBladeBrush(
+                isEnabled = state.isBalanceFlickering,
+                textColor = TangemTheme.colors.text.primary1,
+            ),
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
@@ -143,10 +145,12 @@ private fun CryptoBalance(
             ),
         )
         is TokenDetailsBalanceBlockState.Content -> Text(
-            modifier = modifier.flicker(state.isBalanceFlickering),
+            modifier = modifier,
             text = state.displayCryptoBalance.orMaskWithStars(isBalanceHidden),
-            style = TangemTheme.typography.caption2,
-            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.caption2.applyBladeBrush(
+                isEnabled = state.isBalanceFlickering,
+                textColor = TangemTheme.colors.text.tertiary,
+            ),
         )
         is TokenDetailsBalanceBlockState.Error -> Text(
             modifier = modifier,
