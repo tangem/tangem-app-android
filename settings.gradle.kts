@@ -106,6 +106,17 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.tangem.ic4j")
             }
         }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/web3j")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content {
+                includeGroupAndSubgroups("org.web3j")
+            }
+        }
         maven("https://jitpack.io")
     }
 
