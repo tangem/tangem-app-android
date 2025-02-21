@@ -12,7 +12,6 @@ internal data class BalancesAndLimitsBottomSheetConfig(
         val availableBalance: String,
         val blockedBalance: String,
         val debit: String,
-        val pending: String,
         val amlVerified: String,
         val onInfoClick: () -> Unit,
     )
