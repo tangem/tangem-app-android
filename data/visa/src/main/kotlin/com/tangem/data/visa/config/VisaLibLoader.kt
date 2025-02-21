@@ -16,8 +16,10 @@ internal class VisaLibLoader @Inject constructor(
     private val createMutex = Mutex()
     private val createMutex2 = Mutex()
 
+    @Volatile
     private var config: VisaConfig? = null
 
+    @Volatile
     private var provider: VisaContractInfoProvider? = null
 
     suspend fun getOrCreateConfig(): VisaConfig = config ?: getOrLoadConfig()
@@ -25,6 +27,8 @@ internal class VisaLibLoader @Inject constructor(
     suspend fun getOrCreateProvider(): VisaContractInfoProvider = provider ?: createProvider()
 
     private suspend fun createProvider(): VisaContractInfoProvider = createMutex.withLock {
+        if (provider != null) return@withLock requireNotNull(provider)
+
         val config = getOrLoadConfig()
 
         provider = VisaContractInfoProvider.Builder(
@@ -49,10 +53,12 @@ internal class VisaLibLoader @Inject constructor(
     }
 
     private suspend fun getOrLoadConfig(): VisaConfig = createMutex2.withLock {
+        if (config != null) return@withLock requireNotNull(config)
+
         config = assetLoader.load<VisaConfig>(VISA_CONFIG_FILE_NAME)
 
-        return requireNotNull(config) {
-            "Visa config is not found"
+        return@withLock requireNotNull(config) {
+            "Visa config is not loaded"
         }
     }
 
