@@ -22,3 +22,19 @@ enum class StatusSource {
     /** Status is loaded from the cache and can't be updated with actual value */
     ONLY_CACHE,
 }
+
+/**
+ * Get result status source for the list of [StatusSource]
+ *
+ * ACTUAL, ACTUAL, ACTUAL     -> ACTUAL
+ * ACTUAL, ACTUAL, CACHE      -> CACHE
+ * ACTUAL, ACTUAL, ONLY_CACHE -> ONLY_CACHE
+ * ACTUAL, CACHE,  ONLY_CACHE -> ONLY_CACHE
+ */
+fun List<StatusSource>.getResultStatusSource(): StatusSource {
+    return when {
+        any { it == StatusSource.ONLY_CACHE } -> StatusSource.ONLY_CACHE
+        any { it == StatusSource.CACHE } -> StatusSource.CACHE
+        else -> StatusSource.ACTUAL
+    }
+}
