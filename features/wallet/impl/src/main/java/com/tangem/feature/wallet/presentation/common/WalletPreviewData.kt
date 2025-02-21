@@ -13,6 +13,7 @@ import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toPersistentList
 import java.util.UUID
@@ -32,8 +33,7 @@ internal object WalletPreviewData {
                 content = TextReference.Str("3 cards • Seed phrase3 cards • Seed phrasephrasephrasephrase"),
             ),
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            onRenameClick = { _ -> },
-            onDeleteClick = {},
+            dropDownItems = persistentListOf(),
             cardCount = 1,
             isZeroBalance = false,
             isBalanceFlickering = false,
@@ -45,8 +45,7 @@ internal object WalletPreviewData {
             id = UserWalletId("321"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            onRenameClick = { _ -> },
-            onDeleteClick = {},
+            dropDownItems = persistentListOf(),
         )
     }
 
@@ -55,8 +54,7 @@ internal object WalletPreviewData {
             id = UserWalletId("24"),
             title = "Wallet 1",
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
-            onRenameClick = { _ -> },
-            onDeleteClick = {},
+            dropDownItems = persistentListOf(),
         )
     }
 
