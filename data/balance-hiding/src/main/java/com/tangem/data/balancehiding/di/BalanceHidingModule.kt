@@ -1,31 +1,24 @@
 package com.tangem.data.balancehiding.di
 
-import android.content.Context
 import com.tangem.data.balancehiding.DefaultBalanceHidingRepository
 import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
-import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.balancehiding.DeviceFlipDetector
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-internal object BalanceHidingModule {
+internal interface BalanceHidingModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideBalanceHidingRepository(appPreferencesStore: AppPreferencesStore): BalanceHidingRepository {
-        return DefaultBalanceHidingRepository(appPreferencesStore = appPreferencesStore)
-    }
+    fun provideBalanceHidingRepository(impl: DefaultBalanceHidingRepository): BalanceHidingRepository
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideFlipDetector(@ApplicationContext context: Context): DeviceFlipDetector {
-        return DefaultDeviceFlipDetector(context = context)
-    }
+    fun provideFlipDetector(impl: DefaultDeviceFlipDetector): DeviceFlipDetector
 }
