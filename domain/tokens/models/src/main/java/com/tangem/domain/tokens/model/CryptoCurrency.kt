@@ -142,14 +142,20 @@ sealed class CryptoCurrency {
             @Serializable
             data class NetworkIdWithDerivationPath(
                 val rawId: String,
-                val derivationPath: String,
+                val derivationPathHashCode: Int,
             ) : Body() {
+
                 override val value: String
                     get() = buildString {
                         append(rawId)
                         append(DERIVATION_PATH_DELIMITER)
-                        append(derivationPath.hashCode())
+                        append(derivationPathHashCode)
                     }
+
+                constructor(rawId: String, derivationPath: String) : this(
+                    rawId = rawId,
+                    derivationPathHashCode = derivationPath.hashCode(),
+                )
             }
         }
 
@@ -212,8 +218,13 @@ sealed class CryptoCurrency {
 
             /**
              * Creates an [ID] from a string [value].
-             * */
+             *
+             * Example:
+             * 1. coin⟨BCH⟩bitcoin-cash
+             * 2. coin⟨ETH→12367123⟩ethereum
+             */
             fun fromValue(value: String): ID {
+                // ID(value='coin⟨BCH⟩bitcoin-cash'
                 val parts = value.split(PREFIX_DELIMITER, SUFFIX_DELIMITER)
 
                 require(value = parts.size == ID_PARTS_COUNT) { "Invalid ID format: $value" }
@@ -224,7 +235,10 @@ sealed class CryptoCurrency {
                 val bodyParts = parts[1].split(DERIVATION_PATH_DELIMITER)
                 val body = when (bodyParts.size) {
                     1 -> Body.NetworkId(bodyParts[0])
-                    2 -> Body.NetworkIdWithDerivationPath(bodyParts[0], bodyParts[1])
+                    2 -> Body.NetworkIdWithDerivationPath(
+                        rawId = bodyParts[0],
+                        derivationPathHashCode = bodyParts[1].toInt(),
+                    )
                     else -> error("Invalid ID body: ${parts[1]}")
                 }
 
