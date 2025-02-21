@@ -14,6 +14,8 @@ import androidx.compose.ui.platform.LocalView
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.TangemShimmer
+import com.tangem.core.ui.components.text.BladeAnimation
+import com.tangem.core.ui.components.text.rememberBladeAnimation
 import com.tangem.core.ui.haptic.DefaultHapticManager
 import com.tangem.core.ui.haptic.HapticManager
 import com.tangem.core.ui.haptic.VibratorHapticManager
@@ -98,6 +100,7 @@ fun TangemTheme(
             LocalSnackbarHostState provides snackbarHostState,
             LocalEventMessageHandler provides eventMessageHandler,
             LocalWindowSize provides windowSize,
+            LocalBladeAnimation provides rememberBladeAnimation(),
         ) {
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
@@ -302,6 +305,10 @@ val LocalTangemShimmer = staticCompositionLocalOf<Shimmer> {
 }
 
 val LocalMainBottomSheetColor = staticCompositionLocalOf<MutableState<Color>> {
+    error("No MainBottomSheetColor provided")
+}
+
+val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
     error("No MainBottomSheetColor provided")
 }
 
