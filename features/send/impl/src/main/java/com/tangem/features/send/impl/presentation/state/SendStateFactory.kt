@@ -18,7 +18,7 @@ import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.SendFeeStateConverter
 import com.tangem.features.send.impl.presentation.state.fee.checkFeeCoverage
 import com.tangem.features.send.impl.presentation.state.recipient.SendRecipientStateConverter
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
