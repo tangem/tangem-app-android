@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.operations
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
@@ -29,8 +30,7 @@ internal class CurrencyStatusOperations(
 
     private fun createStatus(): CryptoCurrencyStatus.Value {
         return when (val status = networkStatus?.value) {
-            null,
-            -> CryptoCurrencyStatus.Loading
+            null -> CryptoCurrencyStatus.Loading
             is NetworkStatus.MissedDerivation -> createMissedDerivationStatus()
             is NetworkStatus.Unreachable -> createUnreachableStatus(status)
             is NetworkStatus.NoAccount -> createNoAccountStatus(status)
@@ -56,15 +56,14 @@ internal class CurrencyStatusOperations(
             priceChange = quote?.priceChange,
             fiatRate = quote?.fiatRate,
             networkAddress = status.address,
-            source = getResultStatusSource(
-                sources = listOf(
-                    status.source,
-                    (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
-                ),
-            ),
+            source = listOf(
+                status.source,
+                (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+            ).getResultStatusSource(),
         )
     }
 
+    @Suppress("CyclomaticComplexMethod")
     private fun createStatus(
         networkStatusValue: NetworkStatus.Verified,
         yieldBalance: YieldBalance?,
@@ -106,6 +105,11 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
+                source = listOfNotNull(
+                    networkStatusValue.source,
+                    currentYieldBalance?.source ?: StatusSource.ACTUAL,
+                    (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+                ).getResultStatusSource(),
             )
             quote is Quote.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
@@ -123,13 +127,11 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
-                source = getResultStatusSource(
-                    sources = listOf(
-                        networkStatusValue.source,
-                        currentYieldBalance?.source ?: StatusSource.ACTUAL,
-                        quote.source,
-                    ),
-                ),
+                source = listOf(
+                    networkStatusValue.source,
+                    currentYieldBalance?.source ?: StatusSource.ACTUAL,
+                    quote.source,
+                ).getResultStatusSource(),
             )
             else -> CryptoCurrencyStatus.Loading
         }
@@ -143,19 +145,5 @@ internal class CurrencyStatusOperations(
 
     private fun calculateFiatAmount(amount: BigDecimal, fiatRate: BigDecimal): BigDecimal {
         return amount * fiatRate
-    }
-
-    /*
-     * ACTUAL, ACTUAL, ACTUAL     -> ACTUAL
-     * ACTUAL, ACTUAL, CACHE      -> CACHE
-     * ACTUAL, ACTUAL, ONLY_CACHE -> ONLY_CACHE
-     * ACTUAL, CACHE,  ONLY_CACHE -> ONLY_CACHE
-     */
-    private fun getResultStatusSource(sources: List<StatusSource>): StatusSource {
-        return when {
-            sources.any { it == StatusSource.ONLY_CACHE } -> StatusSource.ONLY_CACHE
-            sources.any { it == StatusSource.CACHE } -> StatusSource.CACHE
-            else -> StatusSource.ACTUAL
-        }
     }
 }
