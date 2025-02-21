@@ -12,7 +12,7 @@ sealed class SwapStoriesUM {
 
     data class Content(
         override val stories: ImmutableList<Config>,
-        override val onClose: () -> Unit,
+        override val onClose: (Int) -> Unit,
     ) : SwapStoriesUM(), StoriesContentConfig<Content.Config> {
         override val isRestartable: Boolean = false
 
