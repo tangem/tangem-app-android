@@ -10,7 +10,7 @@ object SwapStoriesFactory {
     // WARNING! Be careful with indices. Temporary solution.
     // Use all data from v1/stories api (image url, title, subtitle)
     @Suppress("MagicNumber")
-    fun createStoriesState(swapStory: StoryContent, onStoriesClose: () -> Unit): SwapStoriesUM {
+    fun createStoriesState(swapStory: StoryContent, onStoriesClose: (Int) -> Unit): SwapStoriesUM {
         val storyOrderedImageUrls = swapStory.getImageUrls()
         if (storyOrderedImageUrls.size != 5) return SwapStoriesUM.Empty
 
