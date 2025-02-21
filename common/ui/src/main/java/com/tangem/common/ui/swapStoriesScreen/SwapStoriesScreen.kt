@@ -1,7 +1,6 @@
 package com.tangem.common.ui.swapStoriesScreen
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
@@ -39,7 +38,6 @@ private const val STORIES_RELATIVE_PADDING = 0.7
 fun SwapStoriesScreen(config: SwapStoriesUM) {
     if (config !is SwapStoriesUM.Content) return
 
-    BackHandler(onBack = config.onClose)
     SystemBarsIconsDisposable(darkIcons = false)
 
     StoriesContainer(
