@@ -623,7 +623,13 @@ internal class TokenDetailsModel @Inject constructor(
             return
         }
 
-        appRouter.push(AppRoute.Swap(currencyFrom = cryptoCurrency, userWalletId = userWalletId))
+        appRouter.push(
+            AppRoute.Swap(
+                currencyFrom = cryptoCurrency,
+                userWalletId = userWalletId,
+                screenSource = AnalyticsParam.ScreensSources.Token.value,
+            ),
+        )
     }
 
     override fun onDismissDialog() {

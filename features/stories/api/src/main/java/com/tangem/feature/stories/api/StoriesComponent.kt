@@ -9,6 +9,7 @@ interface StoriesComponent : ComposableContentComponent {
     data class Params(
         val storyId: String,
         val nextScreen: AppRoute,
+        val screenSource: String,
     )
 
     interface Factory : ComponentFactory<Params, StoriesComponent>
