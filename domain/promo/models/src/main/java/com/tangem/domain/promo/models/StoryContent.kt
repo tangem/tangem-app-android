@@ -23,6 +23,6 @@ data class StoryContent(
     }
 }
 
-enum class StoryContentIds(val id: String) {
-    STORY_FIRST_TIME_SWAP("first-time-swap"),
+enum class StoryContentIds(val id: String, val analyticType: String) {
+    STORY_FIRST_TIME_SWAP(id = "first-time-swap", analyticType = "Swap"),
 }
