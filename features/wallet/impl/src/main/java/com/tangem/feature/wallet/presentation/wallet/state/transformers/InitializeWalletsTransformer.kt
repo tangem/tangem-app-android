@@ -91,8 +91,7 @@ internal class InitializeWalletsTransformer(
             title = name,
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = this),
             imageResId = walletImageResolver.resolve(userWallet = this),
-            onRenameClick = clickIntents::onRenameBeforeConfirmationClick,
-            onDeleteClick = clickIntents::onDeleteBeforeConfirmationClick,
+            dropDownItems = persistentListOf(),
         )
     }
 
