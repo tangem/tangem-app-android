@@ -94,6 +94,7 @@ internal class SwapSelectTokensModel @Inject constructor(
                     currencyFrom = requireNotNull(fromCurrencyStatus.value).currency,
                     currencyTo = status.currency,
                     userWalletId = params.userWalletId,
+                    screenSource = AnalyticsParam.ScreensSources.Main.value,
                 ),
                 onComplete = {
                     modelScope.launch {

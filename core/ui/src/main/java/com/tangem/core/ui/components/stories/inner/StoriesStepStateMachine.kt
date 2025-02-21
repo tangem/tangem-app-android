@@ -19,18 +19,20 @@ class StoriesStepStateMachine<T>(
     val currentStory
         get() = stories[currentIndex.intValue.coerceIn(FIRST_INDEX, steps)]
 
-    fun nextStory(): Boolean {
+    fun nextStory() {
         _currentIndex.intValue = if (currentIndex.intValue == steps && isRepeatable) {
             FIRST_INDEX
         } else {
             currentIndex.intValue.inc().coerceAtMost(stories.size)
         }
-
-        return currentIndex.intValue > steps
     }
 
     fun prevStory() {
         _currentIndex.intValue = currentIndex.intValue.dec().coerceAtLeast(FIRST_INDEX)
+    }
+
+    fun hasNext(): Boolean {
+        return currentIndex.intValue <= steps
     }
 
     private companion object {
