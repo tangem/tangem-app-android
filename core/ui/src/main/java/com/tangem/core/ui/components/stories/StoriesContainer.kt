@@ -1,6 +1,7 @@
 package com.tangem.core.ui.components.stories
 
 import android.content.res.Configuration
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,6 +47,7 @@ inline fun <reified T : StoryConfig> StoriesContainer(
     isPauseStories: Boolean = false,
     crossinline currentStoryContent: @Composable BoxScope.(T, Boolean) -> Unit,
 ) {
+    var watchedCounter by remember { mutableIntStateOf(1) }
     var isPressed by remember { mutableStateOf(value = false) }
     val storyState by remember(config) {
         mutableStateOf(
@@ -55,18 +57,23 @@ inline fun <reified T : StoryConfig> StoriesContainer(
             ),
         )
     }
+    BackHandler(onBack = { config.onClose(watchedCounter) })
 
     val isPaused = isPressed || isPauseStories
 
+    val onNextClick = {
+        storyState.nextStory()
+        watchedCounter = (watchedCounter + 1).coerceAtMost(config.stories.size)
+
+        if (!storyState.hasNext()) { // Finish stories if nothing left to show
+            config.onClose(watchedCounter)
+        }
+    }
     Box(modifier = modifier) {
         StoriesClickableArea(
             onPress = { isPressed = it },
             onPreviousStory = storyState::prevStory,
-            onNextStory = {
-                if (storyState.nextStory()) {
-                    config.onClose()
-                }
-            },
+            onNextStory = onNextClick,
         )
 
         currentStoryContent(storyState.currentStory, isPaused)
@@ -79,11 +86,7 @@ inline fun <reified T : StoryConfig> StoriesContainer(
                 currentStep = storyState.currentIndex.intValue,
                 stepDuration = storyState.currentStory.duration,
                 paused = isPaused,
-                onStepFinish = {
-                    if (storyState.nextStory()) {
-                        config.onClose()
-                    }
-                },
+                onStepFinish = onNextClick,
             )
             Icon(
                 painter = rememberVectorPainter(
@@ -97,7 +100,7 @@ inline fun <reified T : StoryConfig> StoriesContainer(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = LocalIndication.current,
-                        onClick = config.onClose,
+                        onClick = { config.onClose(watchedCounter) },
                     ),
             )
         }
@@ -133,7 +136,7 @@ private data class StoryContainerPreviewProviderData(
         StoryConfigPreviewProviderData(title = "Wallet"),
     ),
     override val isRestartable: Boolean = true,
-    override val onClose: () -> Unit = {},
+    override val onClose: (Int) -> Unit = {},
 ) : StoriesContentConfig<StoryConfigPreviewProviderData>
 
 private data class StoryConfigPreviewProviderData(
