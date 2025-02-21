@@ -25,7 +25,6 @@ data class VisaContractInfo(
         val available: Available,
         val blocked: BigDecimal,
         val debt: BigDecimal,
-        val pendingRefund: BigDecimal,
     ) {
 
         data class Available(
