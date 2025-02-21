@@ -37,6 +37,7 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
 import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
@@ -277,10 +278,23 @@ internal class SwapModel @Inject constructor(
             getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id).fold(
                 ifLeft = {
                     Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
+                    analyticsEventHandler.send(
+                        StoriesEvents.Error(
+                            source = params.screenSource,
+                            type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
+                        ),
+                    )
                 },
                 ifRight = { story ->
-                    story?.let {
+                    if (story != null) {
                         uiState = stateBuilder.createStoriesState(uiState, story)
+                    } else {
+                        analyticsEventHandler.send(
+                            StoriesEvents.Error(
+                                source = params.screenSource,
+                                type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
+                            ),
+                        )
                     }
                 },
             )
@@ -1131,7 +1145,13 @@ internal class SwapModel @Inject constructor(
             onSuccess = {
                 swapRouter.openScreen(SwapNavScreen.Success)
             },
-            onStoriesClose = {
+            onStoriesClose = { watchCount ->
+                analyticsEventHandler.send(
+                    StoriesEvents.SwapStories(
+                        source = params.screenSource,
+                        watchCount = watchCount.toString(),
+                    ),
+                )
                 modelScope.launch { shouldShowStoriesUseCase.neverToShow(StoryContentIds.STORY_FIRST_TIME_SWAP.id) }
                 swapRouter.openScreen(SwapNavScreen.Main)
             },
