@@ -212,6 +212,7 @@ internal class ChildFactory @Inject constructor(
                     params = StoriesComponent.Params(
                         storyId = route.storyId,
                         nextScreen = route.nextScreen,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = storiesComponentFactory,
                 )
@@ -245,6 +246,7 @@ internal class ChildFactory @Inject constructor(
                         currencyTo = route.currencyTo,
                         userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -437,6 +439,7 @@ internal class ChildFactory @Inject constructor(
                         currencyTo = route.currencyTo,
                         userWalletId = route.userWalletId,
                         isInitialReverseOrder = route.isInitialReverseOrder,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = swapComponentFactory,
                 )
@@ -564,6 +567,7 @@ internal class ChildFactory @Inject constructor(
                     params = StoriesComponent.Params(
                         storyId = route.storyId,
                         nextScreen = route.nextScreen,
+                        screenSource = route.screenSource,
                     ),
                     componentFactory = storiesComponentFactory,
                 )
