@@ -196,6 +196,7 @@ sealed class AppRoute(val path: String) : Route {
         val currencyTo: CryptoCurrency? = null,
         val userWalletId: UserWalletId,
         val isInitialReverseOrder: Boolean = false,
+        val screenSource: String,
     ) : AppRoute(
         path = "/swap" +
             "/${currencyFrom.id.value}" +
@@ -297,6 +298,7 @@ sealed class AppRoute(val path: String) : Route {
     data class Stories(
         val storyId: String,
         val nextScreen: AppRoute,
+        val screenSource: String,
     ) : AppRoute(path = "/stories$storyId"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
