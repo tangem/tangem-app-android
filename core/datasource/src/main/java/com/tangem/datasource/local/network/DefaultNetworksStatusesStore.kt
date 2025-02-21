@@ -2,6 +2,7 @@ package com.tangem.datasource.local.network
 
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.local.datastore.RuntimeDataStore
+import com.tangem.datasource.local.network.converter.NetworkDerivationPathConverter
 import com.tangem.datasource.local.network.converter.NetworkStatusConverter
 import com.tangem.datasource.local.network.converter.NetworkStatusDataModelConverter
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
@@ -13,6 +14,8 @@ import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private typealias NetworkStatusesByWalletId = Map<String, Set<NetworkStatusDM>>
 
@@ -21,6 +24,8 @@ internal class DefaultNetworksStatusesStore(
     private val persistenceDataStore: DataStore<NetworkStatusesByWalletId>,
 ) : NetworksStatusesStore {
 
+    private val mutex = Mutex()
+
     override fun get(key: UserWalletId): Flow<Set<NetworkStatus>> {
         return runtimeDataStore.get(provideStringKey(key))
     }
@@ -28,12 +33,14 @@ internal class DefaultNetworksStatusesStore(
     override fun get(key: UserWalletId, networks: Set<Network>): Flow<Set<NetworkStatus>> = channelFlow {
         val cachedStatuses = persistenceDataStore.data.firstOrNull()
             ?.get(key.stringValue)
-            ?.mapNotNullTo(mutableSetOf()) { status ->
-                val network = networks
-                    .firstOrNull { it.id == status.networkId }
+            ?.mapNotNullTo(mutableSetOf()) { cached ->
+                val network = networks.firstOrNull {
+                    it.id == cached.networkId &&
+                        it.derivationPath == NetworkDerivationPathConverter.convert(cached.derivationPath)
+                }
                     ?: return@mapNotNullTo null
 
-                NetworkStatusConverter(network = network, isCached = true).convert(value = status)
+                NetworkStatusConverter(network = network, isCached = true).convert(value = cached)
             }
             .orEmpty()
 
@@ -71,25 +78,31 @@ internal class DefaultNetworksStatusesStore(
     }
 
     override suspend fun storeAll(key: UserWalletId, values: Set<NetworkStatus>) {
-        coroutineScope {
-            launch { storeInRuntimeStore(key = key, statuses = values) }
-            launch { storeInPersistenceStore(userWalletId = key, statuses = values) }
+        mutex.withLock {
+            coroutineScope {
+                launch { storeInRuntimeStore(key = key, statuses = values) }
+                launch { storeInPersistenceStore(userWalletId = key, statuses = values) }
+            }
         }
     }
 
     override suspend fun refresh(key: UserWalletId, networks: Set<Network>) {
-        val currentStatuses = getSyncOrNull(key).orEmpty()
+        mutex.withLock {
+            val currentStatuses = getSyncOrNull(key).orEmpty()
 
-        storeInRuntimeStore(
-            key = key,
-            statuses = networks.mapNotNullTo(hashSetOf()) { network ->
-                val status = currentStatuses.firstOrNull { it.network.id == network.id } ?: return@mapNotNullTo null
+            storeInRuntimeStore(
+                key = key,
+                statuses = networks.mapNotNullTo(hashSetOf()) { network ->
+                    val status = currentStatuses.firstOrNull {
+                        it.network.id == network.id && it.network.derivationPath == network.derivationPath
+                    } ?: return@mapNotNullTo null
 
-                status.copy(
-                    value = status.value.copySealed(source = StatusSource.CACHE),
-                )
-            },
-        )
+                    status.copy(
+                        value = status.value.copySealed(source = StatusSource.CACHE),
+                    )
+                },
+            )
+        }
     }
 
     /**
@@ -146,7 +159,9 @@ internal class DefaultNetworksStatusesStore(
         persistenceDataStore.updateData { storedStatuses ->
             storedStatuses.toMutableMap().apply {
                 val updatedValues = this[userWalletId.stringValue].orEmpty()
-                    .addOrReplace(newStatuses) { prev, new -> prev.networkId == new.networkId }
+                    .addOrReplace(newStatuses) { prev, new ->
+                        prev.networkId == new.networkId && prev.derivationPath == new.derivationPath
+                    }
 
                 this[userWalletId.stringValue] = updatedValues
             }
