@@ -358,6 +358,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             AppRoute.Swap(
                 currencyFrom = cryptoCurrencyStatus.currency,
                 userWalletId = userWalletId,
+                screenSource = AnalyticsParam.ScreensSources.LongTap.value,
             ),
         )
     }
@@ -617,6 +618,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             AppRoute.Stories(
                 storyId = StoryContentIds.STORY_FIRST_TIME_SWAP.id,
                 nextScreen = targetRoute,
+                screenSource = AnalyticsParam.ScreensSources.Main.value,
             )
         } else {
             targetRoute

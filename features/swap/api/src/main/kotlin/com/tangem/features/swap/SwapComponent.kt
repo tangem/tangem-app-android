@@ -12,6 +12,7 @@ interface SwapComponent : ComposableContentComponent {
         val currencyTo: CryptoCurrency? = null,
         val userWalletId: UserWalletId,
         val isInitialReverseOrder: Boolean = false,
+        val screenSource: String,
     )
 
     interface Factory : ComponentFactory<Params, SwapComponent>
