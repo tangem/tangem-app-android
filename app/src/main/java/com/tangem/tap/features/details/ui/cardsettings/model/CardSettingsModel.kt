@@ -1,16 +1,15 @@
-package com.tangem.tap.features.details.ui.cardsettings
+package com.tangem.tap.features.details.ui.cardsettings.model
 
-import android.os.Bundle
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.CompletionResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
-import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.ScanCardProcessor
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.CardTypesResolver
@@ -20,7 +19,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -29,13 +27,16 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.extensions.signedHashesCount
+import com.tangem.tap.features.details.ui.cardsettings.CardInfo
+import com.tangem.tap.features.details.ui.cardsettings.CardSettingsScreenState
+import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.*
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.store
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.R
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -43,22 +44,24 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@HiltViewModel
-internal class CardSettingsViewModel @Inject constructor(
+@Stable
+@ComponentScoped
+internal class CardSettingsModel @Inject constructor(
+    paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
     private val scanCardProcessor: ScanCardProcessor,
     private val tangemSdkManager: TangemSdkManager,
     private val cardSettingsInteractor: CardSettingsInteractor,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : Model() {
+
+    private val params = paramsContainer.require<CardSettingsComponent.Params>()
 
     private var previousBiometricsRequestPolicy: Boolean = false
 
-    private val userWalletId = savedStateHandle.get<Bundle>(AppRoute.CardSettings.USER_WALLET_ID_KEY)
-        ?.unbundle(UserWalletId.serializer())
-        ?: error("User wallet ID is required for CardSettingsViewModel")
+    private val userWalletId = params.userWalletId
 
     val screenState: MutableStateFlow<CardSettingsScreenState> = MutableStateFlow(getInitialState())
 
@@ -68,10 +71,11 @@ internal class CardSettingsViewModel @Inject constructor(
         cardSettingsInteractor.scannedScanResponse
             .filterNotNull()
             .onEach(::updateCardDetails)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
-    override fun onCleared() {
+    override fun onDestroy() {
+        super.onDestroy()
         // Restore the previous value of access code request policy
         cardSdkConfigRepository.isBiometricsRequestPolicy = previousBiometricsRequestPolicy
     }
@@ -96,7 +100,7 @@ internal class CardSettingsViewModel @Inject constructor(
         onBackClick = ::onBackClick,
     )
 
-    private fun scanCard() = viewModelScope.launch {
+    private fun scanCard() = modelScope.launch {
         scanCardProcessor.scan(
             analyticsSource = com.tangem.core.analytics.models.AnalyticsParam.ScreensSources.Settings,
             allowsRequestAccessCodeFromRepository = true,
@@ -217,7 +221,7 @@ internal class CardSettingsViewModel @Inject constructor(
         }
     }
 
-    private fun changeAccessCode() = viewModelScope.launch {
+    private fun changeAccessCode() = modelScope.launch {
         val scanResponse = requireNotNull(cardSettingsInteractor.scannedScanResponse.value) { "Scan response is null" }
 
         when (val result = tangemSdkManager.setAccessCode(scanResponse.card.cardId)) {
