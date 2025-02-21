@@ -27,7 +27,7 @@ import com.tangem.core.ui.res.TangemThemePreview
 fun Modifier.flicker(
     isFlickering: Boolean,
     targetTextAlpha: Float = 0.4f,
-    animationDurationMillis: Int = 1200,
+    animationDurationMillis: Int = 1500,
 ): Modifier = composed {
     var alphaChange by remember { mutableStateOf(false) }
 
