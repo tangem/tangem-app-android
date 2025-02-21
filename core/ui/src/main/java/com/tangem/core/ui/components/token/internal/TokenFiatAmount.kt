@@ -18,7 +18,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.flicker
+import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.components.token.state.TokenItemState.FiatAmountState as TokenFiatAmountState
@@ -97,12 +97,14 @@ private fun FiatAmountText(
     isFlickering: Boolean = false,
 ) {
     Text(
-        modifier = modifier.flicker(isFlickering),
+        modifier = modifier,
         text = text,
-        color = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
-        style = TangemTheme.typography.body2,
+        style = TangemTheme.typography.body2.applyBladeBrush(
+            isEnabled = isFlickering,
+            textColor = if (isAvailable) TangemTheme.colors.text.primary1 else TangemTheme.colors.text.tertiary,
+        ),
     )
 }
 
