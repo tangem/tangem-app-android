@@ -29,7 +29,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
 import com.tangem.core.ui.components.block.TangemBlockCardColors
-import com.tangem.core.ui.components.flicker
+import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringReference
@@ -133,10 +133,11 @@ private fun NameAndInfo(
                     )
                 } else {
                     Text(
-                        modifier = Modifier.flicker(isFlickering),
                         text = balanceValue,
-                        style = TangemTheme.typography.caption2,
-                        color = TangemTheme.colors.text.tertiary,
+                        style = TangemTheme.typography.caption2.applyBladeBrush(
+                            isEnabled = isFlickering,
+                            textColor = TangemTheme.colors.text.tertiary,
+                        ),
                         maxLines = 1,
                     )
                 }
