@@ -1,10 +1,12 @@
 package com.tangem.domain.tokens
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
+import com.tangem.domain.tokens.operations.CurrenciesStatusesCachedOperations
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
@@ -27,6 +29,7 @@ class GetCurrencyWarningsUseCase(
     private val stakingRepository: StakingRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -36,18 +39,11 @@ class GetCurrencyWarningsUseCase(
         isSingleWalletWithTokens: Boolean,
     ): Flow<Set<CryptoCurrencyWarning>> {
         val currency = currencyStatus.currency
-        val operations = CurrenciesStatusesOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-            userWalletId = userWalletId,
-        )
+
         // don't add here notifications that require async requests
         return combine(
             getCoinRelatedWarnings(
                 userWalletId = userWalletId,
-                operations = operations,
                 networkId = currency.network.id,
                 currencyId = currency.id,
                 derivationPath = derivationPath,
@@ -74,22 +70,50 @@ class GetCurrencyWarningsUseCase(
     @Suppress("LongParameterList")
     private suspend fun getCoinRelatedWarnings(
         userWalletId: UserWalletId,
-        operations: CurrenciesStatusesOperations,
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
         derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
     ): Flow<List<CryptoCurrencyWarning>> {
-        val currencyFlow = if (isSingleWalletWithTokens) {
-            operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
-        } else {
-            operations.getCurrencyStatusFlow(currencyId)
+        val cachedOperations by lazy {
+            CurrenciesStatusesCachedOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+            )
         }
-        val networkFlow = if (isSingleWalletWithTokens) {
-            operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
-        } else {
-            operations.getNetworkCoinFlow(networkId, derivationPath)
+
+        val lceOperations by lazy {
+            CurrenciesStatusesOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+                userWalletId = userWalletId,
+            )
         }
+
+        val currencyFlow = if (tokensFeatureToggles.isBalancesCachingEnabled) {
+            cachedOperations.getCurrencyStatusFlow(userWalletId, currencyId)
+        } else {
+            if (isSingleWalletWithTokens) {
+                lceOperations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
+            } else {
+                lceOperations.getCurrencyStatusFlow(currencyId)
+            }
+        }
+
+        val networkFlow = if (tokensFeatureToggles.isBalancesCachingEnabled) {
+            cachedOperations.getNetworkCoinFlow(userWalletId, networkId, derivationPath)
+        } else {
+            if (isSingleWalletWithTokens) {
+                lceOperations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+            } else {
+                lceOperations.getNetworkCoinFlow(networkId, derivationPath)
+            }
+        }
+
         return combine(
             currencyFlow.map { it.getOrNull() },
             networkFlow.map { it.getOrNull() },
@@ -97,6 +121,7 @@ class GetCurrencyWarningsUseCase(
             when {
                 tokenStatus != null && coinStatus != null -> {
                     buildList {
+                        getUsedOutdatedDataWarning(tokenStatus)?.let(::add)
                         getIsBetaTokensWarning(tokenStatus.currency)?.let(::add)
                         getFeeWarning(
                             userWalletId = userWalletId,
@@ -142,6 +167,10 @@ class GetCurrencyWarningsUseCase(
             }
             else -> null
         }
+    }
+
+    private fun getUsedOutdatedDataWarning(status: CryptoCurrencyStatus): CryptoCurrencyWarning? {
+        return CryptoCurrencyWarning.UsedOutdatedDataWarning.takeIf { status.value.source == StatusSource.ONLY_CACHE }
     }
 
     private fun getIsBetaTokensWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
