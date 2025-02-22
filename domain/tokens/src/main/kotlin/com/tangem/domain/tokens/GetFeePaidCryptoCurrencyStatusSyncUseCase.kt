@@ -2,23 +2,16 @@ package com.tangem.domain.tokens
 
 import arrow.core.Either
 import arrow.core.raise.either
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.FeePaidCurrency
-import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
+import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
 class GetFeePaidCryptoCurrencyStatusSyncUseCase(
     internal val currenciesRepository: CurrenciesRepository,
-    internal val quotesRepository: QuotesRepository,
-    internal val networksRepository: NetworksRepository,
-    internal val stakingRepository: StakingRepository,
-    internal val dispatchers: CoroutineDispatcherProvider,
+    private val currencyStatusOperations: BaseCurrencyStatusOperations,
 ) {
 
     suspend operator fun invoke(
@@ -28,24 +21,20 @@ class GetFeePaidCryptoCurrencyStatusSyncUseCase(
         val cryptoCurrency = cryptoCurrencyStatus.currency
         val network = cryptoCurrency.network
         val feePaidCurrency = currenciesRepository.getFeePaidCurrency(userWalletId, network)
-        val operations = CurrenciesStatusesOperations(
-            userWalletId = userWalletId,
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-        )
 
         return either {
             when (feePaidCurrency) {
-                FeePaidCurrency.Coin ->
-                    operations
-                        .getNetworkCoinSync(network.id, network.derivationPath)
+                is FeePaidCurrency.Coin -> {
+                    currencyStatusOperations.getNetworkCoinSync(userWalletId, network.id, network.derivationPath)
                         .getOrNull()
-                FeePaidCurrency.SameCurrency,
+                }
+                is FeePaidCurrency.Token -> {
+                    currencyStatusOperations.getCurrencyStatusSync(userWalletId, feePaidCurrency.tokenId)
+                        .getOrNull()
+                }
+                is FeePaidCurrency.SameCurrency,
                 is FeePaidCurrency.FeeResource,
                 -> cryptoCurrencyStatus
-                is FeePaidCurrency.Token -> operations.getCurrencyStatusSync(feePaidCurrency.tokenId).getOrNull()
             }
         }
     }
