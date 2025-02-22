@@ -3,9 +3,7 @@ package com.tangem.core.ui.components.text
 import android.content.res.Configuration
 import androidx.compose.animation.core.*
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.*
@@ -17,13 +15,13 @@ import com.tangem.core.ui.res.TangemThemePreview
 import kotlin.math.sqrt
 
 data class BladeAnimation(
-    val offset: Float,
+    val offsetState: State<Float>,
 )
 
 @Composable
 fun rememberBladeAnimation(): BladeAnimation {
     val infiniteTransition = rememberInfiniteTransition()
-    val offset by infiniteTransition.animateFloat(
+    val offsetState = infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
@@ -31,15 +29,17 @@ fun rememberBladeAnimation(): BladeAnimation {
         ),
     )
 
-    return BladeAnimation(offset)
+    return remember(offsetState) {
+        BladeAnimation(offsetState)
+    }
 }
 
 @Suppress("MagicNumber")
 @Composable
 fun TextStyle.applyBladeBrush(isEnabled: Boolean, textColor: Color): TextStyle {
-    val offset = LocalBladeAnimation.current.offset
-
     return if (isEnabled) {
+        val offset by LocalBladeAnimation.current.offsetState
+
         val brush = remember(offset, textColor) {
             object : ShaderBrush() {
                 override fun createShader(size: Size): Shader {
@@ -55,7 +55,7 @@ fun TextStyle.applyBladeBrush(isEnabled: Boolean, textColor: Color): TextStyle {
                         colors = listOf(textColor.copy(alpha = 0.2f), textColor),
                         from = baseStart + shift,
                         to = baseEnd + shift,
-                        colorStops = listOf(0.0f, 0.25f),
+                        colorStops = listOf(0.0f, 0.15f),
                         tileMode = TileMode.Mirror,
                     )
                 }
