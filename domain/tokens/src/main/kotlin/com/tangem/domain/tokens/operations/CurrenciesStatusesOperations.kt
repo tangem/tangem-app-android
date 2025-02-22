@@ -320,7 +320,7 @@ internal class CurrenciesStatusesOperations(
             .bind()
     }
 
-    private suspend fun Raise<Error>.getNetworkCoin(
+    suspend fun Raise<Error>.getNetworkCoin(
         networkId: Network.ID,
         derivationPath: Network.DerivationPath,
     ): CryptoCurrency {

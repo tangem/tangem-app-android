@@ -6,6 +6,7 @@ import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.error.mapper.mapToCurrencyError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.operations.CurrenciesStatusesCachedOperations
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -27,6 +28,7 @@ class GetCurrencyStatusUpdatesUseCase(
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     /**
@@ -58,18 +60,27 @@ class GetCurrencyStatusUpdatesUseCase(
         currencyId: CryptoCurrency.ID,
         isSingleWalletWithTokens: Boolean,
     ): Flow<Either<CurrencyStatusError, CryptoCurrencyStatus>> {
-        val operations = CurrenciesStatusesOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-            userWalletId = userWalletId,
-        )
-
-        val currencyFlow = if (isSingleWalletWithTokens) {
-            operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
+        val currencyFlow = if (tokensFeatureToggles.isBalancesCachingEnabled) {
+            CurrenciesStatusesCachedOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+            ).getCurrencyStatusFlow(userWalletId, currencyId)
         } else {
-            operations.getCurrencyStatusFlow(currencyId)
+            val operations = CurrenciesStatusesOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+                userWalletId = userWalletId,
+            )
+
+            if (isSingleWalletWithTokens) {
+                operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
+            } else {
+                operations.getCurrencyStatusFlow(currencyId)
+            }
         }
         return currencyFlow.map { maybeCurrency ->
             maybeCurrency.mapLeft(CurrenciesStatusesOperations.Error::mapToCurrencyError)
