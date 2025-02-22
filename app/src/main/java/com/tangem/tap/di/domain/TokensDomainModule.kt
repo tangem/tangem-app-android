@@ -93,13 +93,15 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): GetCurrencyStatusUpdatesUseCase {
         return GetCurrencyStatusUpdatesUseCase(
-            currenciesRepository,
-            quotesRepository,
-            networksRepository,
-            stakingRepository,
-            dispatchers,
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
+            dispatchers = dispatchers,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
@@ -131,6 +133,7 @@ internal object TokensDomainModule {
         currencyChecksRepository: CurrencyChecksRepository,
         stakingRepository: StakingRepository,
         dispatchers: CoroutineDispatcherProvider,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): GetCurrencyWarningsUseCase {
         return GetCurrencyWarningsUseCase(
             walletManagersFacade = walletManagersFacade,
@@ -140,6 +143,7 @@ internal object TokensDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             stakingRepository = stakingRepository,
             dispatchers = dispatchers,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
@@ -363,12 +367,14 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): GetWalletTotalBalanceUseCase {
         return GetWalletTotalBalanceUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
