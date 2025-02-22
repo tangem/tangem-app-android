@@ -11,6 +11,7 @@ import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
+import com.tangem.domain.tokens.operations.CurrenciesStatusesCachedOperations
 import com.tangem.domain.tokens.operations.CurrenciesStatusesLceOperations
 import com.tangem.domain.tokens.operations.TokenListFiatBalanceOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -28,6 +29,7 @@ class GetWalletTotalBalanceUseCase(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     operator fun invoke(
@@ -86,13 +88,20 @@ class GetWalletTotalBalanceUseCase(
     }
 
     private fun getStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
-        val operations = CurrenciesStatusesLceOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-        )
-
-        return operations.getCurrenciesStatuses(userWalletId)
+        return if (tokensFeatureToggles.isBalancesCachingEnabled) {
+            CurrenciesStatusesCachedOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+            ).getCurrenciesStatuses(userWalletId)
+        } else {
+            CurrenciesStatusesLceOperations(
+                currenciesRepository = currenciesRepository,
+                quotesRepository = quotesRepository,
+                networksRepository = networksRepository,
+                stakingRepository = stakingRepository,
+            ).getCurrenciesStatuses(userWalletId)
+        }
     }
 }
