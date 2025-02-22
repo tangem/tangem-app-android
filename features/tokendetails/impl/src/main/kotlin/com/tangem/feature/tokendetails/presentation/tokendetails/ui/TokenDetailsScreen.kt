@@ -20,12 +20,12 @@ import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBot
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.txHistoryItems
-import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.tokendetails.presentation.tokendetails.TokenDetailsPreviewData
@@ -96,6 +96,7 @@ internal fun TokenDetailsScreen(state: TokenDetailsState, tokenMarketBlockCompon
                             config = it.config,
                             iconTint = when (it) {
                                 is TokenDetailsNotification.Informational -> TangemTheme.colors.icon.accent
+                                is TokenDetailsNotification.UsedOutdatedData -> TangemTheme.colors.text.attention
                                 else -> null
                             },
                         )
