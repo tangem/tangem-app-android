@@ -1,17 +1,14 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
-import com.tangem.domain.tokens.operations.CurrenciesStatusesCachedOperations
-import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
+import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -24,12 +21,10 @@ import java.math.BigDecimal
 class GetCurrencyWarningsUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
-    private val stakingRepository: StakingRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
-    private val tokensFeatureToggles: TokensFeatureToggles,
+    private val currencyStatusOperations: BaseCurrencyStatusOperations,
 ) {
 
     suspend operator fun invoke(
@@ -75,43 +70,16 @@ class GetCurrencyWarningsUseCase(
         derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
     ): Flow<List<CryptoCurrencyWarning>> {
-        val cachedOperations by lazy {
-            CurrenciesStatusesCachedOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-            )
-        }
+        val currencyFlow = currencyStatusOperations.getCurrencyStatusFlow(
+            userWalletId = userWalletId,
+            currencyId = currencyId,
+            isSingleWalletWithTokens = isSingleWalletWithTokens,
+        )
 
-        val lceOperations by lazy {
-            CurrenciesStatusesOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-                userWalletId = userWalletId,
-            )
-        }
-
-        val currencyFlow = if (tokensFeatureToggles.isBalancesCachingEnabled) {
-            cachedOperations.getCurrencyStatusFlow(userWalletId, currencyId)
+        val networkFlow = if (isSingleWalletWithTokens) {
+            currencyStatusOperations.getNetworkCoinForSingleWalletWithTokenFlow(userWalletId, networkId)
         } else {
-            if (isSingleWalletWithTokens) {
-                lceOperations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
-            } else {
-                lceOperations.getCurrencyStatusFlow(currencyId)
-            }
-        }
-
-        val networkFlow = if (tokensFeatureToggles.isBalancesCachingEnabled) {
-            cachedOperations.getNetworkCoinFlow(userWalletId, networkId, derivationPath)
-        } else {
-            if (isSingleWalletWithTokens) {
-                lceOperations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
-            } else {
-                lceOperations.getNetworkCoinFlow(networkId, derivationPath)
-            }
+            currencyStatusOperations.getNetworkCoinFlow(userWalletId, networkId, derivationPath)
         }
 
         return combine(
