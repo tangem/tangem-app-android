@@ -7,10 +7,8 @@ import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.*
-import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
+import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
@@ -30,36 +28,29 @@ class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
-    private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val promoRepository: PromoRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val swapFeatureToggles: SwapFeatureToggles,
+    private val currencyStatusOperations: BaseCurrencyStatusOperations,
 ) {
 
     suspend operator fun invoke(
         userWallet: UserWallet,
         cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): Flow<TokenActionsState> {
-        val operations = CurrenciesStatusesOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-            userWalletId = userWallet.walletId,
-        )
         val networkId = cryptoCurrencyStatus.currency.network.id
         val requirements = withTimeoutOrNull(REQUEST_EXCHANGE_DATA_TIMEOUT) {
             walletManagersFacade.getAssetRequirements(userWallet.walletId, cryptoCurrencyStatus.currency)
         }
         return flow {
             val networkFlow = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
-                operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+                currencyStatusOperations.getNetworkCoinForSingleWalletWithTokenFlow(userWallet.walletId, networkId)
             } else if (!userWallet.isMultiCurrency) {
-                operations.getPrimaryCurrencyStatusFlow(includeQuotes = false)
+                currencyStatusOperations.getPrimaryCurrencyStatusFlow(userWallet.walletId, includeQuotes = false)
             } else {
-                operations.getNetworkCoinFlow(
+                currencyStatusOperations.getNetworkCoinFlow(
+                    userWallet.walletId,
                     networkId = networkId,
                     derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
                     includeQuotes = false,
