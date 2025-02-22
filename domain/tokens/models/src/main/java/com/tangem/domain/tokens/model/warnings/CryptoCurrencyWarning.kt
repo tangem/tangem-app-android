@@ -59,4 +59,6 @@ sealed class CryptoCurrencyWarning {
     ) : CryptoCurrencyWarning()
 
     data object TokensInBetaWarning : CryptoCurrencyWarning()
+
+    data object UsedOutdatedDataWarning : CryptoCurrencyWarning()
 }
