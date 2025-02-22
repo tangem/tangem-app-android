@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.mock.MockTokensStates
 import com.tangem.domain.tokens.model.*
+import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
@@ -162,17 +163,19 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
         quotes: Flow<Either<DataError, Set<Quote>>> = flowOf(MockQuotes.quotes.right()),
         statuses: Flow<Either<DataError, Set<NetworkStatus>>> = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
     ) = GetPrimaryCurrencyStatusUpdatesUseCase(
-        dispatchers = dispatchers,
-        currenciesRepository = MockCurrenciesRepository(
-            sortTokensResult = Unit.right(),
-            removeCurrencyResult = removeCurrencyResult,
-            token = token,
-            tokens = flowOf(),
-            isGrouped = flowOf(),
-            isSortedByBalance = flowOf(),
+        currencyStatusOperations = CurrenciesStatusesOperations(
+            currenciesRepository = MockCurrenciesRepository(
+                sortTokensResult = Unit.right(),
+                removeCurrencyResult = removeCurrencyResult,
+                token = token,
+                tokens = flowOf(),
+                isGrouped = flowOf(),
+                isSortedByBalance = flowOf(),
+            ),
+            quotesRepository = MockQuotesRepository(quotes),
+            networksRepository = MockNetworksRepository(statuses),
+            stakingRepository = MockStakingRepository(),
         ),
-        quotesRepository = MockQuotesRepository(quotes),
-        networksRepository = MockNetworksRepository(statuses),
-        stakingRepository = MockStakingRepository(),
+        dispatchers = dispatchers,
     )
 }
