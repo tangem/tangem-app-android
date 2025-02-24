@@ -1,8 +1,10 @@
-package com.tangem.tap.features.details.ui.appsettings
+package com.tangem.tap.features.details.ui.appsettings.model
 
-import androidx.lifecycle.*
+import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.apptheme.model.AppThemeMode
@@ -20,12 +22,15 @@ import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.redux.AppSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsDialogsFactory
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState
 import com.tangem.tap.features.details.ui.appsettings.analytics.AppSettingsItemsAnalyticsSender
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
@@ -34,8 +39,10 @@ import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@HiltViewModel
-internal class AppSettingsViewModel @Inject constructor(
+@Stable
+@ComponentScoped
+internal class AppSettingsModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
     private val appCurrencyRepository: AppCurrencyRepository,
     private val walletsRepository: WalletsRepository,
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
@@ -44,9 +51,7 @@ internal class AppSettingsViewModel @Inject constructor(
     private val appThemeModeRepository: AppThemeModeRepository,
     private val settingsRepository: SettingsRepository,
     private val appSettingsItemsAnalyticsSender: AppSettingsItemsAnalyticsSender,
-) : ViewModel(),
-    StoreSubscriber<DetailsState>,
-    DefaultLifecycleObserver {
+) : Model(), StoreSubscriber<DetailsState> {
 
     private val itemsFactory = AppSettingsItemsFactory()
     private val dialogsFactory = AppSettingsDialogsFactory()
@@ -82,11 +87,12 @@ internal class AppSettingsViewModel @Inject constructor(
         }
     }
 
-    override fun onResume(owner: LifecycleOwner) {
-        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(owner.lifecycleScope))
+    fun onResume() {
+        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(modelScope))
     }
 
-    override fun onCleared() {
+    override fun onDestroy() {
+        super.onDestroy()
         store.unsubscribe(subscriber = this)
     }
 
@@ -225,7 +231,7 @@ internal class AppSettingsViewModel @Inject constructor(
             .saveIn(appCurrencyUpdatesJobHolder)
     }
 
-    private fun bootstrapBiometricsUpdates() = viewModelScope.launch {
+    private fun bootstrapBiometricsUpdates() = modelScope.launch {
         val state = AppSettingsState(
             saveWallets = walletsRepository.shouldSaveUserWalletsSync(),
             saveAccessCodes = settingsRepository.shouldSaveAccessCodes(),
