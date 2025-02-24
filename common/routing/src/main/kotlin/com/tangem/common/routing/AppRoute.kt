@@ -103,10 +103,7 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data class DetailsSecurity(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/details/security"), RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-    }
+    ) : AppRoute(path = "/details/security")
 
     @Serializable
     data class CardSettings(
@@ -136,18 +133,7 @@ sealed class AppRoute(val path: String) : Route {
             "/$cardId" +
             "/$isActiveBackupStatus" +
             "/$backupCardsCount",
-    ),
-        RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val USER_WALLET_ID = "userWalletId"
-            const val CARD_ID = "cardId"
-            const val IS_ACTIVE_BACKUP_STATUS = "isActiveBackupStatus"
-            const val BACKUP_CARDS_COUNT = "backupCardsCount"
-        }
-    }
+    )
 
     @Serializable
     data object AccessCodeRecovery : AppRoute(path = "/access_code_recovery"), RouteBundleParams {
