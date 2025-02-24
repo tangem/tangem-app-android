@@ -38,15 +38,28 @@ class CachedCurrenciesStatusesOperations(
         )
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun transformToCurrenciesStatuses(
         userWalletId: UserWalletId,
         currenciesFlow: EitherFlow<TokenListError, List<CryptoCurrency>>,
     ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> = lceFlow {
-        currenciesFlow.collectLatest { maybeCurrencies ->
+        currenciesFlow.flatMapLatest { maybeCurrencies ->
             val isUpdating = MutableStateFlow(value = true)
             val nonEmptyCurrencies = maybeCurrencies.bind().toNonEmptyListOrNull()
 
             ensureNotNull(nonEmptyCurrencies) { TokenListError.EmptyTokens }
+
+            // This is only 'true' when the flow here is empty, such as during initial loading
+            if (isLoading.get()) {
+                val loadingCurrencies = createCurrenciesStatuses(
+                    currencies = nonEmptyCurrencies,
+                    maybeNetworkStatuses = null,
+                    maybeQuotes = null,
+                    maybeYieldBalances = null,
+                    isUpdating = true,
+                )
+                send(loadingCurrencies)
+            }
 
             val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
 
@@ -63,6 +76,9 @@ class CachedCurrenciesStatusesOperations(
                 isUpdating = isUpdating,
             )
 
+            launch { fetchComponents(userWalletId, networks, currenciesIds, nonEmptyCurrencies) }
+                .invokeOnCompletion { isUpdating.value = false }
+
             combine(
                 flow = getQuotes(currenciesIds),
                 flow2 = getNetworksStatuses(userWalletId, networks),
@@ -71,17 +87,9 @@ class CachedCurrenciesStatusesOperations(
                 transform = ::createCurrenciesStatuses,
             )
                 .distinctUntilChanged()
-                .onEach { maybeCurrenciesStatuses ->
-                    send(maybeCurrenciesStatuses)
-                }
-                .launchIn(scope = this)
-
-            launch {
-                fetchComponents(userWalletId, networks, currenciesIds, nonEmptyCurrencies)
-            }.invokeOnCompletion {
-                isUpdating.value = false
-            }
         }
+            .onEach(::send)
+            .launchIn(scope = this)
     }
 
     private suspend fun Raise<TokenListError>.fetchComponents(
