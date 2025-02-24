@@ -65,7 +65,7 @@ internal class AddStakingNotificationsTransformer(
         val feeValue = feeState?.fee?.amount?.value.orZero()
         val reduceAmountBy = confirmationState.reduceAmountBy.orZero()
 
-        val isEnterAction = prevState.actionType == StakingActionCommonType.Enter
+        val isEnterAction = prevState.actionType is StakingActionCommonType.Enter
         val isFeeCoverage = checkFeeCoverage(
             amountValue = amountValue,
             feeValue = feeValue,
@@ -236,7 +236,7 @@ internal class AddStakingNotificationsTransformer(
 
         val showNotification = sendingAmount + feeAmount > balance
         if (showNotification) {
-            val notification = if (actionType == StakingActionCommonType.Enter) {
+            val notification = if (actionType is StakingActionCommonType.Enter) {
                 NotificationUM.Error.TotalExceedsBalance
             } else {
                 with(cryptoCurrencyStatus.currency) {
