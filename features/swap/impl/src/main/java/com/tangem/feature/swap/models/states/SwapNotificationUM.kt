@@ -127,12 +127,12 @@ internal object SwapNotificationUM {
         )
 
         data class NeedReserveToCreateAccount(
-            val amount: String,
-            val token: String,
+            val receiveAmount: String,
+            val receiveToken: String,
         ) : Warning(
             title = resourceReference(
-                id = R.string.send_notification_invalid_reserve_amount_title,
-                formatArgs = wrappedList("$amount $token"),
+                id = R.string.warning_express_notification_invalid_reserve_amount_title,
+                formatArgs = wrappedList("$receiveAmount $receiveToken"),
             ),
             subtitle = resourceReference(R.string.send_notification_invalid_reserve_amount_text),
         )
