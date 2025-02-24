@@ -3,6 +3,7 @@ package com.tangem.features.onramp.tokenlist.entity.utils
 import com.tangem.common.ui.tokens.TokenItemStateConverter
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedCryptoAmount
 import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.getFormattedFiatAmount
+import com.tangem.common.ui.tokens.TokenItemStateConverter.Companion.isFlickering
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.token.state.TokenItemState
 import com.tangem.core.ui.extensions.stringReference
@@ -68,6 +69,7 @@ internal object OnrampTokenItemStateConverterFactory {
             -> {
                 TokenItemState.Subtitle2State.TextContent(
                     text = status.getFormattedCryptoAmount(includeStaking = false),
+                    isFlickering = status.value.isFlickering(),
                 )
             }
             is CryptoCurrencyStatus.Loading,
@@ -92,6 +94,7 @@ internal object OnrampTokenItemStateConverterFactory {
                 TokenItemState.FiatAmountState.TextContent(
                     text = status.getFormattedFiatAmount(appCurrency = appCurrency, includeStaking = false),
                     isAvailable = isAvailable,
+                    isFlickering = status.value.isFlickering(),
                 )
             }
             is CryptoCurrencyStatus.Unreachable,
