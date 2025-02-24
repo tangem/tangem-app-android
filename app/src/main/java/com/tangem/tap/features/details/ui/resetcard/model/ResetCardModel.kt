@@ -1,21 +1,19 @@
-package com.tangem.tap.features.details.ui.resetcard
+package com.tangem.tap.features.details.ui.resetcard.model
 
-import android.os.Bundle
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.bundle.unbundle
 import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.card.ResetCardUseCase
 import com.tangem.domain.card.ResetCardUserCodeParams
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -24,9 +22,12 @@ import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
 import com.tangem.tap.features.details.ui.common.utils.getResetToFactoryDescription
+import com.tangem.tap.features.details.ui.resetcard.ResetCardDialog
+import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState
+import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.store
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -35,8 +36,11 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@HiltViewModel
-internal class ResetCardViewModel @Inject constructor(
+@Stable
+@ComponentScoped
+internal class ResetCardModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
+    paramsContainer: ParamsContainer,
     getUserWalletUseCase: GetUserWalletUseCase,
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val resetCardUseCase: ResetCardUseCase,
@@ -45,13 +49,12 @@ internal class ResetCardViewModel @Inject constructor(
     private val userWalletsListManager: UserWalletsListManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cardSettingsInteractor: CardSettingsInteractor,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel() {
+) : Model() {
+
+    private val params = paramsContainer.require<ResetCardComponent.Params>()
 
     // region Card-set specific data. All cards from single set have the same userWalletId and cardTypesResolver
-    private val currentUserWalletId = savedStateHandle.get<Bundle>(AppRoute.ResetToFactory.USER_WALLET_ID)
-        ?.unbundle(UserWalletId.serializer())
-        ?: error("UserWalletId must be provided for ResetCardViewModel")
+    private val currentUserWalletId = params.userWalletId
 
     // Use only for card-specific data
     private val userWallet = getUserWalletUseCase(userWalletId = currentUserWalletId)
@@ -65,15 +68,11 @@ internal class ResetCardViewModel @Inject constructor(
     // endregion
 
     // region Data of card that was scanned on CardSettings
-    private val primaryCardId: String = savedStateHandle.get<String>(AppRoute.ResetToFactory.CARD_ID)
-        ?: error("CardId must be provided for ResetCardViewModel")
+    private val primaryCardId: String = params.cardId
 
-    private val isActiveBackupPrimaryCard =
-        savedStateHandle.get<Boolean>(AppRoute.ResetToFactory.IS_ACTIVE_BACKUP_STATUS)
-            ?: error("IsActiveBackupCard must be provided for ResetCardViewModel")
+    private val isActiveBackupPrimaryCard = params.isActiveBackupStatus
 
-    private val primaryBackupCardsCount = savedStateHandle.get<Int>(AppRoute.ResetToFactory.BACKUP_CARDS_COUNT)
-        ?: error("CardCount must be provided for ResetCardViewModel")
+    private val primaryBackupCardsCount = params.backupCardsCount
     // endregion
 
     // TODO: move logic to separate domain entity
@@ -177,7 +176,7 @@ internal class ResetCardViewModel @Inject constructor(
     }
 
     private fun makeFullReset() {
-        viewModelScope.launch {
+        modelScope.launch {
             resetCardUseCase(cardId = primaryCardId, params = currentUserCodeParams).onRight {
                 deleteSavedAccessCodesUseCase(cardId = primaryCardId)
                 val hasUserWallets = deleteWalletUseCase(userWalletId = currentUserWalletId).getOrElse {
@@ -203,7 +202,7 @@ internal class ResetCardViewModel @Inject constructor(
     private fun onContinueResetClick() {
         dismissDialog()
 
-        viewModelScope.launch {
+        modelScope.launch {
             resetCardUseCase(
                 cardNumber = resetBackupCardCount + 1,
                 params = currentUserCodeParams,
