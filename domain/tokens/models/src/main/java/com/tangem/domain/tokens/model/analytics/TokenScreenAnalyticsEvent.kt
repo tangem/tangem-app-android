@@ -115,15 +115,18 @@ sealed class TokenScreenAnalyticsEvent(
 
         fun ScenarioUnavailabilityReason.toReasonAnalyticsText(): String {
             return when (this) {
-                is ScenarioUnavailabilityReason.BuyUnavailable -> UNAVAILABLE
+                is ScenarioUnavailabilityReason.BuyUnavailable,
+                is ScenarioUnavailabilityReason.NotExchangeable,
+                is ScenarioUnavailabilityReason.NotSupportedBySellService,
+                is ScenarioUnavailabilityReason.StakingUnavailable,
+                ScenarioUnavailabilityReason.UnassociatedAsset,
+                -> UNAVAILABLE
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
-                ScenarioUnavailabilityReason.None -> ""
-                is ScenarioUnavailabilityReason.NotExchangeable -> UNAVAILABLE
-                is ScenarioUnavailabilityReason.NotSupportedBySellService -> UNAVAILABLE
                 is ScenarioUnavailabilityReason.PendingTransaction -> PENDING
-                is ScenarioUnavailabilityReason.StakingUnavailable -> UNAVAILABLE
-                ScenarioUnavailabilityReason.UnassociatedAsset -> UNAVAILABLE
-                ScenarioUnavailabilityReason.Unreachable -> ""
+                ScenarioUnavailabilityReason.None,
+                ScenarioUnavailabilityReason.Unreachable,
+                ScenarioUnavailabilityReason.UsedOutdatedData,
+                -> ""
             }
         }
     }
