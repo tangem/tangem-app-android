@@ -397,7 +397,7 @@ internal class StakingModel @Inject constructor(
                 StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
             )
         } else {
-            if (uiState.value.actionType == StakingActionCommonType.Enter) {
+            if (uiState.value.actionType is StakingActionCommonType.Enter) {
                 stateController.updateAll(
                     ValidatorSelectChangeTransformer(
                         selectedValidator = null,
@@ -712,7 +712,7 @@ internal class StakingModel @Inject constructor(
     ): BigDecimal? {
         // TODO split for different networks
         val subtractedBalanceAmount = when (actionType) {
-            StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
+            is StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 amountValue = amount.orZero(),
