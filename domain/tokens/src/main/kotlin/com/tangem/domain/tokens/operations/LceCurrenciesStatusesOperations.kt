@@ -51,7 +51,6 @@ class LceCurrenciesStatusesOperations(
                     maybeNetworkStatuses = null,
                     maybeQuotes = null,
                     maybeYieldBalances = null,
-
                 )
                 send(loadingCurrencies)
             }
