@@ -66,6 +66,8 @@ object NotificationsFactory {
                     },
                 ),
             )
+            is GetFeeError.BlockchainErrors.SuiOneCoinRequired ->
+                add(NotificationUM.Sui.NotEnoughCoinForTokenTransaction)
             is GetFeeError.DataError,
             is GetFeeError.UnknownError,
             -> add(
