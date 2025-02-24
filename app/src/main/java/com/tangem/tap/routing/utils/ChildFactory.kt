@@ -20,8 +20,8 @@ import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.navigation.WalletRouter
-import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorFragment
-import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
+import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
+import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCodeRecoveryComponent
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
@@ -67,6 +67,8 @@ internal class ChildFactory @Inject constructor(
     private val qrScanningComponentFactory: QrScanningComponent.Factory,
     private val accessCodeRecoveryComponentFactory: AccessCodeRecoveryComponent.Factory,
     private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
+    private val appCurrencySelectorComponentFactory: AppCurrencySelectorComponent.Factory,
+    private val appSettingsComponentFactory: AppSettingsComponent.Factory,
     private val walletRouter: WalletRouter,
     private val testerRouter: TesterRouter,
     private val pushNotificationRouter: PushNotificationsRouter,
@@ -303,9 +305,21 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = cardSettingsComponentFactory,
                 )
             }
-            is AppRoute.AppCurrencySelector,
+            is AppRoute.AppCurrencySelector -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = appCurrencySelectorComponentFactory,
+                )
+            }
+            is AppRoute.AppSettings -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = appSettingsComponentFactory,
+                )
+            }
             is AppRoute.SaveWallet,
-            is AppRoute.AppSettings,
             is AppRoute.DetailsSecurity,
             is AppRoute.OnboardingNote,
             is AppRoute.OnboardingOther,
@@ -337,7 +351,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.AppCurrencySelector -> {
-                route.asFragmentChild(Provider { AppCurrencySelectorFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = appCurrencySelectorComponentFactory,
+                )
             }
             is AppRoute.SaveWallet -> {
                 route.asFragmentChild(Provider { SaveWalletBottomSheetFragment() })
@@ -357,7 +375,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.AppSettings -> {
-                route.asFragmentChild(Provider { AppSettingsFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = appSettingsComponentFactory,
+                )
             }
             is AppRoute.CardSettings -> {
                 route.asComponentChild(
