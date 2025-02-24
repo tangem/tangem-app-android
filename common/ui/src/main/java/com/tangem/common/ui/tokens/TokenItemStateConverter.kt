@@ -274,7 +274,7 @@ class TokenItemStateConverter(
             return PriceChangeConverter.fromBigDecimal(value = this)
         }
 
-        private fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = getStatusSource() == StatusSource.CACHE
+        fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = getStatusSource() == StatusSource.CACHE
 
         private fun CryptoCurrencyStatus.Value.getStatusSource(): StatusSource? {
             return when (this) {

@@ -39,6 +39,7 @@ internal fun TokenFiatAmount(state: TokenFiatAmountState?, isBalanceHidden: Bool
                 text = state.text.orMaskWithStars(isBalanceHidden),
                 modifier = modifier,
                 isAvailable = state.isAvailable,
+                isFlickering = state.isFlickering,
             )
         }
         is TokenFiatAmountState.Loading -> {
