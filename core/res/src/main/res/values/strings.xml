@@ -271,6 +271,8 @@
   <string name="express_exchange_by">Exchange by %s</string>
   <string name="express_exchange_notification_failed_text">Visit provider’s website to refund your money</string>
   <string name="express_exchange_notification_failed_title">Operation failed by provider</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Your swap is taking longer than expected. Please go to provider support for assistance.</string>
+  <string name="express_exchange_notification_long_transaction_time_title">Long transaction time</string>
   <string name="express_exchange_notification_refund_text">The transaction amount was refunded in %1$s to your wallet due to OKX or bridge rules. %2$s</string>
   <string name="express_exchange_notification_refund_title">The amount was refunded in %1$s (%2$s network)</string>
   <string name="express_exchange_notification_verification_text">Visit provider’s website for verification</string>
@@ -813,6 +815,10 @@
   <string name="staking_notification_low_staked_balance_title">Low staked balance</string>
   <string name="staking_notification_minimum_balance_error_text">A minimum of %1$s %2$s is required for restaking. Please top up your balance.</string>
   <string name="staking_notification_minimum_balance_error_title">Not enough %s</string>
+  <string name="staking_notification_minimum_balance_title"> Insufficient Balance for Staking</string>
+  <string name="staking_notification_minimum_restake_ada_text">A minimum of 3 ADA is required for restaking. Please top up your balance.</string>
+  <string name="staking_notification_minimum_restake_ada_title">Not enough ADA</string>
+  <string name="staking_notification_minimum_stake_ada_text">The minimum amount required for staking must exceed 5 ADA. Please top up your balance to start staking.</string>
   <string name="staking_notification_network_error_text">Staking is currently unavailable due to network conditions. Please try again later.</string>
   <string name="staking_notification_new_validator_funds_transfer">Staking on the %1$s network with a new validator will automatically transfer all previously staked funds to this validator.</string>
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
@@ -918,6 +924,7 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">You do not have funds to sell. Top up your account to be able to sell funds from it.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not supported by current providers, but we are working to add more options.</string>
+  <string name="token_button_unavailability_reason_out_od_date_balance">The displayed balance might be outdated due to caching.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) on the %s network is complete.</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not supported by current providers, but we are working to add more options.</string>
@@ -1107,6 +1114,7 @@
   <string name="warning_some_token_balances_not_updated">Some token balances could not be updated</string>
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
+  <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
