@@ -208,7 +208,11 @@ sealed class TokenItemState {
             )
         }
 
-        data class TextContent(val text: String, val isAvailable: Boolean = true) : FiatAmountState()
+        data class TextContent(
+            val text: String,
+            val isAvailable: Boolean = true,
+            val isFlickering: Boolean = false,
+        ) : FiatAmountState()
 
         data object Loading : FiatAmountState()
 
