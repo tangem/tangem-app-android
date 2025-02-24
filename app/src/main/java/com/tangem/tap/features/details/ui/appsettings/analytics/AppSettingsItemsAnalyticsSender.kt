@@ -2,13 +2,13 @@ package com.tangem.tap.features.details.ui.appsettings.analytics
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState
-import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
-@ViewModelScoped
+@ComponentScoped
 internal class AppSettingsItemsAnalyticsSender @Inject constructor(
     private val analyticsHandler: AnalyticsEventHandler,
 ) {
