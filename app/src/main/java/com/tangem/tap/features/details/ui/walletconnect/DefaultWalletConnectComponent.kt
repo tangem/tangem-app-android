@@ -49,7 +49,7 @@ internal class DefaultWalletConnectComponent @AssistedInject constructor(
     }
 
     override fun newState(state: WalletConnectState) {
-        screenState?.value = model.updateState(state)
+        screenState.value = model.updateState(state)
     }
 
     @Composable
