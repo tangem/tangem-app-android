@@ -24,8 +24,8 @@ import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorCom
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.coderecovery.api.AccessCodeRecoveryComponent
-import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
-import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
+import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
+import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.features.home.api.HomeComponent
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
@@ -69,6 +69,8 @@ internal class ChildFactory @Inject constructor(
     private val cardSettingsComponentFactory: CardSettingsComponent.Factory,
     private val appCurrencySelectorComponentFactory: AppCurrencySelectorComponent.Factory,
     private val appSettingsComponentFactory: AppSettingsComponent.Factory,
+    private val securityModeComponentFactory: SecurityModeComponent.Factory,
+    private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val walletRouter: WalletRouter,
     private val testerRouter: TesterRouter,
     private val pushNotificationRouter: PushNotificationsRouter,
@@ -319,14 +321,33 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = appSettingsComponentFactory,
                 )
             }
+            is AppRoute.DetailsSecurity -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = SecurityModeComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = securityModeComponentFactory,
+                )
+            }
+            is AppRoute.ResetToFactory -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = ResetCardComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cardId = route.cardId,
+                        isActiveBackupStatus = route.isActiveBackupStatus,
+                        backupCardsCount = route.backupCardsCount,
+                    ),
+                    componentFactory = resetCardComponentFactory,
+                )
+            }
             is AppRoute.SaveWallet,
-            is AppRoute.DetailsSecurity,
             is AppRoute.OnboardingNote,
             is AppRoute.OnboardingOther,
             is AppRoute.OnboardingTwins,
             is AppRoute.OnboardingWallet,
             is AppRoute.ReferralProgram,
-            is AppRoute.ResetToFactory,
             is AppRoute.Wallet,
             is AppRoute.PushNotification,
             -> error("Unsupported route: $route")
@@ -396,7 +417,13 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.DetailsSecurity -> {
-                route.asFragmentChild(Provider { SecurityModeFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = SecurityModeComponent.Params(
+                        userWalletId = route.userWalletId,
+                    ),
+                    componentFactory = securityModeComponentFactory,
+                )
             }
             is AppRoute.Disclaimer -> {
                 route.asComponentChild(
@@ -451,7 +478,16 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { ReferralFragment() })
             }
             is AppRoute.ResetToFactory -> {
-                route.asFragmentChild(Provider { ResetCardFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = ResetCardComponent.Params(
+                        userWalletId = route.userWalletId,
+                        cardId = route.cardId,
+                        isActiveBackupStatus = route.isActiveBackupStatus,
+                        backupCardsCount = route.backupCardsCount,
+                    ),
+                    componentFactory = resetCardComponentFactory,
+                )
             }
             is AppRoute.Swap -> {
                 route.asComponentChild(
