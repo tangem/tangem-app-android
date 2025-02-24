@@ -62,7 +62,28 @@ internal class DefaultNetworksStatusesStore(
     }
 
     override suspend fun getSyncOrNull(key: UserWalletId): Set<NetworkStatus>? {
-        return runtimeDataStore.getSyncOrNull(key = provideStringKey(key))
+        val runtimeStatuses = runtimeDataStore.getSyncOrNull(key = provideStringKey(key)) ?: return null
+
+        val networks = runtimeStatuses.map(NetworkStatus::network).toSet()
+
+        val cachedStatuses = persistenceDataStore.data.firstOrNull()
+            ?.get(key.stringValue)
+            ?.mapNotNullTo(mutableSetOf()) { cached ->
+                val network = networks.firstOrNull {
+                    it.id == cached.networkId &&
+                        it.derivationPath == NetworkDerivationPathConverter.convert(cached.derivationPath)
+                }
+                    ?: return@mapNotNullTo null
+
+                NetworkStatusConverter(network = network, isCached = true).convert(value = cached)
+            }
+            .orEmpty()
+
+        return mergeStatuses(
+            networks = networks,
+            cachedStatuses = cachedStatuses,
+            runtimeStatuses = runtimeStatuses,
+        )
     }
 
     override suspend fun store(key: UserWalletId, value: NetworkStatus) {
