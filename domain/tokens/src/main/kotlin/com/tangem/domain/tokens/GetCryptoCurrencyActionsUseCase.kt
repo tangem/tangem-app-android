@@ -2,6 +2,7 @@ package com.tangem.domain.tokens
 
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.StoryContentIds
 import com.tangem.domain.staking.model.StakingAvailability
@@ -50,7 +51,7 @@ class GetCryptoCurrencyActionsUseCase(
                 currencyStatusOperations.getPrimaryCurrencyStatusFlow(userWallet.walletId, includeQuotes = false)
             } else {
                 currencyStatusOperations.getNetworkCoinFlow(
-                    userWallet.walletId,
+                    userWalletId = userWallet.walletId,
                     networkId = networkId,
                     derivationPath = cryptoCurrencyStatus.currency.network.derivationPath,
                     includeQuotes = false,
@@ -111,6 +112,10 @@ class GetCryptoCurrencyActionsUseCase(
         }
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.Unreachable) {
             return getActionsForUnreachableCurrency(userWallet, cryptoCurrencyStatus, requirements)
+        }
+
+        if (cryptoCurrencyStatus.value.source != StatusSource.ACTUAL) {
+            return getActionsForOutdatedData(userWallet, cryptoCurrencyStatus, requirements)
         }
 
         val activeList = mutableListOf<TokenActionsState.ActionState>()
@@ -255,6 +260,61 @@ class GetCryptoCurrencyActionsUseCase(
         actionsList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
 
         return actionsList
+    }
+
+    private suspend fun getActionsForOutdatedData(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        requirements: AssetRequirementsCondition?,
+    ): List<TokenActionsState.ActionState> {
+        val activeList = mutableListOf<TokenActionsState.ActionState>()
+
+        // copy address
+        if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
+            activeList.add(TokenActionsState.ActionState.CopyAddress(ScenarioUnavailabilityReason.None))
+        }
+
+        // receive
+        if (isAddressAvailable(cryptoCurrencyStatus.value.networkAddress)) {
+            val scenario = getReceiveScenario(requirements)
+            activeList.add(TokenActionsState.ActionState.Receive(scenario))
+        }
+
+        // swap
+        activeList.add(
+            TokenActionsState.ActionState.Swap(
+                unavailabilityReason = ScenarioUnavailabilityReason.UsedOutdatedData,
+                showBadge = false,
+            ),
+        )
+
+        // buy
+        if (rampManager.availableForBuy(userWallet.scanResponse, userWallet.walletId, cryptoCurrencyStatus.currency)) {
+            activeList.add(TokenActionsState.ActionState.Buy(ScenarioUnavailabilityReason.None))
+        } else {
+            activeList.add(
+                TokenActionsState.ActionState.Buy(
+                    ScenarioUnavailabilityReason.BuyUnavailable(
+                        cryptoCurrencyName = cryptoCurrencyStatus.currency.name,
+                    ),
+                ),
+            )
+        }
+
+        // staking
+        activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.UsedOutdatedData, null))
+
+        // send
+        activeList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.UsedOutdatedData))
+
+        // region sell
+        activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.UsedOutdatedData))
+        // endregion
+
+        // hide
+        activeList.add(TokenActionsState.ActionState.HideToken(ScenarioUnavailabilityReason.None))
+
+        return activeList
     }
 
     private fun getReceiveScenario(requirements: AssetRequirementsCondition?): ScenarioUnavailabilityReason {
