@@ -44,7 +44,7 @@ internal class StakingInfoNotificationsFactory(
         addStakingLowBalanceNotification(prevState, actionAmount)
 
         when (prevState.actionType) {
-            StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
+            is StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
             is StakingActionCommonType.Exit -> addExitInfoNotifications()
             is StakingActionCommonType.Pending -> addPendingInfoNotifications(prevState)
         }
