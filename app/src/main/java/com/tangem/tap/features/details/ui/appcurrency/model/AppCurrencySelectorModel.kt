@@ -1,35 +1,38 @@
-package com.tangem.tap.features.details.ui.appcurrency
+package com.tangem.tap.features.details.ui.appcurrency.model
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
 import com.tangem.domain.appcurrency.GetAvailableCurrenciesUseCase
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.SelectAppCurrencyUseCase
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorIntents
+import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorState
+import com.tangem.tap.features.details.ui.appcurrency.AppCurrencySelectorStateHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@HiltViewModel
-internal class AppCurrencySelectorViewModel @Inject constructor(
+@Stable
+@ComponentScoped
+internal class AppCurrencySelectorModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getAvailableCurrenciesUseCase: GetAvailableCurrenciesUseCase,
     private val selectAppCurrencyUseCase: SelectAppCurrencyUseCase,
     private val router: AppRouter,
-    private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
-) : ViewModel(), AppCurrencySelectorIntents {
+) : Model(), AppCurrencySelectorIntents {
 
     private val stateController = AppCurrencySelectorStateHolder(
         intents = this,
         onSubscription = { fetchCurrencies() },
-        stateFlowScope = viewModelScope,
+        stateFlowScope = modelScope,
     )
 
     val uiState: StateFlow<AppCurrencySelectorState> = stateController.stateFlow
@@ -47,7 +50,7 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
     }
 
     override fun onCurrencyClick(currency: AppCurrencySelectorState.Currency) {
-        viewModelScope.launch(dispatchers.io) {
+        modelScope.launch(dispatchers.io) {
             selectAppCurrencyUseCase(currency.id)
                 .onRight {
                     analyticsEventHandler.send(
@@ -63,7 +66,7 @@ internal class AppCurrencySelectorViewModel @Inject constructor(
     }
 
     private fun fetchCurrencies() {
-        viewModelScope.launch(dispatchers.io) {
+        modelScope.launch(dispatchers.io) {
             val availableCurrencies = getAvailableCurrenciesUseCase()
                 .onRight(stateController::updateStateWithAvailableCurrencies)
                 .getOrNull()
