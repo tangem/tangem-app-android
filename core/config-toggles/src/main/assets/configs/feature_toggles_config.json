@@ -46,5 +46,9 @@
     {
         "name": "BALANCES_CACHING_ENABLED",
         "version": "5.21.0"
+    },
+    {
+        "name": "NFT_ENABLED",
+        "version": "undefined"
     }
 ]
