@@ -46,14 +46,6 @@ internal class DefaultNetworksStatusesStore(
 
         if (cachedStatuses.isNotEmpty()) {
             send(cachedStatuses)
-
-            /**
-             * Required for storing cache data.
-             * This will help to recognize networks that are still uploaded.
-             *
-             * @see mergeStatuses
-             */
-            storeAll(key = key, values = cachedStatuses)
         }
 
         runtimeDataStore.get(provideStringKey(key))
@@ -70,7 +62,28 @@ internal class DefaultNetworksStatusesStore(
     }
 
     override suspend fun getSyncOrNull(key: UserWalletId): Set<NetworkStatus>? {
-        return runtimeDataStore.getSyncOrNull(key = provideStringKey(key))
+        val runtimeStatuses = runtimeDataStore.getSyncOrNull(key = provideStringKey(key)) ?: return null
+
+        val networks = runtimeStatuses.map(NetworkStatus::network).toSet()
+
+        val cachedStatuses = persistenceDataStore.data.firstOrNull()
+            ?.get(key.stringValue)
+            ?.mapNotNullTo(mutableSetOf()) { cached ->
+                val network = networks.firstOrNull {
+                    it.id == cached.networkId &&
+                        it.derivationPath == NetworkDerivationPathConverter.convert(cached.derivationPath)
+                }
+                    ?: return@mapNotNullTo null
+
+                NetworkStatusConverter(network = network, isCached = true).convert(value = cached)
+            }
+            .orEmpty()
+
+        return mergeStatuses(
+            networks = networks,
+            cachedStatuses = cachedStatuses,
+            runtimeStatuses = runtimeStatuses,
+        )
     }
 
     override suspend fun store(key: UserWalletId, value: NetworkStatus) {
@@ -118,8 +131,18 @@ internal class DefaultNetworksStatusesStore(
         return networks.mapNotNullTo(hashSetOf()) { network ->
             val runtimeStatus = runtimeStatuses.firstOrNull { it.network == network }
 
-            if (runtimeStatus == null || runtimeStatus.value is NetworkStatus.Unreachable) {
-                getCachedStatusIfPossible(cachedStatuses = cachedStatuses, network = network)
+            if (runtimeStatus == null) {
+                getCachedStatusIfPossible(
+                    cachedStatuses = cachedStatuses,
+                    network = network,
+                    source = StatusSource.CACHE,
+                )
+            } else if (runtimeStatus.value is NetworkStatus.Unreachable) {
+                getCachedStatusIfPossible(
+                    cachedStatuses = cachedStatuses,
+                    network = network,
+                    source = StatusSource.ONLY_CACHE,
+                )
                     ?: runtimeStatus
             } else {
                 runtimeStatus
@@ -127,12 +150,16 @@ internal class DefaultNetworksStatusesStore(
         }
     }
 
-    private fun getCachedStatusIfPossible(cachedStatuses: Set<NetworkStatus>, network: Network): NetworkStatus? {
+    private fun getCachedStatusIfPossible(
+        cachedStatuses: Set<NetworkStatus>,
+        network: Network,
+        source: StatusSource,
+    ): NetworkStatus? {
         val cached = cachedStatuses.firstOrNull { it.network == network } ?: return null
 
         val updatedCachedStatus = when (val status = cached.value) {
-            is NetworkStatus.NoAccount -> status.copy(source = StatusSource.ONLY_CACHE)
-            is NetworkStatus.Verified -> status.copy(source = StatusSource.ONLY_CACHE)
+            is NetworkStatus.NoAccount -> status.copy(source = source)
+            is NetworkStatus.Verified -> status.copy(source = source)
             is NetworkStatus.Unreachable,
             is NetworkStatus.MissedDerivation,
             -> null

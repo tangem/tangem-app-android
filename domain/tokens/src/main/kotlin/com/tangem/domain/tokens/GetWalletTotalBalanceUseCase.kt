@@ -7,15 +7,11 @@ import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.utils.lceLoading
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
-import com.tangem.domain.tokens.operations.CurrenciesStatusesLceOperations
+import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.TokenListFiatBalanceOperations
-import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
@@ -24,10 +20,7 @@ import kotlinx.coroutines.flow.transformLatest
 import timber.log.Timber
 
 class GetWalletTotalBalanceUseCase(
-    private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
-    private val networksRepository: NetworksRepository,
-    private val stakingRepository: StakingRepository,
+    private val currenciesStatusesOperations: BaseCurrenciesStatusesOperations,
 ) {
 
     operator fun invoke(
@@ -63,13 +56,12 @@ class GetWalletTotalBalanceUseCase(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(userWalletId: UserWalletId): LceFlow<TokenListError, TotalFiatBalance> {
-        val currenciesStatuses = getStatuses(userWalletId)
+        return currenciesStatusesOperations.getCurrenciesStatuses(userWalletId)
+            .transformLatest { maybeStatuses ->
+                val balance = createBalance(maybeStatuses)
 
-        return currenciesStatuses.transformLatest { maybeStatuses ->
-            val balance = createBalance(maybeStatuses)
-
-            emit(balance)
-        }
+                emit(balance)
+            }
     }
 
     private fun createBalance(
@@ -83,16 +75,5 @@ class GetWalletTotalBalanceUseCase(
         )
 
         operations.calculateFiatBalance()
-    }
-
-    private fun getStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
-        val operations = CurrenciesStatusesLceOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-        )
-
-        return operations.getCurrenciesStatuses(userWalletId)
     }
 }
