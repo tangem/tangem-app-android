@@ -11,6 +11,7 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBalance
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isSkipAmountEnter
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -45,12 +46,12 @@ internal class SetConfirmationStateInitTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         val actionType = when {
             isEnter -> StakingActionCommonType.Enter(
-                skipEnterAmount = isAmountEnterSkipped(prevState),
+                skipEnterAmount = isSkipAmountEnter(prevState.cryptoCurrencyBlockchainId),
             )
             isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled(prevState))
             else -> when (pendingAction?.type) {
                 StakingActionType.STAKE -> StakingActionCommonType.Enter(
-                    skipEnterAmount = isAmountEnterSkipped(prevState),
+                    skipEnterAmount = isSkipAmountEnter(prevState.cryptoCurrencyBlockchainId),
                 )
                 StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(
                     partiallyUnstakeDisabled = isPartiallyUnstakeDisabled(prevState),
@@ -99,9 +100,5 @@ internal class SetConfirmationStateInitTransformer(
         val min = exitAmount.minimum ?: return false
         val max = exitAmount.maximum ?: return false
         return !min.isPositive() && !max.isPositive()
-    }
-
-    private fun isAmountEnterSkipped(state: StakingUiState): Boolean {
-        return BlockchainUtils.isCardano(state.cryptoCurrencyBlockchainId)
     }
 }
