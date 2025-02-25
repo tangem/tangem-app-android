@@ -20,11 +20,11 @@ internal class TokenListOperations(
 
     fun getTokenListFlow(): Flow<Either<Error, TokenList>> {
         return combine(
-            getIsGrouped(),
-            getIsSortedByBalance(),
+            flow = getIsGrouped(),
+            flow2 = getIsSortedByBalance(),
         ) { isGrouped, isSortedByBalance ->
             either {
-                createTokenList(isGrouped.bind(), isSortedByBalance.bind())
+                createTokenList(isGrouped = isGrouped.bind(), isSortedByBalance = isSortedByBalance.bind())
             }
         }
     }
