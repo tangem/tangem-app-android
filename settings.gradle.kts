@@ -171,9 +171,10 @@ include(":features:onboarding")
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
+include(":features:referral:api")
 include(":features:referral:data")
 include(":features:referral:domain")
-include(":features:referral:presentation")
+include(":features:referral:impl")
 
 include(":features:swap:api")
 include(":features:swap:data")
