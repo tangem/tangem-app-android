@@ -13,7 +13,7 @@ import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
-import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
+import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.swap.SwapComponent
 import com.tangem.features.staking.api.StakingComponent
@@ -72,9 +72,9 @@ internal class ChildFactory @Inject constructor(
     private val securityModeComponentFactory: SecurityModeComponent.Factory,
     private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
+    private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
     private val walletRouter: WalletRouter,
     private val testerRouter: TesterRouter,
-    private val pushNotificationRouter: PushNotificationsRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
 ) {
 
@@ -350,13 +350,19 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = referralComponentFactory,
                 )
             }
+            is AppRoute.PushNotification -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = pushNotificationsComponentFactory,
+                )
+            }
             is AppRoute.SaveWallet,
             is AppRoute.OnboardingNote,
             is AppRoute.OnboardingOther,
             is AppRoute.OnboardingTwins,
             is AppRoute.OnboardingWallet,
             is AppRoute.Wallet,
-            is AppRoute.PushNotification,
             -> error("Unsupported route: $route")
         }
         // endregion
@@ -551,7 +557,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.PushNotification -> {
-                route.asFragmentChild(Provider { pushNotificationRouter.entryFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = pushNotificationsComponentFactory,
+                )
             }
             is AppRoute.WalletSettings -> {
                 route.asComponentChild(
