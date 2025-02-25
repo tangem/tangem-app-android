@@ -62,7 +62,6 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.google.GoogleServicesHelper
@@ -175,9 +174,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
-
-    @Inject
-    lateinit var pushNotificationsRouter: PushNotificationsRouter
 
     @Inject
     lateinit var cardRepository: CardRepository
