@@ -13,6 +13,7 @@ dependencies {
 
     /** Libs */
     implementation(projects.core.utils)
+    implementation(projects.core.decompose)
 
     /** Core modules */
     implementation(projects.libs.crypto)
