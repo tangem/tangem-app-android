@@ -1,4 +1,4 @@
-package com.tangem.features.pushnotifications.impl.presentation.viewmodel
+package com.tangem.features.pushnotifications.impl.model
 
 internal interface PushNotificationsClickIntents {
     fun onRequest()
