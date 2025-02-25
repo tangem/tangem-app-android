@@ -2,10 +2,12 @@
 
 package com.tangem.features.onboarding.v2.multiwallet.impl.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -106,7 +108,7 @@ fun WalletArtworks(
             }
         }
 
-        val circleColor = TangemTheme.colors.background.secondary
+        val circleColor = TangemTheme.colors.button.secondary
 
         Canvas(
             modifier = Modifier
@@ -451,11 +453,14 @@ private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeigh
     }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Preview(showBackground = true, widthDp = 360, heightDp = 640, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview() {
     TangemThemePreview {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .background(TangemTheme.colors.background.primary)
+                .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             var state: WalletArtworksState by remember { mutableStateOf(WalletArtworksState.Folded) }
