@@ -58,8 +58,7 @@ internal class SetBalancesAndLimitsTransformer(
                 id = id,
                 title = title,
                 imageResId = imageResId,
-                onRenameClick = onRenameClick,
-                onDeleteClick = onDeleteClick,
+                dropDownItems = dropDownItems,
             )
         }
     }
@@ -71,8 +70,7 @@ internal class SetBalancesAndLimitsTransformer(
                 title = title,
                 additionalInfo = createAdditionalInfo(visaCurrency),
                 imageResId = imageResId,
-                onRenameClick = onRenameClick,
-                onDeleteClick = onDeleteClick,
+                dropDownItems = dropDownItems,
                 balance = visaCurrency.balances.available.format {
                     crypto(visaCurrency.symbol, visaCurrency.decimals)
                 },
