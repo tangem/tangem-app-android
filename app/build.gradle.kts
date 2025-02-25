@@ -146,7 +146,7 @@ dependencies {
 
     /** Features */
     implementation(projects.features.onboarding)
-    implementation(projects.features.referral.presentation)
+    implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)
     implementation(projects.features.swap.api)
