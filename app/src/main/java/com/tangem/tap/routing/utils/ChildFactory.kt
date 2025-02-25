@@ -3,7 +3,7 @@ package com.tangem.tap.routing.utils
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.feature.qrscanning.QrScanningComponent
-import com.tangem.feature.referral.ReferralFragment
+import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
 import com.tangem.feature.walletsettings.component.WalletSettingsComponent
 import com.tangem.features.details.component.DetailsComponent
@@ -71,6 +71,7 @@ internal class ChildFactory @Inject constructor(
     private val appSettingsComponentFactory: AppSettingsComponent.Factory,
     private val securityModeComponentFactory: SecurityModeComponent.Factory,
     private val resetCardComponentFactory: ResetCardComponent.Factory,
+    private val referralComponentFactory: ReferralComponent.Factory,
     private val walletRouter: WalletRouter,
     private val testerRouter: TesterRouter,
     private val pushNotificationRouter: PushNotificationsRouter,
@@ -342,12 +343,18 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = resetCardComponentFactory,
                 )
             }
+            is AppRoute.ReferralProgram -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = ReferralComponent.Params(route.userWalletId),
+                    componentFactory = referralComponentFactory,
+                )
+            }
             is AppRoute.SaveWallet,
             is AppRoute.OnboardingNote,
             is AppRoute.OnboardingOther,
             is AppRoute.OnboardingTwins,
             is AppRoute.OnboardingWallet,
-            is AppRoute.ReferralProgram,
             is AppRoute.Wallet,
             is AppRoute.PushNotification,
             -> error("Unsupported route: $route")
@@ -475,7 +482,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.ReferralProgram -> {
-                route.asFragmentChild(Provider { ReferralFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = ReferralComponent.Params(route.userWalletId),
+                    componentFactory = referralComponentFactory,
+                )
             }
             is AppRoute.ResetToFactory -> {
                 route.asComponentChild(
