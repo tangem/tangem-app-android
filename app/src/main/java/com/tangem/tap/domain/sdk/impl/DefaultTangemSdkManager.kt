@@ -490,6 +490,7 @@ internal class DefaultTangemSdkManager(
                     activationInput = activationInput,
                     coroutineScope = this,
                 ),
+                cardId = activationInput.cardId,
                 initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
             )
         }
@@ -502,6 +503,7 @@ internal class DefaultTangemSdkManager(
             runnable = VisaCustomerWalletApproveTask(
                 visaDataForApprove = visaDataForApprove,
             ),
+            cardId = visaDataForApprove.customerWalletCardId,
             initialMessage = Message(resources.getStringSafe(R.string.initial_message_tap_header)),
         )
     }
