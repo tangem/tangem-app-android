@@ -4,17 +4,13 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.core.utils.toLce
-import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.error.mapper.mapToTokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.tokens.operations.CurrenciesStatusesCachedOperations
-import com.tangem.domain.tokens.operations.CurrenciesStatusesLceOperations
+import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.TokenListOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
-import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emitAll
@@ -23,45 +19,27 @@ import kotlinx.coroutines.flow.transformLatest
 
 class GetTokenListUseCase(
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
-    private val networksRepository: NetworksRepository,
-    private val stakingRepository: StakingRepository,
-    private val tokensFeatureToggles: TokensFeatureToggles,
+    private val currenciesStatusesOperations: BaseCurrenciesStatusesOperations,
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun launch(userWalletId: UserWalletId): LceFlow<TokenListError, TokenList> {
-        val statusesFlow = if (tokensFeatureToggles.isBalancesCachingEnabled) {
-            CurrenciesStatusesCachedOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-            ).getCurrenciesStatuses(userWalletId)
-        } else {
-            CurrenciesStatusesLceOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-            ).getCurrenciesStatuses(userWalletId)
-        }
-
-        return statusesFlow.transformLatest { maybeCurrencies ->
-            maybeCurrencies.fold(
-                ifLoading = { maybeContent ->
-                    if (maybeContent != null) {
-                        emitAll(createTokenListLce(userWalletId, maybeContent, isCurrenciesLoading = true))
-                    } else {
-                        emit(lceLoading())
-                    }
-                },
-                ifContent = { content ->
-                    emitAll(createTokenListLce(userWalletId, content, isCurrenciesLoading = false))
-                },
-                ifError = { error -> emit(error.lceError()) },
-            )
-        }
+        return currenciesStatusesOperations.getCurrenciesStatuses(userWalletId)
+            .transformLatest { maybeCurrencies ->
+                maybeCurrencies.fold(
+                    ifLoading = { maybeContent ->
+                        if (maybeContent != null) {
+                            emitAll(createTokenListLce(userWalletId, maybeContent, isCurrenciesLoading = true))
+                        } else {
+                            emit(lceLoading())
+                        }
+                    },
+                    ifContent = { content ->
+                        emitAll(createTokenListLce(userWalletId, content, isCurrenciesLoading = false))
+                    },
+                    ifError = { error -> emit(error.lceError()) },
+                )
+            }
     }
 
     private fun createTokenListLce(
