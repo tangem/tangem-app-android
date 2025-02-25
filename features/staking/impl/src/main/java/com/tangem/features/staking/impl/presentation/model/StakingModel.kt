@@ -36,7 +36,6 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -45,8 +44,6 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
-import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -72,6 +69,7 @@ import com.tangem.features.staking.impl.presentation.state.transformers.validato
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
@@ -108,7 +106,6 @@ internal class StakingModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
-    private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
@@ -123,7 +120,7 @@ internal class StakingModel @Inject constructor(
     private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerStakingRouter,
-    private val appRouter: AppRouter,
+    appRouter: AppRouter,
 ) : Model(), StakingClickIntents {
 
     val uiState: StateFlow<StakingUiState> = stateController.uiState
@@ -239,7 +236,7 @@ internal class StakingModel @Inject constructor(
                 return
             }
             isInitialInfoStep && noBalanceState -> {
-                stateController.update(
+                val list = buildList {
                     SetConfirmationStateInitTransformer(
                         isEnter = true,
                         isExplicitExit = false,
@@ -248,8 +245,27 @@ internal class StakingModel @Inject constructor(
                         stakingApproval = stakingApproval,
                         stakingAllowance = stakingAllowance,
                         yieldArgs = yield.args,
-                    ),
-                )
+                    ).let(::add)
+                    if (BlockchainUtils.isSkipAmountEnter(uiState.value.cryptoCurrencyBlockchainId)) {
+                        ValidatorSelectChangeTransformer(
+                            selectedValidator = yield.preferredValidators.firstOrNull(),
+                            yield = yield,
+                        ).let(::add)
+                        SetAmountDataTransformer(
+                            clickIntents = this@StakingModel,
+                            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                            userWalletProvider = Provider { userWallet },
+                            appCurrencyProvider = Provider { appCurrency },
+                        ).let(::add)
+                        AmountMaxValueStateTransformer(
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            minimumTransactionAmount = minimumTransactionAmount,
+                            actionType = uiState.value.actionType,
+                            yield = yield,
+                        ).let(::add)
+                    }
+                }
+                stateController.updateAll(*list.toTypedArray())
             }
         }
         stakingStateRouter.onNextClick()
@@ -633,16 +649,6 @@ internal class StakingModel @Inject constructor(
             } else {
                 null
             }
-            val validation = amount?.let {
-                validateTransactionUseCase(
-                    userWalletId = userWalletId,
-                    amount = amount.convertToSdkAmount(cryptoCurrencyStatus.currency),
-                    fee = feeState?.fee,
-                    memo = null,
-                    destination = "",
-                    network = cryptoCurrencyStatus.currency.network,
-                ).leftOrNull()
-            }
 
             val balanceAfterTransaction = calculateBalanceAfterTransaction(
                 amount = amount.orZero(),
@@ -663,7 +669,6 @@ internal class StakingModel @Inject constructor(
                     appCurrencyProvider = Provider { appCurrency },
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     currencyWarning = currencyWarning,
-                    validatorError = validation,
                     currencyCheck = currencyStatus,
                     isSubtractAvailable = isAmountSubtractAvailable,
                     feeError = feeError,
@@ -1021,7 +1026,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private fun isExplicitExit(balanceType: BalanceType, pendingAction: PendingAction?): Boolean {
-        return balanceType == BalanceType.STAKED && pendingAction?.type != StakingActionType.RESTAKE
+        return balanceType == BalanceType.STAKED && pendingAction?.type?.isRestake == false
     }
 
     private fun isAssentState(): Boolean {
