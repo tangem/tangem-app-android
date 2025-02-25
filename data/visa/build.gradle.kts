@@ -29,7 +29,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
 
     /** Project - Libs */
-    debugImplementation(projects.libs.visa)
+    implementation(projects.libs.visa)
 
     /** Libs - Other */
     implementation(deps.kotlin.coroutines)
