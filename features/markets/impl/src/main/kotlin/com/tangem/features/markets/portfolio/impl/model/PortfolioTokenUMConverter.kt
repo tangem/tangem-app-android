@@ -48,33 +48,14 @@ internal class PortfolioTokenUMConverter(
 
     private fun quickActions(cryptoData: PortfolioData.CryptoCurrencyData): PortfolioTokenUM.QuickActions {
         return PortfolioTokenUM.QuickActions(
-            actions = listOfNotNull(
-                QuickActionUM.Buy.takeIf {
-                    cryptoData.actions.any {
-                        it is TokenActionsState.ActionState.Buy &&
-                            it.unavailabilityReason == ScenarioUnavailabilityReason.None
-                    }
-                },
-                QuickActionUM.Exchange.takeIf {
-                    cryptoData.actions.any {
-                        it is TokenActionsState.ActionState.Swap &&
-                            it.unavailabilityReason == ScenarioUnavailabilityReason.None
-                    }
-                },
-                QuickActionUM.Receive.takeIf {
-                    cryptoData.actions.any {
-                        it is TokenActionsState.ActionState.Receive &&
-                            it.unavailabilityReason == ScenarioUnavailabilityReason.None
-                    }
-                },
-            ).toImmutableList(),
+            actions = toQuickActions(cryptoData.actions),
             onQuickActionClick = {
                 when (it) {
                     QuickActionUM.Buy -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Buy,
                         cryptoCurrencyData = cryptoData,
                     )
-                    QuickActionUM.Exchange -> tokenActionsHandler.handle(
+                    is QuickActionUM.Exchange -> tokenActionsHandler.handle(
                         action = TokenActionsBSContentUM.Action.Exchange,
                         cryptoCurrencyData = cryptoData,
                     )
@@ -94,4 +75,17 @@ internal class PortfolioTokenUMConverter(
             },
         )
     }
+
+    private fun toQuickActions(actions: List<TokenActionsState.ActionState>) = buildList {
+        actions.forEach { action ->
+            if (action.unavailabilityReason == ScenarioUnavailabilityReason.None) {
+                when (action) {
+                    is TokenActionsState.ActionState.Buy -> QuickActionUM.Buy
+                    is TokenActionsState.ActionState.Swap -> QuickActionUM.Exchange(showBadge = action.showBadge)
+                    is TokenActionsState.ActionState.Receive -> QuickActionUM.Receive
+                    else -> null
+                }?.let(::add)
+            }
+        }
+    }.toImmutableList()
 }
