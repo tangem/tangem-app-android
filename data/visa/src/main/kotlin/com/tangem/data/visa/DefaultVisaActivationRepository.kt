@@ -1,5 +1,6 @@
 package com.tangem.data.visa
 
+import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.converter.AccessCodeDataConverter
 import com.tangem.data.visa.converter.VisaActivationStatusConverter
 import com.tangem.datasource.api.common.response.ApiResponseError
@@ -28,6 +29,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val accessCodeDataConverter: AccessCodeDataConverter,
     private val visaAuthRepository: VisaAuthRepository,
+    private val visaLibLoader: VisaLibLoader,
 ) : VisaActivationRepository {
 
     override suspend fun getActivationRemoteState(): VisaActivationRemoteState = withContext(dispatcherProvider.io) {
@@ -190,6 +192,10 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
                 )
             }
         }
+    }
+
+    override suspend fun getPinCodeRsaEncryptionPublicKey(): String {
+        return visaLibLoader.getOrCreateConfig().rsaPublicKey
     }
 
     private suspend fun <T : Any> request(requestBlock: suspend () -> T): T {
