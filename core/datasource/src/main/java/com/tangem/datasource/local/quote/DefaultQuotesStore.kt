@@ -7,6 +7,7 @@ import com.tangem.datasource.local.quote.converter.QuoteConverter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -110,7 +111,7 @@ internal class DefaultQuotesStore(
 
     private suspend fun storeInRuntimeStore(values: Set<Quote>) {
         runtimeStore.update(default = emptySet()) { saved ->
-            (saved + values).distinctBy { it.rawCurrencyId }.toSet()
+            saved.addOrReplace(items = values) { prev, new -> prev.rawCurrencyId == new.rawCurrencyId }
         }
     }
 
