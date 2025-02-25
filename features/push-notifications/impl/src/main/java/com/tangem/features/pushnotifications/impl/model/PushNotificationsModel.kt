@@ -1,26 +1,29 @@
-package com.tangem.features.pushnotifications.impl.presentation.viewmodel
+package com.tangem.features.pushnotifications.impl.model
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.model.Model
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.domain.settings.NeverToInitiallyAskPermissionUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import com.tangem.features.pushnotifications.impl.navigation.DefaultPushNotificationsRouter
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
-@HiltViewModel
-internal class PushNotificationViewModel @Inject constructor(
+@Stable
+@ComponentScoped
+class PushNotificationsModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
-    private val router: DefaultPushNotificationsRouter,
+    private val appRouter: AppRouter,
     private val analyticHandler: AnalyticsEventHandler,
-) : ViewModel(), PushNotificationsClickIntents {
+) : Model(), PushNotificationsClickIntents {
 
     override fun onRequest() {
         analyticHandler.send(
@@ -32,10 +35,10 @@ internal class PushNotificationViewModel @Inject constructor(
         analyticHandler.send(
             PushNotificationAnalyticEvents.ButtonLater(AnalyticsParam.ScreensSources.Stories),
         )
-        viewModelScope.launch {
+        modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            router.openHome()
+            appRouter.push(AppRoute.Home)
         }
     }
 
@@ -43,10 +46,10 @@ internal class PushNotificationViewModel @Inject constructor(
         analyticHandler.send(
             PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true),
         )
-        viewModelScope.launch {
+        modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            router.openHome()
+            appRouter.push(AppRoute.Home)
         }
     }
 
@@ -54,10 +57,10 @@ internal class PushNotificationViewModel @Inject constructor(
         analyticHandler.send(
             PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false),
         )
-        viewModelScope.launch {
+        modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
             neverToInitiallyAskPermissionUseCase(PUSH_PERMISSION)
-            router.openHome()
+            appRouter.push(AppRoute.Home)
         }
     }
 }
