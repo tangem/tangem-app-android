@@ -218,12 +218,12 @@ internal class SwapNotificationsFactory(
         if (status is CryptoCurrencyStatus.NoAccount) {
             val amount = quoteModel.toTokenInfo.tokenAmount.value
             val amountToCreateAccount = status.amountToCreateAccount
-            val currencyTo = quoteModel.fromTokenInfo.cryptoCurrencyStatus.currency
+            val currencyTo = quoteModel.toTokenInfo.cryptoCurrencyStatus.currency
             if (amount < amountToCreateAccount) {
                 add(
                     SwapNotificationUM.Warning.NeedReserveToCreateAccount(
-                        status.amountToCreateAccount.parseBigDecimal(currencyTo.decimals),
-                        currencyTo.symbol,
+                        receiveAmount = status.amountToCreateAccount.parseBigDecimal(currencyTo.decimals),
+                        receiveToken = currencyTo.symbol,
                     ),
                 )
             }
