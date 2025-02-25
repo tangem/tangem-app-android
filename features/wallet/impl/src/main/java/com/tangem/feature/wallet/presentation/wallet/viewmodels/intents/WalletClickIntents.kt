@@ -122,7 +122,7 @@ internal class WalletClickIntents @Inject constructor(
             SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = showRefreshState),
         )
 
-        viewModelScope.launch(dispatchers.main) {
+        viewModelScope.launch {
             val maybeFetchResult = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 fetchCardTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
             } else {
