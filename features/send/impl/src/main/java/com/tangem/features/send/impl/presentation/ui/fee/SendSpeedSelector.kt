@@ -25,7 +25,7 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.previewdata.FeeStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 
 @Suppress("LongMethod")
 @Composable
