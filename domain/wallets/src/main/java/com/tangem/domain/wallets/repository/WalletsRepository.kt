@@ -29,4 +29,10 @@ interface WalletsRepository {
     suspend fun acceptSeedPhraseSecondNotification(userWalletId: UserWalletId)
 
     suspend fun markWallet2WasCreated(userWalletId: UserWalletId)
+
+    fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean>
+
+    suspend fun enableNFT(userWalletId: UserWalletId)
+
+    suspend fun disableNFT(userWalletId: UserWalletId)
 }
