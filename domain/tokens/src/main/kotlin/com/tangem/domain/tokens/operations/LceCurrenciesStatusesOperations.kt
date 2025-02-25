@@ -20,14 +20,16 @@ import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
-internal class CurrenciesStatusesLceOperations(
+class LceCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
-) {
+) : BaseCurrenciesStatusesOperations {
 
-    fun getCurrenciesStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
+    override fun getCurrenciesStatuses(
+        userWalletId: UserWalletId,
+    ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
         return transformToCurrenciesStatuses(
             userWalletId = userWalletId,
             currenciesFlow = getWalletCurrencies(userWalletId),
@@ -49,7 +51,6 @@ internal class CurrenciesStatusesLceOperations(
                     maybeNetworkStatuses = null,
                     maybeQuotes = null,
                     maybeYieldBalances = null,
-
                 )
                 send(loadingCurrencies)
             }
@@ -217,7 +218,7 @@ internal class CurrenciesStatusesLceOperations(
         }
     }
 
-    companion object {
-        private const val RETRY_QUOTES_DELAY = 2000L
+    private companion object {
+        const val RETRY_QUOTES_DELAY = 2000L
     }
 }
