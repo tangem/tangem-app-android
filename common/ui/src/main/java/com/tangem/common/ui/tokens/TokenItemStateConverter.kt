@@ -15,6 +15,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
@@ -199,7 +200,11 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.Subtitle2State.TextContent(
-                        text = status.getFormattedCryptoAmount(includeStaking = true),
+                        text = status.getFormattedCryptoAmount(
+                            includeStaking = BlockchainUtils.isIncludeStakingTotalBalance(
+                                status.currency.network.id.value,
+                            ),
+                        ),
                         isFlickering = status.value.isFlickering(),
                     )
                 }
@@ -222,7 +227,12 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.FiatAmountState.Content(
-                        text = status.getFormattedFiatAmount(appCurrency = appCurrency, includeStaking = true),
+                        text = status.getFormattedFiatAmount(
+                            appCurrency = appCurrency,
+                            includeStaking = BlockchainUtils.isIncludeStakingTotalBalance(
+                                status.currency.network.id.value,
+                            ),
+                        ),
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
                             if (!status.getStakedBalance().isZero()) {
