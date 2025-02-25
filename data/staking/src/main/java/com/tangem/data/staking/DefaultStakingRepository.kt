@@ -237,7 +237,7 @@ internal class DefaultStakingRepository(
     ): StakingAction {
         return withContext(dispatchers.io) {
             val response = when (params.actionCommonType) {
-                StakingActionCommonType.Enter -> stakeKitApi.createEnterAction(
+                is StakingActionCommonType.Enter -> stakeKitApi.createEnterAction(
                     createActionRequestBody(
                         userWalletId,
                         network,
@@ -267,7 +267,7 @@ internal class DefaultStakingRepository(
     ): StakingGasEstimate {
         return withContext(dispatchers.io) {
             val gasEstimateDTO = when (params.actionCommonType) {
-                StakingActionCommonType.Enter -> stakeKitApi.estimateGasOnEnter(
+                is StakingActionCommonType.Enter -> stakeKitApi.estimateGasOnEnter(
                     createActionRequestBody(
                         userWalletId,
                         network,
@@ -582,13 +582,14 @@ internal class DefaultStakingRepository(
             -> TransactionData.Compiled.Data.Bytes(unsignedTransaction.hexToBytes())
             Blockchain.BSC,
             Blockchain.Ethereum,
+            Blockchain.TON,
+            Blockchain.Cardano,
             -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
             Blockchain.Tron -> {
                 val tronStakeKitTransaction = tronStakeKitTransactionAdapter.fromJson(unsignedTransaction)
                     ?: error("Failed to parse Tron StakeKit transaction")
                 TransactionData.Compiled.Data.RawString(tronStakeKitTransaction.rawDataHex)
             }
-            Blockchain.TON -> TransactionData.Compiled.Data.RawString(unsignedTransaction)
             else -> error("Unsupported blockchain")
         }
     }
@@ -647,6 +648,7 @@ internal class DefaultStakingRepository(
         const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
         const val NEAR_INTEGRATION_ID = "near-near-native-staking"
         const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
+        const val CARDANO_INTEGRATION_ID = "cardano-ada-native-staking"
 
         const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
 
@@ -669,6 +671,7 @@ internal class DefaultStakingRepository(
             // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
             // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
             // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,
+            Blockchain.Cardano.run { id + toCoinId() } to CARDANO_INTEGRATION_ID,
         )
     }
 }
