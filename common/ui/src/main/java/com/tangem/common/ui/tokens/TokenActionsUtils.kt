@@ -14,28 +14,8 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
                 formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
             )
         }
-        is ScenarioUnavailabilityReason.PendingTransaction -> {
-            when (unavailabilityReason.withdrawalScenario) {
-                ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
-                    id = R.string.token_button_unavailability_reason_pending_transaction_send,
-                    formatArgs = wrappedList(unavailabilityReason.networkName),
-                )
-                ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
-                    id = R.string.token_button_unavailability_reason_pending_transaction_sell,
-                    formatArgs = wrappedList(unavailabilityReason.networkName),
-                )
-            }
-        }
-        is ScenarioUnavailabilityReason.EmptyBalance -> {
-            when (unavailabilityReason.withdrawalScenario) {
-                ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> resourceReference(
-                    id = R.string.token_button_unavailability_reason_empty_balance_send,
-                )
-                ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> resourceReference(
-                    id = R.string.token_button_unavailability_reason_empty_balance_sell,
-                )
-            }
-        }
+        is ScenarioUnavailabilityReason.PendingTransaction -> unavailabilityReason.getDescription()
+        is ScenarioUnavailabilityReason.EmptyBalance -> unavailabilityReason.getDescription()
         is ScenarioUnavailabilityReason.BuyUnavailable -> {
             resourceReference(
                 id = R.string.token_button_unavailability_reason_buy_unavailable,
@@ -62,8 +42,38 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
         ScenarioUnavailabilityReason.UnassociatedAsset -> resourceReference(
             id = R.string.warning_receive_blocked_hedera_token_association_required_message,
         )
+        ScenarioUnavailabilityReason.UsedOutdatedData -> {
+            resourceReference(id = R.string.token_button_unavailability_reason_out_od_date_balance)
+        }
         ScenarioUnavailabilityReason.None -> {
             throw IllegalArgumentException("The unavailability reason must be other than None")
         }
     }
+}
+
+private fun ScenarioUnavailabilityReason.PendingTransaction.getDescription(): TextReference {
+    return resourceReference(
+        id = when (withdrawalScenario) {
+            ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> {
+                R.string.token_button_unavailability_reason_pending_transaction_send
+            }
+            ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> {
+                R.string.token_button_unavailability_reason_pending_transaction_sell
+            }
+        },
+        formatArgs = wrappedList(networkName),
+    )
+}
+
+private fun ScenarioUnavailabilityReason.EmptyBalance.getDescription(): TextReference {
+    return resourceReference(
+        id = when (withdrawalScenario) {
+            ScenarioUnavailabilityReason.WithdrawalScenario.SEND -> {
+                R.string.token_button_unavailability_reason_empty_balance_send
+            }
+            ScenarioUnavailabilityReason.WithdrawalScenario.SELL -> {
+                R.string.token_button_unavailability_reason_empty_balance_sell
+            }
+        },
+    )
 }
