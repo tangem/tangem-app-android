@@ -10,7 +10,6 @@ import com.tangem.features.markets.portfolio.impl.ui.state.MyPortfolioUM
 import com.tangem.features.markets.portfolio.impl.ui.state.PortfolioTokenUM
 import com.tangem.features.markets.portfolio.impl.ui.state.QuickActionUM
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 
 internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfolioUM> {
 
@@ -61,7 +60,11 @@ internal class PreviewMyPortfolioUMProvider : PreviewParameterProvider<MyPortfol
         ),
         isQuickActionsShown = false,
         quickActions = PortfolioTokenUM.QuickActions(
-            actions = QuickActionUM.entries.toImmutableList(),
+            actions = persistentListOf(
+                QuickActionUM.Buy,
+                QuickActionUM.Exchange(showBadge = true),
+                QuickActionUM.Receive,
+            ),
             onQuickActionClick = {},
             onQuickActionLongClick = {},
         ),
