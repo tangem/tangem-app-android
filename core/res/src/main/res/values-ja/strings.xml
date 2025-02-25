@@ -268,6 +268,8 @@
   <string name="express_exchange_by">%sによる交換</string>
   <string name="express_exchange_notification_failed_text">返金を受けるには、プロバイダーのウェブサイトにアクセスしてください。</string>
   <string name="express_exchange_notification_failed_title">プロバイダーによる操作が失敗しました。</string>
+  <string name="express_exchange_notification_long_transaction_time_text">スワップに予想以上の時間がかかっています。プロバイダーサポートにお問い合わせください。</string>
+  <string name="express_exchange_notification_long_transaction_time_title">長い取引時間</string>
   <string name="express_exchange_notification_refund_text">OKXまたはブリッジのルールにより、取引金額は%1$sでウォレットに返金されました。%2$s</string>
   <string name="express_exchange_notification_refund_title">金額は %1$s（%2$sネットワーク）で返金されました</string>
   <string name="express_exchange_notification_verification_text">確認するには、プロバイダーのウェブサイトにアクセスしてください。</string>
@@ -664,6 +666,8 @@
   <string name="scan_card_settings_message">カードまたはリングをスキャンして設定を変更します。変更はスキャンしたカードまたはリングにのみ影響し、ウォレットに関連付けられている他のデバイスには影響しません。</string>
   <string name="scan_card_settings_title">Tangemを準備してください！</string>
   <string name="security_alert_title">セキュリティ警告</string>
+  <string name="seed_warning_no">いいえ、しませんでした</string>
+  <string name="seed_warning_yes">はい、案内してください</string>
   <string name="selling_insufficient_balance_alert_message">暗号通貨を売却するための十分な資金が残高にありません。続行するには希望の資産を入金してください。</string>
   <string name="selling_insufficient_balance_alert_title">残高不足</string>
   <string name="selling_regional_restriction_alert_message">現在、お住まいの地域では暗号資産の売却はご利用いただけません。このオプションをすぐにご利用いただけるよう積極的に取り組んでいますので、お楽しみに！</string>
@@ -1078,6 +1082,8 @@
   <string name="warning_rate_app_title">Tangemを楽しんでいますか?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">トークンを受け取る前に、トークンを関連付ける必要があります。</string>
   <string name="warning_rent_fee_title">ネットワーク使用料が必要です</string>
+  <string name="warning_seedphrase_action_required_title">対応が必要です</string>
+  <string name="warning_seedphrase_contacted_support">ウォレットを作成してから7日以内にアプリまたはEメール経由でサポートに連絡しましたか？連絡したか不明な場合は、手順に従って完了してください。</string>
   <string name="warning_seedphrase_issue_answer_no">ありがとうございます。準備完了です。これ以上の操作は必要ありません。</string>
   <string name="warning_seedphrase_issue_answer_yes">Tangemの公式ウェブサイトに移動します。そちらの指示に従ってください。</string>
   <string name="warning_seedphrase_issue_message">このアプリ経由でTangemサポートチームに直接連絡したことがありますか？</string>
@@ -1092,6 +1098,7 @@
   <string name="warning_some_token_balances_not_updated">一部のトークン残高を更新できませんでした</string>
   <string name="warning_testnet_card_message">これはテストネットカードです。取引処理はできませんので、テストおよび開発目的でのみご利用ください。</string>
   <string name="warning_testnet_card_title">テスト目的のみ</string>
+  <string name="warning_token_balance_not_updated">残高が古い可能性があります。ページを更新してください。</string>
   <string name="welcome_interrupted_backup_alert_discard">破棄</string>
   <string name="welcome_interrupted_backup_alert_message">バックアップが中断されました。再開しますか?</string>
   <string name="welcome_interrupted_backup_alert_resume">はい、再開します</string>

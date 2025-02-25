@@ -1,15 +1,14 @@
 package com.tangem.domain.tokens
 
-import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
-import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
+import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
-import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
@@ -22,11 +21,10 @@ import java.math.BigDecimal
 class GetCurrencyWarningsUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val currenciesRepository: CurrenciesRepository,
-    private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
-    private val stakingRepository: StakingRepository,
     private val dispatchers: CoroutineDispatcherProvider,
     private val currencyChecksRepository: CurrencyChecksRepository,
+    private val currencyStatusOperations: BaseCurrencyStatusOperations,
 ) {
 
     suspend operator fun invoke(
@@ -36,18 +34,11 @@ class GetCurrencyWarningsUseCase(
         isSingleWalletWithTokens: Boolean,
     ): Flow<Set<CryptoCurrencyWarning>> {
         val currency = currencyStatus.currency
-        val operations = CurrenciesStatusesOperations(
-            currenciesRepository = currenciesRepository,
-            quotesRepository = quotesRepository,
-            networksRepository = networksRepository,
-            stakingRepository = stakingRepository,
-            userWalletId = userWalletId,
-        )
+
         // don't add here notifications that require async requests
         return combine(
             getCoinRelatedWarnings(
                 userWalletId = userWalletId,
-                operations = operations,
                 networkId = currency.network.id,
                 currencyId = currency.id,
                 derivationPath = derivationPath,
@@ -74,22 +65,23 @@ class GetCurrencyWarningsUseCase(
     @Suppress("LongParameterList")
     private suspend fun getCoinRelatedWarnings(
         userWalletId: UserWalletId,
-        operations: CurrenciesStatusesOperations,
         networkId: Network.ID,
         currencyId: CryptoCurrency.ID,
         derivationPath: Network.DerivationPath,
         isSingleWalletWithTokens: Boolean,
     ): Flow<List<CryptoCurrencyWarning>> {
-        val currencyFlow = if (isSingleWalletWithTokens) {
-            operations.getCurrencyStatusSingleWalletWithTokensFlow(currencyId)
-        } else {
-            operations.getCurrencyStatusFlow(currencyId)
-        }
+        val currencyFlow = currencyStatusOperations.getCurrencyStatusFlow(
+            userWalletId = userWalletId,
+            currencyId = currencyId,
+            isSingleWalletWithTokens = isSingleWalletWithTokens,
+        )
+
         val networkFlow = if (isSingleWalletWithTokens) {
-            operations.getNetworkCoinForSingleWalletWithTokenFlow(networkId)
+            currencyStatusOperations.getNetworkCoinForSingleWalletWithTokenFlow(userWalletId, networkId)
         } else {
-            operations.getNetworkCoinFlow(networkId, derivationPath)
+            currencyStatusOperations.getNetworkCoinFlow(userWalletId, networkId, derivationPath)
         }
+
         return combine(
             currencyFlow.map { it.getOrNull() },
             networkFlow.map { it.getOrNull() },
@@ -97,6 +89,7 @@ class GetCurrencyWarningsUseCase(
             when {
                 tokenStatus != null && coinStatus != null -> {
                     buildList {
+                        getUsedOutdatedDataWarning(tokenStatus)?.let(::add)
                         getIsBetaTokensWarning(tokenStatus.currency)?.let(::add)
                         getFeeWarning(
                             userWalletId = userWalletId,
@@ -142,6 +135,10 @@ class GetCurrencyWarningsUseCase(
             }
             else -> null
         }
+    }
+
+    private fun getUsedOutdatedDataWarning(status: CryptoCurrencyStatus): CryptoCurrencyWarning? {
+        return CryptoCurrencyWarning.UsedOutdatedDataWarning.takeIf { status.value.source == StatusSource.ONLY_CACHE }
     }
 
     private fun getIsBetaTokensWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {
