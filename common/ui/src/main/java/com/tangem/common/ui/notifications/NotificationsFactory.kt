@@ -364,6 +364,7 @@ object NotificationsFactory {
                     )
                 }
             }
+            else -> return
         }
     }
 
