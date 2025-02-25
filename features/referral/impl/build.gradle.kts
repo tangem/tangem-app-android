@@ -11,6 +11,9 @@ android {
 }
 
 dependencies {
+    /** Api */
+    api(projects.features.referral.api)
+
     /** Core modules */
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
@@ -18,6 +21,7 @@ dependencies {
     implementation(projects.core.res)
     implementation(projects.core.utils)
     implementation(projects.core.ui)
+    implementation(projects.core.decompose)
     implementation(projects.libs.crypto)
     implementation(projects.common.routing)
 
