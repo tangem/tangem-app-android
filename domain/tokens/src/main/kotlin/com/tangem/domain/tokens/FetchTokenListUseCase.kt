@@ -52,14 +52,14 @@ class FetchTokenListUseCase(
         coroutineScope {
             val fetchStatuses = async {
                 fetchNetworksStatuses(
-                    userWalletId,
-                    currencies.mapTo(hashSetOf()) { it.network },
+                    userWalletId = userWalletId,
+                    networks = currencies.mapTo(hashSetOf()) { it.network },
                     refresh = mode.refreshNetworksStatuses,
                 )
             }
             val fetchQuotes = async {
                 fetchQuotes(
-                    currencies.mapTo(hashSetOf()) { it.id },
+                    currenciesIds = currencies.mapTo(hashSetOf()) { it.id },
                     refresh = mode.refreshQuotes,
                 )
             }
