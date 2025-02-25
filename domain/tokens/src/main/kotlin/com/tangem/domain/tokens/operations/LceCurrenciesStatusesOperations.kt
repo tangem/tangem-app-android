@@ -1,8 +1,6 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.*
-import arrow.core.raise.Raise
-import arrow.core.raise.catch
 import arrow.core.raise.ensureNotNull
 import arrow.core.raise.recover
 import com.tangem.domain.core.lce.Lce
@@ -19,20 +17,22 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
-internal class CurrenciesStatusesCachedOperations(
+class LceCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
-) {
+) : BaseCurrenciesStatusesOperations {
 
-    fun getCurrenciesStatuses(userWalletId: UserWalletId): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
+    override fun getCurrenciesStatuses(
+        userWalletId: UserWalletId,
+    ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> {
         return transformToCurrenciesStatuses(
             userWalletId = userWalletId,
-            currenciesFlow = getCurrencies(userWalletId),
+            currenciesFlow = getWalletCurrencies(userWalletId),
         )
     }
 
@@ -41,10 +41,19 @@ internal class CurrenciesStatusesCachedOperations(
         currenciesFlow: EitherFlow<TokenListError, List<CryptoCurrency>>,
     ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> = lceFlow {
         currenciesFlow.collectLatest { maybeCurrencies ->
-            val isUpdating = MutableStateFlow(value = true)
             val nonEmptyCurrencies = maybeCurrencies.bind().toNonEmptyListOrNull()
-
             ensureNotNull(nonEmptyCurrencies) { TokenListError.EmptyTokens }
+
+            // This is only 'true' when the flow here is empty, such as during initial loading
+            if (isLoading.get()) {
+                val loadingCurrencies = createCurrenciesStatuses(
+                    currencies = nonEmptyCurrencies,
+                    maybeNetworkStatuses = null,
+                    maybeQuotes = null,
+                    maybeYieldBalances = null,
+                )
+                send(loadingCurrencies)
+            }
 
             val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
 
@@ -52,57 +61,31 @@ internal class CurrenciesStatusesCachedOperations(
                 maybeQuotes: Either<TokenListError, Set<Quote>>?,
                 maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
                 maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
-                isUpdating: Boolean,
-            ) = createCurrenciesStatuses(
+            ): Lce<TokenListError, List<CryptoCurrencyStatus>> = createCurrenciesStatuses(
                 currencies = nonEmptyCurrencies,
                 maybeQuotes = maybeQuotes,
                 maybeNetworkStatuses = maybeNetworkStatuses,
                 maybeYieldBalances = maybeYieldBalances,
-                isUpdating = isUpdating,
             )
 
             combine(
-                flow = getQuotes(currenciesIds),
-                flow2 = getNetworksStatuses(userWalletId, networks),
-                flow3 = getYieldBalances(userWalletId, nonEmptyCurrencies),
-                flow4 = isUpdating,
-                transform = ::createCurrenciesStatuses,
+                getQuotes(currenciesIds),
+                getNetworksStatuses(userWalletId, networks),
+                getYieldBalances(userWalletId, nonEmptyCurrencies),
+                ::createCurrenciesStatuses,
             )
                 .distinctUntilChanged()
-                .onEach { maybeCurrenciesStatuses ->
+                .collectLatest { maybeCurrenciesStatuses ->
                     send(maybeCurrenciesStatuses)
                 }
-                .launchIn(scope = this)
-
-            launch {
-                fetchComponents(userWalletId, networks, currenciesIds, nonEmptyCurrencies)
-            }.invokeOnCompletion {
-                isUpdating.value = false
-            }
         }
     }
 
-    private suspend fun Raise<TokenListError>.fetchComponents(
-        userWalletId: UserWalletId,
-        networks: NonEmptySet<Network>,
-        currenciesIds: NonEmptySet<CryptoCurrency.ID>,
-        currencies: NonEmptyList<CryptoCurrency>,
-    ) = coroutineScope {
-        catch(
-            block = {
-                awaitAll(
-                    async { networksRepository.fetchNetworkStatuses(userWalletId, networks) },
-                    async {
-                        val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
-                        quotesRepository.fetchQuotes(rawCurrenciesIds)
-                    },
-                    async { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies) },
-                )
-            },
-            catch = {
-                raise(TokenListError.DataError(it))
-            },
-        )
+    private fun getWalletCurrencies(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrency>> {
+        return currenciesRepository.getWalletCurrenciesUpdates(userWalletId)
+            .map<List<CryptoCurrency>, Either<TokenListError, List<CryptoCurrency>>> { it.right() }
+            .catch { emit(TokenListError.DataError(it).left()) }
+            .distinctUntilChanged()
     }
 
     private fun createCurrenciesStatuses(
@@ -110,9 +93,8 @@ internal class CurrenciesStatusesCachedOperations(
         maybeQuotes: Either<TokenListError, Set<Quote>>?,
         maybeNetworkStatuses: Either<TokenListError, Set<NetworkStatus>>?,
         maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
-        isUpdating: Boolean,
     ): Lce<TokenListError, List<CryptoCurrencyStatus>> = lce {
-        isLoading.set(isUpdating)
+        isLoading.set(maybeNetworkStatuses == null || maybeYieldBalances == null)
 
         var quotesRetrievingFailed = false
 
@@ -138,6 +120,10 @@ internal class CurrenciesStatusesCachedOperations(
                 yieldBalance = yieldBalance,
                 ignoreQuote = quotesRetrievingFailed,
             )
+
+            if (currencyStatus.value is CryptoCurrencyStatus.Loading) {
+                isLoading.set(true)
+            }
 
             currencyStatus
         }
@@ -178,20 +164,13 @@ internal class CurrenciesStatusesCachedOperations(
         return currencyStatusOperations.createTokenStatus()
     }
 
-    private fun getCurrencies(userWalletId: UserWalletId): EitherFlow<TokenListError, List<CryptoCurrency>> {
-        return currenciesRepository.getWalletCurrenciesUpdates(userWalletId)
-            .map<List<CryptoCurrency>, Either<TokenListError, List<CryptoCurrency>>> { it.right() }
-            .catch { emit(TokenListError.DataError(it).left()) }
-            .distinctUntilChanged()
-    }
-
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
-        return quotesRepository.getQuotesUpdates(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
+        return quotesRepository.getQuotesUpdatesLegacy(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
             .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
             .retryWhen { cause, _ ->
                 emit(TokenListError.DataError(cause).left())
                 // adding delay before retry to avoid spam when flow restarted
-                delay(RETRY_DELAY)
+                delay(RETRY_QUOTES_DELAY)
                 true
             }
             .distinctUntilChanged()
@@ -201,14 +180,9 @@ internal class CurrenciesStatusesCachedOperations(
         userWalletId: UserWalletId,
         networks: NonEmptySet<Network>,
     ): EitherFlow<TokenListError, Set<NetworkStatus>> {
-        return networksRepository.getNetworkStatusesUpdates(userWalletId, networks)
+        return networksRepository.getNetworkStatusesUpdatesLegacy(userWalletId, networks)
             .map<Set<NetworkStatus>, Either<TokenListError, Set<NetworkStatus>>> { it.right() }
-            .retryWhen { cause, _ ->
-                emit(TokenListError.DataError(cause).left())
-                // adding delay before retry to avoid spam when flow restarted
-                delay(RETRY_DELAY)
-                true
-            }
+            .catch { emit(TokenListError.DataError(it).left()) }
             .distinctUntilChanged()
     }
 
@@ -216,14 +190,9 @@ internal class CurrenciesStatusesCachedOperations(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): EitherFlow<TokenListError, YieldBalanceList> {
-        return stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
+        return stakingRepository.getMultiYieldBalanceUpdatesLegacy(userWalletId, cryptoCurrencies)
             .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
-            .retryWhen { cause, _ ->
-                emit(TokenListError.DataError(cause).left())
-                // adding delay before retry to avoid spam when flow restarted
-                delay(RETRY_DELAY)
-                true
-            }
+            .catch { emit(TokenListError.DataError(it).left()) }
             .distinctUntilChanged()
     }
 
@@ -249,7 +218,7 @@ internal class CurrenciesStatusesCachedOperations(
         }
     }
 
-    companion object {
-        private const val RETRY_DELAY = 2000L
+    private companion object {
+        const val RETRY_QUOTES_DELAY = 2000L
     }
 }

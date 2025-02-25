@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
@@ -68,17 +69,18 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     private fun MutableList<WalletNotification>.addUsedOutdatedDataNotification(
         maybeTokenList: Lce<TokenListError, TokenList>,
     ) {
-        val tokenList = maybeTokenList.getOrNull(isPartialContentAccepted = false)?.flattenCurrencies().orEmpty()
-
-        val hasOnlyCachedData = tokenList.any {
-            when (val value = it.value) {
-                is CryptoCurrencyStatus.Loaded -> value.source == StatusSource.ONLY_CACHE
-                is CryptoCurrencyStatus.NoAccount -> value.source == StatusSource.ONLY_CACHE
-                else -> false
-            }
-        }
-
-        addIf(element = WalletNotification.UsedOutdatedData, condition = hasOnlyCachedData)
+        addIf(
+            element = WalletNotification.UsedOutdatedData,
+            condition = maybeTokenList.fold(
+                ifLoading = {
+                    (it?.totalFiatBalance as? TotalFiatBalance.Loaded)?.source == StatusSource.ONLY_CACHE
+                },
+                ifContent = {
+                    (it.totalFiatBalance as? TotalFiatBalance.Loaded)?.source == StatusSource.ONLY_CACHE
+                },
+                ifError = { false },
+            ),
+        )
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(

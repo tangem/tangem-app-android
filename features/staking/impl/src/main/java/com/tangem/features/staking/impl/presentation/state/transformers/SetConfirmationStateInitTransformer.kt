@@ -10,6 +10,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBalance
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -44,10 +45,10 @@ internal class SetConfirmationStateInitTransformer(
     override fun transform(prevState: StakingUiState): StakingUiState {
         val actionType = when {
             isEnter -> StakingActionCommonType.Enter
-            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled())
+            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartialUnstakeDisabled(prevState))
             else -> when (pendingAction?.type) {
                 StakingActionType.STAKE -> StakingActionCommonType.Enter
-                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled())
+                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(isPartialUnstakeDisabled(prevState))
                 StakingActionType.CLAIM_REWARDS,
                 StakingActionType.RESTAKE_REWARDS,
                 -> StakingActionCommonType.Pending.Rewards
@@ -80,7 +81,13 @@ internal class SetConfirmationStateInitTransformer(
         )
     }
 
-    private fun isPartiallyUnstakeDisabled(): Boolean {
+    private fun isPartialUnstakeDisabled(state: StakingUiState): Boolean {
+        val isSolana = BlockchainUtils.isSolana(state.cryptoCurrencyBlockchainId)
+        val isValidatorPreferred = balanceState?.validator?.preferred == true
+        if (isSolana && !isValidatorPreferred) {
+            return true
+        }
+
         val exitArgs = yieldArgs.exit ?: return false
         val exitAmount = exitArgs.args[Yield.Args.ArgType.AMOUNT] ?: return false
         val min = exitAmount.minimum ?: return false
