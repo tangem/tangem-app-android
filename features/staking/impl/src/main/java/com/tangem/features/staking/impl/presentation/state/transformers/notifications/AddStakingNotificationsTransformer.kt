@@ -1,6 +1,5 @@
 package com.tangem.features.staking.impl.presentation.state.transformers.notifications
 
-import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -11,7 +10,6 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachable
 import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
-import com.tangem.common.ui.notifications.NotificationsFactory.addValidateTransactionNotifications
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.Yield
@@ -40,7 +38,6 @@ internal class AddStakingNotificationsTransformer(
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val currencyWarning: CryptoCurrencyWarning?,
-    private val validatorError: Throwable?,
     private val feeError: GetFeeError?,
     private val currencyCheck: CryptoCurrencyCheck,
     private val isSubtractAvailable: Boolean,
@@ -81,7 +78,7 @@ internal class AddStakingNotificationsTransformer(
                 amountValue = amountValue,
                 feeValue = feeValue,
                 reduceAmountBy = reduceAmountBy,
-            ).max(minimumRequirement)
+            )
         } else {
             // No amount is taken from account balance on exit or pending actions
             BigDecimal.ZERO
@@ -211,15 +208,6 @@ internal class AddStakingNotificationsTransformer(
             sendingValue = sendingAmount,
             appCurrency = appCurrency,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-        )
-
-        // blockchain specific
-        addValidateTransactionNotifications(
-            dustValue = currencyCheck.dustValue.orZero(),
-            minAdaValue = (feeState?.fee as? Fee.CardanoToken)?.minAdaValue,
-            validationError = validatorError,
-            cryptoCurrency = cryptoCurrency,
-            onReduceClick = prevState.clickIntents::onAmountReduceToClick,
         )
     }
 
