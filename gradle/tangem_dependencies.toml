@@ -1,5 +1,5 @@
 [versions]
-tangemBlockchainSdk = "develop-959"
+tangemBlockchainSdk = "develop-965"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
 tangemCardSdk = "develop-434"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
