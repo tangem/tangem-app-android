@@ -1,7 +1,7 @@
 package com.tangem.feature.referral.domain.di
 
-import com.tangem.core.decompose.di.ComponentScoped
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.domain.card.DerivePublicKeysUseCase
 import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -14,11 +14,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 class ReferralDomainModule {
 
     @Provides
-    @ComponentScoped
+    @ModelScoped
     fun provideReferralInteractor(
         referralRepository: ReferralRepository,
         userWalletManager: UserWalletManager,
