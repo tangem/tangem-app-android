@@ -3,7 +3,7 @@ package com.tangem.features.markets.portfolio.impl.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -38,7 +38,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class MarketsPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
