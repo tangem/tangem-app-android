@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
@@ -7,6 +7,7 @@ import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
@@ -55,7 +56,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSend
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -101,7 +101,7 @@ interface WalletCurrencyActionsClickIntents {
 }
 
 @Suppress("LongParameterList", "LargeClass")
-@ViewModelScoped
+@ModelScoped
 internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
@@ -205,7 +205,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonCopyAddress(cryptoCurrencyStatus.currency.symbol),
         )
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             walletManagersFacade.getDefaultAddress(
                 userWalletId = stateHolder.getSelectedWalletId(),
                 network = cryptoCurrencyStatus.currency.network,
@@ -223,7 +223,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             event = TokenScreenAnalyticsEvent.ButtonRemoveToken(cryptoCurrencyStatus.currency.symbol),
         )
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             walletEventSender.send(
                 event = WalletEvent.ShowAlert(
                     state = getHideTokeAlertConfig(stateHolder.getSelectedWalletId(), cryptoCurrencyStatus),
@@ -270,7 +270,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     override fun onPerformHideToken(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val userWalletId = stateHolder.getSelectedWalletId()
 
-        viewModelScope.launch(dispatchers.io) {
+        modelScope.launch(dispatchers.io) {
             removeCurrencyUseCase(userWalletId, cryptoCurrencyStatus.currency)
                 .fold(
                     ifLeft = {
@@ -296,7 +296,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         if (handleUnavailabilityReason(unavailabilityReason)) return
 
         showErrorIfDemoModeOrElse {
-            viewModelScope.launch(dispatchers.main) {
+            modelScope.launch(dispatchers.main) {
                 reduxStateHolder.dispatch(
                     action = TradeCryptoAction.Sell(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -329,7 +329,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             )
         } else {
             showErrorIfDemoModeOrElse {
-                viewModelScope.launch(dispatchers.main) {
+                modelScope.launch(dispatchers.main) {
                     reduxStateHolder.dispatch(
                         TradeCryptoAction.Buy(
                             userWallet = userWallet,
@@ -368,7 +368,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onAnalyticsClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        viewModelScope.launch {
+        modelScope.launch {
             val rawId = cryptoCurrencyStatus.currency.id.rawCurrencyId ?: return@launch
 
             val tokenMarketParams = TokenMarketParams(
@@ -401,7 +401,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
         stateHolder.update(CloseBottomSheetTransformer(userWalletId = userWallet.walletId))
 
-        viewModelScope.launch {
+        modelScope.launch {
             val userWalletId = stateHolder.getSelectedWalletId()
             val cryptoCurrency = cryptoCurrencyStatus.currency
 
@@ -436,7 +436,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        modelScope.launch {
             val swapRoute = getSwapRoute(
                 AppRoute.SwapCrypto(userWalletId = userWalletId),
             )
@@ -463,7 +463,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private fun openExplorer() {
         val userWalletId = stateHolder.getSelectedWalletId()
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val currencyStatus = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(userWalletId) ?: return@launch
 
             when (val addresses = currencyStatus.value.networkAddress) {
@@ -509,7 +509,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         currency: CryptoCurrency,
         addressModel: AddressModel,
     ) {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             router.openUrl(
                 url = getExploreUrlUseCase(
                     userWalletId = userWalletId,
@@ -543,7 +543,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             walletEventSender.send(
                 event = WalletEvent.ShowAlert(
                     state = WalletAlertState.DefaultAlert(
@@ -563,7 +563,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         route: AppRoute,
         eventCreator: (AnalyticsParam.Status) -> MainScreenAnalyticsEvent,
     ) {
-        viewModelScope.launch {
+        modelScope.launch {
             statusFlow.foldStatus(
                 onContent = { handleContent(route, eventCreator) },
                 onError = { handleError(eventCreator = eventCreator) },
