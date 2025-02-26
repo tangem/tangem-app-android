@@ -8,7 +8,7 @@ import com.arkivanov.decompose.defaultComponentContext
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.routing.utils.asRouter
 import com.tangem.core.decompose.context.DefaultAppComponentContext
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.UiDependencies
@@ -38,7 +38,7 @@ internal class WalletFragment : ComposeFragment() {
     internal lateinit var coroutineDispatcherProvider: CoroutineDispatcherProvider
 
     @Inject
-    internal lateinit var componentBuilder: DecomposeComponent.Builder
+    internal lateinit var componentBuilder: ModelComponent.Builder
 
     @Inject
     internal lateinit var appRouter: AppRouter
