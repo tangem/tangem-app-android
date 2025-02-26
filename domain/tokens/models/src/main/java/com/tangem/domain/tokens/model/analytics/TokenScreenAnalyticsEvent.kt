@@ -90,7 +90,7 @@ sealed class TokenScreenAnalyticsEvent(
     )
 
     class NoticeActionInactive(token: String, tokenAction: TokenAction, reason: String) : TokenScreenAnalyticsEvent(
-        "Notice - Action Inactive",
+        event = "Notice - Action Inactive",
         params = buildMap {
             put("Token", token)
             put("Action", tokenAction.action)
@@ -112,6 +112,7 @@ sealed class TokenScreenAnalyticsEvent(
         private const val UNAVAILABLE = "Unavailable"
         private const val EMPTY = "Empty"
         private const val PENDING = "Pending"
+        private const val CACHING = "Caching"
 
         fun ScenarioUnavailabilityReason.toReasonAnalyticsText(): String {
             return when (this) {
@@ -123,9 +124,9 @@ sealed class TokenScreenAnalyticsEvent(
                 -> UNAVAILABLE
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
                 is ScenarioUnavailabilityReason.PendingTransaction -> PENDING
+                ScenarioUnavailabilityReason.UsedOutdatedData -> CACHING
                 ScenarioUnavailabilityReason.None,
                 ScenarioUnavailabilityReason.Unreachable,
-                ScenarioUnavailabilityReason.UsedOutdatedData,
                 -> ""
             }
         }
