@@ -3,7 +3,7 @@ package com.tangem.tap.features.details.ui.appsettings.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -40,7 +40,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class AppSettingsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appCurrencyRepository: AppCurrencyRepository,
