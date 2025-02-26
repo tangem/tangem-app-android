@@ -49,6 +49,14 @@ class FetchTokenListUseCase(
     ): Either<TokenListError, Unit> = either {
         val currencies = fetchCurrencies(userWalletId, refresh = mode.refreshCurrencies)
 
+        invoke(userWalletId = userWalletId, currencies = currencies, mode = mode)
+    }
+
+    suspend operator fun invoke(
+        userWalletId: UserWalletId,
+        currencies: List<CryptoCurrency>,
+        mode: RefreshMode = RefreshMode.NONE,
+    ): Either<TokenListError, Unit> = either {
         coroutineScope {
             val fetchStatuses = async {
                 fetchNetworksStatuses(
