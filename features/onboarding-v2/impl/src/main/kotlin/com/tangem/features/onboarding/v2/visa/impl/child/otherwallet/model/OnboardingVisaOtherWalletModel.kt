@@ -2,7 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.otherwallet.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.extensions.toHexString
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class OnboardingVisaOtherWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     visaActivationRepositoryFactory: VisaActivationRepository.Factory,

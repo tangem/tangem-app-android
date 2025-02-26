@@ -1,6 +1,6 @@
 package com.tangem.features.onramp.settings.di
 
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onramp.settings.model.OnrampSettingsModel
 import dagger.Binds
@@ -10,7 +10,7 @@ import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface OnrampSettingsModelModule {
 
     @Binds
