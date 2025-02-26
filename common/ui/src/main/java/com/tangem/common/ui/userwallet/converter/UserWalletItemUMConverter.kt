@@ -9,6 +9,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -20,7 +21,6 @@ import com.tangem.utils.converter.Converter
  * @property onClick         lambda be invoked when item is clicked
  * @property appCurrency     selected app currency
  * @property balance         wallet balance
- * @property isLoading       wallet loading state
  * @property isBalanceHidden wallet balance is hidden
  *
 [REDACTED_AUTHOR]
@@ -29,7 +29,6 @@ class UserWalletItemUMConverter(
     private val onClick: (UserWalletId) -> Unit,
     private val appCurrency: AppCurrency? = null,
     private val balance: TotalFiatBalance? = null,
-    private val isLoading: Boolean = true,
     private val isBalanceHidden: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
 ) : Converter<UserWallet, UserWalletItemUM> {
@@ -75,7 +74,7 @@ class UserWalletItemUMConverter(
 
                             UserWalletItemUM.Balance.Loaded(
                                 value = formattedAmount,
-                                isFlickering = isLoading,
+                                isFlickering = balance.source == StatusSource.CACHE,
                             )
                         } else {
                             UserWalletItemUM.Balance.Failed
