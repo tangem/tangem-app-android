@@ -1,7 +1,7 @@
 package com.tangem.feature.tokendetails.di
 
-import com.tangem.core.decompose.di.ComponentScoped
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.feature.tokendetails.DefaultTokenDetailsComponent
 import com.tangem.feature.tokendetails.presentation.router.DefaultTokenDetailsRouter
@@ -29,10 +29,10 @@ internal interface TokenDetailsModule {
 }
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface StakingComponentModule {
 
     @Binds
-    @ComponentScoped
+    @ModelScoped
     fun bindRouter(impl: DefaultTokenDetailsRouter): InnerTokenDetailsRouter
 }
