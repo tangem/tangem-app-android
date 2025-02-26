@@ -8,6 +8,10 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletBottomSheetConfig
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
