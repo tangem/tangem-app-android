@@ -93,13 +93,12 @@ jobs:
 
 
       - name: Jira Set Version To Issues From Commit messages
-        uses: tangem-developments/jira-action@feature/JS-3180_add_set_version_policy
+        uses: tangem-developments/jira-action@master
         with:
-          action: 'setFixVersionToIssues'
+          action: 'setVersionToIssues'
           project: 'AND'
           version: '5.21.0'
           issues:  ${{ steps.git-diff.outputs.issues }}
-          override-policy: addIfPresent
 
       - name: Print issues
         id: print_issues
