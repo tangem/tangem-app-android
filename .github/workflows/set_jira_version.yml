@@ -3,8 +3,7 @@ name: Jira - Set 'Next Release' version for the merged Jira task
 on:
   pull_request:
     branches:
-      - 'develop'
-      - 'releases/*'
+      - 'feature/AND-10052_store_tasks_in_aws'
     types:
       - closed
 

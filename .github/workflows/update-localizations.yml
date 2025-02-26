@@ -1,50 +1,116 @@
-name: Fetch translations (Lokalise)
+name: Test versions setting
 
 on:
-  #schedule:
-  #  - cron: '0 0 * * *'  # Runs at 00:00 UTC every day
+  push:
+    branches:
+      - 'feature/AND-10052_store_tasks_in_aws'
   workflow_dispatch:
     inputs:
-      langs:
-        description: 'Languages'
-        default: 'en,fr,de,ja,ru,es,uk_UA'
+      build_description:
+        description: >
+          Optional additional info about the build
         type: string
+  workflow_call:
+    secrets:
+      FIREBASE_APP_ID_INTERNAL:
+        required: true
+      FIREBASE_CLI_TOKEN:
+        required: true
+      # Token must have read access to all the submodule repositories
+      GH_MOBILE_PAT:
+        required: true
 
 jobs:
-  update-localizations:
+  jira_changelog:
+    name: Jira changelog
     runs-on: ubuntu-latest
+    outputs:
+      jira_changelog: ${{ steps.jira-issues-summary.outputs.result }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@01dd5d3ca463c7f10f7f4f7b4f177225ac661ee4  # v6.1.0
-        with:
-          gpg_private_key: ${{ secrets.PGP_PRIVATE_SERVICE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-
-      - name: Install Python
-        uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3  # v5.2.0
-        with:
-          python-version: '3.x'
-
-      - name: Run localization script
+      - name: Jira Login
+        uses: atlassian/gajira-login@master
         env:
-          GH_TOKEN: ${{ github.token }}
-          SOURCE_BRANCH: lokalise-translations
-          TARGET_BRANCH: ${{ github.ref_name }}
-          LOKALISE_PROJECT_ID: ${{ secrets.LOKALISE_ANDROID_APP_PROJECT_ID }}
-          LOKALISE_ACCESS_TOKEN: ${{ secrets.LOKALISE_ACCESS_TOKEN }}
+          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
+
+      - name: Checkout 'find-latest-release-branch' script
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          sparse-checkout: |
+            ci_resources/find-latest-release-branch.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Find latest release branch
+        id: find-latest-release-branch
         run: |
-          git config --global user.name 'Tangem Service'
-          git config --global user.email 'gitservice@tangem.com'
-          git checkout -b $SOURCE_BRANCH $TARGET_BRANCH
-          echo "lokalise.project.id=$LOKALISE_PROJECT_ID" >> local.properties
-          echo "lokalise.token=$LOKALISE_ACCESS_TOKEN" >> local.properties
-          pip3 install python-lokalise-api --break-system-packages
-          python3 lokalize.py --langs ${{ github.event.inputs.langs }}
-          git add .
-          git commit -S -m "Fetch all translations"
-          git push --set-upstream origin $SOURCE_BRANCH --force
-          gh pr create --base $TARGET_BRANCH --head $SOURCE_BRANCH --title "Update translations" --body ""
+          ./ci_resources/find-latest-release-branch.sh '${{ github.ref_name }}'
+          echo "result=$(< 'find-latest-release-branch.output')" >> $GITHUB_OUTPUT
+
+      - name: Get unreleased tasks
+        id: git-diff
+        uses: tangem/github-action@main
+        with:
+          github-token: '${{ secrets.GH_MOBILE_PAT }}'
+          base: develop
+          head: '${{ github.ref_name }}'
+
+      #      - name: Verify Jira issues and generate JSON
+      #        id: verify-jira-issues
+      #        run: |
+      #          issues_json='${{ steps.git-diff.outputs.issues }}'
+      #          base_url="https://tangem.atlassian.net/rest/api/3/issue"
+      #          valid_issues=()
+      #
+      #          # Parse JSON array to get individual issue keys
+      #          issues=$(echo $issues_json | jq -r '.[]')
+      #
+      #          # Iterate through each issue in the list
+      #          for issue in $issues; do
+      #            response=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" "$base_url/$issue")
+      #            if [[ "$response" -eq 200 ]]; then
+      #              echo "Issue $issue exists."
+      #              valid_issues+=("\"$issue\"")
+      #            else
+      #              echo "Issue $issue does not exist."
+      #            fi
+      #          done
+      #
+      #          # Create JSON array from valid issues
+      #          valid_issues_json=$(printf "[%s]" "$(IFS=,; echo "${valid_issues[*]}")")
+      #          echo "valid_issues=$valid_issues_json"
+      #          echo "valid_issues=$valid_issues_json" >> $GITHUB_OUTPUT
+
+
+      - name: Jira Get Issues Summary
+        uses: tangem-developments/jira-action@feature/JS-3180_add_set_version_policy
+        id: jira-issues-summary
+        continue-on-error: true
+        with:
+          action: getIssuesSummary
+          issues: ${{ steps.git-diff.outputs.issues }}
+
+
+      - name: Jira Set Version To Issues From Commit messages
+        uses: tangem-developments/jira-action@feature/JS-3180_add_set_version_policy
+        with:
+          action: 'setFixVersionToIssues'
+          project: 'AND'
+          version: '5.21.0'
+          issues:  ${{ steps.git-diff.outputs.issues }}
+          override-policy: addIfPresent
+
+      - name: Print issues
+        id: print_issues
+        run: |
+          echo "${{ steps.git-diff.outputs.issues }}"
+          echo "${{ steps.jira-issues-summary.outputs.result }}"
+
+  prepare:
+    uses: ./.github/workflows/prepare.yml
+    name: Prepare
+    with:
+      initial_version_code: 1050
+    secrets: inherit
+
