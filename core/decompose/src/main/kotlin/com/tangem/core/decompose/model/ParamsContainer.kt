@@ -3,7 +3,7 @@ package com.tangem.core.decompose.model
 /**
  * Lazy container for [Model] params.
  *
- * This contrainer can be accessed by DI because it's provided via [com.tangem.core.decompose.di.DecomposeComponent].
+ * This contrainer can be accessed by DI because it's provided via [com.tangem.core.decompose.di.ModelComponent].
  * */
 interface ParamsContainer {
 
