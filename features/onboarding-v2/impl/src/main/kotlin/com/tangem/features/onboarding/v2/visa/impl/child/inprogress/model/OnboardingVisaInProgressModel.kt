@@ -2,7 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.inprogress.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.extensions.toHexString
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
@@ -27,7 +27,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class OnboardingVisaInProgressModel @Inject constructor(
     paramsContainer: ParamsContainer,
     visaActivationRepositoryFactory: VisaActivationRepository.Factory,
