@@ -144,10 +144,10 @@ internal class DefaultHotCryptoRepository(
 
         return copy(
             tokens = this.tokens
+                .applyTokensIdMigrations()
                 .filter { hotToken ->
                     !tokens.hasAlreadyAdded(hotToken) && userWallet.canHandleHotCrypto(hotToken)
-                }
-                .applyTokensIdMigrations(),
+                },
         )
     }
 
