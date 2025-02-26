@@ -694,6 +694,7 @@
   <string name="scan_card_settings_message">Отсканируйте карту или кольцо, чтобы изменить ее настройки. Изменения затронут только ту карту или кольцо, которые вы отсканировали, и не повлияют на другие устройства, привязанные к вашему кошельку.</string>
   <string name="scan_card_settings_title">Приготовьте свой Tangem!</string>
   <string name="security_alert_title">Уведомление безопасности</string>
+  <string name="seed_warning_yes">Да</string>
   <string name="selling_insufficient_balance_alert_message">На вашем балансе недостаточно средств для продажи криптовалюты. Пожалуйста, пополните нужный актив, чтобы продолжить.</string>
   <string name="selling_insufficient_balance_alert_title">Недостаточно средств</string>
   <string name="selling_regional_restriction_alert_message">Продажа криптовалюты в вашем регионе временно недоступна. Мы активно работаем над тем, чтобы добавить эту возможность. Следите за нашими новостями!</string>
@@ -897,6 +898,8 @@
   <string name="story_meet_title">Встречайте Tangem</string>
   <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
   <string name="story_web3_title">Поддержка Web 3.0</string>
+  <string name="sui_not_enough_coin_for_fee_description">Для отправки требуется входящая транзакция на сумму не менее %1$s</string>
+  <string name="sui_not_enough_coin_for_fee_title">Недостаточно средств</string>
   <string name="swap_give_permission_fee_footer">Комиссия сети за одобрение токена будет взиматься за подтверждение того, что именно вы разрешаете использовать ваш токен для обмена.</string>
   <string name="swap_promo_text">Обменивайте больше токенов по лучшим курсам прямо в вашем кошельке.</string>
   <string name="swap_promo_title">Новый провайдер обмена!</string>
@@ -1110,6 +1113,7 @@
   <string name="warning_rate_app_title">Нравится Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Вам необходимо провести ассоциацию токена для того, чтобы иметь возможность принимать его</string>
   <string name="warning_rent_fee_title">Необходима плата за аренду сети</string>
+  <string name="warning_seedphrase_contacted_support">Вы обращались в службу поддержки через приложение в течение 7 дней после создания кошелька? Если обращались или не уверены, нажмите «Да» и следуйте инструкциям.</string>
   <string name="warning_seedphrase_issue_answer_no">Спасибо! Всё в порядке! Дальнейшие действия не требуются.</string>
   <string name="warning_seedphrase_issue_answer_yes">Вы будете перенаправлены на официальный сайт Tangem. Пожалуйста, прочитайте и выполните указанные там инструкции.</string>
   <string name="warning_seedphrase_issue_message">Вы когда-либо обращались в службу поддержки Tangem напрямую из этого приложения?</string>
