@@ -8,7 +8,7 @@ sealed class NavigationButtonsState {
     data object Empty : NavigationButtonsState()
 
     data class Data(
-        val primaryButton: NavigationButton,
+        val primaryButton: NavigationButton?,
         val prevButton: NavigationButton?,
         val extraButtons: ImmutableList<NavigationButton>,
         val txUrl: String? = null,
