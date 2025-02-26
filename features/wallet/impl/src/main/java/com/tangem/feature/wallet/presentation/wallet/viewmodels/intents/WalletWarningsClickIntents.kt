@@ -147,7 +147,11 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             ).fold(
                 ifLeft = { Timber.e(it, "Failed to derive public keys") },
                 ifRight = {
-                    fetchTokenListUseCase(userWallet.walletId, mode = RefreshMode.SKIP_CURRENCIES).onLeft {
+                    fetchTokenListUseCase(
+                        userWalletId = userWallet.walletId,
+                        mode = RefreshMode.SKIP_CURRENCIES,
+                        currencies = missedAddressCurrencies,
+                    ).onLeft {
                         Timber.e("Unable to refresh token list: $it")
                     }
                 },
