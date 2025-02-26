@@ -63,7 +63,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
 
         val validatorAddress = validatorState.chosenValidator.address
 
-        val isEnter = state.actionType == StakingActionCommonType.Enter
+        val isEnter = state.actionType is StakingActionCommonType.Enter
         val isApprovalNeeded = confirmationState.isApprovalNeeded
         val isAllowanceNotEnough = confirmationState.allowance < amount
         if (isEnter && isApprovalNeeded && isAllowanceNotEnough) {
