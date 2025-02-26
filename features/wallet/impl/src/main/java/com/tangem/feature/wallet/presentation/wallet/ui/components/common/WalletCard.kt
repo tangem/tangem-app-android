@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -227,7 +228,7 @@ private fun ManageWalletContextMenu(
         dropDownItems.fastForEach { item ->
             MenuItem(
                 text = item.text,
-                imageVector = item.icon,
+                imageVector = ImageVector.vectorResource(id = item.icon),
                 onClick = {
                     onDismissRequest()
                     item.onClick()

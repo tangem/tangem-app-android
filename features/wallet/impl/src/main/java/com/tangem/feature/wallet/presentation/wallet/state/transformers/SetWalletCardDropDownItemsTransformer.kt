@@ -1,8 +1,5 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.impl.R
@@ -67,12 +64,12 @@ internal class SetWalletCardDropDownItemsTransformer(
             persistentListOf(
                 WalletDropDownItems(
                     text = resourceReference(id = R.string.common_rename),
-                    icon = Icons.Outlined.Edit,
+                    icon = R.drawable.ic_edit_24,
                     onClick = { clickIntents.onRenameBeforeConfirmationClick(userWalletId) },
                 ),
                 WalletDropDownItems(
                     text = resourceReference(id = R.string.common_delete),
-                    icon = Icons.Outlined.Delete,
+                    icon = R.drawable.ic_trash_24,
                     onClick = { clickIntents.onDeleteBeforeConfirmationClick(userWalletId) },
                 ),
             )
