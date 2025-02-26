@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.ui.walletconnect
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.qrscanning.models.SourceType
@@ -18,7 +18,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class WalletConnectModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
