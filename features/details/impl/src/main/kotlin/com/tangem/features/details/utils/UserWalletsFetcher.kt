@@ -49,9 +49,9 @@ internal class UserWalletsFetcher @Inject constructor(
         emit(uiModels)
 
         combine(
-            getSelectedAppCurrencyUseCase().distinctUntilChanged(),
-            getBalanceHidingSettingsUseCase().distinctUntilChanged(),
-            getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)).distinctUntilChanged(),
+            flow = getSelectedAppCurrencyUseCase().distinctUntilChanged(),
+            flow2 = getBalanceHidingSettingsUseCase().distinctUntilChanged(),
+            flow3 = getWalletTotalBalanceUseCase(wallets.map(UserWallet::walletId)).distinctUntilChanged(),
         ) { maybeAppCurrency, balanceHidingSettings, maybeBalances ->
             val models = createUiModels(
                 wallets = wallets,
@@ -99,7 +99,6 @@ internal class UserWalletsFetcher @Inject constructor(
                     appCurrency = appCurrency,
                     balance = balance,
                     isBalanceHidden = balanceHidingSettings.isBalanceHidden,
-                    isLoading = maybeBalances.isLoading(),
                 )
                     .convert(userWallet)
             }
