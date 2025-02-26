@@ -7,6 +7,7 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.core.utils.EitherFlow
+import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -45,9 +46,14 @@ class CachedCurrenciesStatusesOperations(
     ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> = lceFlow {
         currenciesFlow.flatMapLatest { maybeCurrencies ->
             val isUpdating = MutableStateFlow(value = true)
-            val nonEmptyCurrencies = maybeCurrencies.bind().toNonEmptyListOrNull()
 
-            ensureNotNull(nonEmptyCurrencies) { TokenListError.EmptyTokens }
+            val nonEmptyCurrencies = maybeCurrencies
+                .getOrElse { return@flatMapLatest flowOf(it.lceError()) }
+                .toNonEmptyListOrNull()
+
+            if (nonEmptyCurrencies.isNullOrEmpty()) {
+                return@flatMapLatest flowOf(TokenListError.EmptyTokens.lceError())
+            }
 
             // This is only 'true' when the flow here is empty, such as during initial loading
             if (isLoading.get()) {
