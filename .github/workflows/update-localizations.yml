@@ -103,6 +103,7 @@ jobs:
       - name: Print issues
         id: print_issues
         run: |
+          echo "${{ github.repository }}"
           echo "${{ steps.git-diff.outputs.issues }}"
           echo "${{ steps.jira-issues-summary.outputs.result }}"
 
