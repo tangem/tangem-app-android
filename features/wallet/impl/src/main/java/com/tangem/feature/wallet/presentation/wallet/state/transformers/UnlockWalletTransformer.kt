@@ -50,8 +50,9 @@ internal class UnlockWalletTransformer(
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
             is WalletState.Visa.Content,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
-                Timber.e("Impossible to unlock wallet with content state")
+                Timber.e("Impossible to unlock wallet with not locked state")
                 prevState
             }
         }
