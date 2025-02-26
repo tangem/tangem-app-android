@@ -91,6 +91,11 @@ internal class VisaApiRequestMaker @Inject constructor(
     private suspend fun getAuthTokens(userWalletId: UserWalletId): VisaAuthTokens {
         val userWallet = findVisaUserWallet(userWalletId)
         val status = userWallet.scanResponse.visaCardActivationStatus ?: error("Visa card activation status not found")
+
+        if (status is VisaCardActivationStatus.RefreshTokenExpired) {
+            throw RefreshTokenExpiredException()
+        }
+
         return (status as? VisaCardActivationStatus.Activated)?.visaAuthTokens ?: error("Visa card is not activated")
     }
 
