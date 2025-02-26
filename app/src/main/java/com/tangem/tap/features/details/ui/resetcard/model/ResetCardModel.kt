@@ -5,7 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
@@ -37,7 +37,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class ResetCardModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,

@@ -13,7 +13,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
@@ -75,7 +75,7 @@ import kotlin.properties.Delegates
 
 @Suppress("LongParameterList", "TooManyFunctions", "LargeClass")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class SendModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
