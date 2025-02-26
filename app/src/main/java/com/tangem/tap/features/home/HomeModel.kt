@@ -9,7 +9,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.card.ScanCardProcessor
@@ -40,7 +40,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class HomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val scanCardProcessor: ScanCardProcessor,

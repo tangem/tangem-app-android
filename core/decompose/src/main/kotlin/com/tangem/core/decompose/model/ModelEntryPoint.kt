@@ -3,7 +3,7 @@ package com.tangem.core.decompose.model
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import dagger.hilt.EntryPoint
 import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
@@ -15,7 +15,7 @@ import javax.inject.Provider
  * It provides a map of model providers.
  */
 @EntryPoint
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 interface ModelsEntryPoint {
 
     fun models(): Map<Class<*>, Provider<Model>>
