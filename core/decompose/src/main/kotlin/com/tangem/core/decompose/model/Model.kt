@@ -6,6 +6,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import javax.annotation.OverridingMethodsMustInvokeSuper
 
 /**
  * Abstract class for a component's model.
@@ -29,6 +30,7 @@ abstract class Model : InstanceKeeper.Instance {
         CoroutineScope(context = dispatchers.mainImmediate + SupervisorJob())
     }
 
+    @OverridingMethodsMustInvokeSuper
     override fun onDestroy() {
         runCatching { modelScope.cancel() }
     }
