@@ -1,10 +1,11 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.DeleteSavedAccessCodesUseCase
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.models.UserWalletId
@@ -35,6 +36,7 @@ internal interface WalletCardClickIntents {
 
 // TODO: Refactor
 @Suppress("LongParameterList")
+@ModelScoped
 internal class WalletCardClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val tokenListStore: MultiWalletTokenListStore,
@@ -74,7 +76,7 @@ internal class WalletCardClickIntentsImplementor @Inject constructor(
     }
 
     override fun onDeleteAfterConfirmationClick(userWalletId: UserWalletId) {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             walletScreenContentLoader.cancel(userWalletId)
             tokenListStore.remove(userWalletId)
 
