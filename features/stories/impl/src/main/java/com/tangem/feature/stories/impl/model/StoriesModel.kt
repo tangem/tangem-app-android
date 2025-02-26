@@ -53,22 +53,10 @@ internal class StoriesModel @Inject constructor(
             getStoryContentUseCase.invokeSync(params.storyId).fold(
                 ifLeft = {
                     Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
-                    analyticsEventHandler.send(
-                        StoriesEvents.Error(
-                            source = params.screenSource,
-                            type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
-                        ),
-                    )
                     openScreen(hideStories = false) // Fallback to target screen
                 },
                 ifRight = { swapStory ->
                     if (swapStory == null) {
-                        analyticsEventHandler.send(
-                            StoriesEvents.Error(
-                                source = params.screenSource,
-                                type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
-                            ),
-                        )
                         openScreen(hideStories = false) // Fallback to target screen
                     } else {
                         _state.update {
