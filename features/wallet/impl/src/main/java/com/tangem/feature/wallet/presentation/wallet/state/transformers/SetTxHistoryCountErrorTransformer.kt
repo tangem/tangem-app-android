@@ -33,6 +33,7 @@ internal class SetTxHistoryCountErrorTransformer(
             is WalletState.Visa.Content -> prevState.copy(txHistoryState = createErrorState())
             is WalletState.SingleCurrency.Locked,
             is WalletState.Visa.Locked,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
                 Timber.w("Impossible to load transactions history for locked wallet")
                 prevState
