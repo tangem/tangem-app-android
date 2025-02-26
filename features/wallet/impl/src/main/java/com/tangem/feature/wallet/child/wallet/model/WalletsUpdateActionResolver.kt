@@ -1,6 +1,7 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels
+package com.tangem.feature.wallet.child.wallet.model
 
 import arrow.core.getOrElse
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.common.util.getCardsCount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
@@ -9,7 +10,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.NOT_INITIALIZED
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import dagger.hilt.android.scopes.ViewModelScoped
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -18,7 +18,7 @@ import javax.inject.Inject
  *
  * @property getSelectedWalletSyncUseCase use case that returns selected wallet
  */
-@ViewModelScoped
+@ModelScoped
 internal class WalletsUpdateActionResolver @Inject constructor(
     private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
 ) {
