@@ -191,6 +191,19 @@ sealed class WalletNotification(val config: NotificationConfig) {
         ),
     )
 
+    data class UnlockVisaAccess(val onUnlockClick: () -> Unit) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(id = R.string.visa_unlock_notification_title),
+            subtitle = resourceReference(id = R.string.visa_unlock_notification_subtitle),
+            iconResId = R.drawable.ic_locked_24,
+            buttonsState = NotificationConfig.ButtonsState.PrimaryButtonConfig(
+                text = resourceReference(id = R.string.visa_unlock_notification_button),
+                iconResId = R.drawable.ic_tangem_24,
+                onClick = onUnlockClick,
+            ),
+        ),
+    )
+
     data class RateApp(
         val onLikeClick: () -> Unit,
         val onDislikeClick: () -> Unit,

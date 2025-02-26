@@ -886,6 +886,8 @@
   <string name="story_meet_title">Meet Tangem</string>
   <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
   <string name="story_web3_title">Web 3.0 Compatible</string>
+  <string name="sui_not_enough_coin_for_fee_description">An incoming transaction of at least %1$s is required to proceed</string>
+  <string name="sui_not_enough_coin_for_fee_title">Insufficient funds</string>
   <string name="swap_give_permission_fee_footer">The network will charge a token approval fee to verify that you are authorizing the use of your token for the swap.</string>
   <string name="swap_promo_text">Exchange more tokens at better rates directly in your wallet.</string>
   <string name="swap_promo_title">New Swap Provider Available!</string>
@@ -985,6 +987,9 @@
   <string name="user_wallet_list_rename_popup_title">Rename wallet</string>
   <string name="user_wallet_list_unlock_all">Unlock all</string>
   <string name="user_wallet_list_unlock_all_with">Unlock all with %s</string>
+  <string name="visa_unlock_notification_button">Unlock</string>
+  <string name="visa_unlock_notification_subtitle">Scan your card to unlock access</string>
+  <string name="visa_unlock_notification_title">Needed unlock</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain is unreachable. Try later</string>
   <string name="wallet_balance_missing_derivation">Scan card or ring</string>
   <string name="wallet_been_activated_message">This wallet has already been activated earlier.\nIf it was not done by you, please contact support.\nTangem never sells wallets along with pre-generated access codes.</string>
@@ -1099,7 +1104,7 @@
   <string name="warning_receive_blocked_hedera_token_association_required_message">You must associate your token before receiving tokens</string>
   <string name="warning_rent_fee_title">Network rent fee required</string>
   <string name="warning_seedphrase_action_required_title">Action required</string>
-  <string name="warning_seedphrase_contacted_support">Did you contact support via the app or email within 7 days of creating a wallet? If you did or are unsure, follow and complete the instructions.</string>
+  <string name="warning_seedphrase_contacted_support">Did you contact support via the app within 7 days of creating your wallet? If yes, or if you\'re unsure, click \'Yes\' and follow the instructions.</string>
   <string name="warning_seedphrase_issue_answer_no">Thank you! All set! No further actions required.</string>
   <string name="warning_seedphrase_issue_answer_yes">You will now be redirected to the official Tangem website. Please read and follow instructions there.</string>
   <string name="warning_seedphrase_issue_message">Have you ever contacted the Tangem support team directly through this application?</string>
