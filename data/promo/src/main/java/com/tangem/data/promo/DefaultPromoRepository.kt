@@ -44,15 +44,15 @@ internal class DefaultPromoRepository(
     }
 
     override fun getStoryById(id: String): Flow<StoryContent?> = isReadyToShowStories(id).mapLatest {
-        getStoryByIdSync(id)
+        getStoryByIdSync(id = id, refresh = false)
     }
 
-    override suspend fun getStoryByIdSync(id: String): StoryContent? = withContext(dispatchers.io) {
+    override suspend fun getStoryByIdSync(id: String, refresh: Boolean): StoryContent? = withContext(dispatchers.io) {
         if (!isReadyToShowStoriesSync(id)) return@withContext null
 
         val storedPromo = promoStoriesStore.getSyncOrNull(storyId = id)
         // Get last stored promo by id if possible or get from network
-        val story = if (storedPromo == null) {
+        val story = if (storedPromo == null && refresh) {
             val storyContent = runCatching {
                 // Important to return
                 withTimeoutOrNull(STORIES_LOAD_DELAY) {
