@@ -54,6 +54,11 @@ internal class SetWalletCardDropDownItemsTransformer(
                     dropDownItems = constructDropDownItems(prevState.walletCardState.id),
                 ),
             )
+            is WalletState.Visa.AccessTokenLocked -> prevState.copy(
+                walletCardState = prevState.walletCardState.copySealed(
+                    dropDownItems = constructDropDownItems(prevState.walletCardState.id),
+                ),
+            )
         }
     }
 
