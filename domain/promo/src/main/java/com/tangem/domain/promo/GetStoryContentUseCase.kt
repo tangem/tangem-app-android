@@ -18,7 +18,7 @@ class GetStoryContentUseCase(
         .catch { emit(it.left()) }
         .onEmpty { emit(null.right()) }
 
-    suspend fun invokeSync(id: String): Either<Throwable, StoryContent?> = Either.catch {
-        promoRepository.getStoryByIdSync(id)
+    suspend fun invokeSync(id: String, refresh: Boolean = false): Either<Throwable, StoryContent?> = Either.catch {
+        promoRepository.getStoryByIdSync(id, refresh)
     }
 }
