@@ -1,17 +1,17 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels
+package com.tangem.feature.wallet.child.wallet.model
 
 import androidx.compose.runtime.Stable
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.deeplink.WalletDeepLinksHandler
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
@@ -29,13 +29,11 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenSta
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -45,8 +43,9 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
-@HiltViewModel
-internal class WalletViewModel @Inject constructor(
+@ModelScoped
+internal class WalletModel @Inject constructor(
+    override val dispatchers: CoroutineDispatcherProvider,
     private val stateHolder: WalletStateController,
     private val clickIntents: WalletClickIntents,
     private val walletEventSender: WalletEventSender,
@@ -59,8 +58,6 @@ internal class WalletViewModel @Inject constructor(
     private val canUseBiometryUseCase: CanUseBiometryUseCase,
     private val isWalletsScrollPreviewEnabled: IsWalletsScrollPreviewEnabled,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val dispatchers: CoroutineDispatcherProvider,
-    private val screenLifecycleProvider: ScreenLifecycleProvider,
     private val selectedWalletAnalyticsSender: SelectedWalletAnalyticsSender,
     private val walletDeepLinksHandler: WalletDeepLinksHandler,
     private val walletNameMigrationUseCase: WalletNameMigrationUseCase,
@@ -70,12 +67,13 @@ internal class WalletViewModel @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val walletFeatureToggles: WalletFeatureToggles,
+    val screenLifecycleProvider: ScreenLifecycleProvider,
+    val innerWalletRouter: InnerWalletRouter,
     analyticsEventsHandler: AnalyticsEventHandler,
-) : ViewModel() {
+) : Model() {
 
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
-    private lateinit var router: InnerWalletRouter
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
     private val expressStatusJobHolder = JobHolder()
@@ -96,25 +94,18 @@ internal class WalletViewModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeOnExpressTransactionsUpdates()
+
+        clickIntents.initialize(innerWalletRouter, modelScope)
     }
 
     private fun maybeMigrateNames() {
-        viewModelScope.launch {
+        modelScope.launch {
             walletNameMigrationUseCase()
         }
     }
 
-    fun setWalletRouter(router: InnerWalletRouter) {
-        this.router = router
-        clickIntents.initialize(router, viewModelScope)
-    }
-
-    fun subscribeToLifecycle(lifecycleOwner: LifecycleOwner) {
-        lifecycleOwner.lifecycle.addObserver(screenLifecycleProvider)
-    }
-
-    override fun onCleared() {
-        super.onCleared()
+    override fun onDestroy() {
+        super.onDestroy()
 
         tokenListStore.clear()
         stateHolder.clear()
@@ -122,15 +113,15 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun suggestToEnableBiometrics() {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
-            if (isShowSaveWalletScreenEnabled()) router.openSaveUserWalletScreen()
+            if (isShowSaveWalletScreenEnabled()) innerWalletRouter.openSaveUserWalletScreen()
         }
     }
 
     private fun suggestToOpenMarkets() {
-        viewModelScope.launch {
+        modelScope.launch {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
             if (shouldShowMarketsTooltipUseCase()) {
@@ -144,7 +135,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private suspend fun isShowSaveWalletScreenEnabled(): Boolean {
-        return router.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
+        return innerWalletRouter.isWalletLastScreen() && shouldShowSaveWalletScreenUseCase() && canUseBiometryUseCase()
     }
 
     private fun subscribeToUserWalletsUpdates() {
@@ -156,7 +147,7 @@ internal class WalletViewModel @Inject constructor(
             }
             .onEach(::updateWallets)
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
             .saveIn(walletsUpdateJobHolder)
     }
 
@@ -168,11 +159,11 @@ internal class WalletViewModel @Inject constructor(
                 stateHolder.update(transformer = UpdateBalanceHidingModeTransformer(it.isBalanceHidden))
             }
             .flowOn(dispatchers.main)
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnPushNotificationsPermission() {
-        viewModelScope.launch {
+        modelScope.launch {
             val shouldRequestPush = shouldAskPermissionUseCase(PUSH_PERMISSION)
             val isPushPermissionAvailable = getPushPermissionOrNull() != null
             if (!shouldRequestPush || !isPushPermissionAvailable) return@launch
@@ -203,10 +194,10 @@ internal class WalletViewModel @Inject constructor(
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
 
-                    walletDeepLinksHandler.registerForWallet(viewModel = this, userWallet = selectedWallet)
+                    walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
                 }
                 .flowOn(dispatchers.main)
-                .launchIn(viewModelScope)
+                .launchIn(modelScope)
         }
     }
 
@@ -227,14 +218,14 @@ internal class WalletViewModel @Inject constructor(
                     !isBackground -> subscribeOnExpressTransactionsUpdates()
                 }
             }
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun subscribeOnExpressTransactionsUpdates() {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             expressTxStatusTaskScheduler.cancelTask()
             expressTxStatusTaskScheduler.scheduleTask(
-                viewModelScope,
+                modelScope,
                 PeriodicTask(
                     isDelayFirst = false,
                     delay = EXPRESS_STATUS_UPDATE_DELAY,
@@ -249,7 +240,7 @@ internal class WalletViewModel @Inject constructor(
     }
 
     private fun needToRefreshTimer() {
-        viewModelScope.launch {
+        modelScope.launch {
             delay(REFRESH_WALLET_BACKGROUND_TIMER_MILLIS)
             needToRefreshWallet = true
         }.saveIn(refreshWalletJobHolder)
@@ -259,7 +250,7 @@ internal class WalletViewModel @Inject constructor(
         needToRefreshWallet = false
         val state = stateHolder.uiState.value
         val wallet = state.wallets.getOrNull(state.selectedWalletIndex) ?: return
-        viewModelScope.launch {
+        modelScope.launch {
             refreshMultiCurrencyWalletQuotesUseCase(wallet.walletCardState.id).getOrElse {
                 Timber.e("Failed to refreshMultiCurrencyWalletQuotesUseCase $it")
             }
@@ -279,7 +270,7 @@ internal class WalletViewModel @Inject constructor(
                     userWallet = action.selectedWallet,
                     clickIntents = clickIntents,
                     isRefresh = true,
-                    coroutineScope = viewModelScope,
+                    coroutineScope = modelScope,
                 )
 
                 stateHolder.update(
@@ -312,7 +303,7 @@ internal class WalletViewModel @Inject constructor(
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
+            coroutineScope = modelScope,
         )
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
@@ -337,7 +328,7 @@ internal class WalletViewModel @Inject constructor(
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
+            coroutineScope = modelScope,
         )
 
         stateHolder.update(
@@ -355,7 +346,7 @@ internal class WalletViewModel @Inject constructor(
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
+            coroutineScope = modelScope,
         )
 
         stateHolder.update(
@@ -381,7 +372,7 @@ internal class WalletViewModel @Inject constructor(
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
+            coroutineScope = modelScope,
         )
 
         val newSelectedWalletIndex = if (action.selectedWalletIndex - action.deletedWalletIndex == 1) {
@@ -439,7 +430,7 @@ internal class WalletViewModel @Inject constructor(
         walletScreenContentLoader.load(
             userWallet = action.selectedWallet,
             clickIntents = clickIntents,
-            coroutineScope = viewModelScope,
+            coroutineScope = modelScope,
         )
     }
 

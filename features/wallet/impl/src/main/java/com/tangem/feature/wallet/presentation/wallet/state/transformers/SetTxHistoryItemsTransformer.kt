@@ -6,7 +6,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemFlowConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.coroutines.flow.Flow
 import timber.log.Timber
 
