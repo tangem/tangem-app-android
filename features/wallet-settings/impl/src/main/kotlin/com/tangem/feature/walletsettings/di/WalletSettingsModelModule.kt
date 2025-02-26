@@ -1,6 +1,6 @@
 package com.tangem.feature.walletsettings.di
 
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.feature.walletsettings.component.impl.model.RenameWalletModel
 import com.tangem.feature.walletsettings.model.WalletSettingsModel
@@ -11,7 +11,7 @@ import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface WalletSettingsModelModule {
 
     @Binds

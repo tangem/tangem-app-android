@@ -1,6 +1,6 @@
 package com.tangem.features.details.di
 
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.details.model.DetailsModel
 import com.tangem.features.details.model.UserWalletListModel
@@ -11,7 +11,7 @@ import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface ModelModule {
 
     @Binds

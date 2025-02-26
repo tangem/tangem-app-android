@@ -1,7 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
