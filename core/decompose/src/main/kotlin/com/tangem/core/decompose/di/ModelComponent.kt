@@ -10,11 +10,11 @@ import dagger.hilt.components.SingletonComponent
 /**
  * Interface for the Decompose component.
  *
- * It is annotated as [ComponentScoped], meaning it has a lifecycle that is scoped to the component.
+ * It is annotated as [ModelScoped], meaning it has a lifecycle that is scoped to the component.
  */
-@ComponentScoped
+@ModelScoped
 @DefineComponent(parent = SingletonComponent::class)
-interface DecomposeComponent {
+interface ModelComponent {
 
     /**
      * Builder interface for the component.
@@ -51,6 +51,6 @@ interface DecomposeComponent {
          *
          * @return The built Decompose component.
          */
-        fun build(): DecomposeComponent
+        fun build(): ModelComponent
     }
 }
