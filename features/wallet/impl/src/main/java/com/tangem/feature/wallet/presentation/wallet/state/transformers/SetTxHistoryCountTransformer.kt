@@ -26,6 +26,7 @@ internal class SetTxHistoryCountTransformer(
             )
             is WalletState.SingleCurrency.Locked,
             is WalletState.Visa.Locked,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
                 Timber.w("Impossible to load transactions history for locked wallet")
                 prevState
