@@ -12,7 +12,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomS
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
@@ -89,7 +89,7 @@ import kotlin.properties.Delegates
 
 @Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class StakingModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val stateController: StakingStateController,
@@ -397,7 +397,7 @@ internal class StakingModel @Inject constructor(
                 StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
             )
         } else {
-            if (uiState.value.actionType == StakingActionCommonType.Enter) {
+            if (uiState.value.actionType is StakingActionCommonType.Enter) {
                 stateController.updateAll(
                     ValidatorSelectChangeTransformer(
                         selectedValidator = null,
@@ -712,7 +712,7 @@ internal class StakingModel @Inject constructor(
     ): BigDecimal? {
         // TODO split for different networks
         val subtractedBalanceAmount = when (actionType) {
-            StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
+            is StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 amountValue = amount.orZero(),
