@@ -1,7 +1,7 @@
 package com.tangem.features.send.impl.di
 
-import com.tangem.core.decompose.di.ComponentScoped
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.send.api.SendComponent
 import com.tangem.features.send.impl.DefaultSendComponent
@@ -29,10 +29,10 @@ internal interface SendModule {
 }
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface SendModelModule {
 
     @Binds
-    @ComponentScoped
+    @ModelScoped
     fun bindRouter(router: DefaultSendRouter): InnerSendRouter
 }

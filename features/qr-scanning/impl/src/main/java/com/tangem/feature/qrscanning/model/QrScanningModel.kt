@@ -2,7 +2,7 @@ package com.tangem.feature.qrscanning.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.settings.SettingsManager
@@ -23,7 +23,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class QrScanningModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     paramsContainer: ParamsContainer,
