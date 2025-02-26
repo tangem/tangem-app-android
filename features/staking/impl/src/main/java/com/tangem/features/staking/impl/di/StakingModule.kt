@@ -1,7 +1,7 @@
 package com.tangem.features.staking.impl.di
 
-import com.tangem.core.decompose.di.ComponentScoped
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.staking.impl.DefaultStakingComponent
@@ -29,10 +29,10 @@ internal interface StakingModule {
 }
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface StakingComponentModule {
 
     @Binds
-    @ComponentScoped
+    @ModelScoped
     fun bindRouter(impl: DefaultStakingRouter): InnerStakingRouter
 }
