@@ -7,6 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.visa.exception.RefreshTokenExpiredException
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
@@ -29,6 +30,10 @@ internal class SetBalancesAndLimitsTransformer(
 
     override fun transformTyped(prevState: WalletState.Visa.Content): WalletState {
         val visaCurrency = maybeVisaCurrency.getOrElse {
+            if (it is RefreshTokenExpiredException) {
+                return getRefreshTokenExpiredState(prevState)
+            }
+
             return prevState.copy(
                 walletCardState = getErrorWalletCardState(prevState.walletCardState),
                 depositButtonState = prevState.depositButtonState.copy(isEnabled = false),
@@ -99,5 +104,15 @@ internal class SetBalancesAndLimitsTransformer(
         )
 
         return WalletAdditionalInfo(hideable = true, infoContent)
+    }
+
+    private fun getRefreshTokenExpiredState(prevState: WalletState.Visa.Content): WalletState {
+        return WalletState.Visa.AccessTokenLocked(
+            walletCardState = prevState.walletCardState,
+            buttons = prevState.buttons,
+            bottomSheetConfig = prevState.bottomSheetConfig,
+            onExploreClick = clickIntents::onExploreClick,
+            onUnlockVisaAccessNotificationClick = clickIntents::onUnlockVisaAccessClick,
+        )
     }
 }

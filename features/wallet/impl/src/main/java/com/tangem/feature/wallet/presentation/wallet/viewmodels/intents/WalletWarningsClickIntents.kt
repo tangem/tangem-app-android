@@ -55,6 +55,8 @@ internal interface WalletWarningsClickIntents {
 
     fun onUnlockWalletClick()
 
+    fun onUnlockVisaAccessClick()
+
     fun onScanToUnlockWalletClick()
 
     fun onLikeAppClick()
@@ -174,6 +176,10 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 .onRight { stateHolder.update(CloseBottomSheetTransformer(stateHolder.getSelectedWalletId())) }
                 .onLeft(::handleUnlockWalletsError)
         }
+    }
+
+    override fun onUnlockVisaAccessClick() {
+        openScanCardDialog()
     }
 
     private fun handleUnlockWalletsError(error: UnlockWalletsError) {
