@@ -3,16 +3,16 @@ package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent.ProgramName
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 internal class WalletWarningsAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
