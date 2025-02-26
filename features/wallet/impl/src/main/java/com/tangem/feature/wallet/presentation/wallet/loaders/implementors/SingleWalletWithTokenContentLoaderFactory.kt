@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
@@ -13,12 +14,13 @@ import com.tangem.feature.wallet.presentation.wallet.domain.GetMultiWalletWarnin
 import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenListStore
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.swap.SwapFeatureToggles
 import javax.inject.Inject
 
 // TODO: Refactor
 @Suppress("LongParameterList")
+@ModelScoped
 internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val stateHolder: WalletStateController,
     private val tokenListAnalyticsSender: TokenListAnalyticsSender,
