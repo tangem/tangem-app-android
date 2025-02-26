@@ -9,7 +9,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensLis
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCardStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TokenListStateConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.enableButtons
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import timber.log.Timber
 
 internal class SetTokenListTransformer(
