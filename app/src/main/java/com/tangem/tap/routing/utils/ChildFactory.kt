@@ -19,7 +19,7 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.staking.api.StakingComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.TokenDetailsComponent
-import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.features.wallet.WalletEntryComponent
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -73,7 +73,7 @@ internal class ChildFactory @Inject constructor(
     private val resetCardComponentFactory: ResetCardComponent.Factory,
     private val referralComponentFactory: ReferralComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
-    private val walletRouter: WalletRouter,
+    private val walletComponentFactory: WalletEntryComponent.Factory,
     private val testerRouter: TesterRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
 ) {
@@ -357,12 +357,18 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = pushNotificationsComponentFactory,
                 )
             }
+            is AppRoute.Wallet -> {
+                createComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = walletComponentFactory,
+                )
+            }
             is AppRoute.SaveWallet,
             is AppRoute.OnboardingNote,
             is AppRoute.OnboardingOther,
             is AppRoute.OnboardingTwins,
             is AppRoute.OnboardingWallet,
-            is AppRoute.Wallet,
             -> error("Unsupported route: $route")
         }
         // endregion
@@ -520,7 +526,11 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Wallet -> {
-                route.asFragmentChild(Provider { walletRouter.getEntryFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = Unit,
+                    componentFactory = walletComponentFactory,
+                )
             }
             is AppRoute.WalletConnectSessions -> {
                 route.asComponentChild(

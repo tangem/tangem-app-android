@@ -14,7 +14,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimi
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.utils.extensions.isZero
 import org.joda.time.DateTime
 import org.joda.time.Days

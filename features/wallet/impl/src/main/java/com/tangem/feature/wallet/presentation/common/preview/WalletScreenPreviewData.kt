@@ -9,6 +9,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -144,7 +145,6 @@ internal object WalletScreenPreviewData {
     )
 
     internal val walletScreenState = WalletScreenState(
-        onBackClick = {},
         topBarConfig = topBarConfig,
         selectedWalletIndex = 0,
         wallets = persistentListOf(

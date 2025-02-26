@@ -1,11 +1,11 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.settings.NeverRequestPermissionUseCase
 import com.tangem.features.pushnotifications.api.analytics.PushNotificationAnalyticEvents
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,7 +20,7 @@ internal interface WalletPushPermissionClickIntents {
     fun onAllowPushPermission()
 }
 
-@ViewModelScoped
+@ModelScoped
 internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -36,7 +36,7 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
 
     override fun onNeverAskPushPermission(isUserDismissed: Boolean) {
         if (isUserDismissedDialog != isUserDismissed) return
-        viewModelScope.launch {
+        modelScope.launch {
             analyticsEventHandler.send(
                 PushNotificationAnalyticEvents.ButtonLater(AnalyticsParam.ScreensSources.Main),
             )
@@ -46,14 +46,14 @@ internal class WalletPushPermissionClickIntentsImplementor @Inject constructor(
 
     override fun onDenyPushPermission() {
         analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = false))
-        viewModelScope.launch {
+        modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
         }
     }
 
     override fun onAllowPushPermission() {
         analyticsEventHandler.send(PushNotificationAnalyticEvents.PermissionStatus(isAllowed = true))
-        viewModelScope.launch {
+        modelScope.launch {
             neverRequestPermissionUseCase(PUSH_PERMISSION)
         }
     }

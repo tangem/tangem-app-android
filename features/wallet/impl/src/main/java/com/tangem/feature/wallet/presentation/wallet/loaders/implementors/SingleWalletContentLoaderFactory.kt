@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
@@ -14,11 +15,10 @@ import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
-import dagger.hilt.android.scopes.ViewModelScoped
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 @Suppress("LongParameterList")
 internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val stateHolder: WalletStateController,

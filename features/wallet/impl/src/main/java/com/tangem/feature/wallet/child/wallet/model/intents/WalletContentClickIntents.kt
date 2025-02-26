@@ -1,7 +1,8 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -16,15 +17,11 @@ import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.OpenBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.MultiWalletCurrencyActionsConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
@@ -32,8 +29,6 @@ import timber.log.Timber
 import javax.inject.Inject
 
 internal interface WalletContentClickIntents {
-
-    fun onBackClick()
 
     fun onDetailsClick()
 
@@ -53,7 +48,7 @@ internal interface WalletContentClickIntents {
 
     fun onDissmissBottomSheet()
 
-    fun onGoToProviderClick(externalTxId: String)
+    fun onGoToProviderClick(externalTxUrl: String)
 
     fun onExpressTransactionClick(txId: String)
 
@@ -63,7 +58,7 @@ internal interface WalletContentClickIntents {
 }
 
 @Suppress("LongParameterList")
-@ViewModelScoped
+@ModelScoped
 internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val currencyActionsClickIntents: WalletCurrencyActionsClickIntentsImplementor,
@@ -79,10 +74,8 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val walletEventSender: WalletEventSender,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
-    override fun onBackClick() = router.popBackStack()
-
     override fun onDetailsClick() {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val userWalletId = stateHolder.getSelectedWalletId()
             val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
                 Timber.e(
@@ -124,7 +117,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onDismissMarketsOnboarding() {
         stateHolder.update { it.copy(showMarketsOnboarding = false) }
-        viewModelScope.launch {
+        modelScope.launch {
             shouldShowMarketsTooltipUseCase(isShown = true)
         }
     }
@@ -134,7 +127,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onTokenItemLongClick(cryptoCurrencyStatus: CryptoCurrencyStatus) {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val userWalletId = stateHolder.getSelectedWalletId()
             val userWallet = getUserWalletUseCase(userWalletId).getOrElse {
                 Timber.e(
@@ -169,7 +162,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onTransactionClick(txHash: String) {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val currency = getPrimaryCurrencyStatusUpdatesUseCase.unwrap(
                 userWalletId = stateHolder.getSelectedWalletId(),
             )
@@ -191,7 +184,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onDissmissBottomSheet() {
         val userWalletId = stateHolder.getSelectedWalletId()
         if (stateHolder.getSelectedWallet().bottomSheetConfig?.content is ExpressStatusBottomSheetConfig) {
-            viewModelScope.launch(dispatchers.main) {
+            modelScope.launch(dispatchers.main) {
                 onrampStatusFactory.removeTransactionOnBottomSheetClosed(forceDispose = false)
             }
         }
@@ -199,7 +192,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onExpressTransactionClick(txId: String) {
-        viewModelScope.launch {
+        modelScope.launch {
             val userWalletId = stateHolder.getSelectedWalletId()
             val singleWalletState = stateHolder.getSelectedWallet() as? WalletState.SingleCurrency.Content
                 ?: return@launch
@@ -236,7 +229,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     override fun onDisposeExpressStatus() {
         val userWalletId = stateHolder.getSelectedWalletId()
         if (stateHolder.getSelectedWallet().bottomSheetConfig?.content is ExpressStatusBottomSheetConfig) {
-            viewModelScope.launch(dispatchers.main) {
+            modelScope.launch(dispatchers.main) {
                 onrampStatusFactory.removeTransactionOnBottomSheetClosed(forceDispose = true)
             }
         }

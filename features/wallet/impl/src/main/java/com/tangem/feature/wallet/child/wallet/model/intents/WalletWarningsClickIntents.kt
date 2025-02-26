@@ -1,9 +1,10 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.common.TangemBlogUrlBuilder
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.card.DerivePublicKeysUseCase
@@ -38,7 +39,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -81,7 +81,7 @@ internal interface WalletWarningsClickIntents {
 }
 
 @Suppress("LongParameterList")
-@ViewModelScoped
+@ModelScoped
 internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val stateHolder: WalletStateController,
     private val walletEventSender: WalletEventSender,
@@ -110,7 +110,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     private fun prepareAndStartOnboardingProcess() {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             getSelectedUserWallet()?.let {
                 reduxStateHolder.dispatch(
                     LegacyAction.StartOnboardingProcess(
@@ -129,7 +129,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     override fun onCloseAlreadySignedHashesWarningClick() {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val userWallet = getSelectedUserWallet() ?: return@launch
 
             setCardWasScannedUseCase(cardId = userWallet.cardId)
@@ -140,7 +140,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         analyticsEventHandler.send(Basic.CardWasScanned(AnalyticsParam.ScreensSources.Main))
         analyticsEventHandler.send(MainScreen.NoticeScanYourCardTapped)
 
-        viewModelScope.launch {
+        modelScope.launch {
             val userWallet = getSelectedUserWallet() ?: return@launch
 
             derivePublicKeysUseCase(
@@ -171,7 +171,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onUnlockWalletClick() {
         analyticsEventHandler.send(MainScreen.UnlockAllWithBiometrics)
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             unlockWalletsUseCase(type = UnlockType.ALL_WITHOUT_SELECT)
                 .onRight { stateHolder.update(CloseBottomSheetTransformer(stateHolder.getSelectedWalletId())) }
                 .onLeft(::handleUnlockWalletsError)
@@ -201,7 +201,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     }
 
     private fun openScanCardDialog() {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             scanCardToUnlockWalletClickHandler(walletId = stateHolder.getSelectedWalletId())
                 .onLeft { error ->
                     when (error) {
@@ -222,7 +222,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         walletEventSender.send(
             event = WalletEvent.RateApp(
                 onDismissClick = {
-                    viewModelScope.launch(dispatchers.main) {
+                    modelScope.launch(dispatchers.main) {
                         neverToSuggestRateAppUseCase()
                     }
                 },
@@ -233,7 +233,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onDislikeAppClick() {
         analyticsEventHandler.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             neverToSuggestRateAppUseCase()
 
             val scanResponse = getSelectedUserWallet()?.scanResponse ?: return@launch
@@ -246,7 +246,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     override fun onCloseRateAppWarningClick() {
         analyticsEventHandler.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             remindToRateAppLaterUseCase()
         }
     }
@@ -259,7 +259,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 action = TokenSwapPromoAnalyticsEvent.PromotionBannerClicked.BannerAction.Closed,
             ),
         )
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             shouldShowSwapPromoWalletUseCase.neverToShow()
         }
     }
@@ -268,14 +268,14 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         val scanResponse = getSelectedUserWallet()?.scanResponse ?: return
         val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return
 
-        viewModelScope.launch {
+        modelScope.launch {
             sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
         }
     }
 
     override fun onNoteMigrationButtonClick(url: String) {
         analyticsEventHandler.send(MainScreen.NotePromoButton)
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             router.openUrl(url)
         }
     }
@@ -290,7 +290,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 state = WalletAlertState.SimpleOkAlert(
                     message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
                     onOkClick = {
-                        viewModelScope.launch {
+                        modelScope.launch {
                             seedPhraseNotificationUseCase.confirm(userWalletId = userWallet.walletId)
 
                             urlOpener.openUrl(
@@ -313,7 +313,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 state = WalletAlertState.SimpleOkAlert(
                     message = resourceReference(R.string.warning_seedphrase_issue_answer_no),
                     onOkClick = {
-                        viewModelScope.launch {
+                        modelScope.launch {
                             seedPhraseNotificationUseCase.decline(userWalletId = userWallet.walletId)
                         }
                     },
@@ -332,7 +332,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
                 state = WalletAlertState.SimpleOkAlert(
                     message = resourceReference(R.string.warning_seedphrase_issue_answer_yes),
                     onOkClick = {
-                        viewModelScope.launch {
+                        modelScope.launch {
                             seedPhraseNotificationUseCase.acceptSecond(userWalletId = userWallet.walletId)
 
                             urlOpener.openUrl(
@@ -350,7 +350,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
 
         analyticsEventHandler.send(MainScreen.NoticeSeedPhraseSupportButtonDeclined)
 
-        viewModelScope.launch {
+        modelScope.launch {
             seedPhraseNotificationUseCase.rejectSecond(userWalletId = userWallet.walletId)
         }
     }
