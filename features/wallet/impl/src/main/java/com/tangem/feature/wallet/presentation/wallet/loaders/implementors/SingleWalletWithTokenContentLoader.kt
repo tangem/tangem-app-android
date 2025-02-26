@@ -6,6 +6,7 @@ import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -14,12 +15,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletActionButtonsSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.SingleWalletWithTokenListSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletDropDownItemsSubscriber
-import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.features.swap.SwapFeatureToggles
 
 @Suppress("LongParameterList")

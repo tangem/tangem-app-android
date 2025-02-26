@@ -9,7 +9,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDropDownItems
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCardClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletCardClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
