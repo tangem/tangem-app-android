@@ -29,10 +29,11 @@ jobs:
   set-jira-version:
     name: Set Jira Task Version
     needs: prepare
-    uses: tangem-developments/actions/.github/workflows/set-jira-task-version.yml@feature/AND-9908_fix_set_jira_version_workflow
+    uses: tangem-developments/actions/.github/workflows/set-jira-task-version.yml@feature/IOS-8785_ci_cd_create_release
     with:
       version_name: ${{ needs.prepare.outputs.version_name }}
       project_name: 'AND'
+      pull_request_number: ${{ github.event.pull_request.number }}
     secrets:
       JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
       JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}

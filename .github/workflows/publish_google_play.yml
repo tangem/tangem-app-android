@@ -7,26 +7,26 @@ on:
   workflow_dispatch:
 
 env:
-  ENABLE_DEX_PROTECTION: "false"
+  ENABLE_DEX_PROTECTOR: "false"
 
 jobs:
-  set_dex_protection:
-    name: Set dex protection flag
+  set_dex_protector_flag:
+    name: Set dex protector flag
     runs-on: ubuntu-latest
     outputs:
-      checkout_dexprotector_config: ${{ steps.set-output.outputs.value }}
+      use_dexprotector: ${{ steps.set-output.outputs.value }}
     steps:
       - name: Set output
         id: set-output
-        run: echo "value=${{ env.ENABLE_DEX_PROTECTION == 'true' }}" >> "$GITHUB_OUTPUT"
+        run: echo "value=${{ env.ENABLE_DEX_PROTECTOR == 'true' }}" >> "$GITHUB_OUTPUT"
 
   prepare:
-    needs: set_dex_protection
+    needs: set_dex_protector_flag
     uses: ./.github/workflows/prepare.yml
     name: Prepare
     with:
       initial_version_code: 1200
-      checkout_dexprotector_config: ${{ needs.set_dex_protection.outputs.checkout_dexprotector_config == 'true' }}
+      checkout_dexprotector_config: ${{ needs.set_dex_protector_flag.outputs.use_dexprotector == 'true' }}
     secrets: inherit
 
   build_and_publish:
@@ -79,7 +79,7 @@ jobs:
 
       - name: Protect APK & AAB
         id: dexprotector
-        if: ${{ env.ENABLE_DEX_PROTECTION == 'true' }}
+        if: ${{ env.ENABLE_DEX_PROTECTOR == 'true' }}
         env:
           DEX_PROTECTOR_HOME: /home/ubuntu/CI/dexprotector
           SHA_256_CERTIFICATE_FINGERPRINT: ${{ secrets.UPLOAD_SHA_256_CERTIFICATE_FINGERPRINT }}
@@ -137,9 +137,9 @@ jobs:
       - name: Upload to Google Play
         env:
           UPLOAD_JSON_KEY_DATA: ${{ secrets.UPLOAD_JSON_KEY_DATA }}
-          ENABLE_DEX_PROTECTION: ${{ env.ENABLE_DEX_PROTECTION }}
+          ENABLE_DEX_PROTECTOR: ${{ env.ENABLE_DEX_PROTECTOR }}
         run: |
-          if [[ "$ENABLE_DEX_PROTECTION" == "true" ]]; then
+          if [[ "$ENABLE_DEX_PROTECTOR" == "true" ]]; then
             export AAB_FILE="app-release-protected.aab"
           else
             export AAB_FILE="app-release.aab"
@@ -165,6 +165,7 @@ jobs:
   notification:
     name: Send Notification
     needs:
+      - set_dex_protector_flag
       - prepare
       - build_and_publish
     uses: tangem-developments/actions/.github/workflows/notification.yml@main
@@ -176,12 +177,14 @@ jobs:
       version: ${{ needs.prepare.outputs.version_name }}
       build_number: ${{ needs.prepare.outputs.version_code }}
       changelog: ${{ needs.prepare.outputs.jira_summary }}
+      is_archive_analyzed: ${{ needs.set_dex_protector_flag.outputs.use_dexprotector == 'true' }}
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
   error_notification:
     name: Error Notification
     needs:
+      - set_dex_protector_flag
       - prepare
       - build_and_publish
     if: failure()
@@ -194,5 +197,6 @@ jobs:
       version: ${{ needs.prepare.outputs.version_name }}
       build_number: ${{ needs.prepare.outputs.version_code }}
       changelog: ${{ needs.prepare.outputs.jira_summary }}
+      is_archive_analyzed: ${{ needs.set_dex_protector_flag.outputs.use_dexprotector == 'true' }}
     secrets:
       SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}

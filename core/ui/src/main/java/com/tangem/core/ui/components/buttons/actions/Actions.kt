@@ -18,9 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,9 +28,9 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.icons.badge.drawBadge
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
@@ -223,20 +221,6 @@ fun getTextColor(config: ActionButtonConfig): Color {
         config.dimContent -> TangemTheme.colors.text.tertiary
         else -> TangemTheme.colors.text.primary1
     }
-}
-
-private fun DrawScope.drawBadge(containerColor: Color) {
-    val width = size.width
-    drawCircle(
-        color = containerColor,
-        center = Offset(x = width - 2.dp.toPx(), y = 2.dp.toPx()),
-        radius = 5.dp.toPx(),
-    )
-    drawCircle(
-        color = TangemColorPalette.Azure,
-        center = Offset(x = width - 2.dp.toPx(), y = 2.dp.toPx()),
-        radius = 3.dp.toPx(),
-    )
 }
 
 @Preview(group = "RoundedActionButton", showBackground = true)

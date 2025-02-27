@@ -6,7 +6,7 @@ on:
       - 'releases/**'
 jobs:
   create-pr-to-develop:
-    uses: tangem-developments/actions/.github/workflows/create_pr_to_develop.yml@feature/AND-9908_fix_create_pr_workflow
+    uses: tangem-developments/actions/.github/workflows/create_pr_to_develop.yml@feature/IOS-8785_ci_cd_create_release
     with:
       source_branch: ${{ github.ref_name }}
       replace_android_tangem_dependencies: true
