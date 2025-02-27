@@ -127,7 +127,6 @@ internal class AddToPortfolioBSContentUMFactory(
                             },
                             appCurrency = portfolioData.appCurrency,
                             balance = balance?.getOrNull(),
-                            isLoading = balance?.isLoading() == true,
                             isBalanceHidden = portfolioData.isBalanceHidden,
                             endIcon = if (userWallet.walletId == selectedWalletId) {
                                 UserWalletItemUM.EndIcon.Checkmark
