@@ -21,12 +21,10 @@ sealed class StoriesEvents(
     )
 
     data class Error(
-        val source: String,
         val type: String,
     ) : StoriesEvents(
         event = "Error",
         params = mapOf(
-            AnalyticsParam.SOURCE to source,
             AnalyticsParam.TYPE to type,
         ),
     )
