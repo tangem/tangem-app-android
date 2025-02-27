@@ -271,6 +271,8 @@
   <string name="express_exchange_by">Getauscht von %s</string>
   <string name="express_exchange_notification_failed_text">Besuche die Website des Anbieters, um dein Geld zurückzuerhalten</string>
   <string name="express_exchange_notification_failed_title">Fehler beim Vorgang durch Anbieter</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Dein Wechsel dauert länger als erwartet. Wende Dich für Hilfe bitte an den Support Deines Anbieters.</string>
+  <string name="express_exchange_notification_long_transaction_time_title">Lange Transaktionszeit</string>
   <string name="express_exchange_notification_refund_text">Der Transaktionsbetrag wurde aufgrund von OKX- oder Bridge-Regeln in %1$s auf deine Wallet zurückerstattet. %2$s</string>
   <string name="express_exchange_notification_refund_title">Der Betrag wurde in %1$s (%2$s Netzwerk) zurückerstattet.</string>
   <string name="express_exchange_notification_verification_text">Besuche die Website des Anbieters zur Überprüfung</string>
@@ -813,6 +815,10 @@
   <string name="staking_notification_low_staked_balance_title">Niedriges Stakingguthaben</string>
   <string name="staking_notification_minimum_balance_error_text">Für erneutes Staking sind mindestens %1$s %2$s erforderlich. Bitte lade Dein Guthaben auf.</string>
   <string name="staking_notification_minimum_balance_error_title">Nicht genug %s</string>
+  <string name="staking_notification_minimum_balance_title">Unzureichendes Guthaben zum Staking</string>
+  <string name="staking_notification_minimum_restake_ada_text">Für das erneute staken sind mindestens 3 ADA erforderlich. Bitte lade Dein Guthaben auf.</string>
+  <string name="staking_notification_minimum_restake_ada_title">Nicht genug ADA</string>
+  <string name="staking_notification_minimum_stake_ada_text">Der für das Staking erforderliche Mindestbetrag muss 5 ADA überschreiten. Bitte lade Dein Guthaben auf, um mit dem Staking zu beginnen.</string>
   <string name="staking_notification_network_error_text">Aufgrund von Netzwerkproblemen ist Staking derzeit nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="staking_notification_new_validator_funds_transfer">Wenn Du im %1$s -Netzwerk mit einem neuen Validator stakest, werden alle zuvor eingesetzten Gelder automatisch an diesen Validator übertragen.</string>
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
@@ -880,6 +886,8 @@
   <string name="story_meet_title">Lerne Tangem kennen</string>
   <string name="story_web3_description">Tausche, kaufen Sie NFTs, vergebe Kredite und tätige Einlagen bei mehr als 100 verschiedenen dezentralen Diensten</string>
   <string name="story_web3_title">Web 3.0-kompatibel</string>
+  <string name="sui_not_enough_coin_for_fee_description">Zum Fortfahren ist eine eingehende Transaktion von mindestens %1$s erforderlich</string>
+  <string name="sui_not_enough_coin_for_fee_title">Unzureichende Mittel</string>
   <string name="swap_give_permission_fee_footer">Das Netzwerk erhebt eine Token-Genehmigungsgebühr, um zu überprüfen, ob Sie die Verwendung Ihres Tokens für den Swap genehmigen.</string>
   <string name="swap_promo_text">Tausche mehr Token zu besseren Kursen direkt in deiner Brieftasche.</string>
   <string name="swap_promo_title">Neuer Swap-Anbieter verfügbar!</string>
@@ -918,6 +926,7 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">Du hast kein Guthaben um dies zu Verkaufen. Lade dein Konto auf, um Geld von dort zu verkaufen.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">Du hast kein Guthaben zum Versenden. Lade dein Konto auf, um Geld von dort aus senden zu können.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Das Tauschen von %s wird von aktuellen Anbietern nicht unterstützt, aber wir arbeiten daran, weitere Optionen hinzuzufügen.</string>
+  <string name="token_button_unavailability_reason_out_of_date_balance">Der angezeigte Kontostand kann aufgrund der Zwischenspeicherung veraltet sein.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Der Verkauf von Geldmitteln ist möglich, sobald die ausstehende(n) Transaktion(en) im %s -Netzwerk abgeschlossen ist/sind.</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Die Geldsendung wird verfügbar, sobald die ausstehende(n) Transaktion(en) im Netzwerk %s abgeschlossen ist/sind.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Der Verkauf von %s wird von aktuellen Anbietern nicht unterstützt, aber wir arbeiten daran, weitere Optionen hinzuzufügen.</string>
@@ -978,6 +987,9 @@
   <string name="user_wallet_list_rename_popup_title">Wallet umbenennen</string>
   <string name="user_wallet_list_unlock_all">Alle freischalten</string>
   <string name="user_wallet_list_unlock_all_with">Alle mit %s freischalten</string>
+  <string name="visa_unlock_notification_button">Freischalten</string>
+  <string name="visa_unlock_notification_subtitle">Scanne Deine Karte, um den Zugriff freizuschalten</string>
+  <string name="visa_unlock_notification_title">Benötigte Freischaltung</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Blockchain ist nicht erreichbar. Versuche es später nochmal</string>
   <string name="wallet_balance_missing_derivation">Karte oder Ring scannen</string>
   <string name="wallet_been_activated_message">Dieses Wallet wurde bereits früher aktiviert. \n Wenn dies nicht von Dir durchgeführt wurde, wende Dich bitte an den Support. \n Tangem verkauft niemals Wallets zusammen mit vorgenerierten Zugangscodes.</string>
@@ -1092,7 +1104,7 @@
   <string name="warning_receive_blocked_hedera_token_association_required_message">Du musst deinen Token zuordnen, bevor du Token erhalten kannst</string>
   <string name="warning_rent_fee_title">Netzmietgebühr erforderlich</string>
   <string name="warning_seedphrase_action_required_title">Handlungsbedarf</string>
-  <string name="warning_seedphrase_contacted_support">Hast Du innerhalb von 7 Tagen nach dem Erstellen einer Wallet per App oder E-Mail Kontakt zum Support aufgenommen? Wenn ja oder wenn Du Dir nicht sicher bist, befolge die Anweisungen und führe diese vollständig aus.</string>
+  <string name="warning_seedphrase_contacted_support">Hast Du innerhalb von 7 Tagen nach der Erstellung Ihres Wallets über die App Kontakt zum Support aufgenommen? Wenn ja oder wenn Du Dir nicht sicher bist, klicke auf „Ja“ und folge den Anweisungen.</string>
   <string name="warning_seedphrase_issue_answer_no">Vielen Dank! Alles erledigt! Keine weiteren Maßnahmen erforderlich.</string>
   <string name="warning_seedphrase_issue_answer_yes">Sie werden jetzt auf die offizielle Tangem-Website weitergeleitet. Bitte lesen und befolgen Sie dort die Anweisungen.</string>
   <string name="warning_seedphrase_issue_message">Hast Du das Tangem-Supportteam schon einmal direkt über diese Anwendung kontaktiert?</string>
@@ -1107,6 +1119,7 @@
   <string name="warning_some_token_balances_not_updated">Einige Token-Guthaben konnten nicht aktualisiert werden</string>
   <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
+  <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
   <string name="welcome_interrupted_backup_alert_discard">Verwerfen</string>
   <string name="welcome_interrupted_backup_alert_message">Du hast eine unterbrochene Sicherung. Möchtest du diese fortsetzen?</string>
   <string name="welcome_interrupted_backup_alert_resume">Ja, fortsetzen</string>
