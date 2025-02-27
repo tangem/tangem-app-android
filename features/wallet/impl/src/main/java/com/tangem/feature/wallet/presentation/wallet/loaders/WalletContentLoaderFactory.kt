@@ -1,13 +1,13 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.loaders.implementors.*
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
-import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 internal class WalletContentLoaderFactory @Inject constructor(
     private val multiWalletContentLoaderFactory: MultiWalletContentLoaderFactory,
     private val singleWalletWithTokenContentLoaderFactory: SingleWalletWithTokenContentLoaderFactory,
