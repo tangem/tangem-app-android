@@ -1,4 +1,4 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import kotlinx.coroutines.CoroutineScope
@@ -14,13 +14,13 @@ import kotlin.properties.Delegates
 internal abstract class BaseWalletClickIntents {
 
     protected val router: InnerWalletRouter get() = _router
-    protected val viewModelScope: CoroutineScope get() = _viewModelScope
+    protected val modelScope: CoroutineScope get() = _modelScope
 
     private var _router: InnerWalletRouter by Delegates.notNull()
-    private var _viewModelScope: CoroutineScope by Delegates.notNull()
+    private var _modelScope: CoroutineScope by Delegates.notNull()
 
     open fun initialize(router: InnerWalletRouter, coroutineScope: CoroutineScope) {
         _router = router
-        _viewModelScope = coroutineScope
+        _modelScope = coroutineScope
     }
 }
