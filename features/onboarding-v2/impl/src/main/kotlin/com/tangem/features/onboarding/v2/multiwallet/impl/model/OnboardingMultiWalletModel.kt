@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
@@ -116,8 +117,13 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
                 scanResponse.primaryCard == null -> OnboardingMultiWalletState.Step.ScanPrimary
 
-            card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup ->
-                OnboardingMultiWalletState.Step.AddBackupDevice
+            card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup -> {
+                if (scanResponse.productType == ProductType.Wallet) {
+                    OnboardingMultiWalletState.Step.ChooseBackupOption
+                } else {
+                    OnboardingMultiWalletState.Step.AddBackupDevice
+                }
+            }
             card.wallets.isNotEmpty() && card.backupStatus?.isActive == true ->
                 OnboardingMultiWalletState.Step.Finalize
             else ->
