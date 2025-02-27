@@ -34,7 +34,11 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
                 formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
             )
         }
-        ScenarioUnavailabilityReason.Unreachable -> {
+        is ScenarioUnavailabilityReason.TokenNoQuotes,
+        ScenarioUnavailabilityReason.SingleWallet,
+        is ScenarioUnavailabilityReason.ExpressUnreachable,
+        ScenarioUnavailabilityReason.Unreachable,
+        -> {
             resourceReference(
                 id = R.string.token_button_unavailability_generic_description,
             )
@@ -44,6 +48,21 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
         )
         ScenarioUnavailabilityReason.UsedOutdatedData -> {
             resourceReference(id = R.string.token_button_unavailability_reason_out_of_date_balance)
+        }
+        is ScenarioUnavailabilityReason.AssetNotFound -> resourceReference(
+            id = R.string.token_button_unavailability_reason_not_exchangeable,
+            formatArgs = wrappedList(unavailabilityReason.cryptoCurrencyName),
+        )
+        is ScenarioUnavailabilityReason.CustomToken -> {
+            resourceReference(
+                id = R.string
+                    .token_button_unavailability_reason_custom_token,
+            )
+        }
+        is ScenarioUnavailabilityReason.DataLoading,
+        is ScenarioUnavailabilityReason.ExpressLoading,
+        -> {
+            resourceReference(id = R.string.token_button_unavailability_reason_loading)
         }
         ScenarioUnavailabilityReason.None -> {
             throw IllegalArgumentException("The unavailability reason must be other than None")
