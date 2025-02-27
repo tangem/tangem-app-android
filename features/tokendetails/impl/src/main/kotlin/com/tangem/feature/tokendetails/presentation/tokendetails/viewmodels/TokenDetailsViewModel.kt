@@ -46,10 +46,7 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
-import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.tokens.model.NetworkAddress
-import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
+import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
@@ -286,10 +283,25 @@ internal class TokenDetailsViewModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .onEach {
+                sendButtonsEvents(it.states)
                 internalUiState.value = stateFactory.getManageButtonsState(actions = it.states)
             }
             .flowOn(dispatchers.main)
             .launchIn(viewModelScope)
+    }
+
+    private fun sendButtonsEvents(states: List<TokenActionsState.ActionState>) {
+        // for now send only for swap
+        val swapState = states.firstOrNull { it is TokenActionsState.ActionState.Swap } ?: return
+        if (swapState.unavailabilityReason != ScenarioUnavailabilityReason.None) {
+            analyticsEventsHandler.send(
+                TokenScreenAnalyticsEvent.ButtonWithParams.ActionButtonDisabled(
+                    token = cryptoCurrency.symbol,
+                    status = swapState.unavailabilityReason.toReasonAnalyticsText(),
+                    blockchain = cryptoCurrency.network.name,
+                ),
+            )
+        }
     }
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -464,14 +476,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onBuyClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrency.symbol))
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+            ),
+        )
 
-        if (handleUnavailabilityReason(
-                unavailabilityReason = unavailabilityReason,
-                tokenSymbol = cryptoCurrency.symbol,
-                tokenAction = TokenScreenAnalyticsEvent.NoticeActionInactive.TokenAction.BuyAction,
-            )
-        ) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
 
@@ -504,7 +517,13 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onBuyCoinClick(cryptoCurrency: CryptoCurrency) {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrency.symbol))
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = "",
+            ),
+        )
         router.openTokenDetails(userWalletId = userWalletId, currency = cryptoCurrency)
     }
 
@@ -520,14 +539,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onSendClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrency.symbol))
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonSend(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+            ),
+        )
 
-        if (handleUnavailabilityReason(
-                unavailabilityReason = unavailabilityReason,
-                tokenSymbol = cryptoCurrency.symbol,
-                tokenAction = TokenScreenAnalyticsEvent.NoticeActionInactive.TokenAction.SendAction,
-            )
-        ) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
 
@@ -546,17 +566,18 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
 
-        if (handleUnavailabilityReason(
-                unavailabilityReason = unavailabilityReason,
-                tokenSymbol = cryptoCurrency.symbol,
-                tokenAction = TokenScreenAnalyticsEvent.NoticeActionInactive.TokenAction.ReceiveAction,
-            )
-        ) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
 
         viewModelScope.launch(dispatchers.main) {
-            analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrency.symbol))
+            analyticsEventsHandler.send(
+                TokenScreenAnalyticsEvent.ButtonWithParams.ButtonReceive(
+                    token = cryptoCurrency.symbol,
+                    blockchain = cryptoCurrency.network.name,
+                    status = unavailabilityReason.toReasonAnalyticsText(),
+                ),
+            )
             analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
 
             internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(
@@ -575,12 +596,7 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onStakeClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        if (handleUnavailabilityReason(
-                unavailabilityReason = unavailabilityReason,
-                tokenSymbol = cryptoCurrency.symbol,
-                tokenAction = null,
-            )
-        ) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
 
@@ -611,14 +627,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onSellClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrency.symbol))
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonSell(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+            ),
+        )
 
-        if (handleUnavailabilityReason(
-                unavailabilityReason = unavailabilityReason,
-                tokenSymbol = cryptoCurrency.symbol,
-                tokenAction = TokenScreenAnalyticsEvent.NoticeActionInactive.TokenAction.SellAction,
-            )
-        ) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
 
@@ -635,14 +652,15 @@ internal class TokenDetailsViewModel @Inject constructor(
     }
 
     override fun onSwapClick(unavailabilityReason: ScenarioUnavailabilityReason) {
-        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrency.symbol))
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonExchange(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+            ),
+        )
 
-        if (handleUnavailabilityReason(
-                unavailabilityReason = unavailabilityReason,
-                tokenSymbol = cryptoCurrency.symbol,
-                tokenAction = TokenScreenAnalyticsEvent.NoticeActionInactive.TokenAction.SwapAction,
-            )
-        ) {
+        if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
 
@@ -964,21 +982,8 @@ internal class TokenDetailsViewModel @Inject constructor(
         internalUiState.value = stateFactory.getStateWithClosedBottomSheet()
     }
 
-    private fun handleUnavailabilityReason(
-        unavailabilityReason: ScenarioUnavailabilityReason,
-        tokenSymbol: String,
-        tokenAction: TokenScreenAnalyticsEvent.NoticeActionInactive.TokenAction?,
-    ): Boolean {
+    private fun handleUnavailabilityReason(unavailabilityReason: ScenarioUnavailabilityReason): Boolean {
         if (unavailabilityReason == ScenarioUnavailabilityReason.None) return false
-        if (tokenAction != null) {
-            analyticsEventsHandler.send(
-                TokenScreenAnalyticsEvent.NoticeActionInactive(
-                    token = tokenSymbol,
-                    tokenAction = tokenAction,
-                    reason = unavailabilityReason.toReasonAnalyticsText(),
-                ),
-            )
-        }
 
         internalUiState.value = stateFactory.getStateWithActionButtonErrorDialog(unavailabilityReason)
 
