@@ -4,7 +4,10 @@ import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -13,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -22,6 +26,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.tangem.core.ui.components.SpacerH4
+import com.tangem.core.ui.components.icons.badge.drawBadge
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.res.LocalHapticManager
@@ -29,7 +34,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.markets.portfolio.impl.ui.state.QuickActionUM
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.toImmutableList
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
 internal fun PortfolioQuickActions(
@@ -59,7 +64,6 @@ internal fun PortfolioQuickActions(
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun AnimatedVisibilityScope.LineSeparator(modifier: Modifier = Modifier) {
     val lineColor = TangemTheme.colors.stroke.primary
@@ -99,7 +103,7 @@ private fun AnimatedVisibilityScope.LineSeparator(modifier: Modifier = Modifier)
     }
 }
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun AnimatedVisibilityScope.QuickActionItem(
     state: QuickActionUM,
@@ -131,27 +135,7 @@ private fun AnimatedVisibilityScope.QuickActionItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing18),
     ) {
-        Box(
-            Modifier
-                .animateEnterExit(
-                    enter = scaleIn(),
-                    exit = scaleOut(),
-                )
-                .background(
-                    color = TangemTheme.colors.button.secondary,
-                    shape = CircleShape,
-                )
-                .size(TangemTheme.dimens.size32),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                modifier = Modifier
-                    .requiredSize(TangemTheme.dimens.size16),
-                imageVector = ImageVector.vectorResource(id = state.icon),
-                contentDescription = null,
-                tint = TangemTheme.colors.button.primary,
-            )
-        }
+        QuickActionIcon(state)
         Column(
             modifier = Modifier
                 .animateEnterExit(
@@ -171,6 +155,38 @@ private fun AnimatedVisibilityScope.QuickActionItem(
                 color = TangemTheme.colors.text.tertiary,
             )
         }
+    }
+}
+
+@Composable
+private fun AnimatedVisibilityScope.QuickActionIcon(state: QuickActionUM) {
+    val containerColor = TangemTheme.colors.background.action
+    Box(
+        Modifier
+            .animateEnterExit(
+                enter = scaleIn(),
+                exit = scaleOut(),
+            )
+            .background(
+                color = TangemTheme.colors.button.secondary,
+                shape = CircleShape,
+            )
+            .size(TangemTheme.dimens.size32)
+            .drawWithContent {
+                drawContent()
+                if (state is QuickActionUM.Exchange && state.showBadge) {
+                    drawBadge(containerColor = containerColor, offset = 4.dp)
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            modifier = Modifier
+                .requiredSize(TangemTheme.dimens.size16),
+            imageVector = ImageVector.vectorResource(id = state.icon),
+            contentDescription = null,
+            tint = TangemTheme.colors.button.primary,
+        )
     }
 }
 
@@ -197,7 +213,11 @@ private fun Preview() {
                 modifier = Modifier.background(color = TangemTheme.colors.background.action),
             ) {
                 PortfolioQuickActions(
-                    actions = QuickActionUM.entries.toImmutableList(),
+                    actions = persistentListOf(
+                        QuickActionUM.Buy,
+                        QuickActionUM.Exchange(showBadge = true),
+                        QuickActionUM.Receive,
+                    ),
                     isVisible = isVisible,
                     onActionClick = {},
                     onActionLongClick = {},
@@ -214,7 +234,11 @@ private fun PreviewRtl() {
     TangemThemePreview(rtl = true) {
         Box(modifier = Modifier.background(color = TangemTheme.colors.background.action)) {
             PortfolioQuickActions(
-                actions = QuickActionUM.entries.toImmutableList(),
+                actions = persistentListOf(
+                    QuickActionUM.Buy,
+                    QuickActionUM.Exchange(showBadge = true),
+                    QuickActionUM.Receive,
+                ),
                 isVisible = true,
                 onActionClick = {},
                 onActionLongClick = {},
