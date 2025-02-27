@@ -1,9 +1,9 @@
 package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetWalletCardDropDownItemsTransformer
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 
