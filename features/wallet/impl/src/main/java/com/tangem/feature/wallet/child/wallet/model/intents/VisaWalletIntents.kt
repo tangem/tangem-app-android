@@ -1,6 +1,7 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
@@ -15,7 +16,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.converte
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.VisaTxDetailsBottomSheetConverter
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -32,7 +32,7 @@ internal interface VisaWalletIntents {
     fun onExploreClick(exploreUrl: String)
 }
 
-@ViewModelScoped
+@ModelScoped
 internal class VisaWalletIntentsImplementor @Inject constructor(
     private val stateController: WalletStateController,
     private val eventSender: WalletEventSender,
@@ -49,7 +49,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     override fun onDepositClick() {
         val userWalletId = stateController.getSelectedWalletId()
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val currencyStatus = getPrimaryCurrencyStatus(userWalletId) ?: return@launch
 
             createReceiveBottomSheetContent(currencyStatus)?.let { content ->
@@ -79,7 +79,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     }
 
     override fun onBalancesAndLimitsClick() {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val userWalletId = stateController.getSelectedWalletId()
             val balancesAndLimits = getVisaCurrencyUseCase(userWalletId)
                 .getOrElse {
@@ -104,7 +104,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     }
 
     override fun onVisaTransactionClick(id: String) {
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             val userWalletId = stateController.getSelectedWalletId()
             val visaCurrency = getVisaCurrencyUseCase(userWalletId)
                 .getOrElse {
