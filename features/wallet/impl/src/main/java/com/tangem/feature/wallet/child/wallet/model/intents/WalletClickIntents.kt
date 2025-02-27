@@ -1,5 +1,6 @@
-package com.tangem.feature.wallet.presentation.wallet.viewmodels.intents
+package com.tangem.feature.wallet.child.wallet.model.intents
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
@@ -21,7 +22,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetRefre
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTokenListErrorTransformer
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@ViewModelScoped
+@ModelScoped
 internal class WalletClickIntents @Inject constructor(
     private val walletCardClickIntentsImplementor: WalletCardClickIntentsImplementor,
     private val warningsClickIntentsImplementer: WalletWarningsClickIntentsImplementor,
@@ -75,7 +75,7 @@ internal class WalletClickIntents @Inject constructor(
             return
         }
 
-        viewModelScope.launch {
+        modelScope.launch {
             launch { neverToShowWalletsScrollPreview() }
 
             val maybeUserWallet = selectWalletUseCase(
@@ -88,7 +88,7 @@ internal class WalletClickIntents @Inject constructor(
                 walletScreenContentLoader.load(
                     userWallet = it,
                     clickIntents = this@WalletClickIntents,
-                    coroutineScope = viewModelScope,
+                    coroutineScope = modelScope,
                 )
             }
         }
@@ -123,7 +123,7 @@ internal class WalletClickIntents @Inject constructor(
             SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = showRefreshState),
         )
 
-        viewModelScope.launch {
+        modelScope.launch {
             val maybeFetchResult = if (userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()) {
                 fetchCardTokenListUseCase(userWalletId = userWallet.walletId, refresh = true)
             } else {
@@ -168,14 +168,14 @@ internal class WalletClickIntents @Inject constructor(
             SetRefreshStateTransformer(userWalletId = userWallet.walletId, isRefreshing = showRefreshState),
         )
 
-        viewModelScope.launch(dispatchers.main) {
+        modelScope.launch(dispatchers.main) {
             fetchCurrencyStatusUseCase(userWallet.walletId, refresh = true)
 
             walletScreenContentLoader.load(
                 userWallet = userWallet,
                 clickIntents = this@WalletClickIntents,
                 isRefresh = true,
-                coroutineScope = viewModelScope,
+                coroutineScope = modelScope,
             )
 
             stateHolder.update(
