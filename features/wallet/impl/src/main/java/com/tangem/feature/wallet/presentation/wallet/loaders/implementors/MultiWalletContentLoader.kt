@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
@@ -7,6 +8,7 @@ import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsSingleEventSender
@@ -19,10 +21,10 @@ import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletActi
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletTokenListSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import com.tangem.features.swap.SwapFeatureToggles
 
 @Suppress("LongParameterList")
+@ModelScoped
 internal class MultiWalletContentLoader(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
