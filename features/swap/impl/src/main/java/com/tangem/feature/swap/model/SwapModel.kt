@@ -82,7 +82,6 @@ internal class SwapModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val blockchainInteractor: BlockchainInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
@@ -96,6 +95,7 @@ internal class SwapModel @Inject constructor(
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val featureToggles: SwapFeatureToggles,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
     private val urlOpener: UrlOpener,
     router: AppRouter,
@@ -278,23 +278,10 @@ internal class SwapModel @Inject constructor(
             getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id).fold(
                 ifLeft = {
                     Timber.e("Unable to load stories for ${StoryContentIds.STORY_FIRST_TIME_SWAP.id}")
-                    analyticsEventHandler.send(
-                        StoriesEvents.Error(
-                            source = params.screenSource,
-                            type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
-                        ),
-                    )
                 },
                 ifRight = { story ->
                     if (story != null) {
                         uiState = stateBuilder.createStoriesState(uiState, story)
-                    } else {
-                        analyticsEventHandler.send(
-                            StoriesEvents.Error(
-                                source = params.screenSource,
-                                type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
-                            ),
-                        )
                     }
                 },
             )
