@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBlockState
+import com.tangem.feature.wallet.presentation.wallet.state.model.DepositButtonState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.mutate
