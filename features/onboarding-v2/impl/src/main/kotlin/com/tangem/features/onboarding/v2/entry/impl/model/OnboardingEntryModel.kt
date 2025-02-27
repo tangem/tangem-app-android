@@ -9,6 +9,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -79,8 +80,14 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
-        stackNavigation.navigate {
-            listOf(OnboardingRoute.ManageTokens(userWallet))
+        if (userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
+            stackNavigation.navigate {
+                listOf(OnboardingRoute.ManageTokens(userWallet))
+            }
+        } else {
+            stackNavigation.navigate {
+                listOf(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            }
         }
     }
 
