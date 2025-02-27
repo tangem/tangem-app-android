@@ -19,98 +19,49 @@ on:
       # Token must have read access to all the submodule repositories
       GH_MOBILE_PAT:
         required: true
-
 jobs:
-  jira_changelog:
-    name: Jira changelog
+  generate-release-name:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        branch_name: ["releases/5.21", "hotfix/5.21.1", "develop", "test", "feature/AND-123", "feature/releases/5.21", "releases/XXX"]
     outputs:
-      jira_changelog: ${{ steps.jira-issues-summary.outputs.result }}
+      versionName: ${{ steps.get_version_name.outputs.versionName }}
     steps:
-      - name: Jira Login
-        uses: atlassian/gajira-login@master
-        env:
-          JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
-
-      - name: Checkout 'find-latest-release-branch' script
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          sparse-checkout: |
-            ci_resources/find-latest-release-branch.sh
-          sparse-checkout-cone-mode: false
 
-      - name: Find latest release branch
-        id: find-latest-release-branch
+      - name: Determine release version
+        id: get_version_name
         run: |
-          ./ci_resources/find-latest-release-branch.sh '${{ github.ref_name }}'
-          echo "result=$(< 'find-latest-release-branch.output')" >> $GITHUB_OUTPUT
+          BRANCH=${{ matrix.branch_name }}
+          echo "Testing with branch: $BRANCH"
+          
+          if [[ "$BRANCH" =~ ^(releases|hotfix)/([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+            MAJOR=${BASH_REMATCH[2]}
+            MINOR=${BASH_REMATCH[3]}
+            PATCH=${BASH_REMATCH[4]:-.0}
+            VERSION="${MAJOR}.${MINOR}${PATCH}"
+          else
+            echo "Running script"
+            ./ci_resources/find-latest-release-branch.sh origin/$BRANCH
+            LATEST_BRANCH=$(< 'find-latest-release-branch.output')
+          
+            if [[ "$LATEST_BRANCH" =~ releases/([0-9]+)\.([0-9]+) ]]; then
+              MAJOR=${BASH_REMATCH[1]}
+              MINOR=${BASH_REMATCH[2]}
+              NEW_MINOR=$((MINOR + 1))
+              VERSION="${MAJOR}.${NEW_MINOR}.0"
+            else
+              echo "Failed to determine version"
+              exit 1
+            fi
+          fi
+          
+          echo "versionName=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Get unreleased tasks
-        id: git-diff
-        uses: tangem/github-action@main
-        with:
-          github-token: '${{ secrets.GH_MOBILE_PAT }}'
-          base: develop
-          head: '${{ github.ref_name }}'
-
-      #      - name: Verify Jira issues and generate JSON
-      #        id: verify-jira-issues
-      #        run: |
-      #          issues_json='${{ steps.git-diff.outputs.issues }}'
-      #          base_url="https://tangem.atlassian.net/rest/api/3/issue"
-      #          valid_issues=()
-      #
-      #          # Parse JSON array to get individual issue keys
-      #          issues=$(echo $issues_json | jq -r '.[]')
-      #
-      #          # Iterate through each issue in the list
-      #          for issue in $issues; do
-      #            response=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" "$base_url/$issue")
-      #            if [[ "$response" -eq 200 ]]; then
-      #              echo "Issue $issue exists."
-      #              valid_issues+=("\"$issue\"")
-      #            else
-      #              echo "Issue $issue does not exist."
-      #            fi
-      #          done
-      #
-      #          # Create JSON array from valid issues
-      #          valid_issues_json=$(printf "[%s]" "$(IFS=,; echo "${valid_issues[*]}")")
-      #          echo "valid_issues=$valid_issues_json"
-      #          echo "valid_issues=$valid_issues_json" >> $GITHUB_OUTPUT
-
-
-      - name: Jira Get Issues Summary
-        uses: tangem-developments/jira-action@feature/JS-3180_add_set_version_policy
-        id: jira-issues-summary
-        continue-on-error: true
-        with:
-          action: getIssuesSummary
-          issues: ${{ steps.git-diff.outputs.issues }}
-
-
-      - name: Jira Set Version To Issues From Commit messages
-        uses: tangem-developments/jira-action@master
-        with:
-          action: 'setVersionToIssues'
-          project: 'AND'
-          version: '5.21.0'
-          issues:  ${{ steps.git-diff.outputs.issues }}
-
-      - name: Print issues
-        id: print_issues
+      - name: Output release name
         run: |
-          echo "${{ github.repository }}"
-          echo "${{ steps.git-diff.outputs.issues }}"
-          echo "${{ steps.jira-issues-summary.outputs.result }}"
-
-  prepare:
-    uses: ./.github/workflows/prepare.yml
-    name: Prepare
-    with:
-      initial_version_code: 1050
-    secrets: inherit
-
+          echo "Branch: ${{ matrix.branch_name }} → Release version: ${{ steps.get_version_name.outputs.versionName }}"
