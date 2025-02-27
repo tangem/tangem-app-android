@@ -40,7 +40,7 @@ jobs:
 
       - name: Get Jira Issue Number from Branch Name
         id: jira
-        uses: tangem/jira-action@master
+        uses: tangem-developments/jira-action@master
         with:
           action: getBranchSummary
           branch-name: ${{ github.ref_name }}
