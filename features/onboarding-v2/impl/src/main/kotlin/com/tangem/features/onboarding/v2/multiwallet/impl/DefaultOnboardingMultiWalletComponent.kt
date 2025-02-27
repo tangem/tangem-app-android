@@ -81,6 +81,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         backups = model.backups,
     )
 
+    val backButtonClickFlow = MutableSharedFlow<Unit>()
+
     private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, ComposableContentComponent>> =
         childStack(
             key = "innerStack",
@@ -95,8 +97,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 )
             },
         )
-
-    val backButtonClickFlow = MutableSharedFlow<Unit>()
 
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = innerNavigationStateFlow
@@ -117,7 +117,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         source = bottomSheetNavigation,
         serializer = null,
         handleBackButton = false,
-        childFactory = { configuration, componentContext ->
+        childFactory = { _, componentContext ->
             MultiWalletAccessCodeComponent(
                 context = childByContext(componentContext),
                 params = childParams,
