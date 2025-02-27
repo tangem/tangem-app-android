@@ -40,9 +40,9 @@ internal class UserWalletListModel @Inject constructor(
 
     init {
         combine(
-            userWalletsFetcher.userWallets,
-            shouldSaveUserWalletsUseCase(),
-            isWalletSavingInProgress,
+            flow = userWalletsFetcher.userWallets,
+            flow2 = shouldSaveUserWalletsUseCase(),
+            flow3 = isWalletSavingInProgress,
             transform = ::updateState,
         ).launchIn(modelScope)
     }

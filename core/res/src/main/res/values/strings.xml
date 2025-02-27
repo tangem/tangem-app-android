@@ -926,7 +926,7 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">You do not have funds to sell. Top up your account to be able to sell funds from it.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not supported by current providers, but we are working to add more options.</string>
-  <string name="token_button_unavailability_reason_out_od_date_balance">The displayed balance might be outdated due to caching.</string>
+  <string name="token_button_unavailability_reason_out_of_date_balance">The displayed balance might be outdated due to caching.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) on the %s network is complete.</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Sending funds will be available once the pending transaction(s) in network %s is complete</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Selling %s is not supported by current providers, but we are working to add more options.</string>
