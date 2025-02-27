@@ -43,7 +43,7 @@ fun ScenarioUnavailabilityReason.getUnavailabilityReasonText(): TextReference {
             id = R.string.warning_receive_blocked_hedera_token_association_required_message,
         )
         ScenarioUnavailabilityReason.UsedOutdatedData -> {
-            resourceReference(id = R.string.token_button_unavailability_reason_out_od_date_balance)
+            resourceReference(id = R.string.token_button_unavailability_reason_out_of_date_balance)
         }
         ScenarioUnavailabilityReason.None -> {
             throw IllegalArgumentException("The unavailability reason must be other than None")
