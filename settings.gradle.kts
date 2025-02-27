@@ -224,6 +224,9 @@ include(":features:onramp:impl")
 
 include(":features:stories:api")
 include(":features:stories:impl")
+
+include(":features:nft:api")
+include(":features:nft:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -266,6 +269,7 @@ include(":domain:manage-tokens:models")
 include(":domain:onramp")
 include(":domain:onramp:models")
 include(":domain:promo")
+include(":domain:nft:models")
 // endregion Domain modules
 
 // region Data modules

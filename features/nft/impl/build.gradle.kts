@@ -26,14 +26,17 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
 
+    /** Domain modules */
+    implementation(projects.domain.nft.models)
+
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
-    implementation(deps.tangem.card.core)
-    implementation(deps.tangem.card.android) {
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
 
