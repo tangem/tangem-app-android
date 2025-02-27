@@ -29,6 +29,7 @@ import com.tangem.domain.settings.IncrementAppLaunchCounterUseCase
 import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.tap.common.extensions.setContext
@@ -300,19 +301,32 @@ internal class MainViewModel @Inject constructor(
     private fun preloadImages() {
         try {
             viewModelScope.launch {
-                val swapStories = if (swapFeatureToggles.isPromoStoriesEnabled) {
-                    getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
-                        .getOrNull()
-                } else {
-                    null
-                }
+                if (swapFeatureToggles.isPromoStoriesEnabled) {
+                    val swapStories = getStoryContentUseCase.invokeSync(
+                        id = StoryContentIds.STORY_FIRST_TIME_SWAP.id,
+                        refresh = true,
+                    ).getOrNull()
 
-                val storiesImages = swapStories?.getImageUrls()
-                // try to preload images for stories
-                storiesImages?.forEach(imagePreloader::preload)
+                    if (swapStories == null) {
+                        analyticsEventHandler.send(
+                            StoriesEvents.Error(
+                                type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
+                            ),
+                        )
+                    } else {
+                        val storiesImages = swapStories.getImageUrls()
+                        // try to preload images for stories
+                        storiesImages.forEach(imagePreloader::preload)
+                    }
+                }
             }
         } catch (ex: Exception) {
             Timber.e(ex.message)
+            analyticsEventHandler.send(
+                StoriesEvents.Error(
+                    type = StoryContentIds.STORY_FIRST_TIME_SWAP.analyticType,
+                ),
+            )
         }
     }
 }
