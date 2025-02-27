@@ -805,6 +805,10 @@
   <string name="staking_notification_low_staked_balance_title">ステーキング残高が低いです</string>
   <string name="staking_notification_minimum_balance_error_text">再ステーキングには最低%1$s %2$sが必要です。残高を補充してください。</string>
   <string name="staking_notification_minimum_balance_error_title">%sが足りません</string>
+  <string name="staking_notification_minimum_balance_title">ステーキングのための残高が不足しています</string>
+  <string name="staking_notification_minimum_restake_ada_text">リステーキングには最低3ADA が必要です。残高を補充してください。</string>
+  <string name="staking_notification_minimum_restake_ada_title">ADAが不足しています</string>
+  <string name="staking_notification_minimum_stake_ada_text">ステーキングに必要な最小金額は5ADAを超える必要があります。ステーキングを開始するには残高を補充してください。</string>
   <string name="staking_notification_network_error_text">ネットワークの状態により、現在ステーキングはご利用いただけません。しばらくしてからもう一度お試しください。</string>
   <string name="staking_notification_new_validator_funds_transfer">新しいバリデーターを使用して%1$sネットワークにステーキングすると、以前にステーキングされた資金がすべてこのバリデーターに自動的に転送されます。</string>
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
@@ -872,6 +876,8 @@
   <string name="story_meet_title">Tangemのご紹介</string>
   <string name="story_web3_description">100種類以上の分散型サービスで、NFTの交換・購入や、借入・預金を行うことができます。</string>
   <string name="story_web3_title">Web3.0対応</string>
+  <string name="sui_not_enough_coin_for_fee_description">続行するには少なくとも%1$sの受信取引が必要です</string>
+  <string name="sui_not_enough_coin_for_fee_title">残高不足</string>
   <string name="swap_give_permission_fee_footer">ネットワークは、あなたがトークンのスワップを承認していることを確認するために、トークン承認手数料を請求します。</string>
   <string name="swap_promo_text">より多くのトークンをより良いレートで、ウォレット内にて直接交換します。</string>
   <string name="swap_promo_title">新しいスワッププロバイダーが利用可能になりました！</string>
@@ -910,6 +916,7 @@
   <string name="token_button_unavailability_reason_empty_balance_sell">売却できる資金がありません。アカウントに入金して、売却できるようにしてください。</string>
   <string name="token_button_unavailability_reason_empty_balance_send">送金する資金がありません。アカウントに入金して、送金できるようにしてください。</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%sのスワップは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
+  <string name="token_button_unavailability_reason_out_of_date_balance">表示残高はキャッシュにより古くなっている可能性があります。</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">%sネットワーク上の保留中の取引が完了すると、資金の売却が可能になります。</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">ネットワーク%s内の保留中の取引が完了すると、送金が可能になります。</string>
   <string name="token_button_unavailability_reason_sell_unavailable">%sの売却は、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
@@ -970,6 +977,9 @@
   <string name="user_wallet_list_rename_popup_title">ウォレット名の変更</string>
   <string name="user_wallet_list_unlock_all">すべてのロックを解除</string>
   <string name="user_wallet_list_unlock_all_with">%sですべてをロック解除</string>
+  <string name="visa_unlock_notification_button">ロック解除</string>
+  <string name="visa_unlock_notification_subtitle">カードをスキャンしてアクセスロックを解除する</string>
+  <string name="visa_unlock_notification_title">ロック解除が必要</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">ブロックチェーンにアクセスできません。後でもう一度お試しください。</string>
   <string name="wallet_balance_missing_derivation">カードまたはリングをスキャン</string>
   <string name="wallet_been_activated_message">このウォレットはすでに有効化されています。\nあなたが行ったのでない場合は、サポートに連絡してください。\nTangemは、事前に生成されたアクセスコードと一緒にウォレットを販売することはありません。</string>
@@ -1083,7 +1093,7 @@
   <string name="warning_receive_blocked_hedera_token_association_required_message">トークンを受け取る前に、トークンを関連付ける必要があります。</string>
   <string name="warning_rent_fee_title">ネットワーク使用料が必要です</string>
   <string name="warning_seedphrase_action_required_title">対応が必要です</string>
-  <string name="warning_seedphrase_contacted_support">ウォレットを作成してから7日以内にアプリまたはEメール経由でサポートに連絡しましたか？連絡したか不明な場合は、手順に従って完了してください。</string>
+  <string name="warning_seedphrase_contacted_support">ウォレットの作成後、7日以内にアプリ経由でサポートに連絡しましたか？連絡した場合、あるいは連絡したかわからない場合は、「はい」をクリックして指示に従ってください。</string>
   <string name="warning_seedphrase_issue_answer_no">ありがとうございます。準備完了です。これ以上の操作は必要ありません。</string>
   <string name="warning_seedphrase_issue_answer_yes">Tangemの公式ウェブサイトに移動します。そちらの指示に従ってください。</string>
   <string name="warning_seedphrase_issue_message">このアプリ経由でTangemサポートチームに直接連絡したことがありますか？</string>
