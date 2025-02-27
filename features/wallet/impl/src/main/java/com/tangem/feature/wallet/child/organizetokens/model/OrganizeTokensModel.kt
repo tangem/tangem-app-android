@@ -1,9 +1,12 @@
-package com.tangem.feature.wallet.presentation.organizetokens
+package com.tangem.feature.wallet.child.organizetokens.model
 
-import androidx.lifecycle.*
+import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -13,24 +16,27 @@ import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
 import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
 import com.tangem.domain.tokens.model.TokenList
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
+import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensIntents
+import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensStateHolder
 import com.tangem.feature.wallet.presentation.organizetokens.analytics.PortfolioOrganizeTokensAnalyticsEvent
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensListState
 import com.tangem.feature.wallet.presentation.organizetokens.model.OrganizeTokensState
 import com.tangem.feature.wallet.presentation.organizetokens.utils.CryptoCurrenciesIdsResolver
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.disableSortingByBalance
 import com.tangem.feature.wallet.presentation.organizetokens.utils.dnd.DragAndDropAdapter
-import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.feature.wallet.presentation.router.WalletRoute
 import com.tangem.utils.Provider
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@HiltViewModel
-internal class OrganizeTokensViewModel @Inject constructor(
+@Stable
+@ModelScoped
+internal class OrganizeTokensModel @Inject constructor(
+    paramsContainer: ParamsContainer,
+    override val dispatchers: CoroutineDispatcherProvider,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val toggleTokenListGroupingUseCase: ToggleTokenListGroupingUseCase,
     private val toggleTokenListSortingUseCase: ToggleTokenListSortingUseCase,
@@ -38,10 +44,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    savedStateHandle: SavedStateHandle,
-) : ViewModel(), DefaultLifecycleObserver, OrganizeTokensIntents {
-
-    lateinit var router: InnerWalletRouter
+) : Model(), OrganizeTokensIntents {
 
     private val selectedAppCurrencyFlow = createSelectedAppCurrencyFlow()
 
@@ -57,33 +60,30 @@ internal class OrganizeTokensViewModel @Inject constructor(
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
     )
 
-    private val userWalletId: UserWalletId by lazy {
-        val userWalletIdValue: String = checkNotNull(savedStateHandle[WalletRoute.userWalletIdKey])
-
-        UserWalletId(userWalletIdValue)
-    }
+    private val userWalletId = paramsContainer.require<OrganizeTokensComponent.Params>().userWalletId
 
     private var cachedTokenList: TokenList? = null
 
     val uiState: StateFlow<OrganizeTokensState> = stateHolder.stateFlow
 
-    override fun onCreate(owner: LifecycleOwner) {
+    val onBack = MutableSharedFlow<Unit>()
+
+    init {
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ScreenOpened)
 
         getBalanceHidingSettingsUseCase()
-            .flowWithLifecycle(owner.lifecycle)
             .onEach {
                 isBalanceHidden = it.isBalanceHidden
                 stateHolder.updateHiddenState(isBalanceHidden)
             }
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
 
         bootstrapTokenList()
         bootstrapDragAndDropUpdates()
     }
 
     override fun onBackClick() {
-        router.popBackStack()
+        modelScope.launch { onBack.emit(Unit) }
     }
 
     override fun onSortClick() {
@@ -92,7 +92,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.ByBalance)
 
-        viewModelScope.launch {
+        modelScope.launch {
             toggleTokenListSortingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
@@ -108,7 +108,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Group)
 
-        viewModelScope.launch {
+        modelScope.launch {
             toggleTokenListGroupingUseCase(list).fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
@@ -120,7 +120,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
     }
 
     override fun onApplyClick() {
-        viewModelScope.launch {
+        modelScope.launch {
             stateHolder.updateStateToDisplayProgress()
 
             val listState = uiState.value.itemsState
@@ -144,7 +144,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
             result.fold(
                 ifLeft = stateHolder::updateStateWithError,
                 ifRight = {
-                    router.popBackStack()
+                    modelScope.launch { onBack.emit(Unit) }
                     stateHolder.updateStateToHideProgress()
                 },
             )
@@ -154,11 +154,11 @@ internal class OrganizeTokensViewModel @Inject constructor(
     override fun onCancelClick() {
         analyticsEventsHandler.send(PortfolioOrganizeTokensAnalyticsEvent.Cancel)
 
-        router.popBackStack()
+        modelScope.launch { onBack.emit(Unit) }
     }
 
     private fun bootstrapTokenList() {
-        viewModelScope.launch {
+        modelScope.launch {
             val tokenList = getTokenList() ?: return@launch
 
             stateHolder.updateStateWithTokenList(tokenList)
@@ -192,7 +192,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
 
                 stateHolder.updateStateWithManualSorting(updatedListState)
             }
-            .launchIn(viewModelScope)
+            .launchIn(modelScope)
     }
 
     private fun disableSortingByBalanceIfListChanged(dragOperationType: DragAndDropAdapter.DragOperation.Type) {
@@ -210,7 +210,7 @@ internal class OrganizeTokensViewModel @Inject constructor(
                 maybeAppCurrency.getOrElse { AppCurrency.Default }
             }
             .stateIn(
-                scope = viewModelScope,
+                scope = modelScope,
                 started = SharingStarted.Eagerly,
                 initialValue = AppCurrency.Default,
             )
