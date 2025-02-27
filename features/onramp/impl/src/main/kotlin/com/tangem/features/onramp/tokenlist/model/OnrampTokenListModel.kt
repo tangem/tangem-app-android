@@ -10,6 +10,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.getOrElse
+import com.tangem.domain.exchange.ExchangeableState
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
@@ -241,10 +242,21 @@ internal class OnrampTokenListModel @Inject constructor(
                 val isAvailable = rampStateManager.availableForSwap(
                     userWalletId = params.userWalletId,
                     cryptoCurrency = status.currency,
-                )
+                ).isSwapAvailable() && !status.currency.isCustom
 
                 isAvailable && status.value !is CryptoCurrencyStatus.NoQuote
             }
+        }
+    }
+
+    private fun ExchangeableState.isSwapAvailable(): Boolean {
+        return when (this) {
+            ExchangeableState.AssetNotFound,
+            ExchangeableState.Error,
+            ExchangeableState.Loading,
+            ExchangeableState.NotExchangeable,
+            -> false
+            ExchangeableState.Exchangeable -> true
         }
     }
 }
