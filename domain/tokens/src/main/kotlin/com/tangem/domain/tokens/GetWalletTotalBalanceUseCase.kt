@@ -13,10 +13,8 @@ import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.TokenListFiatBalanceOperations
 import com.tangem.domain.wallets.models.UserWalletId
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.transformLatest
 import timber.log.Timber
 
 class GetWalletTotalBalanceUseCase(
@@ -54,20 +52,28 @@ class GetWalletTotalBalanceUseCase(
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     operator fun invoke(userWalletId: UserWalletId): LceFlow<TokenListError, TotalFiatBalance> {
-        return currenciesStatusesOperations.getCurrenciesStatuses(userWalletId)
-            .transformLatest { maybeStatuses ->
-                val balance = createBalance(maybeStatuses)
-
-                emit(balance)
-            }
+        return currenciesStatusesOperations.getCurrenciesStatuses(userWalletId).map(::createBalance)
     }
 
     private fun createBalance(
         maybeStatuses: Lce<TokenListError, List<CryptoCurrencyStatus>>,
     ): Lce<TokenListError, TotalFiatBalance> = lce {
-        val statuses = maybeStatuses.bind()
+        val statuses = when (maybeStatuses) {
+            is Lce.Content -> maybeStatuses.content
+            is Lce.Error -> raise(maybeStatuses)
+            is Lce.Loading -> {
+                val content = maybeStatuses.partialContent
+
+                if (content == null) {
+                    isLoading.set(true)
+
+                    raise(lceLoading())
+                } else {
+                    content
+                }
+            }
+        }
 
         val operations = TokenListFiatBalanceOperations(
             currencies = ensureNotNull(statuses.toNonEmptyListOrNull()) { lceLoading() },

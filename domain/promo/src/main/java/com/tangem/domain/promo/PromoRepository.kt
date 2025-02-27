@@ -18,7 +18,7 @@ interface PromoRepository {
     // region Stories
     fun getStoryById(id: String): Flow<StoryContent?>
 
-    suspend fun getStoryByIdSync(id: String): StoryContent?
+    suspend fun getStoryByIdSync(id: String, refresh: Boolean): StoryContent?
 
     fun isReadyToShowStories(storyId: String): Flow<Boolean>
 
