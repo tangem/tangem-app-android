@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -254,6 +255,7 @@ private fun WalletCard(url: String?, modifier: Modifier = Modifier) {
         placeholder = painterResource(R.drawable.card_placeholder_black),
         error = painterResource(R.drawable.card_placeholder_black),
         fallback = painterResource(R.drawable.card_placeholder_black),
+        contentScale = ContentScale.Fit,
         contentDescription = null,
     )
 }
@@ -263,16 +265,16 @@ private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeigh
         WalletArtworksState.Hidden -> listOf()
         is WalletArtworksState.Folded -> listOf(
             CardsTransitionState(
-                WalletCardTransitionState(),
-                WalletCardTransitionState(),
-                WalletCardTransitionState(),
+                WalletCardTransitionState(alpha = 1f),
+                WalletCardTransitionState(alpha = 0f),
+                WalletCardTransitionState(alpha = 0f),
             ),
         )
         is WalletArtworksState.Stack -> listOf(
             CardsTransitionState(
-                walletCard1 = WalletCardTransitionState(),
-                walletCard2 = WalletCardTransitionState(),
-                walletCard3 = WalletCardTransitionState(),
+                WalletCardTransitionState(alpha = 1f),
+                WalletCardTransitionState(alpha = 0f),
+                WalletCardTransitionState(alpha = 0f),
             ),
             CardsTransitionState(
                 walletCard1 = WalletCardTransitionState().copy(
