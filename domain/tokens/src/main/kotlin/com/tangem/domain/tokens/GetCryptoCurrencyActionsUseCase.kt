@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens
 
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.exchange.ExchangeableState
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.promo.PromoRepository
@@ -24,7 +25,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  *
  * @property rampManager Ramp manager to check ramp availability
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 class GetCryptoCurrencyActionsUseCase(
     private val rampManager: RampStateManager,
     private val walletManagersFacade: WalletManagersFacade,
@@ -181,26 +182,11 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // swap
-        if (userWallet.isMultiCurrency) {
-            val isExchangeable = withTimeoutOrNull(REQUEST_EXCHANGE_DATA_TIMEOUT) {
-                rampManager.availableForSwap(userWallet.walletId, cryptoCurrency)
-            } ?: false
-            if (isExchangeable && cryptoCurrencyStatus.value !is CryptoCurrencyStatus.NoQuote) {
-                val swapStoriesEnabled = swapFeatureToggles.isPromoStoriesEnabled
-                activeList.add(
-                    TokenActionsState.ActionState.Swap(
-                        unavailabilityReason = ScenarioUnavailabilityReason.None,
-                        showBadge = shouldShowSwapStories && swapStoriesEnabled,
-                    ),
-                )
-            } else {
-                disabledList.add(
-                    TokenActionsState.ActionState.Swap(
-                        unavailabilityReason = ScenarioUnavailabilityReason.NotExchangeable(cryptoCurrency.name),
-                        showBadge = false,
-                    ),
-                )
-            }
+        val swapActionState = getSwapUnavailabilityReason(userWallet, cryptoCurrencyStatus, shouldShowSwapStories)
+        if (swapActionState.unavailabilityReason == ScenarioUnavailabilityReason.None) {
+            activeList.add(swapActionState)
+        } else {
+            disabledList.add(swapActionState)
         }
 
         // buy
@@ -289,7 +275,8 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // swap
-        val isSwapAvailable = with(cryptoCurrencyStatus.value.sources) {
+        val sources = cryptoCurrencyStatus.value.sources
+        val isSwapAvailable = with(sources) {
             quoteSource.isActual() && networkSource.isActual()
         }
 
@@ -297,8 +284,11 @@ class GetCryptoCurrencyActionsUseCase(
             TokenActionsState.ActionState.Swap(
                 unavailabilityReason = if (isSwapAvailable) {
                     ScenarioUnavailabilityReason.None
-                } else {
+                } else if (sources.networkSource == StatusSource.ONLY_CACHE) {
                     ScenarioUnavailabilityReason.UsedOutdatedData
+                } else {
+                    // CACHE source always when loading
+                    ScenarioUnavailabilityReason.DataLoading
                 },
                 showBadge = false,
             ),
@@ -373,6 +363,54 @@ class GetCryptoCurrencyActionsUseCase(
             else -> {
                 ScenarioUnavailabilityReason.None
             }
+        }
+    }
+
+    private suspend fun getSwapUnavailabilityReason(
+        userWallet: UserWallet,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        shouldShowSwapStories: Boolean,
+    ): TokenActionsState.ActionState {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        return if (userWallet.isMultiCurrency) {
+            if (cryptoCurrency.isCustom) {
+                return TokenActionsState.ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.CustomToken(cryptoCurrency.name),
+                    showBadge = false,
+                )
+            }
+            if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.NoQuote) {
+                return TokenActionsState.ActionState.Swap(
+                    unavailabilityReason = ScenarioUnavailabilityReason.TokenNoQuotes(cryptoCurrency.name),
+                    showBadge = false,
+                )
+            }
+            val exchangeableState = withTimeoutOrNull(REQUEST_EXCHANGE_DATA_TIMEOUT) {
+                rampManager.availableForSwap(userWallet.walletId, cryptoCurrency)
+            } ?: ExchangeableState.Loading
+            val swapStoriesEnabled = swapFeatureToggles.isPromoStoriesEnabled
+            val currencyName = cryptoCurrency.name
+
+            val reason = when (exchangeableState) {
+                ExchangeableState.Exchangeable -> {
+                    ScenarioUnavailabilityReason.None
+                }
+                ExchangeableState.AssetNotFound -> ScenarioUnavailabilityReason.AssetNotFound(currencyName)
+                ExchangeableState.Error -> ScenarioUnavailabilityReason.ExpressUnreachable(currencyName)
+                ExchangeableState.Loading -> ScenarioUnavailabilityReason.ExpressLoading(currencyName)
+                ExchangeableState.NotExchangeable -> ScenarioUnavailabilityReason.NotExchangeable(currencyName)
+            }
+
+            val isShowBadge = reason == ScenarioUnavailabilityReason.None && shouldShowSwapStories && swapStoriesEnabled
+            TokenActionsState.ActionState.Swap(
+                unavailabilityReason = reason,
+                showBadge = isShowBadge,
+            )
+        } else {
+            TokenActionsState.ActionState.Swap(
+                unavailabilityReason = ScenarioUnavailabilityReason.SingleWallet,
+                showBadge = false,
+            )
         }
     }
 

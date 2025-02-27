@@ -10,6 +10,8 @@ import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRA
 import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
 import com.tangem.datasource.local.token.ExpressAssetsStore
+import com.tangem.domain.core.lce.Lce
+import com.tangem.domain.exchange.ExchangeableState
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
@@ -97,10 +99,11 @@ internal class DefaultRampManager(
         }
     }
 
-    override suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
-        return runCatching { getExchangeableFlag(userWalletId, cryptoCurrency) && !cryptoCurrency.isCustom }
-            .getOrNull()
-            ?: false
+    override suspend fun availableForSwap(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): ExchangeableState {
+        return runCatching { getExchangeableState(userWalletId, cryptoCurrency) }.getOrNull() ?: ExchangeableState.Error
     }
 
     override fun getBuyInitializationStatus(): Flow<ExchangeServiceInitializationStatus> {
@@ -127,14 +130,27 @@ internal class DefaultRampManager(
         return expressServiceLoader.getInitializationStatus(userWalletId)
     }
 
-    private suspend fun getExchangeableFlag(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
+    private suspend fun getExchangeableState(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): ExchangeableState {
         return withContext(dispatchers.io) {
-            val asset = expressServiceLoader.getInitializationStatus(userWalletId)
-                .value
-                .getOrNull()
-                ?.find { cryptoCurrency.findAssetPredicate(it) }
+            when (val asset = expressServiceLoader.getInitializationStatus(userWalletId).value) {
+                is Lce.Error -> ExchangeableState.Error
+                is Lce.Loading -> ExchangeableState.Loading
+                is Lce.Content -> {
+                    val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
+                    foundAsset?.exchangeAvailable?.toExchangeableState() ?: ExchangeableState.AssetNotFound
+                }
+            }
+        }
+    }
 
-            asset?.exchangeAvailable ?: false
+    private fun Boolean.toExchangeableState(): ExchangeableState {
+        return if (this) {
+            ExchangeableState.Exchangeable
+        } else {
+            ExchangeableState.NotExchangeable
         }
     }
 
