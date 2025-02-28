@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.settings.IsReadyToShowRateAppUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
@@ -42,6 +43,8 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
         ) { maybePrimaryCurrencyStatus, isReadyToShowRating, isNeedToBackup, userWallets ->
             readyForRateAppNotification = true
             buildList {
+                addUsedOutdatedDataNotification(maybePrimaryCurrencyStatus)
+
                 addCriticalNotifications(
                     cardTypesResolver = cardTypesResolver,
                 )
@@ -66,6 +69,18 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
                 )
             }.toImmutableList()
         }
+    }
+
+    private fun MutableList<WalletNotification>.addUsedOutdatedDataNotification(
+        maybePrimaryCurrencyStatus: Either<CurrencyStatusError, CryptoCurrencyStatus>,
+    ) {
+        addIf(
+            element = WalletNotification.UsedOutdatedData,
+            condition = maybePrimaryCurrencyStatus.fold(
+                ifLeft = { false },
+                ifRight = { it.value.source == StatusSource.ONLY_CACHE },
+            ),
+        )
     }
 
     private fun MutableList<WalletNotification>.addCriticalNotifications(cardTypesResolver: CardTypesResolver) {
