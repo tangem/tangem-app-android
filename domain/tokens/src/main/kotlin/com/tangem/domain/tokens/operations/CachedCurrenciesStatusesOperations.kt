@@ -1,7 +1,7 @@
 package com.tangem.domain.tokens.operations
 
 import arrow.core.*
-import arrow.core.raise.*
+import arrow.core.raise.recover
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
@@ -98,14 +98,14 @@ class CachedCurrenciesStatusesOperations(
             .launchIn(scope = this)
     }
 
-    private suspend fun Raise<TokenListError>.fetchComponents(
+    override suspend fun fetchComponents(
         userWalletId: UserWalletId,
-        networks: NonEmptySet<Network>,
-        currenciesIds: NonEmptySet<CryptoCurrency.ID>,
-        currencies: NonEmptyList<CryptoCurrency>,
-    ) = coroutineScope {
-        catch(
-            block = {
+        networks: Set<Network>,
+        currenciesIds: Set<CryptoCurrency.ID>,
+        currencies: List<CryptoCurrency>,
+    ): Either<Throwable, Unit> {
+        return coroutineScope {
+            Either.catch {
                 awaitAll(
                     async { networksRepository.fetchNetworkStatuses(userWalletId, networks) },
                     async {
@@ -114,11 +114,9 @@ class CachedCurrenciesStatusesOperations(
                     },
                     async { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies) },
                 )
-            },
-            catch = {
-                raise(TokenListError.DataError(it))
-            },
-        )
+            }
+                .map { }
+        }
     }
 
     private fun createCurrenciesStatuses(
