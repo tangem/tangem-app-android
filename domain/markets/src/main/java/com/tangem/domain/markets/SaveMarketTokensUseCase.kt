@@ -31,36 +31,40 @@ class SaveMarketTokensUseCase(
         addedNetworks: Set<TokenMarketInfo.Network>,
         removedNetworks: Set<TokenMarketInfo.Network>,
     ): Either<Throwable, Unit> = Either.catch {
-        currenciesRepository.removeCurrencies(
-            userWalletId = userWalletId,
-            currencies = removedNetworks.mapNotNull {
+        if (removedNetworks.isNotEmpty()) {
+            currenciesRepository.removeCurrencies(
+                userWalletId = userWalletId,
+                currencies = removedNetworks.mapNotNull {
+                    marketsTokenRepository.createCryptoCurrency(
+                        userWalletId = userWalletId,
+                        token = tokenMarketParams,
+                        network = it,
+                    )
+                },
+            )
+        }
+
+        if (addedNetworks.isNotEmpty()) {
+            derivationsRepository.derivePublicKeysByNetworkIds(
+                userWalletId = userWalletId,
+                networkIds = addedNetworks.map { Network.ID(it.networkId) },
+            )
+
+            val addedCurrencies = addedNetworks.mapNotNull {
                 marketsTokenRepository.createCryptoCurrency(
                     userWalletId = userWalletId,
                     token = tokenMarketParams,
                     network = it,
                 )
-            },
-        )
+            }
 
-        derivationsRepository.derivePublicKeysByNetworkIds(
-            userWalletId = userWalletId,
-            networkIds = addedNetworks.map { Network.ID(it.networkId) },
-        )
+            currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = addedCurrencies)
 
-        val addedCurrencies = addedNetworks.mapNotNull {
-            marketsTokenRepository.createCryptoCurrency(
+            networksRepository.getNetworkStatusesSync(
                 userWalletId = userWalletId,
-                token = tokenMarketParams,
-                network = it,
+                networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
+                refresh = true,
             )
         }
-
-        currenciesRepository.addCurrencies(userWalletId = userWalletId, currencies = addedCurrencies)
-
-        networksRepository.getNetworkStatusesSync(
-            userWalletId = userWalletId,
-            networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
-            refresh = true,
-        )
     }
 }
