@@ -35,8 +35,22 @@ internal class DefaultQuotesRepository(
     private var quotesFetchedForAppCurrency: String? = null
     private val mutex = Mutex()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
-        return quotesStore.get(currenciesIds)
+        return appPreferencesStore.getObject<CurrenciesResponse.Currency>(
+            key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+        )
+            .distinctUntilChanged()
+            .filterNotNull()
+            .flatMapLatest { appCurrency ->
+                fetchExpiredQuotes(
+                    currenciesIds = currenciesIds,
+                    appCurrencyId = appCurrency.id,
+                    refresh = true,
+                )
+
+                quotesStore.get(currenciesIds)
+            }
             .flowOn(dispatchers.io)
     }
 
