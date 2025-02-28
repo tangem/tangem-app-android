@@ -44,7 +44,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                 when (action) {
                     is TokenActionsState.ActionState.Buy -> {
                         WalletManageButton.Buy(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            enabled = true,
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onBuyClick(
@@ -56,7 +56,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Receive -> {
                         WalletManageButton.Receive(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            enabled = true,
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onReceiveClick(cryptoCurrencyStatus = cryptoCurrencyStatus)
@@ -68,7 +68,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Sell -> {
                         WalletManageButton.Sell(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            enabled = true,
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSellClick(
@@ -80,7 +80,7 @@ internal class SetCryptoCurrencyActionsTransformer(
                     }
                     is TokenActionsState.ActionState.Send -> {
                         WalletManageButton.Send(
-                            enabled = action.unavailabilityReason == ScenarioUnavailabilityReason.None,
+                            enabled = true,
                             dimContent = action.unavailabilityReason != ScenarioUnavailabilityReason.None,
                             onClick = {
                                 clickIntents.onSendClick(
