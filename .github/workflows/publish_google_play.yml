@@ -53,7 +53,6 @@ jobs:
             --env-file .env \
             --volume ~/.gradle:/home/ubuntu/.gradle \
             --volume ~/apks:/home/ubuntu/apks \
-            --volume ~/bundles:/home/ubuntu/bundles \
             --volume ${{ github.workspace }}:/workspace \
             tangem_ci_android_environment \
             sh -c '
@@ -75,7 +74,7 @@ jobs:
               cp app/build/outputs/apk/release/app-release.apk /workspace/app-release.apk
               cp app/build/outputs/bundle/release/app-release.aab /workspace/app-release.aab
               cp app/build/outputs/bundle/release/app-release.aab /workspace/app-release-$version_code-$version_name.aab
-              
+          
               cp app/build/outputs/apk/release/app-release.apk /home/ubuntu/apks/app-release-$version_code-$version_name.apk
             '
 
