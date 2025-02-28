@@ -107,9 +107,10 @@ internal class DefaultCurrenciesRepository(
             )
 
             val currenciesToAdd = populateCurrenciesWithMissedCoins(
-                currencies = filterAlreadyAddedCurrencies(savedCurrencies.tokens, currencies),
-            )
-
+                currencies = currencies,
+            ).let {
+                filterAlreadyAddedCurrencies(savedCurrencies.tokens, it)
+            }
             val updatedResponse = savedCurrencies.copy(
                 tokens = savedCurrencies.tokens + currenciesToAdd.map(userTokensResponseFactory::createResponseToken),
             )
