@@ -28,6 +28,11 @@ jobs:
     outputs:
       versionName: ${{ steps.get_version_name.outputs.versionName }}
     steps:
+      - name: Test
+        run: |
+          pwd
+          echo ${{ github.workspace }}
+
       - name: Check out repository
         uses: actions/checkout@v4
         with:
