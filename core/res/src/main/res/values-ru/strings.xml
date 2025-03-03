@@ -6,7 +6,7 @@
   <string name="action_buttons_service_loading_alert_message">Это может занять несколько секунд. Пожалуйста, попробуйте позже.</string>
   <string name="action_buttons_service_loading_alert_title">Данные ещё не загрузились</string>
   <string name="action_buttons_something_wrong_alert_message">Это действие в данный момент недоступно, пожалуйста, попробуйте позже или обновите данные, сделав свайп экрана вниз.</string>
-  <string name="action_buttons_something_wrong_alert_title">Кнопка недоступна</string>
+  <string name="action_buttons_something_wrong_alert_title">Действие недоступно</string>
   <string name="action_buttons_swap_choose_token">Выберите токен</string>
   <string name="action_buttons_swap_empty_search_message">Не нашли свой токен? Перейдите в раздел «Рынок» на главной странице и добавьте его в свой портфель для обмена.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Нет доступных вариантов для обмена с выбранным токеном, пожалуйста, выберите другой.</string>
@@ -1113,6 +1113,7 @@
   <string name="warning_rate_app_title">Нравится Tangem?</string>
   <string name="warning_receive_blocked_hedera_token_association_required_message">Вам необходимо провести ассоциацию токена для того, чтобы иметь возможность принимать его</string>
   <string name="warning_rent_fee_title">Необходима плата за аренду сети</string>
+  <string name="warning_seedphrase_action_required_title">Требуется действие</string>
   <string name="warning_seedphrase_contacted_support">Вы обращались в службу поддержки через приложение в течение 7 дней после создания кошелька? Если обращались или не уверены, нажмите «Да» и следуйте инструкциям.</string>
   <string name="warning_seedphrase_issue_answer_no">Спасибо! Всё в порядке! Дальнейшие действия не требуются.</string>
   <string name="warning_seedphrase_issue_answer_yes">Вы будете перенаправлены на официальный сайт Tangem. Пожалуйста, прочитайте и выполните указанные там инструкции.</string>
