@@ -10,6 +10,7 @@ plugins {
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.firebase.crashlytics)
     alias(deps.plugins.firebase.perf)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -22,9 +23,15 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
-        resources.excludes.add("META-INF/DEPENDENCIES")
         resources.excludes.add("META-INF/LICENSE.md")
         resources.excludes.add("META-INF/NOTICE.md")
+        resources.excludes.add("META-INF/DISCLAIMER")
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/FastDoubleParser-NOTICE")
+        resources.excludes.add("META-INF/FastDoubleParser-LICENSE")
+        resources.excludes.add("META-INF/io.netty.versions.properties")
+        resources.excludes.add("META-INF/INDEX.LIST")
+        resources.excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
     }
     androidResources {
         generateLocaleConfig = true
@@ -141,7 +148,7 @@ dependencies {
 
     /** Features */
     implementation(projects.features.onboarding)
-    implementation(projects.features.referral.presentation)
+    implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)
     implementation(projects.features.swap.api)
@@ -263,7 +270,7 @@ dependencies {
     implementation(deps.moshi.adapters)
 
     implementation(deps.moshi.kotlin)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Testing libraries */

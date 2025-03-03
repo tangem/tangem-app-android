@@ -50,46 +50,18 @@ jobs:
 
       - name: Get unreleased tasks
         id: git-diff
-        uses: tangem/github-action@main
+        uses: tangem-developments/github-action@main
         with:
           github-token: '${{ secrets.GH_MOBILE_PAT }}'
           base: '${{ steps.find-latest-release-branch.outputs.result }}'
           head: '${{ github.ref_name }}'
 
-      - name: Verify Jira issues and generate JSON
-        id: verify-jira-issues
-        run: |
-          issues_json='${{ steps.git-diff.outputs.issues }}'
-          base_url="https://tangem.atlassian.net/rest/api/3/issue"
-          valid_issues=()
-
-          # Parse JSON array to get individual issue keys
-          issues=$(echo $issues_json | jq -r '.[]')
-
-          # Iterate through each issue in the list
-          for issue in $issues; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" -u "${{ secrets.JIRA_USER }}:${{ secrets.JIRA_TOKEN }}" "$base_url/$issue")
-            if [[ "$response" -eq 200 ]]; then
-              echo "Issue $issue exists."
-              valid_issues+=("\"$issue\"")
-            else
-              echo "Issue $issue does not exist."
-            fi
-          done
-
-          # Create JSON array from valid issues
-          valid_issues_json=$(printf "[%s]" "$(IFS=,; echo "${valid_issues[*]}")")
-          echo "valid_issues=$valid_issues_json"
-          echo "valid_issues=$valid_issues_json" >> $GITHUB_OUTPUT
-      
-
       - name: Jira Get Issues Summary
-        uses: tangem/jira-action@master
+        uses: tangem-developments/jira-action@master
         id: jira-issues-summary
-        continue-on-error: true
         with:
-          action: 'getIssuesSummary'
-          issues: '${{ steps.verify-jira-issues.outputs.valid_issues }}'
+          action: getIssuesSummary
+          issues: ${{ steps.git-diff.outputs.issues }}
 
       - name: Print issues
         id: print_issues
