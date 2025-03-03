@@ -971,7 +971,7 @@ internal class TokenDetailsModel @Inject constructor(
                 error("Staking is unavailable for ${cryptoCurrency.name}")
             }
 
-            router.openStaking(userWalletId, cryptoCurrency, yield)
+            router.openStaking(userWalletId, cryptoCurrency, yield.id)
         }
     }
 
