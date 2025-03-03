@@ -1,7 +1,7 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.onboarding.v2.impl.R
@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class OnboardingVisaChooseWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
