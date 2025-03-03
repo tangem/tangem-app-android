@@ -28,7 +28,7 @@ import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.arkivanov.decompose.value.observe
+import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -316,12 +316,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         appRouterConfig.componentRouter = routingComponent.router
         appRouterConfig.snackbarHandler = this
 
-        routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
+        routingComponent.stack.subscribe(lifecycle.asEssentyLifecycle()) { childStack ->
             val stack = childStack.backStack
                 .plus(childStack.active)
                 .map { it.configuration }
 
-            if (stack == appRouterConfig.stack) return@observe
+            if (stack == appRouterConfig.stack) return@subscribe
 
             appRouterConfig.stack = stack
 
