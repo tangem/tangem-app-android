@@ -3,6 +3,7 @@ package com.tangem.feature.wallet.presentation.wallet.domain
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.datasource.local.swaptx.ExpressAnalyticsStatus
 import com.tangem.domain.onramp.GetOnrampStatusUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
@@ -13,14 +14,13 @@ import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 internal class OnrampStatusFactory @Inject constructor(
     private val stateHolder: WalletStateController,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
