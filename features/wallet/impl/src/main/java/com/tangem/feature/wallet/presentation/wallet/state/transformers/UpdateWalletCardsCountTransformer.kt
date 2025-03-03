@@ -27,6 +27,7 @@ internal class UpdateWalletCardsCountTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             is WalletState.Visa.Locked,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
                 Timber.e("Impossible to update wallet cards count for locked wallet")
                 prevState
