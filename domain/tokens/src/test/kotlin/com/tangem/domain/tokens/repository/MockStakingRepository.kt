@@ -39,78 +39,9 @@ class MockStakingRepository : StakingRepository {
             rewardSchedule = Yield.Metadata.RewardSchedule.DAY,
         )
 
-    override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield = Yield(
-        id = "1",
-        token = Token(
-            name = "Solana",
-            network = NetworkType.SOLANA,
-            symbol = "SOL",
-            decimals = 18,
-            address = null,
-            coinGeckoId = "solana",
-            logoURI = null,
-            isPoints = null,
-        ),
-        tokens = listOf(),
-        args = Yield.Args(
-            enter = Yield.Args.Enter(
-                addresses = Yield.Args.Enter.Addresses(
-                    address = AddressArgument(
-                        required = false,
-                        network = null,
-                        minimum = null,
-                        maximum = null,
-                    ),
-                    additionalAddresses = mapOf(),
-                ),
-                args = mapOf(),
-            ),
-            exit = null,
-        ),
-        status = Yield.Status(enter = false, exit = null),
-        apy = 1.toBigDecimal(),
-        rewardRate = 2.3,
-        rewardType = Yield.RewardType.APR,
-        metadata = Yield.Metadata(
-            name = "Yield",
-            logoUri = "",
-            description = "",
-            documentation = null,
-            gasFeeToken = Token(
-                name = "Solana",
-                network = NetworkType.SOLANA,
-                symbol = "SOL",
-                decimals = 18,
-                address = null,
-                coinGeckoId = null,
-                logoURI = null,
-                isPoints = null,
-            ),
-            token = Token(
-                name = "Solana",
-                network = NetworkType.SOLANA,
-                symbol = "SOL",
-                decimals = 18,
-                address = null,
-                coinGeckoId = null,
-                logoURI = null,
-                isPoints = null,
-            ),
-            tokens = listOf(),
-            type = "auto",
-            rewardSchedule = Yield.Metadata.RewardSchedule.DAY,
-            cooldownPeriod = Yield.Metadata.Period(days = 1),
-            warmupPeriod = Yield.Metadata.Period(days = 1),
-            rewardClaiming = Yield.Metadata.RewardClaiming.AUTO,
-            defaultValidator = null,
-            minimumStake = null,
-            supportsMultipleValidators = false,
-            revshare = Yield.Metadata.Enabled(enabled = false),
-            fee = Yield.Metadata.Enabled(enabled = false),
-        ),
-        validators = listOf(),
-        isAvailable = false,
-    )
+    override suspend fun getYield(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): Yield = yield
+
+    override suspend fun getYield(yieldId: String) = yield
 
     override suspend fun getStakingAvailability(
         userWalletId: UserWalletId,
@@ -245,4 +176,79 @@ class MockStakingRepository : StakingRepository {
     override fun getStakingApproval(cryptoCurrency: CryptoCurrency): StakingApproval = StakingApproval.Empty
 
     override suspend fun isAnyTokenStaked(userWalletId: UserWalletId): Boolean = false
+
+    private companion object {
+        val yield = Yield(
+            id = "1",
+            token = Token(
+                name = "Solana",
+                network = NetworkType.SOLANA,
+                symbol = "SOL",
+                decimals = 18,
+                address = null,
+                coinGeckoId = "solana",
+                logoURI = null,
+                isPoints = null,
+            ),
+            tokens = listOf(),
+            args = Yield.Args(
+                enter = Yield.Args.Enter(
+                    addresses = Yield.Args.Enter.Addresses(
+                        address = AddressArgument(
+                            required = false,
+                            network = null,
+                            minimum = null,
+                            maximum = null,
+                        ),
+                        additionalAddresses = mapOf(),
+                    ),
+                    args = mapOf(),
+                ),
+                exit = null,
+            ),
+            status = Yield.Status(enter = false, exit = null),
+            apy = 1.toBigDecimal(),
+            rewardRate = 2.3,
+            rewardType = Yield.RewardType.APR,
+            metadata = Yield.Metadata(
+                name = "Yield",
+                logoUri = "",
+                description = "",
+                documentation = null,
+                gasFeeToken = Token(
+                    name = "Solana",
+                    network = NetworkType.SOLANA,
+                    symbol = "SOL",
+                    decimals = 18,
+                    address = null,
+                    coinGeckoId = null,
+                    logoURI = null,
+                    isPoints = null,
+                ),
+                token = Token(
+                    name = "Solana",
+                    network = NetworkType.SOLANA,
+                    symbol = "SOL",
+                    decimals = 18,
+                    address = null,
+                    coinGeckoId = null,
+                    logoURI = null,
+                    isPoints = null,
+                ),
+                tokens = listOf(),
+                type = "auto",
+                rewardSchedule = Yield.Metadata.RewardSchedule.DAY,
+                cooldownPeriod = Yield.Metadata.Period(days = 1),
+                warmupPeriod = Yield.Metadata.Period(days = 1),
+                rewardClaiming = Yield.Metadata.RewardClaiming.AUTO,
+                defaultValidator = null,
+                minimumStake = null,
+                supportsMultipleValidators = false,
+                revshare = Yield.Metadata.Enabled(enabled = false),
+                fee = Yield.Metadata.Enabled(enabled = false),
+            ),
+            validators = listOf(),
+            isAvailable = false,
+        )
+    }
 }
