@@ -694,6 +694,7 @@
   <string name="scan_card_settings_message">Отсканируйте карту или кольцо, чтобы изменить ее настройки. Изменения затронут только ту карту или кольцо, которые вы отсканировали, и не повлияют на другие устройства, привязанные к вашему кошельку.</string>
   <string name="scan_card_settings_title">Приготовьте свой Tangem!</string>
   <string name="security_alert_title">Уведомление безопасности</string>
+  <string name="seed_warning_no">Нет</string>
   <string name="seed_warning_yes">Да</string>
   <string name="selling_insufficient_balance_alert_message">На вашем балансе недостаточно средств для продажи криптовалюты. Пожалуйста, пополните нужный актив, чтобы продолжить.</string>
   <string name="selling_insufficient_balance_alert_title">Недостаточно средств</string>
