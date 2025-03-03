@@ -2,10 +2,9 @@ package com.tangem.tap.features.details.ui.appsettings.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Icon
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,7 +21,6 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsItemsFactory
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsScreenState.Item
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 internal fun SettingsCardItem(item: Item.Card, modifier: Modifier = Modifier) {
     Surface(
