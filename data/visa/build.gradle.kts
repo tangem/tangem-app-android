@@ -4,6 +4,7 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -39,7 +40,7 @@ dependencies {
     implementation(deps.timber)
     implementation(deps.androidx.paging.runtime)
     implementation(deps.moshi.kotlin)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Libs - Tangem */
