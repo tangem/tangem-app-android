@@ -179,7 +179,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
             AppRoute.Staking(
                 userWalletId = cryptoCurrencyData.userWallet.walletId,
                 cryptoCurrencyId = cryptoCurrencyData.status.currency.id,
-                yield = yield,
+                yieldId = yield.id,
             ),
         )
     }
