@@ -133,6 +133,12 @@ internal class DefaultStakingRepository(
         }
     }
 
+    override suspend fun getYield(yieldId: String): Yield {
+        return withContext(dispatchers.io) {
+            getEnabledYieldsSync().find { it.id == yieldId } ?: error("Staking is unavailable")
+        }
+    }
+
     override suspend fun getActions(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
