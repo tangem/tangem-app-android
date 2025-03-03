@@ -409,7 +409,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
                 AppRoute.Staking(
                     userWalletId = userWalletId,
                     cryptoCurrencyId = cryptoCurrency.id,
-                    yield = yield ?: return@launch,
+                    yieldId = yield?.id ?: return@launch,
                 ),
             )
         }
