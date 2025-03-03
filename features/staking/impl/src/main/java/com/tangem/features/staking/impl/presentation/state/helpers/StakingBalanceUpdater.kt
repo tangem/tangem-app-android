@@ -60,20 +60,10 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         coroutineScope {
             listOf(
                 async {
-                    updateNetworkStatuses(delay = 0)
-                },
-                async {
-                    updateProcessingActions()
-                },
-            ).awaitAll()
-        }
-    }
-
-    suspend fun initialUpdate() {
-        coroutineScope {
-            listOf(
-                async {
                     updateStakeBalance()
+                },
+                async {
+                    updateNetworkStatuses(delay = 0)
                 },
                 async {
                     updateProcessingActions()
