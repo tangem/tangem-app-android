@@ -227,6 +227,9 @@ include(":features:stories:impl")
 
 include(":features:txhistory:api")
 include(":features:txhistory:impl")
+
+include(":features:nft:api")
+include(":features:nft:impl")
 // endregion Feature modules
 
 // region Domain modules
