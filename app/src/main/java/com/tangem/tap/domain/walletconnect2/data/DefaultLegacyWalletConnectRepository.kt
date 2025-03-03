@@ -9,11 +9,9 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.events.WalletConnect
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
-import com.tangem.tap.domain.walletconnect2.domain.WcJrpcMethods
-import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
-import com.tangem.tap.domain.walletconnect2.domain.WcRequest
+import com.tangem.tap.domain.walletconnect2.domain.*
 import com.tangem.tap.domain.walletconnect2.domain.models.*
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.OpenSession.SourceType
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -24,6 +22,7 @@ internal class DefaultLegacyWalletConnectRepository(
     private val application: Application,
     private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
     private val analyticsHandler: AnalyticsEventHandler,
+    private val blockchainHelper: WcBlockchainHelper,
 ) : LegacyWalletConnectRepository {
 
     private var sessionProposal: Wallet.Model.SessionProposal? = null
@@ -136,6 +135,13 @@ internal class DefaultLegacyWalletConnectRepository(
                     userNamespaces = this@DefaultLegacyWalletConnectRepository.userNamespaces ?: emptyMap(),
                 )
 
+                val requiredChainIds = sessionProposal.requiredNamespaces.values.flatMap { it.chains ?: emptyList() }
+                val optionalChainIds = optionalWithoutMissingNetworks.toList()
+                val networks = (requiredChainIds + optionalChainIds)
+                    .mapNotNull { blockchainHelper.chainIdToFullNameOrNull(it) }
+                    .distinct()
+                analyticsHandler.send(WalletConnect.DAppConnectionRequested(networks))
+
                 scope.launch {
                     _events.emit(
                         WalletConnectEvents.SessionProposal(
@@ -143,8 +149,8 @@ internal class DefaultLegacyWalletConnectRepository(
                             sessionProposal.description,
                             sessionProposal.url,
                             sessionProposal.icons,
-                            sessionProposal.requiredNamespaces.values.flatMap { it.chains ?: emptyList() },
-                            optionalWithoutMissingNetworks.toList(),
+                            requiredChainIds,
+                            optionalChainIds,
                         ),
                     )
                 }
@@ -176,7 +182,17 @@ internal class DefaultLegacyWalletConnectRepository(
                             result = "",
                         )
                     }
-                    else ->
+                    else -> {
+                        val event = WalletConnect.SignatureRequestReceived(
+                            WalletConnect.RequestHandledParams(
+                                dAppName = sessionRequest.peerMetaData?.name ?: "",
+                                dAppUrl = sessionRequest.peerMetaData?.url ?: "",
+                                methodName = sessionRequest.request.method,
+                                blockchain = sessionRequest.chainId
+                                    ?.let { blockchainHelper.chainIdToNetworkIdOrNull(it) } ?: "",
+                            ),
+                        )
+                        analyticsHandler.send(event)
                         scope.launch {
                             _events.emit(
                                 WalletConnectEvents.SessionRequest(
@@ -190,6 +206,7 @@ internal class DefaultLegacyWalletConnectRepository(
                                 ),
                             )
                         }
+                    }
                 }
             }
 
@@ -247,7 +264,8 @@ internal class DefaultLegacyWalletConnectRepository(
         this.userNamespaces = userNamespaces
     }
 
-    override fun pair(uri: String) {
+    override fun pair(uri: String, source: SourceType) {
+        analyticsHandler.send(WalletConnect.NewSessionInitiated(source = source))
         WalletKit.pair(
             params = Wallet.Params.Pair(uri),
             onSuccess = {
@@ -255,6 +273,7 @@ internal class DefaultLegacyWalletConnectRepository(
             },
             onError = {
                 Timber.e("Error while pairing: $it")
+                analyticsHandler.send(WalletConnect.SessionFailed)
                 scope.launch {
                     _events.emit(
                         WalletConnectEvents.PairConnectError(it.throwable),
@@ -305,7 +324,7 @@ internal class DefaultLegacyWalletConnectRepository(
             onSuccess = {
                 Timber.i("Approved successfully: $it")
                 analyticsHandler.send(
-                    WalletConnect.NewSessionEstablished(
+                    WalletConnect.DAppConnected(
                         dAppName = sessionProposal.name,
                         dAppUrl = sessionProposal.url,
                         blockchainNames = blockchainNames,
@@ -314,6 +333,13 @@ internal class DefaultLegacyWalletConnectRepository(
             },
             onError = {
                 Timber.e("Error while approving: $it")
+                analyticsHandler.send(
+                    WalletConnect.DAppConnectionFailed(
+                        dAppName = sessionProposal.name,
+                        dAppUrl = sessionProposal.url,
+                        blockchainNames = blockchainNames,
+                    ),
+                )
                 scope.launch {
                     _events.emit(
                         WalletConnectEvents.SessionApprovalError(
@@ -352,7 +378,7 @@ internal class DefaultLegacyWalletConnectRepository(
         // Add Ethereum Chain method is processed without user input, skip logging it
         if (requestData.method != WcJrpcMethods.WALLET_ADD_ETHEREUM_CHAIN.code) {
             analyticsHandler.send(
-                WalletConnect.RequestHandled(
+                WalletConnect.SignatureRequestHandled(
                     WalletConnect.RequestHandledParams(
                         dAppName = session?.name ?: "",
                         dAppUrl = session?.url ?: "",
@@ -377,7 +403,7 @@ internal class DefaultLegacyWalletConnectRepository(
             onError = { error ->
                 Timber.e(error.throwable, "Error while responging session request")
 
-                WalletConnect.RequestHandledParams(
+                val params = WalletConnect.RequestHandledParams(
                     dAppName = session?.name ?: "",
                     dAppUrl = session?.url ?: "",
                     methodName = requestData.method,
@@ -385,6 +411,7 @@ internal class DefaultLegacyWalletConnectRepository(
                     errorCode = WalletConnectError.ValidationError.error,
                     errorDescription = error.throwable.message,
                 )
+                analyticsHandler.send(WalletConnect.SignatureRequestFailed(params))
             },
         )
     }
@@ -393,7 +420,7 @@ internal class DefaultLegacyWalletConnectRepository(
         val session = currentSessions.find { it.topic == requestData.topic }
 
         analyticsHandler.send(
-            WalletConnect.RequestHandled(
+            WalletConnect.SignatureRequestHandled(
                 WalletConnect.RequestHandledParams(
                     dAppName = session?.name ?: "",
                     dAppUrl = session?.url ?: "",
