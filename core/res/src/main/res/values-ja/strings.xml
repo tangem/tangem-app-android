@@ -6,7 +6,7 @@
   <string name="action_buttons_service_loading_alert_message">これには数秒かかる場合があります。しばらくしてからもう一度お試しください。</string>
   <string name="action_buttons_service_loading_alert_title">データはまだ読み込まれていません。</string>
   <string name="action_buttons_something_wrong_alert_message">この操作は現在利用できません。しばらくしてからもう一度お試しいただくか、画面を下にスワイプしてデータを更新してください。</string>
-  <string name="action_buttons_something_wrong_alert_title">ボタンは使用できません</string>
+  <string name="action_buttons_something_wrong_alert_title">アクションは利用できません</string>
   <string name="action_buttons_swap_choose_token">トークンを選択</string>
   <string name="action_buttons_swap_empty_search_message">トークンが見つかりませんか？メインページのマーケットセクションに移動し、ポートフォリオに追加してスワップできるようにします。</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">選択したトークンと交換できるトークンがありません。別のトークンを選択してください。</string>
@@ -913,8 +913,10 @@
   <string name="toast_undo">元に戻す</string>
   <string name="token_button_unavailability_generic_description">この操作は現在利用できません。しばらくしてからもう一度お試しください。</string>
   <string name="token_button_unavailability_reason_buy_unavailable">%sの買付は、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
+  <string name="token_button_unavailability_reason_custom_token">カスタムトークンでは使用できません。</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">売却できる資金がありません。アカウントに入金して、売却できるようにしてください。</string>
   <string name="token_button_unavailability_reason_empty_balance_send">送金する資金がありません。アカウントに入金して、送金できるようにしてください。</string>
+  <string name="token_button_unavailability_reason_loading">データはまだ読み込まれていません。数秒かかる場合があります。しばらくしてからもう一度お試しください。</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%sのスワップは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">表示残高はキャッシュにより古くなっている可能性があります。</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">%sネットワーク上の保留中の取引が完了すると、資金の売却が可能になります。</string>
