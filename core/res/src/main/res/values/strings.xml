@@ -6,7 +6,7 @@
   <string name="action_buttons_service_loading_alert_message">This may take a few seconds. Please try again later.</string>
   <string name="action_buttons_service_loading_alert_title">The data has not loaded yet.</string>
   <string name="action_buttons_something_wrong_alert_message">The action is currently unavailable. Please try again later or refresh the data by swiping down on the screen.</string>
-  <string name="action_buttons_something_wrong_alert_title">Button is unavailable</string>
+  <string name="action_buttons_something_wrong_alert_title">Action is unavailable</string>
   <string name="action_buttons_swap_choose_token">Choose the Token</string>
   <string name="action_buttons_swap_empty_search_message">Can’t find your token? Go to the Market section on the main page and add it to your portfolio for swapping.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">There are no available tokens to swap with the selected token. Please choose another one.</string>
@@ -923,8 +923,10 @@
   <string name="toast_undo">Undo</string>
   <string name="token_button_unavailability_generic_description">This operation is currently unavailable. Please try again later.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">Buying %s is not supported by current providers, but we are working to add more options.</string>
+  <string name="token_button_unavailability_reason_custom_token">Action is not available for custom tokens.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">You do not have funds to sell. Top up your account to be able to sell funds from it.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
+  <string name="token_button_unavailability_reason_loading">The data has not loaded yet. This may take a few seconds. Please try again later.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not supported by current providers, but we are working to add more options.</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">The displayed balance might be outdated due to caching.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) on the %s network is complete.</string>
