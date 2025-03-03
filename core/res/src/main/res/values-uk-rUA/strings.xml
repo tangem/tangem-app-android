@@ -694,6 +694,8 @@
   <string name="scan_card_settings_message">Відскануйте картку або кільце, щоб змінити її налаштування. Зміни торкнуться лише тої картки або кільця, які ви відсканували, і не вплинуть на інші пристрої, прив\'язані до вашого гаманця.</string>
   <string name="scan_card_settings_title">Підготуйте свій Tangem!</string>
   <string name="security_alert_title">Оповіщення безпеки</string>
+  <string name="seed_warning_no">Ні, не робив</string>
+  <string name="seed_warning_yes">Так</string>
   <string name="selling_insufficient_balance_alert_message">На вашому балансі недостатньо коштів для продажу криптовалюти. Будь ласка, внесіть бажаний актив, щоб продовжити.</string>
   <string name="selling_insufficient_balance_alert_title">Недостатній баланс</string>
   <string name="selling_regional_restriction_alert_message">Продаж криптовалюти у вашому регіоні тимчасово недоступний. Ми активно працюємо над тим, щоб додати цю можливість. Слідкуйте за нашими новинами!</string>
