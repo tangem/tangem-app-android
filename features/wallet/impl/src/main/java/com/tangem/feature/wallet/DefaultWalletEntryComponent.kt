@@ -2,13 +2,15 @@ package com.tangem.feature.wallet
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.fade
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.value.Value
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.decompose.ComposableContentComponent
@@ -28,7 +30,7 @@ internal class DefaultWalletEntryComponent @AssistedInject constructor(
 
     private val navigation = StackNavigation<WalletRoute>()
 
-    private val stack = childStack<WalletRoute, ComposableContentComponent>(
+    private val stack: Value<ChildStack<WalletRoute, ComposableContentComponent>> = childStack(
         source = navigation,
         serializer = WalletRoute.serializer(),
         initialConfiguration = WalletRoute.Wallet,
