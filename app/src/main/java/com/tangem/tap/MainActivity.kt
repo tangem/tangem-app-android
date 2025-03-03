@@ -326,7 +326,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             context = rootComponentContext,
         )
 
-        appRouterConfig.routerScope = lifecycleScope
+        appRouterConfig.routerScope = mainScope
         appRouterConfig.componentRouter = routingComponent.router
         appRouterConfig.snackbarHandler = this
 
@@ -367,6 +367,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             owner = this,
             settingsRepository = settingsRepository,
             userWalletsListManager = userWalletsListManager,
+            coroutineScope = mainScope,
         )
 
         initIntentHandlers()
