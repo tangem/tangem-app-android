@@ -11,6 +11,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFICATION_SHOW_TIME
 import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -205,21 +206,27 @@ internal class DefaultWalletsRepository(
 
     override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> {
         return appPreferencesStore
-            .get(key = PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY, default = emptySet())
-            .map { it.contains(userWalletId.stringValue) }
+            .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+            .map { !it.contains(userWalletId.stringValue) || it[userWalletId.stringValue] == true }
     }
 
     override suspend fun enableNFT(userWalletId: UserWalletId) {
         appPreferencesStore.editData {
-            val added = it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY].orEmpty()
-            it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY] = added + userWalletId.stringValue
+            it.setObjectMap(
+                PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                    .plus(userWalletId.stringValue to true),
+            )
         }
     }
 
     override suspend fun disableNFT(userWalletId: UserWalletId) {
         appPreferencesStore.editData {
-            val added = it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY].orEmpty()
-            it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY] = added - userWalletId.stringValue
+            it.setObjectMap(
+                PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                    .plus(userWalletId.stringValue to false),
+            )
         }
     }
 }
