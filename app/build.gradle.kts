@@ -10,6 +10,7 @@ plugins {
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.firebase.crashlytics)
     alias(deps.plugins.firebase.perf)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -30,6 +31,7 @@ android {
         resources.excludes.add("META-INF/FastDoubleParser-LICENSE")
         resources.excludes.add("META-INF/io.netty.versions.properties")
         resources.excludes.add("META-INF/INDEX.LIST")
+        resources.excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
     }
     androidResources {
         generateLocaleConfig = true
@@ -268,7 +270,7 @@ dependencies {
     implementation(deps.moshi.adapters)
 
     implementation(deps.moshi.kotlin)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Testing libraries */
