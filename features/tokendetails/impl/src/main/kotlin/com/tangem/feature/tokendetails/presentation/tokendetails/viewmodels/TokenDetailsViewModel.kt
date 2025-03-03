@@ -139,7 +139,9 @@ internal class TokenDetailsViewModel @Inject constructor(
             ?.unbundle(CryptoCurrency.serializer())
             ?: error("This screen can't be opened without `CryptoCurrency`")
 
-    private val userWallet: UserWallet
+    private val userWallet: UserWallet by lazy {
+        getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
+    }
 
     lateinit var router: InnerTokenDetailsRouter
 
@@ -203,7 +205,6 @@ internal class TokenDetailsViewModel @Inject constructor(
                 ),
             ),
         )
-        userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("UserWallet not found")
     }
 
     private fun onBuyCurrencyDeepLink(externalTxId: String) {
