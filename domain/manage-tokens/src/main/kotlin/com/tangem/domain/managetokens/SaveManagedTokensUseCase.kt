@@ -5,6 +5,7 @@ import arrow.core.flatten
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -18,6 +19,7 @@ class SaveManagedTokensUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
     private val derivationsRepository: DerivationsRepository,
+    private val stakingRepository: StakingRepository,
 ) {
 
     suspend operator fun invoke(
@@ -50,6 +52,8 @@ class SaveManagedTokensUseCase(
             existingCurrencies = existingCurrencies,
             currenciesToAdd = addingCurrencies,
         )
+
+        refreshUpdatedYieldBalances(userWalletId, existingCurrencies)
     }
 
     private suspend fun removeCurrenciesFromWalletManager(
@@ -86,6 +90,17 @@ class SaveManagedTokensUseCase(
         networksRepository.getNetworkStatusesSync(
             userWalletId = userWalletId,
             networks = networksToUpdate + networkToUpdate,
+            refresh = true,
+        )
+    }
+
+    private suspend fun refreshUpdatedYieldBalances(
+        userWalletId: UserWalletId,
+        existingCurrencies: List<CryptoCurrency>,
+    ) {
+        stakingRepository.fetchMultiYieldBalance(
+            userWalletId = userWalletId,
+            cryptoCurrencies = existingCurrencies,
             refresh = true,
         )
     }
