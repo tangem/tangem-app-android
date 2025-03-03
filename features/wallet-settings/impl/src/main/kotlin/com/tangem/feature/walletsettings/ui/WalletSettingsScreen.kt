@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.TangemSwitch
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.block.BlockCard
@@ -96,6 +97,10 @@ private fun Content(state: WalletSettingsUM, modifier: Modifier = Modifier) {
                     modifier = itemModifier,
                     model = item,
                 )
+                is WalletSettingsItemUM.WithSwitch -> SwitchBlock(
+                    modifier = itemModifier,
+                    model = item,
+                )
             }
         }
     }
@@ -160,6 +165,34 @@ private fun TextBlock(model: WalletSettingsItemUM.WithText, modifier: Modifier =
                 color = TangemTheme.colors.text.primary1,
                 style = TangemTheme.typography.body1,
                 overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun SwitchBlock(model: WalletSettingsItemUM.WithSwitch, modifier: Modifier = Modifier) {
+    BlockCard(
+        modifier = modifier.fillMaxWidth(),
+        enabled = model.isChecked,
+    ) {
+        Row(
+            modifier = Modifier.padding(all = TangemTheme.dimens.spacing12),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12, Alignment.Start),
+        ) {
+            Text(
+                modifier = Modifier.weight(1f),
+                text = model.title.resolveReference(),
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            TangemSwitch(
+                checked = model.isChecked,
+                onCheckedChange = model.onCheckedChange,
             )
         }
     }
