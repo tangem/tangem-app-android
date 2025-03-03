@@ -241,6 +241,7 @@
   <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card or ring. It will enforce a delay between reception and execution of a command.</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Before executing any command entailing a change of the card state, you will have to enter the passcode.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Referral program</string>
   <string name="details_row_description_flip_to_hide">Flip your device screen down to quickly hide and show balances</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
