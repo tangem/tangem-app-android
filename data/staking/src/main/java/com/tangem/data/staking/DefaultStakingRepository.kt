@@ -403,13 +403,31 @@ internal class DefaultStakingRepository(
             ?: YieldBalance.Error(integrationId, address)
     }
 
+    @Suppress("LongMethod")
     override suspend fun fetchMultiYieldBalance(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
         refresh: Boolean,
     ) = withContext(dispatchers.io) {
         if (refresh) {
-            stakingBalanceStore.refresh(userWalletId = userWalletId)
+            stakingBalanceStore.refresh(
+                userWalletId = userWalletId,
+                addressWithIntegrationIdMap = cryptoCurrencies
+                    .mapNotNull { currency ->
+                        val addresses = walletManagersFacade.getAddresses(userWalletId, currency.network)
+                        val integrationId = integrationIdMap[getIntegrationKey(currency.id)]
+
+                        if (integrationId != null) {
+                            addresses to integrationId
+                        } else {
+                            null
+                        }
+                    }
+                    .flatMap { (addresses, integrationId) ->
+                        addresses.map { address -> integrationId to address.value }
+                    }
+                    .toMap(),
+            )
         }
 
         cacheRegistry.invokeOnExpire(
