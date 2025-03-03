@@ -932,7 +932,7 @@ internal class StakingModel @Inject constructor(
                 when {
                     isInitState() -> {
                         updateInitialData()
-                        balanceUpdater.initialUpdate()
+                        balanceUpdater.partialUpdate()
                     }
                     isAssentState() -> {
                         getFee()
