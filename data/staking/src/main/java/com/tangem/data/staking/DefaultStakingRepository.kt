@@ -219,6 +219,7 @@ internal class DefaultStakingRepository(
     private fun checkFeatureToggleEnabled(networkId: Network.ID): Boolean {
         return when (Blockchain.fromId(networkId.value)) {
             Blockchain.TON -> stakingFeatureToggles.isTonStakingEnabled
+            Blockchain.Cardano -> stakingFeatureToggles.isCardanoStakingEnabled
             else -> true
         }
     }
