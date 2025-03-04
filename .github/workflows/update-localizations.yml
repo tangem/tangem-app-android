@@ -12,6 +12,12 @@ on:
         type: string
   workflow_call:
     secrets:
+      JIRA_BASE_URL:
+        required: true
+      JIRA_USER_EMAIL:
+        required: true
+      JIRA_API_TOKEN:
+        required: true
       FIREBASE_APP_ID_INTERNAL:
         required: true
       FIREBASE_CLI_TOKEN:
@@ -22,51 +28,74 @@ on:
 jobs:
   generate-release-name:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        branch_name: ["releases/5.21", "hotfix/5.21.1", "develop", "test", "feature/AND-123", "feature/releases/5.21", "releases/XXX"]
-    outputs:
-      versionName: ${{ steps.get_version_name.outputs.versionName }}
+#    strategy:
+#      matrix:
+#        branch_name: ["releases/5.21", "hotfix/5.21.1", "develop", "test", "feature/AND-123", "feature/releases/5.21", "releases/XXX"]
+#    outputs:
+#      versionName: ${{ steps.get_version_name.outputs.versionName }}
     steps:
-      - name: Test
-        run: |
-          pwd
-          echo ${{ github.workspace }}
+      - name: Jira Login
+        uses: atlassian/gajira-login@master
+        env:
+          JIRA_BASE_URL: '${{ secrets.JIRA_BASE_URL }}'
+          JIRA_USER_EMAIL: '${{ secrets.JIRA_USER_EMAIL }}'
+          JIRA_API_TOKEN: '${{ secrets.JIRA_API_TOKEN }}'
 
-      - name: Check out repository
-        uses: actions/checkout@v4
+
+      - name: Jira Create Version
+        uses: tangem-developments/jira-action@master
         with:
-          fetch-depth: 0
+          action: createVersion
+          project: AND
+          version: test
 
-      - name: Determine release version
-        id: get_version_name
-        run: |
-          BRANCH=${{ matrix.branch_name }}
-          echo "Testing with branch: $BRANCH"
-          
-          if [[ "$BRANCH" =~ ^(releases|hotfix)/([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
-            MAJOR=${BASH_REMATCH[2]}
-            MINOR=${BASH_REMATCH[3]}
-            PATCH=${BASH_REMATCH[4]:-.0}
-            VERSION="${MAJOR}.${MINOR}${PATCH}"
-          else
-            echo "Running script"
-            ./ci_resources/find-latest-release-branch.sh origin/$BRANCH
-            LATEST_BRANCH=$(< 'find-latest-release-branch.output')
-          
-            if [[ "$LATEST_BRANCH" =~ releases/([0-9]+)\.([0-9]+) ]]; then
-              MAJOR=${BASH_REMATCH[1]}
-              MINOR=${BASH_REMATCH[2]}
-              NEW_MINOR=$((MINOR + 1))
-              VERSION="${MAJOR}.${NEW_MINOR}.0"
-            else
-              echo "Failed to determine version"
-              exit 1
-            fi
-          fi
-          
-          echo "versionName=$VERSION" >> $GITHUB_OUTPUT
+      - name: Jira Create Version
+        uses: tangem-developments/jira-action@master
+        with:
+          action: createVersion
+          project: AND
+          version: test
 
-      - name: Output release name
-        run: |
-          echo "Branch: ${{ matrix.branch_name }} → Release version: ${{ steps.get_version_name.outputs.versionName }}"
+#
+#      - name: Test
+#        run: |
+#          pwd
+#          echo ${{ github.workspace }}
+#
+#      - name: Check out repository
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#
+#      - name: Determine release version
+#        id: get_version_name
+#        run: |
+#          BRANCH=${{ matrix.branch_name }}
+#          echo "Testing with branch: $BRANCH"
+#
+#          if [[ "$BRANCH" =~ ^(releases|hotfix)/([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+#            MAJOR=${BASH_REMATCH[2]}
+#            MINOR=${BASH_REMATCH[3]}
+#            PATCH=${BASH_REMATCH[4]:-.0}
+#            VERSION="${MAJOR}.${MINOR}${PATCH}"
+#          else
+#            echo "Running script"
+#            ./ci_resources/find-latest-release-branch.sh origin/$BRANCH
+#            LATEST_BRANCH=$(< 'find-latest-release-branch.output')
+#
+#            if [[ "$LATEST_BRANCH" =~ releases/([0-9]+)\.([0-9]+) ]]; then
+#              MAJOR=${BASH_REMATCH[1]}
+#              MINOR=${BASH_REMATCH[2]}
+#              NEW_MINOR=$((MINOR + 1))
+#              VERSION="${MAJOR}.${NEW_MINOR}.0"
+#            else
+#              echo "Failed to determine version"
+#              exit 1
+#            fi
+#          fi
+#
+#          echo "versionName=$VERSION" >> $GITHUB_OUTPUT
+#
+#      - name: Output release name
+#        run: |
+#          echo "Branch: ${{ matrix.branch_name }} → Release version: ${{ steps.get_version_name.outputs.versionName }}"
