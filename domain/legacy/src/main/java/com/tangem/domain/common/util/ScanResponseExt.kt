@@ -73,6 +73,7 @@ private fun ScanResponse.hasDerivation(curve: EllipticCurve, derivationPath: Der
  * @return null if wallet is not multi-currency or total cards count
  */
 fun ScanResponse.getCardsCount(): Int? {
+    if (cardTypesResolver.isTangemTwins()) return 2
     if (!cardTypesResolver.isMultiwalletAllowed()) return null
 
     return when (val status = card.backupStatus) {

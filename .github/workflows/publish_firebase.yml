@@ -143,7 +143,6 @@ jobs:
     with:
       channel: 'deployments-android'
       status: 'success'
-      app_name: 'Tangem Internal'
       deploy_to: 'Firebase app distribution'
       version: ${{ needs.prepare.outputs.version_name }}
       build_number: ${{ needs.prepare.outputs.version_code }}
@@ -164,7 +163,6 @@ jobs:
     with:
       channel: 'deployments-android'
       status: 'error'
-      app_name: 'Tangem Internal'
       deploy_to: 'Firebase App Distribution'
       version: ${{ needs.prepare.outputs.version_name }}
       build_number: ${{ needs.prepare.outputs.version_code }}

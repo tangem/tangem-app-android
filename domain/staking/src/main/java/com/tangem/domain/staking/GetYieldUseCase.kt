@@ -20,4 +20,10 @@ class GetYieldUseCase(
             .catch { stakingRepository.getYield(cryptoCurrencyId, symbol) }
             .mapLeft { stakingErrorResolver.resolve(it) }
     }
+
+    suspend operator fun invoke(yieldId: String): Either<StakingError, Yield> {
+        return Either
+            .catch { stakingRepository.getYield(yieldId) }
+            .mapLeft { stakingErrorResolver.resolve(it) }
+    }
 }

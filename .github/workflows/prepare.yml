@@ -45,6 +45,9 @@ jobs:
           action: getBranchSummary
           branch-name: ${{ github.ref_name }}
 
+      - name: Clean
+        run: rm -rf *
+
       - name: Checkout
         uses: actions/checkout@v3
         with:

@@ -12,4 +12,3 @@ jobs:
       replace_android_tangem_dependencies: true
     secrets:
       AUTO_MERGE_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}
-      GH_MOBILE_PAT: ${{ secrets.GH_MOBILE_PAT }}
