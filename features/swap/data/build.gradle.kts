@@ -49,6 +49,7 @@ dependencies {
 
     /** Others */
     implementation(deps.timber)
+    implementation(deps.jodatime)
 
     /** DI */
     implementation(deps.hilt.android)
