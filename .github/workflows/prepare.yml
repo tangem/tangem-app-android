@@ -1,5 +1,4 @@
-# .github/workflows/prepare.yml
-name: Prepare
+name: Prepare for build
 
 on:
   workflow_call:
@@ -14,7 +13,7 @@ on:
     outputs:
       version_name:
         description: "Version name"
-        value: ${{ jobs.prepare.outputs.version_name }}
+        value: ${{ jobs.get_version_name.outputs.version_name }}
       version_code:
         description: "Version code"
         value: ${{ jobs.prepare.outputs.version_code }}
@@ -23,11 +22,14 @@ on:
         value: ${{ jobs.prepare.outputs.jira_summary }}
 
 jobs:
+  get_version_name:
+    uses: ./.github/workflows/get_version_name.yml
+
   prepare:
     name: Prepare
     runs-on: [ self-hosted, active-android, build ]
+    needs: get_version_name
     outputs:
-      version_name: ${{ steps.get_version_name.outputs.versionName }}
       version_code: ${{ steps.get_version_code.outputs.versionCode }}
       jira_summary: ${{ steps.jira.outputs.summary }}
     steps:
@@ -72,34 +74,6 @@ jobs:
         run: |
           VERSION_CODE=$((RUN_NUMBER + INITIAL_VERSION_CODE))
           echo "versionCode=$VERSION_CODE" >> $GITHUB_OUTPUT
-
-      - name: Get version name from branch name
-        id: get_version_name
-        run: |
-          BRANCH=${{ github.ref_name }}
-          
-          if [[ "$BRANCH" =~ ^(releases|hotfix)/([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
-            MAJOR=${BASH_REMATCH[2]}
-            MINOR=${BASH_REMATCH[3]}
-            PATCH=${BASH_REMATCH[4]:-.0}
-            VERSION="${MAJOR}.${MINOR}${PATCH}"
-          else
-            ./ci_resources/find-latest-release-branch.sh origin/$BRANCH
-            LATEST_BRANCH=$(< 'find-latest-release-branch.output')
-          
-            if [[ "$LATEST_BRANCH" =~ releases/([0-9]+)\.([0-9]+) ]]; then
-              MAJOR=${BASH_REMATCH[1]}
-              MINOR=${BASH_REMATCH[2]}
-              NEW_MINOR=$((MINOR + 1))
-              VERSION="${MAJOR}.${NEW_MINOR}.0"
-            else
-              echo "Failed to get version"
-              exit 1
-            fi
-          fi
-          
-          echo "versionName=$VERSION"
-          echo "versionName=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Build Docker image
         run: |

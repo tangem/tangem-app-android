@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version_name:
-        description: 'Name of version (ie 1.3.0)'
+        description: 'Name of version (ie 5.21)'
         required: true
 
 jobs:

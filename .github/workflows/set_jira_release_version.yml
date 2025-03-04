@@ -1,0 +1,28 @@
+name: Jira - Set release version in Jira for the merged task
+
+on:
+  pull_request:
+    branches:
+      - 'develop'
+      - 'releases/*'
+    types:
+      - closed
+
+jobs:
+  get_version_name:
+    if: ${{ github.event.pull_request.merged }}
+    uses: ./.github/workflows/get_version_name.yml
+
+  set-jira-version:
+    name: Set Jira Task Version
+    needs: prepare
+    uses: tangem-developments/actions/.github/workflows/set-jira-task-version.yml@feature/IOS-8785_ci_cd_create_release
+    with:
+      version_name: ${{ needs.get_version_name.outputs.version_name }}
+      project_name: 'AND'
+      pull_request_number: ${{ github.event.pull_request.number }}
+    secrets:
+      JIRA_BASE_URL: ${{ secrets.JIRA_URL }}
+      JIRA_USER_EMAIL: ${{ secrets.JIRA_USER }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_TOKEN }}
+      GH_MOBILE_PAT: ${{ secrets.GH_MOBILE_PAT }}

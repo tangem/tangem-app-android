@@ -70,7 +70,7 @@ jobs:
 
   prepare:
     uses: ./.github/workflows/prepare.yml
-    name: Prepare
+    name: Prepare for build
     with:
       initial_version_code: 1050
     secrets: inherit

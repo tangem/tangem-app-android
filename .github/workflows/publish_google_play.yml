@@ -23,7 +23,7 @@ jobs:
   prepare:
     needs: set_dex_protector_flag
     uses: ./.github/workflows/prepare.yml
-    name: Prepare
+    name: Prepare for build
     with:
       initial_version_code: 1200
       checkout_dexprotector_config: ${{ needs.set_dex_protector_flag.outputs.use_dexprotector == 'true' }}
