@@ -101,10 +101,14 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         } else {
             val statusModel = getExchangeStatus(swapTx.info.txId, swapTx.provider)
 
-            swapTransactionsStateConverter.updateTxStatus(
-                tx = swapTx,
-                statusModel = statusModel,
-            )
+            if (statusModel != null) {
+                swapTransactionsStateConverter.updateTxStatus(
+                    tx = swapTx,
+                    statusModel = statusModel,
+                )
+            } else {
+                swapTx
+            }
         }
     }
 
