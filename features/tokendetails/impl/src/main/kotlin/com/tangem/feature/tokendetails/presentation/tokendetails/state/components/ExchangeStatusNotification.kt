@@ -15,9 +15,9 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.tokendetails.impl.R
 
 @Immutable
-internal sealed interface ExchangeStatusNotifications {
+internal sealed interface ExchangeStatusNotification {
 
-    sealed class CommonNotification(val config: NotificationConfig) : ExchangeStatusNotifications
+    sealed class CommonNotification(val config: NotificationConfig) : ExchangeStatusNotification
 
     @Deprecated("Use one in ExpressNotificationsUM")
     data class NeedVerification(val onGoToProviderClick: () -> Unit) : CommonNotification(
@@ -45,11 +45,23 @@ internal sealed interface ExchangeStatusNotifications {
         ),
     )
 
+    data class LongTimeExchange(val onGoToProviderClick: () -> Unit) : CommonNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.express_exchange_notification_long_transaction_time_title),
+            subtitle = resourceReference(R.string.express_exchange_notification_long_transaction_time_text),
+            iconResId = R.drawable.ic_alert_triangle_20,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.common_go_to_provider),
+                onClick = onGoToProviderClick,
+            ),
+        ),
+    )
+
     data class TokenRefunded(
         val cryptoCurrency: CryptoCurrency,
         val onReadMoreClick: () -> Unit,
         val onGoToTokenClick: () -> Unit,
-    ) : ExchangeStatusNotifications {
+    ) : ExchangeStatusNotification {
 
         val config = CurrencyNotificationConfig(
             title = resourceReference(
