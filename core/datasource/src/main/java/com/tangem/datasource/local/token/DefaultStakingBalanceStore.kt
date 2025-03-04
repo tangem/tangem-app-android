@@ -72,21 +72,35 @@ internal class DefaultStakingBalanceStore(
     override suspend fun store(userWalletId: UserWalletId, items: Set<YieldBalanceWrapperDTO>) {
         coroutineScope {
             launch {
-                updateRuntimeStore(userWalletId = userWalletId) {
-                    YieldBalanceConverter(isCached = false).convertSet(input = items)
+                val newBalances = YieldBalanceConverter(isCached = false).convertSet(input = items)
+
+                runtimeStore.update(default = emptyMap()) { saved ->
+                    saved.toMutableMap().apply {
+                        this[userWalletId] = saved[userWalletId]
+                            ?.addOrReplace(newBalances) { old, new ->
+                                old.integrationId == new.integrationId && old.address == new.address
+                            }
+                            ?: newBalances
+                    }
                 }
             }
             launch { storeInPersistenceStore(userWalletId = userWalletId, items = items) }
         }
     }
 
-    override suspend fun refresh(userWalletId: UserWalletId) {
+    override suspend fun refresh(userWalletId: UserWalletId, addressWithIntegrationIdMap: Map<String, String>) {
         updateRuntimeStore(userWalletId = userWalletId) { saved ->
-            saved.mapTo(hashSetOf()) {
-                when (it) {
-                    is YieldBalance.Data -> it.copy(source = StatusSource.CACHE)
-                    is YieldBalance.Empty -> it.copy(source = StatusSource.CACHE)
-                    is YieldBalance.Error -> it
+            saved.mapTo(hashSetOf()) { balance ->
+                val refreshIntegrationId = addressWithIntegrationIdMap[balance.address]
+
+                if (balance.integrationId == refreshIntegrationId) {
+                    when (balance) {
+                        is YieldBalance.Data -> balance.copy(source = StatusSource.CACHE)
+                        is YieldBalance.Empty -> balance.copy(source = StatusSource.CACHE)
+                        is YieldBalance.Error -> balance
+                    }
+                } else {
+                    balance
                 }
             }
         }
@@ -114,11 +128,13 @@ internal class DefaultStakingBalanceStore(
     ) {
         val newBalance = YieldBalanceConverter(isCached = false).convert(value = item)
 
-        val balances = getSyncOrNull(userWalletId)
-            ?.addOrReplace(newBalance) { it.integrationId == integrationId && it.address == address }
-            ?: setOf(newBalance)
-
-        updateRuntimeStore(userWalletId = userWalletId) { balances }
+        runtimeStore.update(default = emptyMap()) { saved ->
+            saved.toMutableMap().apply {
+                this[userWalletId] = saved[userWalletId]
+                    ?.addOrReplace(newBalance) { it.integrationId == integrationId && it.address == address }
+                    ?: setOf(newBalance)
+            }
+        }
     }
 
     private suspend fun updateRuntimeStore(
@@ -135,7 +151,11 @@ internal class DefaultStakingBalanceStore(
     private suspend fun storeInPersistenceStore(userWalletId: UserWalletId, items: Set<YieldBalanceWrapperDTO>) {
         persistenceStore.updateData { current ->
             current.toMutableMap().apply {
-                this[userWalletId.stringValue] = items
+                this[userWalletId.stringValue] = current[userWalletId.stringValue]
+                    ?.addOrReplace(items = items) { old, new ->
+                        old.integrationId == new.integrationId && old.addresses.address == new.addresses.address
+                    }
+                    ?: items
             }
         }
     }
@@ -159,6 +179,8 @@ internal class DefaultStakingBalanceStore(
         cachedBalances: Set<YieldBalance>,
         runtimeBalances: Set<YieldBalance>,
     ): Set<YieldBalance> {
+        if (runtimeBalances.isEmpty()) return cachedBalances
+
         return runtimeBalances
             .map { runtime ->
                 runtime.takeIf { runtime !is YieldBalance.Error }
