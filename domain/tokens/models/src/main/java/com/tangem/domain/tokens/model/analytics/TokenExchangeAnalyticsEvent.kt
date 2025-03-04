@@ -26,17 +26,34 @@ class TokenExchangeAnalyticsEvent(
     )
 
     class GoToProviderStatus(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Go To Provider",
+        event = BUTTON_GO_TO_PROVIDER,
         params = mapOf(TOKEN_PARAM to token, PLACE to "Status"),
     )
 
     class GoToProviderKYC(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Go To Provider",
+        event = BUTTON_GO_TO_PROVIDER,
         params = mapOf(TOKEN_PARAM to token, PLACE to "KYC"),
     )
 
     class GoToProviderFail(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Go To Provider",
+        event = BUTTON_GO_TO_PROVIDER,
         params = mapOf(TOKEN_PARAM to token, PLACE to "Fail"),
     )
+
+    class GoToProviderLongTime(token: String) : TokenScreenAnalyticsEvent(
+        event = BUTTON_GO_TO_PROVIDER,
+        params = mapOf(TOKEN_PARAM to token, PLACE to "LongTime"),
+    )
+
+    class LongTimeTransaction(token: String, provider: String) : TokenScreenAnalyticsEvent(
+        event = "Notice - Long Time Transaction",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            PROVIDER to provider,
+        ),
+    )
+
+    private companion object {
+        const val BUTTON_GO_TO_PROVIDER = "Button - Go To Provider"
+    }
 }
