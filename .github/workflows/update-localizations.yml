@@ -43,8 +43,8 @@ jobs:
 #          project: AND
 #          version: test
 
-      - name: Jira Create Version
-        uses: tangem-developments/jira-action@master
+      - name: Jira Release Version
+        uses: tangem-developments/jira-action@feature/AND-9909_fix_release_version_action
         with:
           action: realiseVersion
           project: AND
