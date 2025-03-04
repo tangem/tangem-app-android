@@ -5,7 +5,6 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import javax.inject.Inject
@@ -38,12 +37,12 @@ internal class DefaultTokenDetailsRouter @Inject constructor(
         )
     }
 
-    override fun openStaking(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, yield: Yield) {
+    override fun openStaking(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency, yieldId: String) {
         router.push(
             AppRoute.Staking(
                 userWalletId = userWalletId,
                 cryptoCurrencyId = cryptoCurrency.id,
-                yield = yield,
+                yieldId = yieldId,
             ),
         )
     }
