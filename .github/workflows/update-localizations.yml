@@ -36,17 +36,17 @@ jobs:
           JIRA_API_TOKEN: '${{ secrets.JIRA_TOKEN }}'
 
 
-      - name: Jira Create Version
-        uses: tangem-developments/jira-action@master
-        with:
-          action: createVersion
-          project: AND
-          version: test
+#      - name: Jira Create Version
+#        uses: tangem-developments/jira-action@master
+#        with:
+#          action: createVersion
+#          project: AND
+#          version: test
 
       - name: Jira Create Version
         uses: tangem-developments/jira-action@master
         with:
-          action: createVersion
+          action: realiseVersion
           project: AND
           version: test
 
