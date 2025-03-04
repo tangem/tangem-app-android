@@ -11,6 +11,7 @@ on:
           Optional additional info about the build
         type: string
   workflow_call:
+    secrets:
       FIREBASE_APP_ID_INTERNAL:
         required: true
       FIREBASE_CLI_TOKEN:
