@@ -676,7 +676,7 @@
   <string name="scan_card_settings_message">Scanne die Karte oder Ring, um ihre Einstellungen zu ändern. Die Änderungen wirken sich nur auf die von dir gescannte Karte oder Ring aus und haben keine Auswirkungen auf andere mit deiner Wallet verknüpften Geräte.</string>
   <string name="scan_card_settings_title">Halte deine Karte oder Ring bereit!</string>
   <string name="security_alert_title">Sicherheitswarnung</string>
-  <string name="seed_warning_no">Nein, habe ich nicht</string>
+  <string name="seed_warning_no">Nein</string>
   <string name="seed_warning_yes">Ja, leite mich</string>
   <string name="selling_insufficient_balance_alert_message">Dein Konto verfügt nicht über ausreichend Guthaben, um Kryptowährungen zu verkaufen. Bitte zahle den gewünschten Vermögenswert ein, um fortzufahren.</string>
   <string name="selling_insufficient_balance_alert_title">Unzureichendes Guthaben</string>
