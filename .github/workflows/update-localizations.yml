@@ -46,7 +46,7 @@ jobs:
       - name: Jira Release Version
         uses: tangem-developments/jira-action@feature/AND-9909_fix_release_version_action
         with:
-          action: realiseVersion
+          action: releaseVersion
           project: AND
           version: test
 
