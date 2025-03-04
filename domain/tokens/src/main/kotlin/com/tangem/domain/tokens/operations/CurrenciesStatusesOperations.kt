@@ -43,6 +43,13 @@ class CurrenciesStatusesOperations(
             .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
     }
 
+    override suspend fun fetchComponents(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+        currenciesIds: Set<CryptoCurrency.ID>,
+        currencies: List<CryptoCurrency>,
+    ): Either<Throwable, Unit> = Unit.right()
+
     sealed class Error {
 
         data object EmptyCurrencies : Error()
