@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.tokens.utils.CurrencyStatusProxyCreator
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
 /**
  * Base operations for working with currency status
@@ -28,6 +29,7 @@ import kotlinx.coroutines.flow.*
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LargeClass")
 abstract class BaseCurrencyStatusOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
@@ -43,6 +45,13 @@ abstract class BaseCurrencyStatusOperations(
         userWalletId: UserWalletId,
         network: Network,
     ): EitherFlow<Error, Set<NetworkStatus>>
+
+    protected abstract suspend fun fetchComponents(
+        userWalletId: UserWalletId,
+        networks: Set<Network>,
+        currenciesIds: Set<CryptoCurrency.ID>,
+        currencies: List<CryptoCurrency>,
+    ): Either<Throwable, Unit>
 
     suspend fun getCurrencyStatusFlow(
         userWalletId: UserWalletId,
@@ -93,13 +102,26 @@ abstract class BaseCurrencyStatusOperations(
 
         val yieldBalanceFlow = getYieldBalance(userWalletId = userWalletId, cryptoCurrency = currency)
 
-        return combine(quoteFlow, statusFlow, yieldBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeYieldBalance ->
-            currencyStatusProxyCreator.createCurrencyStatus(
-                currency = currency,
-                maybeQuote = maybeQuote,
-                maybeNetworkStatus = maybeNetworkStatus,
-                maybeYieldBalance = maybeYieldBalance,
-            )
+        return channelFlow {
+            launch {
+                fetchComponents(
+                    userWalletId = userWalletId,
+                    networks = nonEmptySetOf(currency.network),
+                    currenciesIds = nonEmptySetOf(currency.id),
+                    currencies = nonEmptyListOf(currency),
+                )
+            }
+
+            combine(quoteFlow, statusFlow, yieldBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeYieldBalance ->
+                currencyStatusProxyCreator.createCurrencyStatus(
+                    currency = currency,
+                    maybeQuote = maybeQuote,
+                    maybeNetworkStatus = maybeNetworkStatus,
+                    maybeYieldBalance = maybeYieldBalance,
+                )
+            }
+                .onEach(::send)
+                .launchIn(this)
         }
     }
 
