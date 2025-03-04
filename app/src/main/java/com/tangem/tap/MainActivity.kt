@@ -312,7 +312,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             context = rootComponentContext,
         )
 
-        appRouterConfig.routerScope = lifecycleScope
+        appRouterConfig.routerScope = mainScope
         appRouterConfig.componentRouter = routingComponent.router
         appRouterConfig.snackbarHandler = this
 
@@ -353,6 +353,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             owner = this,
             settingsRepository = settingsRepository,
             userWalletsListManager = userWalletsListManager,
+            coroutineScope = mainScope,
         )
 
         initIntentHandlers()
@@ -433,6 +434,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onDestroy() {
         intentProcessor.removeAll()
+        // workaround: kill process when activity destroy to avoid state when lock() wallets
+        // and navigation to unlock screen was skipped because system kills activity but not process
+        android.os.Process.killProcess(android.os.Process.myPid())
         super.onDestroy()
     }
 

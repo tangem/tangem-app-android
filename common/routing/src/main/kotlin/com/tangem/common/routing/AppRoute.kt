@@ -10,7 +10,6 @@ import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.qrscanning.models.SourceType
-import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
@@ -186,8 +185,8 @@ sealed class AppRoute(val path: String) : Route {
     data class Staking(
         val userWalletId: UserWalletId,
         val cryptoCurrencyId: CryptoCurrency.ID,
-        val yield: Yield,
-    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/${yield.id}")
+        val yieldId: String,
+    ) : AppRoute(path = "/staking/${userWalletId.stringValue}/${cryptoCurrencyId.value}/$yieldId")
 
     @Serializable
     data object PushNotification : AppRoute(path = "/push_notification")
