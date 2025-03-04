@@ -1006,6 +1006,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         timestamp: Long,
         txExternalUrl: String? = null,
         txExternalId: String? = null,
+        averageDuration: Int? = null,
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = userWalletId,
@@ -1023,6 +1024,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     txId = swapDataModel.transaction.txId,
                     txExternalUrl = txExternalUrl,
                     txExternalId = txExternalId,
+                    averageDuration = averageDuration,
                 ),
             ),
         )
