@@ -35,8 +35,22 @@ internal class DefaultQuotesRepository(
     private var quotesFetchedForAppCurrency: String? = null
     private val mutex = Mutex()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun getQuotesUpdates(currenciesIds: Set<CryptoCurrency.RawID>): Flow<Set<Quote>> {
-        return quotesStore.get(currenciesIds)
+        return appPreferencesStore.getObject<CurrenciesResponse.Currency>(
+            key = PreferencesKeys.SELECTED_APP_CURRENCY_KEY,
+        )
+            .distinctUntilChanged()
+            .filterNotNull()
+            .flatMapLatest { appCurrency ->
+                fetchExpiredQuotes(
+                    currenciesIds = currenciesIds,
+                    appCurrencyId = appCurrency.id,
+                    refresh = false,
+                )
+
+                quotesStore.get(currenciesIds)
+            }
             .flowOn(dispatchers.io)
     }
 
@@ -106,6 +120,7 @@ internal class DefaultQuotesRepository(
 
             val expiredCurrenciesIds = filterExpiredCurrenciesIds(
                 currenciesIds = currenciesIds,
+                appCurrencyId = appCurrencyId,
                 refresh = refresh || quotesFetchedForAppCurrency != appCurrencyId,
             )
             if (expiredCurrenciesIds.isEmpty()) return
@@ -136,7 +151,7 @@ internal class DefaultQuotesRepository(
             onError = { error ->
                 Timber.e(error)
 
-                cacheRegistry.invalidate(rawCurrenciesIds.map { getQuoteCacheKey(it) })
+                cacheRegistry.invalidate(rawCurrenciesIds.map { getQuoteCacheKey(it, appCurrencyId) })
                 quotesStore.storeEmptyQuotes(currenciesIds = rawCurrenciesIds)
             },
         )
@@ -144,12 +159,13 @@ internal class DefaultQuotesRepository(
 
     private suspend fun filterExpiredCurrenciesIds(
         currenciesIds: Set<CryptoCurrency.RawID>,
+        appCurrencyId: String,
         refresh: Boolean,
     ): Set<CryptoCurrency.RawID> {
         return currenciesIds.fold(hashSetOf()) { acc, currencyId ->
             if (currencyId !in acc) {
                 cacheRegistry.invokeOnExpire(
-                    key = getQuoteCacheKey(currencyId),
+                    key = getQuoteCacheKey(currencyId, appCurrencyId),
                     skipCache = refresh,
                     block = { acc.add(currencyId) },
                 )
@@ -158,5 +174,7 @@ internal class DefaultQuotesRepository(
         }
     }
 
-    private fun getQuoteCacheKey(rawCurrencyId: CryptoCurrency.RawID): String = "quote_${rawCurrencyId.value}"
+    private fun getQuoteCacheKey(rawCurrencyId: CryptoCurrency.RawID, appCurrencyId: String): String {
+        return "quote_${rawCurrencyId.value}_$appCurrencyId"
+    }
 }
