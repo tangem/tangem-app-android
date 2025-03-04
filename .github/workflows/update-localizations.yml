@@ -31,9 +31,9 @@ jobs:
       - name: Jira Login
         uses: atlassian/gajira-login@master
         env:
-          JIRA_BASE_URL: '${{ secrets.JIRA_BASE_URL }}'
-          JIRA_USER_EMAIL: '${{ secrets.JIRA_USER_EMAIL }}'
-          JIRA_API_TOKEN: '${{ secrets.JIRA_API_TOKEN }}'
+          JIRA_BASE_URL: '${{ secrets.JIRA_URL }}'
+          JIRA_USER_EMAIL: '${{ secrets.JIRA_USER }}'
+          JIRA_API_TOKEN: '${{ secrets.JIRA_TOKEN }}'
 
 
       - name: Jira Create Version
