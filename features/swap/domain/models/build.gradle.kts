@@ -22,6 +22,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.arrow.core)
     implementation(deps.moshi.kotlin)
+    implementation(deps.jodatime)
     ksp(deps.moshi.kotlin.codegen)
 
 }
