@@ -2,7 +2,6 @@ package com.tangem.tap
 
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.lifecycleScope
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -17,6 +16,7 @@ internal class LockUserWalletsTimer(
     private val settingsRepository: SettingsRepository,
     private val duration: Duration = with(Duration) { 10.minutes },
     private val userWalletsListManager: UserWalletsListManager,
+    private val coroutineScope: CoroutineScope,
 ) : LifecycleOwner by owner,
     DefaultLifecycleObserver {
 
@@ -31,7 +31,7 @@ internal class LockUserWalletsTimer(
     }
 
     override fun onStart(owner: LifecycleOwner) {
-        owner.lifecycleScope.launch {
+        coroutineScope.launch {
             val wasApplicationStopped = settingsRepository.wasApplicationStopped()
             val shouldOpenWelcomeScreenOnResume = settingsRepository.shouldOpenWelcomeScreenOnResume()
 
@@ -59,14 +59,9 @@ internal class LockUserWalletsTimer(
     override fun onStop(owner: LifecycleOwner) {
         Timber.i("Owner stopped")
 
-        owner.lifecycleScope.launch {
+        coroutineScope.launch {
             settingsRepository.setWasApplicationStopped(value = true)
         }
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
-        Timber.i("Owner destroyed")
-        stop()
     }
 
     fun restart() {
@@ -92,44 +87,30 @@ internal class LockUserWalletsTimer(
         delayJob = createDelayJob()
     }
 
-    private fun stop(log: Boolean = true) {
-        if (log) {
-            Timber.i(
-                """
-                    Timer stop
-                    |- Was started: ${delayJob?.isActive ?: false}
-                """.trimIndent(),
-            )
-        }
-        delayJob = null
-    }
-
-    private fun createDelayJob(): Job = lifecycleScope.launch(Dispatchers.Default) {
+    private fun createDelayJob(): Job = coroutineScope.launch {
         val startTime = System.currentTimeMillis()
 
         delay(duration)
 
-        if (isActive) {
-            val userWalletsListManager = userWalletsListManager.asLockable() ?: return@launch
+        val userWalletsListManager = userWalletsListManager.asLockable() ?: return@launch
 
-            if (userWalletsListManager.hasUserWallets) {
-                val currentTime = System.currentTimeMillis()
-                val wasApplicationStopped = settingsRepository.wasApplicationStopped()
+        if (userWalletsListManager.hasUserWallets) {
+            val currentTime = System.currentTimeMillis()
+            val wasApplicationStopped = settingsRepository.wasApplicationStopped()
 
-                Timber.i(
-                    """
+            Timber.i(
+                """
                         Finished
                         |- App is stopped: $wasApplicationStopped
                         |- Millis passed: ${currentTime - startTime}
-                    """.trimIndent(),
-                )
+                """.trimIndent(),
+            )
 
-                userWalletsListManager.lock()
-                if (wasApplicationStopped) {
-                    settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
-                } else {
-                    store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
-                }
+            userWalletsListManager.lock()
+            if (wasApplicationStopped) {
+                settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
+            } else {
+                store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
             }
         }
     }
