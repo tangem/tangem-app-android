@@ -4,6 +4,7 @@ import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.managetokens.repository.ManageTokensRepository
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -65,6 +66,7 @@ internal object ManageTokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         networksRepository: NetworksRepository,
         derivationsRepository: DerivationsRepository,
+        stakingRepository: StakingRepository,
     ): SaveManagedTokensUseCase {
         return SaveManagedTokensUseCase(
             customTokensRepository = customTokensRepository,
@@ -72,6 +74,7 @@ internal object ManageTokensDomainModule {
             currenciesRepository = currenciesRepository,
             networksRepository = networksRepository,
             derivationsRepository = derivationsRepository,
+            stakingRepository = stakingRepository,
         )
     }
 
