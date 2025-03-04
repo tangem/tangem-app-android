@@ -9,4 +9,7 @@ internal class DefaultStakingFeatureToggles(
 
     override val isTonStakingEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "STAKING_TON_ENABLED")
+
+    override val isCardanoStakingEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("STAKING_CARDANO_ENABLED")
 }
