@@ -26,10 +26,7 @@ import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.BlockchainErrorInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.domain.staking.GetActionsUseCase
-import com.tangem.domain.staking.InvalidatePendingTransactionsUseCase
-import com.tangem.domain.staking.IsAnyTokenStakedUseCase
-import com.tangem.domain.staking.IsApproveNeededUseCase
+import com.tangem.domain.staking.*
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
 import com.tangem.domain.staking.model.StakingApproval
@@ -79,6 +76,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import java.math.BigDecimal
 import java.util.concurrent.CopyOnWriteArrayList
@@ -116,6 +114,7 @@ internal class StakingModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getActionsUseCase: GetActionsUseCase,
+    private val getYieldUseCase: GetYieldUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
@@ -136,7 +135,11 @@ internal class StakingModel @Inject constructor(
 
     private val cryptoCurrencyId: CryptoCurrency.ID = params.cryptoCurrencyId
     private val userWalletId: UserWalletId = params.userWalletId
-    private val yield: Yield = params.yield
+    private val yield: Yield = runBlocking {
+        getYieldUseCase(params.yieldId).getOrElse {
+            error("yield must be not null")
+        }
+    }
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     private var processingActions: List<StakingAction> = emptyList()
