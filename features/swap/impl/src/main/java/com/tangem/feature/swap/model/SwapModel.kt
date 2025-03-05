@@ -12,7 +12,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.I
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
@@ -76,7 +76,7 @@ typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 
 @Suppress("LongParameterList", "LargeClass")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class SwapModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
