@@ -60,6 +60,8 @@ import com.tangem.features.send.impl.presentation.state.amount.AmountStateFactor
 import com.tangem.features.send.impl.presentation.state.confirm.SendNotificationFactory
 import com.tangem.features.send.impl.presentation.state.fee.*
 import com.tangem.features.send.impl.presentation.state.recipient.RecipientSendFactory
+import com.tangem.features.txhistory.TxHistoryFeatureToggles
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
@@ -110,6 +112,8 @@ internal class SendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val shareManager: ShareManager,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerSendRouter,
     private val appRouter: AppRouter,
@@ -1012,11 +1016,15 @@ internal class SendModel @Inject constructor(
         )
 
         txHistoryItemsCountEither.onRight {
-            getTxHistoryItemsUseCase(
-                userWalletId = userWalletId,
-                currency = cryptoCurrency,
-                refresh = true,
-            )
+            if (txHistoryFeatureToggles.isFeatureEnabled) {
+                txHistoryContentUpdateEmitter.triggerUpdate()
+            } else {
+                getTxHistoryItemsUseCase(
+                    userWalletId = userWalletId,
+                    currency = cryptoCurrency,
+                    refresh = true,
+                )
+            }
         }
     }
 
