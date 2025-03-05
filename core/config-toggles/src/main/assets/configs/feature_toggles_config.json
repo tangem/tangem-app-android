@@ -54,5 +54,9 @@
     {
         "name": "STAKING_CARDANO_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TX_HISTORY_REFACTORING_ENABLED",
+        "version": "undefined"
     }
 ]
