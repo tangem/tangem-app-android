@@ -68,3 +68,5 @@ core/utils/ @ahohlov_tangem
 **/tokendetails/ @dkamalov_tangem
 
 **/wallet/ @ahohlov_tangem
+
+**/txhistory/ @dkamalov_tangem
