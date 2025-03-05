@@ -34,6 +34,7 @@ import dagger.assisted.AssistedInject
 @Suppress("LongParameterList")
 internal class DefaultRoutingComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
+    @Assisted val initialStack: List<AppRoute>?,
     private val childFactory: ChildFactory,
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
@@ -46,8 +47,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     override val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
-        serializer = AppRoute.serializer(),
-        initialConfiguration = getInitialRoute(),
+        initialStack = { getInitialStackOrInit() },
+        serializer = null, // AppRoute.serializer(), // Disabled until Nav refactoring completes
         handleBackButton = false,
         childFactory = ::child,
     )
@@ -114,7 +115,11 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         messageSender.send(SnackbarMessage(message = TextReference.EMPTY))
     }
 // [REDACTED_TODO_COMMENT]
-    private fun getInitialRoute(): AppRoute = AppRoute.Initial
+    private fun getInitialStackOrInit(): List<AppRoute> = if (initialStack.isNullOrEmpty()) {
+        listOf(AppRoute.Initial)
+    } else {
+        initialStack
+    }
 
     private fun child(route: AppRoute, context: ComponentContext): Child {
         return childFactory.createChild(route) { childByContext(context) }
@@ -122,6 +127,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory : RoutingComponent.Factory {
-        override fun create(context: AppComponentContext): DefaultRoutingComponent
+        override fun create(context: AppComponentContext, initialStack: List<AppRoute>?): DefaultRoutingComponent
     }
 }
