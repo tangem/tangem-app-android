@@ -186,6 +186,8 @@ dependencies {
     implementation(projects.features.onboardingV2.impl)
     implementation(projects.features.stories.api)
     implementation(projects.features.stories.impl)
+    implementation(projects.features.txhistory.api)
+    implementation(projects.features.txhistory.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
