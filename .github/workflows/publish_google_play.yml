@@ -34,14 +34,14 @@ jobs:
         run: rm -rf *
 
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
           token: ${{ secrets.GH_MOBILE_PAT }}
 
       - name: Checkout dexprotector config
         if: ${{ needs.set_dex_protector_flag.outputs.use_dexprotector == 'true' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: 'tangem-developments/private-app-config'
           ref: 'main'

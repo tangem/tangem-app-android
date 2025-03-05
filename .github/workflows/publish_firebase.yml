@@ -68,31 +68,74 @@ jobs:
         run: |
           echo "${{ steps.jira-issues-summary.outputs.result }}"
 
-  prepare:
-    uses: ./.github/workflows/prepare.yml
-    name: Prepare
-    with:
-      initial_version_code: 1050
-    secrets: inherit
-
   build_and_publish:
     name: Build and publish
     runs-on: [ self-hosted, active-android, build ]
     environment: Alpha # required for obtaining token
-    needs:
-      - prepare
-      - jira_changelog
+    needs: jira_changelog
     outputs:
       encoded_release_url: ${{ steps.publish.outputs.encoded_release_url }}
+      version_name: ${{ steps.get_version_name.outputs.versionName }}
+      version_code: ${{ steps.get_version_code.outputs.versionCode }}
     steps:
+      - name: Clean
+        run: rm -rf *
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.GH_MOBILE_PAT }}
+          fetch-depth: 0
+
+      - name: Increment version code
+        id: get_version_code
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+          INITIAL_VERSION_CODE: 1050
+        run: |
+          VERSION_CODE=$((RUN_NUMBER + INITIAL_VERSION_CODE))
+          echo "versionCode=$VERSION_CODE" >> $GITHUB_OUTPUT
+
+      - name: Get version name from branch name
+        id: get_version_name
+        run: |
+          BRANCH=${{ github.ref_name }}
+
+          if [[ "$BRANCH" =~ ^(releases|hotfix)/([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+            MAJOR=${BASH_REMATCH[2]}
+            MINOR=${BASH_REMATCH[3]}
+            PATCH=${BASH_REMATCH[4]:-.0}
+            VERSION="${MAJOR}.${MINOR}${PATCH}"
+          else
+            ./ci_resources/find-latest-release-branch.sh origin/$BRANCH
+            LATEST_BRANCH=$(< 'find-latest-release-branch.output')
+
+            if [[ "$LATEST_BRANCH" =~ releases/([0-9]+)\.([0-9]+) ]]; then
+              MAJOR=${BASH_REMATCH[1]}
+              MINOR=${BASH_REMATCH[2]}
+              NEW_MINOR=$((MINOR + 1))
+              VERSION="${MAJOR}.${NEW_MINOR}.0"
+            else
+              echo "Failed to get version"
+              exit 1
+            fi
+          fi
+
+          echo "versionName=$VERSION"
+          echo "versionName=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build --platform linux/arm64 -t tangem_ci_android_environment -f ci_resources/Dockerfile.android .      
+
       - name: Build internal
         id: build
         env:
           GITHUB_TOKEN: ${{ secrets.GH_MOBILE_PAT }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
-          version_code: ${{ needs.prepare.outputs.version_code }}
-          version_name: ${{ needs.prepare.outputs.version_name }}
-          jira_issues_summary: ${{ needs.prepare.outputs.jira_issues_summary }}
+          version_code: ${{ steps.get_version_code.outputs.versionCode }}
+          version_name: ${{ steps.get_version_name.outputs.versionName }}
         run: |
           env > .env
           
@@ -137,15 +180,14 @@ jobs:
     name: Send Notification
     needs:
       - jira_changelog
-      - prepare
       - build_and_publish
     uses: tangem-developments/actions/.github/workflows/notification.yml@main
     with:
       channel: 'deployments-android'
       status: 'success'
       deploy_to: 'Firebase app distribution'
-      version: ${{ needs.prepare.outputs.version_name }}
-      build_number: ${{ needs.prepare.outputs.version_code }}
+      version: ${{ needs.build_and_publish.outputs.version_name }}
+      build_number: ${{ needs.build_and_publish.outputs.version_code }}
       changelog: ${{ needs.jira_changelog.outputs.jira_changelog }}
       build_description: ${{ inputs.build_description }}
       encoded_release_url: ${{ needs.build_and_publish.outputs.encoded_release_url }}
@@ -156,7 +198,6 @@ jobs:
     name: Error Notification
     needs:
       - jira_changelog
-      - prepare
       - build_and_publish
     if: failure()
     uses: tangem-developments/actions/.github/workflows/notification.yml@main
@@ -164,9 +205,9 @@ jobs:
       channel: 'deployments-android'
       status: 'error'
       deploy_to: 'Firebase App Distribution'
-      version: ${{ needs.prepare.outputs.version_name }}
-      build_number: ${{ needs.prepare.outputs.version_code }}
-      changelog: ${{ needs.prepare.outputs.jira_summary }}
+      version: ${{ needs.build_and_publish.outputs.version_name }}
+      build_number: ${{ needs.build_and_publish.outputs.version_code }}
+      changelog: ${{ needs.jira_changelog.outputs.jira_changelog }}
       build_description: ${{ inputs.build_description }}
       encoded_release_url: ${{ needs.build_and_publish.outputs.encoded_release_url }}
     secrets:
