@@ -4,9 +4,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
+import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.decompose.value.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
@@ -87,7 +89,10 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
     @Suppress("MagicNumber")
     private fun linkToInnerNavigation() {
         // stepper linking
-        innerStack.observe { stack ->
+        innerStack.subscribe(
+            lifecycle = lifecycle,
+            mode = ObserveLifecycleMode.CREATE_DESTROY,
+        ) { stack ->
             val activeChild = stack.active.instance
             if (activeChild is InnerNavigationHolder) {
                 componentScope.launch {
