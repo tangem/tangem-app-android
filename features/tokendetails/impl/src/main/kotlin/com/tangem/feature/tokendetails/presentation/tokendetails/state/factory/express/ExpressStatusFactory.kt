@@ -12,8 +12,9 @@ import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -110,9 +111,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         return state.copy(
             expressTxs = expressTxs,
             expressTxsToDisplay = expressTxsToDisplay,
-            bottomSheetConfig = currentTx?.let(
-                ::updateStateWithExpressStatusBottomSheet,
-            ) ?: config,
+            bottomSheetConfig = currentTx?.let(::updateStateWithExpressStatusBottomSheet) ?: config,
         )
     }
 
@@ -146,6 +145,12 @@ internal class ExpressStatusFactory @AssistedInject constructor(
         val state = currentStateProvider()
         val bottomSheetConfig = state.bottomSheetConfig
         val currentConfig = bottomSheetConfig?.content as? ExpressStatusBottomSheetConfig ?: return bottomSheetConfig
+
+        sendLongTimeExchangeNotificationShowEvent(
+            expressState = expressState,
+            currentStateNotification = (currentConfig.value as? ExchangeUM)?.notification,
+        )
+
         return bottomSheetConfig.copy(
             content = if (currentConfig.value != expressState) {
                 ExpressStatusBottomSheetConfig(expressState)
@@ -163,6 +168,24 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             is ExchangeUM -> exchangeStatusFactory.removeTransactionOnBottomSheetClosed(isForceDispose)
             is ExpressTransactionStateUM.OnrampUM -> onrampStatusFactory.removeTransactionOnBottomSheetClosed(
                 isForceDispose,
+            )
+        }
+    }
+
+    private fun sendLongTimeExchangeNotificationShowEvent(
+        expressState: ExpressTransactionStateUM,
+        currentStateNotification: ExchangeStatusNotification?,
+    ) {
+        val newState = expressState as? ExchangeUM
+        val newStateNotification = newState?.notification
+        if (currentStateNotification !is ExchangeStatusNotification.LongTimeExchange &&
+            newStateNotification is ExchangeStatusNotification.LongTimeExchange
+        ) {
+            analyticsEventsHandler.send(
+                TokenExchangeAnalyticsEvent.LongTimeTransaction(
+                    token = cryptoCurrency.symbol,
+                    provider = newState.provider.name,
+                ),
             )
         }
     }

@@ -26,5 +26,13 @@
     {
         "name": "alephium",
         "version": "5.21.0"
+    },
+    {
+        "name": "scroll",
+        "version": "undefined"
+    },
+    {
+        "name": "zklink",
+        "version": "undefined"
     }
 ]
