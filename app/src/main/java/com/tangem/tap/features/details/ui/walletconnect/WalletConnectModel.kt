@@ -13,6 +13,7 @@ import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -29,7 +30,8 @@ internal class WalletConnectModel @Inject constructor(
         modelScope.launch {
             listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
                 .getOrElse { emptyFlow() }
-                .collect { store.dispatch(WalletConnectAction.OpenSession(it)) }
+                .map { WalletConnectAction.OpenSession(it, WalletConnectAction.OpenSession.SourceType.QR) }
+                .collect { store.dispatch(it) }
         }
     }
 
