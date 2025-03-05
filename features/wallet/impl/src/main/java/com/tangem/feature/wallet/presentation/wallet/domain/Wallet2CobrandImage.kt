@@ -230,10 +230,22 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("BB000010"),
     ),
 
+    SpringBloom(
+        cards2ResId = R.drawable.ill_spring_bloom_card2_120_106,
+        cards3ResId = R.drawable.ill_spring_bloom_card3_120_106,
+        batchIds = setOf("AF990001", "AF990002", "AF990004"),
+    ),
+
     StealthCard(
         cards2ResId = R.drawable.ill_stealth_cards2_120_106,
         cards3ResId = R.drawable.ill_stealth_cards3_120_106,
         batchIds = setOf("AF60", "AF74", "AF88"),
+    ),
+
+    SunDrop(
+        cards2ResId = R.drawable.ill_sundrop_cards2_120_106,
+        cards3ResId = R.drawable.ill_sundrop_cards3_120_106,
+        batchIds = setOf("AF990005", "AF990003"),
     ),
 
     Trillant(
