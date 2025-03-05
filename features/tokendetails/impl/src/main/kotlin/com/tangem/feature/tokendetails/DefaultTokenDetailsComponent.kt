@@ -17,6 +17,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDeta
 import com.tangem.feature.tokendetails.presentation.tokendetails.ui.TokenDetailsScreen
 import com.tangem.features.markets.token.block.TokenMarketBlockComponent
 import com.tangem.features.tokendetails.TokenDetailsComponent
+import com.tangem.features.txhistory.TxHistoryFeatureToggles
+import com.tangem.features.txhistory.component.TxHistoryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -25,10 +27,20 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted params: TokenDetailsComponent.Params,
     tokenMarketBlockComponentFactory: TokenMarketBlockComponent.Factory,
+    txHistoryComponentFactory: TxHistoryComponent.Factory,
+    txHistoryFeatureToggles: TxHistoryFeatureToggles,
     deepLinksRegistry: DeepLinksRegistry,
 ) : TokenDetailsComponent, AppComponentContext by appComponentContext {
 
     private val model: TokenDetailsModel = getOrCreateModel(params)
+    private val txHistoryComponent = txHistoryComponentFactory.create(
+        context = child("txHistoryComponent"),
+        params = TxHistoryComponent.Params(
+            userWalletId = params.userWalletId,
+            currency = params.currency,
+            openExplorer = { model.onExploreClick() },
+        ),
+    ).takeIf { txHistoryFeatureToggles.isFeatureEnabled }
 
     init {
         lifecycle.subscribe(
@@ -54,11 +66,11 @@ internal class DefaultTokenDetailsComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
-
         NavigationBar3ButtonsScrim()
         TokenDetailsScreen(
             state = state,
             tokenMarketBlockComponent = tokenMarketBlockComponent,
+            txHistoryComponent = txHistoryComponent,
         )
     }
 
