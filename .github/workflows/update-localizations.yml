@@ -71,6 +71,7 @@ jobs:
           LATEST_RELEASE=$(echo "$RELEASE_BRANCHES" | sort -V | tail -n 1)
           
           echo "✅ Latest release branch found: $LATEST_RELEASE"
+          echo "Current branch:  ${{ github.ref_name }}"
           
           # Save the result to GitHub output
           echo "latest_release_branch=$LATEST_RELEASE" >> $GITHUB_OUTPUT
