@@ -7,6 +7,7 @@ import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isIncludeStakingTotalBalance
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
@@ -21,6 +22,8 @@ internal class TokenListFiatBalanceOperations(
         if (isAnyTokenLoading) return fiatBalance
 
         for (token in currencies) {
+            val networkId = token.currency.network.id.value
+            val includeStakingBalance = isIncludeStakingTotalBalance(networkId)
             when (val status = token.value) {
                 is CryptoCurrencyStatus.Loading -> {
                     fiatBalance = TotalFiatBalance.Loading
@@ -35,7 +38,7 @@ internal class TokenListFiatBalanceOperations(
                 is CryptoCurrencyStatus.Unreachable,
                 is CryptoCurrencyStatus.NoAmount,
                 -> {
-                    if (BlockchainUtils.isIncludeToBalanceOnError(token.currency.network.id.value)) {
+                    if (BlockchainUtils.isIncludeToBalanceOnError(networkId)) {
                         fiatBalance = recalculateNoAccountBalance(status, fiatBalance)
                     } else {
                         fiatBalance = TotalFiatBalance.Failed
@@ -46,10 +49,10 @@ internal class TokenListFiatBalanceOperations(
                     fiatBalance = recalculateNoAccountBalance(status, fiatBalance)
                 }
                 is CryptoCurrencyStatus.Loaded -> {
-                    fiatBalance = recalculateBalance(status, fiatBalance)
+                    fiatBalance = recalculateBalance(status, fiatBalance, includeStakingBalance)
                 }
                 is CryptoCurrencyStatus.Custom -> {
-                    fiatBalance = recalculateBalance(status, fiatBalance)
+                    fiatBalance = recalculateBalance(status, fiatBalance, includeStakingBalance)
                 }
             }
         }
@@ -74,12 +77,16 @@ internal class TokenListFiatBalanceOperations(
     private fun recalculateBalance(
         status: CryptoCurrencyStatus.Loaded,
         currentBalance: TotalFiatBalance,
+        includeStakingBalance: Boolean,
     ): TotalFiatBalance {
         return with(currentBalance) {
             val yieldBalance = status.yieldBalance as? YieldBalance.Data
             val stakingBalance = yieldBalance?.getTotalWithRewardsStakingBalance().orZero()
-            val fiatStakingBalance = status.fiatRate.times(stakingBalance)
-
+            val fiatStakingBalance = if (includeStakingBalance) {
+                status.fiatRate.times(stakingBalance)
+            } else {
+                BigDecimal.ZERO
+            }
             (this as? TotalFiatBalance.Loaded)?.copy(
                 amount = this.amount + status.fiatAmount + fiatStakingBalance,
             ) ?: TotalFiatBalance.Loaded(
@@ -93,11 +100,16 @@ internal class TokenListFiatBalanceOperations(
     private fun recalculateBalance(
         status: CryptoCurrencyStatus.Custom,
         currentBalance: TotalFiatBalance,
+        includeStakingBalance: Boolean,
     ): TotalFiatBalance {
         return with(currentBalance) {
             val isTokenAmountCanBeSummarized = status.fiatAmount != null
             val yieldBalance = (status.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance().orZero()
-            val fiatYieldBalance = status.fiatRate?.times(yieldBalance).orZero()
+            val fiatYieldBalance = if (includeStakingBalance) {
+                status.fiatRate?.times(yieldBalance).orZero()
+            } else {
+                BigDecimal.ZERO
+            }
             (this as? TotalFiatBalance.Loaded)?.copy(
                 amount = this.amount + status.fiatAmount.orZero() + fiatYieldBalance,
                 isAllAmountsSummarized = isTokenAmountCanBeSummarized,
