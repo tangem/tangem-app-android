@@ -33,7 +33,7 @@ internal object WalletConnectInteractorModule {
     fun provideWalletConnectInteractor(
         wcRepository: LegacyWalletConnectRepository,
         wcSessionsRepository: WalletConnectSessionsRepository,
-        wcBlockchainHelper: WcBlockchainHelper,
+        walletConnectFeatureToggles: WalletConnectFeatureToggles,
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
@@ -44,7 +44,7 @@ internal object WalletConnectInteractorModule {
             walletConnectRepository = wcRepository,
             sessionsRepository = wcSessionsRepository,
             sdkHelper = WalletConnectSdkHelper(),
-            blockchainHelper = wcBlockchainHelper,
+            blockchainHelper = TangemWcBlockchainHelper(walletConnectFeatureToggles),
             currenciesRepository = currenciesRepository,
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
@@ -65,23 +65,17 @@ internal object WalletConnectModule {
 
     @Provides
     @Singleton
-    fun provideWcBlockchainHelper(walletConnectFeatureToggles: WalletConnectFeatureToggles): WcBlockchainHelper {
-        return TangemWcBlockchainHelper(walletConnectFeatureToggles)
-    }
-
-    @Provides
-    @Singleton
     fun provideWalletConnectRepository(
         application: Application,
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
-        wcBlockchainHelper: WcBlockchainHelper,
+        walletConnectFeatureToggles: WalletConnectFeatureToggles,
     ): LegacyWalletConnectRepository {
         return DefaultLegacyWalletConnectRepository(
             application = application,
             wcRequestDeserializer = wcRequestDeserializer,
             analyticsHandler = analyticsHandler,
-            blockchainHelper = wcBlockchainHelper,
+            walletConnectFeatureToggles = walletConnectFeatureToggles,
         )
     }
 
