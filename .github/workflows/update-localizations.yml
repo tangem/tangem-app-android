@@ -20,126 +20,64 @@ on:
       GH_MOBILE_PAT:
         required: true
 jobs:
-  generate-release-name:
+  find_latest_release_branch:
     runs-on: ubuntu-latest
-#    strategy:
-#      matrix:
-#        branch_name: ["releases/5.21", "hotfix/5.21.1", "develop", "test", "feature/AND-123", "feature/releases/5.21", "releases/XXX"]
-#    outputs:
-#      versionName: ${{ steps.get_version_name.outputs.versionName }}
+    outputs:
+      latest_release_branch: ${{ steps.find_latest_release_branch.outputs.latest_release_branch }}
     steps:
-      - name: Checkout 'find-latest-release-branch' script
+      - name: Checkout 
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          sparse-checkout: |
-            ci_resources/find-latest-release-branch.sh
-          sparse-checkout-cone-mode: false
 
       - name: Find latest release branch
-        id: find_latest_release
+        id: find_latest_release_branch
         run: |
-          echo "🔍 Fetching all remote branches..."
-          
+          echo "Fetching all remote branches..."
+
           # Retrieve all remote branches without cloning the repository
           BRANCHES=$(git ls-remote --heads https://github.com/${{ github.repository }}.git)
-          
-          echo "✅ Retrieved branches from the remote repository:"
+
+          echo "Retrieved branches from the remote repository:"
           echo "$BRANCHES"
-          
-          echo "🔍 Extracting full branch names..."
+
+          echo "Extracting full branch names..."
           # Extract branch names while preserving the full path (e.g., "refs/heads/releases/1.0")
           BRANCH_NAMES=$(echo "$BRANCHES" | sed 's?.*refs/heads/??')
-          
-          echo "✅ Extracted branch names:"
+
+          echo "Extracted branch names:"
           echo "$BRANCH_NAMES"
-          
-          echo "🔍 Filtering only release branches..."
+
+          echo "Filtering only release branches..."
           # Select only release branches (format: releases/X.Y or releases/X.Y.Z)
           RELEASE_BRANCHES=$(echo "$BRANCH_NAMES" | grep -E '^test/[0-9]+\.[0-9]+(\.[0-9]+)?$' || true)
-          
+
           if [[ -z "$RELEASE_BRANCHES" ]]; then
             echo "⚠️ No release branches found. Exiting."
             exit 0
           fi
-          
-          echo "✅ Found release branches:"
+
+          echo "Found release branches:"
           echo "$RELEASE_BRANCHES"
-          
-          echo "🔍 Sorting release branches lexicographically..."
+
+          echo "Sorting release branches lexicographically..."
           # Sort branches lexicographically to get the latest version
           LATEST_RELEASE=$(echo "$RELEASE_BRANCHES" | sort -V | tail -n 1)
-          
-          echo "✅ Latest release branch found: $LATEST_RELEASE"
-          echo "Current branch:  ${{ github.ref_name }}"
-          
+
+          echo "Latest release branch found: $LATEST_RELEASE"
+          echo "Current branch: ${{ github.ref_name }}"
+
           # Save the result to GitHub output
           echo "latest_release_branch=$LATEST_RELEASE" >> $GITHUB_OUTPUT
-        
 
-#      - name: Jira Login
-#        uses: atlassian/gajira-login@master
-#        env:
-#          JIRA_BASE_URL: '${{ secrets.JIRA_URL }}'
-#          JIRA_USER_EMAIL: '${{ secrets.JIRA_USER }}'
-#          JIRA_API_TOKEN: '${{ secrets.JIRA_TOKEN }}'
-
-
-#      - name: Jira Create Version
-#        uses: tangem-developments/jira-action@master
-#        with:
-#          action: createVersion
-#          project: AND
-#          version: test
-
-#      - name: Jira Release Version
-#        uses: tangem-developments/jira-action@feature/AND-9909_fix_release_version_action
-#        with:
-#          action: releaseVersion
-#          project: AND
-#          version: test
-
-
-#
-#      - name: Test
-#        run: |
-#          pwd
-#          echo ${{ github.workspace }}
-#
-#      - name: Check out repository
-#        uses: actions/checkout@v4
-#        with:
-#          fetch-depth: 0
-#
-#      - name: Determine release version
-#        id: get_version_name
-#        run: |
-#          BRANCH=${{ matrix.branch_name }}
-#          echo "Testing with branch: $BRANCH"
-#
-#          if [[ "$BRANCH" =~ ^(releases|hotfix)/([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
-#            MAJOR=${BASH_REMATCH[2]}
-#            MINOR=${BASH_REMATCH[3]}
-#            PATCH=${BASH_REMATCH[4]:-.0}
-#            VERSION="${MAJOR}.${MINOR}${PATCH}"
-#          else
-#            echo "Running script"
-#            ./ci_resources/find-latest-release-branch.sh origin/$BRANCH
-#            LATEST_BRANCH=$(< 'find-latest-release-branch.output')
-#
-#            if [[ "$LATEST_BRANCH" =~ releases/([0-9]+)\.([0-9]+) ]]; then
-#              MAJOR=${BASH_REMATCH[1]}
-#              MINOR=${BASH_REMATCH[2]}
-#              NEW_MINOR=$((MINOR + 1))
-#              VERSION="${MAJOR}.${NEW_MINOR}.0"
-#            else
-#              echo "Failed to determine version"
-#              exit 1
-#            fi
-#          fi
-#
-#          echo "versionName=$VERSION" >> $GITHUB_OUTPUT
-#
-#      - name: Output release name
-#        run: |
-#          echo "Branch: ${{ matrix.branch_name }} → Release version: ${{ steps.get_version_name.outputs.versionName }}"
+  create-pr-to-next-release:
+    needs:
+      - find_latest_release_branch
+    if: needs.find_latest_release_branch.outputs.latest_release_branch != github.ref_name
+    uses: tangem-developments/actions/.github/workflows/create_pr.yml@feature/AND-10201_modify_create_pr_workflow
+    with:
+      source_branch: ${{ github.ref_name }}
+      target_branch: ${{ needs.find_latest_release_branch.outputs.latest_release_branch }}
+      replace_android_tangem_dependencies: true
+    secrets:
+      AUTO_MERGE_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}
