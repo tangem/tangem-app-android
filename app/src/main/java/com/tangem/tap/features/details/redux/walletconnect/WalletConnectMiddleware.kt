@@ -76,7 +76,7 @@ class WalletConnectMiddleware {
             is WalletConnectAction.OpenSession -> {
                 val index = action.wcUri.indexOf("@")
                 when (action.wcUri[index + 1]) {
-                    '2' -> walletConnectRepository.pair(uri = action.wcUri)
+                    '2' -> walletConnectRepository.pair(uri = action.wcUri, source = action.source)
                     '1' -> {
                         store.dispatchOnMain(WalletConnectAction.UnsupportedDappRequest)
                         store.dispatchOnMain(
