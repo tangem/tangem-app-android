@@ -29,6 +29,14 @@ internal object StakingNotification {
             title = resourceReference(R.string.common_error),
             subtitle = subtitle,
         )
+
+        data class CardanoMinimumBalance(
+            val title: TextReference,
+            val subtitle: TextReference,
+        ) : StakingNotification.Error(
+            title = title,
+            subtitle = subtitle,
+        )
     }
 
     sealed class Warning(
