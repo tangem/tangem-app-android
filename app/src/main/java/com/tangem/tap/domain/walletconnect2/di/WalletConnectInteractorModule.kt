@@ -14,9 +14,7 @@ import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
 import com.tangem.tap.domain.walletconnect2.data.DefaultLegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.data.DefaultWalletConnectSessionsRepository
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
+import com.tangem.tap.domain.walletconnect2.domain.*
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -35,7 +33,7 @@ internal object WalletConnectInteractorModule {
     fun provideWalletConnectInteractor(
         wcRepository: LegacyWalletConnectRepository,
         wcSessionsRepository: WalletConnectSessionsRepository,
-        walletConnectFeatureToggles: WalletConnectFeatureToggles,
+        wcBlockchainHelper: WcBlockchainHelper,
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
@@ -46,7 +44,7 @@ internal object WalletConnectInteractorModule {
             walletConnectRepository = wcRepository,
             sessionsRepository = wcSessionsRepository,
             sdkHelper = WalletConnectSdkHelper(),
-            blockchainHelper = TangemWcBlockchainHelper(walletConnectFeatureToggles),
+            blockchainHelper = wcBlockchainHelper,
             currenciesRepository = currenciesRepository,
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
@@ -67,15 +65,23 @@ internal object WalletConnectModule {
 
     @Provides
     @Singleton
+    fun provideWcBlockchainHelper(walletConnectFeatureToggles: WalletConnectFeatureToggles): WcBlockchainHelper {
+        return TangemWcBlockchainHelper(walletConnectFeatureToggles)
+    }
+
+    @Provides
+    @Singleton
     fun provideWalletConnectRepository(
         application: Application,
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
+        wcBlockchainHelper: WcBlockchainHelper,
     ): LegacyWalletConnectRepository {
         return DefaultLegacyWalletConnectRepository(
             application = application,
             wcRequestDeserializer = wcRequestDeserializer,
             analyticsHandler = analyticsHandler,
+            blockchainHelper = wcBlockchainHelper,
         )
     }
 
