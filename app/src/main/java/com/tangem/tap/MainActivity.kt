@@ -315,6 +315,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     private fun setRootContent() {
         val routingComponent = routingComponentFactory.create(
             context = rootComponentContext,
+            initialStack = null,
         )
 
         setContent {
@@ -323,8 +324,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun installRouting() {
+        // for now activity is singleTop and after going to ChromeCustomTab it calls onCreate but onDestroy
+        // doesn't calls. It lead to issue that decompose nav stack is not saved in bundle and to restore it
+        // we try to init component with previous stack
         val routingComponent = routingComponentFactory.create(
             context = rootComponentContext,
+            initialStack = appRouterConfig.stack,
         )
 
         appRouterConfig.routerScope = mainScope
