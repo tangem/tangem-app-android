@@ -202,4 +202,24 @@ internal class DefaultWalletsRepository(
             }
         }
     }
+
+    override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> {
+        return appPreferencesStore
+            .get(key = PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY, default = emptySet())
+            .map { it.contains(userWalletId.stringValue) }
+    }
+
+    override suspend fun enableNFT(userWalletId: UserWalletId) {
+        appPreferencesStore.editData {
+            val added = it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY].orEmpty()
+            it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY] = added + userWalletId.stringValue
+        }
+    }
+
+    override suspend fun disableNFT(userWalletId: UserWalletId) {
+        appPreferencesStore.editData {
+            val added = it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY].orEmpty()
+            it[PreferencesKeys.WALLETS_WITH_NFT_ENABLED_KEY] = added - userWalletId.stringValue
+        }
+    }
 }

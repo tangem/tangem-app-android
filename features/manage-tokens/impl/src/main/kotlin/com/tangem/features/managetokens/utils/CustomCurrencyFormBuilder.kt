@@ -3,7 +3,7 @@ package com.tangem.features.managetokens.utils
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
@@ -15,7 +15,7 @@ import com.tangem.features.managetokens.impl.R
 import kotlinx.collections.immutable.persistentMapOf
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class CustomCurrencyFormBuilder @Inject constructor(
     paramsContainer: ParamsContainer,
 ) {
