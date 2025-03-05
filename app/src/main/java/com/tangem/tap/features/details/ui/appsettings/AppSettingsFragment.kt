@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.appsettings
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -26,6 +27,8 @@ internal class AppSettingsFragment : ComposeFragment() {
 
     @Composable
     override fun ScreenContent(modifier: Modifier) {
+        BackHandler { store.dispatchNavigationAction(AppRouter::pop) }
+
         val viewModel = hiltViewModel<AppSettingsViewModel>().apply {
             LocalLifecycleOwner.current.lifecycle.addObserver(observer = this)
         }
