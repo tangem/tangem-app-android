@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.ui.UiDependencies

@@ -3,7 +3,9 @@ package com.tangem.core.decompose.model
 import com.arkivanov.essenty.instancekeeper.getOrCreate
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
+import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import dagger.hilt.EntryPoint
 import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
@@ -15,7 +17,7 @@ import javax.inject.Provider
  * It provides a map of model providers.
  */
 @EntryPoint
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 interface ModelsEntryPoint {
 
     fun models(): Map<Class<*>, Provider<Model>>
@@ -35,11 +37,15 @@ inline fun <reified M : Model> AppComponentContext.getOrCreateModel(): M = getOr
  * @param params The parameters to store in the [ParamsContainer],
 
  */
-inline fun <reified M : Model, reified P : Any> AppComponentContext.getOrCreateModel(params: P?): M {
-    val entryPoint = instanceKeeper.getOrCreateSimple(key = "modelsEntryPoint") {
+inline fun <reified M : Model, reified P : Any> AppComponentContext.getOrCreateModel(
+    params: P?,
+    messageSender: UiMessageSender? = null,
+    router: Router? = null,
+): M {
+    val entryPoint = instanceKeeper.getOrCreateSimple(key = "modelsEntryPoint_${M::class.simpleName}") {
         val hiltComponent = hiltComponentBuilder
-            .router(router)
-            .uiMessageSender(messageSender)
+            .router(router ?: this@getOrCreateModel.router)
+            .uiMessageSender(messageSender ?: this@getOrCreateModel.messageSender)
             .paramsContainer(MutableParamsContainer(params ?: Unit))
             .build()
 
