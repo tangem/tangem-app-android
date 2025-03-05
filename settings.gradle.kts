@@ -224,6 +224,9 @@ include(":features:onramp:impl")
 
 include(":features:stories:api")
 include(":features:stories:impl")
+
+include(":features:txhistory:api")
+include(":features:txhistory:impl")
 // endregion Feature modules
 
 // region Domain modules
