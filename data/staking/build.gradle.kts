@@ -49,6 +49,7 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
+    implementation(deps.firebase.crashlytics)
     ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
