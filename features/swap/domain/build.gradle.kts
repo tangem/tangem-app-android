@@ -5,6 +5,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.kotlin.serialization)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -54,5 +55,5 @@ dependencies {
     implementation(tangemDeps.blockchain)
     implementation(tangemDeps.card.core)
     implementation(deps.moshi)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
 }
