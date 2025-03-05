@@ -289,7 +289,7 @@ private class DefaultBatchListSource<TKey, TData, TRequestParams : Any, TUpdate>
             batchFetcher.fetchNext(action.requestParams, lastResult)
         }.getOrElse { BatchFetchResult.Error(it) }
 
-        lastRequestResult.value = lastResult
+        lastRequestResult.value = res
 
         state.update { currentState ->
             when (res) {
