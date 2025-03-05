@@ -28,12 +28,60 @@ jobs:
 #    outputs:
 #      versionName: ${{ steps.get_version_name.outputs.versionName }}
     steps:
-      - name: Jira Login
-        uses: atlassian/gajira-login@master
-        env:
-          JIRA_BASE_URL: '${{ secrets.JIRA_URL }}'
-          JIRA_USER_EMAIL: '${{ secrets.JIRA_USER }}'
-          JIRA_API_TOKEN: '${{ secrets.JIRA_TOKEN }}'
+      - name: Checkout 'find-latest-release-branch' script
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          sparse-checkout: |
+            ci_resources/find-latest-release-branch.sh
+          sparse-checkout-cone-mode: false
+
+      - name: Find latest release branch
+        id: find_latest_release
+        run: |
+          echo "🔍 Fetching all remote branches..."
+          
+          # Retrieve all remote branches without cloning the repository
+          BRANCHES=$(git ls-remote --heads https://github.com/${{ github.repository }}.git)
+          
+          echo "✅ Retrieved branches from the remote repository:"
+          echo "$BRANCHES"
+          
+          echo "🔍 Extracting full branch names..."
+          # Extract branch names while preserving the full path (e.g., "refs/heads/releases/1.0")
+          BRANCH_NAMES=$(echo "$BRANCHES" | sed 's?.*refs/heads/??')
+          
+          echo "✅ Extracted branch names:"
+          echo "$BRANCH_NAMES"
+          
+          echo "🔍 Filtering only release branches..."
+          # Select only release branches (format: releases/X.Y or releases/X.Y.Z)
+          RELEASE_BRANCHES=$(echo "$BRANCH_NAMES" | grep -E '^test/[0-9]+\.[0-9]+(\.[0-9]+)?$' || true)
+          
+          if [[ -z "$RELEASE_BRANCHES" ]]; then
+            echo "⚠️ No release branches found. Exiting."
+            exit 0
+          fi
+          
+          echo "✅ Found release branches:"
+          echo "$RELEASE_BRANCHES"
+          
+          echo "🔍 Sorting release branches lexicographically..."
+          # Sort branches lexicographically to get the latest version
+          LATEST_RELEASE=$(echo "$RELEASE_BRANCHES" | sort -V | tail -n 1)
+          
+          echo "✅ Latest release branch found: $LATEST_RELEASE"
+          
+          # Save the result to GitHub output
+          echo "latest_release_branch=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+        
+
+#      - name: Jira Login
+#        uses: atlassian/gajira-login@master
+#        env:
+#          JIRA_BASE_URL: '${{ secrets.JIRA_URL }}'
+#          JIRA_USER_EMAIL: '${{ secrets.JIRA_USER }}'
+#          JIRA_API_TOKEN: '${{ secrets.JIRA_TOKEN }}'
 
 
 #      - name: Jira Create Version
@@ -43,12 +91,13 @@ jobs:
 #          project: AND
 #          version: test
 
-      - name: Jira Release Version
-        uses: tangem-developments/jira-action@feature/AND-9909_fix_release_version_action
-        with:
-          action: releaseVersion
-          project: AND
-          version: test
+#      - name: Jira Release Version
+#        uses: tangem-developments/jira-action@feature/AND-9909_fix_release_version_action
+#        with:
+#          action: releaseVersion
+#          project: AND
+#          version: test
+
 
 #
 #      - name: Test
