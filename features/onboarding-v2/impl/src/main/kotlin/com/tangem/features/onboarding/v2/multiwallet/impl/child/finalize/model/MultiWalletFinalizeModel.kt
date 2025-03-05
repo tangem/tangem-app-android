@@ -3,7 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.repository.CardRepository
@@ -39,7 +39,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class MultiWalletFinalizeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,

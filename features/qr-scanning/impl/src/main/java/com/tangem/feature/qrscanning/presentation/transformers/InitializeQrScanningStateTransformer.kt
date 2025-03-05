@@ -5,7 +5,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.impl.R
 import com.tangem.feature.qrscanning.presentation.QrScanningState
-import com.tangem.feature.qrscanning.viewmodel.QrScanningClickIntents
+import com.tangem.feature.qrscanning.model.QrScanningClickIntents
 
 internal class InitializeQrScanningStateTransformer(
     private val clickIntents: QrScanningClickIntents,
