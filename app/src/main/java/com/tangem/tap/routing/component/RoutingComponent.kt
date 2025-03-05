@@ -38,6 +38,6 @@ internal interface RoutingComponent : ComposableContentComponent {
     }
 
     interface Factory {
-        fun create(context: AppComponentContext): RoutingComponent
+        fun create(context: AppComponentContext, initialStack: List<AppRoute>?): RoutingComponent
     }
 }
