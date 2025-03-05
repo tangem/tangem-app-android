@@ -3,7 +3,7 @@ package com.tangem.feature.walletsettings.utils
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRoute.ManageTokens.Source
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.block.model.BlockUM
 import com.tangem.core.ui.extensions.resourceReference
@@ -17,7 +17,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class ItemsBuilder @Inject constructor(
     private val router: Router,
     private val analyticsEventHandler: AnalyticsEventHandler,

@@ -1,6 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
 import arrow.core.Either
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -13,14 +14,13 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
-import dagger.hilt.android.scopes.ViewModelScoped
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 internal class GetSingleWalletWarningsFactory @Inject constructor(
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
