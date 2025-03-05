@@ -9,8 +9,10 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.events.WalletConnect
+import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.domain.*
 import com.tangem.tap.domain.walletconnect2.domain.models.*
+import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.OpenSession.SourceType
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +24,7 @@ internal class DefaultLegacyWalletConnectRepository(
     private val application: Application,
     private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
     private val analyticsHandler: AnalyticsEventHandler,
-    private val blockchainHelper: WcBlockchainHelper,
+    private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) : LegacyWalletConnectRepository {
 
     private var sessionProposal: Wallet.Model.SessionProposal? = null
@@ -34,6 +36,7 @@ internal class DefaultLegacyWalletConnectRepository(
 
     private val _activeSessions: MutableSharedFlow<List<WalletConnectSession>> = MutableSharedFlow()
     override val activeSessions: Flow<List<WalletConnectSession>> = _activeSessions
+    private val blockchainHelper by lazy { TangemWcBlockchainHelper(walletConnectFeatureToggles) }
 
     override var currentSessions: List<WalletConnectSession> = emptyList()
         private set
