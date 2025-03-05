@@ -32,7 +32,7 @@ import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.state.previewdata.RecipientStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
