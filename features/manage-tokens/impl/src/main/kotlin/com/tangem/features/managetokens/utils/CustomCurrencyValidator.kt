@@ -1,7 +1,7 @@
 package com.tangem.features.managetokens.utils
 
 import arrow.core.getOrElse
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.managetokens.CheckIsCurrencyNotAddedUseCase
 import com.tangem.domain.managetokens.CreateCurrencyUseCase
 import com.tangem.domain.managetokens.FindTokenUseCase
@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class CustomCurrencyValidator @Inject constructor(
     private val validateTokenFormUseCase: ValidateTokenFormUseCase,
     private val createCustomCurrencyUseCase: CreateCurrencyUseCase,
