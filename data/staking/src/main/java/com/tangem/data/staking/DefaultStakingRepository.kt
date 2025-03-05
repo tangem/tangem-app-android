@@ -378,6 +378,7 @@ internal class DefaultStakingRepository(
                     } else {
                         FirebaseCrashlytics.getInstance()
                             .log("No yield balance available for currency ${cryptoCurrency.id.value}")
+                        send(YieldBalance.Error(integrationId, address))
                     }
                 }
         }
