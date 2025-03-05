@@ -10,8 +10,8 @@ import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.di.GlobalUiMessageSender
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -76,6 +76,8 @@ import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.e
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.tokendetails.impl.R
+import com.tangem.features.txhistory.TxHistoryFeatureToggles
+import com.tangem.features.txhistory.entity.TxHistoryContentUpdateEmitter
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.collections.immutable.PersistentList
@@ -122,6 +124,8 @@ internal class TokenDetailsModel @Inject constructor(
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val shareManager: ShareManager,
     @GlobalUiMessageSender private val uiMessageSender: UiMessageSender,
+    private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
+    private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     paramsContainer: ParamsContainer,
     expressStatusFactory: ExpressStatusFactory.Factory,
     getUserWalletUseCase: GetUserWalletUseCase,
@@ -240,7 +244,7 @@ internal class TokenDetailsModel @Inject constructor(
     private fun updateContent() {
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExpressTransactionsUpdates()
-        updateTxHistory(refresh = false, showItemsLoading = true)
+        updateTxHistory(refresh = false, showItemsLoading = true, initialUpdating = true)
 
         updateStakingInfo()
     }
@@ -362,29 +366,33 @@ internal class TokenDetailsModel @Inject constructor(
      * @param refresh - invalidate cache and get data from remote
      * @param showItemsLoading - show loading items placeholder.
      */
-    private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean) {
-        modelScope.launch(dispatchers.main) {
-            val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
-                userWalletId = userWalletId,
-                currency = cryptoCurrency,
-            )
-
-            // if countEither is left, handling error state run inside getLoadingTxHistoryState
-            if (showItemsLoading || txHistoryItemsCountEither.isLeft()) {
-                internalUiState.value = stateFactory.getLoadingTxHistoryState(
-                    itemsCountEither = txHistoryItemsCountEither,
-                    pendingTransactions = internalUiState.value.pendingTxs,
-                )
-            }
-
-            txHistoryItemsCountEither.onRight {
-                val maybeTxHistory = txHistoryItemsUseCase(
+    private fun updateTxHistory(refresh: Boolean, showItemsLoading: Boolean, initialUpdating: Boolean = false) {
+        if (txHistoryFeatureToggles.isFeatureEnabled && !initialUpdating) {
+            modelScope.launch { txHistoryContentUpdateEmitter.triggerUpdate() }
+        } else {
+            modelScope.launch(dispatchers.main) {
+                val txHistoryItemsCountEither = txHistoryItemsCountUseCase(
                     userWalletId = userWalletId,
                     currency = cryptoCurrency,
-                    refresh = refresh,
-                ).map { it.cachedIn(modelScope) }
+                )
 
-                internalUiState.value = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
+                // if countEither is left, handling error state run inside getLoadingTxHistoryState
+                if (showItemsLoading || txHistoryItemsCountEither.isLeft()) {
+                    internalUiState.value = stateFactory.getLoadingTxHistoryState(
+                        itemsCountEither = txHistoryItemsCountEither,
+                        pendingTransactions = internalUiState.value.pendingTxs,
+                    )
+                }
+
+                txHistoryItemsCountEither.onRight {
+                    val maybeTxHistory = txHistoryItemsUseCase(
+                        userWalletId = userWalletId,
+                        currency = cryptoCurrency,
+                        refresh = refresh,
+                    ).map { it.cachedIn(modelScope) }
+
+                    internalUiState.value = stateFactory.getLoadedTxHistoryState(maybeTxHistory)
+                }
             }
         }
     }
