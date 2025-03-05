@@ -2,6 +2,7 @@ package com.tangem.data.staking
 
 import android.util.Base64
 import arrow.core.getOrElse
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
@@ -375,7 +376,8 @@ internal class DefaultStakingRepository(
                     if (it != null) {
                         send(it)
                     } else {
-                        error("No yield balance available for currency ${cryptoCurrency.id.value}")
+                        FirebaseCrashlytics.getInstance()
+                            .log("No yield balance available for currency ${cryptoCurrency.id.value}")
                     }
                 }
         }
