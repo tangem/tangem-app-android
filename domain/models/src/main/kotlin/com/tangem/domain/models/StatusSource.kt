@@ -21,6 +21,10 @@ enum class StatusSource {
 
     /** Status is loaded from the cache and can't be updated with actual value */
     ONLY_CACHE,
+
+    ;
+
+    fun isActual() = this == ACTUAL
 }
 
 /**
