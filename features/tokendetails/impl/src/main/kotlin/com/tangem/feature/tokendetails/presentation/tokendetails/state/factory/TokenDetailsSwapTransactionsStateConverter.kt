@@ -24,10 +24,10 @@ import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isF
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatusModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionListModel
 import com.tangem.feature.swap.domain.models.domain.SavedSwapTransactionModel
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeStatusState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
@@ -82,17 +82,18 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                         }
                     }
                     val statusModel = transaction.status
-                    val notifications = getNotification(
+                    val notification = getNotification(
                         status = statusModel?.status,
                         txUrl = statusModel?.txExternalUrl,
                         refundToken = statusModel?.refundCurrency,
+                        hasLongTime = statusModel?.hasLongTime,
                     )
-                    val showProviderLink = getShowProviderLink(notifications, transaction.status)
+                    val showProviderLink = getShowProviderLink(notification, transaction.status)
                     result.add(
                         ExchangeUM(
                             provider = transaction.provider,
                             statuses = getStatuses(statusModel?.status),
-                            notification = notifications,
+                            notification = notification,
                             activeStatus = statusModel?.status,
                             showProviderLink = showProviderLink,
                             fromCryptoCurrency = fromCryptoCurrency,
@@ -104,6 +105,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
                                 toFiatAmount,
                                 fromFiatAmount,
                             ),
+                            hasLongTime = transaction.status?.hasLongTime ?: false,
                         ),
                     )
                 }
@@ -111,17 +113,22 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         return result.toPersistentList()
     }
 
-    fun updateTxStatus(tx: ExchangeUM, statusModel: ExchangeStatusModel?): ExchangeUM {
-        if (statusModel == null || tx.activeStatus == statusModel.status) {
+    fun updateTxStatus(tx: ExchangeUM, statusModel: ExchangeStatusModel): ExchangeUM {
+        if (tx.activeStatus == statusModel.status && tx.hasLongTime == statusModel.hasLongTime) {
             Timber.e("UpdateTxStatus isn't required. Current status isn't changed")
             return tx
         }
         val hasFailed = statusModel.status.isFailed()
-        val notifications = getNotification(statusModel.status, statusModel.txExternalUrl, statusModel.refundCurrency)
-        val showProviderLink = getShowProviderLink(notifications, statusModel)
+        val notification = getNotification(
+            status = statusModel.status,
+            txUrl = statusModel.txExternalUrl,
+            refundToken = statusModel.refundCurrency,
+            hasLongTime = statusModel.hasLongTime,
+        )
+        val showProviderLink = getShowProviderLink(notification, statusModel)
         return tx.copy(
             activeStatus = statusModel.status,
-            notification = notifications,
+            notification = notification,
             statuses = getStatuses(statusModel.status, hasFailed),
             showProviderLink = showProviderLink,
             info = tx.info.copy(txExternalUrl = statusModel.txExternalUrl),
@@ -184,37 +191,44 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         status: ExchangeStatus?,
         txUrl: String?,
         refundToken: CryptoCurrency?,
-    ): ExchangeStatusNotifications? {
-        return when (status) {
-            ExchangeStatus.Failed,
-            ExchangeStatus.TxFailed,
-            -> {
+        hasLongTime: Boolean?,
+    ): ExchangeStatusNotification? {
+        return when {
+            status == ExchangeStatus.Failed || status == ExchangeStatus.TxFailed -> {
                 if (txUrl == null) return null
-                ExchangeStatusNotifications.Failed {
+                ExchangeStatusNotification.Failed {
                     analyticsEventsHandler.send(
                         TokenExchangeAnalyticsEvent.GoToProviderFail(cryptoCurrency.symbol),
                     )
                     clickIntents.onGoToProviderClick(txUrl)
                 }
             }
-            ExchangeStatus.Verifying -> {
+            status == ExchangeStatus.Verifying -> {
                 if (txUrl == null) return null
-                ExchangeStatusNotifications.NeedVerification {
+                ExchangeStatusNotification.NeedVerification {
                     analyticsEventsHandler.send(
                         TokenExchangeAnalyticsEvent.GoToProviderKYC(cryptoCurrency.symbol),
                     )
                     clickIntents.onGoToProviderClick(txUrl)
                 }
             }
-            ExchangeStatus.Refunded -> {
+            status == ExchangeStatus.Refunded -> {
                 if (refundToken == null) {
                     null
                 } else {
-                    ExchangeStatusNotifications.TokenRefunded(
+                    ExchangeStatusNotification.TokenRefunded(
                         cryptoCurrency = refundToken,
                         onReadMoreClick = { clickIntents.onOpenUrlClick(url = getAboutCrossChainBridgesLink()) },
                         onGoToTokenClick = { clickIntents.onGoToRefundedTokenClick(refundToken) },
                     )
+                }
+            }
+            status?.isTerminal == false && txUrl != null && hasLongTime == true -> {
+                ExchangeStatusNotification.LongTimeExchange {
+                    analyticsEventsHandler.send(
+                        event = TokenExchangeAnalyticsEvent.GoToProviderLongTime(cryptoCurrency.symbol),
+                    )
+                    clickIntents.onGoToProviderClick(txUrl)
                 }
             }
             else -> null
@@ -239,7 +253,7 @@ internal class TokenDetailsSwapTransactionsStateConverter(
         statuses = persistentListOf(),
     )
 
-    private fun getShowProviderLink(notifications: ExchangeStatusNotifications?, status: ExchangeStatusModel?) =
+    private fun getShowProviderLink(notifications: ExchangeStatusNotification?, status: ExchangeStatusModel?) =
         notifications == null && status?.txExternalUrl != null && status.status != ExchangeStatus.Cancelled
 
     private fun getStatuses(status: ExchangeStatus?, hasFailed: Boolean = false): ImmutableList<ExchangeStatusState> {
