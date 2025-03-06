@@ -106,6 +106,17 @@ dependencyResolutionManagement {
                 includeGroupAndSubgroups("com.tangem.ic4j")
             }
         }
+        maven {
+            // setting any repository from tangem project allows maven search all packages in the project
+            url = uri("https://maven.pkg.github.com/tangem/web3j")
+            credentials {
+                username = properties.getProperty("gpr.user") ?: System.getenv("GITHUB_ACTOR")
+                password = properties.getProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
+            content {
+                includeGroupAndSubgroups("org.web3j")
+            }
+        }
         maven("https://jitpack.io")
     }
 
@@ -160,9 +171,10 @@ include(":features:onboarding")
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
+include(":features:referral:api")
 include(":features:referral:data")
 include(":features:referral:domain")
-include(":features:referral:presentation")
+include(":features:referral:impl")
 
 include(":features:swap:api")
 include(":features:swap:data")
@@ -212,6 +224,9 @@ include(":features:onramp:impl")
 
 include(":features:stories:api")
 include(":features:stories:impl")
+
+include(":features:txhistory:api")
+include(":features:txhistory:impl")
 // endregion Feature modules
 
 // region Domain modules
