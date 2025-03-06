@@ -10,7 +10,7 @@ import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.VisaWalletIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.VisaWalletIntents
 import com.tangem.utils.StringsSigns
 import com.tangem.utils.converter.Converter
 import org.joda.time.DateTimeZone
