@@ -55,7 +55,7 @@ internal class TokenListFiatBalanceOperations(
         }
 
         return (fiatBalance as? TotalFiatBalance.Loaded)?.copy(
-            source = currencies.map { it.value.source }.getResultStatusSource(),
+            source = currencies.map { it.value.sources.total }.getResultStatusSource(),
         ) ?: fiatBalance
     }
 
@@ -67,7 +67,7 @@ internal class TokenListFiatBalanceOperations(
             ?: TotalFiatBalance.Loaded(
                 amount = BigDecimal.ZERO,
                 isAllAmountsSummarized = false,
-                source = (status as? CryptoCurrencyStatus.NoAccount)?.source ?: StatusSource.ACTUAL,
+                source = (status as? CryptoCurrencyStatus.NoAccount)?.sources?.total ?: StatusSource.ACTUAL,
             )
     }
 
@@ -85,7 +85,7 @@ internal class TokenListFiatBalanceOperations(
             ) ?: TotalFiatBalance.Loaded(
                 amount = status.fiatAmount + fiatStakingBalance,
                 isAllAmountsSummarized = true,
-                source = status.source,
+                source = status.sources.total,
             )
         }
     }
