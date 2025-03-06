@@ -41,4 +41,5 @@ jobs:
           
           
           git remote add mirror https://x-access-token:${{ secrets.TEST_CLONE_REPO_KEY }}@github.com/tangem-developments/tangem-app-android-clone-test.git
+          echo "push"
           git push --mirror mirror
