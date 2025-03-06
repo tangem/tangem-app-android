@@ -87,7 +87,6 @@ internal class WalletStateController @Inject constructor() {
 
     private fun getInitialState(): WalletScreenState {
         return WalletScreenState(
-            onBackClick = {},
             topBarConfig = WalletTopBarConfig(onDetailsClick = {}),
             selectedWalletIndex = NOT_INITIALIZED_WALLET_INDEX,
             wallets = persistentListOf(),
