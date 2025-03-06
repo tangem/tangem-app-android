@@ -43,10 +43,10 @@ class MockStakingRepository : StakingRepository {
 
     override suspend fun getYield(yieldId: String) = yield
 
-    override suspend fun getStakingAvailability(
+    override fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): StakingAvailability = StakingAvailability.Unavailable
+    ): Flow<StakingAvailability> = flowOf(StakingAvailability.Unavailable)
 
     override suspend fun getActions(
         userWalletId: UserWalletId,

@@ -61,11 +61,8 @@ import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
 
@@ -188,32 +185,48 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override suspend fun getStakingAvailability(
+    override fun getStakingAvailability(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): StakingAvailability {
-        if (!checkFeatureToggleEnabled(cryptoCurrency.network.id)) return StakingAvailability.Unavailable
-
-        if (checkForInvalidCardBatch(userWalletId, cryptoCurrency)) return StakingAvailability.Unavailable
-
-        val rawCurrencyId = cryptoCurrency.id.rawCurrencyId ?: return StakingAvailability.Unavailable
-
-        val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
-
-        val prefetchedYield = findPrefetchedYield(
-            yields = getEnabledYieldsSync(),
-            currencyId = rawCurrencyId,
-            symbol = cryptoCurrency.symbol,
-        )
-
-        return when {
-            prefetchedYield != null && isSupportedInMobileApp -> {
-                StakingAvailability.Available(prefetchedYield.id)
+    ): Flow<StakingAvailability> {
+        return channelFlow {
+            if (!checkFeatureToggleEnabled(cryptoCurrency.network.id)) {
+                send(StakingAvailability.Unavailable)
+                return@channelFlow
             }
-            prefetchedYield == null && isSupportedInMobileApp -> {
-                StakingAvailability.TemporaryUnavailable
+
+            if (checkForInvalidCardBatch(userWalletId, cryptoCurrency)) {
+                send(StakingAvailability.Unavailable)
+                return@channelFlow
             }
-            else -> StakingAvailability.Unavailable
+
+            val rawCurrencyId = cryptoCurrency.id.rawCurrencyId
+            if (rawCurrencyId == null) {
+                send(StakingAvailability.Unavailable)
+                return@channelFlow
+            }
+
+            val isSupportedInMobileApp = getSupportedIntegrationId(cryptoCurrency.id).isNullOrEmpty().not()
+
+            getEnabledYields()
+                .distinctUntilChanged()
+                .onEach { yields ->
+                    val prefetchedYield = findPrefetchedYield(
+                        yields = yields,
+                        currencyId = rawCurrencyId,
+                        symbol = cryptoCurrency.symbol,
+                    )
+                    when {
+                        prefetchedYield != null && isSupportedInMobileApp -> {
+                            send(StakingAvailability.Available(prefetchedYield.id))
+                        }
+                        prefetchedYield == null && isSupportedInMobileApp -> {
+                            send(StakingAvailability.TemporaryUnavailable)
+                        }
+                        else -> send(StakingAvailability.Unavailable)
+                    }
+                }
+                .launchIn(this)
         }
     }
 
@@ -378,6 +391,7 @@ internal class DefaultStakingRepository(
                     } else {
                         FirebaseCrashlytics.getInstance()
                             .log("No yield balance available for currency ${cryptoCurrency.id.value}")
+                        send(YieldBalance.Error(integrationId, address))
                     }
                 }
         }
@@ -631,6 +645,15 @@ internal class DefaultStakingRepository(
             input = stakingYieldsStore.getSync(),
             onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
         )
+    }
+
+    private fun getEnabledYields(): Flow<List<Yield>> {
+        return stakingYieldsStore.get().map {
+            YieldConverter.convertListIgnoreErrors(
+                input = it,
+                onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
+            )
+        }
     }
 
     private fun getBalanceRequestData(address: String, integrationId: String): YieldBalanceRequestBody {

@@ -60,13 +60,18 @@ class GetCryptoCurrencyActionsUseCase(
             val flow = combine(
                 flow = networkFlow,
                 flow2 = promoRepository.getStoryById(StoryContentIds.STORY_FIRST_TIME_SWAP.id).conflate(),
-            ) { maybeCoinStatus, maybeSwapStories ->
+                flow3 = stakingRepository.getStakingAvailability(
+                    userWalletId = userWallet.walletId,
+                    cryptoCurrency = cryptoCurrencyStatus.currency,
+                ).onStart { emit(StakingAvailability.Unavailable) },
+            ) { maybeCoinStatus, maybeSwapStories, stakingAvailability ->
                 createTokenActionsState(
                     userWallet = userWallet,
                     coinStatus = maybeCoinStatus.getOrNull(),
                     cryptoCurrencyStatus = cryptoCurrencyStatus,
                     requirements = requirements,
                     shouldShowSwapStories = maybeSwapStories != null,
+                    isStakingAvailable = stakingAvailability is StakingAvailability.Available,
                 )
             }
 
@@ -80,6 +85,7 @@ class GetCryptoCurrencyActionsUseCase(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         requirements: AssetRequirementsCondition?,
         shouldShowSwapStories: Boolean,
+        isStakingAvailable: Boolean,
     ): TokenActionsState {
         return TokenActionsState(
             walletId = userWallet.walletId,
@@ -90,6 +96,7 @@ class GetCryptoCurrencyActionsUseCase(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 requirements = requirements,
                 shouldShowSwapStories = shouldShowSwapStories,
+                isStakingAvailable = isStakingAvailable,
             ),
         )
     }
@@ -105,6 +112,7 @@ class GetCryptoCurrencyActionsUseCase(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         requirements: AssetRequirementsCondition?,
         shouldShowSwapStories: Boolean,
+        isStakingAvailable: Boolean,
     ): List<TokenActionsState.ActionState> {
         val cryptoCurrency = cryptoCurrencyStatus.currency
         if (cryptoCurrencyStatus.value is CryptoCurrencyStatus.MissedDerivation) {
@@ -139,7 +147,7 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // staking
-        if (isStakingAvailable(userWallet, cryptoCurrency)) {
+        if (isStakingAvailable) {
             val yield = kotlin.runCatching {
                 stakingRepository.getYield(
                     cryptoCurrencyId = cryptoCurrency.id,
@@ -352,13 +360,6 @@ class GetCryptoCurrencyActionsUseCase(
 
     private fun isAddressAvailable(networkAddress: NetworkAddress?): Boolean {
         return networkAddress != null && networkAddress.defaultAddress.value.isNotEmpty()
-    }
-
-    private suspend fun isStakingAvailable(userWallet: UserWallet, cryptoCurrency: CryptoCurrency): Boolean {
-        return stakingRepository.getStakingAvailability(
-            userWalletId = userWallet.walletId,
-            cryptoCurrency = cryptoCurrency,
-        ) is StakingAvailability.Available
     }
 
     private companion object {
