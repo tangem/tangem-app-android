@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.mock
 
 import arrow.core.nonEmptyListOf
-import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
 
@@ -75,7 +74,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
-            source = StatusSource.ACTUAL,
+            sources = CryptoCurrencyStatus.Sources(),
         ),
     )
 
@@ -89,7 +88,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
-            source = StatusSource.ACTUAL,
+            sources = CryptoCurrencyStatus.Sources(),
         ),
     )
 
@@ -103,7 +102,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
-            source = StatusSource.ACTUAL,
+            sources = CryptoCurrencyStatus.Sources(),
         ),
     )
 
@@ -117,7 +116,7 @@ internal object MockTokensStates {
             networkAddress = NetworkAddress.Single(
                 defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
             ),
-            source = StatusSource.ACTUAL,
+            sources = CryptoCurrencyStatus.Sources(),
         ),
     )
 
@@ -152,6 +151,7 @@ internal object MockTokensStates {
                     value = MockNetworks.verifiedNetworksStatuses.first { it.network == status.currency.network }.value as? NetworkStatus.Verified,
                 ).address,
                 yieldBalance = null,
+                sources = CryptoCurrencyStatus.Sources(),
             )
             is Quote.Value -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
@@ -162,7 +162,7 @@ internal object MockTokensStates {
                 hasCurrentNetworkTransactions = false,
                 networkAddress = requireNotNull(networkStatus.value as? NetworkStatus.Verified).address,
                 yieldBalance = null,
-                source = StatusSource.ACTUAL,
+                sources = CryptoCurrencyStatus.Sources(),
             )
         }
         status.copy(value = value)
@@ -180,6 +180,7 @@ internal object MockTokensStates {
                         .value as? NetworkStatus.Verified,
                 ).address,
                 yieldBalance = null,
+                sources = CryptoCurrencyStatus.Sources(),
             ),
         )
     }
