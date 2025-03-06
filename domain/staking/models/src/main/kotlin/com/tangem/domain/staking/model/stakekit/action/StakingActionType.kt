@@ -39,4 +39,12 @@ enum class StakingActionType {
             MIGRATE -> "Migrate"
             UNKNOWN -> "Unknown"
         }
+
+    val isRestake
+        get() = when (this) {
+            RESTAKE,
+            STAKE,
+            -> true
+            else -> false
+        }
 }
