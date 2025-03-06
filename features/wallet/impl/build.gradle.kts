@@ -24,8 +24,6 @@ dependencies {
     implementation(deps.compose.foundation)
     implementation(deps.compose.material)
     implementation(deps.compose.material3)
-    implementation(deps.compose.navigation)
-    implementation(deps.compose.navigation.hilt)
     implementation(deps.compose.paging)
     implementation(deps.compose.reorderable)
     implementation(deps.compose.shimmer)
