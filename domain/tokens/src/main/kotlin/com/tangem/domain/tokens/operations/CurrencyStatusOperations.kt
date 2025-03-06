@@ -1,7 +1,6 @@
 package com.tangem.domain.tokens.operations
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.model.*
 import java.math.BigDecimal
@@ -56,14 +55,14 @@ internal class CurrencyStatusOperations(
             priceChange = quote?.priceChange,
             fiatRate = quote?.fiatRate,
             networkAddress = status.address,
-            source = listOf(
-                status.source,
-                (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
-            ).getResultStatusSource(),
+            sources = CryptoCurrencyStatus.Sources(
+                networkSource = status.source,
+                quoteSource = (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+            ),
         )
     }
 
-    @Suppress("CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun createStatus(
         networkStatusValue: NetworkStatus.Verified,
         yieldBalance: YieldBalance?,
@@ -105,11 +104,11 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
-                source = listOfNotNull(
-                    networkStatusValue.source,
-                    currentYieldBalance?.source ?: StatusSource.ACTUAL,
-                    (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
-                ).getResultStatusSource(),
+                sources = CryptoCurrencyStatus.Sources(
+                    networkSource = networkStatusValue.source,
+                    quoteSource = (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+                    yieldBalanceSource = currentYieldBalance?.source ?: StatusSource.ACTUAL,
+                ),
             )
             quote is Quote.Empty || ignoreQuote -> CryptoCurrencyStatus.NoQuote(
                 amount = amount,
@@ -117,6 +116,11 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
+                sources = CryptoCurrencyStatus.Sources(
+                    networkSource = networkStatusValue.source,
+                    quoteSource = (quote as? Quote.Value)?.source ?: StatusSource.ACTUAL,
+                    yieldBalanceSource = currentYieldBalance?.source ?: StatusSource.ACTUAL,
+                ),
             )
             quote is Quote.Value -> CryptoCurrencyStatus.Loaded(
                 amount = amount,
@@ -127,11 +131,11 @@ internal class CurrencyStatusOperations(
                 pendingTransactions = currentTransactions,
                 networkAddress = networkStatusValue.address,
                 yieldBalance = currentYieldBalance,
-                source = listOf(
-                    networkStatusValue.source,
-                    currentYieldBalance?.source ?: StatusSource.ACTUAL,
-                    quote.source,
-                ).getResultStatusSource(),
+                sources = CryptoCurrencyStatus.Sources(
+                    networkSource = networkStatusValue.source,
+                    quoteSource = quote.source,
+                    yieldBalanceSource = currentYieldBalance?.source ?: StatusSource.ACTUAL,
+                ),
             )
             else -> CryptoCurrencyStatus.Loading
         }
