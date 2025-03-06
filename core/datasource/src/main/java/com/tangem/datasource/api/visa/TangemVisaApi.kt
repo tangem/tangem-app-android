@@ -5,9 +5,7 @@ import com.tangem.datasource.api.utils.ReadTimeout
 import com.tangem.datasource.api.visa.models.request.ActivationByCardWalletRequest
 import com.tangem.datasource.api.visa.models.request.ActivationByCustomerWalletRequest
 import com.tangem.datasource.api.visa.models.request.SetPinCodeRequest
-import com.tangem.datasource.api.visa.models.response.CardActivationRemoteStateResponse
-import com.tangem.datasource.api.visa.models.response.CardWalletDataToSignResponse
-import com.tangem.datasource.api.visa.models.response.CustomerWalletDataToSignResponse
+import com.tangem.datasource.api.visa.models.response.*
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -71,4 +69,19 @@ interface TangemVisaApi {
         @Header("Authorization") authHeader: String,
         @Body body: SetPinCodeRequest,
     ): ApiResponse<Unit>
+
+    @GET("customer/info")
+    suspend fun getCustomerInfo(
+        @Header("Authorization") authHeader: String,
+        @Query("card_id") cardId: String,
+    ): ApiResponse<VisaCustomerInfo>
+
+    @GET("product_instance/transactions")
+    suspend fun getTxHistory(
+        @Header("Authorization") authHeader: String,
+        @Query("customer_id") customerId: String,
+        @Query("product_instance_id") productInstanceId: String,
+        @Query("limit") limit: Int,
+        @Query("offset") offset: Int,
+    ): ApiResponse<VisaTxHistoryResponse>
 }
