@@ -44,8 +44,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class TokenDetailsStateFactory(
     private val currentStateProvider: Provider<TokenDetailsState>,
     private val appCurrencyProvider: Provider<AppCurrency>,
-    private val stakingEntryInfoProvider: Provider<StakingEntryInfo?>,
-    private val stakingAvailabilityProvider: Provider<StakingAvailability>,
     private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val clickIntents: TokenDetailsClickIntents,
     private val networkHasDerivationUseCase: NetworkHasDerivationUseCase,
@@ -74,8 +72,6 @@ internal class TokenDetailsStateFactory(
         TokenDetailsLoadedBalanceConverter(
             currentStateProvider = currentStateProvider,
             appCurrencyProvider = appCurrencyProvider,
-            stakingEntryInfoProvider = stakingEntryInfoProvider,
-            stakingAvailabilityProvider = stakingAvailabilityProvider,
             symbol = symbol,
             decimals = decimals,
             clickIntents = clickIntents,
@@ -127,6 +123,20 @@ internal class TokenDetailsStateFactory(
         cryptoCurrencyEither: Either<CurrencyStatusError, CryptoCurrencyStatus>,
     ): TokenDetailsState {
         return tokenDetailsLoadedBalanceConverter.convert(cryptoCurrencyEither)
+    }
+
+    fun getStakingInfoState(
+        state: TokenDetailsState,
+        stakingEntryInfo: StakingEntryInfo?,
+        stakingAvailability: StakingAvailability,
+    ): TokenDetailsState {
+        return TokenDetailsStakingInfoConverter(
+            currentState = state,
+            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            clickIntents = clickIntents,
+            appCurrencyProvider = appCurrencyProvider,
+            stakingEntryInfo = stakingEntryInfo,
+        ).convert(stakingAvailability)
     }
 
     fun getManageButtonsState(actions: List<TokenActionsState.ActionState>): TokenDetailsState {
