@@ -26,7 +26,7 @@ import com.tangem.feature.wallet.impl.R
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
