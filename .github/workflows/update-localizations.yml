@@ -20,64 +20,22 @@ on:
       GH_MOBILE_PAT:
         required: true
 jobs:
-  find_latest_release_branch:
+  mirror:
     runs-on: ubuntu-latest
-    outputs:
-      latest_release_branch: ${{ steps.find_latest_release_branch.outputs.latest_release_branch }}
+
     steps:
-      - name: Checkout 
+      - name: Checkout source repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Find latest release branch
-        id: find_latest_release_branch
+      - name: Debug Token
         run: |
-          echo "Fetching all remote branches..."
+          echo "Token length: $(echo -n "${{ secrets.TEST_CLONE_REPO_KEY }}" | wc -c)"
 
-          # Retrieve all remote branches without cloning the repository
-          BRANCHES=$(git ls-remote --heads https://github.com/${{ github.repository }}.git)
-
-          echo "Retrieved branches from the remote repository:"
-          echo "$BRANCHES"
-
-          echo "Extracting full branch names..."
-          # Extract branch names while preserving the full path (e.g., "refs/heads/releases/1.0")
-          BRANCH_NAMES=$(echo "$BRANCHES" | sed 's?.*refs/heads/??')
-
-          echo "Extracted branch names:"
-          echo "$BRANCH_NAMES"
-
-          echo "Filtering only release branches..."
-          # Select only release branches (format: releases/X.Y or releases/X.Y.Z)
-          RELEASE_BRANCHES=$(echo "$BRANCH_NAMES" | grep -E '^test/[0-9]+\.[0-9]+(\.[0-9]+)?$' || true)
-
-          if [[ -z "$RELEASE_BRANCHES" ]]; then
-            echo "⚠️ No release branches found. Exiting."
-            exit 0
-          fi
-
-          echo "Found release branches:"
-          echo "$RELEASE_BRANCHES"
-
-          echo "Sorting release branches lexicographically..."
-          # Sort branches lexicographically to get the latest version
-          LATEST_RELEASE=$(echo "$RELEASE_BRANCHES" | sort -V | tail -n 1)
-
-          echo "Latest release branch found: $LATEST_RELEASE"
-          echo "Current branch: ${{ github.ref_name }}"
-
-          # Save the result to GitHub output
-          echo "latest_release_branch=$LATEST_RELEASE" >> $GITHUB_OUTPUT
-
-  create-pr-to-next-release:
-    needs:
-      - find_latest_release_branch
-    if: needs.find_latest_release_branch.outputs.latest_release_branch != github.ref_name
-    uses: tangem-developments/actions/.github/workflows/create_pr.yml@feature/AND-10201_modify_create_pr_workflow
-    with:
-      source_branch: ${{ github.ref_name }}
-      target_branch: ${{ needs.find_latest_release_branch.outputs.latest_release_branch }}
-      replace_android_tangem_dependencies: true
-    secrets:
-      AUTO_MERGE_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}
+      - name: Push to mirror
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git remote add mirror https://x-access-token:${{ secrets.TEST_CLONE_REPO_KEY }}@github.com/tangem-developments/tangem-app-android-clone-test.git
+          git push --mirror mirror
