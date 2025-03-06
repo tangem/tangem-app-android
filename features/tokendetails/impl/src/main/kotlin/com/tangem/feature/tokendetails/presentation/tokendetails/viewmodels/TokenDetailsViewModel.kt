@@ -321,9 +321,9 @@ internal class TokenDetailsViewModel @Inject constructor(
                         cryptoCurrencyStatus = status
                         updateButtons(currencyStatus = status)
                         updateWarnings(status)
+                        subscribeOnUpdateStakingInfo(status)
                     }
                     currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
-                    subscribeOnUpdateStakingInfo()
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(viewModelScope)
@@ -409,7 +409,7 @@ internal class TokenDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun subscribeOnUpdateStakingInfo() {
+    private fun subscribeOnUpdateStakingInfo(cryptoCurrencyStatus: CryptoCurrencyStatus) {
         getStakingAvailabilityUseCase(
             userWalletId = userWalletId,
             cryptoCurrency = cryptoCurrency,
@@ -417,16 +417,22 @@ internal class TokenDetailsViewModel @Inject constructor(
             .map { it.getOrElse { StakingAvailability.Unavailable } }
             .distinctUntilChanged()
             .onEach {
-                if (it is StakingAvailability.Available) {
-                    val stakingInfo = getStakingEntryInfoUseCase(
+                val stakingEntryInfo = if (it is StakingAvailability.Available) {
+                    getStakingEntryInfoUseCase(
                         cryptoCurrencyId = cryptoCurrency.id,
                         symbol = cryptoCurrency.symbol,
-                    )
+                    ).getOrNull()
+                } else {
+                    null
+                }
 
-                    val stakingEntryInfo = stakingInfo.getOrNull()
-                    internalUiState.update { state ->
-                        stateFactory.getStakingInfoState(state, stakingEntryInfo, it)
-                    }
+                internalUiState.update { state ->
+                    stateFactory.getStakingInfoState(
+                        state = state,
+                        stakingEntryInfo = stakingEntryInfo,
+                        stakingAvailability = it,
+                        cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    )
                 }
             }
             .flowOn(dispatchers.main)

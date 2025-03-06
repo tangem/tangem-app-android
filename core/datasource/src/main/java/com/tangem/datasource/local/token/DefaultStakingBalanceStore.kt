@@ -179,7 +179,15 @@ internal class DefaultStakingBalanceStore(
         cachedBalances: Set<YieldBalance>,
         runtimeBalances: Set<YieldBalance>,
     ): Set<YieldBalance> {
-        if (runtimeBalances.isEmpty()) return cachedBalances
+        if (runtimeBalances.isEmpty()) {
+            return cachedBalances.mapNotNullTo(hashSetOf()) {
+                when (it) {
+                    is YieldBalance.Data -> it.copy(source = StatusSource.ONLY_CACHE)
+                    is YieldBalance.Empty -> it.copy(source = StatusSource.ONLY_CACHE)
+                    is YieldBalance.Error -> null
+                }
+            }
+        }
 
         return runtimeBalances
             .map { runtime ->
