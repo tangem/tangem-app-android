@@ -37,9 +37,24 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          
+          # Настроить SSH-ключ
+          mkdir -p ~/.ssh
+          echo "${{ secrets.TEST_CLONE_REPO_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_rsa
+          
+          # Добавить GitHub в known_hosts, чтобы избежать предупреждений
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          
+          # Проверить удалённые репозитории
           git remote -v
           
+          # Добавить mirror, если его нет
+          git remote remove mirror || true
+          git remote add mirror git@github.com:tangem-developments/tangem-app-android-clone-test.git
           
-          git remote add mirror https://x-access-token:${{ secrets.TEST_CLONE_REPO_KEY }}@github.com/tangem-developments/tangem-app-android-clone-test.git
+          # Выполнить push
           echo "push"
           git push --mirror mirror
