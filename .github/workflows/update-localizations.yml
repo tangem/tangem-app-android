@@ -37,5 +37,8 @@ jobs:
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
+          git remote -v
+          
+          
           git remote add mirror https://x-access-token:${{ secrets.TEST_CLONE_REPO_KEY }}@github.com/tangem-developments/tangem-app-android-clone-test.git
           git push --mirror mirror
