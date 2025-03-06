@@ -42,7 +42,6 @@ import com.tangem.domain.staking.GetStakingEntryInfoUseCase
 import com.tangem.domain.staking.GetStakingIntegrationIdUseCase
 import com.tangem.domain.staking.GetYieldUseCase
 import com.tangem.domain.staking.model.StakingAvailability
-import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -144,18 +143,16 @@ internal class TokenDetailsModel @Inject constructor(
     private val refreshStateJobHolder = JobHolder()
     private val warningsJobHolder = JobHolder()
     private val expressTxJobHolder = JobHolder()
+    private val buttonsJobHolder = JobHolder()
+    private val stakingJobHolder = JobHolder()
     private val selectedAppCurrencyFlow: StateFlow<AppCurrency> = createSelectedAppCurrencyFlow()
 
     private var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
-    private var stakingEntryInfo: StakingEntryInfo? = null
-    private var stakingAvailability: StakingAvailability = StakingAvailability.Unavailable
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<PersistentList<ExpressTransactionStateUM>>()
 
     private val stateFactory = TokenDetailsStateFactory(
         currentStateProvider = Provider { uiState.value },
         appCurrencyProvider = Provider(selectedAppCurrencyFlow::value),
-        stakingEntryInfoProvider = Provider { stakingEntryInfo },
-        stakingAvailabilityProvider = Provider { stakingAvailability },
         cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
         clickIntents = this,
         networkHasDerivationUseCase = networkHasDerivationUseCase,
@@ -245,8 +242,6 @@ internal class TokenDetailsModel @Inject constructor(
         subscribeOnCurrencyStatusUpdates()
         subscribeOnExpressTransactionsUpdates()
         updateTxHistory(refresh = false, showItemsLoading = true, initialUpdating = true)
-
-        updateStakingInfo()
     }
 
     private fun handleBalanceHiding() {
@@ -271,6 +266,7 @@ internal class TokenDetailsModel @Inject constructor(
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
+            .saveIn(buttonsJobHolder)
     }
 
     private fun updateWarnings(cryptoCurrencyStatus: CryptoCurrencyStatus) {
@@ -308,6 +304,7 @@ internal class TokenDetailsModel @Inject constructor(
                         updateWarnings(status)
                     }
                     currencyStatusAnalyticsSender.send(maybeCurrencyStatus)
+                    subscribeOnUpdateStakingInfo()
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -397,24 +394,29 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    private fun updateStakingInfo() {
-        modelScope.launch {
-            val availability = getStakingAvailabilityUseCase(
-                userWalletId = userWalletId,
-                cryptoCurrency = cryptoCurrency,
-            ).getOrElse { StakingAvailability.Unavailable }
+    private fun subscribeOnUpdateStakingInfo() {
+        getStakingAvailabilityUseCase(
+            userWalletId = userWalletId,
+            cryptoCurrency = cryptoCurrency,
+        )
+            .map { it.getOrElse { StakingAvailability.Unavailable } }
+            .distinctUntilChanged()
+            .onEach {
+                if (it is StakingAvailability.Available) {
+                    val stakingInfo = getStakingEntryInfoUseCase(
+                        cryptoCurrencyId = cryptoCurrency.id,
+                        symbol = cryptoCurrency.symbol,
+                    )
 
-            stakingAvailability = availability
-
-            if (stakingAvailability is StakingAvailability.Available) {
-                val stakingInfo = getStakingEntryInfoUseCase(
-                    cryptoCurrencyId = cryptoCurrency.id,
-                    symbol = cryptoCurrency.symbol,
-                )
-
-                stakingEntryInfo = stakingInfo.getOrNull()
+                    val stakingEntryInfo = stakingInfo.getOrNull()
+                    internalUiState.update { state ->
+                        stateFactory.getStakingInfoState(state, stakingEntryInfo, it)
+                    }
+                }
             }
-        }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+            .saveIn(stakingJobHolder)
     }
 
     private fun updateTopBarMenu() {
