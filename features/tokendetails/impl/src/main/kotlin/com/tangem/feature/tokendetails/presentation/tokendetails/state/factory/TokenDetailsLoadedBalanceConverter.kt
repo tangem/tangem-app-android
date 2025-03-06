@@ -12,7 +12,9 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
@@ -211,13 +213,5 @@ internal class TokenDetailsLoadedBalanceConverter(
         return totalAmount.format { crypto(status.currency) }
     }
 
-    private fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = getStatusSource() == StatusSource.CACHE
-
-    private fun CryptoCurrencyStatus.Value.getStatusSource(): StatusSource? {
-        return when (this) {
-            is CryptoCurrencyStatus.Loaded -> source
-            is CryptoCurrencyStatus.NoAccount -> source
-            else -> null
-        }
-    }
+    private fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = sources.total == StatusSource.CACHE
 }
