@@ -204,11 +204,8 @@ internal class DefaultStakingBalanceStore(
 
     private fun Set<YieldBalance>.getBalance(address: String?, integrationId: String?): YieldBalance? {
         return firstOrNull { yieldBalance ->
-            val data = yieldBalance as? YieldBalance.Data
-            val balance = data?.balance
-
-            val isCorrectAddress = address != null && address == data?.address
-            val isCorrectIntegration = integrationId != null && balance?.integrationId == integrationId
+            val isCorrectAddress = address != null && address == yieldBalance.address
+            val isCorrectIntegration = integrationId != null && yieldBalance.integrationId == integrationId
 
             isCorrectIntegration && isCorrectAddress
         }
