@@ -9,7 +9,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.wallet.state.model.TokenActionButtonConfig
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletCurrencyActionsClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletCurrencyActionsClickIntents
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.isNullOrZero
 import kotlinx.collections.immutable.ImmutableList
