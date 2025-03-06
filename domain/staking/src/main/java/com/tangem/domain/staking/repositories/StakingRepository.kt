@@ -35,7 +35,7 @@ interface StakingRepository {
 
     suspend fun getYield(yieldId: String): Yield
 
-    suspend fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): StakingAvailability
+    fun getStakingAvailability(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Flow<StakingAvailability>
 
     suspend fun getActions(
         userWalletId: UserWalletId,
