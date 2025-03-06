@@ -72,7 +72,7 @@ jobs:
       - name: Build APK & AAB
         id: build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_MOBILE_PAT }}
           keystore_encoded_base64: ${{ secrets.UPLOAD_KEYSTORE }}
           store_password: ${{ secrets.UPLOAD_STORE_PASSWORD }}
           key_alias: ${{ vars.UPLOAD_KEY_ALIAS }}
