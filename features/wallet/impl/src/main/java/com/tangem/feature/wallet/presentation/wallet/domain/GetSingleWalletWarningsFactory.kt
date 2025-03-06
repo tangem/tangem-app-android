@@ -78,7 +78,7 @@ internal class GetSingleWalletWarningsFactory @Inject constructor(
             element = WalletNotification.UsedOutdatedData,
             condition = maybePrimaryCurrencyStatus.fold(
                 ifLeft = { false },
-                ifRight = { it.value.source == StatusSource.ONLY_CACHE },
+                ifRight = { it.value.sources.total == StatusSource.ONLY_CACHE },
             ),
         )
     }
