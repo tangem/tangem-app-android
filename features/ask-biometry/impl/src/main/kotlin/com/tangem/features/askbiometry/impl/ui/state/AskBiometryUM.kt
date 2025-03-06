@@ -8,4 +8,5 @@ internal data class AskBiometryUM(
     val error: TextReference? = null,
     val onAllowClick: () -> Unit = {},
     val onDontAllowClick: () -> Unit = {},
+    val onDismiss: () -> Unit = {},
 )

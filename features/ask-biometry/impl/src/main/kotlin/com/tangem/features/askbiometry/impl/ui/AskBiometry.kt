@@ -14,7 +14,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -31,15 +30,16 @@ internal fun AskBiometry(state: AskBiometryUM, modifier: Modifier = Modifier) {
             modifier = Modifier.weight(1f),
         ) {
             if (state.bottomSheetVariant) {
-                Header(onCloseClick = state.onDontAllowClick)
+                Header(onCloseClick = state.onDismiss)
             }
 
             SpacerH32()
+            SpacerHHalf()
 
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
             ) {
-                Title(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing22))
+                Title(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing56))
                 SpacerH32()
                 Description(
                     modifier = Modifier
@@ -47,6 +47,8 @@ internal fun AskBiometry(state: AskBiometryUM, modifier: Modifier = Modifier) {
                         .fillMaxWidth(),
                 )
             }
+
+            SpacerHHalf()
         }
         Footer(state = state)
         SpacerH16()
@@ -54,29 +56,23 @@ internal fun AskBiometry(state: AskBiometryUM, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun Header(onCloseClick: () -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+private fun Header(onCloseClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
     ) {
-        Hand()
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
+        IconButton(
+            modifier = Modifier.size(TangemTheme.dimens.size32),
+            onClick = onCloseClick,
         ) {
-            IconButton(
-                modifier = Modifier.size(TangemTheme.dimens.size32),
-                onClick = onCloseClick,
-            ) {
-                Icon(
-                    modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_close_24),
-                    tint = TangemTheme.colors.icon.secondary,
-                    contentDescription = stringResourceSafe(id = R.string.common_cancel),
-                )
-            }
-            SpacerW8()
+            Icon(
+                modifier = Modifier.size(TangemTheme.dimens.size24),
+                painter = painterResource(id = R.drawable.ic_close_24),
+                tint = TangemTheme.colors.icon.secondary,
+                contentDescription = stringResourceSafe(id = R.string.common_cancel),
+            )
         }
+        SpacerW8()
     }
 }
 

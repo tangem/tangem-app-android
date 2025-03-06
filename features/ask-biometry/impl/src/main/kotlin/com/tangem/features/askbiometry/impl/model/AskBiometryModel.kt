@@ -22,6 +22,8 @@ import com.tangem.features.askbiometry.AskBiometryComponent
 import com.tangem.features.askbiometry.impl.ui.state.AskBiometryUM
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -52,9 +54,11 @@ internal class AskBiometryModel @Inject constructor(
             bottomSheetVariant = params.bottomSheetVariant,
             onAllowClick = ::onAllowClick,
             onDontAllowClick = ::dontAllow,
+            onDismiss = ::dismiss,
         ),
     )
     val uiState = _uiState.asStateFlow()
+    val dismissBSFlow = MutableSharedFlow<Unit>()
 
     init {
         modelScope.launch {
@@ -72,7 +76,11 @@ internal class AskBiometryModel @Inject constructor(
     }
 
     fun dismiss() {
-        dontAllow()
+        modelScope.launch {
+            dismissBSFlow.emit(Unit)
+            delay(timeMillis = 500)
+            dontAllow()
+        }
     }
 
     private fun allowToUseBiometrics() {
@@ -106,6 +114,11 @@ internal class AskBiometryModel @Inject constructor(
         cardSdkConfigRepository.setAccessCodeRequestPolicy(
             isBiometricsRequestPolicy = userWallet.hasAccessCode,
         )
+
+        if (_uiState.value.bottomSheetVariant) {
+            dismissBSFlow.emit(Unit)
+            delay(timeMillis = 500)
+        }
 
         params.modelCallbacks.onAllowed()
     }

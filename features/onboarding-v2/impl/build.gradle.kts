@@ -15,6 +15,7 @@ dependencies {
     /** Api */
     implementation(projects.features.onboardingV2.api)
     implementation(projects.features.manageTokens.api)
+    implementation(projects.features.askBiometry.api)
 
     /** Core modules */
     implementation(projects.core.configToggles)
