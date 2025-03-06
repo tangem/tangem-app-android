@@ -135,7 +135,9 @@ class WalletConnectInteractor(
             isWalletConnectReadyForDeepLinks = true
             if (deeplinkStack.empty()) return
             val lastDeeplink = deeplinkStack.pop()
-            store.dispatchOnMain(WalletConnectAction.OpenSession(lastDeeplink))
+            val action = WalletConnectAction
+                .OpenSession(lastDeeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            store.dispatchOnMain(action)
         }.onFailure {
             Timber.e("WC deeplink handling failed. $it")
         }
@@ -392,7 +394,8 @@ class WalletConnectInteractor(
         }
 
         if (isWalletConnectReadyForDeepLinks) {
-            store.dispatchOnMain(WalletConnectAction.OpenSession(deeplink))
+            val action = WalletConnectAction.OpenSession(deeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            store.dispatchOnMain(action)
         } else {
             deeplinkStack.push(deeplink)
         }
