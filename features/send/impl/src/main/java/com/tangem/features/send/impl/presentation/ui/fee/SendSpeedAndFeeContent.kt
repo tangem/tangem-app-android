@@ -20,7 +20,7 @@ import com.tangem.features.send.impl.presentation.state.fee.FeeType
 import com.tangem.features.send.impl.presentation.state.previewdata.FeeStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
 import com.tangem.features.send.impl.presentation.ui.common.notifications
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 
 private const val FEE_SELECTOR_KEY = "FEE_SELECTOR_KEY"
 private const val FEE_CUSTOM_KEY = "FEE_CUSTOM_KEY"
