@@ -12,7 +12,7 @@ import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.domain.txhistory.models.TxHistoryItem.*
 import com.tangem.feature.wallet.impl.R
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.StringsSigns.PLUS
 import com.tangem.utils.converter.Converter

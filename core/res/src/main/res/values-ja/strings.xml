@@ -238,6 +238,7 @@
   <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。</string>
   <string name="details_manage_security_passcode">パスコード</string>
   <string name="details_manage_security_passcode_description">カードの状態の変更を伴うコマンドを実行する前に、パスコードを入力する必要があります。</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">紹介プログラム</string>
   <string name="details_row_description_flip_to_hide">デバイスの画面を下に向けると、残高をすばやく非表示にしたり表示したりできます。</string>
   <string name="details_row_subtitle_signed_hashes_format">%sハッシュ</string>
@@ -530,6 +531,7 @@
   <string name="onboarding_exit_alert_title">アクティベーション処理を途中で終了しますか?</string>
   <string name="onboarding_getting_started">スタート</string>
   <string name="onboarding_linking_error_card_with_wallets">追加しようとしているカードには、すでに別のウォレットが作成されています。このウォレットに資金がある場合は、それを引き出してからこのカードをリセットし、バックアップとして追加してください。</string>
+  <string name="onboarding_navbar_save_wallet">ウォレットを保存する</string>
   <string name="onboarding_navbar_title_creating_backup">バックアップの作成</string>
   <string name="onboarding_seed_button_read_more">シードフレーズについてもっと読む</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -658,6 +660,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">生体認証の使用を許可する</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">ウォレットの操作には、アクセスコードの代わりに生体認証が要求されます。</string>
   <string name="save_user_wallet_agreement_code_title">アクセスコード</string>
+  <string name="save_user_wallet_agreement_dont_allow">許可しない</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">生体認証が無効になっているようです。ウォレットを保存する必要があります。</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">生体認証を有効にする</string>
   <string name="save_user_wallet_agreement_header_biometrics">生体認証を使用しますか?</string>
@@ -768,6 +771,7 @@
   <string name="staking_details_estimated_profit">%s 推定利益</string>
   <string name="staking_details_market_rating">市場評価</string>
   <string name="staking_details_metrics_block_header">指標</string>
+  <string name="staking_details_min_rewards_notification">%1$sネットワークルールによれば、 %2$sからの請求が可能です。以下の金額は、ステーキング解除時にアカウントに入金されます。</string>
   <string name="staking_details_minimum_requirement">最低要件</string>
   <string name="staking_details_no_rewards_to_claim">報酬はありません</string>
   <string name="staking_details_reward_claiming">請求中の報酬</string>
