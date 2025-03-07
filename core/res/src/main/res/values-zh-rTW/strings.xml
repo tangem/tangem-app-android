@@ -108,6 +108,7 @@
   <string name="details_manage_security_long_tap_description">此機制可防止對卡進行鄰近攻擊。它將強制執行命令的接收和執行之間的延遲。</string>
   <string name="details_manage_security_passcode">密碼</string>
   <string name="details_manage_security_passcode_description">在執行任何需要更改卡狀態的命令之前，您必須輸入密碼</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">推薦計畫</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
   <string name="details_row_title_cid">卡號</string>
@@ -176,6 +177,7 @@
   <string name="onboarding_exit_alert_message">這此情況，您必須要重新開始</string>
   <string name="onboarding_exit_alert_title">您想要離開啟用程序嗎?</string>
   <string name="onboarding_getting_started">開始</string>
+  <string name="onboarding_navbar_save_wallet">儲存你的錢包</string>
   <string name="onboarding_navbar_title_creating_backup">創建備份</string>
   <string name="onboarding_seed_button_read_more">閱讀更多關於助記詞的訊息</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -241,6 +243,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">允許使用生物辨識</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">將要求生物識別而不是訪問密碼來與您的錢包進行交互</string>
   <string name="save_user_wallet_agreement_code_title">訪問密碼</string>
+  <string name="save_user_wallet_agreement_dont_allow">不允許</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">您好像禁用了生物識別，有必要保存錢包</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">啟用生物識別授權</string>
   <string name="save_user_wallet_agreement_header_biometrics">您想使用生物識別技術嗎？</string>
