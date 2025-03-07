@@ -204,17 +204,15 @@ internal class DefaultWalletsRepository(
         }
     }
 
-    override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> {
-        return appPreferencesStore
-            .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
-            .map { !it.contains(userWalletId.stringValue) || it[userWalletId.stringValue] == true }
-    }
+    override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
+        .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+        .map { it[userWalletId.stringValue] == true }
 
     override suspend fun enableNFT(userWalletId: UserWalletId) {
         appPreferencesStore.editData {
             it.setObjectMap(
-                PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
-                it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                value = it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
                     .plus(userWalletId.stringValue to true),
             )
         }
@@ -223,8 +221,8 @@ internal class DefaultWalletsRepository(
     override suspend fun disableNFT(userWalletId: UserWalletId) {
         appPreferencesStore.editData {
             it.setObjectMap(
-                PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
-                it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                value = it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
                     .plus(userWalletId.stringValue to false),
             )
         }
