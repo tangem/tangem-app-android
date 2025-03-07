@@ -3,13 +3,13 @@ package com.tangem.features.onboarding.v2.visa.impl
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
-import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.decompose.value.observe
+import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
@@ -85,7 +85,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
         }
 
         // sets title and stepper value
-        childStack.observe(lifecycle) { stack ->
+        childStack.subscribe(lifecycle) { stack ->
             val currentRoute = stack.active.configuration
             params.titleProvider.changeTitle(currentRoute.screenTitle())
             model.updateStepForNewRoute(currentRoute)
