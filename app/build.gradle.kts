@@ -100,6 +100,7 @@ dependencies {
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.walletConnect)
+    implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.nft)
