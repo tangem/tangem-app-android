@@ -217,13 +217,5 @@ internal class TokenDetailsLoadedBalanceConverter(
         return totalAmount.format { crypto(status.currency) }
     }
 
-    private fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = getStatusSource() == StatusSource.CACHE
-
-    private fun CryptoCurrencyStatus.Value.getStatusSource(): StatusSource? {
-        return when (this) {
-            is CryptoCurrencyStatus.Loaded -> source
-            is CryptoCurrencyStatus.NoAccount -> source
-            else -> null
-        }
-    }
+    private fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = sources.total == StatusSource.CACHE
 }
