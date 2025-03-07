@@ -6,9 +6,10 @@ on:
       - 'releases/**'
 jobs:
   create-pr-to-develop:
-    uses: tangem-developments/actions/.github/workflows/create_pr_to_develop.yml@feature/IOS-8785_ci_cd_create_release
+    uses: tangem-developments/actions/.github/workflows/create_pr.yml@feature/IOS-8785_ci_cd_create_release
     with:
       source_branch: ${{ github.ref_name }}
+      target_branch: develop
       replace_android_tangem_dependencies: true
     secrets:
       AUTO_MERGE_TOKEN: ${{ secrets.AUTO_MERGE_TOKEN }}

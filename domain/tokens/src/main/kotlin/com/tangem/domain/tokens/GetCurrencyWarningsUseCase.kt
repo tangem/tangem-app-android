@@ -138,7 +138,9 @@ class GetCurrencyWarningsUseCase(
     }
 
     private fun getUsedOutdatedDataWarning(status: CryptoCurrencyStatus): CryptoCurrencyWarning? {
-        return CryptoCurrencyWarning.UsedOutdatedDataWarning.takeIf { status.value.source == StatusSource.ONLY_CACHE }
+        return CryptoCurrencyWarning.UsedOutdatedDataWarning.takeIf {
+            status.value.sources.total == StatusSource.ONLY_CACHE
+        }
     }
 
     private fun getIsBetaTokensWarning(currency: CryptoCurrency): CryptoCurrencyWarning? {

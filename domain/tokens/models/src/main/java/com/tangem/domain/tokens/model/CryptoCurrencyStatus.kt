@@ -1,6 +1,7 @@
 package com.tangem.domain.tokens.model
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.models.getResultStatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import java.math.BigDecimal
@@ -51,7 +52,19 @@ data class CryptoCurrencyStatus(
         /** Staking yield balance */
         open val yieldBalance: YieldBalance? = null
 
-        open val source: StatusSource = StatusSource.ACTUAL
+        /** Sources */
+        open val sources: Sources = Sources()
+    }
+
+    data class Sources(
+        val networkSource: StatusSource = StatusSource.ACTUAL,
+        val quoteSource: StatusSource = StatusSource.ACTUAL,
+        val yieldBalanceSource: StatusSource = StatusSource.ACTUAL,
+    ) {
+
+        val total: StatusSource by lazy {
+            listOf(networkSource, quoteSource, yieldBalanceSource).getResultStatusSource()
+        }
     }
 
     /** Represents the Loading state of a cryptocurrency, typically while fetching its details. */
@@ -86,7 +99,7 @@ data class CryptoCurrencyStatus(
      * Represents a state where there is no account associated with the cryptocurrency
      *
      * @property amountToCreateAccount base reserve amount for account creation
-     * @property source source of data
+     * @property sources sources of data
      */
     data class NoAccount(
         val amountToCreateAccount: BigDecimal,
@@ -94,7 +107,7 @@ data class CryptoCurrencyStatus(
         override val priceChange: BigDecimal?,
         override val fiatRate: BigDecimal?,
         override val networkAddress: NetworkAddress,
-        override val source: StatusSource,
+        override val sources: Sources,
     ) : Value(isError = false) {
 
         override val amount: BigDecimal = BigDecimal.ZERO
@@ -110,7 +123,7 @@ data class CryptoCurrencyStatus(
      * @property hasCurrentNetworkTransactions Indicates if there are any transactions in progress related to the
      * cryptocurrency network.
      * @property pendingTransactions The current cryptocurrency transactions.
-     * @property source source of data
+     * @property sources sources of data
      */
     data class Loaded(
         override val amount: BigDecimal,
@@ -121,7 +134,7 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-        override val source: StatusSource,
+        override val sources: Sources,
     ) : Value(isError = false)
 
     /**
@@ -144,7 +157,7 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-        override val source: StatusSource,
+        override val sources: Sources,
     ) : Value(isError = false)
 
     /**
@@ -161,8 +174,6 @@ data class CryptoCurrencyStatus(
         override val hasCurrentNetworkTransactions: Boolean,
         override val pendingTransactions: Set<TxHistoryItem>,
         override val networkAddress: NetworkAddress,
-    ) : Value(isError = false) {
-
-        override val source: StatusSource = StatusSource.CACHE
-    }
+        override val sources: Sources,
+    ) : Value(isError = false)
 }
