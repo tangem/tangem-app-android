@@ -188,6 +188,8 @@ dependencies {
     implementation(projects.features.stories.impl)
     implementation(projects.features.txhistory.api)
     implementation(projects.features.txhistory.impl)
+    implementation(projects.features.askBiometry.api)
+    implementation(projects.features.askBiometry.impl)
     implementation(projects.features.nft.api)
     implementation(projects.features.nft.impl)
 
