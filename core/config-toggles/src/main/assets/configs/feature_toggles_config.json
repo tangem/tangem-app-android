@@ -58,5 +58,9 @@
     {
         "name": "TX_HISTORY_REFACTORING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "ASK_BIOMETRY_REFACTORING_ENABLED",
+        "version": "undefined"
     }
 ]
