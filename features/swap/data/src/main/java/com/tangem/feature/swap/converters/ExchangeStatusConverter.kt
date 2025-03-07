@@ -17,6 +17,8 @@ internal class ExchangeStatusConverter : Converter<ExchangeStatusResponse, Excha
             txExternalId = value.externalTxId,
             refundNetwork = value.refundNetwork,
             refundContractAddress = value.refundContractAddress,
+            createdAt = value.createdAt,
+            averageDuration = value.averageDuration,
         )
     }
 }
