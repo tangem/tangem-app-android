@@ -122,7 +122,7 @@ class GetCryptoCurrencyActionsUseCase(
             return getActionsForUnreachableCurrency(userWallet, cryptoCurrencyStatus, requirements)
         }
 
-        if (cryptoCurrencyStatus.value.source != StatusSource.ACTUAL) {
+        if (cryptoCurrencyStatus.value.sources.total != StatusSource.ACTUAL) {
             return getActionsForOutdatedData(userWallet, cryptoCurrencyStatus, requirements)
         }
 
@@ -289,9 +289,17 @@ class GetCryptoCurrencyActionsUseCase(
         }
 
         // swap
+        val isSwapAvailable = with(cryptoCurrencyStatus.value.sources) {
+            quoteSource.isActual() && networkSource.isActual()
+        }
+
         activeList.add(
             TokenActionsState.ActionState.Swap(
-                unavailabilityReason = ScenarioUnavailabilityReason.UsedOutdatedData,
+                unavailabilityReason = if (isSwapAvailable) {
+                    ScenarioUnavailabilityReason.None
+                } else {
+                    ScenarioUnavailabilityReason.UsedOutdatedData
+                },
                 showBadge = false,
             ),
         )
@@ -313,7 +321,17 @@ class GetCryptoCurrencyActionsUseCase(
         activeList.add(TokenActionsState.ActionState.Stake(ScenarioUnavailabilityReason.UsedOutdatedData, null))
 
         // send
-        activeList.add(TokenActionsState.ActionState.Send(ScenarioUnavailabilityReason.UsedOutdatedData))
+        val isSendAvailable = cryptoCurrencyStatus.value.sources.networkSource.isActual()
+
+        activeList.add(
+            TokenActionsState.ActionState.Send(
+                unavailabilityReason = if (isSendAvailable) {
+                    ScenarioUnavailabilityReason.None
+                } else {
+                    ScenarioUnavailabilityReason.UsedOutdatedData
+                },
+            ),
+        )
 
         // region sell
         activeList.add(TokenActionsState.ActionState.Sell(ScenarioUnavailabilityReason.UsedOutdatedData))
