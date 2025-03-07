@@ -13,6 +13,7 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.walletConnect)
+    implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.wallets.models)
 
     /* Project - Data */
@@ -25,6 +26,11 @@ dependencies {
     implementation(deps.hilt.core)
     kapt(deps.hilt.kapt)
 
+    /* Reown - WalletConnect */
+    implementation(deps.reownCore)
+    implementation(deps.reownWeb3)
+
     /* Other */
     implementation(deps.kotlin.coroutines)
+    implementation(deps.arrow.core)
 }
