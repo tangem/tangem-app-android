@@ -241,7 +241,7 @@ class TokenItemStateConverter(
                                     useAccentColor = true,
                                 ).let(::add)
                             }
-                            if (status.value.getStatusSource() == StatusSource.ONLY_CACHE) {
+                            if (status.value.sources.total == StatusSource.ONLY_CACHE) {
                                 TokenItemState.FiatAmountState.Content.IconUM(
                                     iconRes = R.drawable.ic_error_sync_24,
                                     useAccentColor = false,
@@ -284,14 +284,6 @@ class TokenItemStateConverter(
             return PriceChangeConverter.fromBigDecimal(value = this)
         }
 
-        fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = getStatusSource() == StatusSource.CACHE
-
-        private fun CryptoCurrencyStatus.Value.getStatusSource(): StatusSource? {
-            return when (this) {
-                is CryptoCurrencyStatus.Loaded -> source
-                is CryptoCurrencyStatus.NoAccount -> source
-                else -> null
-            }
-        }
+        fun CryptoCurrencyStatus.Value.isFlickering(): Boolean = sources.total == StatusSource.CACHE
     }
 }
