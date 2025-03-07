@@ -129,10 +129,11 @@ internal class TokenDetailsStateFactory(
         state: TokenDetailsState,
         stakingEntryInfo: StakingEntryInfo?,
         stakingAvailability: StakingAvailability,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
     ): TokenDetailsState {
         return TokenDetailsStakingInfoConverter(
             currentState = state,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
             stakingEntryInfo = stakingEntryInfo,
