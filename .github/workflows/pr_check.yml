@@ -30,7 +30,7 @@ jobs:
         task: [detekt, test]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: true
           token: ${{ secrets.GH_MOBILE_PAT }}
@@ -41,7 +41,7 @@ jobs:
 
       - name: Run ${{ matrix.task }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_MOBILE_PAT}}
+          GITHUB_TOKEN: ${{ secrets.GH_MOBILE_PAT }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
           BUNDLE_PATH: vendor/bundle
         run: |

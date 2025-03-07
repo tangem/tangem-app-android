@@ -19,6 +19,7 @@ internal class SetWarningsTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             is WalletState.Visa.Locked,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
                 Timber.w("Impossible to update notifications for locked wallet")
                 prevState

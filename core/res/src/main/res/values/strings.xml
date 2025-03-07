@@ -537,6 +537,7 @@
   <string name="onboarding_exit_alert_title">Do you want to exit the activation process?</string>
   <string name="onboarding_getting_started">Getting started</string>
   <string name="onboarding_linking_error_card_with_wallets">Another wallet has already been created on the card you\'re trying to add. If you have funds in this wallet, please withdraw it and then reset this card and add it as a backup.</string>
+  <string name="onboarding_navbar_save_wallet">Save your wallet</string>
   <string name="onboarding_navbar_title_creating_backup">Creating a backup</string>
   <string name="onboarding_seed_button_read_more">Read more about seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -669,6 +670,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">Biometrics will be requested instead of the access code for interactions with your wallet</string>
   <string name="save_user_wallet_agreement_code_title">Access code</string>
+  <string name="save_user_wallet_agreement_dont_allow">Don\'t allow</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authentication disabled, it is necessary to save wallets</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Enable biometric authorization</string>
   <string name="save_user_wallet_agreement_header_biometrics">Would you like to use biometrics?</string>
@@ -779,6 +781,7 @@
   <string name="staking_details_estimated_profit">%s est. profit</string>
   <string name="staking_details_market_rating">Market rating</string>
   <string name="staking_details_metrics_block_header">Metrics</string>
+  <string name="staking_details_min_rewards_notification">According to %1$s network rules, claims are possible from %2$s. Amounts below will be credited to your account upon unstaking.</string>
   <string name="staking_details_minimum_requirement">Minimum Requirement</string>
   <string name="staking_details_no_rewards_to_claim">No rewards available</string>
   <string name="staking_details_reward_claiming">Reward claiming</string>
