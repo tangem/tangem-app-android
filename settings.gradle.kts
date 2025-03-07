@@ -228,6 +228,9 @@ include(":features:stories:impl")
 include(":features:txhistory:api")
 include(":features:txhistory:impl")
 
+include(":features:ask-biometry:api")
+include(":features:ask-biometry:impl")
+
 include(":features:nft:api")
 include(":features:nft:impl")
 // endregion Feature modules
