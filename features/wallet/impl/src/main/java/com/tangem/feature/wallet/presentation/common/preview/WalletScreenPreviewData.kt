@@ -9,6 +9,7 @@ import com.tangem.core.ui.event.consumedEvent
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditionalInfo
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData.topBarConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -87,8 +88,7 @@ internal object WalletScreenPreviewData {
                 content = TextReference.Str("Locked"),
             ),
             imageResId = R.drawable.ill_note_btc_120_106,
-            onRenameClick = { _ -> },
-            onDeleteClick = {},
+            dropDownItems = persistentListOf(),
         )
     }
     private val miltiUnreachableCard by lazy {
@@ -102,8 +102,7 @@ internal object WalletScreenPreviewData {
             imageResId = R.drawable.ill_wallet2_cards3_120_106,
             cardCount = 3,
             balance = DASH_SIGN,
-            onRenameClick = { _ -> },
-            onDeleteClick = {},
+            dropDownItems = persistentListOf(),
             isZeroBalance = false,
             isBalanceFlickering = false,
         )
@@ -146,7 +145,6 @@ internal object WalletScreenPreviewData {
     )
 
     internal val walletScreenState = WalletScreenState(
-        onBackClick = {},
         topBarConfig = topBarConfig,
         selectedWalletIndex = 0,
         wallets = persistentListOf(
