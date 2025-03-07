@@ -4,7 +4,7 @@ import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.components.token.state.TokenItemState
@@ -40,7 +40,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
-@ComponentScoped
+@ModelScoped
 internal class HotCryptoModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getHotCryptoUseCase: GetHotCryptoUseCase,
