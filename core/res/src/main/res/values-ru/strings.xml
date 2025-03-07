@@ -247,6 +247,7 @@
   <string name="details_manage_security_long_tap_description">Этот механизм защищает карту или кольцо от бесконтактных атак. Между сканированием и выполнением команды будет добавлена задержка.</string>
   <string name="details_manage_security_passcode">Пароль</string>
   <string name="details_manage_security_passcode_description">Перед выполнением любой команды, влекущей за собой изменение состояния карты, вам необходимо будет ввести пароль.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Реферальная программа</string>
   <string name="details_row_description_flip_to_hide">Переверните экран вашего устройства вниз, чтобы быстро скрыть и отобразить балансы</string>
   <string name="details_row_subtitle_signed_hashes_format">%s хэшей</string>
@@ -546,6 +547,7 @@
   <string name="onboarding_exit_alert_title">Вы хотите выйти из процесса активации?</string>
   <string name="onboarding_getting_started">Подготовка</string>
   <string name="onboarding_linking_error_card_with_wallets">Другой кошелек уже был создан на карте, которую вы пытаетесь добавить. Если на нем есть средства, пожалуйста сначала выведите их, а затем сделайте сброс до заводских настроек и используйте как резервную.</string>
+  <string name="onboarding_navbar_save_wallet">Сохраните ваш кошелек</string>
   <string name="onboarding_navbar_title_creating_backup">Резервная копия</string>
   <string name="onboarding_seed_button_read_more">Прочитать о seed-фразе</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -639,7 +641,7 @@
   <string name="receive_bottom_sheet_warning_message">%1$s (%2$s) в сети %3$s</string>
   <string name="receive_bottom_sheet_warning_message_description">Использование другой сети может привести к утрате средств.</string>
   <string name="receive_bottom_sheet_warning_message_full">Отправляйте только %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
-  <string name="receive_bottom_sheet_warning_title">Отправляйте только %1$s в сети %2$s </string>
+  <string name="receive_bottom_sheet_warning_title">Отправляйте только %1$s в сети %2$s</string>
   <string name="receive_token_description">Переводите средства с любого кошелька или биржи</string>
   <string name="referral_button_participate">Участвовать</string>
   <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
@@ -686,6 +688,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">Использовать биометрию</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">Для операций с вашим кошельком будет запрашиваться биометрия вместо кода доступа карты</string>
   <string name="save_user_wallet_agreement_code_title">Код доступа</string>
+  <string name="save_user_wallet_agreement_dont_allow">Не использовать</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">Похоже, что у вас отключена биометрическая аутентификация, она необходима для сохранения кошельков</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Включите биометрическую аутентификацию</string>
   <string name="save_user_wallet_agreement_header_biometrics">Вы хотите использовать биометрию?</string>
