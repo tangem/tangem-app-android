@@ -106,9 +106,7 @@ internal class WalletSettingsModel @Inject constructor(
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
         isNFTFeatureEnabled = isNFTFeatureEnabled,
         isNFTEnabled = isNFTEnabled,
-        onCheckedNFTChange = { isChecked ->
-            onCheckedNFTChange(isChecked)
-        },
+        onCheckedNFTChange = ::onCheckedNFTChange,
         forgetWallet = {
             val message = DialogMessage(
                 message = resourceReference(R.string.user_wallet_list_delete_prompt),
