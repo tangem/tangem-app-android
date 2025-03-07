@@ -7,7 +7,7 @@ import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.TxHistoryItemStateConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 
@@ -33,6 +33,7 @@ internal class SetTxHistoryCountErrorTransformer(
             is WalletState.Visa.Content -> prevState.copy(txHistoryState = createErrorState())
             is WalletState.SingleCurrency.Locked,
             is WalletState.Visa.Locked,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
                 Timber.w("Impossible to load transactions history for locked wallet")
                 prevState
