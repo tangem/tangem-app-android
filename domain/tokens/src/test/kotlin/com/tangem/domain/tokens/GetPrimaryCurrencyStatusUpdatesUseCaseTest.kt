@@ -124,6 +124,7 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
                         defaultAddress = NetworkAddress.Address(value = "mock", NetworkAddress.Address.Type.Primary),
                     ),
                     yieldBalance = null,
+                    sources = CryptoCurrencyStatus.Sources(),
                 ),
             )
         }

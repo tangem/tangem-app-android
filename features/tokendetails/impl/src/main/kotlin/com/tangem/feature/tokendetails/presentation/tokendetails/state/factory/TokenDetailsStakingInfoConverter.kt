@@ -27,7 +27,7 @@ import com.tangem.utils.isNullOrZero
 import java.math.BigDecimal
 
 internal class TokenDetailsStakingInfoConverter(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val clickIntents: TokenDetailsClickIntents,
     private val currentState: TokenDetailsState,
@@ -35,7 +35,6 @@ internal class TokenDetailsStakingInfoConverter(
 ) : Converter<StakingAvailability, TokenDetailsState> {
 
     override fun convert(value: StakingAvailability): TokenDetailsState {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider.invoke() ?: return currentState
         return currentState.copy(
             stakingBlocksState = getYieldBalance(cryptoCurrencyStatus, currentState, value),
         )
