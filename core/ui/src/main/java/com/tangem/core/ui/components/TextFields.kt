@@ -14,7 +14,8 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -119,7 +120,7 @@ private fun TangemTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    colors: TangemTextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
+    colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
     size: TangemTextFieldSize = TangemTextFieldSize.Default,
     onClear: () -> Unit = { onValueChange(TextFieldValue()) },
 ) {
@@ -230,7 +231,7 @@ private fun TangemTextFieldWithIcon(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-    colors: TangemTextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
+    colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
     size: TangemTextFieldSize = TangemTextFieldSize.Default,
     onIconClick: () -> Unit = {},
 ) {
@@ -326,154 +327,139 @@ private fun TangemTextFieldSize.toShape(): Shape = when (this) {
 }
 
 object TangemTextFieldsDefault {
-    val defaultTextFieldColors: TangemTextFieldColors
-        @Composable @Stable get() = TangemTextFieldColors(
-            textColor = TangemTheme.colors.text.primary1,
+    val defaultTextFieldColors: TextFieldColors
+        @Composable @Stable get() = TextFieldColors(
+            focusedTextColor = TangemTheme.colors.text.primary1,
+            errorTextColor = TangemTheme.colors.text.primary1,
+            unfocusedTextColor = TangemTheme.colors.text.primary1,
             disabledTextColor = TangemTheme.colors.text.disabled,
-            backgroundColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent,
+            errorContainerColor = Color.Transparent,
             cursorColor = TangemTheme.colors.icon.primary1,
             errorCursorColor = TangemTheme.colors.icon.warning,
             focusedIndicatorColor = TangemTheme.colors.icon.primary1,
             unfocusedIndicatorColor = TangemTheme.colors.stroke.secondary,
             disabledIndicatorColor = TangemTheme.colors.stroke.secondary,
             errorIndicatorColor = TangemTheme.colors.icon.warning,
-            leadingIconColor = TangemTheme.colors.icon.informative,
+            focusedLeadingIconColor = TangemTheme.colors.icon.informative,
+            unfocusedLeadingIconColor = TangemTheme.colors.icon.informative,
             disabledLeadingIconColor = Color.Transparent,
             errorLeadingIconColor = TangemTheme.colors.icon.warning,
-            trailingIconColor = TangemTheme.colors.icon.informative,
+            focusedTrailingIconColor = TangemTheme.colors.icon.informative,
+            unfocusedTrailingIconColor = TangemTheme.colors.icon.informative,
             disabledTrailingIconColor = Color.Transparent,
             errorTrailingIconColor = TangemTheme.colors.icon.warning,
             focusedLabelColor = TangemTheme.colors.text.primary1,
             unfocusedLabelColor = TangemTheme.colors.text.secondary,
             disabledLabelColor = TangemTheme.colors.text.disabled,
             errorLabelColor = TangemTheme.colors.icon.warning,
-            placeholderColor = TangemTheme.colors.text.secondary,
+            focusedPlaceholderColor = TangemTheme.colors.text.secondary,
+            errorPlaceholderColor = TangemTheme.colors.text.secondary,
+            unfocusedPlaceholderColor = TangemTheme.colors.text.secondary,
             disabledPlaceholderColor = TangemTheme.colors.text.disabled,
-            captionColor = TangemTheme.colors.text.tertiary,
-            disabledCaptionColor = TangemTheme.colors.text.disabled,
-            errorCaptionColor = TangemTheme.colors.icon.warning,
+            focusedSupportingTextColor = TangemTheme.colors.text.tertiary,
+            unfocusedSupportingTextColor = TangemTheme.colors.text.tertiary,
+            disabledSupportingTextColor = TangemTheme.colors.text.disabled,
+            errorSupportingTextColor = TangemTheme.colors.icon.warning,
+            textSelectionColors = LocalTextSelectionColors.current,
+            focusedPrefixColor = Color.Transparent,
+            unfocusedPrefixColor = Color.Transparent,
+            disabledPrefixColor = Color.Transparent,
+            errorPrefixColor = Color.Transparent,
+            focusedSuffixColor = Color.Transparent,
+            unfocusedSuffixColor = Color.Transparent,
+            disabledSuffixColor = Color.Transparent,
+            errorSuffixColor = Color.Transparent,
         )
 }
 
-@Immutable
-data class TangemTextFieldColors(
-    private val textColor: Color,
-    private val disabledTextColor: Color,
-    private val cursorColor: Color,
-    private val errorCursorColor: Color,
-    private val focusedIndicatorColor: Color,
-    private val unfocusedIndicatorColor: Color,
-    private val errorIndicatorColor: Color,
-    private val disabledIndicatorColor: Color,
-    private val leadingIconColor: Color,
-    private val disabledLeadingIconColor: Color,
-    private val errorLeadingIconColor: Color,
-    private val trailingIconColor: Color,
-    private val disabledTrailingIconColor: Color,
-    private val errorTrailingIconColor: Color,
-    private val backgroundColor: Color,
-    private val focusedLabelColor: Color,
-    private val unfocusedLabelColor: Color,
-    private val disabledLabelColor: Color,
-    private val errorLabelColor: Color,
-    private val placeholderColor: Color,
-    private val disabledPlaceholderColor: Color,
-    private val captionColor: Color,
-    private val disabledCaptionColor: Color,
-    private val errorCaptionColor: Color,
-) : TextFieldColors {
+@Composable
+fun TextFieldColors.leadingIconColor(enabled: Boolean, isError: Boolean): State<Color> {
+    return rememberUpdatedState(
+        when {
+            !enabled -> disabledLeadingIconColor
+            isError -> errorLeadingIconColor
+            else -> focusedLeadingIconColor
+        },
+    )
+}
 
-    @Composable
-    override fun leadingIconColor(enabled: Boolean, isError: Boolean): State<Color> {
-        return rememberUpdatedState(
-            when {
-                !enabled -> disabledLeadingIconColor
-                isError -> errorLeadingIconColor
-                else -> leadingIconColor
-            },
+@Composable
+fun TextFieldColors.trailingIconColor(enabled: Boolean, isError: Boolean): State<Color> {
+    return rememberUpdatedState(
+        when {
+            !enabled -> disabledTrailingIconColor
+            isError -> errorTrailingIconColor
+            else -> focusedTrailingIconColor
+        },
+    )
+}
+
+@Composable
+fun TextFieldColors.indicatorColor(
+    enabled: Boolean,
+    isError: Boolean,
+    interactionSource: InteractionSource,
+): State<Color> {
+    val focused by interactionSource.collectIsFocusedAsState()
+
+    val targetValue = when {
+        !enabled -> disabledIndicatorColor
+        isError -> errorIndicatorColor
+        focused -> focusedIndicatorColor
+        else -> unfocusedIndicatorColor
+    }
+    return if (enabled) {
+        animateColorAsState(
+            targetValue = targetValue,
+            animationSpec = tween(durationMillis = 120),
+            label = "IndicatorColor",
         )
+    } else {
+        rememberUpdatedState(targetValue)
     }
+}
 
-    @Composable
-    override fun trailingIconColor(enabled: Boolean, isError: Boolean): State<Color> {
-        return rememberUpdatedState(
-            when {
-                !enabled -> disabledTrailingIconColor
-                isError -> errorTrailingIconColor
-                else -> trailingIconColor
-            },
-        )
+@Composable
+fun TextFieldColors.placeholderColor(enabled: Boolean): State<Color> {
+    return rememberUpdatedState(if (enabled) focusedPlaceholderColor else disabledPlaceholderColor)
+}
+
+@Composable
+fun TextFieldColors.labelColor(enabled: Boolean, error: Boolean, interactionSource: InteractionSource): State<Color> {
+    val focused by interactionSource.collectIsFocusedAsState()
+
+    val targetValue = when {
+        !enabled -> disabledLabelColor
+        error -> errorLabelColor
+        focused -> focusedLabelColor
+        else -> unfocusedLabelColor
     }
+    return rememberUpdatedState(targetValue)
+}
 
-    @Composable
-    override fun indicatorColor(
-        enabled: Boolean,
-        isError: Boolean,
-        interactionSource: InteractionSource,
-    ): State<Color> {
-        val focused by interactionSource.collectIsFocusedAsState()
+@Composable
+fun TextFieldColors.textColor(enabled: Boolean): State<Color> {
+    return rememberUpdatedState(if (enabled) focusedTextColor else disabledTextColor)
+}
 
-        val targetValue = when {
-            !enabled -> disabledIndicatorColor
-            isError -> errorIndicatorColor
-            focused -> focusedIndicatorColor
-            else -> unfocusedIndicatorColor
-        }
-        return if (enabled) {
-            animateColorAsState(
-                targetValue = targetValue,
-                animationSpec = tween(durationMillis = 120),
-                label = "IndicatorColor",
-            )
-        } else {
-            rememberUpdatedState(targetValue)
-        }
-    }
+@Composable
+fun TextFieldColors.cursorColor(isError: Boolean): State<Color> {
+    return rememberUpdatedState(if (isError) errorCursorColor else cursorColor)
+}
 
-    @Composable
-    override fun backgroundColor(enabled: Boolean): State<Color> {
-        return rememberUpdatedState(backgroundColor)
-    }
-
-    @Composable
-    override fun placeholderColor(enabled: Boolean): State<Color> {
-        return rememberUpdatedState(if (enabled) placeholderColor else disabledPlaceholderColor)
-    }
-
-    @Composable
-    override fun labelColor(enabled: Boolean, error: Boolean, interactionSource: InteractionSource): State<Color> {
-        val focused by interactionSource.collectIsFocusedAsState()
-
-        val targetValue = when {
-            !enabled -> disabledLabelColor
-            error -> errorLabelColor
-            focused -> focusedLabelColor
-            else -> unfocusedLabelColor
-        }
-        return rememberUpdatedState(targetValue)
-    }
-
-    @Composable
-    override fun textColor(enabled: Boolean): State<Color> {
-        return rememberUpdatedState(if (enabled) textColor else disabledTextColor)
-    }
-
-    @Composable
-    override fun cursorColor(isError: Boolean): State<Color> {
-        return rememberUpdatedState(if (isError) errorCursorColor else cursorColor)
-    }
-
-    @Suppress("TopLevelComposableFunctions")
-    @Composable
-    fun captionColor(enabled: Boolean, isError: Boolean): State<Color> {
-        return rememberUpdatedState(
-            newValue = when {
-                !enabled -> disabledCaptionColor
-                isError -> errorCaptionColor
-                else -> captionColor
-            },
-        )
-    }
+@Suppress("TopLevelComposableFunctions")
+@Composable
+fun TextFieldColors.captionColor(enabled: Boolean, isError: Boolean): State<Color> {
+    return rememberUpdatedState(
+        newValue = when {
+            !enabled -> disabledSupportingTextColor
+            isError -> errorSupportingTextColor
+            else -> focusedSupportingTextColor
+        },
+    )
 }
 // endregion Defaults
 
