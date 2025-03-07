@@ -24,6 +24,7 @@ import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.*
@@ -61,8 +62,11 @@ import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 import kotlin.time.Duration.Companion.seconds
 
@@ -110,10 +114,17 @@ internal class DefaultStakingRepository(
                 key = YIELDS_STORE_KEY,
                 skipCache = refresh,
                 block = {
-                    val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)
-                        .getOrThrow()
-
-                    stakingYieldsStore.store(stakingTokensWithYields.data.filter { it.isAvailable ?: false })
+                    when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
+                        is ApiResponse.Success -> stakingYieldsStore.store(
+                            stakingTokensWithYields.data.data.filter {
+                                it.isAvailable ?: false
+                            },
+                        )
+                        else -> {
+                            stakingYieldsStore.store(emptyList())
+                            throw (stakingTokensWithYields as ApiResponse.Error).cause
+                        }
+                    }
                 },
             )
         }
@@ -211,6 +222,11 @@ internal class DefaultStakingRepository(
             getEnabledYields()
                 .distinctUntilChanged()
                 .onEach { yields ->
+                    if (yields.isEmpty()) {
+                        send(StakingAvailability.TemporaryUnavailable)
+                        return@onEach
+                    }
+
                     val prefetchedYield = findPrefetchedYield(
                         yields = yields,
                         currencyId = rawCurrencyId,
@@ -446,21 +462,21 @@ internal class DefaultStakingRepository(
             )
         }
 
+        val yieldDTOs = withTimeoutOrNull(YIELDS_WATITING_TIMEOUT) {
+            runCatching { stakingYieldsStore.get().firstOrNull() }.getOrNull()
+        }
+
+        if (yieldDTOs == null) {
+            Timber.i("No enabled yields for $userWalletId")
+            stakingBalanceStore.store(userWalletId, emptySet())
+
+            return@withContext
+        }
+
         cacheRegistry.invokeOnExpire(
             key = getYieldBalancesKey(userWalletId),
             skipCache = refresh,
             block = {
-                val yieldDTOs = withTimeoutOrNull(YIELDS_WATITING_TIMEOUT) {
-                    runCatching { stakingYieldsStore.get().firstOrNull() }.getOrNull()
-                }
-
-                if (yieldDTOs == null) {
-                    Timber.i("No enabled yields for $userWalletId")
-                    stakingBalanceStore.store(userWalletId, emptySet())
-
-                    return@invokeOnExpire
-                }
-
                 val yields = YieldConverter.convertListIgnoreErrors(
                     input = yieldDTOs,
                     onError = { Timber.e("Error converting one of the items in enabled yields: $it") },
