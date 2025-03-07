@@ -24,6 +24,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
@@ -130,8 +131,8 @@ internal class DefaultRampManager(
     private suspend fun getExchangeableFlag(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
         return withContext(dispatchers.io) {
             val asset = expressServiceLoader.getInitializationStatus(userWalletId)
-                .value
-                .getOrNull()
+                .firstOrNull()
+                ?.getOrNull()
                 ?.find { cryptoCurrency.findAssetPredicate(it) }
 
             asset?.exchangeAvailable ?: false
