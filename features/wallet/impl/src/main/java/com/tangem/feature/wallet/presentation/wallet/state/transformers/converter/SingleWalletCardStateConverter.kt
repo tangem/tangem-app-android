@@ -65,7 +65,7 @@ internal class SingleWalletCardStateConverter(
             balance = formatFiatAmount(status = status, appCurrency = appCurrency),
             cardCount = selectedWallet.getCardsCount(),
             isZeroBalance = status.fiatAmount?.isZero(),
-            isBalanceFlickering = (status as? CryptoCurrencyStatus.Loaded)?.source == StatusSource.CACHE,
+            isBalanceFlickering = (status as? CryptoCurrencyStatus.Loaded)?.sources?.total == StatusSource.CACHE,
         )
     }
 
