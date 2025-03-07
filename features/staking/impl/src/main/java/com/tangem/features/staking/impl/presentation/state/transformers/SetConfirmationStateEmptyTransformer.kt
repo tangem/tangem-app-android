@@ -8,7 +8,7 @@ import com.tangem.utils.transformer.Transformer
 internal object SetConfirmationStateEmptyTransformer : Transformer<StakingUiState> {
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
-            actionType = StakingActionCommonType.Enter,
+            actionType = StakingActionCommonType.Enter(skipEnterAmount = false),
             validatorState = StakingStates.ValidatorState.Empty(),
             confirmationState = StakingStates.ConfirmationState.Empty(),
             balanceState = null,
