@@ -26,6 +26,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
@@ -134,8 +135,10 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): ExchangeableState {
+        val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
+            ?: return ExchangeableState.Error
         return withContext(dispatchers.io) {
-            when (val asset = expressServiceLoader.getInitializationStatus(userWalletId).value) {
+            when (asset) {
                 is Lce.Error -> ExchangeableState.Error
                 is Lce.Loading -> ExchangeableState.Loading
                 is Lce.Content -> {
