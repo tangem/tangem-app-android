@@ -241,6 +241,7 @@
   <string name="details_manage_security_long_tap_description">Dieser Mechanismus schützt vor Annäherungsangriffen auf eine Karte oder einen Ring. Er erzwingt eine Verzögerung zwischen dem Empfang und der Ausführung eines Befehls.</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Bevor du einen Befehl ausführst, der eine Änderung des Kartenstatus zur Folge hat, musst du den Passcode eingeben.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Empfehlungsprogramm</string>
   <string name="details_row_description_flip_to_hide">Flippe den Bildschirm deines Geräts nach unten, um Salden schnell ein- und auszublenden</string>
   <string name="details_row_subtitle_signed_hashes_format">%s Hasch</string>
@@ -536,6 +537,7 @@
   <string name="onboarding_exit_alert_title">Möchtest du den Aktivierungsprozess abbrechen?</string>
   <string name="onboarding_getting_started">Erste Schritte</string>
   <string name="onboarding_linking_error_card_with_wallets">Für die Karte oder Ring, die du hinzufügen möchtest, wurde bereits eine andere Wallets erstellt. Wenn du Guthaben auf dieser Wallets hast, hebe es bitte ab, setze diese Karte oder Ring zurück und füge sie als Backup hinzu.</string>
+  <string name="onboarding_navbar_save_wallet">Sicher deine Wallet</string>
   <string name="onboarding_navbar_title_creating_backup">Backups anlegen</string>
   <string name="onboarding_seed_button_read_more">Lese mehr über die Seed-Phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -668,6 +670,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">Nutzung biometrischer Daten zulassen</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">Bei Interaktionen mit deiner Wallet werden anstelle des Zugangscodes biometrische Daten abgefragt</string>
   <string name="save_user_wallet_agreement_code_title">Zugangscode</string>
+  <string name="save_user_wallet_agreement_dont_allow">Nicht zulassen</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">Es sieht so aus, als ob du die biometrische Authentifizierung deaktiviert hast. Diese ist notwendig, um Wallets zu speichern</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Biometrische Autorisierung aktivieren</string>
   <string name="save_user_wallet_agreement_header_biometrics">Möchtest du Biometrie nutzen?</string>
