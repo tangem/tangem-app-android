@@ -8,9 +8,13 @@ import com.reown.android.relay.ConnectionType
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.data.walletconnect.pair.unsupportedDApps
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
-import com.tangem.tap.domain.walletconnect2.domain.*
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WcJrpcMethods
+import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
+import com.tangem.tap.domain.walletconnect2.domain.WcRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.*
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.OpenSession.SourceType
@@ -554,10 +558,5 @@ internal class DefaultLegacyWalletConnectRepository(
         val wcProvidedChains = namespaces.values.flatMap { it.chains ?: emptyList() }
         val userChains = userNamespaces.flatMap { it.value.map { account -> account.chainId } }
         return wcProvidedChains.intersect(userChains.toSet())
-    }
-
-    private companion object {
-
-        val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro", "The Sandbox")
     }
 }
