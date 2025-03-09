@@ -83,7 +83,9 @@ internal class CustomTokensMerger(
         return token.copy(
             id = foundToken.id,
             name = foundToken.name,
-            symbol = foundToken.symbol,
+            symbol = foundToken.symbol.ifEmpty {
+                token.symbol
+            },
         )
     }
 
