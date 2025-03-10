@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
-import com.arkivanov.decompose.value.observe
+import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.google.android.material.snackbar.Snackbar
@@ -65,7 +65,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             appRouterConfig.componentRouter = router
             appRouterConfig.snackbarHandler = this
 
-            stack.observe(lifecycle) { stack ->
+            stack.subscribe(lifecycle) { stack ->
                 val stackItems = stack.items.map { it.configuration }
 
                 if (appRouterConfig.stack != stackItems) {
