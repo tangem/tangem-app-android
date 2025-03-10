@@ -989,6 +989,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 Bitrock, BitrockTestnet,
                 Sonic, SonicTestnet,
                 ApeChain, ApeChainTestnet,
+                Scroll, ScrollTestnet,
+                ZkLinkNova, ZkLinkNovaTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
@@ -1004,6 +1006,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         timestamp: Long,
         txExternalUrl: String? = null,
         txExternalId: String? = null,
+        averageDuration: Int? = null,
     ) {
         swapTransactionRepository.storeTransaction(
             userWalletId = userWalletId,
@@ -1021,6 +1024,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     txId = swapDataModel.transaction.txId,
                     txExternalUrl = txExternalUrl,
                     txExternalId = txExternalId,
+                    averageDuration = averageDuration,
                 ),
             ),
         )
