@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.nft.state
+package com.tangem.feature.wallet.presentation.wallet.state.model
 
 import androidx.compose.runtime.Immutable
 import kotlinx.collections.immutable.ImmutableList
