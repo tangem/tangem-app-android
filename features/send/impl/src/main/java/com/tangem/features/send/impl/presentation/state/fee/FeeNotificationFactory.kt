@@ -4,7 +4,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addFeeUnreachable
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
