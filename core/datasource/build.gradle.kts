@@ -6,6 +6,7 @@ plugins {
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.room)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -57,7 +58,7 @@ dependencies {
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Time */
@@ -78,7 +79,7 @@ dependencies {
     implementation(deps.androidx.datastore)
     implementation(deps.room.runtime)
     implementation(deps.room.ktx)
-    kapt(deps.room.compiler)
+    ksp(deps.room.compiler)
 
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
