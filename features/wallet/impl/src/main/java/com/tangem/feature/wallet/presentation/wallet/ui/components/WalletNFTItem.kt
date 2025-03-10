@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.nft
+package com.tangem.feature.wallet.presentation.wallet.ui.components
 
 import android.content.res.Configuration
 import androidx.compose.foundation.Image
@@ -23,24 +23,25 @@ import coil.compose.SubcomposeAsyncImage
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.nft.state.WalletNFTItemUM
-import com.tangem.core.ui.components.nft.state.WalletNFTItemUM.Content.CollectionPreview
 import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM.Content.CollectionPreview
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun WalletNFTItem(state: WalletNFTItemUM, onClick: () -> Unit) {
+fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = { }) {
     when (state) {
-        is WalletNFTItemUM.Hidden -> {}
+        is WalletNFTItemUM.Hidden -> Unit
         is WalletNFTItemUM.Empty -> WalletNFTItemEmpty(
+            modifier = modifier,
             onClick = onClick,
         )
-        is WalletNFTItemUM.Failed -> WalletNFTItemFailed()
-        is WalletNFTItemUM.Loading -> WalletNFTItemLoading()
+        is WalletNFTItemUM.Failed -> WalletNFTItemFailed(modifier = modifier)
+        is WalletNFTItemUM.Loading -> WalletNFTItemLoading(modifier = modifier)
 
         is WalletNFTItemUM.Content -> WalletNFTItemContent(
             previews = state.previews,
@@ -48,13 +49,15 @@ fun WalletNFTItem(state: WalletNFTItemUM, onClick: () -> Unit) {
             assetsCount = state.assetsCount,
             isFlickering = state.isFlickering,
             onClick = onClick,
+            modifier = modifier,
         )
     }
 }
 
 @Composable
-fun WalletNFTItemEmpty(onClick: () -> Unit) {
+private fun WalletNFTItemEmpty(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     RowContentContainer(
+        modifier = modifier,
         icon = {
             Image(
                 modifier = Modifier,
@@ -82,16 +85,20 @@ fun WalletNFTItemEmpty(onClick: () -> Unit) {
 }
 
 @Composable
-fun WalletNFTItemContent(
+private fun WalletNFTItemContent(
     onClick: () -> Unit,
     previews: ImmutableList<CollectionPreview>,
     collectionsCount: Int,
     assetsCount: Int,
     isFlickering: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     RowContentContainer(
+        modifier = modifier,
         icon = {
-            CollectionsPreviews(previews)
+            CollectionsPreviews(
+                previews = previews,
+            )
         },
         text = {
             Text(
@@ -121,8 +128,9 @@ fun WalletNFTItemContent(
 }
 
 @Composable
-fun WalletNFTItemFailed() {
+private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
     RowContentContainer(
+        modifier = modifier,
         icon = {
             CollectionsPreviewsPlaceholder()
         },
@@ -138,12 +146,14 @@ fun WalletNFTItemFailed() {
                 color = TangemTheme.colors.text.tertiary,
             )
         },
+        enabled = false,
     )
 }
 
 @Composable
-fun WalletNFTItemLoading() {
+private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
     RowContentContainer(
+        modifier = modifier,
         icon = {
             CollectionsPreviewsPlaceholder()
         },
@@ -161,32 +171,34 @@ fun WalletNFTItemLoading() {
                 textSizeHeight = true,
             )
         },
+        enabled = false,
     )
 }
 
 @Composable
-private fun CollectionsPreviewsPlaceholder() {
-    RectangleShimmer(
-        modifier = Modifier
-            .size(TangemTheme.dimens.size36),
-        radius = TangemTheme.dimens.radius8,
+private fun CollectionsPreviewsPlaceholder(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(TangemTheme.dimens.size36)
+            .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+            .background(TangemTheme.colors.field.primary),
     )
 }
 
 @Composable
 @Suppress("MagicNumber")
-private fun BoxScope.CollectionsPreviews(urls: ImmutableList<CollectionPreview>) {
-    val modifiers = when (urls.size) {
+private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPreview>, modifier: Modifier = Modifier) {
+    val modifiers = when (previews.size) {
         1 -> previews1Modifiers()
         2 -> previews2Modifiers()
         3 -> previews3Modifiers()
         else -> previews4Modifiers()
     }
     Box(
-        modifier = Modifier
+        modifier = modifier
             .size(TangemTheme.dimens.size36),
     ) {
-        urls.take(modifiers.size).forEachIndexed { index, s ->
+        previews.take(modifiers.size).forEachIndexed { index, s ->
             val modifier = modifiers[index]
             when (s) {
                 is CollectionPreview.Image -> {
@@ -195,6 +207,11 @@ private fun BoxScope.CollectionsPreviews(urls: ImmutableList<CollectionPreview>)
                         model = s,
                         loading = {
                             RectangleShimmer(radius = 0.dp)
+                        },
+                        error = {
+                            Box(
+                                modifier = Modifier.background(TangemTheme.colors.field.primary),
+                            )
                         },
                         contentDescription = null,
                     )
@@ -214,7 +231,6 @@ private fun BoxScope.CollectionsPreviews(urls: ImmutableList<CollectionPreview>)
 
 @Composable
 private fun BoxScope.previews1Modifiers(): List<Modifier> = listOf(
-    // single image
     Modifier
         .size(TangemTheme.dimens.size36)
         .clip(RoundedCornerShape(TangemTheme.dimens.radius6)),
@@ -299,9 +315,9 @@ private fun BoxScope.previews4Modifiers(): List<Modifier> = listOf(
 )
 
 @Composable
-private fun ChevronArrow() {
+private fun ChevronArrow(modifier: Modifier = Modifier) {
     Icon(
-        modifier = Modifier,
+        modifier = modifier,
         painter = painterResource(R.drawable.ic_chevron_right_24),
         contentDescription = null,
         tint = TangemTheme.colors.icon.informative,
@@ -312,6 +328,7 @@ private fun ChevronArrow() {
 private fun RowContentContainer(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
+    enabled: Boolean = true,
     icon: @Composable BoxScope.() -> Unit,
     text: @Composable ColumnScope.() -> Unit,
     action: @Composable BoxScope.() -> Unit = {},
@@ -326,7 +343,7 @@ private fun RowContentContainer(
             disabledContentColor = TangemTheme.colors.text.primary1,
         ),
         onClick = onClick,
-        enabled = true,
+        enabled = enabled,
     ) {
         Row(
             modifier = Modifier
@@ -337,7 +354,7 @@ private fun RowContentContainer(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                modifier = modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
