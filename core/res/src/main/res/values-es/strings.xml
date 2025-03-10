@@ -241,6 +241,7 @@
   <string name="details_manage_security_long_tap_description">Este mecanismo protege contra los ataques de proximidad a una tarjeta o anillo. Aplicará un retardo entre la recepción y la ejecución de un comando.</string>
   <string name="details_manage_security_passcode">Contraseña</string>
   <string name="details_manage_security_passcode_description">Antes de ejecutar un comando que cambie el estado de la tarjeta, deberá ingresar una contraseña.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Programa de referidos</string>
   <string name="details_row_description_flip_to_hide">Gire la pantalla de su dispositivo hacia abajo para ocultar y mostrar rápidamente los saldos</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
@@ -534,6 +535,7 @@
   <string name="onboarding_exit_alert_title">¿Quiere salir del proceso de activación?</string>
   <string name="onboarding_getting_started">Inicializando</string>
   <string name="onboarding_linking_error_card_with_wallets">Ya se ha creado otra billetera en la tarjeta que está intentando agregar. Si tiene fondos en esta billetera, por favor retírelos y luego reinicie esta tarjeta y agréguela como backup.</string>
+  <string name="onboarding_navbar_save_wallet">Guardar su billetera</string>
   <string name="onboarding_navbar_title_creating_backup">Creando un backup</string>
   <string name="onboarding_seed_button_read_more">Leer más sobre seed phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -666,6 +668,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">Permitir el uso de biometría</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">Se solicitará la biometría en lugar del código de acceso para interactuar con su billetera</string>
   <string name="save_user_wallet_agreement_code_title">Código de acceso</string>
+  <string name="save_user_wallet_agreement_dont_allow">No autorizar</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">Parece que tiene la autenticación biométrica deshabilitada, es necesaria para guardar billeteras</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Activar la autorización biométrica</string>
   <string name="save_user_wallet_agreement_header_biometrics">¿Le gustaría usar la biometría?</string>
