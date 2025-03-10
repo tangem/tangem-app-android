@@ -75,6 +75,7 @@ dependencies {
 
     /** Feature modules */
     implementation(projects.features.staking.api)
+    implementation(projects.features.txhistory.api)
 
     /** DI */
     implementation(deps.hilt.android)
