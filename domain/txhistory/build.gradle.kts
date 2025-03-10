@@ -20,4 +20,6 @@ dependencies {
 
     /** Android - Other */
     implementation(deps.androidx.paging.runtime)
+
+    api(projects.core.pagination)
 }
