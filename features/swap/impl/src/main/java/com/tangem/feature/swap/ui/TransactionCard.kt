@@ -10,10 +10,9 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -195,7 +194,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
             text = type.header.resolveReference(),
             color = titleColor,
             maxLines = 1,
-            style = MaterialTheme.typography.subtitle2,
+            style = TangemTheme.typography.subtitle2,
             modifier = Modifier
                 .align(Alignment.CenterVertically),
         )
@@ -205,7 +204,7 @@ private fun Header(type: TransactionCardType, balance: String, modifier: Modifie
                 Text(
                     text = it,
                     color = TangemTheme.colors.text.tertiary,
-                    style = MaterialTheme.typography.body2,
+                    style = TangemTheme.typography.body2,
                     modifier = Modifier
                         .align(Alignment.CenterVertically),
                 )
