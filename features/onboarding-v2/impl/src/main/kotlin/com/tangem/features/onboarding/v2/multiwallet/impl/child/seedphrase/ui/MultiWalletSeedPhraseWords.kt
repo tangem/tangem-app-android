@@ -84,8 +84,8 @@ private fun SegmentSeedBlock(state: MultiWalletSeedPhraseUM.GenerateSeedPhrase, 
         Text(
             text = pluralStringResourceSafe(
                 id = R.plurals.onboarding_seed_generate_words_count,
-                count = state.option.length,
-                state.option.length,
+                count = it.length,
+                it.length,
             ),
             modifier = Modifier
                 .padding(vertical = TangemTheme.dimens.spacing10)
