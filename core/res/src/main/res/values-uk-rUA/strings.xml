@@ -247,6 +247,7 @@
   <string name="details_manage_security_long_tap_description">Цей механізм захищає картку або кільце від безконтактних атак. Між скануванням картки та виконанням команди буде додана затримка.</string>
   <string name="details_manage_security_passcode">Пароль</string>
   <string name="details_manage_security_passcode_description">Перед виконанням будь-якої команди, що тягне за собою зміну стану картки, вам необхідно буде ввести пароль.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Реферальна програма</string>
   <string name="details_row_description_flip_to_hide">Переверніть екран пристрою вниз, щоб швидко приховати та відобразити баланси</string>
   <string name="details_row_subtitle_signed_hashes_format">%s хешів</string>
@@ -546,6 +547,7 @@
   <string name="onboarding_exit_alert_title">Ви хочете вийти з процесу активації?</string>
   <string name="onboarding_getting_started">Підготовка</string>
   <string name="onboarding_linking_error_card_with_wallets">На картці, яку ви намагаєтеся додати, вже створено інший гаманець. Якщо у вас є кошти на цьому гаманці, будь ласка, виведіть їх, а потім скиньте цю картку до заводських налаштувань і додайте її як резервну.</string>
+  <string name="onboarding_navbar_save_wallet">Збережіть ваш гаманець</string>
   <string name="onboarding_navbar_title_creating_backup">Резервна копія</string>
   <string name="onboarding_seed_button_read_more">Дізнатися більше про seed-фразу</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -686,6 +688,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">Використовувати біометрію</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">Для взаємодії з гаманцем будуть запитуватися біометричні дані замість коду доступу</string>
   <string name="save_user_wallet_agreement_code_title">Код доступу</string>
+  <string name="save_user_wallet_agreement_dont_allow">Не дозволяти</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">Схоже, що у вас відключена біометрична автентифікація, вона необхідна для збереження гаманців</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Увімкніть біометричну автентифікацію</string>
   <string name="save_user_wallet_agreement_header_biometrics">Бажаєте використовувати біометрію?</string>
