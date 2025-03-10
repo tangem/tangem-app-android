@@ -81,7 +81,7 @@ class WalletConnectInteractor(
         }
     }
 
-    private suspend fun initWithWallet(userWallet: UserWallet) {
+    private fun initWithWallet(userWallet: UserWallet) {
         if (userWallet.isMultiCurrency) {
             Timber.i("WalletConnect: initialize and setup networks for ${userWallet.walletId}")
             startListeningWc(userWallet.walletId.stringValue, getCardId(userWallet))
@@ -109,7 +109,7 @@ class WalletConnectInteractor(
         handleDeeplinkStack(accounts)
     }
 
-    private suspend fun startListeningWc(userWalletId: String, cardId: String?) {
+    private fun startListeningWc(userWalletId: String, cardId: String?) {
         this.userWalletId = userWalletId
         this.cardId = cardId
         listenerScope.coroutineContext.cancelChildren()
@@ -135,7 +135,9 @@ class WalletConnectInteractor(
             isWalletConnectReadyForDeepLinks = true
             if (deeplinkStack.empty()) return
             val lastDeeplink = deeplinkStack.pop()
-            store.dispatchOnMain(WalletConnectAction.OpenSession(lastDeeplink))
+            val action = WalletConnectAction
+                .OpenSession(lastDeeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            store.dispatchOnMain(action)
         }.onFailure {
             Timber.e("WC deeplink handling failed. $it")
         }
@@ -147,18 +149,21 @@ class WalletConnectInteractor(
                 Timber.i("WalletConnect: event: $wcEvent")
                 when (wcEvent) {
                     is WalletConnectEvents.SessionProposal -> {
-                        val unsupportedNetworks = wcEvent.requiredChainIds
-                            .filter { blockchainHelper.chainIdToNetworkIdOrNull(it) == null }
-                        if (unsupportedNetworks.isNotEmpty()) {
+                        val unsupportedNetworks = wcEvent.requiredChainIds.filter {
+                            blockchainHelper.chainIdToNetworkIdOrNull(it) == null
+                        }
+
+                        val supportedNetworks = (wcEvent.requiredChainIds + wcEvent.optionalChainIds)
+                            .mapNotNull(blockchainHelper::chainIdToFullNameOrNull)
+                            .distinct()
+
+                        if (unsupportedNetworks.isNotEmpty() || supportedNetworks.isEmpty()) {
                             val error = WalletConnectError.ApprovalErrorUnsupportedNetwork(unsupportedNetworks)
                             handler.onSessionRejected(error)
                             return@onEach
                         }
-                        val networksFormatted = (wcEvent.requiredChainIds + wcEvent.optionalChainIds)
-                            .mapNotNull { blockchainHelper.chainIdToFullNameOrNull(it) }
-                            .distinct()
-                            .toString()
-                        handler.onProposalReceived(proposal = wcEvent, networksFormatted = networksFormatted)
+
+                        handler.onProposalReceived(proposal = wcEvent, networksFormatted = supportedNetworks.toString())
                     }
                     is WalletConnectEvents.SessionApprovalError -> {
                         val error = when (wcEvent.error) {
@@ -392,7 +397,8 @@ class WalletConnectInteractor(
         }
 
         if (isWalletConnectReadyForDeepLinks) {
-            store.dispatchOnMain(WalletConnectAction.OpenSession(deeplink))
+            val action = WalletConnectAction.OpenSession(deeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            store.dispatchOnMain(action)
         } else {
             deeplinkStack.push(deeplink)
         }
