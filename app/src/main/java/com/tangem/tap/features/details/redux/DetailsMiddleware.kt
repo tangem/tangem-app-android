@@ -1,6 +1,5 @@
 package com.tangem.tap.features.details.redux
 
-import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.common.CompletionResult
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
@@ -22,6 +21,7 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
@@ -67,7 +67,7 @@ class DetailsMiddleware {
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
-                    observeBiometricsStatusChanges(action.lifecycleScope)
+                    observeBiometricsStatusChanges(action.coroutineScope)
                 }
                 is DetailsAction.AppSettings.EnrollBiometrics -> {
                     enrollBiometrics()
@@ -90,7 +90,7 @@ class DetailsMiddleware {
             }
         }
 
-        private fun observeBiometricsStatusChanges(lifecycleScope: LifecycleCoroutineScope) {
+        private fun observeBiometricsStatusChanges(scope: CoroutineScope) {
             val needEnrollBiometricsFlow = flow {
                 do {
                     val needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull()
@@ -108,7 +108,7 @@ class DetailsMiddleware {
                 .onEach { needEnrollBiometrics ->
                     store.dispatchWithMain(DetailsAction.AppSettings.BiometricsStatusChanged(needEnrollBiometrics))
                 }
-                .launchIn(lifecycleScope)
+                .launchIn(scope)
                 .saveIn(checkBiometricsStatusJobHolder)
         }
 
