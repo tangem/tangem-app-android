@@ -8,7 +8,7 @@ import com.tangem.domain.transaction.error.SendTransactionError
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fee.FeeStateFactory
 import com.tangem.features.send.impl.presentation.state.fee.FeeType
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.utils.Provider
 import java.math.BigDecimal
 
