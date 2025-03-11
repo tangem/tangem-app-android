@@ -2,141 +2,65 @@
 <resources>
 
     <color name="colorPrimary">#0029FF</color>
-    <color name="colorSecondary">#0022D4</color>
-    <color name="accent">#19C878</color>
+    <color name="accent">#0099FF</color>
 
     <color name="menu_accent_color">@color/accent</color>
 
     <color name="tapButtonColorBlack">@color/darkGray6</color>
-    <color name="tapButtonBlackDisabled">#6A6A6A</color>
 
-    <color name="success">@color/accent</color>
-    <color name="error">#C4291C</color>
     <color name="warning">#FFB71B</color>
 
-    <color name="toolbarColor">@color/backgroundLightGray</color>
+    <color name="toolbarColor">@color/background_secondary</color>
 
     <color name="white">#FFFFFF</color>
     <color name="lightGray0">#F3F3F3</color>
-    <color name="lightGray1">#F8F8FB</color>
-    <color name="lightGray2">#DADADF</color>
-    <color name="lightGray3">#D0D0D5</color>
-    <color name="lightGray4">#C7C7CC</color>
-    <color name="lightGray5">#D1D1D6</color>
-    <color name="lightGray6">#CACACC</color>
-    <color name="darkGray0">#B6B6B8</color>
-    <color name="darkGray1">#8E8E90</color>
     <color name="darkGray2">#666668</color>
-    <color name="darkGray3">#48484A</color>
-    <color name="darkGray4">#3A3A3C</color>
-    <color name="darkGray5">#2C2C2E</color>
-    <color name="darkGray6">#1C1C1E</color>
 
-    <color name="backgroundWhite">#FFFFFF</color>
-    <color name="backgroundLightGray">#F9F9F9</color>
-    <color name="buttonGray">#F4F5F6</color>
-    <color name="textGray">#DE000000</color>
+    <color name="darkGray4">#3A3A3C</color>
+    <color name="darkGray6">#1C1C1E</color>
 
     <color name="textBlack">#060606</color>
     <color name="iconGray">#686868</color>
     <color name="backgroundGray">#F2F2F2</color>
     <color name="chipBlack">#090E13</color>
 
-    <color name="twins_dark">#14181D</color>
-
-
-    <color name="separatorGrey1">#1F000000</color>
     <color name="separatorGrey2">#14212121</color>
 
-    <color name="blue">@color/colorSecondary</color>
-    <color name="blue1">#0029FF</color>
-    <color name="blue2">#1F50FF</color>
-    <color name="blue3">#CBE4FF</color>
-    <color name="blue_pale">#E0E6FA</color>
+    <color name="onboarding_card_background">#F3F3F3</color>
+    <color name="onboarding_twin_wave_1">#DDDEE0</color>
+    <color name="onboarding_twin_wave_2">#DCDCDC</color>
+    <color name="onboarding_twin_wave_3">#D9D9D9</color>
 
-    <color name="tint">#55000000</color>
 
     <color name="warning_info">#1C1C1E</color>
     <color name="warning_warning">#FFB71B</color>
     <color name="warning_critical">#CA0F03</color>
 
-    <color name="gray_button">#EFEFF0</color>
-
-    <color name="all_colors_amaranth">#DE1010</color>
-    <color name="all_colors_azure">#007AFF</color>
-    <color name="all_colors_black">#000000</color>
-    <color name="all_colors_cobalt">#0029FF</color>
-    <color name="all_colors_dark_1">#919191</color>
-    <color name="all_colors_dark_2">#656565</color>
-    <color name="all_colors_dark_3">#494949</color>
-    <color name="all_colors_dark_4">#3B3B3B</color>
-    <color name="all_colors_dark_5">#303030</color>
-    <color name="all_colors_dark_6">#1E1E1E</color>
-    <color name="all_colors_dark_green">#06311F</color>
-    <color name="all_colors_flamingo">#ED7979</color>
-    <color name="all_colors_light_1">#F5F5F5</color>
-    <color name="all_colors_light_2">#EBEBEB</color>
-    <color name="all_colors_light_3">#D3D3D3</color>
-    <color name="all_colors_light_4">#C9C9C9</color>
-    <color name="all_colors_light_5">#B0B0B0</color>
-    <color name="all_colors_magic_mint">#A3EBCC</color>
-    <color name="all_colors_meadow">#1ACE80</color>
-    <color name="all_colors_tangerine">#FFB71B</color>
-    <color name="all_colors_white">#FFFFFF</color>
-
-
-    <color name="background_action">#000000</color>
-    <color name="background_plain">#FFFFFF</color>
     <color name="background_primary">#FFFFFF</color>
     <color name="background_secondary">#F5F5F5</color>
 
 
-
     <color name="button_disabled">#EBEBEB</color>
-    <color name="button_positive">#1ACE80</color>
-    <color name="button_positive_disabled">#A3EBCC</color>
     <color name="button_primary">#1E1E1E</color>
     <color name="button_secondary">#EBEBEB</color>
 
 
-    <color name="control_checked">#1ACE80</color>
-    <color name="control_key">#FFFFFF</color>
-    <color name="control_unchecked">#EBEBEB</color>
-
-
-
-    <color name="field_focused">#EBEBEB</color>
-    <color name="field_primary">#F5F5F5</color>
-
-
-
-    <color name="icon_accent">#1ACE80</color>
-    <color name="icon_attention">#FFB71B</color>
-    <color name="icon_inactive">#C9C9C9</color>
     <color name="icon_informative">#B0B0B0</color>
-    <color name="icon_primary_1">#000000</color>
+    <color name="icon_primary_1">#1E1E1E</color>
     <color name="icon_primary_2">#FFFFFF</color>
-    <color name="icon_secondary">#656565</color>
-    <color name="icon_warning">#DE1010</color>
+    <color name="icon_warning">#FF3333</color>
 
 
-
-    <color name="stroke_primary">#EBEBEB</color>
-    <color name="stroke_secondary">#663B3B3B</color>
-    <color name="stroke_transparency">#FFFFFF</color>
-
-
-
-    <color name="text_accent">#1ACE80</color>
-    <color name="text_attention">#FFB71B</color>
-    <color name="text_constant_white">#FFFFFF</color>
     <color name="text_disabled">#C9C9C9</color>
     <color name="text_primary_1">#1E1E1E</color>
     <color name="text_primary_2">#FFFFFF</color>
     <color name="text_secondary">#656565</color>
     <color name="text_tertiary">#919191</color>
-    <color name="text_warning">#DE1010</color>
 
+    <color name="background_splash">#000000</color>
+    <color name="transparent">#00000000</color>
 
-
+    <color name="gradient_start_color">#FFFFFF</color>
+    <color name="gradient_center_color">#F0FFFF</color>
+    <color name="gradient_end_color">#19FFFFFF</color>
 </resources>

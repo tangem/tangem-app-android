@@ -1,61 +1,50 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.Fragment
-import androidx.transition.TransitionInflater
+import androidx.compose.ui.Modifier
+import androidx.fragment.app.viewModels
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.tap.common.analytics.events.WalletConnect
-import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
+import dagger.hilt.android.AndroidEntryPoint
 import org.rekotlin.StoreSubscriber
+import javax.inject.Inject
 
-class WalletConnectFragment : Fragment(), StoreSubscriber<WalletConnectState> {
-    private val viewModel = WalletConnectViewModel(store)
-    private var screenState: MutableState<WalletConnectScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.walletConnectState))
+@AndroidEntryPoint
+internal class WalletConnectFragment : ComposeFragment(), StoreSubscriber<WalletConnectState> {
+
+    @Inject
+    override lateinit var uiDependencies: UiDependencies
+
+    private val viewModel: WalletConnectViewModel by viewModels()
+
+    private var screenState: MutableState<WalletConnectScreenState>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Analytics.send(WalletConnect.ScreenOpened())
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(android.R.transition.fade)
-        exitTransition = inflater.inflateTransition(android.R.transition.fade)
+        lifecycle.addObserver(viewModel)
+        screenState = mutableStateOf(viewModel.updateState(store.state.walletConnectState))
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                isTransitionGroup = true
-                TangemTheme {
-                    WalletConnectScreen(
-                        state = screenState.value,
-                        onBackClick = {
-                            if (screenState.value.isLoading) {
-                                store.dispatch(
-                                    WalletConnectAction.FailureEstablishingSession(
-                                        store.state.walletConnectState.newSessionData?.session?.session,
-                                    ),
-                                )
-                            }
-                            store.dispatch(NavigationAction.PopBackTo())
-                        },
-                    )
-                }
-            }
-        }
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        val state = screenState?.value ?: return
+        WalletConnectScreen(
+            modifier = modifier,
+            state = state,
+            onBackClick = {
+                store.dispatchNavigationAction(AppRouter::pop)
+            },
+        )
     }
 
     override fun onStart() {
@@ -74,6 +63,6 @@ class WalletConnectFragment : Fragment(), StoreSubscriber<WalletConnectState> {
 
     override fun newState(state: WalletConnectState) {
         if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state)
+        screenState?.value = viewModel.updateState(state)
     }
 }
