@@ -112,7 +112,13 @@ class CachedCurrenciesStatusesOperations(
                         val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
                         quotesRepository.fetchQuotes(rawCurrenciesIds)
                     },
-                    async { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies) },
+                    async {
+                        if (currencies.size == 1) {
+                            stakingRepository.fetchSingleYieldBalance(userWalletId, currencies.first())
+                        } else {
+                            stakingRepository.fetchMultiYieldBalance(userWalletId, currencies)
+                        }
+                    },
                 )
             }
                 .map { }
