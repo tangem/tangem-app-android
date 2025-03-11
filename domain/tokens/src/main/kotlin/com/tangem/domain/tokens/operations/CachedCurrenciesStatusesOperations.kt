@@ -251,6 +251,6 @@ class CachedCurrenciesStatusesOperations(
     }
 
     companion object {
-        private const val RETRY_DELAY = 2000L
+        internal const val RETRY_DELAY = 2000L
     }
 }
