@@ -16,6 +16,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -508,19 +510,34 @@ internal class StakingModel @Inject constructor(
         analyticsEventHandler.send(StakingAnalyticsEvent.ButtonRewards)
         val rewardsValidators =
             stateController.value.rewardsValidatorsState as? StakingStates.RewardsValidatorsState.Data
-        val rewards = rewardsValidators?.rewards
-        if (rewards != null && rewards.isSingleItem()) {
-            onActiveStake(rewards.first())
-        } else {
-            analyticsEventHandler.send(
-                StakingAnalyticsEvent.ButtonValidator(
-                    source = StakeScreenSource.Info,
-                ),
+
+        val initialInfoState = stateController.value.initialInfoState as? StakingStates.InitialInfoState.Data
+        val yieldBalance = initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data
+        val rewardBlockType = yieldBalance?.reward?.rewardBlockType
+        val rewardPendingActionConstraints = yieldBalance?.reward?.rewardConstraints
+
+        if (rewardBlockType == RewardBlockType.RewardsRequirementsError) {
+            stakingEventFactory.createStakingRewardsMinimumRequirementsErrorAlert(
+                cryptoCurrencyName = cryptoCurrencyStatus.currency.name,
+                cryptoAmountValue = rewardPendingActionConstraints?.amountArg?.minimum?.format {
+                    crypto(cryptoCurrencyStatus.currency)
+                }.orEmpty(),
             )
-            stateController.update {
-                value.copy(actionType = StakingActionCommonType.Pending.Rewards)
+        } else {
+            val rewards = rewardsValidators?.rewards
+            if (rewards != null && rewards.isSingleItem()) {
+                onActiveStake(rewards.first())
+            } else {
+                analyticsEventHandler.send(
+                    StakingAnalyticsEvent.ButtonValidator(
+                        source = StakeScreenSource.Info,
+                    ),
+                )
+                stateController.update {
+                    value.copy(actionType = StakingActionCommonType.Pending.Rewards)
+                }
+                stakingStateRouter.showRewardsValidators()
             }
-            stakingStateRouter.showRewardsValidators()
         }
     }
 
