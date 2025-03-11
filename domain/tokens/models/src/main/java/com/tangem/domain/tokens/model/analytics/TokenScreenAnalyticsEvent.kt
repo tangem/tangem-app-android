@@ -167,15 +167,17 @@ sealed class TokenScreenAnalyticsEvent(
         private const val NO_QUOTE = "Quotes Unavailable"
         private const val SINGLE_WALLET = "Single Wallet"
         private const val LOADING = "Loading"
+        private const val ASSET_REQUIREMENT = "AssetRequirement"
 
+        @Suppress("CyclomaticComplexMethod")
         fun ScenarioUnavailabilityReason.toReasonAnalyticsText(): String {
             return when (this) {
                 is ScenarioUnavailabilityReason.BuyUnavailable,
                 is ScenarioUnavailabilityReason.NotExchangeable,
                 is ScenarioUnavailabilityReason.NotSupportedBySellService,
                 is ScenarioUnavailabilityReason.StakingUnavailable,
-                ScenarioUnavailabilityReason.UnassociatedAsset,
                 -> UNAVAILABLE
+                ScenarioUnavailabilityReason.UnassociatedAsset -> ASSET_REQUIREMENT
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
                 is ScenarioUnavailabilityReason.PendingTransaction -> PENDING
                 ScenarioUnavailabilityReason.UsedOutdatedData -> CACHING
