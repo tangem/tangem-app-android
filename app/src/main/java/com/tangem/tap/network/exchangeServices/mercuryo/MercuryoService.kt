@@ -6,145 +6,110 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.datasource.api.common.createRetrofitInstance
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceError
+import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
+import com.tangem.tap.network.exchangeServices.ExchangeServiceInitializationStatus
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import timber.log.Timber
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
 [REDACTED_AUTHOR]
  */
-class MercuryoService(
-    private val apiVersion: String,
-    private val mercuryoWidgetId: String,
-    private val secret: String,
-    private val logEnabled: Boolean,
-) : ExchangeService, ExchangeUrlBuilder {
+internal class MercuryoService(private val environment: MercuryoEnvironment) : ExchangeService {
 
-    private val api: MercuryoApi = createRetrofitInstance(
-        baseUrl = MercuryoApi.BASE_URL,
-        logEnabled = logEnabled,
-    ).create(MercuryoApi::class.java)
+    override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
+        get() = _initializationStatus
 
-    private val blockchainsAvailableToBuy = mutableListOf<Blockchain>()
-    private val tokensAvailableToBy = mutableMapOf<String, MutableList<Blockchain>>()
+    private val _initializationStatus: MutableStateFlow<ExchangeServiceInitializationStatus> =
+        MutableStateFlow(value = lceLoading())
 
-    override fun featureIsSwitchedOn(): Boolean = true
+    private val api: MercuryoApi = environment.mercuryoApi
 
-    @Suppress("NestedBlockDepth")
+    private val availableMercuryoCurrencies = CopyOnWriteArrayList<MercuryoCurrenciesResponse.MercuryoCryptoCurrency>()
+
     override suspend fun update() {
-        when (val result = performRequest { api.currencies(apiVersion) }) {
-            is Result.Success -> {
-                val response = result.data
-                if (response.status == RESPONSE_SUCCESS_STATUS_CODE) {
-                    // all currencies which can be bought
-                    val currenciesAvailableToBy = response.data.crypto
-                    // tokens which can be bought only from specific blockchain network
-                    val supportedTokensWithNetwork = response.data.config.base
+        Timber.i("Start updating")
+        _initializationStatus.value = lceLoading()
 
-                    currenciesAvailableToBy.forEach { currencyName ->
-                        val blockchain = blockchainFromCurrencyName(currencyName)
-                        if (blockchain == null) {
-                            // suppose its a token
-                            supportedTokensWithNetwork[currencyName]?.let {
-                                blockchainFromCurrencyName(it)
-                            }?.let { blockchainNetwork ->
-                                val supportedInBlockchainsNetwork = tokensAvailableToBy[currencyName]
-                                    ?: mutableListOf()
-                                supportedInBlockchainsNetwork.add(blockchainNetwork)
-                                tokensAvailableToBy[currencyName] = supportedInBlockchainsNetwork
-                            }
-                        } else {
-                            blockchainsAvailableToBuy.add(blockchain)
-                        }
-                    }
-                }
+        val result = performRequest { api.currencies(environment.apiVersion) }
+        when {
+            result is Result.Success && result.data.status == RESPONSE_SUCCESS_STATUS_CODE -> {
+                handleSuccessfullyUpdatedData(data = result.data.data)
             }
-            is Result.Failure -> {
-                blockchainsAvailableToBuy.clear()
-                tokensAvailableToBy.clear()
+            result is Result.Failure -> {
+                availableMercuryoCurrencies.clear()
+
+                Timber.e("Failed to load currencies", result.error)
+                _initializationStatus.value = result.error.lceError()
             }
         }
     }
 
-    override fun isBuyAllowed(): Boolean = true
-
-    override fun isSellAllowed(): Boolean = false
-
-    override fun availableForBuy(currency: Currency): Boolean {
-        if (!isBuyAllowed()) return false
-
-        // blockchains which cant be defined by mercuryo service
-        val unsupportedBlockchains = listOf(
-            Blockchain.Unknown,
-            Blockchain.Binance,
-            Blockchain.Arbitrum,
-            Blockchain.Optimism,
-        )
-        val blockchain = currency.blockchain
-
-        return when (currency) {
-            is Currency.Blockchain -> {
-                when {
-                    blockchain.isTestnet() -> blockchain.getTestnetTopUpUrl() != null
-                    unsupportedBlockchains.contains(blockchain) -> false
-                    else -> {
-                        blockchainsAvailableToBuy.contains(currency.blockchain)
-                    }
-                }
-            }
-            is Currency.Token -> {
-                val supportedInBlockchains = tokensAvailableToBy[currency.currencySymbol] ?: return false
-                supportedInBlockchains.contains(currency.blockchain)
-            }
+    override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
+        val mercuryoNetwork = currency.blockchain.mercuryoNetwork
+        val contractAddress = (currency as? Currency.Token)?.token?.contractAddress ?: ""
+        val availableCurrency = availableMercuryoCurrencies.firstOrNull {
+            it.currencySymbol == currency.currencySymbol &&
+                it.network == mercuryoNetwork &&
+                it.contractAddress.equals(contractAddress, ignoreCase = true)
         }
+        return availableCurrency != null
     }
 
     override fun availableForSell(currency: Currency): Boolean = false
 
     override fun getUrl(
         action: CurrencyExchangeManager.Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: CryptoCurrencyName,
+        cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
+
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
 
         val builder = Uri.Builder()
             .scheme(ExchangeUrlBuilder.SCHEME)
             .authority("exchange.mercuryo.io")
-            .appendQueryParameter("widget_id", mercuryoWidgetId)
+            .appendQueryParameter("widget_id", environment.widgetId)
             .appendQueryParameter("type", action.name.lowercase())
-            .appendQueryParameter("currency", cryptoCurrencyName)
+            .appendQueryParameter("currency", cryptoCurrency.symbol)
             .appendQueryParameter("address", walletAddress)
             .appendQueryParameter("signature", signature(walletAddress))
             .appendQueryParameter("fix_currency", "true")
-            .appendQueryParameter("return_url", ExchangeUrlBuilder.SUCCESS_URL)
+            .appendQueryParameter("redirect_url", ExchangeUrlBuilder.SUCCESS_URL)
+        if (isDarkTheme) builder.appendQueryParameter("theme", "1inch")
 
-        val url = builder.build().toString()
-        return url
+        blockchain.mercuryoNetwork?.let {
+            builder.appendQueryParameter("network", it)
+        }
+
+        return builder.build().toString()
     }
 
-    private fun signature(address: String): String {
-        return (address + secret).calculateSha512().toHexString().lowercase()
+    override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String? = null
+
+    private fun handleSuccessfullyUpdatedData(data: MercuryoCurrenciesResponse.Data) {
+        availableMercuryoCurrencies.clear()
+        availableMercuryoCurrencies.addAll(data.config.cryptoCurrencies)
+
+        Timber.i("Successfully updated")
+        _initializationStatus.value = lceContent()
     }
 
-    override fun getSellCryptoReceiptUrl(
-        action: CurrencyExchangeManager.Action,
-        transactionId: String,
-    ): String? = null
+    private fun signature(address: String) = (address + environment.secret).calculateSha512().toHexString().lowercase()
 
-    private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
-        "BNB" -> Blockchain.BSC
-        "ETH" -> Blockchain.Ethereum
-        "ADA" -> Blockchain.CardanoShelley
-        else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
-    }
-
-    companion object {
-        private const val RESPONSE_SUCCESS_STATUS_CODE = 200
+    private companion object {
+        const val RESPONSE_SUCCESS_STATUS_CODE = 200
     }
 }

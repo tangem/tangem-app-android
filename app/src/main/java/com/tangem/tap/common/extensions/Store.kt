@@ -1,12 +1,13 @@
 package com.tangem.tap.common.extensions
 
-import com.tangem.domain.common.ScanResponse
+import com.tangem.common.routing.AppRouter
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.common.redux.StateDialog
+import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -16,10 +17,25 @@ import org.rekotlin.Store
 
 /**
  * Dispatch action with creating the new coroutine with the Main dispatcher
+ *
+ * @see dispatchWithMain
  */
 fun Store<*>.dispatchOnMain(action: Action) {
     scope.launch(Dispatchers.Main) {
-        store.dispatch(action)
+        dispatch(action)
+    }
+}
+
+/**
+ * Dispatch action on the Main coroutine context
+ *
+ * @param action [Action] to be dispatched
+ *
+ * @see dispatchOnMain
+ * */
+suspend fun Store<*>.dispatchWithMain(action: Action) {
+    withMainContext {
+        dispatch(action)
     }
 }
 
@@ -27,13 +43,8 @@ fun Store<*>.dispatchNotification(resId: Int) {
     dispatchOnMain(GlobalAction.ShowNotification(resId))
 }
 
-@Suppress("UnusedReceiverParameter")
-suspend fun Store<*>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
-    store.state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh)
-}
-
-fun Store<*>.dispatchToastNotification(resId: Int) {
-    dispatchOnMain(GlobalAction.ShowToastNotification(resId))
+suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet) {
+    state.globalState.tapWalletManager.onWalletSelected(userWallet)
 }
 
 fun Store<*>.dispatchErrorNotification(error: TapError) {
@@ -63,20 +74,28 @@ fun Store<*>.dispatchDialogHide() {
 /**
  * Dispatch action inside a coroutine with the Main dispatcher
  */
+@Deprecated(
+    message = "Use dispatchWithMain instead",
+    replaceWith = ReplaceWith(expression = "dispatchWithMain"),
+)
 suspend fun dispatchOnMain(vararg actions: Action) {
     withMainContext { actions.forEach { store.dispatch(it) } }
 }
 
-/**
- * Dispatch action
- */
-suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
-    store.state.globalState.tapWalletManager.onCardScanned(scanResponse)
+fun Store<AppState>.dispatchOpenUrl(url: String) {
+    inject(DaggerGraphState::urlOpener).openUrl(url)
 }
 
-fun Store<*>.dispatchOpenUrl(url: String) {
-    store.dispatch(NavigationAction.OpenUrl(url))
+fun Store<AppState>.dispatchShare(url: String) {
+    inject(DaggerGraphState::shareManager).shareText(url)
 }
-fun Store<*>.dispatchShare(url: String) {
-    store.dispatch(NavigationAction.Share(url))
+
+fun Store<AppState>.dispatchNavigationAction(action: AppRouter.() -> Unit) {
+    inject(DaggerGraphState::appRouter).action()
+}
+
+inline fun <reified T> Store<AppState>.inject(getDependency: DaggerGraphState.() -> T?): T {
+    return requireNotNull(state.daggerGraphState.getDependency()) {
+        "${T::class.simpleName} isn't initialized "
+    }
 }

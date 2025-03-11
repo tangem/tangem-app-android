@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.userWalletList.repository.implementation
 
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.repository.SelectedUserWalletRepository
 
 internal class DefaultSelectedUserWalletRepository(
@@ -25,6 +25,6 @@ internal class DefaultSelectedUserWalletRepository(
     }
 
     private enum class StorageKey {
-        SelectedWalletId
+        SelectedWalletId,
     }
 }

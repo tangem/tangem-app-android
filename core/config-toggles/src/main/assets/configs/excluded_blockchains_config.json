@@ -1,0 +1,30 @@
+[
+    {
+        "name": "",
+        "version": "undefined"
+    },
+    {
+        "name": "NEXA",
+        "version": "undefined"
+    },
+    {
+        "name": "NEXA/test",
+        "version": "undefined"
+    },
+    {
+        "name": "vanar-chain",
+        "version": "undefined"
+    },
+    {
+        "name": "sonic",
+        "version": "5.21.0"
+    },
+    {
+        "name": "apechain",
+        "version": "5.21.0"
+    },
+    {
+        "name": "alephium",
+        "version": "5.21.0"
+    }
+]

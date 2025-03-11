@@ -2,38 +2,31 @@ package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.getAddressData
-import com.tangem.tap.common.extensions.getTopUpUrl
+import com.tangem.tap.common.entities.ProgressState
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.makePrimaryWalletManager
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
@@ -65,8 +58,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
 
     when (action) {
         is OnboardingNoteAction.Init -> {
-            if (!onboardingManager.isActivationStarted(card.cardId)) {
-                Analytics.send(Onboarding.Started())
+            scope.launch {
+                if (!onboardingManager.isActivationStarted(card.cardId)) {
+                    Analytics.send(Onboarding.Started())
+                }
             }
         }
         is OnboardingNoteAction.LoadCardArtwork -> {
@@ -94,10 +89,12 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 }
                 OnboardingNoteStep.Done -> {
                     Analytics.send(Onboarding.Finished())
-                    onboardingManager.activationFinished(card.cardId)
-                    postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
+                    mainScope.launch {
+                        onboardingManager.finishActivation(card.cardId)
+                        postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
+                    }
                 }
-                else -> {}
+                else -> Unit
             }
         }
         is OnboardingNoteAction.CreateWallet -> {
@@ -109,12 +106,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                             Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                             val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
-                            onboardingManager.activationStarted(updatedResponse.card.cardId)
+                            onboardingManager.startActivation(updatedResponse.card.cardId)
                             store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.TopUpWallet))
                         }
-                        is CompletionResult.Failure -> {
-//                            do nothing
-                        }
+                        is CompletionResult.Failure -> Unit
                     }
                 }
             }
@@ -123,8 +118,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             val walletManager = if (noteState.walletManager != null) {
                 noteState.walletManager
             } else {
-                val wmFactory = globalState.tapWalletManager.walletManagerFactory
-                val walletManager = wmFactory.makePrimaryWalletManager(scanResponse).guard {
+                val wmFactory = runBlocking {
+                    store.inject(DaggerGraphState::blockchainSDKFactory).getWalletManagerFactorySync()
+                }
+                val walletManager = wmFactory?.makePrimaryWalletManager(scanResponse).guard {
                     val message = "Loading cancelled. Cause: wallet manager didn't created"
                     val customError = TapError.CustomError(message)
                     store.dispatchErrorNotification(customError)
@@ -159,6 +156,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
+                OnboardingHelper.sendToppedUpEvent(scanResponse)
                 store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.Done))
             }
         }
@@ -175,18 +173,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 return
             }
 
-            val topUpUrl = walletManager.getTopUpUrl() ?: return
-            val blockchain = walletManager.wallet.blockchain
-
-            val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
-            Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
-
-            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
-                val dialogData = WalletDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
-                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(dialogData))
-            } else {
-                store.dispatchOpenUrl(topUpUrl)
-            }
+            OnboardingHelper.handleTopUpAction(
+                walletManager = walletManager,
+                scanResponse = scanResponse,
+            )
         }
         is OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
@@ -196,7 +186,8 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             store.dispatchDialogShow(
                 OnboardingDialog.InterruptOnboarding(
                     onOk = {
-                        store.dispatch(NavigationAction.PopBackTo())
+                        OnboardingHelper.onInterrupted()
+                        store.dispatchNavigationAction(AppRouter::pop)
                     },
                 ),
             )
