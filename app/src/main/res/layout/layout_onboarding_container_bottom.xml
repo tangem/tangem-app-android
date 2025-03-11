@@ -55,6 +55,7 @@
         android:textStyle="bold"
         android:visibility="gone"
         app:buttonTint="@color/accent"
+        android:textColor="@color/text_secondary"
         app:layout_constraintBottom_toTopOf="@+id/btn_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -63,18 +64,23 @@
 
     <FrameLayout
         android:id="@+id/btn_container"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/home_bottom_fl_scan_card_container_margin_bottom"
         android:clipChildren="false"
         android:clipToPadding="false"
+        android:layout_marginStart="@dimen/dimen16"
+        android:layout_marginEnd="@dimen/dimen16"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_main_action"
-            style="@style/TapPrimaryButton"
+            style="@style/TapPrimaryIconButton"
+            android:layout_width="match_parent"
+            tools:icon="@drawable/ic_tangem_24"
+            app:iconSize="20dp"
             tools:text="@string/welcome_unlock_card" />
 
         <ProgressBar
@@ -84,7 +90,7 @@
             android:layout_gravity="center"
             android:elevation="18dp"
             android:indeterminate="true"
-            android:indeterminateTint="@color/backgroundLightGray"
+            android:indeterminateTint="@color/background_secondary"
             android:visibility="invisible" />
 
     </FrameLayout>
@@ -92,6 +98,9 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_alternative_action"
         style="@style/TapTextButton"
+        android:layout_width="match_parent"
+        android:layout_marginStart="@dimen/dimen16"
+        android:layout_marginEnd="@dimen/dimen16"
         android:layout_marginBottom="@dimen/home_bottom_btn_alternative_action_margin_bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
