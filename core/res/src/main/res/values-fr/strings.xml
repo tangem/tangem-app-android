@@ -241,6 +241,7 @@
   <string name="details_manage_security_long_tap_description">Ce mécanisme protège contre les attaques sans contact sur la carte. Il y a un délai entre la réception et l\'exécution de la commande. Après la première transaction signée, ce téléphone sera associé à la carte et les transactions seront signées immédiatement.</string>
   <string name="details_manage_security_passcode">Mot de passe</string>
   <string name="details_manage_security_passcode_description">Avant d\'exécuter une commande qui modifie l\'état de la carte, vous devrez entrer un mot de passe.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Programme de parrainage</string>
   <string name="details_row_description_flip_to_hide">Retournez l\'écran de votre appareil vers le bas pour masquer et afficher rapidement les soldes</string>
   <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
@@ -536,6 +537,7 @@
   <string name="onboarding_exit_alert_title">Voulez-vous quitter le processus d\'activation ?</string>
   <string name="onboarding_getting_started">Initialisation en cours</string>
   <string name="onboarding_linking_error_card_with_wallets">Un autre portefeuille a déjà été créé sur la carte que vous essayez d\'ajouter. Si vous avez des fonds dans ce portefeuille, veuillez les retirer, puis réinitialiser cette carte et l\'ajouter comme sauvegarde.</string>
+  <string name="onboarding_navbar_save_wallet">Enregistrer votre portefeuille</string>
   <string name="onboarding_navbar_title_creating_backup">Sauvegarde en cours</string>
   <string name="onboarding_seed_button_read_more">En savoir plus sur les seed phrases</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -668,6 +670,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">Autoriser l\'utilisation de la biométrie</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">La biométrie sera demandée à la place du code d\'accès pour les interactions avec votre portefeuille</string>
   <string name="save_user_wallet_agreement_code_title">Code d\'accès</string>
+  <string name="save_user_wallet_agreement_dont_allow">Ne pas autoriser</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">Il semble que vous ayez désactivé l\'authentification biométrique, elle est nécessaire pour sauvegarder les portefeuilles</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Activer l\'autorisation biométrique</string>
   <string name="save_user_wallet_agreement_header_biometrics">Souhaitez-vous utiliser la biométrie ?</string>
@@ -919,6 +922,7 @@
   <string name="token_button_unavailability_reason_buy_unavailable">L\'achat de %s n\'est pas pris en charge par les fournisseurs actuels mais nous travaillons à ajouter davantage d\'options.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">Vous n\'avez pas de fonds à vendre. Renflouez votre compte pour pouvoir vendre des fonds à partir de celui-ci.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">Vous n\'avez pas de fonds à envoyer. Renflouez votre compte pour pouvoir envoyer des fonds à partir de celui-ci.</string>
+  <string name="token_button_unavailability_reason_loading">Die Daten wurden noch nicht geladen. Dies kann einige Sekunden dauern. Bitte versuchen Sie es später noch einmal.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Le service d\'échange %s n\'est pas pris en charge par les fournisseurs actuels mais nous travaillons à ajouter plus d\'options.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">La vente de fonds sera disponible une fois que la ou les transactions en attente dans le réseau %s seront terminées</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">L\'envoi de fonds sera disponible une fois la ou les transactions en attente dans le réseau %s terminées.</string>
