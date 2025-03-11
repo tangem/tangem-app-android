@@ -1,35 +1,41 @@
 package com.tangem.tap.proxy
 
-import com.tangem.TangemSdk
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.domain.redux.ReduxStateHolder
+import com.tangem.domain.redux.StateDialog
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.userWalletList.UserWalletsListManager
-import com.tangem.tap.domain.walletStores.WalletStoresManager
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.network.exchangeServices.ExchangeService
+import org.rekotlin.Action
 import org.rekotlin.Store
 import javax.inject.Inject
 
 /**
- * Holds objects from old modules, that missing in DI graph
- * Object sets manually to use in new modules and [AppStateHolder] proxies its to DI
+ * Holds objects from old modules, that missing in DI graph.
+ * Object sets manually to use in new modules and [AppStateHolder] proxies its to DI.
  */
-class AppStateHolder @Inject constructor() {
+class AppStateHolder @Inject constructor() : ReduxStateHolder {
 
-    var scanResponse: ScanResponse? = null
-    var walletState: WalletState? = null
-    var userTokensRepository: UserTokensRepository? = null
     var mainStore: Store<AppState>? = null
-    var tangemSdkManager: TangemSdkManager? = null
-    var tangemSdk: TangemSdk? = null
-    var walletStoresManager: WalletStoresManager? = null
-    var userWalletsListManager: UserWalletsListManager? = null
-    var appFiatCurrency: FiatCurrency = FiatCurrency.Default
+    var exchangeService: ExchangeService? = null
+    var buyService: ExchangeService? = null
+    var sellService: ExchangeService? = null
 
-    fun getActualCard(): CardDTO? {
-        return scanResponse?.card
+    override fun dispatch(action: Action) {
+        mainStore?.dispatch(action)
+    }
+
+    override suspend fun dispatchWithMain(action: Action) {
+        mainStore?.dispatchWithMain(action)
+    }
+
+    override suspend fun onUserWalletSelected(userWallet: UserWallet) {
+        mainStore?.onUserWalletSelected(userWallet)
+    }
+
+    override fun dispatchDialogShow(dialog: StateDialog) {
+        mainStore?.dispatchDialogShow(dialog)
     }
 }
