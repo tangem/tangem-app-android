@@ -238,6 +238,7 @@
   <string name="details_manage_security_long_tap_description">このメカニズムは、カードまたはリングに対する近接攻撃から保護します。コマンドの受信と実行の間に遅延を強制します。</string>
   <string name="details_manage_security_passcode">パスコード</string>
   <string name="details_manage_security_passcode_description">カードの状態の変更を伴うコマンドを実行する前に、パスコードを入力する必要があります。</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">紹介プログラム</string>
   <string name="details_row_description_flip_to_hide">デバイスの画面を下に向けると、残高をすばやく非表示にしたり表示したりできます。</string>
   <string name="details_row_subtitle_signed_hashes_format">%sハッシュ</string>
@@ -530,6 +531,7 @@
   <string name="onboarding_exit_alert_title">アクティベーション処理を途中で終了しますか?</string>
   <string name="onboarding_getting_started">スタート</string>
   <string name="onboarding_linking_error_card_with_wallets">追加しようとしているカードには、すでに別のウォレットが作成されています。このウォレットに資金がある場合は、それを引き出してからこのカードをリセットし、バックアップとして追加してください。</string>
+  <string name="onboarding_navbar_save_wallet">ウォレットを保存する</string>
   <string name="onboarding_navbar_title_creating_backup">バックアップの作成</string>
   <string name="onboarding_seed_button_read_more">シードフレーズについてもっと読む</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -658,6 +660,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">生体認証の使用を許可する</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">ウォレットの操作には、アクセスコードの代わりに生体認証が要求されます。</string>
   <string name="save_user_wallet_agreement_code_title">アクセスコード</string>
+  <string name="save_user_wallet_agreement_dont_allow">許可しない</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">生体認証が無効になっているようです。ウォレットを保存する必要があります。</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">生体認証を有効にする</string>
   <string name="save_user_wallet_agreement_header_biometrics">生体認証を使用しますか?</string>
@@ -768,6 +771,7 @@
   <string name="staking_details_estimated_profit">%s 推定利益</string>
   <string name="staking_details_market_rating">市場評価</string>
   <string name="staking_details_metrics_block_header">指標</string>
+  <string name="staking_details_min_rewards_notification">%1$sネットワークルールによれば、 %2$sからの請求が可能です。以下の金額は、ステーキング解除時にアカウントに入金されます。</string>
   <string name="staking_details_minimum_requirement">最低要件</string>
   <string name="staking_details_no_rewards_to_claim">報酬はありません</string>
   <string name="staking_details_reward_claiming">請求中の報酬</string>
@@ -814,6 +818,7 @@
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
+  <string name="staking_notification_ton_activate_account">TONでステーキングを開始するには、まず任意の金額の送金を行ってください。これにより、ウォレットがアクティブになります。</string>
   <string name="staking_notification_unlock_text">資金をステーキングから引き出すには、ロックを解除してください。ロック解除には%sかかります。</string>
   <string name="staking_notification_unstake_cosmos_text">資金は、21日間のロック解除期間後に使用可能になります。報酬は、ロック解除後の資金とともに引き出されます。</string>
   <string name="staking_notification_unstake_text">%sのステーキング解除期間後、資金はすぐ利用可能となります。</string>
@@ -916,7 +921,7 @@
   <string name="token_button_unavailability_reason_custom_token">カスタムトークンでは使用できません。</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">売却できる資金がありません。アカウントに入金して、売却できるようにしてください。</string>
   <string name="token_button_unavailability_reason_empty_balance_send">送金する資金がありません。アカウントに入金して、送金できるようにしてください。</string>
-  <string name="token_button_unavailability_reason_loading">データはまだ読み込まれていません。数秒かかる場合があります。しばらくしてからもう一度お試しください。</string>
+  <string name="token_button_unavailability_reason_loading">現在データを読み込んでいます。これには数秒かかる場合があります。しばらくしてからもう一度お試しください。</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%sのスワップは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">表示残高はキャッシュにより古くなっている可能性があります。</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">%sネットワーク上の保留中の取引が完了すると、資金の売却が可能になります。</string>
@@ -965,6 +970,7 @@
   <string name="twins_recreate_toolbar">Tangemツイン</string>
   <string name="twins_recreate_warning">この操作は元に戻せません。古いウォレットにはアクセスできなくなります。</string>
   <string name="twins_scan_twin_with_number">番号%sのツインカードをタップし、操作が終了するまで取り外さないでください。</string>
+  <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
