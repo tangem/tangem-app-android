@@ -7,12 +7,12 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.flatMap
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.common.extensions.replaceByOrAdd
-import com.tangem.tap.domain.model.UserWallet
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.publicInformation
+import com.tangem.utils.extensions.addOrReplace
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -24,21 +24,23 @@ internal class DefaultUserWalletsPublicInformationRepository(
         Types.newParameterizedType(List::class.java, UserWalletPublicInformation::class.java),
     )
 
-    override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
+    override suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {
-            getAll()
-                .flatMap { savedInformation ->
-                    val infoToSave = withContext(Dispatchers.Default) {
-                        savedInformation.toMutableList()
-                            .apply {
-                                replaceByOrAdd(userWallet.publicInformation) {
-                                    userWallet.walletId == it.walletId
-                                }
-                            }
+            getAll().flatMap { savedWalletsInformation ->
+                val infoToSave = if (canOverride) {
+                    savedWalletsInformation.addOrReplace(userWallet.publicInformation) {
+                        it.walletId == userWallet.walletId
                     }
-
-                    save(infoToSave)
+                } else {
+                    if (savedWalletsInformation.none { it.walletId == userWallet.walletId }) {
+                        savedWalletsInformation + userWallet.publicInformation
+                    } else {
+                        return@withContext CompletionResult.Success(Unit)
+                    }
                 }
+
+                save(infoToSave)
+            }
         }
     }
 
@@ -73,9 +75,7 @@ internal class DefaultUserWalletsPublicInformationRepository(
     }
 
     @JvmName("saveWithPublicInformation")
-    private suspend fun save(
-        publicInformation: List<UserWalletPublicInformation>,
-    ): CompletionResult<Unit> = catching {
+    private suspend fun save(publicInformation: List<UserWalletPublicInformation>): CompletionResult<Unit> = catching {
         withContext(Dispatchers.IO) {
             publicInformation
                 .let(publicInformationAdapter::toJson)
@@ -85,6 +85,6 @@ internal class DefaultUserWalletsPublicInformationRepository(
     }
 
     private enum class StorageKey {
-        UserWalletPublicInformation
+        UserWalletPublicInformation,
     }
 }
