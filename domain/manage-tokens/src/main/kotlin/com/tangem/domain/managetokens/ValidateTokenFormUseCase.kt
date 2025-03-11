@@ -77,7 +77,7 @@ class ValidateTokenFormUseCase(
     }
 
     companion object {
-        const val MIN_DECIMALS = 1
+        const val MIN_DECIMALS = 0
         const val MAX_DECIMALS = 30
     }
 }
