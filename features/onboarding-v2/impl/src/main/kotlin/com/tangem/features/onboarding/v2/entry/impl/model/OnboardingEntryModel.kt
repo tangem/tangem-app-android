@@ -75,6 +75,11 @@ internal class OnboardingEntryModel @Inject constructor(
                 titleProvider = titleProvider,
                 onDone = ::onVisaOnboardingDone,
             )
+            ProductType.Note -> OnboardingRoute.Note(
+                scanResponse = scanResponse,
+                titleProvider = titleProvider,
+                onDone = ::navigateToWalletScreen,
+            )
             else -> error("Unsupported")
         }
     }

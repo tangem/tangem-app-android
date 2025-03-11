@@ -52,7 +52,12 @@ internal inline fun OnboardingEntry(
                         modifier = modifier,
                     )
                 }
-                OnboardingRoute.None -> {}
+                is OnboardingRoute.Note -> {
+                    (it.instance as ComposableContentComponent).Content(
+                        modifier = modifier,
+                    )
+                }
+                is OnboardingRoute.None -> {}
             }
         }
     }
