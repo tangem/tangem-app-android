@@ -25,6 +25,7 @@ import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
 import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.buttons.common.contentColor
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.isNullOrEmpty
@@ -73,12 +74,18 @@ fun NavigationPrimaryButton(primaryButton: NavigationButton?, modifier: Modifier
             } else {
                 TangemButtonIconPosition.None
             }
+            val color = if (button.isDimmed) {
+                TangemButtonsDefaults.secondaryButtonColors
+                    .copy(contentColor = TangemTheme.colors.text.tertiary)
+            } else {
+                TangemButtonsDefaults.primaryButtonColors
+            }
             TangemButton(
                 text = button.textReference.resolveReference(),
                 enabled = button.isEnabled,
                 onClick = button.onClick,
                 showProgress = button.showProgress,
-                colors = TangemButtonsDefaults.primaryButtonColors,
+                colors = color,
                 textStyle = TangemTheme.typography.subtitle1,
                 icon = icon,
                 modifier = Modifier.fillMaxWidth(),
