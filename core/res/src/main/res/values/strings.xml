@@ -861,6 +861,7 @@
   <string name="staking_rewards">Rewards</string>
   <string name="staking_stake_locked">Stake locked</string>
   <string name="staking_stake_more">Stake more</string>
+  <string name="staking_stake_more_button_unavailability_reason">When staking %1$s, your entire %2$s balance is staked. Any additional %2$s you deposit to your Tangem Wallet will also be automatically staked.</string>
   <string name="staking_staked_amount">Staked amount</string>
   <string name="staking_summary_description_text">You stake %1$s and will be receiving your reward %2$s</string>
   <string name="staking_tap_to_unlock">Tap to unlock</string>
