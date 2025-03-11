@@ -18,21 +18,25 @@ default_platform(:android)
 platform :android do
 
   before_all do |lane, options|
-    FileUtils.mv("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
+    FileUtils.cp("../app/src/main/assets/tangem-app-config/android/google-services.json", "../app")
   end
-	
-  desc "Runs all the tests"
-  lane :test do
-    gradle(
-        task: "clean assemble",
-        build_type: "Debug"
-    )
+
+  desc "Run detekt"
+  lane :detekt do
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
     gradle(task: "detekt")
-    gradle(task: "test")
+  end
+
+  desc "Run tests"
+  lane :test do
+    FileUtils.cp("../ci_resources/tests_8gb_ram_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
+    gradle(task: "testDebugUnitTest")
   end
 
   desc "Build a signed release APK"
-  lane :release do |options|
+  lane :release do |options|  # TODO: remove after fully moving from old CI
      gradle(
        task: "clean assemble",
        build_type: "Release",
@@ -44,15 +48,10 @@ platform :android do
        })
   end
 
-  desc "Build debug and release APKs"
-  lane :build do |options|
-     gradle(
-       task: "clean assemble",
-       build_type: "Debug_beta",
-       properties: {
-           'versionCode' => options[:versionCode],
-           'versionName' => options[:versionName],
-         })
+  desc "Build external and release APKs"
+  lane :build do |options|  # TODO: remove after fully moving from old CI
+     gradle(task: 'clean')
+
      gradle(
        task: "bundle",
        build_type: "Release",
@@ -63,26 +62,92 @@ platform :android do
           "android.injected.signing.store.password" => options[:store_password],
           "android.injected.signing.key.alias" => options[:key_alias],
           "android.injected.signing.key.password" => options[:key_password],
-        })
-        gradle(
-          task: "assemble",
-          build_type: "Release",
-          properties: {
+       }
+     )
+     gradle(
+       task: "assemble",
+       build_type: "Release",
+       properties: {
+         'versionCode' => options[:versionCode],
+         'versionName' => options[:versionName],
+         "android.injected.signing.store.file" => options[:keystore],
+         "android.injected.signing.store.password" => options[:store_password],
+         "android.injected.signing.key.alias" => options[:key_alias],
+         "android.injected.signing.key.password" => options[:key_password],
+       }
+     )
+  end
+
+  desc "Build release AAB and APK"
+    lane :buildRelease do |options|
+       FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
+       puts File.read("../gradle.properties")
+
+       gradle(
+         task: "bundle",
+         build_type: "Release",
+         properties: {
             'versionCode' => options[:versionCode],
             'versionName' => options[:versionName],
             "android.injected.signing.store.file" => options[:keystore],
             "android.injected.signing.store.password" => options[:store_password],
             "android.injected.signing.key.alias" => options[:key_alias],
             "android.injected.signing.key.password" => options[:key_password],
-          })
-  end
+         }
+       )
+       gradle(
+         task: "assemble",
+         build_type: "Release",
+         properties: {
+           'versionCode' => options[:versionCode],
+           'versionName' => options[:versionName],
+           "android.injected.signing.store.file" => options[:keystore],
+           "android.injected.signing.store.password" => options[:store_password],
+           "android.injected.signing.key.alias" => options[:key_alias],
+           "android.injected.signing.key.password" => options[:key_password],
+         }
+       )
+    end
 
   desc "Submit a new Beta Build to Firebase App Distribution"
-  lane :beta do |options|
+  lane :beta do |options| # TODO: remove after fully moving from old CI
        firebase_app_distribution(
             app: options[:app_id],
             apk_path: options[:apk_path],
             groups: options[:groups])
+  end
+
+
+  desc "Build internal APK Firebase App Distribution"
+  lane :buildInternal do |options|
+    FileUtils.cp("../ci_resources/build_ci_gradle.properties", "../gradle.properties")
+    puts File.read("../gradle.properties")
+
+    gradle(
+      task: "assemble",
+      build_type: "Internal",
+      properties: {
+        'versionCode' => ENV['version_code'],
+        'versionName' => ENV['version_name'],
+      }
+  )
+  end
+
+  desc "Publish internal build to Firebase App Distribution"
+  lane :publishToFirebase do |options|
+    uploaded_release = firebase_app_distribution(
+      firebase_cli_token: ENV['firebase_cli_token'],
+      app: ENV['app_id_internal'],
+      apk_path: ENV['apk_path_internal'],
+      groups: ENV['groups'],
+      release_notes: ENV['release_notes'],
+    )
+    release_url = uploaded_release[:testingUri]
+
+    # Applying base64 encoding twice to prevent GA bug "Skip output 'output' since it may contain secret."
+    # See https://github.com/orgs/community/discussions/13082#discussioncomment-6776428 for details
+    encoded_release_url = Base64.strict_encode64(Base64.strict_encode64(release_url))
+    sh("echo 'encoded_release_url=#{encoded_release_url}' >> /workspace/github_output.txt")
   end
 
 end

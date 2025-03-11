@@ -1,0 +1,304 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "a8a710af25033ee27e5043d001385234",
+    "entities": [
+      {
+        "tableName": "UserWalletEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `artworkUrl` TEXT NOT NULL, `isMultiCurrency` INTEGER NOT NULL, `hasBackupError` INTEGER NOT NULL, `cardsInWallet` TEXT NOT NULL, `ordinalNumber` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "artworkUrl",
+            "columnName": "artworkUrl",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isMultiCurrency",
+            "columnName": "isMultiCurrency",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "hasBackupError",
+            "columnName": "hasBackupError",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cardsInWallet",
+            "columnName": "cardsInWallet",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ordinalNumber",
+            "columnName": "ordinalNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_UserWalletEntity_id",
+            "unique": true,
+            "columnNames": [
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_UserWalletEntity_id` ON `${TABLE_NAME}` (`id`)"
+          },
+          {
+            "name": "index_UserWalletEntity_ordinalNumber",
+            "unique": true,
+            "columnNames": [
+              "ordinalNumber"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_UserWalletEntity_ordinalNumber` ON `${TABLE_NAME}` (`ordinalNumber`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "CryptoCurrenciesAccountEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `userWalletId` TEXT NOT NULL, `title` TEXT NOT NULL, `currenciesCount` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `ordinalNumber` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`userWalletId`) REFERENCES `UserWalletEntity`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userWalletId",
+            "columnName": "userWalletId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currenciesCount",
+            "columnName": "currenciesCount",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isArchived",
+            "columnName": "isArchived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ordinalNumber",
+            "columnName": "ordinalNumber",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_CryptoCurrenciesAccountEntity_id",
+            "unique": false,
+            "columnNames": [
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_CryptoCurrenciesAccountEntity_id` ON `${TABLE_NAME}` (`id`)"
+          },
+          {
+            "name": "index_CryptoCurrenciesAccountEntity_userWalletId",
+            "unique": false,
+            "columnNames": [
+              "userWalletId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_CryptoCurrenciesAccountEntity_userWalletId` ON `${TABLE_NAME}` (`userWalletId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "UserWalletEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userWalletId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "CryptoCurrencyEntity",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `currencyBackendId` TEXT, `networkId` TEXT NOT NULL, `accountId` INTEGER NOT NULL, `userWalletId` TEXT NOT NULL, `name` TEXT NOT NULL, `symbol` TEXT NOT NULL, `decimals` INTEGER NOT NULL, `contractAddress` TEXT, `derivationPath` TEXT, FOREIGN KEY(`accountId`) REFERENCES `CryptoCurrenciesAccountEntity`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`userWalletId`) REFERENCES `UserWalletEntity`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currencyBackendId",
+            "columnName": "currencyBackendId",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "networkId",
+            "columnName": "networkId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountId",
+            "columnName": "accountId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userWalletId",
+            "columnName": "userWalletId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "symbol",
+            "columnName": "symbol",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "decimals",
+            "columnName": "decimals",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "contractAddress",
+            "columnName": "contractAddress",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "derivationPath",
+            "columnName": "derivationPath",
+            "affinity": "TEXT",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_CryptoCurrencyEntity_currencyBackendId",
+            "unique": false,
+            "columnNames": [
+              "currencyBackendId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_CryptoCurrencyEntity_currencyBackendId` ON `${TABLE_NAME}` (`currencyBackendId`)"
+          },
+          {
+            "name": "index_CryptoCurrencyEntity_networkId",
+            "unique": false,
+            "columnNames": [
+              "networkId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_CryptoCurrencyEntity_networkId` ON `${TABLE_NAME}` (`networkId`)"
+          },
+          {
+            "name": "index_CryptoCurrencyEntity_accountId",
+            "unique": false,
+            "columnNames": [
+              "accountId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_CryptoCurrencyEntity_accountId` ON `${TABLE_NAME}` (`accountId`)"
+          },
+          {
+            "name": "index_CryptoCurrencyEntity_userWalletId",
+            "unique": false,
+            "columnNames": [
+              "userWalletId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_CryptoCurrencyEntity_userWalletId` ON `${TABLE_NAME}` (`userWalletId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "CryptoCurrenciesAccountEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "accountId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "UserWalletEntity",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "userWalletId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a8a710af25033ee27e5043d001385234')"
+    ]
+  }
+}

@@ -7,7 +7,9 @@ internal object SaveWalletReducer {
     fun reduce(action: Action, state: AppState): SaveWalletState {
         return if (action is SaveWalletAction) {
             internalReduce(action, state.saveWalletState)
-        } else state.saveWalletState
+        } else {
+            state.saveWalletState
+        }
     }
 
     private fun internalReduce(action: SaveWalletAction, state: SaveWalletState): SaveWalletState {
@@ -19,14 +21,13 @@ internal object SaveWalletReducer {
                     backupCardsIds = action.backupCardsIds,
                 ),
             )
-            is SaveWalletAction.Save -> state.copy(
-                isSaveInProgress = true,
-            )
-            is SaveWalletAction.Save.Error -> state.copy(
+            is SaveWalletAction.AllowToUseBiometrics,
+            -> state.copy(isSaveInProgress = true)
+            is SaveWalletAction.AllowToUseBiometrics.Error -> state.copy(
                 error = action.error,
                 isSaveInProgress = false,
             )
-            is SaveWalletAction.Save.Success -> state.copy(
+            is SaveWalletAction.AllowToUseBiometrics.Success -> state.copy(
                 backupInfo = null,
                 isSaveInProgress = false,
             )
@@ -45,7 +46,8 @@ internal object SaveWalletReducer {
                 needEnrollBiometrics = false,
                 isSaveInProgress = false,
             )
-            is SaveWalletAction.SaveWalletWasShown -> state
+            is SaveWalletAction.SaveWalletAfterBackup,
+            -> state
         }
     }
 }
