@@ -364,8 +364,8 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = walletComponentFactory,
                 )
             }
-            is AppRoute.SaveWallet,
             is AppRoute.OnboardingNote,
+            is AppRoute.SaveWallet,
             is AppRoute.OnboardingOther,
             is AppRoute.OnboardingTwins,
             is AppRoute.OnboardingWallet,
