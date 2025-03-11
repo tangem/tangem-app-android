@@ -29,7 +29,7 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
     StakingActionType.REVOTE -> resourceReference(R.string.staking_revote)
     StakingActionType.REBOND -> resourceReference(R.string.staking_rebond)
     StakingActionType.MIGRATE -> resourceReference(R.string.staking_migrate)
-    StakingActionType.STAKE -> resourceReference(R.string.common_stake)
+    StakingActionType.STAKE -> resourceReference(R.string.staking_restake)
     StakingActionType.UNSTAKE -> resourceReference(R.string.common_unstake)
     StakingActionType.UNKNOWN -> TextReference.EMPTY
     null -> TextReference.EMPTY
