@@ -32,7 +32,9 @@ internal class StakingStateRouter(
                 StakingActionCommonType.Pending.Other,
                 StakingActionCommonType.Pending.Rewards,
                 -> showConfirmation()
-                StakingActionCommonType.Pending.Restake -> showRestakeValidators()
+                is StakingActionCommonType.Pending.Stake,
+                StakingActionCommonType.Pending.Restake,
+                -> showRestakeValidators()
             }
             StakingStep.RestakeValidator,
             StakingStep.RewardsValidators,
