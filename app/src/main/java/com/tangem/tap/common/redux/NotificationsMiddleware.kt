@@ -20,22 +20,14 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
     private val basicCoordinatorLayout = WeakReference(coordinatorLayout)
     private var baseLayout = basicCoordinatorLayout
 
-    fun replaceBaseLayout(coordinatorLayout: CoordinatorLayout) {
-        baseLayout = WeakReference(coordinatorLayout)
-    }
-
-    fun returnBaseLayout() {
-        baseLayout = basicCoordinatorLayout
-    }
-
-    fun showNotification(message: String) {
+    private fun showNotification(message: String) {
         baseLayout.get()?.let { layout ->
             Snackbar.make(layout, message, Snackbar.LENGTH_LONG)
                 .also { snackbar -> snackbar.show() }
         }
     }
 
-    fun showDebugNotification(message: String) {
+    private fun showDebugNotification(message: String) {
         baseLayout.get()?.let { layout ->
             Snackbar.make(layout, message, Snackbar.LENGTH_LONG)
                 .also { snackbar ->

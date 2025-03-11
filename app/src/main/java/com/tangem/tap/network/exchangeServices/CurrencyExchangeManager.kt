@@ -5,16 +5,24 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.core.utils.lceContent
+import com.tangem.domain.core.utils.lceLoading
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.domain.model.Currency
+import com.tangem.tap.features.demo.isDemoCard
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.store
-import com.tangem.tap.tangemSdk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.math.BigDecimal
 
 /**
@@ -24,20 +32,29 @@ class CurrencyExchangeManager(
     private val buyService: ExchangeService,
     private val sellService: ExchangeService,
     private val primaryRules: ExchangeRules,
-) : ExchangeService, ExchangeUrlBuilder {
+) : ExchangeService {
 
-    override fun featureIsSwitchedOn(): Boolean = primaryRules.featureIsSwitchedOn()
+    override val initializationStatus: StateFlow<ExchangeServiceInitializationStatus>
+        get() = _initializationStatus
+
+    private val _initializationStatus: MutableStateFlow<ExchangeServiceInitializationStatus> =
+        MutableStateFlow(value = lceLoading())
 
     override suspend fun update() {
-        buyService.update()
+        _initializationStatus.value = lceLoading()
+
+        if (!store.inject(DaggerGraphState::onrampFeatureToggles).isFeatureEnabled) {
+            buyService.update()
+        }
+
         sellService.update()
+
+        _initializationStatus.value = lceContent()
     }
 
-    override fun isBuyAllowed(): Boolean = primaryRules.isBuyAllowed() && buyService.isBuyAllowed()
-    override fun isSellAllowed(): Boolean = primaryRules.isSellAllowed() && sellService.isSellAllowed()
-
-    override fun availableForBuy(currency: Currency): Boolean {
-        return primaryRules.availableForBuy(currency) && buyService.availableForBuy(currency)
+    override fun availableForBuy(scanResponse: ScanResponse, currency: Currency): Boolean {
+        return primaryRules.availableForBuy(scanResponse, currency) &&
+            buyService.availableForBuy(scanResponse, currency)
     }
 
     override fun availableForSell(currency: Currency): Boolean {
@@ -46,20 +63,21 @@ class CurrencyExchangeManager(
 
     override fun getUrl(
         action: Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: CryptoCurrencyName,
+        cryptoCurrency: CryptoCurrency,
         fiatCurrencyName: String,
         walletAddress: String,
+        isDarkTheme: Boolean,
     ): String? {
+        val blockchain = Blockchain.fromId(cryptoCurrency.network.id.value)
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
         val urlBuilder = getExchangeUrlBuilder(action)
         return urlBuilder.getUrl(
             action,
-            blockchain,
-            cryptoCurrencyName,
+            cryptoCurrency,
             fiatCurrencyName,
             walletAddress,
+            isDarkTheme,
         )
     }
 
@@ -72,7 +90,7 @@ class CurrencyExchangeManager(
         return when (action) {
             Action.Buy -> buyService
             Action.Sell -> sellService
-        } as ExchangeUrlBuilder
+        }
     }
 
     enum class Action { Buy, Sell }
@@ -86,32 +104,27 @@ class CurrencyExchangeManager(
     }
 }
 
-suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
-    card: CardDTO,
-    walletManager: EthereumWalletManager,
-    token: Token,
-) {
-    walletManager.safeUpdate()
+@Deprecated("Useless")
+suspend fun buyErc20TestnetTokens(card: CardDTO, walletManager: EthereumWalletManager, destinationAddress: String) {
+    walletManager.safeUpdate(card.isDemoCard())
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
-    val destinationAddress = token.contractAddress
 
-    val feeResult =
-        walletManager.getFee(
-            amountToSend,
-            destinationAddress,
-        ) as? Result.Success ?: return
-    val fee = feeResult.data[0]
+    val feeResult = walletManager.getFee(amountToSend, destinationAddress) as? Result.Success ?: return
+    val fee = when (val feeForTx = feeResult.data) {
+        is TransactionFee.Choosable -> feeForTx.minimum
+        is TransactionFee.Single -> feeForTx.normal
+    }
 
     val coinValue = walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
-    if (coinValue < fee.value) return
+    if (coinValue < fee.amount.value) return
 
-    val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
-
+    val isCardNotBackedUp = card.backupStatus?.isActive != true && !card.isTangemTwins
     val signer = TangemSigner(
-        card = card,
-        tangemSdk = tangemSdk,
+        cardId = card.cardId.takeIf { isCardNotBackedUp },
+        tangemSdk = store.inject(DaggerGraphState::cardSdkConfigRepository).sdk,
         initialMessage = Message(),
+        twinKey = null,
     ) { signResponse ->
         store.dispatch(
             GlobalAction.UpdateWalletSignedHashes(
@@ -120,6 +133,16 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
                 remainingSignatures = signResponse.remainingSignatures,
             ),
         )
+
+        store.dispatch(action = GlobalAction.IsSignWithRing(signResponse.isRing))
     }
-    walletManager.send(transaction, signer)
+
+    walletManager.send(
+        transactionData = walletManager.createTransaction(
+            amount = amountToSend,
+            fee = fee,
+            destination = destinationAddress,
+        ),
+        signer = signer,
+    )
 }

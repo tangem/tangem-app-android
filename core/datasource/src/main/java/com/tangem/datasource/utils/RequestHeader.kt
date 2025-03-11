@@ -1,21 +1,51 @@
 package com.tangem.datasource.utils
 
-import com.tangem.lib.auth.AuthProvider
+import android.os.Build
+import com.tangem.datasource.api.common.AuthProvider
+import com.tangem.datasource.utils.RequestHeader.CacheControlHeader.checkHeaderValueOrEmpty
+import com.tangem.utils.ProviderSuspend
+import com.tangem.utils.version.AppVersionProvider
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * Presentation of request header
  *
  * @param pairs header name and header value pairs
  */
-sealed class RequestHeader(vararg pairs: Pair<String, String>) {
+sealed class RequestHeader(vararg pairs: Pair<String, ProviderSuspend<String>>) {
 
     /** Header list */
-    val values: List<Pair<String, String>> = pairs.toList()
+    val values: Map<String, ProviderSuspend<String>> = pairs.toMap()
 
-    object CacheControlHeader : RequestHeader("Cache-Control" to "max-age=600")
+    data object CacheControlHeader : RequestHeader("Cache-Control" to ProviderSuspend { "max-age=600" })
 
     class AuthenticationHeader(authProvider: AuthProvider) : RequestHeader(
-        "card_public_key" to authProvider.getCardPublicKey(),
-        "card_id" to authProvider.getCardId()
+        "card_id" to ProviderSuspend(authProvider::getCardId),
+        "card_public_key" to ProviderSuspend(authProvider::getCardPublicKey),
     )
+
+    class AppVersionPlatformHeaders(appVersionProvider: AppVersionProvider) : RequestHeader(
+        "version" to ProviderSuspend { appVersionProvider.versionName },
+        "platform" to ProviderSuspend { "android" },
+        "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
+        "timezone" to ProviderSuspend {
+            TimeZone.getDefault().getDisplayName(false, TimeZone.SHORT).checkHeaderValueOrEmpty()
+        },
+        "device" to ProviderSuspend { "${Build.MANUFACTURER} ${Build.MODEL}".checkHeaderValueOrEmpty() },
+    )
+
+    /**
+     * Use it to avoid crash in okhttp headers
+     */
+    fun String.checkHeaderValueOrEmpty(): String {
+        for (i in this.indices) {
+            val c = this[i]
+            val charCondition = c == '\t' || c in '\u0020'..'\u007e'
+            if (!charCondition) {
+                return ""
+            }
+        }
+        return this
+    }
 }

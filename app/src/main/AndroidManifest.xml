@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.tangem.wallet">
+    xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.HIDE_OVERLAY_WINDOWS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -10,8 +10,7 @@
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />
 
     <uses-feature android:name="android.hardware.camera" />
     <uses-feature android:name="android.hardware.camera.autofocus" />
@@ -26,28 +25,41 @@
         </intent>
     </queries>
 
+    <queries>
+        <intent>
+            <action android:name=
+                "android.support.customtabs.action.CustomTabsService" />
+        </intent>
+    </queries>
+
     <application
-        android:theme="@style/AppTheme"
-        android:label="@string/tangem_app_name"
-        android:name="com.tangem.tap.TapApplication"
+        android:name="com.tangem.tap.TangemHiltApplication"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
+        android:label="@string/tangem_app_name"
+        android:largeHeap="@bool/largeHeap"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:resizeableActivity="@bool/resizeable_activity"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:allowBackup="false"
-        android:networkSecurityConfig="@xml/network_security_config"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:allowBackup">
+        tools:replace="android:allowBackup, android:fullBackupContent, android:label">
 
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
             android:value="true" />
 
         <activity
-            android:exported="true"
             android:name="com.tangem.tap.MainActivity"
+            android:configChanges="uiMode"
+            android:exported="true"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
+            android:theme="@style/SplashTheme"
             android:windowSoftInputMode="adjustResize">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -57,40 +69,25 @@
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
 
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="www.tangem.com"
-                    android:scheme="http" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="www.tangem.com"
-                    android:scheme="https" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="tangem.com"
-                    android:scheme="http" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="tangem.com"
-                    android:scheme="https" />
-                <data
-                    android:pathPrefix="/ndef"
-                    android:host="app.tangem.com"
-                    android:scheme="https" />
-            </intent-filter>
+                <data android:scheme="http" />
+                <data android:host="www.tangem.com" />
+                <data android:pathPrefix="/ndef" />
 
-            <intent-filter>
-                <action android:name="android.nfc.action.TECH_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
+                <data android:scheme="https" />
+                <data android:host="www.tangem.com" />
+                <data android:pathPrefix="/ndef" />
 
-            <meta-data
-                android:name="android.nfc.action.TECH_DISCOVERED"
-                android:resource="@xml/nfc_tech_filter" />
+                <data android:scheme="http" />
+                <data android:host="tangem.com" />
+                <data android:pathPrefix="/ndef" />
 
-            <intent-filter>
-                <action android:name="android.nfc.action.TAG_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="https" />
+                <data android:host="tangem.com" />
+                <data android:pathPrefix="/ndef" />
+
+                <data android:scheme="https" />
+                <data android:host="app.tangem.com" />
+                <data android:pathPrefix="/ndef" />
             </intent-filter>
 
             <intent-filter>
@@ -120,7 +117,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="success.tangem.com"
+                    android:host="redirect"
                     android:scheme="tangem" />
             </intent-filter>
 
@@ -131,16 +128,22 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="sell-request.tangem.com"
+                    android:host="onramp-success"
+                    android:scheme="tangem" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="redirect_sell"
                     android:scheme="tangem" />
             </intent-filter>
 
         </activity>
-
-        <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
-
-        <activity android:name="zendesk.messaging.MessagingActivity"
-            android:theme="@style/ZendeskTheme" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -152,5 +155,19 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_tangem_24" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/white" />
+
+        <service
+            android:name="com.tangem.tap.common.pushes.TangemPushNotificationService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
     </application>
 </manifest>
