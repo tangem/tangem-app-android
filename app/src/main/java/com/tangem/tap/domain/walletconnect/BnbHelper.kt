@@ -4,16 +4,17 @@ import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.GsonBuilder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.calculateSha256
-import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTradeOrder
+import com.tangem.tap.domain.walletconnect2.domain.models.binance.WcBinanceTransferOrder
+import com.tangem.tap.domain.walletconnect2.domain.models.binance.tradeOrderSerializer
 import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
 import com.tangem.tap.features.details.redux.walletconnect.TradeData
-import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
-import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
-import com.trustwallet.walletconnect.models.binance.tradeOrderSerializer
+import com.tangem.utils.extensions.stripZeroPlainString
 import timber.log.Timber
 
-object BnbHelper {
-    fun createMessageData(order: WCBinanceTransferOrder): BinanceMessageData.Transfer {
+internal object BnbHelper {
+
+    fun createMessageData(order: WcBinanceTransferOrder): BinanceMessageData.Transfer {
         val input = order.msgs.first().inputs.first()
         val output = order.msgs.first().inputs.first()
 
@@ -39,7 +40,7 @@ object BnbHelper {
         )
     }
 
-    fun createMessageData(order: WCBinanceTradeOrder): BinanceMessageData.Trade {
+    fun createMessageData(order: WcBinanceTradeOrder): BinanceMessageData.Trade {
         val address = order.msgs.first().sender
 
         val tradeData = order.msgs.map {

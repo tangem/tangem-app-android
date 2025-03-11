@@ -128,11 +128,7 @@ internal data class TangemTextFieldColors(
     }
 
     @Composable
-    override fun labelColor(
-        enabled: Boolean,
-        error: Boolean,
-        interactionSource: InteractionSource,
-    ): State<Color> {
+    override fun labelColor(enabled: Boolean, error: Boolean, interactionSource: InteractionSource): State<Color> {
         val focused by interactionSource.collectIsFocusedAsState()
 
         val targetValue = when {

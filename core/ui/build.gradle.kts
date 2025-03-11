@@ -1,61 +1,61 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    id("configuration")
 }
 
 android {
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
-
-    buildFeatures {
-        compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose
-    }
-
-    buildTypes {
-        create("debug_beta") {
-            initWith(getByName("release"))
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("release"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-    }
+    namespace = "com.tangem.core.ui"
 }
 
 dependencies {
+    /** Project - Domain */
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.appTheme.models)
+
+    /** Project - Core */
+    implementation(projects.core.res)
+    implementation(projects.core.utils)
+    implementation(projects.core.decompose)
+
     /** AndroidX libraries */
-    implementation(AndroidX.fragmentKtx)
+    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.androidx.paging.runtime)
+    implementation(deps.lifecycle.runtime.ktx)
+    implementation(deps.androidx.palette)
+    implementation(deps.androidx.windowManager) {
+        exclude(
+            deps.kotlin.coroutines.android.get().module.group,
+            deps.kotlin.coroutines.android.get().module.name
+        )
+    }
 
     /** Compose */
-    implementation(Compose.foundation)
-    implementation(Compose.material)
-    implementation(Compose.uiTooling)
+    implementation(deps.compose.constraintLayout)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.paging)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.ui.utils)
+    implementation(deps.compose.coil)
+    implementation(deps.compose.navigation)
+    implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.reorderable)
 
     /** Other libraries */
-    implementation(Library.accompanistSystemUiController)
-    implementation(Library.materialComponent)
-    implementation(Library.composeShimmer)
+    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.compose.accompanist.permission)
+    implementation(deps.material)
+    implementation(deps.compose.shimmer)
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.zxing.qrCore)
+    api(deps.jodatime)
+    implementation(deps.timber)
+    implementation(deps.markdown)
 
-    implementation(project(":core:res"))
+    /** Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }

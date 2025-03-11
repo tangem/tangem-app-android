@@ -1,29 +1,11 @@
 package com.tangem.tap.common.extensions
 
-import android.content.ContentResolver
-import android.content.Context
-import android.content.pm.PackageManager
-import android.content.res.Resources
-import android.net.Uri
-import androidx.annotation.AnyRes
-import androidx.core.content.ContextCompat
-
-fun Context.readFile(fileName: String): String =
-    this.openFileInput(fileName).bufferedReader().readText()
-
-fun Context.rewriteFile(content: String, fileName: String) {
-    this.openFileOutput(fileName, Context.MODE_PRIVATE).use {
-        it.write(content.toByteArray(), 0, content.length)
-    }
-}
-
-fun Context.readAssetAsString(fileName: String): String {
-    return this.assets.open("$fileName.json").bufferedReader().readText()
-}
-
-fun Context.isPermissionGranted(permission: String): Boolean {
-    return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
-}
+import android.content.*
+import android.content.pm.*
+import android.content.res.*
+import android.net.*
+import androidx.annotation.*
+import androidx.core.content.*
 
 /**
  * Get uri to any resource type via given Resource Instance

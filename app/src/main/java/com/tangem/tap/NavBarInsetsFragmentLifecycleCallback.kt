@@ -11,12 +11,8 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentManager.FragmentLifecycleCallbacks
 
 class NavBarInsetsFragmentLifecycleCallback : FragmentLifecycleCallbacks() {
-    override fun onFragmentViewCreated(
-        fm: FragmentManager,
-        f: Fragment,
-        v: View,
-        savedInstanceState: Bundle?,
-    ) {
+
+    override fun onFragmentViewCreated(fm: FragmentManager, f: Fragment, v: View, savedInstanceState: Bundle?) {
         if (v is ComposeView) return
 
         ViewCompat.setOnApplyWindowInsetsListener(v) { view, windowInsets ->

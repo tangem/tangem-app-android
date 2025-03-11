@@ -1,48 +1,25 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
-}
-
-android {
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
-
-    buildTypes {
-        create("debug_beta") {
-            initWith(getByName("release"))
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("release"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-    }
+    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.kotlin.kapt)
+    id("configuration")
 }
 
 dependencies {
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.core)
+    kapt(deps.hilt.kapt)
 
-    /** Core shouldn't depends on core, but in case with utils and logging its necessary */
-    implementation(project(":core:utils"))
+    /** Analytics - Models */
+    api(projects.core.analytics.models)
+
+    /** Domain */
+    implementation(projects.domain.analytics)
+    implementation(projects.domain.models)
+
+    /** Other */
+    implementation(deps.kotlin.coroutines)
+
+    /** Core shouldn't depend on core, but in case with utils and logging its necessary */
+    implementation(projects.core.utils)
 }

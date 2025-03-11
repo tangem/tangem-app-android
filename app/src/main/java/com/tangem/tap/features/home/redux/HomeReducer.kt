@@ -7,19 +7,13 @@ object HomeReducer {
     fun reduce(action: Action, state: AppState): HomeState = internalReduce(action, state)
 }
 
-private fun internalReduce(action: Action, state: AppState): HomeState {
-    if (action !is HomeAction) return state.homeState
+private fun internalReduce(action: Action, appState: AppState): HomeState {
+    if (action !is HomeAction) return appState.homeState
 
-    var state = state.homeState
-    when (action) {
+    return when (action) {
         is HomeAction.ScanInProgress -> {
-            state = state.copy(scanInProgress = action.scanInProgress)
+            appState.homeState.copy(scanInProgress = action.scanInProgress)
         }
-        is HomeAction.ChangeScanCardButtonState -> {
-            state = state.copy(btnScanState = action.state)
-        }
-        else -> {}
+        else -> appState.homeState
     }
-
-    return state
 }

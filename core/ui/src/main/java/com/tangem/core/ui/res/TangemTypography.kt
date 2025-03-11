@@ -1,11 +1,11 @@
 package com.tangem.core.ui.res
 
-import androidx.compose.material.Typography
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.ExperimentalUnitApi
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.TextUnitType
 import androidx.compose.ui.unit.sp
@@ -16,67 +16,138 @@ private val RobotoFamily = FontFamily(
     Font(R.font.roboto_medium, FontWeight.Medium),
 )
 
-@OptIn(ExperimentalUnitApi::class)
-val TangemTypography = Typography(
-    defaultFontFamily = RobotoFamily,
-    h1 = TextStyle(
+@Immutable
+data class TangemTypography internal constructor(
+    val head: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
+        fontSize = 34.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = TextUnit(value = 0f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 44f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
+    ),
+    val h1: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 34.sp,
         fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(0f, TextUnitType.Sp),
-        lineHeight = TextUnit(44f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 44f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    h2 = TextStyle(
+    val h2: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 24.sp,
         fontWeight = FontWeight.Medium,
-        letterSpacing = TextUnit(0.18f, TextUnitType.Sp),
-        lineHeight = TextUnit(32f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.18f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 32f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    h3 = TextStyle(
+    val h3: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 20.sp,
         fontWeight = FontWeight.Medium,
-        letterSpacing = TextUnit(0.15f, TextUnitType.Sp),
-        lineHeight = TextUnit(24f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.15f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 24f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    subtitle1 = TextStyle(
+    val subtitle1: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 16.sp,
         fontWeight = FontWeight.Medium,
-        letterSpacing = TextUnit(0.15f, TextUnitType.Sp),
-        lineHeight = TextUnit(24f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.15f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 24f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    subtitle2 = TextStyle(
+    val subtitle2: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 14.sp,
         fontWeight = FontWeight.Medium,
-        letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
-        lineHeight = TextUnit(24f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    body1 = TextStyle(
+    val body1: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 16.sp,
         fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(0.5f, TextUnitType.Sp),
-        lineHeight = TextUnit(24f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.5f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 24f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    body2 = TextStyle(
+    val body2: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 14.sp,
         fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(0.25f, TextUnitType.Sp),
-        lineHeight = TextUnit(20f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.25f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    button = TextStyle(
+    val button: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 14.sp,
         fontWeight = FontWeight.Medium,
-        letterSpacing = TextUnit(0.1f, TextUnitType.Sp),
-        lineHeight = TextUnit(16f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.1f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 20f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    caption = TextStyle(
+    val caption1: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
+        fontSize = 12.sp,
+        fontWeight = FontWeight.Medium,
+        letterSpacing = TextUnit(value = 0.4f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
+    ),
+    val caption2: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 12.sp,
         fontWeight = FontWeight.Normal,
-        letterSpacing = TextUnit(0.4f, TextUnitType.Sp),
-        lineHeight = TextUnit(16f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 0.4f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
-    overline = TextStyle(
+    val overline: TextStyle = TextStyle(
+        fontFamily = RobotoFamily,
         fontSize = 10.sp,
         fontWeight = FontWeight.Medium,
-        letterSpacing = TextUnit(1.5f, TextUnitType.Sp),
-        lineHeight = TextUnit(16f, TextUnitType.Sp),
+        letterSpacing = TextUnit(value = 1.5f, type = TextUnitType.Sp),
+        lineHeight = TextUnit(value = 16f, type = TextUnitType.Sp),
+        lineHeightStyle = LineHeightStyle(
+            alignment = LineHeightStyle.Alignment.Center,
+            trim = LineHeightStyle.Trim.None,
+        ),
     ),
 )

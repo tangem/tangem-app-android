@@ -1,31 +1,29 @@
 package com.tangem.tap.domain.userWalletList.repository.implementation
 
-import android.security.keystore.KeyProperties
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
-import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.crypto.operations.AESCipherOperations
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.common.extensions.filterNotNull
-import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsSensitiveInformationRepository
 import com.tangem.tap.domain.userWalletList.utils.sensitiveInformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
+import timber.log.Timber
 import javax.crypto.spec.SecretKeySpec
 
 internal class DefaultUserWalletsSensitiveInformationRepository(
     moshi: Moshi,
     private val secureStorage: SecureStorage,
 ) : UserWalletsSensitiveInformationRepository {
+
     private val sensitiveInformationAdapter: JsonAdapter<UserWalletSensitiveInformation> = moshi.adapter(
         UserWalletSensitiveInformation::class.java,
     )
@@ -33,12 +31,11 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
         Types.newParameterizedType(Map::class.java, String::class.java, ByteArray::class.java),
     )
 
-    private val cipher: Cipher by lazy {
-        Cipher.getInstance("$algorithm/$blockMode/$encryptionPadding")
-    }
-
     override suspend fun save(userWallet: UserWallet, encryptionKey: ByteArray?): CompletionResult<Unit> {
-        if (encryptionKey == null) return CompletionResult.Success(Unit) // Encryption key is null, do nothing
+        if (encryptionKey == null) {
+            return CompletionResult.Success(Unit) // Encryption key is null, do nothing
+        }
+
         return catching {
             val encryptedSensitiveInformation = userWallet.sensitiveInformation
                 .encode()
@@ -48,9 +45,6 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
                 .apply { set(userWallet.walletId.stringValue, encryptedSensitiveInformation) }
                 .let { saveInternal(it) }
         }
-            .mapFailure { error ->
-                UserWalletListError.SaveSensitiveInformationError(error.cause ?: error)
-            }
     }
 
     override suspend fun getAll(
@@ -68,13 +62,10 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
                 .mapValues { (userWalletId, encryptionKey) ->
                     encryptedSensitiveInformation[userWalletId.stringValue]
                         ?.getIvAndDecrypt(userWalletId.stringValue, encryptionKey.encryptionKey)
-                        .decodeToSensitiveInformation()
+                        ?.decodeToSensitiveInformation()
                 }
                 .filterNotNull()
         }
-            .mapFailure { error ->
-                UserWalletListError.ReceiveSensitiveInformationError(error.cause ?: error)
-            }
     }
 
     override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
@@ -88,7 +79,8 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     private suspend fun getAllEncrypted(): Map<String, ByteArray> {
         return withContext(Dispatchers.IO) {
             secureStorage.get(StorageKey.UserWalletsSensitiveInformation.name)
-                .decodeToEncryptedSensitiveInformation()
+                ?.decodeToEncryptedSensitiveInformation()
+                .orEmpty()
         }
     }
 
@@ -113,20 +105,25 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
         }
     }
 
-    private suspend fun ByteArray?.decodeToEncryptedSensitiveInformation(): Map<String, ByteArray> {
+    private suspend fun ByteArray.decodeToEncryptedSensitiveInformation(): Map<String, ByteArray>? {
         return withContext(Dispatchers.Default) {
             this@decodeToEncryptedSensitiveInformation
-                ?.decodeToString(throwOnInvalidSequence = true)
-                ?.let(encryptedSensitiveInformationMapAdapter::fromJson)
-                .orEmpty()
+                .decodeToString(throwOnInvalidSequence = true)
+                .let(encryptedSensitiveInformationMapAdapter::fromJson)
         }
     }
 
-    private suspend fun ByteArray?.decodeToSensitiveInformation(): UserWalletSensitiveInformation? {
+    private suspend fun ByteArray.decodeToSensitiveInformation(): UserWalletSensitiveInformation? {
         return withContext(Dispatchers.Default) {
-            this@decodeToSensitiveInformation
-                ?.decodeToString(throwOnInvalidSequence = true)
-                ?.let(sensitiveInformationAdapter::fromJson)
+            try {
+                this@decodeToSensitiveInformation
+                    .decodeToString(throwOnInvalidSequence = true)
+                    .let(sensitiveInformationAdapter::fromJson)
+            } catch (e: CharacterCodingException) {
+                Timber.e(e, "Unable to decode sensitive information")
+
+                null
+            }
         }
     }
 
@@ -148,26 +145,24 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
 
     private suspend fun ByteArray.encryptAndStoreIv(userWalletId: String, encryptionKey: ByteArray): ByteArray {
         return withContext(Dispatchers.Default) {
-            val secretKey = SecretKeySpec(encryptionKey, algorithm)
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey)
-            val encryptedData = cipher.doFinal(this@encryptAndStoreIv)
-            secureStorage.store(data = cipher.iv, account = StorageKey.SensitiveInformationIv(userWalletId).name)
+            val secretKey = SecretKeySpec(encryptionKey, AESCipherOperations.KEY_ALGORITHM)
+            val cipher = AESCipherOperations.initEncryptionCipher(secretKey)
+            val encryptedData = AESCipherOperations.encrypt(cipher, decryptedData = this@encryptAndStoreIv)
+
+            secureStorage.store(cipher.iv, StorageKey.SensitiveInformationIv(userWalletId).name)
+
             encryptedData
         }
     }
 
-    private suspend fun ByteArray.getIvAndDecrypt(
-        userWalletId: String,
-        encryptionKey: ByteArray,
-    ): ByteArray? {
+    private suspend fun ByteArray.getIvAndDecrypt(userWalletId: String, encryptionKey: ByteArray): ByteArray {
         return withContext(Dispatchers.Default) {
+            val secretKeySpec = SecretKeySpec(encryptionKey, AESCipherOperations.KEY_ALGORITHM)
             val iv = secureStorage.get(StorageKey.SensitiveInformationIv(userWalletId).name)
-                ?: error("IV not found")
-            val ivParam = IvParameterSpec(iv)
-            val secretKeySpec = SecretKeySpec(encryptionKey, algorithm)
-            cipher
-                .also { it.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParam) }
-                .doFinal(this@getIvAndDecrypt)
+                ?: error("IV for user wallet $userWalletId not found")
+            val cipher = AESCipherOperations.initDecryptionCipher(secretKeySpec, iv)
+
+            AESCipherOperations.decrypt(cipher, encryptedData = this@getIvAndDecrypt)
         }
     }
 
@@ -181,11 +176,5 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
         class SensitiveInformationIv(userWalletId: String) : StorageKey {
             override val name: String = "user_wallet_sensitive_information_iv_$userWalletId"
         }
-    }
-
-    companion object {
-        private const val algorithm = KeyProperties.KEY_ALGORITHM_AES
-        private const val blockMode = KeyProperties.BLOCK_MODE_CBC
-        private const val encryptionPadding = KeyProperties.ENCRYPTION_PADDING_PKCS7
     }
 }

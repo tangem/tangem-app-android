@@ -1,20 +1,21 @@
 package com.tangem.tap.features.onboarding.products.otherCards.redux
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.mainScope
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.utils.extensions.DELAY_SDK_DIALOG_CLOSE
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -43,8 +44,10 @@ private fun handleOtherCardsAction(action: Action) {
 
     when (action) {
         is OnboardingOtherCardsAction.Init -> {
-            if (!onboardingManager.isActivationStarted(card.cardId)) {
-                Analytics.send(Onboarding.Started())
+            scope.launch {
+                if (!onboardingManager.isActivationStarted(card.cardId)) {
+                    Analytics.send(Onboarding.Started())
+                }
             }
         }
         is OnboardingOtherCardsAction.LoadCardArtwork -> {
@@ -67,15 +70,20 @@ private fun handleOtherCardsAction(action: Action) {
                 }
                 OnboardingOtherCardsStep.Done -> {
                     Analytics.send(Onboarding.Finished())
-                    onboardingManager.activationFinished(card.cardId)
-                    postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+                    mainScope.launch {
+                        onboardingManager.finishActivation(card.cardId)
+                        postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+                    }
                 }
                 else -> Unit
             }
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
             scope.launch {
-                val result = tangemSdkManager.createProductWallet(onboardingManager.scanResponse)
+                val result = tangemSdkManager.createProductWallet(
+                    scanResponse = onboardingManager.scanResponse,
+                    shouldReset = globalState.onboardingState.shouldResetOnCreate,
+                )
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
@@ -85,42 +93,15 @@ private fun handleOtherCardsAction(action: Action) {
                             )
                             val updatedCard = updatedResponse.card
                             onboardingManager.scanResponse = updatedResponse
-                            onboardingManager.activationStarted(updatedCard.cardId)
-
-                            val primaryBlockchain = updatedResponse.cardTypesResolver.getBlockchain()
-                            val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
-                                val primaryToken = updatedResponse.cardTypesResolver.getPrimaryToken()
-                                val blockchainNetwork =
-                                    BlockchainNetwork(
-                                        blockchain = primaryBlockchain,
-                                        card = updatedCard,
-                                    )
-                                        .updateTokens(
-                                            listOfNotNull(primaryToken),
-                                        )
-                                listOf(blockchainNetwork)
-                            } else {
-                                listOf(
-                                    BlockchainNetwork(
-                                        blockchain = Blockchain.Bitcoin,
-                                        card = updatedCard,
-                                    ),
-                                    BlockchainNetwork(
-                                        blockchain = Blockchain.Ethereum,
-                                        card = updatedCard,
-                                    ),
-                                )
-                            }
-
-                            store.dispatch(
-                                WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks, updatedResponse.card),
-                            )
+                            onboardingManager.startActivation(updatedCard.cardId)
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
                         }
                         is CompletionResult.Failure -> {
-//                            do nothing
+                            if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                                handleActivationError()
+                            }
                         }
                     }
                 }
@@ -130,9 +111,19 @@ private fun handleOtherCardsAction(action: Action) {
             store.dispatch(GlobalAction.Onboarding.Stop)
             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(onboardingManager.scanResponse)
         }
-        is OnboardingOtherCardsAction.Confetti.Hide,
-        is OnboardingOtherCardsAction.SetArtworkUrl,
-        is OnboardingOtherCardsAction.Confetti.Show,
-        -> Unit
+        OnboardingOtherCardsAction.OnBackPressed -> {
+            OnboardingHelper.onInterrupted()
+        }
+        else -> Unit
     }
+}
+
+private fun handleActivationError() {
+    store.dispatchDialogShow(
+        OnboardingDialog.WalletActivationError(
+            onConfirm = {
+                store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(true))
+            },
+        ),
+    )
 }

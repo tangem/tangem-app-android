@@ -1,20 +1,18 @@
 package com.tangem.tap.features.home.redux
 
-import com.tangem.core.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.events.IntroductionProcess
-import com.tangem.tap.common.entities.IndeterminateProgressButton
+import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class HomeAction : Action {
 
-    object Init : HomeAction()
+    data object OnCreate : HomeAction()
 
-    data class ReadCard(
-        val analyticsEvent: AnalyticsEvent? = IntroductionProcess.CardWasScanned(),
-    ) : HomeAction()
+    /**
+     * Action for scanning card
+     *
+     * @property scope lifecycle scope. It will be canceled when lifecycle-aware component is destroyed
+     */
+    data class ReadCard(val scope: CoroutineScope) : HomeAction()
 
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
-    data class GoToShop(val userCountryCode: String?) : HomeAction()
-
-    data class ChangeScanCardButtonState(val state: IndeterminateProgressButton) : HomeAction()
 }

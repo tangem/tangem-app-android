@@ -1,73 +1,33 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.Fragment
-import androidx.transition.TransitionInflater
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.DetailsAction
-import com.tangem.tap.features.details.redux.DetailsState
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.routing.AppRouter
+import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.store
-import org.rekotlin.StoreSubscriber
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-class CardSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
+@AndroidEntryPoint
+internal class CardSettingsFragment : ComposeFragment() {
 
-    private val viewModel = CardSettingsViewModel(store)
+    @Inject
+    override lateinit var uiDependencies: UiDependencies
 
-    private var screenState: MutableState<CardSettingsScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.detailsState.cardSettingsState))
+    private val viewModel: CardSettingsViewModel by viewModels()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        BackHandler { store.dispatchNavigationAction(AppRouter::pop) }
 
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(android.R.transition.fade)
-        exitTransition = inflater.inflateTransition(android.R.transition.fade)
-    }
+        val state by viewModel.screenState.collectAsStateWithLifecycle()
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                isTransitionGroup = true
-                TangemTheme {
-                    CardSettingsScreen(
-                        state = screenState.value,
-                        onBackClick = {
-                            store.dispatch(DetailsAction.ResetCardSettingsData)
-                            store.dispatch(NavigationAction.PopBackTo())
-                        },
-                    )
-                }
-            }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.detailsState == newState.detailsState
-            }.select { it.detailsState }
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        store.unsubscribe(this)
-    }
-
-    override fun newState(state: DetailsState) {
-        if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state.cardSettingsState)
+        CardSettingsScreen(modifier = modifier, state = state)
     }
 }

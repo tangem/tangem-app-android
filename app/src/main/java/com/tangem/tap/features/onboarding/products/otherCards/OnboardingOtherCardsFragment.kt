@@ -9,9 +9,9 @@ import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.ShareElement
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
-import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
@@ -72,6 +72,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
 
     private fun setupCreateWalletState() = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
         btnMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(OnboardingOtherCardsAction.CreateWallet)
@@ -92,6 +93,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
 
     private fun setupDoneState() = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
         btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingOtherCardsAction.Done)
@@ -117,5 +119,10 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         val transition = InternalNoteLayoutTransition()
         transition.interpolator = OvershootInterpolator()
         TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(OnboardingOtherCardsAction.OnBackPressed)
+        super.handleOnBackPressed()
     }
 }
