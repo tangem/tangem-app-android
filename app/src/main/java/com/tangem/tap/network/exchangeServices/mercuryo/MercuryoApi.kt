@@ -1,6 +1,7 @@
 package com.tangem.tap.network.exchangeServices.mercuryo
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -8,41 +9,34 @@ import retrofit2.http.Path
 interface MercuryoApi {
 
     @GET("{apiVersion}/lib/currencies")
-    suspend fun currencies(
-        @Path("apiVersion") apiVersion: String,
-    ): MercuryoCurrenciesResponse
-
-    companion object {
-        const val BASE_URL = "https://api.mercuryo.io/"
-        const val API_VERSION = "v1.6"
-    }
+    suspend fun currencies(@Path("apiVersion") apiVersion: String): MercuryoCurrenciesResponse
 }
 
+@JsonClass(generateAdapter = true)
 data class MercuryoCurrenciesResponse(
-    val status: Int,
-    val data: Data,
+    @Json(name = "status") val status: Int,
+    @Json(name = "data") val data: Data,
 ) {
+    @JsonClass(generateAdapter = true)
     data class Data(
-        val fiat: List<String>,
-        val crypto: List<String>,
-        val config: Config
+        @Json(name = "fiat") val fiat: List<String>,
+        @Json(name = "crypto") val crypto: List<String>,
+        @Json(name = "config") val config: Config,
     )
 
+    @JsonClass(generateAdapter = true)
     data class Config(
-        val base: Map<String, String>,
-        @Json(name = "has_withdrawal_fee")
-        val hasWithdrawalFee: Map<String, Boolean>,
-        @Json(name = "display_options")
-        val displayOptions: Map<String, DisplayOption>,
-        val icons: Map<String, Any>,
+        @Json(name = "crypto_currencies")
+        val cryptoCurrencies: List<MercuryoCryptoCurrency>,
     )
 
-    data class DisplayOption(
-        @Json(name = "fullname")
-        val fullName: String,
-        @Json(name = "total_digits")
-        val totalDigits: Int,
-        @Json(name = "display_digits")
-        val displayDigits: Int,
+    @JsonClass(generateAdapter = true)
+    data class MercuryoCryptoCurrency(
+        @Json(name = "currency")
+        val currencySymbol: String,
+        @Json(name = "network")
+        val network: String,
+        @Json(name = "contract")
+        val contractAddress: String,
     )
 }

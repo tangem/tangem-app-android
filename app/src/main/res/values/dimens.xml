@@ -1,37 +1,6 @@
 <resources>
 
-    <dimen name="height_thin_separator">0.8dp</dimen>
-    <dimen name="margin_separator">4dp</dimen>
-    <dimen name="margin_window">8dp</dimen>
-    <dimen name="activity_vertical_margin">4dp</dimen>
-    <dimen name="activity_horizontal_margin">4dp</dimen>
-    <dimen name="fab_margin">8dp</dimen>
-    <dimen name="appbar_padding_top">8dp</dimen>
-    <dimen name="pin_button_size">80dp</dimen>
-    <dimen name="pin_button_top_margin">8dp</dimen>
-    <dimen name="card_height">168dp</dimen>
-    <dimen name="card_info_height">132dp</dimen>
-
-    <dimen name="verify_card_left_col_width">144dp</dimen>
-
-    <dimen name="empty_wallet_left_col_width">140dp</dimen>
-    <dimen name="empty_wallet_left_col_margin">16dp</dimen>
-
-    <dimen name="text_size_2_small">11dp</dimen>
-    <dimen name="text_size_small">13dp</dimen>
-    <dimen name="text_size_1_small">15dp</dimen>
-    <dimen name="text_size_medium">19dp</dimen>
-    <dimen name="text_size_1_large">23dp</dimen>
-    <dimen name="text_size_large">26dp</dimen>
-    <dimen name="text_size_pin">34dp</dimen>
-
-    <dimen name="size_qr_image">180dp</dimen>
-    <dimen name="size_explore_image">30dp</dimen>
-    <dimen name="size_progress_bar_big">135dp</dimen>
-
     <dimen name="btn_corner_radius">4dp</dimen>
-    <dimen name="btn_corner_radius_medium">8dp</dimen>
-    <dimen name="btn_corner_radius_large">12dp</dimen>
     <dimen name="btn_rounded_size">44dp</dimen>
 
     <dimen name="text_size_amount_to_send">32sp</dimen>
@@ -41,12 +10,8 @@
 
     <!-- Home - TOP -->
     <item name="home_top_weight" format="float" type="dimen">0.9</item>
-    <dimen name="home_top_back_card_translationY">-60dp</dimen>
     <item name="home_top_back_card_scaleX" format="float" type="dimen">0.9</item>
     <item name="home_top_back_card_scaleY" format="float" type="dimen">0.9</item>
-    <dimen name="home_top_front_card_translationY">-40dp</dimen>
-    <item name="home_top_front_card_scaleY" format="float" type="dimen">0.9</item>
-    <item name="home_top_front_card_scaleX" format="float" type="dimen">0.9</item>
 
     <!--  Home - bottom -->
     <item name="home_bottom_weight" format="float" type="dimen">1</item>
@@ -67,11 +32,9 @@
 
     <!--  Onboarding - Wallet - Access code  -->
     <dimen name="access_code_title_margin_top">40dp</dimen>
-    <dimen name="access_code_imv_lock_margin_top">12dp</dimen>
     <dimen name="access_code_info_protect_margin_top">8dp</dimen>
     <dimen name="access_code_info_items_space">16dp</dimen>
     <dimen name="access_code_btn_continue_margin_bottom">38dp</dimen>
-    <dimen name="access_code_btn_continue_margin_start">78dp</dimen>
-    <dimen name="access_code_btn_continue_margin_end">78dp</dimen>
+
 
 </resources>

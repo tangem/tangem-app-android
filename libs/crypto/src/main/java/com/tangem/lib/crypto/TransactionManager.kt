@@ -1,50 +1,40 @@
 package com.tangem.lib.crypto
 
-import com.tangem.lib.crypto.models.Currency
-import com.tangem.lib.crypto.models.ProxyAmount
-import com.tangem.lib.crypto.models.ProxyNetworkInfo
-import com.tangem.lib.crypto.models.transactions.SendTxResult
-import java.math.BigDecimal
+import com.tangem.blockchain.common.Amount
+import com.tangem.lib.crypto.models.*
+import java.math.BigInteger
 
 interface TransactionManager {
 
-    @Throws(IllegalStateException::class)
-    suspend fun sendApproveTransaction(
-        networkId: String,
-        feeAmount: BigDecimal,
-        estimatedGas: Int,
-        destinationAddress: String,
-        dataToSign: String,
-    ): SendTxResult
-
+    /**
+     * Get fee
+     *
+     * @param networkId network id of blockchain
+     * @param amountToSend amount
+     * @param currencyToSend currency to send in tx
+     * @param destinationAddress address to send tx
+     * @param increaseBy percents in format 125 = 25%
+     * @param data data for tx
+     * @param derivationPath derivation path
+     * @return
+     */
     @Suppress("LongParameterList")
-    @Throws(IllegalStateException::class)
-    suspend fun sendTransaction(
-        networkId: String,
-        amountToSend: BigDecimal,
-        feeAmount: BigDecimal,
-        estimatedGas: Int,
-        destinationAddress: String,
-        dataToSign: String,
-        isSwap: Boolean,
-        currencyToSend: Currency,
-    ): SendTxResult
-
     @Throws(IllegalStateException::class)
     suspend fun getFee(
         networkId: String,
-        amountToSend: BigDecimal,
+        amountToSend: Amount,
         currencyToSend: Currency,
         destinationAddress: String,
-    ): ProxyAmount
+        increaseBy: Int?,
+        data: String?,
+        derivationPath: String?,
+    ): ProxyFees
 
     @Throws(IllegalStateException::class)
-    fun getNativeTokenDecimals(networkId: String): Int
+    suspend fun getFeeForGas(networkId: String, gas: BigInteger, derivationPath: String?): ProxyFees
 
     @Throws(IllegalStateException::class)
-    suspend fun updateWalletManager(networkId: String)
-
-    fun calculateFee(networkId: String, gasPrice: String, estimatedGas: Int): BigDecimal
+    suspend fun updateWalletManager(networkId: String, derivationPath: String?)
 
     /**
      * In app blockchain id, actual in blockchain sdk, not the same as networkId
