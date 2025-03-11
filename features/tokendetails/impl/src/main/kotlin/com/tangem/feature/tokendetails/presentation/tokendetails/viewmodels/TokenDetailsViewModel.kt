@@ -575,18 +575,19 @@ internal class TokenDetailsViewModel @Inject constructor(
     override fun onReceiveClick(unavailabilityReason: ScenarioUnavailabilityReason) {
         val networkAddress = cryptoCurrencyStatus?.value?.networkAddress ?: return
 
+        analyticsEventsHandler.send(
+            TokenScreenAnalyticsEvent.ButtonWithParams.ButtonReceive(
+                token = cryptoCurrency.symbol,
+                blockchain = cryptoCurrency.network.name,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+            ),
+        )
+
         if (handleUnavailabilityReason(unavailabilityReason = unavailabilityReason)) {
             return
         }
 
-        viewModelScope.launch(dispatchers.main) {
-            analyticsEventsHandler.send(
-                TokenScreenAnalyticsEvent.ButtonWithParams.ButtonReceive(
-                    token = cryptoCurrency.symbol,
-                    blockchain = cryptoCurrency.network.name,
-                    status = unavailabilityReason.toReasonAnalyticsText(),
-                ),
-            )
+        viewModelScope.launch {
             analyticsEventsHandler.send(TokenReceiveAnalyticsEvent.ReceiveScreenOpened(cryptoCurrency.symbol))
 
             internalUiState.value = stateFactory.getStateWithReceiveBottomSheet(

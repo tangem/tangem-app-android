@@ -77,10 +77,6 @@ internal class DefaultRampManager(
                 catch = { raise(ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)) },
             )
 
-            ensure(condition = sellSupportedByService) {
-                ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)
-            }
-
             val reason = getSendUnavailabilityReason(userWalletId, status)
 
             ensure(condition = reason is ScenarioUnavailabilityReason.None) {
@@ -93,6 +89,10 @@ internal class DefaultRampManager(
                     }
                     else -> reason
                 }
+            }
+
+            ensure(condition = sellSupportedByService) {
+                ScenarioUnavailabilityReason.NotSupportedBySellService(status.currency.name)
             }
 
             Unit.right()
