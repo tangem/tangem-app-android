@@ -74,7 +74,8 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_main_action"
-            style="@style/TapPrimaryButton"
+            style="@style/TapPrimaryIconButton"
+            tools:icon="@drawable/ic_tangem_24"
             tools:text="@string/welcome_unlock_card" />
 
         <ProgressBar
@@ -84,7 +85,7 @@
             android:layout_gravity="center"
             android:elevation="18dp"
             android:indeterminate="true"
-            android:indeterminateTint="@color/backgroundLightGray"
+            android:indeterminateTint="@color/background_secondary"
             android:visibility="invisible" />
 
     </FrameLayout>
@@ -92,6 +93,9 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_alternative_action"
         style="@style/TapTextButton"
+        android:layout_width="match_parent"
+        android:layout_marginStart="@dimen/dimen16"
+        android:layout_marginEnd="@dimen/dimen16"
         android:layout_marginBottom="26dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"

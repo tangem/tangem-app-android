@@ -1,54 +1,62 @@
 package com.tangem.core.ui.components
 
-import android.graphics.Rect
-import android.view.ViewTreeObserver
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalView
+import android.os.Build
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 
-sealed class Keyboard {
-    data class Opened(val height: Int) : Keyboard()
-    object Closed : Keyboard()
+@Immutable
+sealed interface Keyboard {
+    val height: Dp
+
+    data class Opened(override val height: Dp) : Keyboard
+
+    data object Closed : Keyboard {
+        override val height: Dp = 0.dp
+    }
 }
+
+val Keyboard.isOpened: Boolean
+    @Stable
+    get() = this is Keyboard.Opened
 
 /**
  * Allows to subscribe to a soft keyboard to detect when it's open/closed
  */
-@Suppress("MagicNumber")
 @Composable
 fun keyboardAsState(): State<Keyboard> {
-    val keyboardState: MutableState<Keyboard> = remember { mutableStateOf(Keyboard.Closed) }
-    val view = LocalView.current
-    val discrepancy = remember {
-        mutableStateOf(0)
-    }
-    DisposableEffect(view) {
-        val onGlobalListener = ViewTreeObserver.OnGlobalLayoutListener {
-            val rect = Rect()
-            view.getWindowVisibleDisplayFrame(rect)
-            val screenHeight = view.rootView.height
-            val keypadHeight: Int = screenHeight - (rect.bottom + rect.top) - discrepancy.value
-            if (discrepancy.value == 0) {
-                discrepancy.value = keypadHeight
-                if (keypadHeight == 0) discrepancy.value = 1
-            }
+    val bottom = WindowInsets.ime.getBottom(LocalDensity.current)
+    val bottomDp = with(LocalDensity.current) { bottom.toDp() }
 
-            keyboardState.value = if (keypadHeight > screenHeight * 0.15) {
-                Keyboard.Opened(keypadHeight)
-            } else {
-                Keyboard.Closed
-            }
-        }
-        view.viewTreeObserver.addOnGlobalLayoutListener(onGlobalListener)
+    val keyboardStateInternal by rememberUpdatedState(
+        if (bottom > 0) Keyboard.Opened(bottomDp) else Keyboard.Closed,
+    )
 
-        onDispose {
-            view.viewTreeObserver.removeOnGlobalLayoutListener(onGlobalListener)
-        }
+    val keyboardState = remember { mutableStateOf(keyboardStateInternal) }
+
+    LaunchedEffect(keyboardStateInternal) {
+        val falsePositive = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q &&
+            keyboardStateInternal is Keyboard.Opened &&
+            keyboardStateInternal.height < 50.dp
+        // FIX android <=10 devices can randomly send ime paddings,
+        // which leads to a false positive keyboard opening ([REDACTED_TASK_KEY])
+        if (falsePositive) return@LaunchedEffect
+
+        keyboardState.value = keyboardStateInternal
     }
 
     return keyboardState
+}
+
+@Composable
+fun rememberIsKeyboardVisible(): State<Boolean> {
+    val keyboard by keyboardAsState()
+    return remember(keyboard) {
+        derivedStateOf {
+            keyboard.isOpened
+        }
+    }
 }

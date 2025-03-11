@@ -1,99 +1,102 @@
 package com.tangem.tap.features.details.ui.common
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.utils.WindowInsetsZero
 import com.tangem.wallet.R
 
 @Composable
-fun SettingsScreensScaffold(
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-    background: @Composable (() -> Unit)? = null,
-    fab: @Composable (() -> Unit)? = null,
-    backgroundColor: Color = TangemTheme.colors.background.secondary,
-    titleRes: Int? = null,
+internal fun SettingsScreensScaffold(
     onBackClick: () -> Unit,
+    content: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    @StringRes titleRes: Int? = null,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    addBottomInsets: Boolean = true,
+    fab: @Composable () -> Unit = {},
 ) {
-    BackHandler(true, onBackClick)
+    val backgroundColor = TangemTheme.colors.background.secondary
+
+    BackHandler(onBack = onBackClick)
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             EmptyTopBarWithNavigation(
+                modifier = Modifier.statusBarsPadding(),
                 onBackClick = onBackClick,
                 backgroundColor = backgroundColor,
             )
         },
-        modifier = modifier.systemBarsPadding(),
-        backgroundColor = backgroundColor,
-        floatingActionButton = { fab?.invoke() },
-    ) {
-        if (titleRes != null) {
-            Box(modifier = modifier.fillMaxSize()) {
-                background?.invoke()
-
-                Column(modifier = modifier.fillMaxWidth()) {
+        modifier = modifier,
+        contentWindowInsets = WindowInsetsZero,
+        containerColor = backgroundColor,
+        floatingActionButton = {
+            Box(modifier = Modifier.navigationBarsPadding()) {
+                fab()
+            }
+        },
+        content = { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .run {
+                        if (addBottomInsets) {
+                            navigationBarsPadding()
+                        } else {
+                            this
+                        }
+                    }
+                    .padding(paddingValues)
+                    .fillMaxSize(),
+            ) {
+                if (titleRes != null) {
                     Text(
-                        text = stringResource(id = titleRes),
-                        modifier = modifier.padding(
-                            start = TangemTheme.dimens.spacing20,
-                            end = TangemTheme.dimens.spacing20,
-                            bottom = TangemTheme.dimens.spacing54,
-                        ),
+                        text = stringResourceSafe(id = titleRes),
+                        modifier = Modifier
+                            .padding(horizontal = TangemTheme.dimens.spacing20)
+                            .padding(bottom = TangemTheme.dimens.spacing36),
                         style = TangemTheme.typography.h1,
                         color = TangemTheme.colors.text.primary1,
                     )
-                    content()
                 }
+
+                content()
             }
-        } else {
-            content()
-        }
-    }
+        },
+    )
 }
 
 @Composable
-fun ScreenTitle(
-    titleRes: Int,
-    modifier: Modifier = Modifier,
-) {
+internal fun ScreenTitle(titleRes: Int, modifier: Modifier = Modifier) {
     Text(
-        text = stringResource(id = titleRes),
+        text = stringResourceSafe(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
         style = TangemTheme.typography.h1,
         color = TangemTheme.colors.text.primary1,
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EmptyTopBarWithNavigation(
+internal fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
     backgroundColor: Color = TangemTheme.colors.background.primary,
 ) {
     TopAppBar(
+        modifier = modifier,
         title = { },
         navigationIcon =
         {
@@ -105,38 +108,62 @@ fun EmptyTopBarWithNavigation(
                 )
             }
         },
-        backgroundColor = backgroundColor,
-        elevation = 0.dp,
+        colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = backgroundColor,
+        ),
     )
 }
 
 @Composable
-fun DetailsMainButton(
+internal fun DetailsMainButton(
     title: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    Button(
+    PrimaryButtonIconEnd(
+        text = title,
+        enabled = enabled,
         onClick = onClick,
         modifier = modifier
+            .fillMaxWidth(),
+        iconResId = R.drawable.ic_tangem_24,
+    )
+}
+
+@Composable
+internal fun DetailsRadioButtonElement(title: String, subtitle: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
             .fillMaxWidth()
-            .heightIn(48.dp),
-        shape = RoundedCornerShape(12.dp),
-        enabled = enabled,
-        colors = ButtonDefaults.buttonColors(
-            backgroundColor = colorResource(R.color.button_primary),
-            contentColor = colorResource(R.color.text_primary_2),
-            disabledBackgroundColor = colorResource(R.color.button_disabled),
-            disabledContentColor = colorResource(R.color.text_disabled),
-        ),
+            .selectable(
+                selected = selected,
+                onClick = { onClick() },
+            )
+            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
-        Text(text = title)
-        Spacer(
-            modifier = Modifier
-                .padding(start = 20.dp, end = 20.dp)
-                .size(8.dp),
+        RadioButton(
+            selected = selected,
+            onClick = null,
+            modifier = Modifier.padding(end = 20.dp),
+            colors = RadioButtonDefaults.colors(
+                unselectedColor = TangemTheme.colors.icon.secondary,
+                selectedColor = TangemTheme.colors.icon.accent,
+            ),
         )
-        Icon(painter = painterResource(id = R.drawable.ic_tangem_24), contentDescription = "")
+
+        Column {
+            Text(
+                text = title,
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
+            Spacer(modifier = Modifier.size(4.dp))
+            Text(
+                text = subtitle,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.secondary,
+            )
+        }
     }
 }
