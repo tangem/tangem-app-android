@@ -1,31 +1,21 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemError
-import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.feedback.FeedbackData
-import com.tangem.tap.common.feedback.FeedbackManager
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.redux.StateDialog
-import com.tangem.tap.common.redux.ToastNotificationAction
-import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.configurable.config.ConfigManager
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.features.details.redux.SecurityOption
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
 
     // notifications
     data class ShowNotification(override val messageResource: Int) : GlobalAction(), NotificationAction
-    data class ShowToastNotification(override val messageResource: Int) : GlobalAction(), ToastNotificationAction
     data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
     data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
 
@@ -36,41 +26,41 @@ sealed class GlobalAction : Action {
     sealed class Onboarding : GlobalAction() {
         /**
          * Initiate an onboarding process.
-         * For SaltPay cards it's additionally checks for unfinished backup.
-         * For resuming unfinished backup for standard Wallet cards see CheckForUnfinishedBackup and
-         * StartForUnfinishedBackup
+         * For resuming unfinished backup of standard Wallet see
+         * BackupAction.CheckForUnfinishedBackup, GlobalAction.Onboarding.StartForUnfinishedBackup
          */
-        data class Start(val scanResponse: ScanResponse, val canSkipBackup: Boolean = true) : Onboarding()
+        data class Start(
+            val scanResponse: ScanResponse,
+            val source: BackupStartedSource,
+            val canSkipBackup: Boolean = true,
+        ) : Onboarding()
 
         /**
-         * Initiate resuming of unfinished backup only for standard Wallet cards.
-         * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
-         * See more Onboarding.Start, CheckForUnfinishedBackup
+         * Initiate resuming of unfinished backup for standard Wallet.
+         * See more BackupAction.CheckForUnfinishedBackup
          */
         data class StartForUnfinishedBackup(val addedBackupCardsCount: Int) : Onboarding()
+
         object Stop : Onboarding()
+
+        data class ShouldResetCardOnCreate(val shouldReset: Boolean) : Onboarding()
     }
 
-    data class ScanCard(
-        val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
-        val onSuccess: ((ScanResponse) -> Unit)? = null,
-        val onFailure: ((TangemError) -> Unit)? = null,
-        val messageResId: Int? = null,
-    ) : GlobalAction()
-
     object ScanFailsCounter {
-        data class ChooseBehavior(val result: CompletionResult<ScanResponse>) : GlobalAction()
+        data class ChooseBehavior(
+            val result: CompletionResult<ScanResponse>,
+            val analyticsSource: AnalyticsParam.ScreensSources,
+        ) : GlobalAction()
+
         object Reset : GlobalAction()
         object Increment : GlobalAction()
     }
 
     data class SaveScanResponse(val scanResponse: ScanResponse) : GlobalAction()
 
-    data class SetIfCardVerifiedOnline(val verified: Boolean) : GlobalAction()
-
-    data class ChangeAppCurrency(val appCurrency: FiatCurrency) : GlobalAction()
+    data class ChangeAppCurrency(val appCurrency: AppCurrency) : GlobalAction()
     object RestoreAppCurrency : GlobalAction() {
-        data class Success(val appCurrency: FiatCurrency) : GlobalAction()
+        data class Success(val appCurrency: AppCurrency) : GlobalAction()
     }
 
     data class UpdateWalletSignedHashes(
@@ -79,16 +69,7 @@ sealed class GlobalAction : Action {
         val walletPublicKey: ByteArray,
     ) : GlobalAction()
 
-    data class HideWarningMessage(val warning: WarningMessage) : GlobalAction()
-    data class UpdateSecurityOptions(val securityOption: SecurityOption) : GlobalAction()
-
-    data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
-    data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
-    data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
-
-    data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
-    data class OpenChat(val feedbackData: FeedbackData, val zendeskConfig: ZendeskConfig? = null) : GlobalAction()
-    data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
+    data class IsSignWithRing(val isSignWithRing: Boolean) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
         object Init : GlobalAction() {
@@ -98,9 +79,5 @@ sealed class GlobalAction : Action {
         }
 
         object Update : GlobalAction()
-    }
-
-    object FetchUserCountry : GlobalAction() {
-        data class Success(val countryCode: String) : GlobalAction()
     }
 }

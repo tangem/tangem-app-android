@@ -1,47 +1,39 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.FloatingActionButton
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.LinearProgressIndicator
-import androidx.compose.material.Text
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.components.progressbar.TangemLinearProgressIndicator
+import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.events.Settings
-import com.tangem.tap.common.compose.TangemTypography
-import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
+import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun WalletConnectScreen(state: WalletConnectScreenState, onBackClick: () -> Unit) {
-    val context = LocalContext.current
-
+internal fun WalletConnectScreen(
+    state: WalletConnectScreenState,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     SettingsScreensScaffold(
+        modifier = modifier,
         content = {
             if (state.sessions.isEmpty()) {
                 EmptyScreen(state)
@@ -54,7 +46,7 @@ fun WalletConnectScreen(state: WalletConnectScreenState, onBackClick: () -> Unit
                 AddSessionFab(
                     onAddSession = {
                         Analytics.send(Settings.ButtonStartWalletConnectSession())
-                        state.onAddSession(context.getFromClipboard()?.toString())
+                        state.onAddSession()
                     },
                 )
             }
@@ -65,14 +57,11 @@ fun WalletConnectScreen(state: WalletConnectScreenState, onBackClick: () -> Unit
 }
 
 @Composable
-private fun AddSessionFab(
-    onAddSession: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+private fun AddSessionFab(onAddSession: () -> Unit, modifier: Modifier = Modifier) {
     FloatingActionButton(
         onClick = onAddSession,
-        backgroundColor = colorResource(id = R.color.button_primary),
-        contentColor = colorResource(id = R.color.icon_primary_2),
+        containerColor = TangemTheme.colors.button.primary,
+        contentColor = TangemTheme.colors.icon.primary2,
         shape = RoundedCornerShape(16.dp),
         modifier = modifier,
     ) {
@@ -86,9 +75,9 @@ private fun AddSessionFab(
 @Composable
 private fun EmptyScreen(state: WalletConnectScreenState) {
     if (state.isLoading) {
-        LinearProgressIndicator(
+        TangemLinearProgressIndicator(
             modifier = Modifier.fillMaxWidth(),
-            color = colorResource(id = R.color.icon_accent),
+            color = TangemTheme.colors.icon.accent,
         )
     }
     Column(
@@ -99,17 +88,17 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Image(
-            painter = painterResource(id = R.drawable.ic_walletconnect),
+            painter = painterResource(id = R.drawable.ic_wallet_connect_24),
             contentDescription = "",
-            colorFilter = ColorFilter.tint(colorResource(id = R.color.icon_inactive)),
+            colorFilter = ColorFilter.tint(TangemTheme.colors.icon.inactive),
             contentScale = ContentScale.FillWidth,
             modifier = Modifier.width(width = 100.dp),
         )
         Spacer(modifier = Modifier.size(24.dp))
         Text(
-            text = stringResource(id = R.string.wallet_connect_subtitle),
-            style = TangemTypography.body2,
-            color = colorResource(id = R.color.text_tertiary),
+            text = stringResourceSafe(id = R.string.wallet_connect_subtitle),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
         )
     }
 }
@@ -117,11 +106,11 @@ private fun EmptyScreen(state: WalletConnectScreenState) {
 @Composable
 private fun WalletConnectSessions(state: WalletConnectScreenState) {
     if (state.isLoading) {
-        LinearProgressIndicator(
+        TangemLinearProgressIndicator(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(2.dp),
-            color = colorResource(id = R.color.icon_accent),
+            color = TangemTheme.colors.icon.accent,
         )
     } else {
         Spacer(modifier = Modifier.height(2.dp))
@@ -141,8 +130,8 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
             ) {
                 Text(
                     text = session.description,
-                    style = TangemTypography.subtitle1,
-                    color = colorResource(id = R.color.text_primary_1),
+                    style = TangemTheme.typography.subtitle1,
+                    color = TangemTheme.colors.text.primary1,
                     modifier = Modifier.weight(1f),
                 )
                 IconButton(
@@ -154,7 +143,7 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_cross_rounded_24),
                         contentDescription = "",
-                        tint = colorResource(id = R.color.icon_warning),
+                        tint = TangemTheme.colors.icon.warning,
                     )
                 }
             }
@@ -167,7 +156,7 @@ private fun WalletConnectSessions(state: WalletConnectScreenState) {
 private fun WalletConnectScreenPreview() {
     WalletConnectScreen(
         state = WalletConnectScreenState(
-            sessions = listOf(
+            sessions = persistentListOf(
                 WcSessionForScreen(
                     description = "session from some dApp",
                     sessionId = "",

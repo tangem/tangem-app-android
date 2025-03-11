@@ -1,28 +1,35 @@
 package com.tangem.tap.features.saveWallet.redux
 
-import com.tangem.common.CompletionResult
-import com.tangem.common.doOnFailure
-import com.tangem.common.doOnSuccess
-import com.tangem.common.flatMap
+import com.tangem.common.*
+import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.guard
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.dispatchWithMain
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.model.builders.UserWalletBuilder
-import com.tangem.tap.preferencesStorage
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
+import com.tangem.utils.coroutines.JobHolder
+import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 internal class SaveWalletMiddleware {
+
+    private val saveWalletJobHolder = JobHolder()
+
     val middleware: Middleware<AppState> = { _, stateProvider ->
         { next ->
             { action ->
@@ -37,79 +44,109 @@ internal class SaveWalletMiddleware {
 
     private fun handleAction(action: SaveWalletAction, state: SaveWalletState) {
         when (action) {
-            is SaveWalletAction.Save -> saveWalletIfBiometricsEnrolled(state)
+            is SaveWalletAction.AllowToUseBiometrics -> allowToUseBiometrics(state)
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
-            is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
             is SaveWalletAction.Dismiss -> dismiss(state)
-            is SaveWalletAction.Save.Success,
+            is SaveWalletAction.SaveWalletAfterBackup -> saveWalletAfterBackup(
+                state = state,
+                hasBackupError = action.hasBackupError,
+                shouldNavigateToWallet = action.shouldNavigateToWallet,
+            )
+            is SaveWalletAction.AllowToUseBiometrics.Success,
+            is SaveWalletAction.AllowToUseBiometrics.Error,
             is SaveWalletAction.ProvideBackupInfo,
             is SaveWalletAction.CloseError,
-            is SaveWalletAction.Save.Error,
             is SaveWalletAction.EnrollBiometrics,
             is SaveWalletAction.EnrollBiometrics.Cancel,
             -> Unit
         }
     }
 
-    private fun enrollBiometrics() {
-        store.dispatchOnMain(NavigationAction.OpenBiometricsSettings)
-    }
+    private fun saveWalletAfterBackup(
+        state: SaveWalletState,
+        hasBackupError: Boolean,
+        shouldNavigateToWallet: Boolean,
+    ) {
+        scope.launch {
+            val backupInfo = state.backupInfo ?: error("Backup info is null")
 
-    private fun saveWalletIfBiometricsEnrolled(state: SaveWalletState) {
-        if (tangemSdkManager.needEnrollBiometrics) {
-            store.dispatchOnMain(SaveWalletAction.EnrollBiometrics)
-        } else {
-            saveWallet(state)
+            val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+            val userWallet = UserWalletBuilder(backupInfo.scanResponse, walletNameGenerateUseCase)
+                .backupCardsIds(state.backupInfo.backupCardsIds)
+                .hasBackupError(hasBackupError)
+                .build()
+                .guard {
+                    Timber.e("User wallet not created")
+                    return@launch
+                }
+
+            val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+            userWalletsListManager.save(userWallet, canOverride = true)
+                .flatMap {
+                    saveAccessCodeIfNeeded(accessCode = backupInfo.accessCode, cardsInWallet = userWallet.cardsInWallet)
+                }
+                .doOnFailure { error ->
+                    Timber.e(error, "Unable to save user wallet")
+                }
+                .doOnSuccess {
+                    store.onUserWalletSelected(userWallet)
+                    if (!shouldNavigateToWallet) {
+                        store.dispatchWithMain(OnboardingWalletAction.WalletSaved(userWallet.walletId))
+                    }
+                }
+                .doOnResult { if (shouldNavigateToWallet) navigateToWallet() }
         }
     }
 
-    /**
+    private fun enrollBiometrics() {
+        store.inject(DaggerGraphState::settingsManager).openBiometricSettings()
+    }
 
-     * or from [SaveWalletState.backupInfo] if provided from
-     * [com.tangem.tap.features.onboarding.OnboardingHelper.trySaveWalletAndNavigateToWalletScreen]
-     *
-     * If saved user's wallet was selected then pop back to [AppScreen.Wallet]
-     * or navigate to [AppScreen.WalletSelector] otherwise
-     *
-     * TODO: Update that logic after onboarding and backup features refactoring
-     * */
-    private fun saveWallet(state: SaveWalletState) {
-        val scanResponse = state.backupInfo?.scanResponse
-            ?: store.state.globalState.scanResponse
-            ?: return
+    private fun allowToUseBiometrics(state: SaveWalletState) = scope.launch {
+        if (tangemSdkManager.checkNeedEnrollBiometrics()) {
+            store.dispatchWithMain(SaveWalletAction.EnrollBiometrics)
+            return@launch
+        }
 
         if (state.backupInfo != null) {
             // TODO: Remove after onboarding refactoring
             Analytics.send(Onboarding.EnableBiometrics(AnalyticsParam.OnOffState.On))
         } else {
-            Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.On))
+            Analytics.send(
+                MainScreenAnalyticsEvent.EnableBiometrics(
+                    state = com.tangem.core.analytics.models.AnalyticsParam.OnOffState.On,
+                ),
+            )
         }
 
-        scope.launch {
-            val userWallet = UserWalletBuilder(scanResponse)
-                .backupCardsIds(state.backupInfo?.backupCardsIds)
-                .build() ?: return@launch
+        /*
 
-            val isFirstSavedWallet = !userWalletsListManager.hasSavedUserWallets
-
-            saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
-                .flatMap { userWalletsListManager.save(userWallet, canOverride = true) }
-                .doOnFailure { error ->
-                    store.dispatchOnMain(SaveWalletAction.Save.Error(error))
-                }
-                .doOnSuccess {
-                    preferencesStorage.shouldSaveUserWallets = true
-
-                    // Enable saving access codes only if this is the first time user save the wallet
-                    preferencesStorage.shouldSaveAccessCodes = isFirstSavedWallet ||
-                        preferencesStorage.shouldSaveAccessCodes
-
-                    store.dispatchOnMain(SaveWalletAction.Save.Success)
-
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                    store.onUserWalletSelected(userWallet)
-                }
+         * because it will be automatically saved on UserWalletsListManager switch
+         */
+        val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync.guard {
+            val error = IllegalStateException("No selected user wallet")
+            Timber.e(error, "Unable to save user wallet")
+            store.dispatchWithMain(
+                SaveWalletAction.AllowToUseBiometrics.Error(TangemSdkError.ExceptionError(error)),
+            )
+            return@launch
         }
+
+        handleSuccessAllowing(selectedUserWallet)
+    }.saveIn(saveWalletJobHolder)
+
+    private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
+        store.inject(DaggerGraphState::walletsRepository).saveShouldSaveUserWallets(item = true)
+
+        store.inject(DaggerGraphState::settingsRepository).setShouldSaveAccessCodes(value = true)
+
+        store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+            isBiometricsRequestPolicy = userWallet.hasAccessCode,
+        )
+
+        store.dispatchWithMain(SaveWalletAction.AllowToUseBiometrics.Success)
+        store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
     }
 
     private fun dismiss(state: SaveWalletState) {
@@ -117,12 +154,12 @@ internal class SaveWalletMiddleware {
             // TODO: Remove after onboarding refactoring
             Analytics.send(Onboarding.EnableBiometrics(AnalyticsParam.OnOffState.Off))
         } else {
-            Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.Off))
+            Analytics.send(
+                MainScreenAnalyticsEvent.EnableBiometrics(
+                    com.tangem.core.analytics.models.AnalyticsParam.OnOffState.Off,
+                ),
+            )
         }
-    }
-
-    private fun saveWalletWasShown() {
-        preferencesStorage.shouldShowSaveUserWalletScreen = false
     }
 
     private suspend fun saveAccessCodeIfNeeded(
@@ -130,15 +167,21 @@ internal class SaveWalletMiddleware {
         cardsInWallet: Set<String>,
     ): CompletionResult<Unit> {
         return when {
-            accessCode != null -> {
+            accessCode.isNullOrBlank() -> {
+                CompletionResult.Success(Unit)
+            }
+            else -> {
                 tangemSdkManager.saveAccessCode(
                     accessCode = accessCode,
                     cardsIds = cardsInWallet,
                 )
             }
-            else -> {
-                CompletionResult.Success(Unit)
-            }
+        }
+    }
+
+    private fun navigateToWallet() {
+        store.dispatchNavigationAction {
+            replaceAll(AppRoute.Wallet)
         }
     }
 }

@@ -1,152 +1,241 @@
 package com.tangem.tap.features.details.ui.resetcard
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Icon
-import androidx.compose.material.IconToggleButton
-import androidx.compose.material.Text
+import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.*
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
-import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
+import com.tangem.tap.features.details.ui.resetcard.ResetCardScreenState.Dialog as ResetCardDialog
 
 @Composable
-fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit) {
+internal fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit, modifier: Modifier = Modifier) {
     SettingsScreensScaffold(
-        content = { ResetCardView(state = state) },
+        modifier = modifier,
+        content = {
+            ResetCardView(state = state)
+        },
         onBackClick = onBackClick,
-        backgroundColor = Color.Transparent,
     )
+
+    when (val dialog = state.dialog) {
+        is ResetCardDialog.StartReset,
+        is ResetCardDialog.ContinueReset,
+        is ResetCardDialog.InterruptedReset,
+        -> CommonResetDialog(dialog = dialog)
+        is ResetCardDialog.CompletedReset -> CompletedResetDialog(dialog = dialog)
+        null -> Unit
+    }
 }
 
-@Suppress("LongMethod", "MagicNumber")
 @Composable
-fun ResetCardView(state: ResetCardScreenState) {
+private fun ResetCardView(state: ResetCardScreenState) {
+    val scrollState = rememberScrollState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.SpaceBetween,
+            .verticalScroll(scrollState) // set scrollState after fillMaxSize
+            .padding(horizontal = TangemTheme.dimens.spacing20),
     ) {
-        Box {
-            Image(
-                painter = painterResource(id = R.drawable.ill_reset_background),
-                contentDescription = null,
-                modifier = Modifier.offset(y = (-82).dp),
-            )
-            ScreenTitle(titleRes = R.string.card_settings_reset_card_to_factory)
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        Column(
-            modifier = Modifier.offset(y = (-32).dp),
-            verticalArrangement = Arrangement.Bottom,
-        ) {
-            Text(
-                text = stringResource(id = R.string.common_attention),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                style = TangemTheme.typography.h3,
-                color = TangemTheme.colors.text.primary1,
-            )
+        Title()
+        SpacerH24()
+        AlertImage()
+        SpacerH24()
+        Subtitle()
+        SpacerH16()
+        Description(text = state.descriptionText)
+        SpacerH12()
+        Conditions(state)
+        DynamicSpacer(scrollState = scrollState)
+        SpacerH16()
+        ResetButton(enabled = state.resetButtonEnabled, onResetButtonClick = state.onResetButtonClick)
+        SpacerH16()
+    }
+}
 
-            Spacer(modifier = Modifier.size(24.dp))
+@Composable
+private fun Title() {
+    Text(
+        text = stringResourceSafe(id = R.string.card_settings_reset_card_to_factory),
+        style = TangemTheme.typography.h1,
+        color = TangemTheme.colors.text.primary1,
+    )
+}
 
-            Text(
-                text = state.descriptionText.resolveReference(),
-                modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                style = TangemTheme.typography.body1,
-                color = TangemTheme.colors.text.secondary,
-            )
+@Composable
+private fun AlertImage() {
+    Image(
+        painter = painterResource(id = R.drawable.img_alert_80),
+        contentDescription = null,
+        modifier = Modifier.size(TangemTheme.dimens.size80),
+    )
+}
 
-            Spacer(modifier = Modifier.size(28.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(
-                        onClick = { state.onAcceptWarningToggleClick(!state.accepted) },
-                    )
-                    .padding(top = 16.dp, bottom = 16.dp),
-            ) {
-                IconToggleButton(
-                    checked = state.accepted,
-                    onCheckedChange = state.onAcceptWarningToggleClick,
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
-                ) {
-                    Icon(
-                        painter = painterResource(
-                            if (state.accepted) {
-                                R.drawable.ic_accepted
-                            } else {
-                                R.drawable.ic_unticked
-                            },
-                        ),
-                        contentDescription = null,
-                        tint = if (state.accepted) {
-                            TangemTheme.colors.icon.accent
-                        } else {
-                            TangemTheme.colors.icon.secondary
-                        },
-                    )
-                }
-                Text(
-                    text = stringResource(id = R.string.reset_card_to_factory_warning_message),
-                    style = TangemTheme.typography.body2,
-                    color = TangemTheme.colors.text.secondary,
-                    modifier = Modifier.padding(end = 20.dp),
+@Composable
+private fun Subtitle() {
+    Text(
+        text = stringResourceSafe(id = R.string.common_attention),
+        style = TangemTheme.typography.h3,
+        color = TangemTheme.colors.text.primary1,
+    )
+}
+
+@Composable
+private fun Description(text: TextReference) {
+    Text(
+        text = text.resolveReference(),
+        style = TangemTheme.typography.body1,
+        color = TangemTheme.colors.text.secondary,
+    )
+}
+
+@Composable
+private fun Conditions(state: ResetCardScreenState) {
+    state.warningsToShow.forEach {
+        when (it) {
+            ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS -> {
+                ConditionCheckBox(
+                    checkedState = state.acceptCondition1Checked,
+                    onCheckedChange = state.onAcceptCondition1ToggleClick,
+                    description = TextReference.Res(R.string.reset_card_to_factory_condition_1),
                 )
             }
-
-            Spacer(modifier = Modifier.size(16.dp))
-            Box(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
-            ) {
-                DetailsMainButton(
-                    title = stringResource(id = R.string.reset_card_to_factory_button_title),
-                    onClick = state.onResetButtonClick,
-                    enabled = state.resetButtonEnabled,
+            ResetCardScreenState.WarningsToReset.LOST_PASSWORD_RESTORE -> {
+                ConditionCheckBox(
+                    checkedState = state.acceptCondition2Checked,
+                    onCheckedChange = state.onAcceptCondition2ToggleClick,
+                    description = TextReference.Res(R.string.reset_card_to_factory_condition_2),
                 )
             }
         }
     }
 }
 
+@Composable
+private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) -> Unit, description: TextReference) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = { onCheckedChange.invoke(!checkedState) })
+            .padding(vertical = TangemTheme.dimens.size16),
+        horizontalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing16),
+    ) {
+        IconToggleButton(checked = checkedState, onCheckedChange = onCheckedChange) {
+            AnimatedContent(targetState = checkedState, label = "Update checked state") { checked ->
+                Icon(
+                    painter = painterResource(
+                        if (checked) {
+                            R.drawable.ic_accepted
+                        } else {
+                            R.drawable.ic_unticked
+                        },
+                    ),
+                    contentDescription = null,
+                    tint = if (checked) {
+                        TangemTheme.colors.control.checked
+                    } else {
+                        TangemTheme.colors.icon.secondary
+                    },
+                )
+            }
+        }
+
+        Text(
+            text = description.resolveReference(),
+            style = TangemTheme.typography.body2,
+            color = TangemTheme.colors.text.secondary,
+        )
+    }
+}
+
+/**
+ * It's helps to create an adaptive layout.
+ * ResetButton will be attach to the bottom of large screen or will be inside scroll layout of small screen.
+ *
+ * @param scrollState flag determines if screen is small (has scroll) or large (hasn't scroll)
+ */
+@Composable
+private fun ColumnScope.DynamicSpacer(scrollState: ScrollState) {
+    if (!scrollState.canScrollBackward && !scrollState.canScrollForward) {
+        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun ResetButton(enabled: Boolean, onResetButtonClick: () -> Unit) {
+    DetailsMainButton(
+        title = stringResourceSafe(id = R.string.reset_card_to_factory_button_title),
+        onClick = onResetButtonClick,
+        enabled = enabled,
+    )
+}
+
+@Composable
+private fun CommonResetDialog(dialog: ResetCardScreenState.Dialog) {
+    BasicDialog(
+        title = stringResourceSafe(dialog.titleResId),
+        message = stringResourceSafe(dialog.messageResId),
+        dismissButton = DialogButtonUM(
+            title = stringResourceSafe(id = R.string.common_cancel),
+            onClick = dialog.onDismiss,
+        ),
+        confirmButton = DialogButtonUM(
+            title = stringResourceSafe(id = R.string.card_settings_action_sheet_reset),
+            warning = true,
+            onClick = dialog.onConfirmClick,
+        ),
+        onDismissDialog = dialog.onDismiss,
+    )
+}
+
+@Composable
+private fun CompletedResetDialog(dialog: ResetCardDialog) {
+    BasicDialog(
+        title = stringResourceSafe(id = dialog.titleResId),
+        message = stringResourceSafe(id = dialog.messageResId),
+        confirmButton = DialogButtonUM(
+            title = stringResourceSafe(id = R.string.common_ok),
+            onClick = dialog.onConfirmClick,
+        ),
+        onDismissDialog = {},
+        isDismissable = false,
+    )
+}
+
 // region Preview
 @Composable
-private fun ResetCardScreenSample(
-    modifier: Modifier = Modifier,
-) {
+private fun ResetCardScreenSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.secondary),
     ) {
         ResetCardScreen(
             state = ResetCardScreenState(
-                accepted = true,
+                resetButtonEnabled = true,
+                showResetPasswordButton = false,
+                warningsToShow = listOf(ResetCardScreenState.WarningsToReset.LOST_WALLET_ACCESS),
                 descriptionText = TextReference.Res(R.string.reset_card_with_backup_to_factory_message),
-                onAcceptWarningToggleClick = {},
+                acceptCondition1Checked = false,
+                acceptCondition2Checked = false,
+                onAcceptCondition1ToggleClick = {},
+                onAcceptCondition2ToggleClick = {},
                 onResetButtonClick = {},
+                dialog = null,
             ),
             onBackClick = {},
         )
@@ -154,17 +243,10 @@ private fun ResetCardScreenSample(
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun ResetCardScreenPreview_Light() {
-    TangemTheme {
-        ResetCardScreenSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun ResetCardScreenPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun ResetCardScreenPreview() {
+    TangemThemePreview {
         ResetCardScreenSample()
     }
 }

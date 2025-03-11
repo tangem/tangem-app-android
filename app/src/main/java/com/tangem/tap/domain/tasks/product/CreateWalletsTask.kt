@@ -5,6 +5,8 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
+import com.tangem.crypto.bip39.Mnemonic
+import com.tangem.crypto.hdWallet.masterkey.AnyMasterKeyFactory
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
@@ -13,11 +15,13 @@ import com.tangem.operations.wallet.CreateWalletTask
 [REDACTED_AUTHOR]
  */
 class CreateWalletsResponse(
-    val createWalletResponses: List<CreateWalletResponse>
+    val createWalletResponses: List<CreateWalletResponse>,
 ) : CommandResponse
 
 class CreateWalletsTask(
     private val curves: List<EllipticCurve>,
+    private val mnemonic: Mnemonic? = null,
+    private val passphrase: String?,
 ) : CardSessionRunnable<CreateWalletsResponse> {
 
     private val createdWalletsResponses = mutableListOf<CreateWalletResponse>()
@@ -35,9 +39,12 @@ class CreateWalletsTask(
     private fun createWallet(
         curve: EllipticCurve,
         session: CardSession,
-        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit
+        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit,
     ) {
-        CreateWalletTask(curve).run(session) { result ->
+        val extendedPrivateKey = mnemonic?.let {
+            AnyMasterKeyFactory(mnemonic = it, passphrase = passphrase ?: "").makeMasterKey(curve)
+        }
+        CreateWalletTask(curve, extendedPrivateKey).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     createdWalletsResponses.add(result.data)
@@ -47,6 +54,7 @@ class CreateWalletsTask(
                     }
                     createWallet(curves[createdWalletsResponses.size], session, callback)
                 }
+
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
         }

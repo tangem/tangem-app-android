@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.text.TextLayoutResult
@@ -18,10 +17,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.TextUnit
+import com.tangem.core.ui.components.atoms.text.BoundCounter
 
 /**
  * https://stackoverflow.com/questions/69083061/how-to-make-middle-ellipsis-in-text-with-jetpack-compose
  */
+@Deprecated("Use EllipsisText with TextEllipsis.Middle ellipsis instead")
 @Suppress("LongMethod")
 @Composable
 fun MiddleEllipsisText(
@@ -139,39 +140,3 @@ fun MiddleEllipsisText(
 private const val ELLIPSIS_CHARACTERS_COUNT = 3
 private const val ELLIPSIS_CHARACTER = '.'
 private val ellipsisText = List(ELLIPSIS_CHARACTERS_COUNT) { ELLIPSIS_CHARACTER }.joinToString(separator = "")
-
-private class BoundCounter(
-    private val text: String,
-    private val textLayoutResult: TextLayoutResult,
-    private val charPosition: (Int) -> Int,
-) {
-    var string = ""
-        private set
-    var width = 0f
-        private set
-
-    private var _nextCharWidth: Float? = null
-    private var invalidCharsCount = 0
-
-    fun widthWithNextChar(): Float =
-        width + nextCharWidth()
-
-    private fun nextCharWidth(): Float =
-        _nextCharWidth ?: run {
-            var boundingBox: Rect
-            // invalidCharsCount fixes this bug: https://issuetracker.google.com/issues/197146630
-            invalidCharsCount--
-            do {
-                boundingBox = textLayoutResult
-                    .getBoundingBox(charPosition(string.count() + ++invalidCharsCount))
-            } while (boundingBox.right == 0f)
-            _nextCharWidth = boundingBox.width
-            boundingBox.width
-        }
-
-    fun addNextChar() {
-        string += text[charPosition(string.count())]
-        width += nextCharWidth()
-        _nextCharWidth = null
-    }
-}

@@ -3,6 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_item_chat_support"
-        android:title="@string/onboarding_chat_button_title"
+        android:title="@string/common_support"
         app:showAsAction="always" />
 </menu>

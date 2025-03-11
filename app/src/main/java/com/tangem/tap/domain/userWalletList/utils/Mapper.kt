@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.userWalletList.utils
 
-import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.domain.model.UserWallet
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletPublicInformation
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 
@@ -20,6 +20,7 @@ internal val UserWallet.publicInformation: UserWalletPublicInformation
                 wallets = emptyList(),
             ),
         ),
+        hasBackupError = hasBackupError,
     )
 
 internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
@@ -30,6 +31,7 @@ internal fun UserWalletPublicInformation.toUserWallet(): UserWallet {
         cardsInWallet = cardsInWallet,
         scanResponse = scanResponse,
         isMultiCurrency = isMultiCurrency,
+        hasBackupError = hasBackupError,
     )
 }
 
@@ -50,7 +52,9 @@ internal fun UserWallet.updateWith(sensitiveInformation: UserWalletSensitiveInfo
 internal fun List<UserWallet>.updateWith(
     walletIdToSensitiveInformation: Map<UserWalletId, UserWalletSensitiveInformation>,
 ): List<UserWallet> {
-    return if (walletIdToSensitiveInformation.isEmpty()) this else {
+    return if (walletIdToSensitiveInformation.isEmpty()) {
+        this
+    } else {
         this.map { wallet ->
             walletIdToSensitiveInformation[wallet.walletId]
                 ?.let(wallet::updateWith)
@@ -58,3 +62,13 @@ internal fun List<UserWallet>.updateWith(
         }
     }
 }
+
+internal fun List<UserWallet>.lockAll(): List<UserWallet> = map(UserWallet::lock)
+
+internal fun UserWallet.lock(): UserWallet = copy(
+    scanResponse = scanResponse.copy(
+        card = scanResponse.card.copy(
+            wallets = emptyList(),
+        ),
+    ),
+)

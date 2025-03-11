@@ -1,15 +1,19 @@
 package com.tangem.tap.features.demo
 
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.extensions.makePrimaryWalletManager
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.domain.extensions.makePrimaryWalletManager
+import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.entities.ProgressState
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.domain.model.Currency
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 
 /**
@@ -18,21 +22,23 @@ import org.rekotlin.Action
 internal class DemoOnboardingNoteMiddleware : DemoMiddleware {
 
     override fun tryHandle(config: DemoConfig, scanResponse: ScanResponse, action: Action): Boolean {
-        val globalState = store.state.globalState
         val noteState = store.state.onboardingNoteState
 
-        when (action) {
+        return when (action) {
             is OnboardingNoteAction.Balance.Update -> {
                 val walletManager = if (noteState.walletManager != null) {
                     noteState.walletManager
                 } else {
-                    val wmFactory = globalState.tapWalletManager.walletManagerFactory
-                    val walletManager = wmFactory.makePrimaryWalletManager(scanResponse).guard {
+                    val wmFactory = runBlocking {
+                        store.inject(DaggerGraphState::blockchainSDKFactory).getWalletManagerFactorySync()
+                    }
+                    val walletManager = wmFactory?.makePrimaryWalletManager(scanResponse).guard {
                         return false
                     }
                     store.dispatch(OnboardingNoteAction.SetWalletManager(walletManager))
                     walletManager
                 }
+
                 val balanceAmount = config.getBalance(walletManager.wallet.blockchain)
                 val loadedBalance = noteState.walletBalance.copy(
                     value = balanceAmount.value!!,
@@ -41,6 +47,7 @@ internal class DemoOnboardingNoteMiddleware : DemoMiddleware {
                     error = null,
                     criticalError = null,
                 )
+
                 walletManager.wallet.setAmount(balanceAmount)
 
                 scope.launch {
@@ -52,7 +59,7 @@ internal class DemoOnboardingNoteMiddleware : DemoMiddleware {
                 }
                 return true
             }
+            else -> false
         }
-        return false
     }
 }

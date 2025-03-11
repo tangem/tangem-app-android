@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
 [REDACTED_AUTHOR]
@@ -14,6 +14,5 @@ sealed class IntroductionProcess(
     class ButtonTokensList : IntroductionProcess("Button - Tokens List")
     class ButtonBuyCards : IntroductionProcess("Button - Buy Cards")
     class ButtonScanCard : IntroductionProcess("Button - Scan Card")
-    class CardWasScanned : IntroductionProcess("Card Was Scanned")
     class ButtonRequestSupport : IntroductionProcess("Button - Request Support")
 }

@@ -1,24 +1,40 @@
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
-    kotlin("kapt")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
+    id("configuration")
 }
 
+android {
+    namespace = "com.tangem.domain.referral"
+}
 dependencies {
 
     /** Libs */
-    implementation(project(":core:utils"))
-    implementation(project(":libs:crypto"))
+    implementation(projects.core.utils)
 
-    /** Time */
-    implementation(Library.jodatime)
+    /** Core modules */
+    implementation(projects.libs.crypto)
+
+    /** Domain modules */
+    implementation(projects.domain.card)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+
+    /** Feature Apis */
+    implementation(projects.features.tester.api)
+    implementation(projects.features.wallet.api)
+
+    /** Dependencies */
+    implementation(deps.arrow.core)
+    implementation(deps.jodatime)
+    implementation(deps.timber)
+    implementation(tangemDeps.card.core)
 
     /** DI */
-    implementation(Library.hiltCore)
-    kapt(Library.hiltKapt)
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 }

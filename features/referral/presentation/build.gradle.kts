@@ -1,77 +1,48 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
+    id("configuration")
 }
 
 android {
-
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
-
-    buildFeatures {
-        compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose
-    }
-
-    buildTypes {
-        create("debug_beta") {
-            initWith(getByName("release"))
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("release"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-    }
+    namespace = "com.tangem.feature.referral.presentation"
 }
 
 dependencies {
     /** Core modules */
-    implementation(project(":core:analytics"))
-    implementation(project(":core:res"))
-    implementation(project(":core:utils"))
-    implementation(project(":core:ui"))
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.navigation)
+    implementation(projects.core.res)
+    implementation(projects.core.utils)
+    implementation(projects.core.ui)
+    implementation(projects.libs.crypto)
+    implementation(projects.common.routing)
 
     /** AndroidX */
-    implementation(AndroidX.appCompat)
-    implementation(AndroidX.fragmentKtx)
-    implementation(AndroidX.lifecycleViewModelKtx)
-    implementation(Library.materialComponent)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.androidx.activity.compose)
 
     /** Compose */
-    implementation(Compose.foundation)
-    implementation(Compose.material)
-    implementation(Compose.uiTooling)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.ui.tooling)
 
     /** Domain */
-    implementation(project(":features:referral:domain"))
+    implementation(projects.domain.demo)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.features.referral.domain)
 
     /** Other libraries */
-    implementation(Library.composeShimmer)
-    implementation(Library.accompanistWebView)
+    implementation(deps.compose.shimmer)
+    implementation(deps.compose.accompanist.systemUiController)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 }
