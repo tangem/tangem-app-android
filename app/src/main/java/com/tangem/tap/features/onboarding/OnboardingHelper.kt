@@ -75,7 +75,8 @@ object OnboardingHelper {
             scanResponse.productType == ProductType.Ring ||
             scanResponse.productType == ProductType.Wallet ||
             scanResponse.productType == ProductType.Visa // AppRoute.OnboardingOther is also supported
-        if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled &&
+        val featureToggles = store.inject(DaggerGraphState::onboardingV2FeatureToggles)
+        if (featureToggles.isOnboardingV2Enabled &&
             newOnboardingSupportTypes
         ) {
             val backupState = store.state.onboardingWalletState.backupState
@@ -91,7 +92,15 @@ object OnboardingHelper {
         }
 
         return when (val type = scanResponse.productType) {
-            ProductType.Note -> AppRoute.OnboardingNote
+            ProductType.Note -> if (featureToggles.isNoteRefactoringEnabled) {
+                AppRoute.Onboarding(
+                    scanResponse = scanResponse,
+                    startFromBackup = false,
+                    mode = AppRoute.Onboarding.Mode.Onboarding,
+                )
+            } else {
+                AppRoute.OnboardingNote
+            }
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,
