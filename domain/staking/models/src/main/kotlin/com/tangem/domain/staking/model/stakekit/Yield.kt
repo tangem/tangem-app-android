@@ -50,9 +50,8 @@ data class Yield(
             val isPartialAmountDisabled: Boolean
                 get() {
                     val enterAmount = args[ArgType.AMOUNT] ?: return false
-                    val min = enterAmount.minimum ?: return false
                     val max = enterAmount.maximum ?: return false
-                    return min.signum() == -1 && max.signum() == -1
+                    return max.signum() == -1
                 }
         }
 

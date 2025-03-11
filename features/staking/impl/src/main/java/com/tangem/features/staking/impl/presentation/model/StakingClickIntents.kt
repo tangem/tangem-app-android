@@ -65,4 +65,6 @@ internal interface StakingClickIntents : AmountScreenClickIntents {
     fun onFailedTxEmailClick(errorMessage: String)
 
     fun openTokenDetails(cryptoCurrency: CryptoCurrency)
+
+    fun showPrimaryClickAlert()
 }
