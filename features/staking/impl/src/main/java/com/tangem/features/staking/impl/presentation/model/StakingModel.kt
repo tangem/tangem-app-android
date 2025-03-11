@@ -66,7 +66,6 @@ import com.tangem.features.staking.impl.presentation.state.transformers.validato
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.isSingleAction
 import com.tangem.features.staking.impl.presentation.state.utils.withStubUnstakeAction
-import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.extensions.isSingleItem
@@ -250,7 +249,7 @@ internal class StakingModel @Inject constructor(
                         stakingAllowance = stakingAllowance,
                         yieldArgs = yield.args,
                     ).let(::add)
-                    if (BlockchainUtils.isSkipAmountEnter(uiState.value.cryptoCurrencyBlockchainId)) {
+                    if (yield.args.enter.isPartialAmountDisabled) {
                         ValidatorSelectChangeTransformer(
                             selectedValidator = yield.preferredValidators.firstOrNull(),
                             yield = yield,
@@ -859,7 +858,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private suspend fun setupIsAnyTokenStaked() {
-        isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() ?: false
+        isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() == true
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
