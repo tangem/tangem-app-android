@@ -46,18 +46,6 @@
             app:layout_constraintTop_toBottomOf="@+id/warning_content_container" />
 
         <Button
-            android:id="@+id/btn_can_be_better"
-            style="@style/Widget.AppCompat.Button.Borderless"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="-16dp"
-            android:text="@string/warning_button_can_be_better"
-            android:textAllCaps="false"
-            android:textColor="@android:color/white"
-            app:layout_constraintEnd_toStartOf="@+id/btn_really_cool"
-            app:layout_constraintTop_toBottomOf="@+id/warning_content_container" />
-
-        <Button
             android:id="@+id/btn_really_cool"
             style="@style/Widget.AppCompat.Button.Borderless"
             android:layout_width="wrap_content"
@@ -75,13 +63,6 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             app:constraint_referenced_ids="btn_got_it" />
-
-        <androidx.constraintlayout.widget.Group
-            android:id="@+id/group_controls_rating"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="visible"
-            app:constraint_referenced_ids="btn_can_be_better, btn_really_cool" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

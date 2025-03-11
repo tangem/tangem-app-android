@@ -1,38 +1,58 @@
 package com.tangem.feature.referral.viewmodels
 
+import android.os.Bundle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.bundle.unbundle
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.analytics.ReferralEvents
 import com.tangem.feature.referral.domain.ReferralInteractor
+import com.tangem.feature.referral.domain.errors.ReferralError
 import com.tangem.feature.referral.domain.models.DiscountType
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.ReferralInfo
+import com.tangem.feature.referral.models.DemoModeException
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
 import com.tangem.feature.referral.router.ReferralRouter
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import com.tangem.utils.coroutines.runCatching
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
+@Suppress("LongParameterList")
 @HiltViewModel
 internal class ReferralViewModel @Inject constructor(
     private val referralInteractor: ReferralInteractor,
-    private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val shareManager: ShareManager,
+    private val urlOpener: UrlOpener,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
+
+    private val userWalletId = savedStateHandle.get<Bundle>(AppRoute.ReferralProgram.USER_WALLET_ID_KEY)
+        ?.unbundle(UserWalletId.serializer())
+        ?: error("User wallet ID is required for Referral screen")
+
+    private var referralRouter: ReferralRouter by Delegates.notNull()
+
+    private var lastReferralData: ReferralData? = null
 
     var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())
         private set
-
-    private var referralRouter: ReferralRouter by Delegates.notNull()
 
     init {
         loadReferralData()
@@ -60,20 +80,38 @@ internal class ReferralViewModel @Inject constructor(
 
     private fun loadReferralData() {
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
-        viewModelScope.launch(dispatchers.main) {
-            runCatching(dispatchers.io) { referralInteractor.getReferralStatus() }
+        viewModelScope.launch {
+            runCatching {
+                referralInteractor.getReferralStatus(userWalletId).apply {
+                    lastReferralData = this
+                }
+            }
                 .onSuccess(::showContent)
                 .onFailure(::showErrorSnackbar)
         }
     }
 
     private fun participate() {
-        analyticsEventHandler.send(ReferralEvents.ClickParticipate)
-        uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
-        viewModelScope.launch(dispatchers.main) {
-            runCatching(dispatchers.io) { referralInteractor.startReferral() }
-                .onSuccess(::showContent)
-                .onFailure(::showErrorSnackbar)
+        val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: error("User wallet not found")
+
+        if (isDemoCardUseCase(cardId = userWallet.cardId)) {
+            showErrorSnackbar(DemoModeException())
+        } else {
+            analyticsEventHandler.send(ReferralEvents.ClickParticipate)
+            uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
+            viewModelScope.launch {
+                runCatching { referralInteractor.startReferral(userWalletId) }
+                    .onSuccess(::showContent)
+                    .onFailure { throwable ->
+                        if (throwable is ReferralError.UserCancelledException) {
+                            lastReferralData?.let { referralData ->
+                                showContent(referralData)
+                            }
+                        } else {
+                            showErrorSnackbar(throwable)
+                        }
+                    }
+            }
         }
     }
 
@@ -89,14 +127,18 @@ internal class ReferralViewModel @Inject constructor(
 
     private fun onAgreementClicked() {
         analyticsEventHandler.send(ReferralEvents.ClickTaC)
+
+        lastReferralData?.tosLink?.let(urlOpener::openUrl)
     }
 
     private fun onCopyClicked() {
         analyticsEventHandler.send(ReferralEvents.ClickCopy)
     }
 
-    private fun onShareClicked() {
+    private fun onShareClicked(text: String) {
         analyticsEventHandler.send(ReferralEvents.ClickShare)
+
+        shareManager.shareText(text = text)
     }
 
     private fun ReferralData.convertToReferralInfoState(): ReferralInfoState = when (this) {
@@ -109,6 +151,7 @@ internal class ReferralViewModel @Inject constructor(
             code = referral.promocode,
             shareLink = referral.shareLink,
             url = tosLink,
+            expectedAwards = expectedAwards,
         )
         is ReferralData.NonParticipantData -> ReferralInfoState.NonParticipantContent(
             award = getAwardValue(),
