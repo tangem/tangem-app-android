@@ -121,7 +121,7 @@ internal class AmountRequirementStateTransformer(
         val isExceedsMaxRequirement = if (maximum?.isPositive() == true) {
             maximum?.compareTo(amount) == -1
         } else {
-            cryptoCurrencyStatus.value.amount?.compareTo(amount) == 1
+            cryptoCurrencyStatus.value.amount?.compareTo(amount) == -1
         }
 
         val errorText = when {
