@@ -16,6 +16,7 @@
         android:paddingEnd="32dp"
         android:text="@string/onboarding_access_code_hint"
         android:textAlignment="center"
+        android:textColor="@color/text_secondary"
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.textfield.TextInputLayout
@@ -28,11 +29,12 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="40dp"
         android:hint="@string/onboarding_wallet_info_title_third"
+        android:textColorHint="@color/text_primary_1"
         android:theme="@style/EditTextThemeOverlay"
         app:boxStrokeColor="@color/selector_edit_text"
+        app:boxStrokeErrorColor="@color/icon_warning"
         app:boxStrokeWidth="1dp"
-        app:endIconDrawable="@drawable/selector_password_toggle"
-        app:endIconMode="password_toggle"
+        app:errorTextColor="@color/icon_warning"
         app:hintTextColor="@color/accent"
         app:layout_constraintTop_toBottomOf="@id/tv_access_code_enter_description">
 
@@ -40,7 +42,11 @@
             android:id="@+id/et_access_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textVisiblePassword"
+            android:autofillHints="none"
+            android:importantForAutofill="no"
+            android:inputType="textPassword"
+            android:privateImeOptions="disableAutofill"
+            android:textColor="@color/text_primary_1"
             android:textSize="16sp" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -48,10 +54,10 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_access_code_submit"
         style="@style/TapPrimaryButton"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/access_code_btn_continue_margin_start"
-        android:layout_marginEnd="@dimen/access_code_btn_continue_margin_end"
+        android:layout_marginStart="@dimen/dimen16"
+        android:layout_marginEnd="@dimen/dimen16"
         android:layout_marginBottom="@dimen/access_code_btn_continue_margin_bottom"
         android:text="@string/common_create"
         android:textSize="16sp"
