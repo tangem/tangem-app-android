@@ -1,44 +1,28 @@
 package com.tangem.tap.features.disclaimer
 
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.tap.persistence.DisclaimerPrefStorage
-import com.tangem.tap.preferencesStorage
-import java.util.*
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
+import java.util.Locale
 
-/**
-[REDACTED_AUTHOR]
- */
-enum class DisclaimerType {
-    Tangem,
-    SaltPay,
-    Start2Coin;
-
-    companion object {
-        fun get(cardDTO: CardDTO): DisclaimerType {
-            return when {
-                cardDTO.isSaltPay -> SaltPay
-                cardDTO.isStart2Coin -> Start2Coin
-                else -> Tangem
-            }
-        }
-    }
-}
-
-fun DisclaimerType.createDisclaimer(cardDTO: CardDTO): Disclaimer {
-    val dataProvider = provideDisclaimerDataProvider(cardDTO.cardId)
-    return when (this) {
-        DisclaimerType.Tangem -> TangemDisclaimer(dataProvider)
-        DisclaimerType.SaltPay -> SaltPayDisclaimer(dataProvider)
-        DisclaimerType.Start2Coin -> Start2CoinDisclaimer(dataProvider)
-    }
+fun CardDTO.createDisclaimer(): Disclaimer {
+    val dataProvider = provideDisclaimerDataProvider(cardId)
+    return TangemDisclaimer(dataProvider)
 }
 
 private fun provideDisclaimerDataProvider(cardId: String): DisclaimerDataProvider {
+    val cardRepository = store.inject(DaggerGraphState::cardRepository)
     return object : DisclaimerDataProvider {
         override fun getLanguage(): String = Locale.getDefault().language
         override fun getCardId(): String = cardId
-        override fun storage(): DisclaimerPrefStorage = preferencesStorage.disclaimerPrefStorage
+
+        override suspend fun accept() {
+            cardRepository.acceptTangemTOS()
+        }
+
+        override suspend fun isAccepted(): Boolean {
+            return cardRepository.isTangemTOSAccepted()
+        }
     }
 }

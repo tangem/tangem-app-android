@@ -1,9 +1,12 @@
 package com.tangem.tap.common.redux
 
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
+import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 
 class AccessCodeRequestPolicyMiddleware {
@@ -19,9 +22,12 @@ class AccessCodeRequestPolicyMiddleware {
     }
 
     private fun updateAccessCodeRequestPolicy(scanResponse: ScanResponse) {
-        tangemSdkManager.setAccessCodeRequestPolicy(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                scanResponse.card.isAccessCodeSet,
-        )
+        mainScope.launch {
+            val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
+            store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+                isBiometricsRequestPolicy = shouldSaveAccessCodes && scanResponse.card.isAccessCodeSet,
+            )
+        }
     }
 }
