@@ -1,24 +1,19 @@
 package com.tangem.core.analytics
 
-import com.tangem.core.analytics.api.AnalyticsEventFilter
-import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.api.AnalyticsFilterHolder
-import com.tangem.core.analytics.api.AnalyticsHandler
-import com.tangem.core.analytics.api.AnalyticsHandlerHolder
-import com.tangem.core.analytics.api.ParamsInterceptor
-import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.core.analytics.api.*
+import com.tangem.core.analytics.models.AnalyticsEvent
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 
 /**
 [REDACTED_AUTHOR]
  */
-interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
+interface GlobalAnalyticsEventHandler :
+    AnalyticsEventHandler,
     AnalyticsHandlerHolder,
     AnalyticsFilterHolder,
     ParamsInterceptorHolder
@@ -28,8 +23,9 @@ object Analytics : GlobalAnalyticsEventHandler {
     private val analyticsScope: CoroutineScope by lazy { createScope() }
 
     private val handlers = mutableMapOf<String, AnalyticsHandler>()
-    private val paramsInterceptors = mutableMapOf<String, ParamsInterceptor>()
+    private val paramsInterceptors = ConcurrentHashMap<String, ParamsInterceptor>()
     private val analyticsFilters = mutableSetOf<AnalyticsEventFilter>()
+    private val analyticsMutex = Mutex()
 
     private val analyticsHandlers: List<AnalyticsHandler>
         get() = handlers.values.toList()
@@ -54,8 +50,8 @@ object Analytics : GlobalAnalyticsEventHandler {
         paramsInterceptors[interceptor.id()] = interceptor
     }
 
-    override fun removeParamsInterceptor(interceptor: ParamsInterceptor): ParamsInterceptor? {
-        return paramsInterceptors.remove(interceptor.id())
+    override fun removeParamsInterceptor(interceptorId: String): ParamsInterceptor? {
+        return paramsInterceptors.remove(interceptorId)
     }
 
     override fun send(event: AnalyticsEvent) {
@@ -63,23 +59,26 @@ object Analytics : GlobalAnalyticsEventHandler {
             event.params = applyParamsInterceptors(event)
             val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(event) }
 
-            when {
-                eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(event) }
-                eventFilter.canBeSent(event) -> {
-                    analyticsHandlers
-                        .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
-                        .forEach { handler -> handler.send(event) }
+            analyticsMutex.withLock {
+                when {
+                    eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(event) }
+                    eventFilter.canBeSent(event) -> {
+                        analyticsHandlers
+                            .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
+                            .forEach { handler -> handler.send(event) }
+                    }
                 }
             }
         }
     }
 
-    private fun applyParamsInterceptors(event: AnalyticsEvent): MutableMap<String, String> {
+    private suspend fun applyParamsInterceptors(event: AnalyticsEvent): MutableMap<String, String> {
         val interceptedParams = event.params.toMutableMap()
-        paramsInterceptors.values
-            .filter { it.canBeAppliedTo(event) }
-            .forEach { it.intercept(interceptedParams) }
-
+        analyticsMutex.withLock {
+            paramsInterceptors.values
+                .filter { it.canBeAppliedTo(event) }
+                .forEach { it.intercept(interceptedParams) }
+        }
         return interceptedParams
     }
 

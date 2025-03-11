@@ -3,17 +3,17 @@ package com.tangem.tap.common.images
 import android.content.Context
 import android.util.Log
 import coil.ImageLoader
+import coil.memory.MemoryCache
+import coil.request.CachePolicy
 import coil.util.Logger
+import com.tangem.datasource.api.common.createNetworkLoggingInterceptor
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import timber.log.Timber
 
 private const val COIL_LOG_TAG = "COIL"
+private const val COIL_MEMORY_CACHE_SIZE = 0.25
 
-fun createCoilImageLoader(
-    context: Context,
-    logEnabled: Boolean = false,
-): ImageLoader {
+fun createCoilImageLoader(context: Context, logEnabled: Boolean = false): ImageLoader {
     return ImageLoader.Builder(context)
         .apply {
             if (!logEnabled) return@apply
@@ -21,16 +21,15 @@ fun createCoilImageLoader(
             logger(CoilTimberLogger())
             okHttpClient {
                 OkHttpClient.Builder()
-                    .addNetworkInterceptor(
-                        HttpLoggingInterceptor { message ->
-                            Timber.tag(COIL_LOG_TAG).d(message)
-                        }
-                            .apply {
-                                level = HttpLoggingInterceptor.Level.BODY
-                            }
-                    )
+                    .addNetworkInterceptor(createNetworkLoggingInterceptor())
                     .build()
             }
+        }
+        .memoryCachePolicy(CachePolicy.ENABLED)
+        .memoryCache {
+            MemoryCache.Builder(context)
+                .maxSizePercent(COIL_MEMORY_CACHE_SIZE)
+                .build()
         }
         .build()
 }

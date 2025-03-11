@@ -2,6 +2,7 @@
 
 # Built application files
 /build
+/buildSrc
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -32,4 +33,3 @@ local.properties
 **/fastlane/Preview.html
 **/fastlane/screenshots
 **/fastlane/test_output
-/buildSrc/build/
