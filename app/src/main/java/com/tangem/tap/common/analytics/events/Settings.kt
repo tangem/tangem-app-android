@@ -1,7 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
-import com.tangem.core.analytics.AnalyticsEvent
-import com.tangem.tap.features.details.ui.details.SocialNetwork
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
 [REDACTED_AUTHOR]
@@ -14,19 +13,8 @@ sealed class Settings(
 ) : AnalyticsEvent(category, event, params, error) {
 
     class ScreenOpened : Settings(event = "Settings Screen Opened")
-    class ButtonChat : Settings(event = "Button - Chat")
-    class ButtonSendFeedback : Settings(event = "Button - Send Feedback")
     class ButtonStartWalletConnectSession : Settings(event = "Button - Start Wallet Connect Session")
     class ButtonStopWalletConnectSession : Settings(event = "Button - Stop Wallet Connect Session")
-    class ButtonCardSettings : Settings(event = "Button - Card Settings")
-    class ButtonAppSettings : Settings(event = "Button - App Settings")
-    class ButtonCreateBackup : Settings(event = "Button - Create Backup")
-    class ButtonWalletConnect : Settings(event = "Button - Wallet Connect")
-
-    class ButtonSocialNetwork(network: SocialNetwork) : Settings(
-        event = "Button - Social Network",
-        params = mapOf("Network" to network.id),
-    )
 
     sealed class CardSettings(
         event: String,
@@ -35,9 +23,17 @@ sealed class Settings(
     ) : Settings("Settings / Card Settings", event, params, error) {
 
         class ButtonFactoryReset : CardSettings("Button - Factory Reset")
-        class FactoryResetFinished(error: Throwable? = null) : CardSettings(
+        class FactoryResetFinished(cardsCount: Int? = null, error: Throwable? = null) : CardSettings(
             event = "Factory Reset Finished",
+            params = buildMap {
+                cardsCount?.let { put("Cards Count", "$it") }
+            },
             error = error,
+        )
+
+        class FactoryResetCanceled(cardsCount: Int) : CardSettings(
+            event = "Factory Reset Canceled",
+            params = mapOf("Cards Count" to "$cardsCount"),
         )
 
         class UserCodeChanged : CardSettings("User Code Changed")
@@ -53,23 +49,45 @@ sealed class Settings(
             params = mapOf("Mode" to mode.value),
             error = error,
         )
+
+        class AccessCodeRecoveryChanged(status: AnalyticsParam.AccessCodeRecoveryStatus) : CardSettings(
+            event = "Access Code Recovery Changed",
+            params = mapOf(status.key to status.value),
+        )
     }
 
     sealed class AppSettings(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Settings("Settings / App Settings", event, params) {
+    ) : Settings(category = "Settings / App Settings", event = event, params = params) {
 
-        class SaveWalletSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
+        class SaveWalletSwitcherChanged(state: AnalyticsParam.OnOffState) : AppSettings(
             event = "Save Wallet Switcher Changed",
             params = mapOf("State" to state.value),
         )
 
-        class SaveAccessCodeSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
+        class SaveAccessCodeSwitcherChanged(state: AnalyticsParam.OnOffState) : AppSettings(
             event = "Save Access Code Switcher Changed",
             params = mapOf("State" to state.value),
         )
 
-        object ButtonEnableBiometricAuthentication : AppSettings("Button - Enable Biometric Authentication")
+        object ButtonEnableBiometricAuthentication : AppSettings(event = "Button - Enable Biometric Authentication")
+
+        class MainCurrencyChanged(currencyType: String) : AppSettings(
+            event = "Main Currency Changed",
+            params = mapOf("Currency Type" to currencyType),
+        )
+
+        class ThemeSwitched(theme: AnalyticsParam.AppTheme) : AppSettings(
+            event = "App Theme Switched",
+            params = mapOf("State" to theme.value),
+        )
+
+        object EnableBiometrics : AppSettings(event = "Notice - Enable Biometric")
+
+        class HideBalanceChanged(state: AnalyticsParam.OnOffState) : AppSettings(
+            event = "Hide Balance Changed",
+            params = mapOf("State" to state.value),
+        )
     }
 }
