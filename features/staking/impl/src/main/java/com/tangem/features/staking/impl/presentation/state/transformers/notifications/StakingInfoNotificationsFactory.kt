@@ -175,7 +175,7 @@ internal class StakingInfoNotificationsFactory(
         val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (isCardano && balance - feeValue < MINIMUM_STAKE_BALANCE) {
             add(
-                StakingNotification.Error.CardanoMinimumBalance(
+                StakingNotification.Error.MinimumAmountNotReachedError(
                     title = resourceReference(R.string.staking_notification_minimum_balance_title),
                     subtitle = resourceReference(R.string.staking_notification_minimum_stake_ada_text),
                 ),
@@ -189,7 +189,7 @@ internal class StakingInfoNotificationsFactory(
         val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (isCardano && balance - feeValue < MINIMUM_RESTAKE_BALANCE) {
             add(
-                StakingNotification.Error.CardanoMinimumBalance(
+                StakingNotification.Error.MinimumAmountNotReachedError(
                     title = resourceReference(R.string.staking_notification_minimum_restake_ada_title),
                     subtitle = resourceReference(R.string.staking_notification_minimum_restake_ada_text),
                 ),
