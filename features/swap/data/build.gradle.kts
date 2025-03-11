@@ -1,54 +1,56 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
+    id("configuration")
 }
 
 android {
-
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
-
-    buildTypes {
-        create("debug_beta") {
-            initWith(getByName("release"))
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("release"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-    }
+    namespace = "com.tangem.feature.swap.data"
 }
 
 dependencies {
 
+    /** AndroidX */
+    implementation(deps.androidx.datastore)
+
     /** Project*/
-    implementation(project(":core:datasource"))
-    implementation(project(":core:utils"))
-    implementation(project(":features:swap:domain"))
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+    implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.models)
+    implementation(projects.features.swap.domain.api)
 
     /** Network */
-    implementation(Library.retrofit)
+    implementation(deps.retrofit)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
+    implementation(deps.arrow.core)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
+
+    /** Domain */
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.models)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+
+    /** Data */
+    implementation(projects.data.common)
+
+    /** Tangem SDKs */
+    implementation(tangemDeps.blockchain)
+
+    /** Others */
+    implementation(deps.timber)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+
+    kapt(deps.hilt.kapt)
 }
