@@ -1,10 +1,10 @@
 package com.tangem.tap.common.analytics.converters
 
 import com.tangem.blockchain.common.BlockchainSdkError
-import com.tangem.common.Converter
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.demo.DemoTransactionSender
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.features.demo.DemoTransactionSender
+import com.tangem.utils.converter.Converter
 
 /**
 [REDACTED_AUTHOR]
@@ -31,8 +31,8 @@ private class ThrowableErrorConverter : Converter<Throwable, Map<String, String>
     override fun convert(value: Throwable): Map<String, String> {
         val unknown = "unknown"
         return mapOf(
-            AnalyticsParam.ErrorKey to AnalyticsParam.Error.App.value,
-            AnalyticsParam.ErrorDescription to (value.message ?: value.cause?.message ?: unknown),
+            AnalyticsParam.ERROR_KEY to AnalyticsParam.Error.App.value,
+            AnalyticsParam.ERROR_DESCRIPTION to (value.message ?: value.cause?.message ?: unknown),
         )
     }
 }
@@ -43,9 +43,9 @@ class CardSdkErrorConverter : Converter<TangemSdkError, Map<String, String>> {
         if (value is TangemSdkError.UserCancelled) return emptyMap()
 
         return mapOf(
-            AnalyticsParam.ErrorKey to AnalyticsParam.Error.CardSdk.value,
-            AnalyticsParam.ErrorCode to value.code.toString(),
-            AnalyticsParam.ErrorDescription to value.toString(),
+            AnalyticsParam.ERROR_KEY to AnalyticsParam.Error.CardSdk.value,
+            AnalyticsParam.ERROR_CODE to value.code.toString(),
+            AnalyticsParam.ERROR_DESCRIPTION to value.toString(),
         )
     }
 }
@@ -62,9 +62,9 @@ private class BlockchainSdkErrorConverter(
         }
 
         return mapOf(
-            AnalyticsParam.ErrorKey to AnalyticsParam.Error.BlockchainSdk.value,
-            AnalyticsParam.ErrorCode to value.code.toString(),
-            AnalyticsParam.ErrorDescription to "${value.javaClass.simpleName}: ${value.customMessage}",
+            AnalyticsParam.ERROR_KEY to AnalyticsParam.Error.BlockchainSdk.value,
+            AnalyticsParam.ERROR_CODE to value.code.toString(),
+            AnalyticsParam.ERROR_DESCRIPTION to "${value.javaClass.simpleName}: ${value.customMessage}",
         )
     }
 }
