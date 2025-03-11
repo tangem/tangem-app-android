@@ -4,9 +4,7 @@ import com.google.android.material.button.MaterialButton
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.postUiDelayBg
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
-import com.tangem.tap.features.onboarding.products.wallet.ui.BackupCardType.FIRST_BACKUP
-import com.tangem.tap.features.onboarding.products.wallet.ui.BackupCardType.ORIGIN
-import com.tangem.tap.features.onboarding.products.wallet.ui.BackupCardType.SECOND_BACKUP
+import com.tangem.tap.features.onboarding.products.wallet.ui.BackupCardType.*
 import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
 
 /**
@@ -29,7 +27,7 @@ class WalletBackupAnimator(
 
     private val viewState: State = when (cardsWidget.leapfrogWidget.getViewsCount()) {
         2 -> State.TwoCards
-        3 -> State.TreeCards
+        3 -> State.ThreeCards
         else -> throw UnsupportedOperationException()
     }
 
@@ -131,7 +129,7 @@ class WalletBackupAnimator(
                     }
                 }
             }
-            State.TreeCards -> {
+            State.ThreeCards -> {
                 when (backupCard) {
                     1 -> {
                         if (firstBackupCardAnimated) return
@@ -146,6 +144,15 @@ class WalletBackupAnimator(
                     2 -> {
                         if (secondBackupCardAnimated) return
                         secondBackupCardAnimated = true
+
+                        /*
+                         * !!! Workaround !!!
+                         * For interrupted backup
+                         * */
+                        if (!firstBackupCardAnimated) {
+                            showWriteBackupCard(state, backupCard = 1)
+                            return
+                        }
 
                         SECOND_BACKUP.alpha(1f)
                         cardsWidget.leapfrogWidget.leap {
@@ -165,15 +172,11 @@ class WalletBackupAnimator(
     }
 
     private enum class State {
-        TreeCards,
-        TwoCards
+        ThreeCards,
+        TwoCards,
     }
 
-    private fun BackupCardType.animateAlpha(
-        alpha: Float,
-        duration: Long = 0L,
-        startDelay: Long = 0L,
-    ) {
+    private fun BackupCardType.animateAlpha(alpha: Float, duration: Long = 0L, startDelay: Long = 0L) {
         when (this) {
             ORIGIN -> {
                 cardsWidget.getOriginCardView().animate().apply {
@@ -190,7 +193,7 @@ class WalletBackupAnimator(
                 }
             }
             SECOND_BACKUP -> {
-                if (viewState != State.TreeCards) return
+                if (viewState != State.ThreeCards) return
                 cardsWidget.getSecondBackupCardView().animate().apply {
                     alpha(alpha)
                     this.startDelay = startDelay
@@ -205,7 +208,7 @@ class WalletBackupAnimator(
             ORIGIN -> cardsWidget.getOriginCardView().alpha = alpha
             FIRST_BACKUP -> cardsWidget.getFirstBackupCardView().alpha = alpha
             SECOND_BACKUP -> {
-                if (viewState != State.TreeCards) return
+                if (viewState != State.ThreeCards) return
                 cardsWidget.getSecondBackupCardView().alpha = alpha
             }
         }
@@ -216,7 +219,7 @@ class WalletBackupAnimator(
             ORIGIN -> cardsWidget.getOriginCardView().show()
             FIRST_BACKUP -> cardsWidget.getFirstBackupCardView().show()
             SECOND_BACKUP -> {
-                if (viewState != State.TreeCards) return
+                if (viewState != State.ThreeCards) return
                 cardsWidget.getSecondBackupCardView().show()
             }
         }
@@ -247,7 +250,7 @@ class TestBackupAnimation(
     }
 
     @Suppress("MagicNumber")
-    fun setStep(step: Int, onStepUpdate: (Int) -> Unit = {}) {
+    private fun setStep(step: Int, onStepUpdate: (Int) -> Unit = {}) {
         steps = step
         when (steps) {
             0 -> setupCreateWalletState()

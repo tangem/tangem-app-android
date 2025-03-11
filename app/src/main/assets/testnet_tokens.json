@@ -13,6 +13,16 @@
             ]
         },
         {
+            "id" : "kaspa",
+            "symbol" : "KAS",
+            "name" : "Kaspa",
+            "networks" : [
+                {
+                    "networkId" : "kaspa/test"
+                }
+            ]
+        },
+        {
             "id" : "Dai Stablecoin-DAI",
             "symbol" : "DAI",
             "name" : "Dai Stablecoin",
@@ -145,6 +155,17 @@
             "networks" : [
                 {
                     "networkId" : "solana/test"
+                }
+            ]
+        },
+        {
+            "id": "the-open-network",
+            "symbol": "TON",
+            "name": "Toncoin",
+            "networks":
+            [
+                {
+                    "networkId": "the-open-network/test"
                 }
             ]
         },
@@ -392,12 +413,44 @@
             ]
         },
         {
+            "id" : "vechain",
+            "symbol" : "VET",
+            "name" : "VeChain",
+            "networks" : [
+                {
+                    "networkId" : "vechain/test"
+                }
+            ]
+        },
+        {
+            "id": "vethor-token",
+            "symbol": "VTHO",
+            "name": "VeThor",
+            "networks": [
+                {
+                    "networkId": "vechain/test",
+                    "contractAddress": "0x0000000000000000000000000000456e65726779",
+                    "decimalCount": 18
+                }
+            ]
+        },
+        {
           "id" : "tron",
           "symbol" : "TRX",
           "name" : "Tron",
           "networks" : [
               {
                   "networkId" : "tron/test"
+              }
+          ]
+        },
+        {
+          "id" : "algorand",
+          "symbol" : "ALGO",
+          "name" : "Algorand",
+          "networks" : [
+              {
+                  "networkId" : "algorand/test"
               }
           ]
         },
@@ -451,9 +504,300 @@
                     "networkId": "optimistic-ethereum/test"
                 }
             ]
+        },
+        {
+            "id": "kava",
+            "symbol": "KAVA",
+            "name": "Kava EVM",
+            "networks":
+            [
+                {
+                    "networkId": "kava/test"
+                }
+            ]
+        },
+        {
+            "id": "telos",
+            "symbol": "TLOS",
+            "name": "Telos EVM",
+            "networks":
+            [
+                {
+                    "networkId": "telos/test"
+                }
+            ]
+        },
+        {
+            "id": "ravencoin",
+            "symbol": "RVN",
+            "name": "Ravencoin",
+            "networks":
+            [
+                {
+                    "networkId": "ravencoin/test"
+                }
+            ]
+        },
+        {
+            "id": "cosmos",
+            "symbol": "ATOM",
+            "name": "Cosmos Hub",
+            "networks":
+            [
+                {
+                    "networkId": "cosmos/test"
+                }
+            ]
+        },
+        {
+            "id": "aleph-zero",
+            "symbol": "AZERO",
+            "name": "Aleph Zero",
+            "networks": [
+                {
+                    "networkId": "aleph-zero/test"
+                }
+            ]
+        },
+        {
+            "id": "near",
+            "symbol": "NEAR",
+            "name": "NEAR",
+            "networks": [
+                {
+                    "networkId": "near-protocol/test"
+                }
+            ]
+        },
+        {
+            "id": "decimal",
+            "name": "Decimal",
+            "symbol": "tDEL",
+            "networks": [
+                {
+                    "networkId": "decimal/test"
+                }
+            ]
+        },
+        {
+            "id": "xdce-crowd-sale",
+            "name": "XDC",
+            "symbol": "XDC",
+            "networks": [
+                {
+                    "networkId": "xdc-network/test"
+                }
+            ]
+        },
+        {
+            "id": "shibarium",
+            "name": "Shibarium",
+            "symbol": "BONE",
+            "networks": [
+                {
+                    "networkId": "shibarium/test"
+                }
+            ]
+        },
+        {
+            "id": "aptos",
+            "name": "Aptos",
+            "symbol": "APT",
+            "networks": [
+                {
+                    "networkId": "aptos/test"
+                }
+            ]
+        },
+        {
+            "id": "hedera-hashgraph",
+            "name": "Hedera",
+            "symbol": "HBAR",
+            "networks": [
+                {
+                    "networkId": "hedera-hashgraph/test"
+                }
+            ]
+        },
+        {
+            "id": "aurora-ethereum",
+            "name": "Aurora Testnet",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "aurora/test"
+                }
+            ]
+        },
+        {
+            "id": "areon-network",
+            "name": "Areon Network Testnet",
+            "symbol": "TAREA",
+            "networks": [
+                {
+                    "networkId": "areon-network/test"
+                }
+            ]
+        },
+        {
+            "id": "pulsechain",
+            "name": "PulseChain Testnet v4",
+            "symbol": "tPLS",
+            "networks": [
+                {
+                    "networkId": "pulsechain/test"
+                }
+            ]
+        },
+        {
+            "id": "zksync-ethereum",
+            "name": "zkSync",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "zksync/test"
+                }
+            ]
+        },
+        {
+            "id": "moonbeam",
+            "name": "Moonbeam",
+            "symbol": "GLMR",
+            "networks": [
+                {
+                    "networkId": "moonbeam/test"
+                }
+            ]
+        },
+        {
+            "id": "manta-pacific",
+            "name": "Manta Testnet",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "manta-pacific/test"
+                }
+            ]
+        },
+        {
+            "id": "polygon-zkevm-ethereum",
+            "name": "Polygon zkEvm Testnet",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "polygon-zkevm/test"
+                }
+            ]
+        },
+        {
+            "id": "base-ethereum",
+            "name": "Base",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "base/test"
+                }
+            ]
+        },
+        {
+            "id": "blast-ethereum",
+            "name": "Blast",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "blast/test"
+                }
+            ]
+        },
+        {
+            "id": "cyberconnect",
+            "name": "Cyber",
+            "symbol": "ETH",
+            "networks": [
+                {
+                    "networkId": "cyber/test"
+                }
+            ]
+        },
+        {
+            "id": "sei-network",
+            "name": "Sei Network",
+            "symbol": "SEI",
+            "networks": [
+                {
+                    "networkId": "sei-network/test"
+                }
+            ]
+        },
+        {
+            "id": "energy-web-chain",
+            "name": "Energy Web Chain",
+            "symbol": "EWT",
+            "networks": [
+                {
+                    "networkId": "energy-web-chain/test"
+                }
+            ]
+        },
+        {
+            "id": "energy-web-x",
+            "name": "Energy Web X",
+            "symbol": "EWT",
+            "networks": [
+                {
+                    "networkId": "energy-web-x/test"
+                }
+            ]
+        },
+        {
+            "id": "core",
+            "name": "Core",
+            "symbol": "CORE",
+            "networks": [
+                {
+                    "networkId": "core/test"
+                }
+            ]
+        },
+        {
+            "id": "chiliz",
+            "name": "Chiliz",
+            "symbol": "CHZ",
+            "networks": [
+                {
+                    "networkId": "chiliz/test"
+                }
+            ]
+        },
+        {
+            "id": "vanar-chain",
+            "name": "Vanar Chain",
+            "symbol": "VANRY",
+            "networks": [
+                {
+                    "networkId": "vanar-chain/test"
+                }
+            ]
+        },
+        {
+            "id": "casper-network",
+            "name": "Casper",
+            "symbol": "CSPR",
+            "networks": [
+                {
+                    "networkId": "casper-network/test"
+                }
+            ]
+        },
+        {
+            "id": "alephium",
+            "name": "Alephium",
+            "symbol": "ALPH",
+            "networks": [
+                {
+                    "networkId": "alephium/test"
+                }
+            ]
         }
-    ],
-    
-    "total" : 0,
-    "imageHost" : "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/"
+    ]
 }
