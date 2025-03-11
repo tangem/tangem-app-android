@@ -1,77 +1,45 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.platform.ComposeView
-import androidx.fragment.app.Fragment
-import androidx.transition.TransitionInflater
-import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.DetailsAction
-import com.tangem.tap.features.details.redux.DetailsState
+import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tangem.common.routing.AppRouter
+import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.screen.ComposeFragment
+import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
+import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.store
-import com.tangem.wallet.R
-import org.rekotlin.StoreSubscriber
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
-    private val viewModel = AppSettingsViewModel(store)
-    private var screenState: MutableState<AppSettingsScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.detailsState))
+@AndroidEntryPoint
+internal class AppSettingsFragment : ComposeFragment() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-        viewModel.checkBiometricsStatus()
-    }
+    @Inject
+    override lateinit var uiDependencies: UiDependencies
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?,
-    ): View {
-        return ComposeView(requireContext()).apply {
-            setContent {
-                isTransitionGroup = true
-                TangemTheme {
-                    AppSettingsScreen(
-                        state = screenState.value,
-                        onBackClick = {
-                            store.dispatch(DetailsAction.ResetCardSettingsData)
-                            store.dispatch(NavigationAction.PopBackTo())
-                        },
-                    )
-                }
-            }
+    @Inject
+    lateinit var appCurrencyRepository: AppCurrencyRepository
+
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        BackHandler { store.dispatchNavigationAction(AppRouter::pop) }
+
+        val viewModel = hiltViewModel<AppSettingsViewModel>().apply {
+            LocalLifecycleOwner.current.lifecycle.addObserver(observer = this)
         }
-    }
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    override fun onStart() {
-        super.onStart()
-        store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.detailsState == newState.detailsState
-            }.select { it.detailsState }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.refreshBiometricsStatus()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        store.unsubscribe(this)
-    }
-
-    override fun newState(state: DetailsState) {
-        if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state)
+        AppSettingsScreen(
+            modifier = modifier,
+            state = state,
+            onBackClick = {
+                store.dispatchNavigationAction(AppRouter::pop)
+            },
+        )
     }
 }

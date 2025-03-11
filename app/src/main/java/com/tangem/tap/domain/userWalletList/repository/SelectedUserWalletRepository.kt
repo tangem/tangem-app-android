@@ -1,6 +1,6 @@
 package com.tangem.tap.domain.userWalletList.repository
 
-import com.tangem.domain.common.util.UserWalletId
+import com.tangem.domain.wallets.models.UserWalletId
 
 internal interface SelectedUserWalletRepository {
     fun get(): UserWalletId?
