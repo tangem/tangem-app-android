@@ -11,7 +11,10 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionN
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.model.stakekit.StakingErrors
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -39,6 +42,7 @@ internal class AddStakingNotificationsTransformer(
     private val feeCryptoCurrencyStatus: CryptoCurrencyStatus?,
     private val currencyWarning: CryptoCurrencyWarning?,
     private val feeError: GetFeeError?,
+    private val stakingError: StakingError?,
     private val currencyCheck: CryptoCurrencyCheck,
     private val isSubtractAvailable: Boolean,
     private val yield: Yield,
@@ -93,6 +97,9 @@ internal class AddStakingNotificationsTransformer(
                 onReload = prevState.clickIntents::getFee,
                 feeValue = feeValue,
             )
+            addStakingErrorNotifications(
+                stakingError = stakingError,
+            )
             // warnings
             addWarningNotifications(
                 prevState = prevState,
@@ -126,6 +133,22 @@ internal class AddStakingNotificationsTransformer(
                 } && isActualSources,
             ),
         )
+    }
+
+    private fun MutableList<NotificationUM>.addStakingErrorNotifications(stakingError: StakingError?) {
+        when (stakingError) {
+            is StakingError.StakeKitApiError -> {
+                if (stakingError.message != StakingErrors.MinimumAmountNotReachedError.message) {
+                    add(
+                        StakingNotification.Error.Common(subtitle = stringReference(stakingError.toString())),
+                    )
+                }
+            }
+            null -> Unit
+            else -> add(
+                StakingNotification.Error.Common(subtitle = stringReference(stakingError.toString())),
+            )
+        }
     }
 
     private fun MutableList<NotificationUM>.addErrorNotifications(
@@ -193,7 +216,7 @@ internal class AddStakingNotificationsTransformer(
     ) {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
-        val cryptoCurrency = cryptoCurrencyStatus.currency
+        cryptoCurrencyStatus.currency
 
         addRentExemptionNotification(
             rentWarning = currencyCheck.rentWarning,
