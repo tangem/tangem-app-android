@@ -1,14 +1,19 @@
 package com.tangem.feature.swap.di
 
-import com.tangem.datasource.api.oneinch.OneInchApiFactory
-import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
-import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.feature.swap.SwapRepositoryImpl
-import com.tangem.feature.swap.converters.ApproveConverter
-import com.tangem.feature.swap.converters.QuotesConverter
-import com.tangem.feature.swap.converters.SwapConverter
-import com.tangem.feature.swap.converters.TokensConverter
-import com.tangem.feature.swap.domain.SwapRepository
+import com.squareup.moshi.Moshi
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.datasource.api.express.TangemExpressApi
+import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
+import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.datasource.di.NetworkMoshi
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.feature.swap.DefaultSwapRepository
+import com.tangem.feature.swap.DefaultSwapTransactionRepository
+import com.tangem.feature.swap.converters.ErrorsDataConverter
+import com.tangem.feature.swap.domain.SwapTransactionRepository
+import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -18,29 +23,50 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class SwapDataModule {
+internal class SwapDataModule {
 
     @Provides
     @Singleton
-    fun provideSwapRepository(
-        tangemTechApi: TangemTechApi,
-        oneInchApiFactory: OneInchApiFactory,
-        tokensConverter: TokensConverter,
-        quotesConverter: QuotesConverter,
-        swapConverter: SwapConverter,
-        approveConverter: ApproveConverter,
-        oneInchErrorsHandler: OneInchErrorsHandler,
+    internal fun provideSwapRepository(
+        tangemExpressApi: TangemExpressApi,
         coroutineDispatcher: CoroutineDispatcherProvider,
+        dataSignature: DataSignatureVerifier,
+        walletManagerFacade: WalletManagersFacade,
+        userWalletsListManager: UserWalletsListManager,
+        errorsDataConverter: ErrorsDataConverter,
+        @NetworkMoshi moshi: Moshi,
+        excludedBlockchains: ExcludedBlockchains,
     ): SwapRepository {
-        return SwapRepositoryImpl(
-            tangemTechApi = tangemTechApi,
-            oneInchApiFactory = oneInchApiFactory,
-            tokensConverter = tokensConverter,
-            quotesConverter = quotesConverter,
-            swapConverter = swapConverter,
-            approveConverter = approveConverter,
-            oneInchErrorsHandler = oneInchErrorsHandler,
+        return DefaultSwapRepository(
+            tangemExpressApi = tangemExpressApi,
             coroutineDispatcher = coroutineDispatcher,
+            walletManagersFacade = walletManagerFacade,
+            userWalletsListManager = userWalletsListManager,
+            errorsDataConverter = errorsDataConverter,
+            dataSignatureVerifier = dataSignature,
+            moshi = moshi,
+            excludedBlockchains = excludedBlockchains,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideSwapTransactionRepository(
+        appPreferencesStore: AppPreferencesStore,
+        dispatcherProvider: CoroutineDispatcherProvider,
+        excludedBlockchains: ExcludedBlockchains,
+    ): SwapTransactionRepository {
+        return DefaultSwapTransactionRepository(
+            appPreferencesStore = appPreferencesStore,
+            dispatchers = dispatcherProvider,
+            excludedBlockchains = excludedBlockchains,
+        )
+    }
+
+    @Provides
+    @Singleton
+    internal fun provideErrorsConverter(@NetworkMoshi moshi: Moshi): ErrorsDataConverter {
+        val jsonAdapter = moshi.adapter(ExpressErrorResponse::class.java)
+        return ErrorsDataConverter(jsonAdapter)
     }
 }

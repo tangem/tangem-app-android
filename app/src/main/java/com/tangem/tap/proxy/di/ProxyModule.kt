@@ -1,13 +1,13 @@
 package com.tangem.tap.proxy.di
 
-import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.lib.crypto.DerivationManager
+import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.DerivationManagerImpl
 import com.tangem.tap.proxy.TransactionManagerImpl
 import com.tangem.tap.proxy.UserWalletManagerImpl
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,7 +16,7 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-class ProxyModule {
+internal object ProxyModule {
 
     @Provides
     @Singleton
@@ -26,24 +26,27 @@ class ProxyModule {
 
     @Provides
     @Singleton
-    fun provideUserWalletManager(appStateHolder: AppStateHolder): UserWalletManager {
+    fun provideUserWalletManager(
+        walletManagersFacade: WalletManagersFacade,
+        userWalletsListManager: UserWalletsListManager,
+        dispatchers: CoroutineDispatcherProvider,
+    ): UserWalletManager {
         return UserWalletManagerImpl(
-            appStateHolder = appStateHolder,
-            walletManagerFactory = WalletManagerFactory(),
+            walletManagersFacade = walletManagersFacade,
+            userWalletsListManager = userWalletsListManager,
+            dispatchers = dispatchers,
         )
     }
 
     @Provides
     @Singleton
-    fun provideTransactionManager(appStateHolder: AppStateHolder): TransactionManager {
-        return TransactionManagerImpl(appStateHolder)
-    }
-
-    @Provides
-    @Singleton
-    fun provideDerivationManager(appStateHolder: AppStateHolder): DerivationManager {
-        return DerivationManagerImpl(
-            appStateHolder = appStateHolder,
+    fun provideTransactionManager(
+        walletManagersFacade: WalletManagersFacade,
+        userWalletsListManager: UserWalletsListManager,
+    ): TransactionManager {
+        return TransactionManagerImpl(
+            walletManagersFacade = walletManagersFacade,
+            userWalletsListManager = userWalletsListManager,
         )
     }
 }
