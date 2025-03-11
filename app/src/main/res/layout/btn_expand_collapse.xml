@@ -18,6 +18,7 @@
         android:layout_gravity="center"
         android:background="?selectableItemBackgroundBorderless"
         android:padding="5dp"
-        app:srcCompat="@drawable/ic_angle_bracket_up" />
+        app:srcCompat="@drawable/ic_angle_bracket_up"
+        app:tint="@color/icon_primary_1" />
 
 </FrameLayout>

@@ -2,6 +2,7 @@ package com.tangem.tap.common.ui
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -39,7 +40,7 @@ object SimpleCancelableAlertDialog {
         secondaryButtonAction: () -> Unit = {},
         context: Context,
     ): AlertDialog {
-        return AlertDialog.Builder(context).apply {
+        return MaterialAlertDialogBuilder(context, R.style.CustomMaterialDialog).apply {
             setTitle(titleRes?.let { context.getString(it) } ?: title)
             setMessage(messageRes?.let { context.getString(it) } ?: message)
             setPositiveButton(context.getText(primaryButtonRes)) { _, _ -> primaryButtonAction() }
