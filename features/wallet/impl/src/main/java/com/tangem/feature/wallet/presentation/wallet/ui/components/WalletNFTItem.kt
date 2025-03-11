@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -33,7 +34,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = { }) {
+internal fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = { }) {
     when (state) {
         is WalletNFTItemUM.Hidden -> Unit
         is WalletNFTItemUM.Empty -> WalletNFTItemEmpty(
@@ -44,10 +45,7 @@ fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier, onClick
         is WalletNFTItemUM.Loading -> WalletNFTItemLoading(modifier = modifier)
 
         is WalletNFTItemUM.Content -> WalletNFTItemContent(
-            previews = state.previews,
-            collectionsCount = state.collectionsCount,
-            assetsCount = state.assetsCount,
-            isFlickering = state.isFlickering,
+            state = state,
             onClick = onClick,
             modifier = modifier,
         )
@@ -55,7 +53,7 @@ fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier, onClick
 }
 
 @Composable
-private fun WalletNFTItemEmpty(modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
+private fun WalletNFTItemEmpty(onClick: () -> Unit, modifier: Modifier = Modifier) {
     RowContentContainer(
         modifier = modifier,
         icon = {
@@ -70,11 +68,15 @@ private fun WalletNFTItemEmpty(modifier: Modifier = Modifier, onClick: () -> Uni
                 text = stringResourceSafe(R.string.nft_wallet_title),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.primary1,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResourceSafe(R.string.nft_wallet_receive_nft),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         },
         action = {
@@ -85,39 +87,36 @@ private fun WalletNFTItemEmpty(modifier: Modifier = Modifier, onClick: () -> Uni
 }
 
 @Composable
-private fun WalletNFTItemContent(
-    onClick: () -> Unit,
-    previews: ImmutableList<CollectionPreview>,
-    collectionsCount: Int,
-    assetsCount: Int,
-    isFlickering: Boolean,
-    modifier: Modifier = Modifier,
-) {
+private fun WalletNFTItemContent(state: WalletNFTItemUM.Content, onClick: () -> Unit, modifier: Modifier = Modifier) {
     RowContentContainer(
         modifier = modifier,
         icon = {
             CollectionsPreviews(
-                previews = previews,
+                previews = state.previews,
             )
         },
         text = {
             Text(
                 text = stringResourceSafe(R.string.nft_wallet_title),
                 style = TangemTheme.typography.subtitle2.applyBladeBrush(
-                    isEnabled = isFlickering,
+                    isEnabled = state.isFlickering,
                     textColor = TangemTheme.colors.text.primary1,
                 ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResourceSafe(
                     id = R.string.nft_wallet_count,
-                    assetsCount,
-                    collectionsCount,
+                    state.assetsCount,
+                    state.collectionsCount,
                 ),
                 style = TangemTheme.typography.caption2.applyBladeBrush(
-                    isEnabled = isFlickering,
+                    isEnabled = state.isFlickering,
                     textColor = TangemTheme.colors.text.tertiary,
                 ),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         },
         action = {
@@ -139,11 +138,15 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
                 text = stringResourceSafe(R.string.nft_wallet_title),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = stringResourceSafe(R.string.nft_wallet_unable_to_load),
                 style = TangemTheme.typography.caption2,
                 color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
         },
         enabled = false,
