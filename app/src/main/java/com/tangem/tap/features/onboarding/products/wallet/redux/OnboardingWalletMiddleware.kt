@@ -1,58 +1,77 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
-import com.tangem.blockchain.common.Blockchain
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.common.extensions.toHexString
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
+import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
+import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.toWrappedList
+import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.wallets.builder.UserWalletBuilder
+import com.tangem.domain.wallets.builder.UserWalletIdBuilder
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.Artwork
+import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
+import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
+import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.backup.BackupService
-import com.tangem.tap.backupService
+import com.tangem.sdk.api.CreateProductWalletTaskResponse
+import com.tangem.sdk.extensions.localizedDescriptionRes
+import com.tangem.tap.*
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingDialog
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
-import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdk
-import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.wallet.R
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
 object OnboardingWalletMiddleware {
     val handler = onboardingWalletMiddleware
 }
 
+private const val HIDE_PROGRESS_DELAY = 400L
+
 private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state ->
     { next ->
         { action ->
-            handleWalletAction(action, state, dispatch)
+            when (action) {
+                is OnboardingWallet2Action -> handleWallet2Action(action)
+                else -> handleWalletAction(action)
+            }
             next(action)
         }
     }
 }
 
 @Suppress("LongMethod", "ComplexMethod")
-private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch: DispatchFunction) {
+private fun handleWalletAction(action: Action) {
     if (action !is OnboardingWalletAction) return
 
     val globalState = store.state.globalState
@@ -65,33 +84,23 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
 
     when (action) {
         OnboardingWalletAction.Init -> {
-            ifNotNull(onboardingManager, card) { manager, card ->
-                if (!card.isSaltPay && !manager.isActivationStarted(card.cardId)) {
-                    Analytics.send(Onboarding.Started())
+            ifNotNull(onboardingManager, card) { manager, notNullCard ->
+                mainScope.launch {
+                    if (!manager.isActivationStarted(notNullCard.cardId)) {
+                        Analytics.send(Onboarding.Started())
+                    }
                 }
             }
             when {
                 card == null -> {
-                    // it's possible when found unfinished backup for standard Wallet cards
+                    // it's possible when found unfinished backup
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
                 card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup -> {
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
                 card.wallets.isNotEmpty() && card.backupStatus?.isActive == true -> {
-                    when {
-                        // check for unfinished backup for saltPay cards. See more
-                        scanResponse.cardTypesResolver.isSaltPay() && backupService.hasIncompletedBackup -> {
-                            store.dispatch(OnboardingWalletAction.ResumeBackup)
-                        }
-
-                        scanResponse.cardTypesResolver.isSaltPay() -> {
-                            store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
-                            store.dispatch(BackupAction.FinishBackup)
-                        }
-
-                        else -> store.dispatch(BackupAction.FinishBackup)
-                    }
+                    store.dispatch(BackupAction.FinishBackup())
                 }
                 else -> {
                     store.dispatch(OnboardingWalletAction.GetToCreateWalletStep)
@@ -102,84 +111,84 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
         is OnboardingWalletAction.LoadArtwork -> {
             scope.launch {
                 val cardArtwork = when (onboardingManager) {
-                    null -> action.cardArtworkUriForUnfinishedBackup
+                    null -> {
+                        // onboardingManager is null when backup started from previously interrupted
+                        val primaryCardId = backupService.primaryCardId
+                        val cardPublicKey = backupService.primaryPublicKey
+                        if (primaryCardId != null && cardPublicKey != null) {
+                            // uses when no scanResponse and backup state restored
+                            loadArtworkForCard(
+                                cardId = primaryCardId,
+                                cardPublicKey = cardPublicKey,
+                                defaultArtwork = action.cardArtworkUriForUnfinishedBackup,
+                            )
+                        } else {
+                            action.cardArtworkUriForUnfinishedBackup
+                        }
+                    }
                     else -> onboardingManager.loadArtworkUrl()
                         .takeIf { it != Artwork.DEFAULT_IMG_URL }
                         ?.let { Uri.parse(it) }
                 }
-                store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(cardArtwork))
+                store.dispatchOnMain(OnboardingWalletAction.SetPrimaryCardArtworkUrl(cardArtwork))
             }
         }
         is OnboardingWalletAction.CreateWallet -> {
+            scanResponse ?: return
             scope.launch {
-                scanResponse ?: return@launch
-                val result = tangemSdkManager.createProductWallet(scanResponse)
-                withMainContext {
-                    when (result) {
-                        is CompletionResult.Success -> {
-                            Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
-                            // here we must use updated scanResponse after createWallet & derivation
-                            val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
-                                card = result.data.card,
-                                derivedKeys = result.data.derivedKeys,
-                                primaryCard = result.data.primaryCard,
-                            )
-                            onboardingManager.scanResponse = updatedResponse
+                val result = tangemSdkManager.createProductWallet(
+                    scanResponse,
+                    globalState.onboardingState.shouldResetOnCreate,
+                )
+                store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(true, result))
+            }
+        }
+        is OnboardingWalletAction.WalletWasCreated -> {
+            scanResponse ?: return
+            when (val result = action.result) {
+                is CompletionResult.Success -> {
+                    if (action.shouldSendAnalyticsEvent) {
+                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                    }
+                    // here we must use updated scanResponse after createWallet & derivation
+                    val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
+                        card = result.data.card,
+                        derivedKeys = result.data.derivedKeys,
+                        primaryCard = result.data.primaryCard,
+                    )
+                    onboardingManager.scanResponse = updatedResponse
 
-                            val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
-                                DemoHelper.config.demoBlockchains
-                            } else {
-                                listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-                            }.map { blockchain ->
-                                BlockchainNetwork(blockchain, result.data.card)
-                            }
-
-                            store.dispatch(
-                                WalletAction.MultiWallet.SaveCurrencies(
-                                    blockchainNetworks = blockchainNetworks,
-                                    card = result.data.card,
-                                ),
-                            )
-                            startCardActivation(updatedResponse)
-                            store.dispatch(OnboardingWalletAction.ResumeBackup)
-                        }
-                        is CompletionResult.Failure -> {
-//                            do nothing
-                        }
+                    store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(false))
+                    mainScope.launch {
+                        onboardingManager.startActivation(updatedResponse.card.cardId)
+                        store.dispatchWithMain(OnboardingWalletAction.ResumeBackup)
+                    }
+                }
+                is CompletionResult.Failure -> {
+                    if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                        handleActivationError()
                     }
                 }
             }
         }
-        OnboardingWalletAction.FinishOnboarding -> {
+        is OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
-
-            if (scanResponse == null) {
-                store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(HomeAction.ReadCard())
-            } else {
-                val backupState = store.state.onboardingWalletState.backupState
-                val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
-                OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
-                    scanResponse = updatedScanResponse,
-                    accessCode = backupState.accessCode,
-                    backupCardsIds = backupState.backupCardIds,
-                )
-            }
+            navigateToWalletScreen()
+            store.dispatch(BackupAction.DiscardBackup)
         }
         is OnboardingWalletAction.ResumeBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(backupState.index)
                 else -> {
-                    if (onboardingWalletState.backupState.backupStep == BackupStep.InitBackup ||
+                    if (onboardingWalletState.backupState.backupStep == null ||
+                        onboardingWalletState.backupState.backupStep == BackupStep.InitBackup ||
                         onboardingWalletState.backupState.backupStep == BackupStep.Finished
                     ) {
-                        if (onboardingWalletState.isSaltPay) {
-                            BackupAction.StartBackup
-                        } else {
-                            Analytics.send(Onboarding.Backup.ScreenOpened())
-                            BackupAction.IntroduceBackup
-                        }
+                        Analytics.send(Onboarding.Backup.ScreenOpened())
+
+                        val isWallet2 = scanResponse?.cardTypesResolver?.isWallet2() ?: false
+                        if (isWallet2) BackupAction.StartBackup else BackupAction.IntroduceBackup
                     } else {
                         null
                     }
@@ -188,14 +197,190 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
-        else -> {}
+        else -> Unit
     }
 }
 
-private fun updateScanResponseAfterBackup(
-    scanResponse: ScanResponse,
-    backupState: BackupState,
-): ScanResponse {
+private suspend fun handleFinishBackup(scanResponse: ScanResponse, userWallet: UserWallet? = null) {
+    val backupState = store.state.onboardingWalletState.backupState
+    val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
+
+    val userWalletId = userWallet?.walletId ?: UserWalletIdBuilder.scanResponse(scanResponse).build()
+    if (backupState.hasRing && userWalletId != null) {
+        scope.launch {
+            store.inject(DaggerGraphState::walletsRepository).setHasWalletsWithRing(userWalletId = userWalletId)
+        }
+    }
+
+    OnboardingHelper.saveWallet(
+        alreadyCreatedWallet = userWallet,
+        scanResponse = updatedScanResponse,
+        accessCode = backupState.accessCode,
+        backupCardsIds = backupState.backupCardIds,
+        hasBackupError = backupState.hasBackupError,
+    )
+}
+
+private fun navigateToWalletScreen() {
+    mainScope.launch {
+        val settingsRepository = store.inject(DaggerGraphState::settingsRepository)
+        store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
+        if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+            delay(timeMillis = 1_800)
+            store.dispatchNavigationAction { push(AppRoute.SaveWallet) }
+        }
+    }
+}
+
+private suspend fun readCard(): CompletionResult<ScanResponse> {
+    val shouldSaveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
+
+    store.inject(DaggerGraphState::cardSdkConfigRepository).setAccessCodeRequestPolicy(
+        isBiometricsRequestPolicy = shouldSaveAccessCodes,
+    )
+
+    return store.inject(DaggerGraphState::scanCardProcessor).scan(analyticsSource = ScreensSources.Intro)
+}
+
+private suspend fun loadArtworkForCard(cardId: String, cardPublicKey: ByteArray, defaultArtwork: Uri?): Uri {
+    return when (val cardInfo = OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)) {
+        is Result.Success -> {
+            val artworkId = cardInfo.data.artwork?.id
+            if (artworkId.isNullOrEmpty()) {
+                defaultArtwork ?: Uri.EMPTY
+            } else {
+                Uri.parse(OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId))
+            }
+        }
+        is Result.Failure -> defaultArtwork ?: Uri.EMPTY
+    }
+}
+
+@Suppress("LongMethod", "ComplexMethod")
+private fun handleWallet2Action(action: OnboardingWallet2Action) {
+    val globalState = store.state.globalState
+    val onboardingManager = globalState.onboardingState.onboardingManager
+
+    val scanResponse = onboardingManager?.scanResponse
+
+    when (action) {
+        is OnboardingWallet2Action.Init -> {
+            if (scanResponse?.cardTypesResolver?.isWallet2() == true) {
+                store.dispatch(OnboardingWallet2Action.SetDependencies(action.maxProgress))
+            }
+        }
+
+        is OnboardingWallet2Action.CreateWallet -> {
+            scanResponse ?: return
+            scope.launch {
+                val mediateResult = when (
+                    val result = tangemSdkManager.createProductWallet(
+                        scanResponse,
+                        globalState.onboardingState.shouldResetOnCreate,
+                    )
+                ) {
+                    is CompletionResult.Success -> {
+                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
+                        store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(false))
+                        val response = CreateWalletResponse(
+                            card = result.data.card,
+                            derivedKeys = result.data.derivedKeys,
+                            primaryCard = result.data.primaryCard,
+                        )
+                        CompletionResult.Success(response)
+                    }
+
+                    is CompletionResult.Failure -> {
+                        if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                            handleActivationError()
+                        }
+                        CompletionResult.Failure(result.error)
+                    }
+                }
+                withMainContext {
+                    action.callback(mediateResult)
+                }
+            }
+        }
+
+        is OnboardingWallet2Action.ImportWallet -> {
+            scanResponse ?: return
+            scope.launch {
+                val mediateResult = when (
+                    val result = tangemSdkManager.importWallet(
+                        scanResponse = scanResponse,
+                        passphrase = action.passphrase,
+                        mnemonic = action.mnemonicComponents.joinToString(" "),
+                        shouldReset = globalState.onboardingState.shouldResetOnCreate,
+                    )
+                ) {
+                    is CompletionResult.Success -> {
+                        val creationType = when (action.seedPhraseSource) {
+                            SeedPhraseSource.IMPORTED -> AnalyticsParam.WalletCreationType.SeedImport
+                            SeedPhraseSource.GENERATED -> AnalyticsParam.WalletCreationType.NewSeed
+                        }
+                        Analytics.send(
+                            event = Onboarding.CreateWallet.WalletCreatedSuccessfully(
+                                creationType = creationType,
+                                seedPhraseLength = action.mnemonicComponents.size,
+                            ),
+                        )
+                        store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(false))
+                        val response = CreateWalletResponse(
+                            card = result.data.card,
+                            derivedKeys = result.data.derivedKeys,
+                            primaryCard = result.data.primaryCard,
+                        )
+                        CompletionResult.Success(response)
+                    }
+
+                    is CompletionResult.Failure -> {
+                        if (result.error is TangemSdkError.WalletAlreadyCreated) {
+                            handleActivationError()
+                        }
+                        CompletionResult.Failure(result.error)
+                    }
+                }
+                withMainContext {
+                    action.callback(mediateResult)
+                }
+            }
+        }
+
+        is OnboardingWallet2Action.WalletWasCreated -> {
+            val result = when (val mediateResult = action.result) {
+                is CompletionResult.Success -> {
+                    val response = CreateProductWalletTaskResponse(
+                        card = mediateResult.data.card,
+                        derivedKeys = mediateResult.data.derivedKeys,
+                        primaryCard = mediateResult.data.primaryCard,
+                    )
+                    CompletionResult.Success(response)
+                }
+
+                is CompletionResult.Failure -> {
+                    CompletionResult.Failure(mediateResult.error)
+                }
+            }
+            // do not send analytics event for wallet2 flow, cause its already sent
+            store.dispatchOnMain(OnboardingWalletAction.WalletWasCreated(false, result))
+        }
+
+        else -> Unit
+    }
+}
+
+private fun handleActivationError() {
+    store.dispatchDialogShow(
+        OnboardingDialog.WalletActivationError(
+            onConfirm = {
+                store.dispatch(GlobalAction.Onboarding.ShouldResetCardOnCreate(true))
+            },
+        ),
+    )
+}
+
+private fun updateScanResponseAfterBackup(scanResponse: ScanResponse, backupState: BackupState): ScanResponse {
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
         scanResponse.card.copy(
@@ -226,7 +411,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
     val onboardingWalletState = appState()?.onboardingWalletState ?: return
 
     val backupState = onboardingWalletState.backupState
-    val scanResponse = globalState.onboardingState.onboardingManager?.scanResponse
+    var scanResponse = globalState.onboardingState.onboardingManager?.scanResponse
     val card = scanResponse?.card
 
     when (action) {
@@ -242,30 +427,72 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.ScanPrimaryCard -> {
-            backupService.readPrimaryCard(cardId = card?.cardId) { result ->
+            val iconScanRes = if (scanResponse?.cardTypesResolver?.isRing() == true) {
+                R.drawable.img_hand_scan_ring
+            } else {
+                null
+            }
+            backupService.readPrimaryCard(iconScanRes = iconScanRes, cardId = card?.cardId) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.StartAddingBackupCards)
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> Unit
                 }
             }
         }
         is BackupAction.AddBackupCard -> {
-            onboardingWalletState.backupCardIdFilter?.let {
-                backupService.skipCompatibilityChecks = true
-                tangemSdk.config.filter.cardIdFilter = it
-            }
-
+            store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(true))
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false
-                tangemSdk.config.filter.cardIdFilter = null
+                store.inject(DaggerGraphState::cardSdkConfigRepository).sdk.config.filter.cardIdFilter = null
+                store.dispatchOnMain(BackupAction.AddBackupCard.ChangeButtonLoading(false))
                 when (result) {
                     is CompletionResult.Success -> {
-                        store.dispatchOnMain(BackupAction.AddBackupCard.Success)
+                        updateArtworks(backupService.addedBackupCardsCount, result.data)
+                        store.dispatchOnMain(BackupAction.AddBackupCard.Success(result.data))
                     }
                     is CompletionResult.Failure -> {
+                        val crashlytics = FirebaseCrashlytics.getInstance()
+
+                        when (val error = result.error) {
+                            is TangemSdkError.CardVerificationFailed -> {
+                                Analytics.send(
+                                    event = OnboardingAnalyticsEvent.Onboarding.OfflineAttestationFailed(
+                                        ScreensSources.Backup,
+                                    ),
+                                )
+
+                                val resource = error.localizedDescriptionRes()
+                                val resId = resource.resId ?: com.tangem.core.ui.R.string.common_unknown_error
+                                val resArgs = resource.args.map { it.value }
+
+                                store.inject(DaggerGraphState::uiMessageSender).send(
+                                    message = Dialogs.cardVerificationFailed(
+                                        errorDescription = resourceReference(id = resId, resArgs.toWrappedList()),
+                                        onRequestSupport = {
+                                            mainScope.launch {
+                                                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                                                    .invoke(type = FeedbackEmailType.CardAttestationFailed)
+                                            }
+                                        },
+                                    ),
+                                )
+                            }
+                            is TangemSdkError.BackupFailedNotEmptyWallets -> {
+                                store.dispatchOnMain(
+                                    GlobalAction.ShowDialog(
+                                        BackupDialog.ResetBackupCard(error.cardId),
+                                    ),
+                                )
+                            }
+                            is TangemSdkError.IssuerSignatureLoadingFailed -> {
+                                store.dispatchOnMain(
+                                    GlobalAction.ShowDialog(BackupDialog.AttestationFailed),
+                                )
+                            }
+                            else -> crashlytics.recordException(error)
+                        }
                     }
                 }
             }
@@ -294,121 +521,302 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             if (action.accessCodeConfirmation == backupState.accessCode) {
                 store.dispatch(BackupAction.SetAccessCodeError(null))
                 backupService.setAccessCode(action.accessCodeConfirmation)
-                store.dispatch(OnboardingSaltPayAction.SetAccessCode(action.accessCodeConfirmation))
                 store.dispatch(BackupAction.PrepareToWritePrimaryCard)
             } else {
                 store.dispatch(BackupAction.SetAccessCodeError(AccessCodeError.CodesDoNotMatch))
             }
         }
         is BackupAction.WritePrimaryCard -> {
-            backupService.proceedBackup { result ->
+            val isRing = scanResponse?.cardTypesResolver?.isRing() == true
+            val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+
+            store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+
+            tangemSdkManager.changeProductType(isRing)
+            backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(BackupAction.PrepareToWriteBackupCard(1))
                     }
-                    is CompletionResult.Failure -> {
-                    }
+                    is CompletionResult.Failure -> Unit
                 }
+                tangemSdkManager.clearProductType()
             }
         }
         is BackupAction.WriteBackupCard -> {
-            backupService.proceedBackup { result ->
+            val cardIndex = if (action.cardNumber > 0) action.cardNumber - 1 else action.cardNumber
+            val backupCard = backupState.backupCards.getOrNull(cardIndex)
+            val isRing = backupCard.isRing()
+            val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+
+            store.dispatchOnMain(BackupAction.SetHasRing(hasRing = isRing))
+
+            tangemSdkManager.changeProductType(isRing)
+            backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
+                        val backupValidator = BackupValidator()
+                        if (!backupValidator.isValidBackupStatus(CardDTO(result.data))) {
+                            store.dispatchOnMain(BackupAction.ErrorInBackupCard)
+                        }
                         if (backupService.currentState == BackupService.State.Finished) {
-                            initSaltPayOnBackupFinishedIfNeeded(scanResponse, onboardingWalletState)
-                            store.dispatchOnMain(BackupAction.FinishBackup)
+                            store.dispatchOnMain(BackupAction.FinishBackup())
                         } else {
                             store.dispatchOnMain(BackupAction.PrepareToWriteBackupCard(action.cardNumber + 1))
                         }
                     }
                     is CompletionResult.Failure -> {
+                        when (val error = result.error) {
+                            is TangemSdkError.BackupFailedNotEmptyWallets -> {
+                                store.dispatchOnMain(
+                                    GlobalAction.ShowDialog(
+                                        BackupDialog.ResetBackupCard(error.cardId),
+                                    ),
+                                )
+                            }
+                        }
                     }
                 }
-            }
-        }
-        is BackupAction.FinishBackup -> {
-            Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
-            if (!onboardingWalletState.isSaltPay) {
-                Analytics.send(Onboarding.Finished())
-                finishCardActivation(backupState, card)
+
+                tangemSdkManager.clearProductType()
             }
         }
         is BackupAction.DiscardBackup -> {
             backupService.discardSavedBackup()
         }
         is BackupAction.DiscardSavedBackup -> {
-            backupService.primaryCardId?.let {
-                Analytics.send(Onboarding.Finished())
-                finishCardsActivationForDiscardedUnfinishedBackup(it)
+            mainScope.launch {
+                backupService.primaryCardId?.let {
+                    Analytics.send(Onboarding.Finished())
+                    store.state.globalState.onboardingState.onboardingManager?.finishActivation(it)
+                }
+                backupService.discardSavedBackup()
+
+                val isOnboardingV2Enabled = store.inject(DaggerGraphState::onboardingV2FeatureToggles)
+                    .isOnboardingV2Enabled
+
+                if (isOnboardingV2Enabled) {
+                    val onboardingRepository = store.inject(DaggerGraphState::onboardingRepository)
+                    onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                }
             }
-            backupService.discardSavedBackup()
         }
         is BackupAction.CheckForUnfinishedBackup -> {
-            if (backupService.hasIncompletedBackup && !backupService.primaryCardIsSaltPayVisa()) {
-                store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound))
+            val isOnboardingV2Enabled = store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled
+
+            if (isOnboardingV2Enabled) {
+                val onboardingRepository = store.inject(DaggerGraphState::onboardingRepository)
+
+                mainScope.launch {
+                    val onboardingScanResponse = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+                    store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound(onboardingScanResponse)))
+                }
+            } else if (backupService.hasIncompletedBackup) {
+                store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound()))
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {
-            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup(backupService.addedBackupCardsCount))
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+            if (action.unfinishedBackupScanResponse != null) {
+                // onboarding V2
+                store.dispatchNavigationAction {
+                    push(
+                        AppRoute.Onboarding(
+                            scanResponse = action.unfinishedBackupScanResponse,
+                            startFromBackup = false,
+                        ),
+                    )
+                }
+            } else {
+                store.dispatch(
+                    GlobalAction.Onboarding.StartForUnfinishedBackup(
+                        addedBackupCardsCount = backupService.addedBackupCardsCount,
+                    ),
+                )
+
+                store.dispatchNavigationAction { push(AppRoute.OnboardingWallet()) }
+            }
         }
-        is BackupAction.DismissBackup -> {
+        is BackupAction.SkipBackup -> {
             Analytics.send(Onboarding.Backup.Skipped())
-            if (onboardingWalletState.isSaltPay) throw UnsupportedOperationException()
-            store.dispatch(BackupAction.FinishBackup)
+            Analytics.send(Onboarding.Finished())
+
+            scope.launch {
+                launch {
+                    store.state.globalState.onboardingState.onboardingManager?.finishActivation(
+                        cardIds = gatherCardIds(backupState, card),
+                    )
+                }
+
+                with(scanResponse) {
+                    if (this == null) {
+                        when (val result = readCard()) {
+                            is CompletionResult.Success -> handleFinishBackup(result.data)
+                            is CompletionResult.Failure -> store.dispatchNavigationAction(AppRouter::pop)
+                        }
+                    } else {
+                        handleFinishBackup(scanResponse = this)
+                    }
+                }
+            }
         }
-        else -> {}
+        is BackupAction.FinishBackup -> {
+            scope.launch {
+                if (action.withAnalytics) {
+                    Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
+                }
+
+                var userWallet: UserWallet? = null
+                if (scanResponse != null) {
+                    scanResponse = updateScanResponseAfterBackup(scanResponse!!, backupState)
+                    userWallet = createUserWallet(
+                        scanResponse = requireNotNull(value = scanResponse, lazyMessage = { "ScanResponse is null" }),
+                        backupState = backupState,
+                    )
+                } else {
+                    delay(HIDE_PROGRESS_DELAY)
+
+                    when (val result = readCard()) {
+                        is CompletionResult.Failure -> {
+                            store.dispatchNavigationAction(AppRouter::pop)
+                            return@launch
+                        }
+                        is CompletionResult.Success -> {
+                            scanResponse = result.data
+                            userWallet = createUserWallet(scanResponse = result.data, backupState = backupState)
+                        }
+                    }
+                }
+
+                val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
+                when (backupState.startedSource) {
+                    BackupStartedSource.Onboarding -> saveWallet(
+                        userWalletsListManager = userWalletsListManager,
+                        userWallet = userWallet,
+                        scanResponse = scanResponse,
+                        backupState = backupState,
+                    )
+                    BackupStartedSource.CreateBackup -> updateWallet(
+                        userWalletsListManager = userWalletsListManager,
+                        userWallet = userWallet,
+                        backupState = backupState,
+                    )
+                }
+
+                scope.launch {
+                    if (userWallet.scanResponse.cardTypesResolver.isWallet2() && userWallet.isImported) {
+                        store.inject(DaggerGraphState::walletsRepository).markWallet2WasCreated(userWallet.walletId)
+                    }
+                }
+
+                val notActivatedCardIds = gatherCardIds(backupState, card).mapNotNull {
+                    if (store.state.globalState.onboardingState.onboardingManager?.isActivationFinished(it) == true) {
+                        null
+                    } else {
+                        it
+                    }
+                }
+
+                // All cardIds may already be activated if the backup was skipped before.
+                if (notActivatedCardIds.isEmpty()) {
+                    delay(1000)
+                    store.dispatchWithMain(BackupAction.BackupFinished(userWallet.walletId))
+                    return@launch
+                }
+
+                Analytics.send(Onboarding.Finished())
+
+                store.state.globalState.onboardingState.onboardingManager?.finishActivation(notActivatedCardIds)
+                handleFinishBackup(requireNotNull(scanResponse), userWallet)
+                store.dispatchWithMain(BackupAction.BackupFinished(userWalletId = userWallet.walletId))
+            }
+        }
+
+        is BackupAction.ResetBackupCard -> {
+            scope.launch { tangemSdkManager.resetToFactorySettings(action.cardId, false) }
+        }
+
+        else -> Unit
     }
 }
 
-/**
- * Standard Wallet cards start activation at OnboardingWalletAction.CreateWallet
- * SaltPay cards start activation at OnboardingWalletAction.StartSaltPayCardActivation
- */
-private fun startCardActivation(scanResponse: ScanResponse) {
-    preferencesStorage.usedCardsPrefStorage.activationStarted(scanResponse.card.cardId)
+private fun Card?.isRing(): Boolean {
+    return this?.let { RING_BATCH_IDS.contains(batchId) || batchId.startsWith(RING_BATCH_PREFIX) } ?: false
 }
 
-/**
- * Standard Wallet cards finish activation at BackupAction.FinishBackup
- * SaltPay cards finish activation at OnboardingWalletAction.FinishOnboarding
- */
-internal fun finishCardActivation(backupState: BackupState, card: CardDTO?) {
-    (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
-        .distinct()
-        .filterNotNull()
-        .forEach { cardId ->
-            preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
-        }
-}
-
-/**
- * Not used for SaltPay cards, because discarding unfinished backup is not possible
- */
-private fun finishCardsActivationForDiscardedUnfinishedBackup(cardId: String) {
-    preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
-}
-
-/**
- * SaltPay state maybe not initialized if backup resumed from ResumeFoundUnfinishedBackup action
- */
-private fun initSaltPayOnBackupFinishedIfNeeded(
+private suspend fun saveWallet(
+    userWalletsListManager: UserWalletsListManager,
+    userWallet: UserWallet,
     scanResponse: ScanResponse?,
-    onboardingWalletState: OnboardingWalletState,
+    backupState: BackupState,
 ) {
-    if (onboardingWalletState.isSaltPay && onboardingWalletState.onboardingSaltPayState == null) {
-        if (scanResponse == null) error("scanning response is null")
+    userWalletsListManager.save(
+        userWallet = userWallet.copy(
+            scanResponse = updateScanResponseAfterBackup(
+                scanResponse = requireNotNull(
+                    value = scanResponse,
+                    lazyMessage = { "ScanResponse is null" },
+                ),
+                backupState = backupState,
+            ),
+        ),
+        canOverride = true,
+    )
+}
 
-        val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
-        store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager, config))
-        store.dispatchOnMain(OnboardingSaltPayAction.Update)
+private suspend fun updateWallet(
+    userWalletsListManager: UserWalletsListManager,
+    userWallet: UserWallet,
+    backupState: BackupState,
+) {
+    userWalletsListManager.update(
+        userWalletId = userWallet.walletId,
+        update = { wallet ->
+            wallet.copy(
+                scanResponse = updateScanResponseAfterBackup(
+                    scanResponse = wallet.scanResponse,
+                    backupState = backupState,
+                ),
+            )
+        },
+    )
+}
+
+private suspend fun createUserWallet(scanResponse: ScanResponse, backupState: BackupState): UserWallet {
+    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+    return requireNotNull(
+        value = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
+            .backupCardsIds(backupState.backupCardIds.toSet())
+            .hasBackupError(backupState.hasBackupError)
+            .build(),
+        lazyMessage = { "User wallet not created" },
+    )
+}
+
+fun updateArtworks(addedBackupCardsCount: Int, card: Card) {
+    mainScope.launch {
+        withIOContext {
+            val imageUri = loadArtworkForCard(card.cardId, card.cardPublicKey, Uri.EMPTY)
+            when (addedBackupCardsCount) {
+                1 -> {
+                    store.dispatchOnMain(OnboardingWalletAction.SetSecondCardArtworkUrl(imageUri))
+                }
+                2 -> {
+                    store.dispatchOnMain(OnboardingWalletAction.SetThirdCardArtworkUrl(imageUri))
+                }
+            }
+        }
     }
+}
+
+internal fun gatherCardIds(backupState: BackupState, card: CardDTO?): List<String> {
+    return (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
+        .filterNotNull()
+        .distinct()
 }
 
 private fun handleOnBackPressed(state: OnboardingWalletState) {
     when (state.backupState.backupStep) {
-        BackupStep.InitBackup, BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
+        null, BackupStep.InitBackup, BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
         BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
         -> {
             showInterruptOnboardingDialog()
@@ -417,11 +825,8 @@ private fun handleOnBackPressed(state: OnboardingWalletState) {
             store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
         }
         BackupStep.Finished -> {
-            if (state.isSaltPay) {
-                showInterruptOnboardingDialog()
-            } else {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
+            OnboardingHelper.onInterrupted()
+            store.dispatchNavigationAction(AppRouter::pop)
         }
     }
 }
@@ -430,8 +835,9 @@ private fun showInterruptOnboardingDialog() {
     store.dispatchDialogShow(
         OnboardingDialog.InterruptOnboarding(
             onOk = {
+                OnboardingHelper.onInterrupted()
                 store.dispatch(BackupAction.DiscardBackup)
-                store.dispatch(NavigationAction.PopBackTo())
+                store.dispatchNavigationAction(AppRouter::pop)
             },
         ),
     )
