@@ -3,6 +3,7 @@ package com.tangem.datasource.local.token
 import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
+import com.tangem.datasource.local.token.StakingBalanceStore.StakingID
 import com.tangem.datasource.local.token.converter.YieldBalanceConverter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -26,10 +27,16 @@ internal class DefaultStakingBalanceStore(
     private val runtimeStore: RuntimeSharedStore<YieldBalanceListByWalletId>,
 ) : StakingBalanceStore {
 
-    override fun get(userWalletId: UserWalletId): Flow<Set<YieldBalance>> = channelFlow {
+    override fun get(userWalletId: UserWalletId, stakingIds: List<StakingID>): Flow<Set<YieldBalance>> = channelFlow {
         val cachedBalances = persistenceStore.data
             .map {
                 val wrappers = it[userWalletId.stringValue].orEmpty()
+                    .filter { wrapper ->
+                        stakingIds.any { id ->
+                            id.address == wrapper.addresses.address && id.integrationId == wrapper.integrationId
+                        }
+                    }
+
                 YieldBalanceConverter(isCached = true).convertSet(input = wrappers)
             }
             .firstOrNull()
@@ -40,33 +47,64 @@ internal class DefaultStakingBalanceStore(
         }
 
         runtimeStore.get()
-            .map { it[userWalletId].orEmpty() }
+            .map {
+                it[userWalletId].orEmpty().filter { balance ->
+                    stakingIds.any { id ->
+                        id.address == balance.address && id.integrationId == balance.integrationId
+                    }
+                }
+                    .toSet()
+            }
             .onEach {
-                val mergedBalances = mergeYieldBalances(cachedBalances = cachedBalances, runtimeBalances = it)
+                val mergedBalances = mergeYieldBalances(
+                    stakingIds = stakingIds,
+                    cachedBalances = cachedBalances,
+                    runtimeBalances = it,
+                )
 
                 send(mergedBalances)
             }
             .launchIn(scope = this)
     }
 
-    override fun get(userWalletId: UserWalletId, address: String, integrationId: String): Flow<YieldBalance?> {
-        return get(userWalletId).map { balances ->
-            balances.getBalance(address = address, integrationId = integrationId)
+    override fun get(userWalletId: UserWalletId, stakingID: StakingID): Flow<YieldBalance?> {
+        return get(userWalletId = userWalletId, stakingIds = listOf(stakingID)).map { balances ->
+            balances.getBalance(stakingID = stakingID)
         }
     }
 
     override suspend fun getSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>? {
-        return runtimeStore.getSyncOrNull()?.getValue(userWalletId)
+        val runtimeBalances = runtimeStore.getSyncOrNull()?.getValue(userWalletId).orEmpty()
+        val cachedBalances = persistenceStore.data.firstOrNull()?.get(userWalletId.stringValue).orEmpty()
+
+        if (runtimeBalances.isEmpty() && cachedBalances.isEmpty()) return null
+
+        return cachedBalances.mapTo(hashSetOf()) {
+            val cached = YieldBalanceConverter(source = StatusSource.ONLY_CACHE).convert(value = it)
+            val runtime = runtimeBalances.getBalance(address = cached.address, integrationId = cached.integrationId)
+
+            if (runtime == null || runtime is YieldBalance.Error) cached else runtime
+        }
     }
 
-    override suspend fun getSyncOrNull(
-        userWalletId: UserWalletId,
-        address: String,
-        integrationId: String,
-    ): YieldBalance? {
-        val balances = getSyncOrNull(userWalletId) ?: return null
+    override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingIds: List<StakingID>): Set<YieldBalance>? {
+        val runtime = runtimeStore.getSyncOrNull()?.getValue(userWalletId)
+        val cached = persistenceStore.data.firstOrNull()?.get(userWalletId.stringValue)
 
-        return balances.getBalance(address, integrationId)
+        if (runtime.isNullOrEmpty() && cached.isNullOrEmpty()) return null
+
+        return mergeYieldBalances(
+            cachedBalances = YieldBalanceConverter(source = StatusSource.ONLY_CACHE)
+                .convertSet(input = cached.orEmpty()),
+            runtimeBalances = runtime.orEmpty(),
+            stakingIds = stakingIds,
+        )
+    }
+
+    override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingID: StakingID): YieldBalance? {
+        val balances = getSyncOrNull(userWalletId = userWalletId, stakingIds = listOf(stakingID)) ?: return null
+
+        return balances.getBalance(stakingID = stakingID)
     }
 
     override suspend fun store(userWalletId: UserWalletId, items: Set<YieldBalanceWrapperDTO>) {
@@ -88,34 +126,52 @@ internal class DefaultStakingBalanceStore(
         }
     }
 
-    override suspend fun refresh(userWalletId: UserWalletId, addressWithIntegrationIdMap: Map<String, String>) {
+    override suspend fun refresh(userWalletId: UserWalletId, stakingIds: List<StakingID>) {
         updateRuntimeStore(userWalletId = userWalletId) { saved ->
-            saved.mapTo(hashSetOf()) { balance ->
-                val refreshIntegrationId = addressWithIntegrationIdMap[balance.address]
+            saved.mapTo(hashSetOf()) {
+                val yieldBalance = it.takeIf { balance ->
+                    stakingIds.any { id -> balance.integrationId == id.integrationId && balance.address == id.address }
+                }
 
-                if (balance.integrationId == refreshIntegrationId) {
-                    when (balance) {
-                        is YieldBalance.Data -> balance.copy(source = StatusSource.CACHE)
-                        is YieldBalance.Empty -> balance.copy(source = StatusSource.CACHE)
-                        is YieldBalance.Error -> balance
+                if (yieldBalance != null) {
+                    when (yieldBalance) {
+                        is YieldBalance.Data -> yieldBalance.copy(source = StatusSource.CACHE)
+                        is YieldBalance.Empty -> yieldBalance.copy(source = StatusSource.CACHE)
+                        is YieldBalance.Error -> yieldBalance
                     }
                 } else {
-                    balance
+                    it
                 }
             }
         }
     }
 
-    override suspend fun store(
-        userWalletId: UserWalletId,
-        integrationId: String,
-        address: String,
-        item: YieldBalanceWrapperDTO,
-    ) {
+    override suspend fun store(userWalletId: UserWalletId, stakingID: StakingID, item: YieldBalanceWrapperDTO) {
         coroutineScope {
             launch {
-                storeInRuntimeStore(userWalletId, integrationId, address, item)
-                storeInPersistenceStore(userWalletId, integrationId, address, item)
+                storeInRuntimeStore(
+                    userWalletId = userWalletId,
+                    integrationId = stakingID.integrationId,
+                    address = stakingID.address,
+                    item = item,
+                )
+
+                storeInPersistenceStore(
+                    userWalletId = userWalletId,
+                    integrationId = stakingID.integrationId,
+                    address = stakingID.address,
+                    item = item,
+                )
+            }
+        }
+    }
+
+    override suspend fun storeSingleYieldBalance(userWalletId: UserWalletId, item: YieldBalance) {
+        runtimeStore.update(default = emptyMap()) { saved ->
+            saved.toMutableMap().apply {
+                this[userWalletId] = saved[userWalletId]
+                    ?.addOrReplace(item) { it.integrationId == item.integrationId && it.address == item.address }
+                    ?: setOf(item)
             }
         }
     }
@@ -178,28 +234,22 @@ internal class DefaultStakingBalanceStore(
     private fun mergeYieldBalances(
         cachedBalances: Set<YieldBalance>,
         runtimeBalances: Set<YieldBalance>,
+        stakingIds: List<StakingID>,
     ): Set<YieldBalance> {
-        if (runtimeBalances.isEmpty()) {
-            return cachedBalances.mapNotNullTo(hashSetOf()) {
-                when (it) {
-                    is YieldBalance.Data -> it.copy(source = StatusSource.ONLY_CACHE)
-                    is YieldBalance.Empty -> it.copy(source = StatusSource.ONLY_CACHE)
-                    is YieldBalance.Error -> null
-                }
+        return stakingIds.mapTo(hashSetOf()) { id ->
+            val runtime = runtimeBalances.getBalance(stakingID = id)
+
+            if (runtime == null || runtime is YieldBalance.Error) {
+                getCachedBalanceIfPossible(cachedBalances = cachedBalances, stakingID = id)
+            } else {
+                runtime
             }
         }
-
-        return runtimeBalances
-            .map { runtime ->
-                runtime.takeIf { runtime !is YieldBalance.Error }
-                    ?: getCachedBalanceIfPossible(cachedBalances, runtime)
-            }
-            .toSet()
     }
 
-    private fun getCachedBalanceIfPossible(cachedBalances: Set<YieldBalance>, runtime: YieldBalance): YieldBalance {
-        val cached = cachedBalances.getBalance(address = runtime.address, integrationId = runtime.integrationId)
-            ?: return runtime
+    private fun getCachedBalanceIfPossible(cachedBalances: Set<YieldBalance>, stakingID: StakingID): YieldBalance {
+        val cached = cachedBalances.getBalance(stakingID)
+            ?: return YieldBalance.Error(integrationId = stakingID.address, address = stakingID.integrationId)
 
         val updatedCached = when (cached) {
             is YieldBalance.Data -> cached.copy(source = StatusSource.ONLY_CACHE)
@@ -207,7 +257,11 @@ internal class DefaultStakingBalanceStore(
             is YieldBalance.Error -> null
         }
 
-        return updatedCached ?: runtime
+        return updatedCached ?: YieldBalance.Error(integrationId = stakingID.address, address = stakingID.integrationId)
+    }
+
+    private fun Set<YieldBalance>.getBalance(stakingID: StakingID): YieldBalance? {
+        return getBalance(address = stakingID.address, integrationId = stakingID.integrationId)
     }
 
     private fun Set<YieldBalance>.getBalance(address: String?, integrationId: String?): YieldBalance? {
