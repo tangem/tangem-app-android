@@ -20,13 +20,11 @@ import org.joda.time.DateTime
 import java.math.BigDecimal
 
 internal class RewardsValidatorStateConverter(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val yield: Yield,
 ) : Converter<Unit, StakingStates.RewardsValidatorsState> {
     override fun convert(value: Unit): StakingStates.RewardsValidatorsState {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance
         return if (yieldBalance is YieldBalance.Data) {
             val balances = yieldBalance.balance.items
