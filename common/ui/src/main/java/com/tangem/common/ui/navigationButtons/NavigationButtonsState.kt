@@ -16,6 +16,17 @@ sealed class NavigationButtonsState {
     ) : NavigationButtonsState()
 }
 
+/**
+ * @property textReference      text
+ * @property iconRes            icon resource id
+ * @property isSecondary        should set secondary color scheme
+ * @property isIconVisible      determines whether icon is visible
+ * @property showProgress       indicates progress state of button
+ * @property isEnabled          enabled
+ * @property isDimmed           determines whether the button content will be dimmed.
+ * This property will be ignored if [isEnabled] is `false`.
+ * @property onClick            lambda be invoked when action component is clicked
+ */
 data class NavigationButton(
     val textReference: TextReference,
     @DrawableRes val iconRes: Int? = null,
@@ -23,5 +34,6 @@ data class NavigationButton(
     val isIconVisible: Boolean = false,
     val showProgress: Boolean = false,
     val isEnabled: Boolean = true,
+    val isDimmed: Boolean = false,
     val onClick: () -> Unit,
 )
