@@ -1,8 +1,6 @@
 package com.tangem.lib.crypto
 
-import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
-import com.tangem.lib.crypto.models.ProxyFiatCurrency
 
 /**
  * Provider for user tokens data
@@ -10,62 +8,24 @@ import com.tangem.lib.crypto.models.ProxyFiatCurrency
 interface UserWalletManager {
 
     /**
-     * Returns all user tokens (merged from local and backend)
-     */
-    suspend fun getUserTokens(networkId: String): List<Currency>
-
-    fun getNativeTokenForNetwork(networkId: String): Currency
-
-    /**
-     * Returns user walletId
+     * Returns user walletId or empty string
      */
     fun getWalletId(): String
 
-    /**
-     * Checks that token added to user wallet
-     *
-     * @param currency to receive referral payments
-     */
-    suspend fun isTokenAdded(currency: Currency): Boolean
-
-    /**
-     * Adds token to wallet if its not
-     *
-     * @param currency to add to wallet
-     */
-    @Throws(IllegalStateException::class)
-    fun addToken(currency: Currency)
+    suspend fun hideAllTokens()
 
     /**
      * Returns wallet public address for token
      *
      * @param networkId for currency
+     * @param derivationPath if null uses default
      */
     @Throws(IllegalStateException::class)
-    fun getWalletAddress(networkId: String): String
-
-    /**
-     * Return balances from wallet found by networkId
-     *
-     * @param networkId
-     * @return map of <Symbol, [ProxyAmount]>
-     */
-    @Throws(IllegalStateException::class)
-    fun getCurrentWalletTokensBalance(networkId: String): Map<String, ProxyAmount>
-
-    fun getNativeTokenBalance(networkId: String): ProxyAmount?
-
-    /**
-     * @param networkId
-     * @return currency name
-     */
-    fun getNetworkCurrency(networkId: String): String
-
-    /**
-     * Returns selected app currency
-     */
-    fun getUserAppCurrency(): ProxyFiatCurrency
+    suspend fun getWalletAddress(networkId: String, derivationPath: String?): String
 
     @Throws(IllegalStateException::class)
-    fun getLastTransactionHash(networkId: String): String?
+    suspend fun getNativeTokenBalance(networkId: String, derivationPath: String?): ProxyAmount?
+
+    @Throws(IllegalStateException::class)
+    suspend fun getLastTransactionHash(networkId: String, derivationPath: String?): String?
 }
