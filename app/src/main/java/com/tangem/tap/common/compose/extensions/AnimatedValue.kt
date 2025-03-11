@@ -1,6 +1,10 @@
 package com.tangem.tap.common.compose.extensions
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -41,8 +45,8 @@ fun animatable(
                 targetValue = values.second,
                 animationSpec = tween(
                     durationMillis = duration,
-                    easing = easing
-                )
+                    easing = easing,
+                ),
             )
         }
     }

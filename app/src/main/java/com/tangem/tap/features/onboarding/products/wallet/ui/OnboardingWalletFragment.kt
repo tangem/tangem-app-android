@@ -1,7 +1,10 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -9,62 +12,118 @@ import android.view.WindowManager
 import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.core.view.MenuProvider
-import androidx.transition.TransitionInflater
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
+import com.arkivanov.decompose.defaultComponentContext
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
 import com.tangem.common.CardIdFormatter
+import com.tangem.common.CompletionResult
 import com.tangem.common.core.CardIdDisplayFormat
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.PropertyCalculator
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.Basic
+import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.core.decompose.context.childByContext
+import com.tangem.core.decompose.di.RootAppComponentContext
+import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.extensions.setStatusBarColor
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.windowsize.rememberWindowSize
+import com.tangem.datasource.utils.isNullOrEmpty
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.models.scan.isRing
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.onboarding.data.model.CreateWalletResponse
+import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
+import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseMediator
+import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseRouter
+import com.tangem.feature.onboarding.presentation.wallet2.viewmodel.SeedPhraseViewModel
+import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.sdk.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.inflate
-import com.tangem.tap.common.extensions.resourceUri
-import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.OnboardingMenuProvider
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletStep
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.ui.OnboardingSaltPayView
+import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.utils.Provider
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
-import com.tangem.wallet.databinding.LayoutOnboardingSaltpayBinding
+import com.tangem.wallet.databinding.LayoutOnboardingSeedPhraseBinding
 import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
+import timber.log.Timber
+import javax.inject.Inject
 
 @Suppress("LargeClass", "MagicNumber")
-class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_wallet),
-    StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
+@AndroidEntryPoint
+class OnboardingWalletFragment :
+    BaseFragment(R.layout.fragment_onboarding_wallet),
+    StoreSubscriber<OnboardingWalletState>,
+    FragmentOnBackPressedHandler {
 
-    private val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
+    @Inject
+    internal lateinit var uiDependencies: UiDependencies
+
+    @Inject
+    internal lateinit var onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory
+
+    @Inject
+    @RootAppComponentContext
+    internal lateinit var rootComponentContext: AppComponentContext
+
+    private var onboardingManageTokensComponent: OnboardingManageTokensComponent? = null
+    private lateinit var onboardingComponentContext: AppComponentContext
+
     internal val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)
-    internal val bindingSaltPay: LayoutOnboardingSaltpayBinding by lazy { binding.onboardingSaltpayContainer }
+    internal val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
 
-    private val onboardingSaltPayView: OnboardingSaltPayView = OnboardingSaltPayView(this)
+    internal val bindingSeedPhrase: LayoutOnboardingSeedPhraseBinding by lazy { binding.onboardingSeedPhraseContainer }
+    private val bindingManageTokens by lazy { binding.onboardingManageTokensContainer }
+
+    private val canSkipBackup by lazy { arguments?.getBoolean(AppRoute.OnboardingWallet.CAN_SKIP_BACKUP_KEY) ?: true }
+
+    private lateinit var seedPhraseStateHandler: OnboardingSeedPhraseStateHandler
+
+    private val seedPhraseViewModel by viewModels<SeedPhraseViewModel>()
 
     private lateinit var cardsWidget: WalletCardsWidget
+    private var seedPhraseRouter: SeedPhraseRouter? = null
     private var accessCodeDialog: AccessCodeDialog? = null
 
     private lateinit var animator: BackupAnimator
 
-    override fun configureTransitions() {
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        seedPhraseStateHandler = OnboardingSeedPhraseStateHandler(activity = requireActivity())
+
+        val newSeedPhraseRouter = makeSeedPhraseRouter()
+        seedPhraseRouter = newSeedPhraseRouter
+        seedPhraseViewModel.setRouter(newSeedPhraseRouter)
+        seedPhraseViewModel.setMediator(makeSeedPhraseMediator())
+
+        onboardingComponentContext = rootComponentContext.childByContext(
+            componentContext = defaultComponentContext(onBackPressedDispatcher = null),
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -83,11 +142,10 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
-        binding.toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
-        addBackPressHandler(this)
+        addBackPressHandler(handler = this)
 
+        store.dispatch(OnboardingWallet2Action.Init(seedPhraseViewModel.maxProgress))
         store.dispatch(OnboardingWalletAction.Init)
-        store.dispatch(OnboardingSaltPayAction.Init)
         store.dispatch(
             OnboardingWalletAction.LoadArtwork(
                 cardArtworkUriForUnfinishedBackup = requireContext().resourceUri(R.drawable.card_placeholder_wallet),
@@ -95,7 +153,12 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         )
     }
 
-    override fun loadToolbarMenu(): MenuProvider? = OnboardingMenuProvider()
+    override fun loadToolbarMenu(): MenuProvider = OnboardingMenuProvider(
+        scanResponseProvider = Provider {
+            store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                ?: error("ScanResponse must be not null")
+        },
+    )
 
     private fun reInitCardsWidgetIfNeeded(backupCardsCounts: Int) = with(binding) {
         val viewBackupCount = flCardsContainer.childCount - 1
@@ -105,7 +168,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         cardsWidget.toFolded(false)
 
         if (viewBackupCount > backupCardsCounts) {
-            flCardsContainer.removeViewAt(viewBackupCount - 1)
+            flCardsContainer.removeViews(0, viewBackupCount - backupCardsCounts)
         } else {
             flCardsContainer.inflate(R.layout.view_onboarding_card, true)
         }
@@ -115,12 +178,17 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     }
 
     private fun createLeapfrogWidget(container: FrameLayout, deviceScaleFactor: Float): LeapfrogWidget {
-        val leapfrogCalculator = PropertyCalculator(yTranslationFactor = 25f * deviceScaleFactor)
+        val leapfrogCalculator = PropertyCalculator(
+            yTranslationFactor = when (container.childCount) {
+                3 -> 25f
+                else -> 35f
+            } * deviceScaleFactor,
+        )
         return LeapfrogWidget(container, leapfrogCalculator)
     }
 
     private fun initCardsWidget(leapfrogWidget: LeapfrogWidget, deviceScaleFactor: Float, isTest: Boolean = false) {
-        cardsWidget = WalletCardsWidget(leapfrogWidget, deviceScaleFactor) { 200f * deviceScaleFactor }
+        cardsWidget = WalletCardsWidget(leapfrogWidget, deviceScaleFactor)
         animator = if (isTest) {
             TestBackupAnimation(WalletBackupAnimator(cardsWidget), binding)
         } else {
@@ -135,34 +203,53 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
                 oldState.onboardingWalletState == newState.onboardingWalletState
             }.select { it.onboardingWalletState }
         }
+        setStatusBarColor(R.color.background_primary)
     }
 
     override fun onStop() {
         super.onStop()
+        onboardingManageTokensComponent = null
         store.unsubscribe(this)
     }
 
     override fun newState(state: OnboardingWalletState) {
-        if (activity == null || view == null) return
-        if (state.isSaltPay) reInitCardsWidgetIfNeeded(1)
+        Handler(Looper.getMainLooper()).post {
+            if (activity == null || view == null) return@post
+            animator.updateBackupState(state.backupState)
+            requireActivity().invalidateOptionsMenu()
 
-        animator.updateBackupState(state.backupState)
-        requireActivity().invalidateOptionsMenu()
+            pbBinding.pbState.max = state.getMaxProgress()
+            pbBinding.pbState.progress = state.getProgressStep()
 
-        pbBinding.pbState.max = state.getMaxProgress()
-        pbBinding.pbState.progress = state.getProgressStep()
-
-        if (state.isSaltPay) {
-            onboardingSaltPayView.newState(state)
-        } else {
-            loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
-            loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
-            loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
-            handleOnboardingStep(state)
+            when {
+                state.wallet2State != null -> {
+                    seedPhraseStateHandler.newState(this, state, seedPhraseViewModel)
+                    seedPhraseViewModel.setCardArtworkUri(
+                        cardArtworkUri = state.walletImages.primaryCardImage.toString(),
+                    )
+                    updateWalletImagesState(state.walletImages)
+                }
+                else -> {
+                    updateWalletImagesState(state.walletImages)
+                    handleOnboardingStep(state)
+                }
+            }
         }
     }
 
-    internal fun loadImageIntoImageView(uri: Uri?, view: ImageView) {
+    private fun updateWalletImagesState(walletImages: WalletImages) {
+        if (!walletImages.primaryCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.primaryCardImage, binding.imvFrontCard)
+        }
+        if (!walletImages.secondCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.secondCardImage, binding.imvFirstBackupCard)
+        }
+        if (!walletImages.thirdCardImage.isNullOrEmpty()) {
+            loadImageIntoImageView(walletImages.thirdCardImage, binding.imvSecondBackupCard)
+        }
+    }
+
+    private fun loadImageIntoImageView(uri: Uri?, view: ImageView) {
         view.load(uri) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
@@ -173,13 +260,55 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     internal fun handleOnboardingStep(state: OnboardingWalletState) {
         when (state.step) {
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
-            OnboardingWalletStep.Backup -> setBackupState(state.backupState, state.isSaltPay)
+            OnboardingWalletStep.Backup -> setBackupState(state = state.backupState)
+            OnboardingWalletStep.ManageTokens -> setManageTokensState(requireNotNull(state.userWalletId))
+            OnboardingWalletStep.Done -> showSuccess()
             else -> {}
+        }
+    }
+
+    private fun initializeOnboardingManageTokensComponent(userWalletId: UserWalletId) {
+        onboardingManageTokensComponent = onboardingManageTokensComponentFactory.create(
+            context = onboardingComponentContext,
+            params = OnboardingManageTokensComponent.Params(userWalletId = userWalletId),
+            onDone = {},
+        )
+    }
+
+    private fun setManageTokensState(userWalletId: UserWalletId) {
+        with(binding) {
+            tvHeader.show()
+            tvBody.show()
+            viewPagerBackupInfo.hide()
+            tabLayoutBackupInfo.hide()
+            onboardingWalletContainer.show()
+            layoutButtonsCommon.btnWalletAlternativeAction.hide()
+            onboardingWalletContainer.hide()
+            toolbar.title = getText(R.string.onboarding_add_tokens)
+        }
+        pbBinding.pbState.show()
+        bindingSeedPhrase.onboardingSeedPhraseContainer.hide()
+        if (onboardingManageTokensComponent == null) {
+            initializeOnboardingManageTokensComponent(userWalletId)
+        }
+        with(bindingManageTokens) {
+            onboardingManageTokensContainer.hide()
+            onboardingManageTokensContainer.show()
+            onboardingManageTokensContainer.setContent {
+                TangemTheme(
+                    isDark = isSystemInDarkTheme(),
+                    windowSize = rememberWindowSize(activity = requireActivity()),
+                ) {
+                    onboardingManageTokensComponent?.Content(modifier = Modifier.fillMaxSize())
+                }
+            }
         }
     }
 
     private fun setupCreateWalletState() = with(binding) {
         layoutButtonsCommon.btnWalletMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
+
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(OnboardingWalletAction.CreateWallet)
@@ -194,21 +323,25 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         animator.setupCreateWalletState()
     }
 
-    private fun setBackupState(state: BackupState, isSaltPay: Boolean) {
+    private fun setBackupState(state: BackupState) {
         when (state.backupStep) {
-            BackupStep.InitBackup -> showBackupIntro(state, isSaltPay)
+            null -> Unit
+            BackupStep.InitBackup -> showBackupIntro(state)
             BackupStep.ScanOriginCard -> showScanOriginCard()
-            BackupStep.AddBackupCards -> showAddBackupCards(state, isSaltPay)
+            BackupStep.AddBackupCards -> showAddBackupCards(state)
             BackupStep.SetAccessCode -> showSetAccessCode()
             BackupStep.EnterAccessCode -> showEnterAccessCode(state)
             BackupStep.ReenterAccessCode -> showReenterAccessCode(state)
-            is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state, isSaltPay)
-            is BackupStep.WriteBackupCard -> showWriteBackupCard(state, isSaltPay)
-            BackupStep.Finished -> showSuccess()
+            is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state)
+            is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
+            BackupStep.Finished -> {
+                // don't need to navigate here"
+                // showSuccess()
+            }
         }
     }
 
-    private fun showBackupIntro(state: BackupState, isSaltPay: Boolean) = with(binding) {
+    private fun showBackupIntro(state: BackupState) = with(binding) {
         imvFirstBackupCard.show()
         imvSecondBackupCard.show()
 
@@ -219,11 +352,12 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
         with(layoutButtonsCommon) {
             btnWalletMainAction.text = getText(R.string.onboarding_button_backup_now)
+            btnWalletMainAction.icon = null
             btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
 
             btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
-            btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
-            btnWalletAlternativeAction.show(state.canSkipBackup && !isSaltPay)
+            btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.SkipBackup) }
+            btnWalletAlternativeAction.show(state.canSkipBackup && canSkipBackup)
         }
         animator.showBackupIntro(state)
     }
@@ -232,11 +366,12 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         prepareBackupView()
         tvHeader.text = getText(R.string.onboarding_title_scan_origin_card)
         tvBody.text = getString(
-            R.string.onboarding_subtitle_scan_origin_card,
+            R.string.onboarding_subtitle_scan_primary,
         )
 
         with(layoutButtonsCommon) {
             btnWalletMainAction.text = getString(R.string.onboarding_button_scan_origin_card)
+            btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
             btnWalletAlternativeAction.hide()
             btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
         }
@@ -244,7 +379,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         animator.showScanOriginCard()
     }
 
-    private fun showAddBackupCards(state: BackupState, isSaltPay: Boolean) = with(binding) {
+    private fun showAddBackupCards(state: BackupState) = with(binding) {
         prepareBackupView()
 
         accessCodeDialog?.dismiss()
@@ -252,9 +387,26 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
         layoutButtonsAddCards.root.show()
         layoutButtonsCommon.root.hide()
-        layoutButtonsAddCards.btnAddCard.text = getText(R.string.onboarding_button_add_backup_card)
+        layoutButtonsAddCards.btnAddCard.setIconResource(R.drawable.ic_tangem_24)
+        if (state.showBtnLoading) {
+            layoutButtonsAddCards.btnAddCard.iconTint = ColorStateList.valueOf(
+                resources.getColor(R.color.button_secondary),
+            )
+            layoutButtonsAddCards.btnAddCard.text = ""
+            layoutButtonsAddCards.btnAddCard.isEnabled = false
+            layoutButtonsAddCards.btnProgress.show()
+        } else {
+            layoutButtonsAddCards.btnAddCard.iconTint = ColorStateList.valueOf(
+                resources.getColor(R.color.icon_primary_1),
+            )
+            layoutButtonsAddCards.btnProgress.hide()
+            layoutButtonsAddCards.btnAddCard.text = getText(R.string.onboarding_button_add_backup_card)
+            layoutButtonsAddCards.btnAddCard.isEnabled = true
+        }
         if (state.backupCardsNumber < state.maxBackupCards) {
-            layoutButtonsAddCards.btnAddCard.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
+            layoutButtonsAddCards.btnAddCard.setOnClickListener {
+                store.dispatch(BackupAction.AddBackupCard)
+            }
         } else {
             layoutButtonsAddCards.btnAddCard.isEnabled = false
         }
@@ -262,25 +414,20 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         layoutButtonsAddCards.btnContinue.text = getText(R.string.onboarding_button_finalize_backup)
         layoutButtonsAddCards.btnContinue.setOnClickListener { store.dispatch(BackupAction.FinishAddingBackupCards) }
         layoutButtonsAddCards.btnContinue.isEnabled = state.backupCardsNumber != 0
-
-        if (isSaltPay) {
-            onboardingSaltPayView.showAddBackupCards(state)
-        } else {
-            when (state.backupCardsNumber) {
-                0 -> {
-                    tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
-                    tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
-                }
-                1 -> {
-                    tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
-                    tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
-                }
-                2 -> {
-                    tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
-                    tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
-                }
-                else -> {}
+        when (state.backupCardsNumber) {
+            0 -> {
+                tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
+                tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
             }
+            1 -> {
+                tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
+                tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
+            }
+            2 -> {
+                tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
+                tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
+            }
+            else -> {}
         }
 
         animator.showAddBackupCards(state, state.backupCardsNumber)
@@ -305,6 +452,11 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
             setOnCancelListener {
                 store.dispatch(BackupAction.OnAccessCodeDialogClosed)
             }
+
+            setOnShowListener { setSecurityMode(true) }
+
+            setOnDismissListener { setSecurityMode(false) }
+
             show()
             showInfoScreen()
             val view =
@@ -326,25 +478,33 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         accessCodeDialog?.showError(state.accessCodeError)
     }
 
-    private fun showWritePrimaryCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
+    private fun showWritePrimaryCard(state: BackupState) = with(binding) {
         accessCodeDialog?.dismiss()
 
         reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
-        val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        if (isSaltPay) {
-            tvHeader.text = getText(R.string.onboarding_saltpay_title_prepare_origin)
-            tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
-            layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_saltpay_button_backup_origin)
+        val isRing = state.primaryCardBatchId != null && isRing(batchId = state.primaryCardBatchId)
+
+        tvHeader.text = getText(
+            if (isRing) R.string.common_origin_ring else R.string.common_origin_card,
+        )
+
+        tvBody.text = if (isRing) {
+            getString(R.string.onboarding_subtitle_scan_ring)
         } else {
-            tvHeader.text = getText(R.string.common_origin_card)
-            tvBody.text = getString(
+            val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
+            getString(
                 R.string.onboarding_subtitle_scan_primary_card_format,
                 state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
             )
-            layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_backup_origin)
         }
+
+        layoutButtonsCommon.btnWalletMainAction.text = getText(
+            if (isRing) R.string.onboarding_button_backup_ring else R.string.onboarding_button_backup_origin,
+        )
+
+        layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
         animator.showWritePrimaryCard(state)
@@ -362,27 +522,32 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         imvSecondBackupCard.show()
     }
 
-    private fun showWriteBackupCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
+    private fun showWriteBackupCard(state: BackupState) = with(binding) {
+        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
-        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
-        if (isSaltPay) {
-            tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)
-            tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
-            layoutButtonsCommon.btnWalletMainAction.text = getString(R.string.onboarding_saltpay_title_backup_card)
+
+        val isRing = isRing(batchId = state.backupCardBatchIds[cardNumber - 1])
+        tvHeader.text = getString(
+            if (isRing) R.string.onboarding_title_backup_ring else R.string.onboarding_title_backup_card,
+        )
+
+        tvBody.text = if (isRing) {
+            getString(R.string.onboarding_subtitle_scan_ring)
         } else {
             val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-            tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
-            tvBody.text = getString(
+            getString(
                 R.string.onboarding_subtitle_scan_backup_card_format,
                 cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
             )
-            layoutButtonsCommon.btnWalletMainAction.text = getString(
-                R.string.onboarding_button_backup_card_format,
-                cardNumber,
-            )
         }
+
+        layoutButtonsCommon.btnWalletMainAction.text = getString(
+            if (isRing) R.string.onboarding_button_backup_ring else R.string.onboarding_button_backup_origin,
+        )
+
+        layoutButtonsCommon.btnWalletMainAction.setIconResource(R.drawable.ic_tangem_24)
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
         }
@@ -390,7 +555,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         animator.showWriteBackupCard(state, cardNumber)
     }
 
-    internal fun showSuccess() = with(binding) {
+    private fun showSuccess() = with(binding) {
         toolbar.title = getString(R.string.onboarding_done_header)
         tvHeader.text = getText(R.string.onboarding_done_header)
 
@@ -398,36 +563,58 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         tvBody.show()
         viewPagerBackupInfo.hide()
         tabLayoutBackupInfo.hide()
+        onboardingWalletContainer.show()
+        bindingManageTokens.onboardingManageTokensContainer.hide()
 
         tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
         layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_continue_wallet)
+        layoutButtonsCommon.btnWalletMainAction.icon = null
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
         layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             showConfetti(false)
-            store.dispatch(OnboardingWalletAction.FinishOnboarding)
+            store.dispatch(OnboardingWalletAction.FinishOnboarding(scope = requireActivity().lifecycleScope))
         }
 
         animator.showSuccess {
-            flCardsContainer.hide()
-            imvCardBackground.hide()
-            showConfetti(true)
-            imvSuccess.alpha = 0f
-            imvSuccess.show()
-            imvSuccess.animate()?.alpha(1f)?.duration = 400
+            if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+                flCardsContainer.hide()
+                imvCardBackground.hide()
+                showConfetti(true)
+                imvSuccess.alpha = 0f
+                imvSuccess.show()
+                imvSuccess.animate()?.alpha(1f)?.duration = 400
+            }
         }
     }
 
-    internal fun showConfetti(show: Boolean) = with(binding.vConfetti) {
-        lavConfetti.show(show)
+    internal fun showConfetti(show: Boolean) {
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            with(binding.vConfetti) {
+                lavConfetti.show(show)
 
-        if (show) {
-            lavConfetti.playAnimation()
-        } else {
-            lavConfetti.cancelAnimation()
+                if (show) {
+                    lavConfetti.playAnimation()
+                } else {
+                    lavConfetti.cancelAnimation()
+                }
+            }
         }
     }
 
     override fun handleOnBackPressed() {
+        // workaround to use right navigation back for toolbar back btn on seed phrase flow
+        val isWallet2 =
+            store.state.globalState.onboardingState.onboardingManager?.scanResponse?.cardTypesResolver?.isWallet2()
+                ?: false
+        val seedPhraseRouter = seedPhraseRouter
+        if (seedPhraseRouter != null && isWallet2) {
+            seedPhraseRouter.navigateBack()
+        } else {
+            legacyOnBackHandler()
+        }
+    }
+
+    private fun legacyOnBackHandler() {
         store.dispatch(OnboardingWalletAction.OnBackPressed)
     }
 
@@ -435,5 +622,70 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         val typedValue = TypedValue()
         resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
         return typedValue.float
+    }
+
+    private fun makeSeedPhraseRouter(): SeedPhraseRouter = SeedPhraseRouter(
+        onBack = ::legacyOnBackHandler,
+        onOpenChat = {
+            Analytics.send(Basic.ButtonSupport(AnalyticsParam.ScreensSources.Intro))
+
+            val scanResponse = requireNotNull(store.state.globalState.onboardingState.onboardingManager?.scanResponse)
+
+            val getCardInfoUseCase = store.inject(DaggerGraphState::getCardInfoUseCase)
+            val cardInfo = requireNotNull(getCardInfoUseCase.invoke(scanResponse).getOrNull())
+
+            scope.launch {
+                store.inject(DaggerGraphState::sendFeedbackEmailUseCase)
+                    .invoke(type = FeedbackEmailType.DirectUserRequest(cardInfo))
+            }
+        },
+        onOpenUriClick = { uri ->
+            store.dispatchOpenUrl(uri.toString())
+        },
+    )
+
+    private fun makeSeedPhraseMediator(): SeedPhraseMediator {
+        return object : SeedPhraseMediator {
+            override fun createWallet(callback: (CompletionResult<CreateWalletResponse>) -> Unit) {
+                store.dispatch(OnboardingWallet2Action.CreateWallet(callback))
+            }
+
+            override fun onWalletCreated(result: CompletionResult<CreateWalletResponse>) {
+                store.dispatch(OnboardingWallet2Action.WalletWasCreated(result))
+            }
+
+            override fun importWallet(
+                mnemonicComponents: List<String>,
+                passphrase: String?,
+                seedPhraseSource: SeedPhraseSource,
+                callback: (CompletionResult<CreateWalletResponse>) -> Unit,
+            ) {
+                store.dispatch(
+                    OnboardingWallet2Action.ImportWallet(
+                        mnemonicComponents,
+                        passphrase,
+                        seedPhraseSource,
+                        callback,
+                    ),
+                )
+            }
+
+            override fun allowScreenshots(allow: Boolean) {
+                setSecurityMode(value = !allow)
+            }
+        }
+    }
+
+    private fun setSecurityMode(value: Boolean) {
+        Timber.d("Security mode: ${if (value) "enabled" else "disabled"}")
+
+        if (value) {
+            requireActivity().window.setFlags(
+                WindowManager.LayoutParams.FLAG_SECURE,
+                WindowManager.LayoutParams.FLAG_SECURE,
+            )
+        } else {
+            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        }
     }
 }

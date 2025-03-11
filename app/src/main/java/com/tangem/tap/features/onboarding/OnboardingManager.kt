@@ -5,30 +5,31 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.card.repository.CardRepository
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
-import com.tangem.tap.common.extensions.isPositive
+import com.tangem.tap.common.entities.ProgressState
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.persistence.UsedCardsPrefStorage
+import com.tangem.tap.domain.model.Currency
+import com.tangem.tap.domain.model.hasPendingTransactions
+import com.tangem.tap.features.demo.isDemoCard
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
+import com.tangem.utils.extensions.isPositive
 import timber.log.Timber
 import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
  */
-class OnboardingManager(
-    var scanResponse: ScanResponse,
-    val usedCardsPrefStorage: UsedCardsPrefStorage,
-) {
+class OnboardingManager(var scanResponse: ScanResponse) {
 
-    var cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null
-        private set
+    private val cardRepository: CardRepository = store.inject(DaggerGraphState::cardRepository)
+    private var cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null
 
     suspend fun loadArtworkUrl(): String {
         val cardInfo = cardInfo
@@ -38,7 +39,8 @@ class OnboardingManager(
     }
 
     suspend fun updateBalance(walletManager: WalletManager): OnboardingWalletBalance {
-        val balance = when (val result = walletManager.safeUpdate()) {
+        val isDemoCard = scanResponse.isDemoCard()
+        val balance = when (val result = walletManager.safeUpdate(isDemoCard)) {
             is Result.Success -> {
                 val wallet = walletManager.wallet
                 val valueOfAmount = wallet.amounts[AmountType.Coin]?.value
@@ -75,21 +77,23 @@ class OnboardingManager(
         )
     }
 
-    fun activationStarted(cardId: String) {
-        usedCardsPrefStorage.activationStarted(cardId)
+    suspend fun startActivation(cardId: String) {
+        cardRepository.startCardActivation(cardId)
     }
 
-    fun activationFinished(cardId: String) {
-        usedCardsPrefStorage.activationFinished(cardId)
+    suspend fun finishActivation(cardId: String) {
+        cardRepository.finishCardActivation(cardId)
     }
 
-    fun isActivationFinished(cardId: String): Boolean {
-        return usedCardsPrefStorage.isActivationFinished(cardId)
+    suspend fun finishActivation(cardIds: List<String>) {
+        cardRepository.finishCardsActivation(cardIds)
     }
 
-    fun isActivationStarted(cardId: String): Boolean {
-        return usedCardsPrefStorage.isActivationStarted(cardId)
-    }
+    suspend fun isActivationStarted(cardId: String): Boolean = cardRepository.isActivationStarted(cardId)
+
+    suspend fun isActivationFinished(cardId: String): Boolean = cardRepository.isActivationFinished(cardId)
+
+    suspend fun isActivationInProgress(cardId: String): Boolean = cardRepository.isActivationInProgress(cardId)
 }
 
 data class OnboardingWalletBalance(
