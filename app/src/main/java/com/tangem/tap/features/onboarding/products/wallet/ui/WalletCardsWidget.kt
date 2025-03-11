@@ -6,25 +6,19 @@ import android.animation.PropertyValuesHolder
 import android.view.View
 import android.widget.ImageView
 import androidx.core.animation.doOnEnd
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapView
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapViewState
-import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapView
+import com.tangem.sdk.ui.widget.leapfrogWidget.LeapfrogWidget
 
 class WalletCardsWidget(
     val leapfrogWidget: LeapfrogWidget,
     private val deviceScaleFactor: Float = 1f,
-    val getTopOfAnchorViewForActivateState: () -> Float,
 ) {
 
     private val animDuration: Long = 400
 
-    var currentState: WidgetState? = null
-        private set
+    private var currentState: WidgetState? = null
 
-    fun toWelcome(
-        animate: Boolean = true,
-        onEnd: () -> Unit = {},
-    ) {
+    fun toWelcome(animate: Boolean = true, onEnd: () -> Unit = {}) {
         if (currentState == WidgetState.WELCOME) return
 
         currentState = WidgetState.WELCOME
@@ -34,11 +28,7 @@ class WalletCardsWidget(
         leapfrogWidget.fold { animator.start() }
     }
 
-    fun toFolded(
-        animate: Boolean = true,
-        duration: Long = animDuration,
-        onEnd: () -> Unit = {},
-    ) {
+    fun toFolded(animate: Boolean = true, duration: Long = animDuration, onEnd: () -> Unit = {}) {
         if (currentState == WidgetState.FOLDED) return
 
         currentState = WidgetState.FOLDED
@@ -50,10 +40,7 @@ class WalletCardsWidget(
         animator.start()
     }
 
-    fun toFan(
-        animate: Boolean = true,
-        onEnd: () -> Unit = {},
-    ) {
+    fun toFan(animate: Boolean = true, onEnd: () -> Unit = {}) {
         if (currentState == WidgetState.FAN) return
 
         currentState = WidgetState.FAN
@@ -63,11 +50,7 @@ class WalletCardsWidget(
         leapfrogWidget.fold { animator.start() }
     }
 
-    fun toLeapfrog(
-        animate: Boolean = true,
-        onEndFold: () -> Unit = {},
-        onEnd: () -> Unit = {},
-    ) {
+    fun toLeapfrog(animate: Boolean = true, onEndFold: () -> Unit = {}, onEnd: () -> Unit = {}) {
         if (currentState == WidgetState.LEAPFROG) return
 
         currentState = WidgetState.LEAPFROG
@@ -102,10 +85,7 @@ class WalletCardsWidget(
         }
     }
 
-    private fun createCardAnimator(
-        cardType: BackupCardType,
-        properties: CardProperties,
-    ): ObjectAnimator {
+    private fun createCardAnimator(cardType: BackupCardType, properties: CardProperties): ObjectAnimator {
         val view = getLeapViewByCard(cardType).view
         val animator = ObjectAnimator.ofPropertyValuesHolder(
             view,
@@ -256,15 +236,5 @@ private data class CardProperties(
         )
     }
 
-    companion object {
-        fun from(leapViewState: LeapViewState): CardProperties {
-            val leapViewProperties = leapViewState.properties
-
-            return CardProperties(
-                yTranslation = leapViewProperties.yTranslation,
-                elevation = leapViewProperties.elevationEnd,
-                scale = leapViewProperties.scale,
-            )
-        }
-    }
+    companion object
 }
