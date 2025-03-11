@@ -46,6 +46,14 @@ data class Yield(
                 val address: AddressArgument,
                 val additionalAddresses: Map<ArgType, AddressArgument>? = null,
             )
+
+            val isPartialAmountDisabled: Boolean
+                get() {
+                    val enterAmount = args[ArgType.AMOUNT] ?: return false
+                    val min = enterAmount.minimum ?: return false
+                    val max = enterAmount.maximum ?: return false
+                    return min.signum() == -1 && max.signum() == -1
+                }
         }
 
         enum class ArgType {
