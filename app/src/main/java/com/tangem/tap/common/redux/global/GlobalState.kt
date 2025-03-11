@@ -1,31 +1,23 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.feedback.FeedbackManager
-import com.tangem.tap.common.redux.StateDialog
-import com.tangem.tap.domain.PayIdManager
+import com.tangem.domain.appcurrency.model.AppCurrency
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.domain.TapWalletManager
-import com.tangem.tap.domain.configurable.config.ConfigManager
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import org.rekotlin.StateType
 
 data class GlobalState(
+    @Deprecated("Use scan response from selected user wallet")
     val scanResponse: ScanResponse? = null,
     val onboardingState: OnboardingState = OnboardingState(),
-    val cardVerifiedOnline: Boolean = false,
     val tapWalletManager: TapWalletManager = TapWalletManager(),
-    val payIdManager: PayIdManager = PayIdManager(),
-    val configManager: ConfigManager? = null,
-    val warningManager: WarningMessagesManager? = null,
-    val feedbackManager: FeedbackManager? = null,
-    val appCurrency: FiatCurrency = FiatCurrency.Default,
+    val appCurrency: AppCurrency = AppCurrency.Default,
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
-    val userCountryCode: String? = null,
+    val isLastSignWithRing: Boolean = false,
 ) : StateType
 
 typealias CryptoCurrencyName = String
@@ -33,4 +25,5 @@ typealias CryptoCurrencyName = String
 data class OnboardingState(
     val onboardingStarted: Boolean = false,
     val onboardingManager: OnboardingManager? = null,
+    val shouldResetOnCreate: Boolean = false,
 )
