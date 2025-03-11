@@ -19,6 +19,7 @@
   <string name="details_manage_security_long_tap_description">Questo meccanismo protegge dagli avvicinamenti senza contatto sulla carta. Attiva un ritardo tra la ricezione e l\'esecuzione di un comando. Dopo la prima transazione firmata, questo telefono verrà associato alla carta e le transazioni verranno firmate immediatamente.</string>
   <string name="details_manage_security_passcode">Password</string>
   <string name="details_manage_security_passcode_description">Dovrai inserire una password prima di eseguire qualsiasi comando che modifichi lo stato della carta.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_row_subtitle_signed_hashes_format">Hash %s</string>
   <string name="details_row_title_cid">ID carta</string>
   <string name="details_row_title_currency">Valuta dell\'applicazione</string>
