@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
 [REDACTED_AUTHOR]
@@ -21,7 +21,17 @@ sealed class Onboarding(
 
         class ScreenOpened : CreateWallet("Create Wallet Screen Opened")
         class ButtonCreateWallet : CreateWallet("Button - Create Wallet")
-        class WalletCreatedSuccessfully : CreateWallet("Wallet Created Successfully")
+        class WalletCreatedSuccessfully(
+            creationType: AnalyticsParam.WalletCreationType = AnalyticsParam.WalletCreationType.PrivateKey,
+            seedPhraseLength: Int? = null,
+        ) : CreateWallet(
+            event = "Wallet Created Successfully",
+            params = buildMap {
+                put(AnalyticsParam.CREATION_TYPE, creationType.value)
+
+                if (seedPhraseLength != null) put(AnalyticsParam.SEED_PHRASE_LENGTH, seedPhraseLength.toString())
+            },
+        )
     }
 
     sealed class Backup(
@@ -40,6 +50,16 @@ sealed class Onboarding(
             event = "Backup Finished",
             params = mapOf("Cards count" to "$cardsCount"),
         )
+
+        object ResetCancelEvent : Backup(
+            event = "Reset Card Notification",
+            params = mapOf("Option" to "Cancel"),
+        )
+
+        object ResetPerformEvent : Backup(
+            event = "Reset Card Notification",
+            params = mapOf("Option" to "Reset"),
+        )
     }
 
     sealed class Topup(
@@ -51,7 +71,7 @@ sealed class Onboarding(
 
         class ButtonBuyCrypto(currency: AnalyticsParam.CurrencyType) : Topup(
             event = "Button - Buy Crypto",
-            params = mapOf("Currency" to currency.value),
+            params = mapOf(AnalyticsParam.CURRENCY to currency.value),
         )
 
         class ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")
@@ -66,16 +86,6 @@ sealed class Onboarding(
         class SetupStarted : Twins("Twin Setup Started")
         class SetupFinished : Twins("Twin Setup Finished")
     }
-
-    class PinCodeSet : Onboarding("Onboarding", "PIN code set")
-    class ButtonConnect : Onboarding("Onboarding", "Button - Connect")
-    class KYCStarted : Onboarding("Onboarding", "KYC started")
-    class KYCInProgress : Onboarding("Onboarding", "KYC in progress")
-    class KYCRejected : Onboarding("Onboarding", "KYC rejected")
-    class ClaimScreenOpened : Onboarding("Onboarding", "Claim screen opened")
-    class ButtonClaim : Onboarding("Onboarding", "Button - Claim")
-    class ClaimWasSuccessfully : Onboarding("Onboarding", "Claim was successfully")
-    class ButtonChat : Onboarding("Onboarding", "Button - Chat")
 
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : Onboarding(
         category = "Onboarding / Biometric",
