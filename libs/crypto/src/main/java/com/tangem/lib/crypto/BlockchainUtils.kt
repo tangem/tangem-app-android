@@ -144,12 +144,6 @@ object BlockchainUtils {
         return blockchain != Blockchain.Cardano
     }
 
-    fun isSkipAmountEnter(blockchainId: String): Boolean {
-        val blockchain = Blockchain.fromId(blockchainId)
-
-        return blockchain == Blockchain.Cardano
-    }
-
     private fun getNetworkStandardName(blockchain: Blockchain): String {
         return when (blockchain) {
             Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ERC20"
