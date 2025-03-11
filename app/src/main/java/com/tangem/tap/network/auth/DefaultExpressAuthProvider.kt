@@ -1,5 +1,6 @@
 package com.tangem.tap.network.auth
 
+import com.tangem.common.CardIdRangeDec
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
@@ -48,7 +49,12 @@ internal class DefaultExpressAuthProvider(
     }
 
     private fun isChangeNow(selectedUserWallet: UserWallet): Boolean {
-        return selectedUserWallet.scanResponse.card.batchId == BATCH_ID_CHANGENOW
+        val changeNowRange = CardIdRangeDec(
+            start = "AF99001800554008",
+            end = "AF99001800559994",
+        )
+        val card = selectedUserWallet.scanResponse.card
+        return card.batchId == BATCH_ID_CHANGENOW || changeNowRange?.contains(card.cardId) == true
     }
 
     private fun isPartner(selectedUserWallet: UserWallet): Boolean {
