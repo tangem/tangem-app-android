@@ -295,13 +295,13 @@ internal class StakingModel @Inject constructor(
                     )
                     updateNotifications()
                 },
-                onStakingFeeError = {
-                    stateController.update(AddStakingErrorTransformer())
-                    updateNotifications(GetFeeError.UnknownError)
+                onStakingFeeError = { stakingFeeError ->
+                    stateController.update(AddStakingErrorTransformer)
+                    updateNotifications(stakingError = stakingFeeError)
                 },
                 onFeeError = { error ->
                     analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
-                    stateController.update(AddStakingErrorTransformer())
+                    stateController.update(AddStakingErrorTransformer)
                     updateNotifications(error)
                 },
                 onApprovalFee = { fee ->
@@ -646,7 +646,7 @@ internal class StakingModel @Inject constructor(
         }.saveIn(approvalJobHolder)
     }
 
-    private fun updateNotifications(feeError: GetFeeError? = null) {
+    private fun updateNotifications(feeError: GetFeeError? = null, stakingError: StakingError? = null) {
         modelScope.launch {
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
             val feeState = confirmationState?.feeState as? FeeState.Content
@@ -687,6 +687,7 @@ internal class StakingModel @Inject constructor(
                     currencyCheck = currencyStatus,
                     isSubtractAvailable = isAmountSubtractAvailable,
                     feeError = feeError,
+                    stakingError = stakingError,
                     yield = yield,
                 ),
             )
@@ -837,6 +838,14 @@ internal class StakingModel @Inject constructor(
 
     override fun openTokenDetails(cryptoCurrency: CryptoCurrency) {
         innerRouter.openTokenDetails(userWalletId, cryptoCurrency)
+    }
+
+    override fun showPrimaryClickAlert() {
+        stateController.updateEvent(
+            StakingEvent.ShowAlert(
+                StakingAlertUM.StakeMoreClickUnavailable(cryptoCurrencyStatus.currency),
+            ),
+        )
     }
 
     private suspend fun setupApprovalNeeded() {
