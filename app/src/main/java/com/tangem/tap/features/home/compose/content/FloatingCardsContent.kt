@@ -1,7 +1,7 @@
 package com.tangem.tap.features.home.compose.content
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -15,17 +15,15 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 @Composable
-fun FloatingCardsContent(
-    isPaused: Boolean,
-    stepDuration: Int,
-) {
-    val imageBitmap = asImageBitmap(R.drawable.card_placeholder_wallet)
+fun FloatingCardsContent(isPaused: Boolean, stepDuration: Int) {
+    val imageBitmap = asImageBitmap(R.drawable.img_card_placeholder_wallet_2)
     val cards = listOf(
         FloatingCard.first(),
         FloatingCard.second(),
         FloatingCard.third(),
     )
-    Box {
+
+    Box(modifier = Modifier.fillMaxSize()) {
         cards.forEach { floatingCard ->
             FloatingCard.Item(
                 isPaused = isPaused,
@@ -50,12 +48,7 @@ private object FloatingCard {
 
     @Suppress("TopLevelComposableFunctions")
     @Composable
-    fun Item(
-        isPaused: Boolean,
-        stepDuration: Int,
-        imageBitmap: ImageBitmap,
-        cardValues: CardValues,
-    ) {
+    fun Item(isPaused: Boolean, stepDuration: Int, imageBitmap: ImageBitmap, cardValues: CardValues) {
         Image(
             bitmap = imageBitmap,
             contentDescription = "Floating Tangem card",

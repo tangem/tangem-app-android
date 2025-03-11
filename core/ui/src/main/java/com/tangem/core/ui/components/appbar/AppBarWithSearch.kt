@@ -4,30 +4,16 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
@@ -40,6 +26,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.TangemTextFieldsDefault
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * App bar with close icon and search functionality
@@ -63,6 +50,7 @@ fun ExpandableSearchView(
     onBackClick: () -> Unit,
     onSearchChange: (String) -> Unit,
     onSearchDisplayClose: () -> Unit,
+    onFocusChange: (Boolean) -> Unit = {},
     title: String? = null,
     placeholderSearchText: String = "",
     expandedInitially: Boolean = false,
@@ -79,6 +67,7 @@ fun ExpandableSearchView(
                 onSearchChange = onSearchChange,
                 onSearchDisplayClose = onSearchDisplayClose,
                 onExpandedChange = onExpandedChanged,
+                onFocusChange = onFocusChange,
                 tint = tint,
             )
         } else {
@@ -107,7 +96,6 @@ private fun CollapsedSearchView(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -166,17 +154,19 @@ private fun SubtitleView(subtitle: String, icon: Painter?) {
             text = subtitle,
             color = TangemTheme.colors.text.secondary,
             maxLines = 1,
-            style = TangemTheme.typography.caption,
+            style = TangemTheme.typography.caption2,
         )
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 private fun ExpandedSearchView(
     placeholderSearchText: String,
     onSearchChange: (String) -> Unit,
     onSearchDisplayClose: () -> Unit,
     onExpandedChange: (Boolean) -> Unit,
+    onFocusChange: (Boolean) -> Unit,
     tint: Color,
 ) {
     val focusManager = LocalFocusManager.current
@@ -216,7 +206,8 @@ private fun ExpandedSearchView(
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()
-                .focusRequester(textFieldFocusRequester),
+                .focusRequester(textFieldFocusRequester)
+                .onFocusChanged { onFocusChange(it.hasFocus) },
             placeholder = {
                 Text(text = placeholderSearchText)
             },
@@ -238,13 +229,14 @@ private fun ExpandedSearchView(
 @Preview
 @Composable
 private fun CollapsedSearchViewPreview() {
-    TangemTheme {
+    TangemThemePreview {
         ExpandableSearchView(
             title = "Choose Token",
             onBackClick = {},
             placeholderSearchText = "Search",
             onSearchChange = {},
             onSearchDisplayClose = {},
+            onFocusChange = {},
             subtitle = "Ethereum",
             icon = painterResource(id = R.drawable.img_eth_22),
         )
@@ -254,7 +246,7 @@ private fun CollapsedSearchViewPreview() {
 @Preview
 @Composable
 private fun ExpandedSearchViewPreview() {
-    TangemTheme {
+    TangemThemePreview {
         ExpandableSearchView(
             title = "Choose Token",
             onBackClick = {},
@@ -262,6 +254,7 @@ private fun ExpandedSearchViewPreview() {
             onSearchChange = {},
             expandedInitially = true,
             onSearchDisplayClose = {},
+            onFocusChange = {},
         )
     }
 }

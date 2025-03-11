@@ -2,97 +2,91 @@
 
 package com.tangem.tap.features.home.compose
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.tangem.tap.features.home.compose.content.FirstStoriesContent
-import com.tangem.tap.features.home.compose.content.StoriesCurrencies
-import com.tangem.tap.features.home.compose.content.StoriesRevolutionaryWallet
-import com.tangem.tap.features.home.compose.content.StoriesUltraSecureBackup
-import com.tangem.tap.features.home.compose.content.StoriesWalletForEveryone
-import com.tangem.tap.features.home.compose.content.StoriesWeb3
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.core.ui.test.TestTags
+import com.tangem.tap.features.home.compose.content.*
 import com.tangem.tap.features.home.compose.views.HomeButtons
+import com.tangem.tap.features.home.compose.views.SearchCurrenciesButton
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
 import com.tangem.tap.features.home.redux.HomeState
+import com.tangem.tap.features.home.redux.Stories
 import com.tangem.wallet.R
 import kotlin.math.max
 
-private const val STEPS = 6
-
-@Suppress("LongMethod", "ComplexMethod")
 @Composable
-fun StoriesScreen(
+internal fun StoriesScreen(
     homeState: MutableState<HomeState>,
     onScanButtonClick: () -> Unit,
     onShopButtonClick: () -> Unit,
     onSearchTokensClick: () -> Unit,
 ) {
-    val currentStep = remember { mutableStateOf(1) }
-    val systemUiController = rememberSystemUiController()
+    val state = homeState.value
 
-    val isDarkBackground = currentStep.value !in 3..5
+    var currentStory by remember { mutableStateOf(state.firstStory) }
+    val currentStoryIndex by rememberUpdatedState(newValue = state.stepOf(currentStory))
 
-    val goToPreviousScreen = {
-        currentStep.value = max(1, currentStep.value - 1)
+    val goToPreviousStory = remember(currentStory, currentStoryIndex) {
+        { currentStory = state.stories[max(0, currentStoryIndex - 1)] }
     }
-    val goToNextScreen = {
-        currentStep.value = if (currentStep.value < STEPS) currentStep.value + 1 else 1
-    }
-
-    val isPressed = remember { mutableStateOf(false) }
-    val isPaused = isPressed.value || homeState.value.scanInProgress
-
-    val hideContent = remember { mutableStateOf(true) }
-
-    LaunchedEffect(key1 = isDarkBackground) {
-        systemUiController.setSystemBarsColor(
-            color = Color.Transparent,
-            darkIcons = !isDarkBackground,
-        )
+    val goToNextStory = remember(currentStory, currentStoryIndex) {
+        {
+            currentStory = if (currentStoryIndex < state.stories.lastIndex) {
+                state.stories[currentStoryIndex + 1]
+            } else {
+                state.firstStory
+            }
+        }
     }
 
-    Box(
+    // todo refactor [REDACTED_TASK_KEY]
+    StoriesScreenContent(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF090E13)),
+            .testTag(TestTags.STORIES_SCREEN),
+        config = StoriesScreenContentConfig(
+            storiesSize = state.stories.lastIndex,
+            currentStoryIndex = currentStoryIndex,
+            currentStory = currentStory,
+            isScanInProgress = homeState.value.scanInProgress,
+            onGoToPreviousStory = goToPreviousStory,
+            onGoToNextStory = goToNextStory,
+            onSearchTokensClick = onSearchTokensClick,
+            onScanButtonClick = onScanButtonClick,
+            onShopButtonClick = onShopButtonClick,
+        ),
+    )
+}
+
+@Deprecated("Use StoriesContainer from core/ui")
+@Suppress("LongMethod")
+@Composable
+private fun StoriesScreenContent(config: StoriesScreenContentConfig, modifier: Modifier = Modifier) {
+    var isPressed by remember { mutableStateOf(value = false) }
+
+    val isPaused = isPressed || config.isScanInProgress
+    val currentStoryDuration = config.currentStory.duration
+
+    Box(
+        modifier = modifier.background(Color(0xFF010101)),
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -101,16 +95,16 @@ fun StoriesScreen(
                 Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .pointerInput(isPressed) {
+                    .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
                                 val pressStartTime = System.currentTimeMillis()
-                                isPressed.value = true
+                                isPressed = true
                                 this.tryAwaitRelease()
                                 val pressEndTime = System.currentTimeMillis()
                                 val totalPressTime = pressEndTime - pressStartTime
-                                if (totalPressTime < 200) goToPreviousScreen()
-                                isPressed.value = false
+                                if (totalPressTime < 200) config.onGoToPreviousStory()
+                                isPressed = false
                             },
                         )
                     },
@@ -119,123 +113,154 @@ fun StoriesScreen(
                 Modifier
                     .weight(1f)
                     .fillMaxHeight()
-                    .pointerInput(isPressed) {
+                    .pointerInput(Unit) {
                         detectTapGestures(
                             onPress = {
                                 val pressStartTime = System.currentTimeMillis()
-                                isPressed.value = true
+                                isPressed = true
                                 this.tryAwaitRelease()
                                 val pressEndTime = System.currentTimeMillis()
                                 val totalPressTime = pressEndTime - pressStartTime
-                                if (totalPressTime < 200) goToNextScreen()
-                                isPressed.value = false
+                                if (totalPressTime < 200) config.onGoToNextStory()
+                                isPressed = false
                             },
                         )
                     },
             )
         }
-        if (!isDarkBackground) {
-            Image(
-                modifier = Modifier.fillMaxSize(),
-                painter = painterResource(id = R.drawable.ic_overlay),
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-            )
-        }
-
-        val statusBarInsets = WindowInsets.statusBars
-            .union(WindowInsets(top = 32.dp))
 
         Column(
             modifier = Modifier
-                .windowInsetsPadding(statusBarInsets)
+                .statusBarsPadding()
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             StoriesProgressBar(
-                steps = STEPS,
-                currentStep = currentStep.value,
-                stepDuration = currentStep.duration(),
+                steps = config.storiesSize,
+                currentStep = config.currentStoryIndex,
+                stepDuration = currentStoryDuration,
                 paused = isPaused,
-                onStepFinish = goToNextScreen,
+                onStepFinish = config.onGoToNextStory,
             )
             Image(
                 painter = painterResource(id = R.drawable.ic_tangem_logo),
                 contentDescription = null,
                 contentScale = ContentScale.FillHeight,
                 modifier = Modifier
-                    .padding(start = 16.dp, top = 10.dp)
-                    .height(17.dp)
-                    .alpha(if (hideContent.value) 0f else 1f)
+                    .padding(
+                        start = TangemTheme.dimens.spacing16,
+                        top = TangemTheme.dimens.spacing16,
+                    )
+                    .height(TangemTheme.dimens.size18)
                     .align(Alignment.Start),
-                colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black),
             )
-            when (currentStep.value) {
-                1 -> FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
-                2 -> StoriesRevolutionaryWallet(currentStep.duration())
-                3 -> StoriesUltraSecureBackup(isPaused, currentStep.duration())
-                4 -> StoriesCurrencies(isPaused, currentStep.duration())
-                5 -> StoriesWeb3(isPaused, currentStep.duration())
-                6 -> StoriesWalletForEveryone(currentStep.duration())
+            when (config.currentStory) {
+                Stories.TangemIntro -> FirstStoriesContent(
+                    isPaused = isPaused,
+                    duration = currentStoryDuration,
+                )
+                Stories.RevolutionaryWallet -> StoriesRevolutionaryWallet()
+                Stories.UltraSecureBackup -> StoriesUltraSecureBackup(
+                    isPaused = isPaused,
+                    stepDuration = currentStoryDuration,
+                )
+                Stories.Currencies -> StoriesCurrencies(isPaused, currentStoryDuration)
+                Stories.Web3 -> StoriesWeb3(isPaused, currentStoryDuration)
+                Stories.WalletForEveryone -> StoriesWalletForEveryone(currentStoryDuration)
             }
         }
         Column(
             modifier = Modifier
                 .navigationBarsPadding()
+                .padding(bottom = TangemTheme.dimens.spacing16)
+                .padding(horizontal = TangemTheme.dimens.spacing16)
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         ) {
-            if (currentStep.value == 4) {
-                Button(
-                    onClick = onSearchTokensClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                        .heightIn(48.dp),
-                    colors = ButtonDefaults.textButtonColors(
-                        backgroundColor = Color.White,
-                        contentColor = Color(0xFF080C10),
-                    ),
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_search),
-                        contentDescription = null,
-                    )
-                    Text(
-                        text = stringResource(id = R.string.search_tokens_title),
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Center,
-                    )
-                }
+            AnimatedVisibility(
+                visible = config.currentStory == Stories.Currencies,
+                enter = fadeIn(),
+                exit = fadeOut(),
+            ) {
+                SearchCurrenciesButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = config.onSearchTokensClick,
+                )
             }
+
             HomeButtons(
-                modifier = Modifier
-                    .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 37.dp)
-                    .fillMaxWidth(),
-                isDarkBackground = isDarkBackground,
-                btnScanStateInProgress = homeState.value.btnScanStateInProgress,
-                onScanButtonClick = onScanButtonClick,
-                onShopButtonClick = onShopButtonClick,
+                modifier = Modifier.fillMaxWidth(),
+                btnScanStateInProgress = config.isScanInProgress,
+                onScanButtonClick = config.onScanButtonClick,
+                onShopButtonClick = config.onShopButtonClick,
             )
         }
     }
 }
 
-@Suppress("MagicNumber")
-private fun MutableState<Int>.duration(): Int = when (this.value) {
-    1 -> 8000
-    else -> 6000
+private data class StoriesScreenContentConfig(
+    val storiesSize: Int,
+    val currentStoryIndex: Int,
+    val currentStory: Stories,
+    val isScanInProgress: Boolean,
+    val onGoToPreviousStory: () -> Unit = {},
+    val onGoToNextStory: () -> Unit = {},
+    val onSearchTokensClick: () -> Unit = {},
+    val onScanButtonClick: () -> Unit = {},
+    val onShopButtonClick: () -> Unit = {},
+)
+
+// region Preview
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun StoriesScreenContentPreview(
+    @PreviewParameter(StoriesScreenContentConfigProvider::class) config: StoriesScreenContentConfig,
+) {
+    TangemThemePreview {
+        StoriesScreenContent(config = config)
+    }
 }
 
-@Preview
-@Composable
-private fun StoriesScreenPreview() {
-    StoriesScreen(
-        onScanButtonClick = {},
-        onShopButtonClick = {},
-        onSearchTokensClick = {},
-        homeState = remember { mutableStateOf(HomeState()) },
-    )
-}
+private class StoriesScreenContentConfigProvider : CollectionPreviewParameterProvider<StoriesScreenContentConfig>(
+    collection = listOf(
+        StoriesScreenContentConfig(
+            storiesSize = 6,
+            currentStoryIndex = 0,
+            currentStory = Stories.TangemIntro,
+            isScanInProgress = true,
+        ),
+        StoriesScreenContentConfig(
+            storiesSize = 6,
+            currentStoryIndex = 1,
+            currentStory = Stories.RevolutionaryWallet,
+            isScanInProgress = false,
+        ),
+        StoriesScreenContentConfig(
+            storiesSize = 6,
+            currentStoryIndex = 2,
+            currentStory = Stories.UltraSecureBackup,
+            isScanInProgress = false,
+        ),
+        StoriesScreenContentConfig(
+            storiesSize = 6,
+            currentStoryIndex = 3,
+            currentStory = Stories.Currencies,
+            isScanInProgress = false,
+        ),
+        StoriesScreenContentConfig(
+            storiesSize = 6,
+            currentStoryIndex = 4,
+            currentStory = Stories.Web3,
+            isScanInProgress = false,
+        ),
+        StoriesScreenContentConfig(
+            storiesSize = 6,
+            currentStoryIndex = 5,
+            currentStory = Stories.WalletForEveryone,
+            isScanInProgress = false,
+        ),
+    ),
+)
+// endregion Preview

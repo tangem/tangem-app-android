@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
-import com.tangem.core.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.events.AnalyticsParam.CurrencyType
+import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 
 /**
 [REDACTED_AUTHOR]
@@ -13,65 +13,19 @@ sealed class Token(
     error: Throwable? = null,
 ) : AnalyticsEvent(category, event, params, error) {
 
-    class Refreshed : Token("Token", "Refreshed")
-    class ButtonExplore : Token("Token", "Button - Explore")
-
-    class ButtonRemoveToken(type: CurrencyType) : Token(
-        "Token",
-        "Button - Remove Token",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonBuy(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Buy",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonSell(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Sell",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonExchange(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Exchange",
-        params = mapOf("Token" to type.value),
-    )
-
-    class ButtonSend(type: CurrencyType) : Token(
-        category = "Token",
-        event = "Button - Send",
-        params = mapOf("Token" to type.value),
-    )
-
     sealed class Receive(
         event: String,
         params: Map<String, String> = mapOf(),
     ) : Token("Token / Receive", event, params) {
 
-        class ScreenOpened : Receive("Receive Screen Opened")
+        class ScreenOpened(
+            val token: String,
+        ) : Receive(
+            event = "Receive Screen Opened",
+            params = mapOf(TOKEN_PARAM to token),
+        )
         class ButtonCopyAddress : Receive("Button - Copy Address")
         class ButtonShareAddress : Receive("Button - Share Address")
-    }
-
-    sealed class Send(
-        event: String,
-        params: Map<String, String> = mapOf(),
-        error: Throwable? = null,
-    ) : Token("Token / Send", event, params, error) {
-
-        class ScreenOpened : Send("Send Screen Opened")
-        class ButtonPaste : Send("Button - Paste")
-        class ButtonQRCode : Send("Button - QR Code")
-        class ButtonSwapCurrency : Send("Button - Swap Currency")
-
-        class TransactionSent(type: CurrencyType, error: Throwable? = null) : Send(
-            event = "Transaction Sent",
-            params = mapOf("Token" to type.value),
-            error = error,
-        )
     }
 
     sealed class Topup(

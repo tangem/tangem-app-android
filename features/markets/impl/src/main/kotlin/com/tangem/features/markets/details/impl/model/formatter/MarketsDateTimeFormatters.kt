@@ -1,0 +1,140 @@
+package com.tangem.features.markets.details.impl.model.formatter
+
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.utils.DateTimeFormatters
+import com.tangem.core.ui.utils.formatAsDateTime
+import com.tangem.domain.markets.PriceChangeInterval
+import com.tangem.features.markets.impl.R
+import com.tangem.utils.H24_MILLIS
+import com.tangem.utils.WEEK_MILLIS
+import org.joda.time.DateTime
+import org.joda.time.DateTimeZone
+import java.math.BigDecimal
+
+internal object MarketsDateTimeFormatters {
+
+    private val dateTimeMMMFormatter by lazy {
+        DateTimeFormatters.getBestFormatterBySkeleton("dd MMM Hm")
+    }
+
+    private val dateFormatter = DateTimeFormatters.dateDDMMYYYY
+
+    fun getChartXFormatterByInterval(interval: PriceChangeInterval): (BigDecimal) -> String {
+        return when (interval) {
+            PriceChangeInterval.H24 -> { value: BigDecimal ->
+                value.toLong().formatAsDateTime(DateTimeFormatters.timeFormatter)
+            }
+            PriceChangeInterval.WEEK,
+            PriceChangeInterval.MONTH,
+            PriceChangeInterval.MONTH3,
+            PriceChangeInterval.MONTH6,
+            -> { value ->
+                value.toLong().formatAsDateTime(DateTimeFormatters.dateMMMdd)
+            }
+            PriceChangeInterval.YEAR -> { value ->
+                value.toLong().formatAsDateTime(DateTimeFormatters.dateMMMdd)
+            }
+            PriceChangeInterval.ALL_TIME -> { value ->
+                value.toLong().formatAsDateTime(DateTimeFormatters.dateYYYY)
+            }
+        }
+    }
+
+    fun formatDateByInterval(interval: PriceChangeInterval, startTimestamp: Long): TextReference {
+        return when (interval) {
+            PriceChangeInterval.H24 -> resourceReference(R.string.common_today)
+            PriceChangeInterval.WEEK,
+            PriceChangeInterval.MONTH,
+            PriceChangeInterval.MONTH3,
+            -> {
+                resourceReference(
+                    R.string.common_range_with_space,
+                    wrappedList(
+                        stringReference(
+                            startTimestamp.formatAsDateTime(dateTimeMMMFormatter),
+                        ),
+                        resourceReference(R.string.common_now),
+                    ),
+                )
+            }
+            PriceChangeInterval.MONTH6,
+            PriceChangeInterval.YEAR,
+            -> {
+                resourceReference(
+                    R.string.common_range_with_space,
+                    wrappedList(
+                        stringReference(
+                            startTimestamp.formatAsDateTime(dateFormatter),
+                        ),
+                        resourceReference(R.string.common_now),
+                    ),
+                )
+            }
+            PriceChangeInterval.ALL_TIME -> resourceReference(R.string.common_all)
+        }
+    }
+
+    fun formatDateByIntervalWithMarker(interval: PriceChangeInterval, markerTimestamp: BigDecimal): TextReference {
+        return when (interval) {
+            PriceChangeInterval.H24,
+            PriceChangeInterval.WEEK,
+            PriceChangeInterval.MONTH,
+            PriceChangeInterval.MONTH3,
+            -> {
+                resourceReference(
+                    R.string.common_range_with_space,
+                    wrappedList(
+                        stringReference(
+                            markerTimestamp.toLong().formatAsDateTime(dateTimeMMMFormatter),
+                        ),
+                        resourceReference(R.string.common_now),
+                    ),
+                )
+            }
+            PriceChangeInterval.MONTH6,
+            PriceChangeInterval.YEAR,
+            PriceChangeInterval.ALL_TIME,
+            -> {
+                resourceReference(
+                    R.string.common_range_with_space,
+                    wrappedList(
+                        stringReference(
+                            markerTimestamp.toLong().formatAsDateTime(dateFormatter),
+                        ),
+                        resourceReference(R.string.common_now),
+                    ),
+                )
+            }
+        }
+    }
+
+    @Suppress("MagicNumber")
+    fun getStartTimestampByInterval(interval: PriceChangeInterval, currentTimestamp: Long): Long {
+        return when (interval) {
+            PriceChangeInterval.H24 -> currentTimestamp - H24_MILLIS
+            PriceChangeInterval.WEEK -> currentTimestamp - WEEK_MILLIS
+            PriceChangeInterval.MONTH -> DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(1).millis
+            PriceChangeInterval.MONTH3 -> DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(3).millis
+            PriceChangeInterval.MONTH6 -> DateTime(currentTimestamp, DateTimeZone.UTC).minusMonths(6).millis
+            PriceChangeInterval.YEAR -> DateTime(currentTimestamp, DateTimeZone.UTC).minusYears(1).millis
+            PriceChangeInterval.ALL_TIME -> 0
+        }
+    }
+
+    fun getDefaultDateTimeString(interval: PriceChangeInterval, currentTimestamp: Long): TextReference {
+        return formatDateByInterval(
+            interval = interval,
+            startTimestamp = getStartTimestampByInterval(
+                interval = interval,
+                currentTimestamp = currentTimestamp,
+            ),
+        )
+    }
+
+    fun formatAsDate(timestamp: Long): String {
+        return timestamp.formatAsDateTime(dateFormatter)
+    }
+}
