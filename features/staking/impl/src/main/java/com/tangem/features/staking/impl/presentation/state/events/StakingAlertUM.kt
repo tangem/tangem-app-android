@@ -68,4 +68,17 @@ internal sealed class StakingAlertUM : AlertUM {
         override val message: TextReference = resourceReference(id = R.string.staking_notification_ton_activate_account)
         override val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
     }
+
+    data class RewardsMinimumRequirementsError(
+        val cryptoCurrencyName: String,
+        val cryptoAmountValue: String,
+    ) : StakingAlertUM() {
+        override val onConfirmClick: (() -> Unit)? = null
+        override val title: TextReference? = null
+        override val message: TextReference = resourceReference(
+            id = R.string.staking_details_min_rewards_notification,
+            formatArgs = wrappedList(cryptoCurrencyName, cryptoAmountValue),
+        )
+        override val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
+    }
 }
