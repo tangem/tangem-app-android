@@ -3,17 +3,12 @@ package com.tangem.tap.domain.userWalletList.repository.implementation
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
-import com.tangem.common.CompletionResult
-import com.tangem.common.biometric.BiometricManager
-import com.tangem.common.biometric.BiometricStorage
+import com.tangem.common.*
+import com.tangem.common.authentication.storage.AuthenticatedStorage
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.doOnFailure
-import com.tangem.common.fold
-import com.tangem.common.map
-import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.domain.userWalletList.UserWalletListError
+import com.tangem.domain.wallets.legacy.UserWalletsListError
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import kotlinx.coroutines.Dispatchers
@@ -22,13 +17,10 @@ import kotlinx.coroutines.withContext
 
 internal class BiometricUserWalletsKeysRepository(
     moshi: Moshi,
-    biometricManager: BiometricManager,
+    private val authenticatedStorage: AuthenticatedStorage,
     private val secureStorage: SecureStorage,
 ) : UserWalletsKeysRepository {
-    private val biometricStorage = BiometricStorage(
-        biometricManager = biometricManager,
-        secureStorage = secureStorage,
-    )
+
     private val encryptionKeyAdapter: JsonAdapter<UserWalletEncryptionKey> = moshi.adapter(
         UserWalletEncryptionKey::class.java,
     )
@@ -40,7 +32,17 @@ internal class BiometricUserWalletsKeysRepository(
         return withContext(Dispatchers.IO) {
             getAllInternal()
                 .mapFailure { error ->
-                    UserWalletListError.ReceiveEncryptionKeysError(error.cause ?: error)
+                    when (error) {
+                        is TangemSdkError.AuthenticationLockout ->
+                            UserWalletsListError.BiometricsAuthenticationLockout(isPermanent = false)
+                        is TangemSdkError.AuthenticationPermanentLockout ->
+                            UserWalletsListError.BiometricsAuthenticationLockout(isPermanent = true)
+                        is TangemSdkError.KeystoreInvalidated ->
+                            UserWalletsListError.AllKeysInvalidated
+                        is TangemSdkError.AuthenticationUnavailable ->
+                            UserWalletsListError.BiometricsAuthenticationDisabled
+                        else -> error
+                    }
                 }
         }
     }
@@ -48,32 +50,27 @@ internal class BiometricUserWalletsKeysRepository(
     override suspend fun save(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {
             storeEncryptionKey(encryptionKey)
-                .mapFailure { error ->
-                    UserWalletListError.SaveEncryptionKeysError(error.cause ?: error)
-                }
         }
     }
 
-    override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
+    override suspend fun delete(userWalletsIds: List<UserWalletId>) {
         return withContext(Dispatchers.IO) {
-            userWalletsIds.map { userWalletId ->
+            userWalletsIds.forEach { userWalletId ->
                 deleteEncryptionKey(userWalletId)
             }
-                .fold()
-                .map { deleteUserWalletsIds(userWalletsIds) }
+
+            deleteUserWalletsIds(userWalletsIds)
         }
     }
 
-    override suspend fun clear(): CompletionResult<Unit> {
+    override suspend fun clear() {
         return withContext(Dispatchers.IO) {
             getUserWalletsIds()
-                .map { userWalletId ->
+                .forEach { userWalletId ->
                     deleteEncryptionKey(userWalletId)
                 }
-                .fold()
-                .map {
-                    clearUserWalletsIds()
-                }
+
+            clearUserWalletsIds()
         }
     }
 
@@ -84,38 +81,45 @@ internal class BiometricUserWalletsKeysRepository(
     }
 
     private suspend fun getAllInternal(): CompletionResult<List<UserWalletEncryptionKey>> {
-        return getUserWalletsIds()
-            .map { userWalletId ->
-                // This is possible because the Card SDK cipher key has an expiration time
-                // If this operation runs more than that expiration time, the user will not receive all encryption keys
-                getEncryptionKey(userWalletId)
-                    .doOnFailure { error ->
-                        // If the user cancels biometric authentication, cancel the request for all keys
-                        if (error is TangemSdkError.BiometricsAuthenticationFailed) {
-                            return CompletionResult.Failure(error)
+        return catching {
+            val userWalletIds = getUserWalletsIds()
+
+            getEncryptionKeys(userWalletIds)
+        }
+            .doOnFailure { error ->
+                when (error) {
+                    is TangemSdkError.KeystoreInvalidated -> {
+                        getUserWalletsIds().forEach { userWalletId ->
+                            deleteEncryptionKey(userWalletId)
                         }
                     }
-            }
-            .fold(listOf()) { acc, data ->
-                if (data != null) acc + data else acc
+                    else -> Unit
+                }
             }
     }
 
-    private suspend fun getEncryptionKey(userWalletId: UserWalletId): CompletionResult<UserWalletEncryptionKey?> {
-        return biometricStorage.get(StorageKey.WalletEncryptionKey(userWalletId).name)
-            .map { it.decodeToKey() }
+    private suspend fun getEncryptionKeys(userWalletsIds: List<UserWalletId>): List<UserWalletEncryptionKey> {
+        val keys = userWalletsIds.map { userWalletId ->
+            StorageKey.UserWalletEncryptionKey(userWalletId).name
+        }
+
+        return authenticatedStorage.get(keys).mapNotNull { (_, encodedData) ->
+            encodedData.decodeToKey()
+        }
     }
 
     private suspend fun storeEncryptionKey(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
-        return biometricStorage.store(
-            key = StorageKey.WalletEncryptionKey(encryptionKey.walletId).name,
-            data = encryptionKey.encode(),
-        )
+        return catching {
+            authenticatedStorage.store(
+                keyAlias = StorageKey.UserWalletEncryptionKey(encryptionKey.walletId).name,
+                data = encryptionKey.encode(),
+            )
+        }
             .map { storeUserWalletId(encryptionKey.walletId) }
     }
 
-    private suspend fun deleteEncryptionKey(userWalletId: UserWalletId): CompletionResult<Unit> {
-        return biometricStorage.delete(StorageKey.WalletEncryptionKey(userWalletId).name)
+    private fun deleteEncryptionKey(userWalletId: UserWalletId) {
+        authenticatedStorage.delete(StorageKey.UserWalletEncryptionKey(userWalletId).name)
     }
 
     private suspend fun getUserWalletsIds(): List<UserWalletId> {
@@ -183,7 +187,7 @@ internal class BiometricUserWalletsKeysRepository(
     private sealed interface StorageKey {
         val name: String
 
-        class WalletEncryptionKey(userWalletId: UserWalletId) : StorageKey {
+        class UserWalletEncryptionKey(userWalletId: UserWalletId) : StorageKey {
             override val name: String = "user_wallet_encryption_key_${userWalletId.stringValue}"
         }
 
