@@ -1,15 +1,26 @@
 plugins {
-    id("java-library")
-    id("org.jetbrains.kotlin.jvm")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
+    id("configuration")
+}
+
+android {
+    namespace = "com.tangem.lib.crypto"
 }
 
 dependencies {
 
     /** Coroutines */
-    implementation(Library.coroutine)
-}
+    implementation(deps.kotlin.coroutines)
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    /** SDK */
+    implementation(tangemDeps.blockchain)
+
+    /** Core */
+    implementation(projects.core.utils)
+
+    /** Libs */
+    implementation(projects.libs.blockchainSdk)
 }

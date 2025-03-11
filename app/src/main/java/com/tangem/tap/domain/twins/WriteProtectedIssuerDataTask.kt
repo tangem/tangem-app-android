@@ -19,10 +19,7 @@ class WriteProtectedIssuerDataTask(
     private val issuerKeys: KeyPair,
 ) : CardSessionRunnable<SuccessResponse> {
 
-    override fun run(
-        session: CardSession,
-        callback: (result: CompletionResult<SuccessResponse>) -> Unit,
-    ) {
+    override fun run(session: CardSession, callback: (result: CompletionResult<SuccessResponse>) -> Unit) {
         SignHashCommand(
             twinPublicKey.calculateSha256(),
             session.environment.card!!.wallets.first().publicKey,
