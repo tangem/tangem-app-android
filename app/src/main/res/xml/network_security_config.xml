@@ -1,19 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-
-    <debug-overrides>
+    <base-config cleartextTrafficPermitted="false">
         <trust-anchors>
-            <certificates src="user" />
             <certificates src="system" />
         </trust-anchors>
-    </debug-overrides>
-
-    <domain-config>
-        <domain includeSubdomains="true">api.tangem.com</domain>
-        <trust-anchors>
-            <certificates src="user" />
-            <certificates src="system" />
-        </trust-anchors>
-    </domain-config>
-
+    </base-config>
 </network-security-config>

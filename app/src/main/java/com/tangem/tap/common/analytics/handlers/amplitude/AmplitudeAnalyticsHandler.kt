@@ -9,8 +9,8 @@ class AmplitudeAnalyticsHandler(
 
     override fun id(): String = ID
 
-    override fun send(event: String, params: Map<String, String>) {
-        client.logEvent(event, params)
+    override fun send(eventId: String, params: Map<String, String>) {
+        client.logEvent(eventId, params)
     }
 
     companion object {
@@ -18,10 +18,14 @@ class AmplitudeAnalyticsHandler(
     }
 
     class Builder : AnalyticsHandlerBuilder {
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
-            !data.isDebug -> AmplitudeClient(data.application, data.config.amplitudeApiKey)
-            data.isDebug && data.logConfig.amplitude -> AmplitudeLogClient(data.jsonConverter)
-            else -> null
-        }?.let { AmplitudeAnalyticsHandler(it) }
+        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler {
+            return AmplitudeAnalyticsHandler(
+                client = if (data.logConfig.amplitude) {
+                    AmplitudeLogClient(data.jsonConverter)
+                } else {
+                    AmplitudeClient(data.application, data.config.amplitudeApiKey)
+                },
+            )
+        }
     }
 }
