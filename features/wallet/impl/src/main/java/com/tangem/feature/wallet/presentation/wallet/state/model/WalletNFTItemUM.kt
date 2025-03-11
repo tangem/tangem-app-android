@@ -21,6 +21,7 @@ sealed class WalletNFTItemUM {
         val isFlickering: Boolean,
     ) : WalletNFTItemUM() {
 
+        @Immutable
         sealed class CollectionPreview {
             data class Image(val url: String) : CollectionPreview()
             data object More : CollectionPreview()
