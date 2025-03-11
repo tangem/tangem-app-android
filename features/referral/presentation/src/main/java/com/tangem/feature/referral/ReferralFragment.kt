@@ -1,41 +1,37 @@
 package com.tangem.feature.referral
 
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.compose.ui.platform.ComposeView
-import androidx.core.view.WindowCompat
-import androidx.fragment.app.Fragment
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
-import androidx.transition.TransitionInflater
-import com.tangem.feature.referral.presentation.R
+import com.tangem.common.routing.AppRouter
+import com.tangem.core.ui.UiDependencies
+import com.tangem.core.ui.screen.ComposeFragment
 import com.tangem.feature.referral.router.ReferralRouter
 import com.tangem.feature.referral.ui.ReferralScreen
 import com.tangem.feature.referral.viewmodels.ReferralViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import java.lang.ref.WeakReference
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class ReferralFragment : Fragment() {
+class ReferralFragment : ComposeFragment() {
+
+    @Inject
+    override lateinit var uiDependencies: UiDependencies
+
+    @Inject
+    internal lateinit var appRouter: AppRouter
+
     private val viewModel by viewModels<ReferralViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.fade)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
+        viewModel.onScreenOpened()
+        viewModel.setRouter(ReferralRouter(appRouter))
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
-        viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))
-        viewModel.onScreenOpened()
-        return ComposeView(inflater.context).apply {
-            isTransitionGroup = true
-            setContent {
-                ReferralScreen(stateHolder = viewModel.uiState)
-            }
-        }
+    @Composable
+    override fun ScreenContent(modifier: Modifier) {
+        ReferralScreen(stateHolder = viewModel.uiState)
     }
 }
