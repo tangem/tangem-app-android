@@ -1,68 +1,87 @@
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
-    id("com.android.library")
-    kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.hilt.android)
+    alias(deps.plugins.room)
+    id("configuration")
 }
 
 android {
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-    }
+    namespace = "com.tangem.datasource"
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
-
-    buildTypes {
-        create("debug_beta") {
-            initWith(getByName("release"))
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("release"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
+    room {
+        schemaDirectory("$projectDir/schemas")
     }
 }
 
 dependencies {
 
     /** Project */
-    implementation(project(":libs:auth"))
+    implementation(projects.core.analytics)
+    implementation(projects.core.utils)
+    implementation(projects.libs.auth)
+    implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.core)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.txhistory.models)
+    implementation(projects.domain.staking.models)
+    implementation(projects.domain.onramp.models)
+    implementation(projects.domain.models)
 
     /** Tangem libraries */
-    implementation(Tangem.cardCore)
+    implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+    kapt(deps.hilt.kapt)
 
     /** Coroutines */
-    implementation(Library.coroutine)
+    implementation(deps.kotlin.coroutines)
+    implementation(deps.kotlin.coroutines.rx2)
 
     /** Logging */
-    implementation(Library.timber)
+    implementation(deps.timber)
 
     /** Network */
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
-    implementation(Library.moshi)
-    implementation(Library.moshiKotlin)
-    implementation(Library.okHttp)
-    implementation(Library.okHttpLogging)
+    implementation(deps.moshi)
+    implementation(deps.moshi.kotlin)
+    implementation(deps.moshi.adapters)
+    implementation(deps.moshi.adapters.ext)
+    implementation(deps.okHttp)
+    implementation(deps.okHttp.prettyLogging)
+    implementation(deps.retrofit)
+    implementation(deps.retrofit.moshi)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Time */
-    implementation(Library.jodatime)
+    implementation(deps.jodatime)
+
+    /** Security */
+    implementation(deps.spongecastle.core)
+
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    debugPGImplementation(deps.chucker)
+    mockedImplementation(deps.chuckerStub)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
+
+    /** Local storages */
+    implementation(deps.androidx.datastore)
+    implementation(deps.room.runtime)
+    implementation(deps.room.ktx)
+    kapt(deps.room.compiler)
+
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }

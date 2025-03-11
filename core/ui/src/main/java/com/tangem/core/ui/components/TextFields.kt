@@ -1,5 +1,7 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -9,29 +11,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Divider
-import androidx.compose.material.Icon
-import androidx.compose.material.IconButton
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
-import androidx.compose.material.TextFieldColors
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.material.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -43,7 +27,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
+import com.tangem.core.ui.res.TangemThemePreview
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=213%3A218&t=TmfD6UBHPg9uYfev-4)
@@ -60,6 +44,7 @@ fun OutlineTextField(
     isError: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions(),
+    visualTransformation: VisualTransformation = VisualTransformation.None,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
     TangemTextField(
@@ -74,7 +59,46 @@ fun OutlineTextField(
         isError = isError,
         keyboardOptions = keyboardOptions,
         keyboardActions = keyboardActions,
+        visualTransformation = visualTransformation,
         interactionSource = interactionSource,
+    )
+}
+
+@Composable
+fun OutlineTextFieldWithIcon(
+    value: TextFieldValue,
+    onValueChange: (TextFieldValue) -> Unit,
+    @DrawableRes iconResId: Int,
+    iconColor: Color,
+    onIconClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions(),
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    caption: String? = null,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+) {
+    TangemTextFieldWithIcon(
+        modifier = modifier,
+        value = value,
+        onValueChange = onValueChange,
+        iconResId = iconResId,
+        iconColor = iconColor,
+        singleLine = true,
+        label = label,
+        placeholder = placeholder,
+        enabled = enabled,
+        isError = isError,
+        keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
+        visualTransformation = visualTransformation,
+        caption = caption,
+        interactionSource = interactionSource,
+        onIconClick = onIconClick,
     )
 }
 
@@ -121,7 +145,7 @@ private fun TangemTextField(
                 if (!label.isNullOrEmpty()) {
                     Text(
                         text = label,
-                        style = TangemTheme.typography.caption,
+                        style = TangemTheme.typography.caption2,
                         color = colors.labelColor(
                             enabled = enabled,
                             error = isError,
@@ -141,17 +165,124 @@ private fun TangemTextField(
             },
             trailingIcon = {
                 val iconRes by rememberUpdatedState(
-                    newValue = if (isError) R.drawable.ic_alert_24 else R.drawable.ic_close_24,
+                    newValue = if (isError) {
+                        R.drawable.ic_alert_24
+                    } else if (value.text.isNotEmpty()) {
+                        R.drawable.ic_close_24
+                    } else {
+                        null
+                    },
                 )
+                if (iconRes != null) {
+                    IconButton(
+                        modifier = Modifier.size(32.dp),
+                        onClick = onClear,
+                        enabled = !isError && enabled,
+                    ) {
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            painter = painterResource(id = iconRes!!),
+                            tint = colors.trailingIconColor(enabled = enabled, isError = isError).value,
+                            contentDescription = "Clear input",
+                        )
+                    }
+                }
+            },
+        )
+
+        AnimatedVisibility(
+            visible = !caption.isNullOrEmpty(),
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            val captionWrapped = remember(this) { requireNotNull(caption) }
+
+            Column {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    text = captionWrapped,
+                    style = TangemTheme.typography.caption2,
+                    color = colors.captionColor(enabled = enabled, isError = isError).value,
+                )
+            }
+        }
+    }
+}
+
+@Suppress("LongMethod")
+@Composable
+private fun TangemTextFieldWithIcon(
+    value: TextFieldValue,
+    singleLine: Boolean,
+    onValueChange: (TextFieldValue) -> Unit,
+    @DrawableRes iconResId: Int,
+    iconColor: Color,
+    modifier: Modifier = Modifier,
+    label: String? = null,
+    placeholder: String? = null,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    caption: String? = null,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    keyboardActions: KeyboardActions = KeyboardActions(),
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+    colors: TangemTextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
+    size: TangemTextFieldSize = TangemTextFieldSize.Default,
+    onIconClick: () -> Unit = {},
+) {
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .heightIn(size.toHeightDp()),
+            value = value,
+            textStyle = TangemTheme.typography.body1,
+            onValueChange = onValueChange,
+            singleLine = singleLine,
+            enabled = enabled,
+            isError = isError,
+            visualTransformation = visualTransformation,
+            keyboardActions = keyboardActions,
+            keyboardOptions = keyboardOptions,
+            interactionSource = interactionSource,
+            shape = size.toShape(),
+            colors = colors,
+            label = {
+                if (!label.isNullOrEmpty()) {
+                    Text(
+                        text = label,
+                        style = TangemTheme.typography.caption2,
+                        color = colors.labelColor(
+                            enabled = enabled,
+                            error = isError,
+                            interactionSource = interactionSource,
+                        ).value,
+                    )
+                }
+            },
+            placeholder = {
+                if (!placeholder.isNullOrEmpty()) {
+                    Text(
+                        text = placeholder,
+                        style = TangemTheme.typography.body1,
+                        color = colors.placeholderColor(enabled = enabled).value,
+                    )
+                }
+            },
+            trailingIcon = {
                 IconButton(
                     modifier = Modifier.size(32.dp),
-                    onClick = onClear,
-                    enabled = !isError && enabled,
+                    onClick = onIconClick,
                 ) {
                     Icon(
                         modifier = Modifier.size(24.dp),
-                        painter = painterResource(id = iconRes),
-                        tint = colors.trailingIconColor(enabled = enabled, isError = isError).value,
+                        painter = painterResource(id = iconResId),
+                        tint = iconColor,
                         contentDescription = "Clear input",
                     )
                 }
@@ -163,15 +294,16 @@ private fun TangemTextField(
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            if (caption.isNullOrEmpty()) return@AnimatedVisibility
+            val captionWrapped = remember(this) { requireNotNull(caption) }
+
             Column {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp),
-                    text = caption,
-                    style = TangemTypography.body1,
+                    text = captionWrapped,
+                    style = TangemTheme.typography.caption2,
                     color = colors.captionColor(enabled = enabled, isError = isError).value,
                 )
             }
@@ -180,7 +312,7 @@ private fun TangemTextField(
 }
 
 private enum class TangemTextFieldSize {
-    Default
+    Default,
 }
 
 @Composable
@@ -193,7 +325,7 @@ private fun TangemTextFieldSize.toShape(): Shape = when (this) {
     TangemTextFieldSize.Default -> TangemTheme.shapes.roundedCornersSmall2
 }
 
-internal object TangemTextFieldsDefault {
+object TangemTextFieldsDefault {
     val defaultTextFieldColors: TangemTextFieldColors
         @Composable @Stable get() = TangemTextFieldColors(
             textColor = TangemTheme.colors.text.primary1,
@@ -202,8 +334,8 @@ internal object TangemTextFieldsDefault {
             cursorColor = TangemTheme.colors.icon.primary1,
             errorCursorColor = TangemTheme.colors.icon.warning,
             focusedIndicatorColor = TangemTheme.colors.icon.primary1,
-            unfocusedIndicatorColor = TangemTheme.colors.stroke.primary,
-            disabledIndicatorColor = TangemTheme.colors.stroke.primary,
+            unfocusedIndicatorColor = TangemTheme.colors.stroke.secondary,
+            disabledIndicatorColor = TangemTheme.colors.stroke.secondary,
             errorIndicatorColor = TangemTheme.colors.icon.warning,
             leadingIconColor = TangemTheme.colors.icon.informative,
             disabledLeadingIconColor = Color.Transparent,
@@ -224,7 +356,7 @@ internal object TangemTextFieldsDefault {
 }
 
 @Immutable
-internal data class TangemTextFieldColors(
+data class TangemTextFieldColors(
     private val textColor: Color,
     private val disabledTextColor: Color,
     private val cursorColor: Color,
@@ -288,7 +420,11 @@ internal data class TangemTextFieldColors(
             else -> unfocusedIndicatorColor
         }
         return if (enabled) {
-            animateColorAsState(targetValue, tween(durationMillis = 120))
+            animateColorAsState(
+                targetValue = targetValue,
+                animationSpec = tween(durationMillis = 120),
+                label = "IndicatorColor",
+            )
         } else {
             rememberUpdatedState(targetValue)
         }
@@ -305,11 +441,7 @@ internal data class TangemTextFieldColors(
     }
 
     @Composable
-    override fun labelColor(
-        enabled: Boolean,
-        error: Boolean,
-        interactionSource: InteractionSource,
-    ): State<Color> {
+    override fun labelColor(enabled: Boolean, error: Boolean, interactionSource: InteractionSource): State<Color> {
         val focused by interactionSource.collectIsFocusedAsState()
 
         val targetValue = when {
@@ -347,9 +479,7 @@ internal data class TangemTextFieldColors(
 
 // region Preview
 @Composable
-private fun OutlineTextFieldSample(
-    modifier: Modifier = Modifier,
-) {
+private fun OutlineTextFieldSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
@@ -395,21 +525,24 @@ private fun OutlineTextFieldSample(
             caption = "Supporting text",
         )
         Divider(modifier = Modifier.padding(vertical = 8.dp))
+        OutlineTextFieldWithIcon(
+            value = TextFieldValue(),
+            onValueChange = { /* no-op */ },
+            iconResId = R.drawable.ic_alert_24,
+            iconColor = TangemTheme.colors.icon.informative,
+            label = "Default without value",
+            placeholder = "Placeholder",
+            onIconClick = {},
+        )
+        Divider(modifier = Modifier.padding(vertical = 8.dp))
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun OutlineTextFieldPreview_Light() {
-    TangemTheme {
-        OutlineTextFieldSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun OutlineTextFieldPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun OutlineTextFieldPreview() {
+    TangemThemePreview {
         OutlineTextFieldSample()
     }
 }
