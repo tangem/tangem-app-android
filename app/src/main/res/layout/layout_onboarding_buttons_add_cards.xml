@@ -5,20 +5,37 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_add_card"
-        style="@style/TapSecondaryButton"
-        android:layout_width="0dp"
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="92dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="@id/btn_continue"
-        app:layout_constraintStart_toStartOf="@id/btn_continue"
-        tools:text="+ Add backup card" />
+        app:layout_constraintStart_toStartOf="@id/btn_continue">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_card"
+            style="@style/TapSecondaryIconButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:icon="@drawable/ic_tangem_24"
+            tools:text="Add backup card" />
+
+        <ProgressBar
+            android:id="@+id/btn_progress"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:elevation="18dp"
+            android:visibility="gone"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/text_primary_1" />
+    </FrameLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_continue"
         style="@style/TapPrimaryButton"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toBottomOf="parent"

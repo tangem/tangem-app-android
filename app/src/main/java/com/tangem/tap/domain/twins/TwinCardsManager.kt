@@ -1,41 +1,37 @@
 package com.tangem.tap.domain.twins
 
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Types
 import com.tangem.Message
-import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.datasource.api.common.MoshiConverter
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.operations.wallet.CreateWalletResponse
-import com.tangem.tap.common.AssetReader
+import com.tangem.tap.common.extensions.inject
+import com.tangem.tap.proxy.redux.DaggerGraphState
+import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 
-class TwinCardsManager(
-    card: CardDTO,
-    assetReader: AssetReader,
-) {
+class TwinCardsManager(card: CardDTO) {
+
+    private val issuersConfigStorage by lazy(mode = LazyThreadSafetyMode.NONE) {
+        store.inject(DaggerGraphState::issuersConfigStorage)
+    }
+
     private val firstCardId: String = card.cardId
+    private val publicKey: String = card.issuer.publicKey.toHexString()
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
 
-    private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
-
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
-        val response = tangemSdkManager.runTaskAsync(
-            runnable = CreateFirstTwinWalletTask(firstCardId),
-            cardId = firstCardId,
-            initialMessage = message,
-        )
-        when (response) {
-            is CompletionResult.Success -> currentCardPublicKey = response.data.wallet.publicKey.toHexString()
-            is CompletionResult.Failure -> {}
+        val response = tangemSdkManager.createFirstTwinWallet(cardId = firstCardId, initialMessage = message)
+
+        if (response is CompletionResult.Success) {
+            currentCardPublicKey = response.data.wallet.publicKey.toHexString()
         }
+
         return response
     }
 
@@ -44,58 +40,39 @@ class TwinCardsManager(
         preparingMessage: Message,
         creatingWalletMessage: Message,
     ): CompletionResult<CreateWalletResponse> {
-        val task = CreateSecondTwinWalletTask(
+        val response = tangemSdkManager.createSecondTwinWallet(
             firstPublicKey = currentCardPublicKey!!,
             firstCardId = firstCardId,
-            issuerKeys = issuerKeyPair,
+            issuerKeys = getIssuerKeys(),
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
+            initialMessage = initialMessage,
         )
-        val response = tangemSdkManager.runTaskAsync(task, null, initialMessage)
-        when (response) {
-            is CompletionResult.Success -> {
-                secondCardPublicKey = response.data.wallet.publicKey.toHexString()
-            }
-            is CompletionResult.Failure -> {}
+
+        if (response is CompletionResult.Success) {
+            secondCardPublicKey = response.data.wallet.publicKey.toHexString()
         }
+
         return response
     }
 
-    suspend fun complete(message: Message): Result<ScanResponse> {
-        val response = tangemSdkManager.runTaskAsync(
-            runnable = FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
+    suspend fun complete(message: Message): CompletionResult<ScanResponse> {
+        val response = tangemSdkManager.finalizeTwin(
+            secondCardPublicKey = secondCardPublicKey!!.hexToBytes(),
+            issuerKeyPair = getIssuerKeys(),
             cardId = firstCardId,
             initialMessage = message,
         )
-        return when (response) {
-            is CompletionResult.Success -> Result.Success(response.data)
-            is CompletionResult.Failure -> Result.fromTangemSdkError(response.error)
-        }
+
+        return response
     }
 
-    companion object {
-        private fun getIssuerKeys(reader: AssetReader, publicKey: String): KeyPair {
-            val issuer = getIssuers(reader).first { it.publicKey == publicKey }
-            return KeyPair(
-                publicKey = issuer.publicKey.hexToBytes(),
-                privateKey = issuer.privateKey.hexToBytes(),
-            )
-        }
+    private suspend fun getIssuerKeys(): KeyPair {
+        val issuer = issuersConfigStorage.getConfig().first { it.publicKey == publicKey }
 
-        private fun getAdapter(): JsonAdapter<List<Issuer>> {
-            return MoshiConverter.sdkMoshi.adapter(
-                Types.newParameterizedType(List::class.java, Issuer::class.java),
-            )
-        }
-
-        private fun getIssuers(reader: AssetReader): List<Issuer> {
-            val file = reader.readAssetAsString("tangem-app-config/issuers")
-            return getAdapter().fromJson(file)!!
-        }
+        return KeyPair(
+            publicKey = issuer.publicKey.hexToBytes(),
+            privateKey = issuer.privateKey.hexToBytes(),
+        )
     }
 }
-
-private class Issuer(
-    val privateKey: String,
-    val publicKey: String,
-)
