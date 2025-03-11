@@ -21,13 +21,12 @@ import org.joda.time.DateTime
 import java.util.Calendar
 
 internal class BalanceItemConverter(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val yield: Yield,
 ) : Converter<BalanceItem, BalanceState?> {
 
     override fun convert(value: BalanceItem): BalanceState? {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
         val cryptoCurrency = cryptoCurrencyStatus.currency
 
