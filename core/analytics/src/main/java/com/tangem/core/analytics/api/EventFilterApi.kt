@@ -1,6 +1,6 @@
 package com.tangem.core.analytics.api
 
-import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsEvent
 
 /**
 [REDACTED_AUTHOR]
@@ -16,7 +16,7 @@ interface AnalyticsEventFilter {
      * An internal filter check that, on external or internal conditions, recognizes the possibility of
      * sending an event.
      */
-    fun canBeSent(event: AnalyticsEvent): Boolean
+    suspend fun canBeSent(event: AnalyticsEvent): Boolean
 
     /**
      * Performs a check to see if the event can be dispatched by a specific handler

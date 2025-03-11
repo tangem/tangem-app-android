@@ -6,11 +6,13 @@ import com.tangem.common.KeyPair
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.CompletionCallback
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
+import com.tangem.tap.domain.twins.CreateFirstTwinWalletTask.Companion.runAttestation
 
 class CreateSecondTwinWalletTask(
     private val firstPublicKey: String,
@@ -34,6 +36,11 @@ class CreateSecondTwinWalletTask(
                 return
             }
 
+            if (!TwinsHelper.isTwinsCompatible(firstCardId, card.cardId)) {
+                callback(CompletionResult.Failure(IncompatibleTwinCard))
+                return
+            }
+
             session.setMessage(preparingMessage)
             PurgeWalletCommand(publicKey).run(session) { response ->
                 when (response) {
@@ -54,16 +61,29 @@ class CreateSecondTwinWalletTask(
         CreateWalletTask(EllipticCurve.Secp256k1).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    session.environment.card = session.environment.card?.updateWallet(result.data.wallet)
-
-                    WriteProtectedIssuerDataTask(firstPublicKey.hexToBytes(), issuerKeys).run(session) { writeResult ->
-                        when (writeResult) {
-                            is CompletionResult.Success -> callback(result)
-                            is CompletionResult.Failure -> callback(CompletionResult.Failure(writeResult.error))
+                    runAttestation(session) { attestationResponse ->
+                        when (attestationResponse) {
+                            is CompletionResult.Success -> writeProtectedIssuerData(session, result, callback)
+                            is CompletionResult.Failure -> callback(CompletionResult.Failure(attestationResponse.error))
                         }
                     }
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+            }
+        }
+    }
+
+    private fun writeProtectedIssuerData(
+        session: CardSession,
+        result: CompletionResult.Success<CreateWalletResponse>,
+        callback: CompletionCallback<CreateWalletResponse>,
+    ) {
+        session.environment.card = session.environment.card?.updateWallet(result.data.wallet)
+
+        WriteProtectedIssuerDataTask(firstPublicKey.hexToBytes(), issuerKeys).run(session) { writeResult ->
+            when (writeResult) {
+                is CompletionResult.Success -> callback(result)
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(writeResult.error))
             }
         }
     }

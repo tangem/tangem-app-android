@@ -1,85 +1,101 @@
 package com.tangem.tap.domain.tasks.product
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
-import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.deserialization.WalletDataDeserializer
-import com.tangem.common.extensions.ByteArrayKey
-import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toByteArray
-import com.tangem.common.extensions.toHexString
-import com.tangem.common.extensions.toMapKey
-import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.common.extensions.*
+import com.tangem.common.map
 import com.tangem.common.tlv.Tlv
 import com.tangem.common.tlv.TlvDecoder
 import com.tangem.crypto.CryptoUtils
-import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.ProductType
-import com.tangem.domain.common.ScanResponse
+import com.tangem.crypto.hdWallet.DerivationPath
+import com.tangem.domain.common.DerivationStyleProvider
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.TapWorkarounds.isVisa
 import com.tangem.domain.common.TwinsHelper
-import com.tangem.operations.PreflightReadMode
-import com.tangem.operations.PreflightReadTask
+import com.tangem.domain.common.configs.CardConfig
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.common.visa.VisaUtilities
+import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
+import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
+import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
+import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.extensions.getPrimaryCurve
-import com.tangem.tap.domain.extensions.isFirmwareMultiwalletAllowed
-import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.preferencesStorage
+import com.tangem.tap.domain.visa.VisaCardScanHandler
+import com.tangem.tap.mainScope
+import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
+import com.tangem.tap.store
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlin.collections.set
 
-class ScanProductTask(
-    val card: Card? = null,
-    private val userTokensRepository: UserTokensRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
+internal class ScanProductTask(
+    private val card: Card?,
+    private val derivationsFinder: DerivationsFinder?,
+    private val visaCardScanHandler: VisaCardScanHandler?,
+    private val visaCoroutineScope: CoroutineScope?,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles?,
+    override val allowsRequestAccessCodeFromRepository: Boolean = false,
 ) : CardSessionRunnable<ScanResponse> {
 
-    override val allowsRequestAccessCodeFromRepository: Boolean
-        get() = !additionalBlockchainsToDerive.isNullOrEmpty()
-
-    override fun run(
-        session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit,
-    ) {
+    override fun run(session: CardSession, callback: (result: CompletionResult<ScanResponse>) -> Unit) {
         val card = this.card ?: session.environment.card.guard {
             callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
             return
         }
         val cardDto = CardDTO(card)
 
-        val error = getErrorIfExcludedCard(cardDto)
+        val error = getErrorIfExcludedCard(cardDto, card)
         if (error != null) {
             callback(CompletionResult.Failure(error))
             return
         }
 
+        if (VisaUtilities.isVisaCard(cardDto)) {
+            if (onboardingV2FeatureToggles == null ||
+                onboardingV2FeatureToggles.isVisaOnboardingEnabled.not()
+            ) {
+                callback(CompletionResult.Failure(TangemSdkError.NotSupportedFirmwareVersion()))
+                return
+            }
+
+            readVisaCard(
+                session = session,
+                cardDto = cardDto,
+                scanWalletProcessor = ScanWalletProcessor(derivationsFinder),
+                callback = callback,
+            )
+            return
+        }
+
         val commandProcessor = when {
             cardDto.isTangemTwins -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(userTokensRepository, additionalBlockchainsToDerive)
+            else -> ScanWalletProcessor(derivationsFinder)
         }
         commandProcessor.proceed(cardDto, session) { processorResult ->
             when (processorResult) {
                 is CompletionResult.Success -> ScanTask().run(session) { scanTaskResult ->
                     when (scanTaskResult) {
                         is CompletionResult.Success -> {
-                            // it need because processorResult.data.card doesn't contains attestation result
+                            // it needed because processorResult.data.card doesn't contains attestation result
                             // and CardWallet.derivedKeys
                             val processorScanResponseWithNewCard = processorResult.data.copy(
                                 card = CardDTO(scanTaskResult.data),
@@ -94,16 +110,58 @@ class ScanProductTask(
         }
     }
 
-    private fun getErrorIfExcludedCard(card: CardDTO): TangemError? {
-        if (card.isExcluded) return TapSdkError.CardForDifferentApp
-        if (card.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
+    private fun getErrorIfExcludedCard(cardDto: CardDTO, card: Card): TangemError? {
+        if (cardDto.isExcluded) return TapSdkError.CardForDifferentApp
+        if (cardDto.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
+        // according ios decline card lower Ed25519Slip0010Available version and contains imported wallets
+        if (card.firmwareVersion < FirmwareVersion.Ed25519Slip0010Available &&
+            card.wallets.any { it.isImported }
+        ) {
+            return TapSdkError.CardNotSupportedByRelease
+        }
         return null
+    }
+
+    private fun readVisaCard(
+        session: CardSession,
+        cardDto: CardDTO,
+        scanWalletProcessor: ScanWalletProcessor,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
+    ) {
+        visaCardScanHandler ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.InsNotSupported()))
+            return
+        }
+
+        visaCoroutineScope ?: run {
+            callback(CompletionResult.Failure(TangemSdkError.InsNotSupported()))
+            return
+        }
+
+        visaCoroutineScope.launch {
+            when (val result = visaCardScanHandler.handleVisaCardScan(session = session)) {
+                is CompletionResult.Success -> {
+                    scanWalletProcessor.proceed(
+                        card = cardDto,
+                        session = session,
+                    ) { scanResponseResult ->
+                        callback(
+                            scanResponseResult.map { scanResponse ->
+                                scanResponse.copy(visaCardActivationStatus = result.data)
+                            },
+                        )
+                    }
+                }
+                is CompletionResult.Failure -> {
+                    callback(CompletionResult.Failure(result.error))
+                }
+            }
+        }
     }
 }
 
 private class ScanWalletProcessor(
-    private val userTokensRepository: UserTokensRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
+    private val derivationsFinder: DerivationsFinder?,
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -118,7 +176,7 @@ private class ScanWalletProcessor(
             return
         }
 
-        createMissingWalletsIfNeeded(card, session, callback)
+        startLinkingForBackupIfNeeded(card, session, callback)
     }
 
     private fun readFile(
@@ -126,7 +184,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val funToContinue = { createMissingWalletsIfNeeded(card, session, callback) }
+        val funToContinue = { startLinkingForBackupIfNeeded(card, session, callback) }
 
         ReadFilesTask(fileName = "blockchainInfo", walletPublicKey = null).run(session) { result ->
 
@@ -160,7 +218,7 @@ private class ScanWalletProcessor(
                             CompletionResult.Success(
                                 ScanResponse(
                                     card = card,
-                                    productType = ProductType.Note,
+                                    productType = determineProductTypeForSingleCurrencyWallet(card),
                                     walletData = walletData,
                                 ),
                             ),
@@ -181,37 +239,11 @@ private class ScanWalletProcessor(
         }
     }
 
-    private fun createMissingWalletsIfNeeded(
-        card: CardDTO,
-        session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit,
-    ) {
-        if (card.wallets.isEmpty() || !card.isFirmwareMultiwalletAllowed) {
-            startLinkingForBackupIfNeeded(card, session, callback)
-            return
-        }
-
-        val curvesToCreate = card.getCurvesForNonCreatedWallets()
-        if (curvesToCreate.isEmpty()) {
-            startLinkingForBackupIfNeeded(card, session, callback)
-            return
-        }
-
-        CreateWalletsTask(curvesToCreate).run(session) { result ->
-            when (result) {
-                is CompletionResult.Success -> {
-                    PreflightReadTask(
-                        readMode = PreflightReadMode.FullCardRead,
-                        cardId = card.cardId,
-                    ).run(session) { readResult ->
-                        when (readResult) {
-                            is CompletionResult.Success -> startLinkingForBackupIfNeeded(card, session, callback)
-                            is CompletionResult.Failure -> callback(CompletionResult.Failure(readResult.error))
-                        }
-                    }
-                }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
-            }
+    private fun determineProductTypeForSingleCurrencyWallet(card: CardDTO): ProductType {
+        return when {
+            card.isStart2Coin -> ProductType.Start2Coin
+            card.isVisa -> ProductType.Visa
+            else -> ProductType.Note
         }
     }
 
@@ -220,25 +252,28 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
+        mainScope.launch {
+            val activationInProgress = store.inject(DaggerGraphState::cardRepository)
+                .isActivationInProgress(card.cardId)
 
-        @Suppress("ComplexCondition")
-        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
-            (activationInProgress || card.isSaltPay)
-        ) {
-            StartPrimaryCardLinkingTask().run(session) { linkingResult ->
-                when (linkingResult) {
-                    is CompletionResult.Success -> {
-                        primaryCard = linkingResult.data
-                        deriveKeysIfNeeded(card, session, callback)
-                    }
-                    is CompletionResult.Failure -> {
-                        deriveKeysIfNeeded(card, session, callback)
+            @Suppress("ComplexCondition")
+            if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
+                activationInProgress
+            ) {
+                StartPrimaryCardLinkingTask().run(session) { linkingResult ->
+                    when (linkingResult) {
+                        is CompletionResult.Success -> {
+                            primaryCard = linkingResult.data
+                            deriveKeysIfNeeded(card, session, callback)
+                        }
+                        is CompletionResult.Failure -> {
+                            deriveKeysIfNeeded(card, session, callback)
+                        }
                     }
                 }
+            } else {
+                deriveKeysIfNeeded(card, session, callback)
             }
-        } else {
-            deriveKeysIfNeeded(card, session, callback)
         }
     }
 
@@ -247,36 +282,26 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = when (card.isSaltPay) {
-            true -> ProductType.SaltPay
-            else -> ProductType.Wallet
-        }
+        val productType = getWalletProductType(card)
+        val config = CardConfig.createConfig(card)
         scope.launch {
-            val derivations = collectDerivations(card)
+            val scanResponse = ScanResponse(
+                card = card,
+                productType = productType,
+                walletData = session.environment.walletData,
+                primaryCard = primaryCard,
+            )
+            val derivations =
+                collectDerivations(card, config, scanResponse.derivationStyleProvider)
             if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
-                callback(
-                    CompletionResult.Success(
-                        ScanResponse(
-                            card = card,
-                            productType = productType,
-                            walletData = session.environment.walletData,
-                            primaryCard = primaryCard,
-                        ),
-                    ),
-                )
+                callback(CompletionResult.Success(scanResponse))
                 return@launch
             }
 
             DeriveMultipleWalletPublicKeysTask(derivations).run(session) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
-                        val response = ScanResponse(
-                            card = card,
-                            productType = productType,
-                            walletData = session.environment.walletData,
-                            derivedKeys = result.data.entries,
-                            primaryCard = primaryCard,
-                        )
+                        val response = scanResponse.copy(derivedKeys = result.data.entries)
                         callback(CompletionResult.Success(response))
                     }
                     is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
@@ -285,77 +310,33 @@ private class ScanWalletProcessor(
         }
     }
 
-    private suspend fun getBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> {
-        val userTokensRepository = userTokensRepository ?: return emptyList()
-        val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(card)
-            .toMutableList()
-            .ifEmpty {
-                mutableListOf(
-                    BlockchainNetwork(
-                        blockchain = Blockchain.Bitcoin,
-                        card = card,
-                    ),
-                    BlockchainNetwork(
-                        blockchain = Blockchain.Ethereum,
-                        card = card,
-                    ),
-                )
-            }
-
-        if (card.settings.isHDWalletAllowed) {
-            blockchainsToDerive.addAll(
-                listOf(
-                    BlockchainNetwork(
-                        blockchain = Blockchain.Ethereum,
-                        card = card,
-                    ),
-                    BlockchainNetwork(
-                        blockchain = Blockchain.EthereumTestnet,
-                        card = card,
-                    ),
-                ),
-            )
+    private fun getWalletProductType(card: CardDTO): ProductType {
+        return when {
+            card.isVisa -> ProductType.Visa
+            RING_BATCH_IDS.contains(card.batchId) || card.batchId.startsWith(RING_BATCH_PREFIX) -> ProductType.Ring
+            card.firmwareVersion >= FirmwareVersion.Ed25519Slip0010Available &&
+                card.settings.isKeysImportAllowed -> ProductType.Wallet2
+            else -> ProductType.Wallet
         }
-        if (additionalBlockchainsToDerive != null) {
-            blockchainsToDerive.addAll(
-                additionalBlockchainsToDerive.map {
-                    BlockchainNetwork(
-                        blockchain = it,
-                        card = card,
-                    )
-                },
-            )
-        }
-        if (!card.useOldStyleDerivation) {
-            blockchainsToDerive.removeAll(
-                listOf(
-                    Blockchain.BSC, Blockchain.BSCTestnet,
-                    Blockchain.Polygon, Blockchain.PolygonTestnet,
-                    Blockchain.RSK,
-                    Blockchain.Fantom, Blockchain.FantomTestnet,
-                    Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-                ).map {
-                    BlockchainNetwork(
-                        blockchain = it,
-                        card = card,
-                    )
-                },
-            )
-        }
-        return blockchainsToDerive.distinct()
     }
 
-    private suspend fun collectDerivations(card: CardDTO): Map<ByteArrayKey, List<DerivationPath>> {
-        val blockchains = getBlockchainsToDerive(card)
+    private suspend fun collectDerivations(
+        card: CardDTO,
+        config: CardConfig,
+        derivationStyleProvider: DerivationStyleProvider,
+    ): Map<ByteArrayKey, List<DerivationPath>> {
         val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
+        val blockchains = derivationsFinder
+            ?.findBlockchainsToDerive(card, derivationStyleProvider)
+            ?: return derivations
 
         blockchains.forEach { blockchain ->
-            val curve = blockchain.blockchain.getPrimaryCurve()
+            val curve = config.primaryCurve(blockchain.blockchain)
             val wallet = card.wallets.firstOrNull { it.curve == curve } ?: return@forEach
             if (wallet.chainCode == null) return@forEach
 
             val key = wallet.publicKey.toMapKey()
-            val path = blockchain.derivationPath?.let { DerivationPath(it) }
+            val path = blockchain.derivationPath
             if (path != null) {
                 val addedDerivations = derivations[key]
                 if (addedDerivations != null) {
@@ -365,6 +346,7 @@ private class ScanWalletProcessor(
                 }
             }
         }
+
         return derivations
     }
 }
@@ -415,10 +397,4 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
             }
         }
     }
-}
-
-fun CardDTO.getCurvesForNonCreatedWallets(): List<EllipticCurve> {
-    val curvesPresent = wallets.map { it.curve }.toSet()
-    val curvesForNonCreatedWallets = supportedCurves.subtract(curvesPresent + EllipticCurve.Secp256r1)
-    return curvesForNonCreatedWallets.toList()
 }

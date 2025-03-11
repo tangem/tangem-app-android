@@ -35,7 +35,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_title"
         app:layout_constraintVertical_bias="0.0"
-        app:lineHeight="18dp"
-        tools:text="@string/lorem_ipsum" />
+        app:lineHeight="18dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

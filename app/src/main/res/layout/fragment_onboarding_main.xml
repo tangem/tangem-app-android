@@ -4,7 +4,7 @@
     android:id="@+id/coordinator_onboarding"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/backgroundWhite"
+    android:background="@color/background_primary"
     android:clipChildren="false"
     android:clipToPadding="false"
     android:fitsSystemWindows="true"
@@ -22,6 +22,8 @@
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
+            app:navigationIconTint="@color/icon_primary_1"
+            app:titleTextColor="@color/text_primary_1"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24" />
 

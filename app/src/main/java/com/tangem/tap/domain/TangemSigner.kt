@@ -5,57 +5,58 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
-import com.tangem.domain.common.CardDTO
+import com.tangem.domain.card.models.TwinKey
+import com.tangem.domain.models.scan.isRing
 import com.tangem.tap.domain.tasks.SignHashesTask
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class TangemSigner(
-    private val card: CardDTO,
+    private val cardId: String?,
     private val tangemSdk: TangemSdk,
     private val initialMessage: Message,
-    private val accessCode: String? = null,
+    private val twinKey: TwinKey?,
     private val signerCallback: (TangemSignerResponse) -> Unit,
 ) : TransactionSigner {
 
     override suspend fun sign(
         hashes: List<ByteArray>,
-        publicKey: Wallet.PublicKey
+        publicKey: Wallet.PublicKey,
     ): CompletionResult<List<ByteArray>> {
-        return suspendCoroutine { continuation ->
-            val cardId = if (card.backupStatus?.isActive == true) null else card.cardId
+        return suspendCancellableCoroutine { continuation ->
+            val task = SignHashesTask(hashes, publicKey, twinKey?.getPairKey(publicKey.seedKey))
 
-            val task = SignHashesTask(hashes, publicKey)
             tangemSdk.startSessionWithRunnable(
                 runnable = task,
                 cardId = cardId,
                 initialMessage = initialMessage,
-                accessCode = accessCode,
             ) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         signerCallback(
                             TangemSignerResponse(
-                                result.data.totalSignedHashes,
-                                result.data.remainingSignatures
-                            )
+                                totalSignedHashes = result.data.totalSignedHashes,
+                                remainingSignatures = result.data.remainingSignatures,
+                                isRing = result.data.batchId?.let(::isRing) ?: false,
+                            ),
                         )
-                        continuation.resume(CompletionResult.Success(result.data.signatures))
+                        if (continuation.isActive) {
+                            continuation.resume(CompletionResult.Success(result.data.signatures))
+                        }
                     }
                     is CompletionResult.Failure ->
-                        continuation.resume(CompletionResult.Failure(result.error))
+                        if (continuation.isActive) {
+                            continuation.resume(CompletionResult.Failure(result.error))
+                        }
                 }
             }
         }
     }
 
-    override suspend fun sign(
-        hash: ByteArray,
-        publicKey: Wallet.PublicKey
-    ): CompletionResult<ByteArray> {
+    override suspend fun sign(hash: ByteArray, publicKey: Wallet.PublicKey): CompletionResult<ByteArray> {
         val result = sign(
             hashes = listOf(hash),
-            publicKey = publicKey
+            publicKey = publicKey,
         )
 
         return when (result) {
@@ -68,4 +69,5 @@ class TangemSigner(
 data class TangemSignerResponse(
     val totalSignedHashes: Int?,
     val remainingSignatures: Int?,
+    val isRing: Boolean,
 )

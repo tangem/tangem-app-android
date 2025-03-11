@@ -10,18 +10,20 @@ import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.ShareElement
+import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
-import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.addBackPressHandler
+import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteStep
 import com.tangem.tap.store
+import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.wallet.R
 
 /**
@@ -103,37 +105,40 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         tvBody.isVisible = false
 
         btnMainAction.text = ""
+        btnMainAction.icon = null
         btnAlternativeAction.text = ""
+        btnAlternativeAction.icon = null
         tvHeader.text = ""
         tvBody.text = ""
     }
 
-    private fun setupCreateWalletState(state: OnboardingNoteState) =
-        with(mainBinding.onboardingActionContainer) {
-            btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-            btnMainAction.setOnClickListener {
-                Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
-                store.dispatch(OnboardingNoteAction.CreateWallet)
-            }
-            btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
-            btnAlternativeAction.setOnClickListener { }
-
-            btnRefreshBalanceWidget.mainView.setOnClickListener(null)
-
-            tvHeader.setText(R.string.onboarding_create_wallet_header)
-            tvBody.setText(R.string.onboarding_create_wallet_body)
-
-            mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-                requireContext().getDrawableCompat(R.drawable.shape_circle),
-            )
-            updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
-
-            btnAlternativeAction.isVisible = false // temporary
+    private fun setupCreateWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
+        btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        btnMainAction.setIconResource(R.drawable.ic_tangem_24)
+        btnMainAction.setOnClickListener {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
+            store.dispatch(OnboardingNoteAction.CreateWallet)
         }
+        btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
+        btnAlternativeAction.setOnClickListener { }
+
+        btnRefreshBalanceWidget.mainView.setOnClickListener(null)
+
+        tvHeader.setText(R.string.onboarding_create_wallet_header)
+        tvBody.setText(R.string.onboarding_create_wallet_body)
+
+        mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
+            requireContext().getDrawableCompat(R.drawable.shape_circle),
+        )
+        updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
+
+        btnAlternativeAction.isVisible = false // temporary
+    }
 
     private fun setupTopUpWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
-        if (state.isBuyAllowed) {
+        if (availableForBuy(state.scanResponse, state.walletBalance)) {
             btnMainAction.setText(R.string.onboarding_top_up_button_but_crypto)
+            btnMainAction.icon = null
             btnMainAction.setOnClickListener {
                 store.dispatch(OnboardingNoteAction.TopUp)
             }
@@ -145,6 +150,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             }
         } else {
             btnMainAction.setText(R.string.onboarding_button_receive_crypto)
+            btnMainAction.icon = null
             btnMainAction.setOnClickListener {
                 store.dispatch(OnboardingNoteAction.ShowAddressInfoDialog)
             }
@@ -152,7 +158,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             btnAlternativeAction.isVisible = false
         }
 
-        tvHeader.setText(R.string.onboarding_top_up_header)
+        tvHeader.setText(R.string.onboarding_topup_title)
         if (state.balanceNonCriticalError == null) {
             tvBody.setText(R.string.onboarding_top_up_body)
         } else {
@@ -180,6 +186,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
     private fun setupDoneState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.common_continue)
+        btnMainAction.icon = null
         btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingNoteAction.Done)
@@ -210,6 +217,11 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             transition.interpolator = OvershootInterpolator()
             TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
+    }
+
+    private fun availableForBuy(scanResponse: ScanResponse?, walletBalance: OnboardingWalletBalance): Boolean {
+        scanResponse ?: return false
+        return store.state.globalState.exchangeManager.availableForBuy(scanResponse, walletBalance.currency)
     }
 
     override fun handleOnBackPressed() {

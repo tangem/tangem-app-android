@@ -13,4 +13,11 @@ data class ProxyAmount(
     val currencySymbol: String,
     var value: BigDecimal,
     val decimals: Int,
-)
+) {
+
+    companion object {
+        fun empty(): ProxyAmount {
+            return ProxyAmount("", BigDecimal.ZERO, 0)
+        }
+    }
+}

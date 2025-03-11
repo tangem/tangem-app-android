@@ -1,212 +1,314 @@
+import java.util.Properties
+import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+
 plugins {
-    id("com.android.application")
-    kotlin("android")
-    kotlin("kapt")
-    kotlin("plugin.serialization")
-    id("com.google.gms.google-services")
-    id("com.google.firebase.crashlytics")
-    id("com.google.dagger.hilt.android")
+    alias(deps.plugins.android.application)
+    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.kotlin.serialization)
+    alias(deps.plugins.google.services)
+    alias(deps.plugins.hilt.android)
+    alias(deps.plugins.firebase.crashlytics)
+    alias(deps.plugins.firebase.perf)
+    id("configuration")
 }
 
 android {
-    compileSdk = AppConfig.compileSdkVersion
-
-    defaultConfig {
-        applicationId = AppConfig.packageName
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-
-        versionCode = if (project.hasProperty("versionCode")) {
-            (project.property("versionCode") as String).toInt()
-        } else {
-            AppConfig.versionCode
-        }
-
-        versionName = if (project.hasProperty("versionName")) {
-            project.property("versionName") as String
-        } else {
-            AppConfig.versionName
-        }
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    namespace = "com.tangem.wallet"
+    testOptions {
+        animationsDisabled = true
     }
-
-    buildFeatures {
-        compose = true
-        viewBinding = true
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/LICENSE.md")
+        resources.excludes.add("META-INF/NOTICE.md")
     }
+    androidResources {
+        generateLocaleConfig = true
+    }
+    signingConfigs {
+        getByName("debug") {
+            val keystorePath = "src/main/assets/tangem-app-config/android/keystore/debug_keystore"
+            val propertiesPath = "src/main/assets/tangem-app-config/android/keystore/debug_keystore.properties"
 
-    buildTypes {
-        release {
-            isDebuggable = false
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
+            val keystoreProperties = Properties()
+            file(propertiesPath)
+                .inputStream()
+                .use { keystoreProperties.load(it) }
 
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("prod"),
-                    Field.TestActionEnabled(false),
-                    Field.LogEnabled(false),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-
-        debug {
-            isDebuggable = true
-            isMinifyEnabled = false
-            applicationIdSuffix = ".dev"
-
-            configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
-                // disable mapping file uploads (default=true if minifying)
-                mappingFileUploadEnabled = false
-            }
-
-            BuildConfigFieldFactory(
-                fields = listOf(
-                    Field.Environment("dev"),
-                    Field.TestActionEnabled(true),
-                    Field.LogEnabled(true),
-                ),
-                builder = ::buildConfigField,
-            ).create()
-        }
-
-        create("debug_beta") {
-            initWith(getByName("release"))
-            versionNameSuffix = "-beta"
-            applicationIdSuffix = ".debug"
-            signingConfig = signingConfigs.getByName("debug")
+            storeFile = file(keystorePath)
+            storePassword = keystoreProperties["store_password"] as String
+            keyAlias = keystoreProperties["key_alias"] as String
+            keyPassword = keystoreProperties["key_password"] as String
         }
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
+}
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
+configurations.all {
+    exclude(group = "org.bouncycastle", module = "bcprov-jdk15to18")
+    exclude(group = "com.github.komputing.kethereum")
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = Versions.compose
-    }
+    resolutionStrategy {
+        dependencySubstitution {
+            substitute(module("org.bouncycastle:bcprov-jdk15on"))
+                .using(module("org.bouncycastle:bcprov-jdk18on:1.73"))
+        }
 
-    packagingOptions {
-        resources.excludes += "lib/x86_64/darwin/libscrypt.dylib"
-        resources.excludes += "lib/x86_64/freebsd/libscrypt.so"
-        resources.excludes += "lib/x86_64/linux/libscrypt.so"
-        resources.excludes += "META-INF/gradle/incremental.annotation.processors"
+        force(
+            "org.bouncycastle:bcpkix-jdk15on:1.70",
+        )
     }
 }
 
-repositories {
-    mavenCentral()
-    maven(url = "https://jitpack.io")
-}
 
 dependencies {
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
-    implementation(project(":domain"))
-    implementation(project(":common"))
-    implementation(project(":core:analytics"))
-    implementation(project(":core:res"))
-    implementation(project(":core:ui"))
-    implementation(project(":core:datasource"))
-    implementation(project(":core:utils"))
-    implementation(project(":libs:crypto"))
-    implementation(project(":libs:auth"))
+    implementation(projects.domain.legacy)
+    implementation(projects.libs.blockchainSdk)
+    implementation(projects.domain.models)
+    implementation(projects.domain.core)
+    implementation(projects.domain.card)
+    implementation(projects.domain.demo)
+    implementation(projects.domain.wallets)
+    implementation(projects.domain.wallets.models)
+    implementation(projects.domain.settings)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.appCurrency)
+    implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.appTheme)
+    implementation(projects.domain.appTheme.models)
+    implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.transaction)
+    implementation(projects.domain.analytics)
+    implementation(projects.domain.visa)
+    implementation(projects.domain.onboarding)
+    implementation(projects.domain.feedback)
+    implementation(projects.domain.qrScanning)
+    implementation(projects.domain.qrScanning.models)
+    implementation(projects.domain.staking)
+    implementation(projects.domain.walletConnect)
+    implementation(projects.domain.markets)
+    implementation(projects.domain.manageTokens)
+    implementation(projects.domain.onramp)
+    implementation(projects.domain.promo)
+    implementation(projects.domain.promo.models)
+
+    implementation(projects.common)
+    implementation(projects.common.routing)
+    implementation(projects.common.google)
+    implementation(projects.core.analytics)
+    implementation(projects.core.analytics.models)
+    implementation(projects.core.navigation)
+    implementation(projects.core.configToggles)
+    implementation(projects.core.res)
+    implementation(projects.core.ui)
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+    implementation(projects.core.decompose)
+    implementation(projects.core.deepLinks)
+    implementation(projects.libs.crypto)
+    implementation(projects.libs.auth)
+    implementation(projects.libs.blockchainSdk)
+    implementation(projects.libs.tangemSdkApi)
+
+    implementation(projects.data.appCurrency)
+    implementation(projects.data.appTheme)
+    implementation(projects.data.balanceHiding)
+    implementation(projects.data.card)
+    implementation(projects.data.common)
+    implementation(projects.data.settings)
+    implementation(projects.data.tokens)
+    implementation(projects.data.txhistory)
+    implementation(projects.data.wallets)
+    implementation(projects.data.analytics)
+    implementation(projects.data.transaction)
+    implementation(projects.data.visa)
+    implementation(projects.data.promo)
+    implementation(projects.data.onboarding)
+    implementation(projects.data.feedback)
+    implementation(projects.data.qrScanning)
+    implementation(projects.data.staking)
+    implementation(projects.data.walletConnect)
+    implementation(projects.data.markets)
+    implementation(projects.data.manageTokens)
+    implementation(projects.data.onramp)
 
     /** Features */
-    implementation(project(":features:referral:presentation"))
-    implementation(project(":features:referral:domain"))
-    implementation(project(":features:referral:data"))
-    implementation(project(":features:swap:presentation"))
-    implementation(project(":features:swap:domain"))
-    implementation(project(":features:swap:data"))
+    implementation(projects.features.onboarding)
+    implementation(projects.features.referral.presentation)
+    implementation(projects.features.referral.domain)
+    implementation(projects.features.referral.data)
+    implementation(projects.features.swap.api)
+    implementation(projects.features.swap.impl)
+    implementation(projects.features.swap.domain)
+    implementation(projects.features.swap.domain.api)
+    implementation(projects.features.swap.data)
+    implementation(projects.features.tester.api)
+    implementation(projects.features.tester.impl)
+    implementation(projects.features.wallet.api)
+    implementation(projects.features.wallet.impl)
+    implementation(projects.features.tokendetails.api)
+    implementation(projects.features.tokendetails.impl)
+    implementation(projects.features.manageTokens.api)
+    implementation(projects.features.manageTokens.impl)
+    implementation(projects.features.send.api)
+    implementation(projects.features.send.impl)
+    implementation(projects.features.qrScanning.api)
+    implementation(projects.features.qrScanning.impl)
+    implementation(projects.features.staking.api)
+    implementation(projects.features.staking.impl)
+    implementation(projects.features.details.api)
+    implementation(projects.features.details.impl)
+    implementation(projects.features.disclaimer.api)
+    implementation(projects.features.disclaimer.impl)
+    implementation(projects.features.pushNotifications.api)
+    implementation(projects.features.pushNotifications.impl)
+    implementation(projects.features.walletSettings.api)
+    implementation(projects.features.walletSettings.impl)
+    implementation(projects.features.markets.api)
+    implementation(projects.features.markets.impl)
+    implementation(projects.features.onramp.api)
+    implementation(projects.features.onramp.impl)
+    implementation(projects.features.onboardingV2.api)
+    implementation(projects.features.onboardingV2.impl)
+    implementation(projects.features.stories.api)
+    implementation(projects.features.stories.impl)
 
     /** AndroidX libraries */
-    implementation(AndroidX.coreKtx)
-    implementation(AndroidX.appCompat)
-    implementation(AndroidX.fragmentKtx)
-    implementation(AndroidX.constraintLayout)
-    implementation(AndroidX.browser)
-    implementation(AndroidX.lifecycleRuntimeKtx)
-    implementation(AndroidX.lifecycleCommonJava8)
-    implementation(AndroidX.lifecycleViewModelKtx)
-    implementation(AndroidX.lifecycleLiveDataKtx)
-    implementation(AndroidX.activityCompose)
+    implementation(deps.androidx.core.ktx)
+    implementation(deps.androidx.core.splashScreen)
+    implementation(deps.androidx.appCompat)
+    implementation(deps.androidx.datastore)
+    implementation(deps.androidx.fragment.ktx)
+    implementation(deps.androidx.constraintLayout)
+    implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.browser)
+    implementation(deps.androidx.paging.runtime)
+    implementation(deps.androidx.swipeRefreshLayout)
+    implementation(deps.androidx.fragment.compose)
+    implementation(deps.lifecycle.runtime.ktx)
+    implementation(deps.lifecycle.common.java8)
+    implementation(deps.lifecycle.viewModel.ktx)
+    implementation(deps.lifecycle.compose)
 
     /** Compose libraries */
-    implementation(Compose.material)
-    implementation(Compose.animation)
-    implementation(Compose.foundation)
-    implementation(Compose.ui)
-    implementation(Compose.uiTooling)
-    implementation(Compose.coil)
+    implementation(deps.compose.constraintLayout)
+    implementation(deps.compose.material)
+    implementation(deps.compose.material3)
+    implementation(deps.compose.animation)
+    implementation(deps.compose.coil)
+    implementation(deps.compose.constraintLayout)
+    implementation(deps.compose.foundation)
+    implementation(deps.compose.material)
+    implementation(deps.compose.navigation.hilt)
+    implementation(deps.compose.shimmer)
+    implementation(deps.compose.ui)
+    implementation(deps.compose.ui.tooling)
+    implementation(deps.compose.paging)
 
     /** Firebase libraries */
-    implementation(platform(Firebase.bom))
-    implementation(Firebase.firebaseAnalytics)
-    implementation(Firebase.firebaseCrashlytics)
-
+    implementation(platform(deps.firebase.bom))
+    implementation(deps.firebase.analytics)
+    implementation(deps.firebase.crashlytics)
+    implementation(deps.firebase.messaging)
+    implementation(deps.firebase.perf) {
+        exclude(group = "com.google.firebase", module = "protolite-well-known-types")
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
     /** Tangem libraries */
-    implementation(Tangem.blockchain) {
+    implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
-    implementation(Tangem.cardCore)
-    implementation(Tangem.cardAndroid) {
+    implementation(tangemDeps.card.core)
+    implementation(tangemDeps.card.android) {
         exclude(module = "joda-time")
     }
 
     /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    implementation(deps.hilt.android)
+
+    kapt(deps.hilt.kapt)
 
     /** Other libraries */
-    implementation(Library.materialComponent)
-    implementation(Library.googlePlayCore)
-    implementation(Library.googlePlayCoreKtx)
-    coreLibraryDesugaring(Library.desugarJdkLibs)
-    implementation(Library.timber)
-    implementation(Library.reKotlin)
-    implementation(Library.zxingQrCore)
-    implementation(Library.zxingQrBarcodeScanner)
-    implementation(Library.otaliastudiosCameraView)
-    implementation(Library.coil)
-    implementation(Library.appsflyer)
-    implementation(Library.amplitude)
-    implementation(Library.kotsonGsonExt)
-    //TODO: refactoring: remove it when all network services moved to the datasource module
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
-    implementation(Library.moshi)
-    implementation(Library.moshiKotlin)
-    implementation(Library.okHttp)
-    implementation(Library.okHttpLogging)
-    implementation(Library.zendeskChat)
-    implementation(Library.zendeskMessaging)
-    implementation(Library.spongecastleCryptoCore)
-    implementation(Library.lottie)
-    implementation(Library.shopifyBuySdk) {
-        exclude(group = "com.shopify.graphql.support")
-        exclude(module = "joda-time")
-    }
-    implementation(Library.accompanistAppCompatTheme)
-    implementation(Library.accompanistSystemUiController)
-    implementation(Library.xmlShimmer)
-    implementation(Library.viewBindingDelegate)
-    implementation(Library.armadillo)
-    implementation(Library.googlePlayServicesWallet)
-    implementation(Library.composeShimmer)
-    implementation(Library.mviCoreWatcher)
-    implementation(Library.kotlinSerialization)
+    implementation(deps.kotlin.immutable.collections)
+    implementation(deps.material)
+    implementation(deps.googlePlay.review)
+    implementation(deps.googlePlay.review.ktx)
+    implementation(deps.googlePlay.services.wallet)
+    coreLibraryDesugaring(deps.desugar)
+    implementation(deps.timber)
+    implementation(deps.reKotlin)
+    implementation(deps.zxing.qrCore)
+    implementation(deps.coil)
+    implementation(deps.amplitude)
+    implementation(deps.kotsonGson)
+    implementation(deps.spongecastle.core)
+    implementation(deps.lottie)
+    implementation(deps.compose.accompanist.appCompatTheme)
+    implementation(deps.compose.accompanist.systemUiController)
+    implementation(deps.xmlShimmer)
+    implementation(deps.viewBindingDelegate)
+    implementation(deps.armadillo)
+    implementation(deps.kotlin.serialization)
+    implementation(deps.reownCore)
+    implementation(deps.reownWeb3)
+    implementation(deps.prettyLogger)
+    implementation(deps.decompose.ext.compose)
+    implementation(deps.moshi.adapters)
+
+    implementation(deps.moshi.kotlin)
+    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Testing libraries */
-    testImplementation(Test.junit)
-    testImplementation(Test.truth)
-    androidTestImplementation(Test.junitAndroidExt)
-    androidTestImplementation(Test.espresso)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    androidTestImplementation(deps.test.junit.android)
+    androidTestImplementation(deps.test.espresso){
+        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
+    }
+    androidTestImplementation(deps.test.espresso.intents)
+    {
+        exclude(group = "com.google.protobuf", module = "protobuf-lite") //conflicting with firebasePerf
+    }
+    androidTestImplementation(deps.test.compose.junit)
+    androidTestImplementation(deps.test.hamcrest)
+    androidTestImplementation(deps.test.hilt)
+    androidTestImplementation(deps.test.ultron.android)
+    androidTestImplementation(deps.test.ultron.compose)
+    androidTestImplementation(deps.test.ultron.allure)
+    kaptAndroidTest(deps.test.hilt.compiler)
+
+    /** Chucker */
+    debugImplementation(deps.chucker)
+    debugPGImplementation(deps.chucker)
+    mockedImplementation(deps.chuckerStub)
+    externalImplementation(deps.chuckerStub)
+    internalImplementation(deps.chuckerStub)
+    releaseImplementation(deps.chuckerStub)
+
+    /** Camera */
+    implementation(deps.camera.camera2)
+    implementation(deps.camera.lifecycle)
+    implementation(deps.camera.view)
+
+    implementation(deps.listenableFuture)
+    implementation(deps.mlKit.barcodeScanning)
+
+    /** Leakcanary */
+    debugImplementation(deps.leakcanary)
+
+    /** Excluded dependencies */
+    implementation("com.google.guava:guava:30.0-android") {
+        // excludes version 9999.0-empty-to-avoid-conflict-with-guava
+        exclude(group = "com.google.guava", module = "listenablefuture")
+    }
 }
