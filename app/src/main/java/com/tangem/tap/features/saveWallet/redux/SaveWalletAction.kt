@@ -1,7 +1,7 @@
 package com.tangem.tap.features.saveWallet.redux
 
 import com.tangem.common.core.TangemError
-import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.models.scan.ScanResponse
 import org.rekotlin.Action
 
 internal sealed interface SaveWalletAction : Action {
@@ -11,18 +11,21 @@ internal sealed interface SaveWalletAction : Action {
         val backupCardsIds: Set<String>?,
     ) : SaveWalletAction
 
-    object Save : SaveWalletAction {
-        object Success : SaveWalletAction
+    data object AllowToUseBiometrics : SaveWalletAction {
+        data object Success : SaveWalletAction
         data class Error(val error: TangemError) : SaveWalletAction
     }
 
-    object Dismiss : SaveWalletAction
+    data object Dismiss : SaveWalletAction
 
-    object CloseError : SaveWalletAction
-    object EnrollBiometrics : SaveWalletAction {
-        object Enroll : SaveWalletAction
-        object Cancel : SaveWalletAction
+    data object CloseError : SaveWalletAction
+    data object EnrollBiometrics : SaveWalletAction {
+        data object Enroll : SaveWalletAction
+        data object Cancel : SaveWalletAction
     }
 
-    object SaveWalletWasShown : SaveWalletAction
+    data class SaveWalletAfterBackup(
+        val hasBackupError: Boolean,
+        val shouldNavigateToWallet: Boolean,
+    ) : SaveWalletAction
 }

@@ -1,48 +1,37 @@
 package com.tangem.core.ui.components
 
+import android.content.res.Configuration
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.tangem.core.ui.R
+import com.tangem.core.ui.components.SelctorDialogParamsProvider.SelectorDialogParams
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
+import com.tangem.core.ui.components.fields.SimpleDialogTextField
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
-
-/**
- * Dialog button params
- *
- * @param title Button text. If not provided default values will be used
- * @param warning If true then button text will be in theme warning color
- * @param enabled If false button will be disabled
- * @param onClick Button click callback
- */
-data class DialogButton(
-    val title: String? = null,
-    val warning: Boolean = false,
-    val enabled: Boolean = true,
-    val onClick: () -> Unit,
-)
-
-/**
- * Additional params for dialog text field
- */
-data class AdditionalTextInputDialogParams(
-    val label: String? = null,
-    val placeholder: String? = null,
-    val caption: String? = null,
-    val enabled: Boolean = true,
-    val isError: Boolean = false,
-)
+import com.tangem.core.ui.res.TangemThemePreview
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 
 /**
  * Simple alert dialog with a message and 'OK' button
@@ -52,6 +41,7 @@ data class AdditionalTextInputDialogParams(
  * @param confirmButton title and action for confirm button
  * @param dismissButton title and action for dismiss button (no dismiss button if null)
  * @param onDismissDialog action to perform when dialog is closed
+ * @param isDismissable If false then dialog can not be dismissed by back button click or by outside click
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=48%3A30&t=izDPAJnDbJTTC0Fp-1"
  * >Figma component</a>
@@ -59,10 +49,11 @@ data class AdditionalTextInputDialogParams(
 @Composable
 fun BasicDialog(
     message: String,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onDismissDialog: () -> Unit,
     title: String? = null,
-    dismissButton: DialogButton? = null,
+    dismissButton: DialogButtonUM? = null,
+    isDismissable: Boolean = true,
 ) {
     TangemDialog(
         type = DialogType.Message(message),
@@ -70,6 +61,10 @@ fun BasicDialog(
         onDismissDialog = onDismissDialog,
         title = title,
         dismissButton = dismissButton,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
     )
 }
 
@@ -77,7 +72,7 @@ fun BasicDialog(
 fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
     TangemDialog(
         type = DialogType.Message(message),
-        confirmButton = DialogButton(onClick = onDismissDialog),
+        confirmButton = DialogButtonUM(onClick = onDismissDialog),
         onDismissDialog = onDismissDialog,
         title = null,
         dismissButton = null,
@@ -94,6 +89,7 @@ fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
  * @param dismissButton title and action for dismiss button (no dismiss button if null)
  * @param onDismissDialog action to perform when dialog is closed
  * @param textFieldParams Additional params for dialog text field
+ * @param isDismissable If false then dialog can not be dismissed by back button click or by outside click
  *
  * @see <a href = "https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=268%3A273&t=9uHKoudX78ySqium-4"
  * >Figma component</a>
@@ -101,12 +97,13 @@ fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
 @Composable
 fun TextInputDialog(
     fieldValue: TextFieldValue,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onDismissDialog: () -> Unit,
     onValueChange: (TextFieldValue) -> Unit,
+    textFieldParams: AdditionalTextInputDialogUM = remember { AdditionalTextInputDialogUM() },
     title: String? = null,
-    dismissButton: DialogButton? = null,
-    textFieldParams: AdditionalTextInputDialogParams,
+    dismissButton: DialogButtonUM? = null,
+    isDismissable: Boolean = true,
 ) {
     TangemDialog(
         type = DialogType.TextInput(
@@ -118,34 +115,120 @@ fun TextInputDialog(
         onDismissDialog = onDismissDialog,
         title = title,
         dismissButton = dismissButton,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
     )
 }
+
+@Composable
+fun TextInputDialog(
+    fieldValue: String,
+    confirmButton: DialogButtonUM,
+    onDismissDialog: () -> Unit,
+    onValueChange: (String) -> Unit,
+    textFieldParams: AdditionalTextInputDialogUM = remember { AdditionalTextInputDialogUM() },
+    title: String? = null,
+    dismissButton: DialogButtonUM? = null,
+    isDismissable: Boolean = true,
+) {
+    TangemDialog(
+        type = DialogType.SimpleTextInput(
+            value = fieldValue,
+            onValueChange = onValueChange,
+            params = textFieldParams,
+        ),
+        confirmButton = confirmButton,
+        onDismissDialog = onDismissDialog,
+        title = title,
+        dismissButton = dismissButton,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
+    )
+}
+
+@Composable
+fun SelectorDialog(
+    selectedItemIndex: Int,
+    items: ImmutableList<String>,
+    confirmButton: DialogButtonUM,
+    onSelect: (index: Int) -> Unit,
+    onDismissDialog: () -> Unit,
+    title: String? = null,
+    isDismissable: Boolean = true,
+) {
+    TangemDialog(
+        type = DialogType.Selector(selectedItemIndex, items, onSelect),
+        confirmButton = confirmButton,
+        title = title,
+        onDismissDialog = onDismissDialog,
+        properties = DialogProperties(
+            dismissOnBackPress = isDismissable,
+            dismissOnClickOutside = isDismissable,
+        ),
+    )
+}
+
+/**
+ * Dialog button params
+ *
+ * @param title Button text. If not provided default values will be used
+ * @param warning If true then button text will be in theme warning color
+ * @param enabled If false button will be disabled
+ * @param onClick Button click callback
+ */
+data class DialogButtonUM(
+    val title: String? = null,
+    val warning: Boolean = false,
+    val enabled: Boolean = true,
+    val onClick: () -> Unit,
+)
+
+/**
+ * Additional params for dialog text field
+ */
+data class AdditionalTextInputDialogUM(
+    val label: String? = null,
+    val placeholder: String? = null,
+    val caption: String? = null,
+    val enabled: Boolean = true,
+    val isError: Boolean = false,
+    val errorText: String? = null,
+)
 
 // region Defaults
 @Composable
 private fun TangemDialog(
     type: DialogType,
-    confirmButton: DialogButton,
+    confirmButton: DialogButtonUM,
     onDismissDialog: () -> Unit,
     title: String? = null,
-    dismissButton: DialogButton? = null,
+    dismissButton: DialogButtonUM? = null,
+    properties: DialogProperties = DialogProperties(),
 ) {
-    Dialog(onDismissRequest = onDismissDialog) {
+    Dialog(properties = properties, onDismissRequest = onDismissDialog) {
         Column(
             modifier = Modifier
                 .background(
                     shape = TangemTheme.shapes.roundedCornersLarge,
-                    color = TangemTheme.colors.background.plain,
+                    color = TangemTheme.colors.background.primary,
                 )
-                .padding(all = TangemTheme.dimens.spacing24),
+                .padding(vertical = TangemTheme.dimens.spacing24),
         ) {
             if (title != null) {
                 Text(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .fillMaxWidth(),
                     text = title,
                     style = when (type) {
                         is DialogType.Message -> TangemTheme.typography.h2
                         is DialogType.TextInput -> TangemTheme.typography.h3
+                        is DialogType.SimpleTextInput -> TangemTheme.typography.h3
+                        is DialogType.Selector -> TangemTheme.typography.h2
                     },
                     color = TangemTheme.colors.text.primary1,
                 )
@@ -153,16 +236,19 @@ private fun TangemDialog(
             }
             DialogContent(type = type)
             SpacerH24()
-            DialogButtons(confirmButton = confirmButton, dismissButton = dismissButton)
+            DialogButtons(
+                modifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing24)
+                    .fillMaxWidth(),
+                confirmButton = confirmButton,
+                dismissButton = dismissButton,
+            )
         }
     }
 }
 
 @Composable
-private fun DialogContent(
-    modifier: Modifier = Modifier,
-    type: DialogType,
-) {
+private fun DialogContent(type: DialogType, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.Center,
@@ -171,15 +257,29 @@ private fun DialogContent(
         when (type) {
             is DialogType.Message -> {
                 Text(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .fillMaxWidth(),
                     text = type.message,
                     style = TangemTheme.typography.body2,
                     color = TangemTheme.colors.text.secondary,
                 )
             }
+            is DialogType.SimpleTextInput -> {
+                SimpleDialogTextField(
+                    value = type.value,
+                    onValueChange = type.onValueChange,
+                    isError = type.params.isError,
+                    errorText = type.params.errorText,
+                    isEnabled = type.params.enabled,
+                    placeholder = type.params.placeholder,
+                )
+            }
             is DialogType.TextInput -> {
                 OutlineTextField(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing24)
+                        .fillMaxWidth(),
                     value = type.value,
                     label = type.params.label,
                     placeholder = type.params.placeholder,
@@ -191,18 +291,26 @@ private fun DialogContent(
                     },
                 )
             }
+            is DialogType.Selector -> {
+                SelectorDialogContent(
+                    modifier = Modifier.fillMaxWidth(),
+                    selectedItemIndex = type.selectedItemIndex,
+                    items = type.items,
+                    onSelect = type.onSelect,
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun DialogButtons(
+    confirmButton: DialogButtonUM,
+    dismissButton: DialogButtonUM?,
     modifier: Modifier = Modifier,
-    confirmButton: DialogButton,
-    dismissButton: DialogButton?,
 ) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.spacedBy(
             space = TangemTheme.dimens.spacing4,
             alignment = Alignment.End,
@@ -210,14 +318,14 @@ private fun DialogButtons(
     ) {
         if (dismissButton != null) {
             DialogButton(
-                text = dismissButton.title ?: stringResource(id = R.string.common_cancel),
+                text = dismissButton.title ?: stringResourceSafe(id = R.string.common_cancel),
                 warning = dismissButton.warning,
                 enabled = dismissButton.enabled,
                 onClick = dismissButton.onClick,
             )
         }
         DialogButton(
-            text = confirmButton.title ?: stringResource(id = R.string.common_ok),
+            text = confirmButton.title ?: stringResourceSafe(id = R.string.common_ok),
             warning = confirmButton.warning,
             enabled = confirmButton.enabled,
             onClick = confirmButton.onClick,
@@ -227,11 +335,11 @@ private fun DialogButtons(
 
 @Composable
 private fun DialogButton(
-    modifier: Modifier = Modifier,
     text: String,
     warning: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
         if (warning) {
@@ -245,19 +353,84 @@ private fun DialogButton(
                 text = text,
                 enabled = enabled,
                 onClick = onClick,
+                colors = TangemButtonsDefaults.positiveButtonColors,
             )
         }
     }
 }
 
-private sealed interface DialogType {
-    data class Message(val message: String) : DialogType
+@Composable
+private fun SelectorDialogContent(
+    selectedItemIndex: Int,
+    items: ImmutableList<String>,
+    onSelect: (index: Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    LazyColumn(modifier = modifier) {
+        itemsIndexed(items = items) { index, itemText ->
+            val onClick = remember(index) {
+                { onSelect(index) }
+            }
+
+            val interactionSource = remember { MutableInteractionSource() }
+
+            Row(
+                modifier = Modifier
+                    .clickable(
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current,
+                        onClick = onClick,
+                    )
+                    .padding(
+                        vertical = TangemTheme.dimens.spacing16,
+                        horizontal = TangemTheme.dimens.spacing18,
+                    )
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    selected = index == selectedItemIndex,
+                    onClick = onClick,
+                    colors = RadioButtonDefaults.colors(
+                        selectedColor = TangemTheme.colors.control.checked,
+                        unselectedColor = TangemTheme.colors.icon.secondary,
+                    ),
+                    interactionSource = interactionSource,
+                )
+                Text(
+                    text = itemText,
+                    style = TangemTheme.typography.body1,
+                    color = TangemTheme.colors.text.primary1,
+                )
+            }
+        }
+    }
+}
+
+@Immutable
+private sealed class DialogType {
+
+    data class Message(val message: String) : DialogType()
 
     data class TextInput(
         val value: TextFieldValue,
         val onValueChange: (TextFieldValue) -> Unit,
-        val params: AdditionalTextInputDialogParams = AdditionalTextInputDialogParams(),
-    ) : DialogType
+        val params: AdditionalTextInputDialogUM = AdditionalTextInputDialogUM(),
+    ) : DialogType()
+
+    data class SimpleTextInput(
+        val value: String,
+        val onValueChange: (String) -> Unit,
+        val params: AdditionalTextInputDialogUM = AdditionalTextInputDialogUM(),
+    ) : DialogType()
+
+    data class Selector(
+        val selectedItemIndex: Int,
+        val items: ImmutableList<String>,
+        val onSelect: (index: Int) -> Unit,
+    ) : DialogType()
 }
 // endregion Defaults
 
@@ -276,48 +449,32 @@ private fun BasicDialogPreview() {
         message = "All protected passwords will be deleted from the secure storage, you must enter the wallet " +
             "password to work with the app",
         title = "Attention",
-        confirmButton = DialogButton {},
-        dismissButton = DialogButton {},
+        confirmButton = DialogButtonUM {},
+        dismissButton = DialogButtonUM {},
         onDismissDialog = {},
     )
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_SimpleOkDialog_InLightTheme() {
-    TangemTheme(isDark = false) {
+private fun Preview_SimpleOkDialog() {
+    TangemThemePreview {
         SimpleOkDialogPreview()
     }
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_BasicDialog_InLightTheme() {
-    TangemTheme(isDark = false) {
-        BasicDialogPreview()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_SimpleOkDialog_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        SimpleOkDialogPreview()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun Preview_BasicDialog_InDarkTheme() {
-    TangemTheme(isDark = true) {
+private fun Preview_BasicDialog() {
+    TangemThemePreview {
         BasicDialogPreview()
     }
 }
 
 @Composable
-private fun WarningBasicDialogSample(
-    modifier: Modifier = Modifier,
-) {
+private fun WarningBasicDialogSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
     ) {
@@ -325,43 +482,34 @@ private fun WarningBasicDialogSample(
             message = "All protected passwords will be deleted from the secure storage, you must enter the wallet " +
                 "password to work with the app",
             title = "Attention",
-            confirmButton = DialogButton(warning = true) {},
-            dismissButton = DialogButton {},
+            confirmButton = DialogButtonUM(warning = true) {},
+            dismissButton = DialogButtonUM {},
             onDismissDialog = {},
         )
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun WarningBasicDialogPreview_Light() {
-    TangemTheme {
-        WarningBasicDialogSample()
-    }
-}
-
-@Preview(showBackground = true, widthDp = 360)
-@Composable
-private fun WarningBasicDialogPreview_Dark() {
-    TangemTheme(isDark = true) {
+private fun WarningBasicDialogPreview() {
+    TangemThemePreview {
         WarningBasicDialogSample()
     }
 }
 
 @Composable
-private fun TextInputDialogSample(
-    modifier: Modifier = Modifier,
-) {
+private fun TextInputDialogSample(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
     ) {
         TextInputDialog(
             fieldValue = TextFieldValue(text = ""),
             title = "Rename Wallet",
-            confirmButton = DialogButton {},
+            confirmButton = DialogButtonUM {},
             onDismissDialog = {},
             onValueChange = {},
-            textFieldParams = AdditionalTextInputDialogParams(
+            textFieldParams = AdditionalTextInputDialogUM(
                 label = "Wallet name",
             ),
         )
@@ -369,18 +517,54 @@ private fun TextInputDialogSample(
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TextInputDialogPreview_Light() {
-    TangemTheme {
+private fun TextInputDialogPreview() {
+    TangemThemePreview {
         TextInputDialogSample()
     }
 }
 
 @Preview(showBackground = true, widthDp = 360)
+@Preview(showBackground = true, widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun TextInputDialogPreview_Dark() {
-    TangemTheme(isDark = true) {
-        TextInputDialogSample()
+private fun SelectorDialogPreview(@PreviewParameter(SelctorDialogParamsProvider::class) param: SelectorDialogParams) {
+    TangemThemePreview {
+        SelectorDialog(
+            title = param.title,
+            items = param.items,
+            selectedItemIndex = param.selectedItemIndex,
+            confirmButton = DialogButtonUM(title = "Cancel", onClick = {}),
+            onSelect = {},
+            onDismissDialog = {},
+        )
     }
+}
+
+private class SelctorDialogParamsProvider : CollectionPreviewParameterProvider<SelectorDialogParams>(
+    collection = listOf(
+        SelectorDialogParams(
+            title = "Theme",
+            selectedItemIndex = 0,
+            persistentListOf("Light", "Dark", "Follow system"),
+        ),
+        SelectorDialogParams(
+            title = null,
+            selectedItemIndex = 2,
+            persistentListOf("Light", "Dark", "Follow system"),
+        ),
+        SelectorDialogParams(
+            title = "Count",
+            selectedItemIndex = 8,
+            List(size = 10) { it.toString() }.toImmutableList(),
+        ),
+    ),
+) {
+
+    data class SelectorDialogParams(
+        val title: String?,
+        val selectedItemIndex: Int,
+        val items: ImmutableList<String>,
+    )
 }
 // endregion Preview
