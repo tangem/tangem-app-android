@@ -6,7 +6,7 @@
   <string name="action_buttons_service_loading_alert_message">Einige Netzwerke sind derzeit nicht erreichbar. Bitte versuche es später erneut.</string>
   <string name="action_buttons_service_loading_alert_title">Die Daten wurden noch nicht geladen.</string>
   <string name="action_buttons_something_wrong_alert_message">Die Aktion ist derzeit nicht verfügbar. Bitte versuche es später erneut oder aktualisiere die Daten, indem Du auf dem Bildschirm nach unten wischst.</string>
-  <string name="action_buttons_something_wrong_alert_title">Schaltfläche ist nicht verfügbar</string>
+  <string name="action_buttons_something_wrong_alert_title">Aktion ist nicht verfügbar</string>
   <string name="action_buttons_swap_choose_token">Wähle den Token</string>
   <string name="action_buttons_swap_empty_search_message">Du kannst Deinen Token nicht finden? Gehe zum Bereich „Markt“ auf der Hauptseite und fügen diesen zum tauschen im Portfolio hinzu.</string>
   <string name="action_buttons_swap_no_available_pair_notification_message">Es gibt keine verfügbaren Token, die mit dem ausgewählten Token getauscht werden können. Bitte wähle einen anderen.</string>
@@ -241,6 +241,7 @@
   <string name="details_manage_security_long_tap_description">Dieser Mechanismus schützt vor Annäherungsangriffen auf eine Karte oder einen Ring. Er erzwingt eine Verzögerung zwischen dem Empfang und der Ausführung eines Befehls.</string>
   <string name="details_manage_security_passcode">Passcode</string>
   <string name="details_manage_security_passcode_description">Bevor du einen Befehl ausführst, der eine Änderung des Kartenstatus zur Folge hat, musst du den Passcode eingeben.</string>
+  <string name="details_nft_title">NFT</string>
   <string name="details_referral_title">Empfehlungsprogramm</string>
   <string name="details_row_description_flip_to_hide">Flippe den Bildschirm deines Geräts nach unten, um Salden schnell ein- und auszublenden</string>
   <string name="details_row_subtitle_signed_hashes_format">%s Hasch</string>
@@ -536,6 +537,7 @@
   <string name="onboarding_exit_alert_title">Möchtest du den Aktivierungsprozess abbrechen?</string>
   <string name="onboarding_getting_started">Erste Schritte</string>
   <string name="onboarding_linking_error_card_with_wallets">Für die Karte oder Ring, die du hinzufügen möchtest, wurde bereits eine andere Wallets erstellt. Wenn du Guthaben auf dieser Wallets hast, hebe es bitte ab, setze diese Karte oder Ring zurück und füge sie als Backup hinzu.</string>
+  <string name="onboarding_navbar_save_wallet">Sicher deine Wallet</string>
   <string name="onboarding_navbar_title_creating_backup">Backups anlegen</string>
   <string name="onboarding_seed_button_read_more">Lese mehr über die Seed-Phrase</string>
   <plurals name="onboarding_seed_generate_message_words_count">
@@ -668,6 +670,7 @@
   <string name="save_user_wallet_agreement_allow_biometrics">Nutzung biometrischer Daten zulassen</string>
   <string name="save_user_wallet_agreement_code_description_biometrics">Bei Interaktionen mit deiner Wallet werden anstelle des Zugangscodes biometrische Daten abgefragt</string>
   <string name="save_user_wallet_agreement_code_title">Zugangscode</string>
+  <string name="save_user_wallet_agreement_dont_allow">Nicht zulassen</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_description">Es sieht so aus, als ob du die biometrische Authentifizierung deaktiviert hast. Diese ist notwendig, um Wallets zu speichern</string>
   <string name="save_user_wallet_agreement_enroll_biometrics_title">Biometrische Autorisierung aktivieren</string>
   <string name="save_user_wallet_agreement_header_biometrics">Möchtest du Biometrie nutzen?</string>
@@ -778,6 +781,7 @@
   <string name="staking_details_estimated_profit">%s geschätzter Profit</string>
   <string name="staking_details_market_rating">Marktbewertung</string>
   <string name="staking_details_metrics_block_header">Metriken</string>
+  <string name="staking_details_min_rewards_notification">Gemäß den Netzwerkregeln %1$s sind Ansprüche ab %2$s möglich. Die unten aufgeführten Beträge werden Deinem Konto nach der Aufhebung des Stakings gutgeschrieben.</string>
   <string name="staking_details_minimum_requirement">Mindestanforderungen</string>
   <string name="staking_details_no_rewards_to_claim">Keine Belohnungen verfügbar</string>
   <string name="staking_details_reward_claiming">Belohnungen beanspruchen</string>
@@ -824,6 +828,7 @@
   <string name="staking_notification_restake_rewards_text">Reinvestiert Deine verdienten Prämien in Deinen Einsatzbetrag und erhöht so den potenziellen Gewinn.</string>
   <string name="staking_notification_restake_text">Mit Restake kannst Du Dein Guthaben von einem Validator zu einem anderen verschieben, ohne dass Du den Stake aufheben musst.</string>
   <string name="staking_notification_stake_entire_balance_text">Du bist dabei, Dein gesamtes Guthaben zu staken. Wir empfehlen, einen kleinen Betrag übrig zu lassen, um die Netzwerkgebühren für die Aufhebung des Stakes oder das Einfordern von Prämien abzudecken.</string>
+  <string name="staking_notification_ton_activate_account">Um mit dem Staking bei TON zu beginnen, führe zunächst eine ausgehende Transaktion in beliebiger Höhe durch – dadurch wird Deine Wallet aktiviert.</string>
   <string name="staking_notification_unlock_text">Entsperre dein Geld, um es aus dem Staking-Prozess abzuheben. Das Freischalten nimmt %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Nach Ablauf der 21-tägigen Bindungsfrist kannst Du über Dein Guthaben verfügen. Die Prämie wird zusammen mit dem ungestaketen Guthaben abgehoben.</string>
   <string name="staking_notification_unstake_text">Deine Assets stehen Dir nach Ablauf der Frist für die Aufhebung der Bindung %s zur Verfügung.</string>
@@ -923,8 +928,10 @@
   <string name="toast_undo">Rückgängig machen</string>
   <string name="token_button_unavailability_generic_description">Dieser Vorgang ist derzeit nicht verfügbar. Bitte versuche es später noch einmal.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">Der Kauf von %s wird von aktuellen Anbietern nicht unterstützt, aber wir arbeiten daran, weitere Optionen hinzuzufügen.</string>
+  <string name="token_button_unavailability_reason_custom_token">Die Aktion ist für benutzerdefinierte Token nicht verfügbar.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">Du hast kein Guthaben um dies zu Verkaufen. Lade dein Konto auf, um Geld von dort zu verkaufen.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">Du hast kein Guthaben zum Versenden. Lade dein Konto auf, um Geld von dort aus senden zu können.</string>
+  <string name="token_button_unavailability_reason_loading">Die Daten wurden noch nicht geladen. Dies kann einige Sekunden dauern. Bitte versuche es später erneut.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Das Tauschen von %s wird von aktuellen Anbietern nicht unterstützt, aber wir arbeiten daran, weitere Optionen hinzuzufügen.</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">Der angezeigte Kontostand kann aufgrund der Zwischenspeicherung veraltet sein.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Der Verkauf von Geldmitteln ist möglich, sobald die ausstehende(n) Transaktion(en) im %s -Netzwerk abgeschlossen ist/sind.</string>
@@ -973,6 +980,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Diese Aktion ist unumkehrbar. Du hast keinen Zugriff mehr auf die alte Wallet.</string>
   <string name="twins_scan_twin_with_number">Tippe auf die Doppelkarte oder Ring mit der Nummer %s und entferne sie erst am Ende des Vorgangs.</string>
+  <string name="universal_error">Es ist ein Fehler aufgetreten. Fehlercode: %s. Bitte kontaktiere unseren Support.</string>
   <string name="unlock_wallet_description_full">Verwende %s oder scanne eine Karte oder Ring, um Zugriff auf deine Wallet zu erhalten.</string>
   <string name="unsupported_wc_version">Verbindung fehlgeschlagen: Diese dApp verwendet Wallet Connect Version 1.0, die nicht unterstützt wird. Bitte stelle sicher, dass die dApp Wallet Connect Version 2.0 unterstützt, um eine erfolgreiche Verbindung herzustellen.</string>
   <string name="user_push_notification_agreement_argument_one">Bleib auf dem Laufenden mit den neuesten Funktionen und Neuigkeiten</string>
