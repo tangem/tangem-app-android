@@ -1,0 +1,50 @@
+[
+    {
+        "name": "NEW_CARD_SCANNING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "WC_SOLANA_TX_SIGN_ENABLED",
+        "version": "5.18.0"
+    },
+    {
+        "name": "IS_ETHEREUM_EIP_1559_ENABLED",
+        "version": "5.17.0"
+    },
+    {
+        "name": "ONRAMP_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "MAIN_ACTION_BUTTONS_ENABLED",
+        "version": "5.19.0"
+    },
+    {
+        "name": "ONBOARDING_CODE_REFACTORING_ENABLED",
+        "version": "5.22.0"
+    },
+    {
+        "name": "NAVIGATION_REFACTORING",
+        "version": "undefined"
+    },
+    {
+        "name": "SWAP_STORIES_ENABLED",
+        "version": "5.21.0"
+    },
+    {
+        "name": "VISA_ONBOARDING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "ONRAMP_HOT_TOKENS_ENABLED",
+        "version": "5.21.0"
+    },
+    {
+        "name": "STAKING_TON_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "BALANCES_CACHING_ENABLED",
+        "version": "5.21.0"
+    }
+]

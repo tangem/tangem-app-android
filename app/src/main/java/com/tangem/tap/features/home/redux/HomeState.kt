@@ -1,15 +1,25 @@
 package com.tangem.tap.features.home.redux
 
-import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.wallet.redux.ProgressState
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 import org.rekotlin.StateType
 
+// todo refactor [REDACTED_TASK_KEY]
 data class HomeState(
     val scanInProgress: Boolean = false,
-    val btnScanState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.ENABLED),
+    val stories: ImmutableList<Stories> = Stories.entries.toImmutableList(),
 ) : StateType {
 
-    val btnScanStateInProgress: Boolean
-        get() = btnScanState.progressState == ProgressState.Loading
+    val firstStory: Stories get() = stories[0]
+
+    fun stepOf(story: Stories): Int = stories.indexOf(story)
+}
+
+enum class Stories(val duration: Int = 6000) {
+    TangemIntro,
+    RevolutionaryWallet,
+    UltraSecureBackup,
+    Currencies,
+    Web3,
+    WalletForEveryone,
 }

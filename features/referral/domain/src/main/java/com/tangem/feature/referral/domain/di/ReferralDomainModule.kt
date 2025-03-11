@@ -1,34 +1,37 @@
 package com.tangem.feature.referral.domain.di
 
+import com.tangem.domain.card.DerivePublicKeysUseCase
+import com.tangem.domain.tokens.AddCryptoCurrenciesUseCase
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.ReferralInteractorImpl
 import com.tangem.feature.referral.domain.ReferralRepository
-import com.tangem.feature.referral.domain.converter.TokensConverter
-import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.UserWalletManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.components.SingletonComponent
-import javax.inject.Singleton
+import dagger.hilt.android.components.ViewModelComponent
+import dagger.hilt.android.scopes.ViewModelScoped
 
 @Module
-@InstallIn(SingletonComponent::class)
+@InstallIn(ViewModelComponent::class)
 class ReferralDomainModule {
 
     @Provides
-    @Singleton
+    @ViewModelScoped
     fun provideReferralInteractor(
         referralRepository: ReferralRepository,
-        derivationManager: DerivationManager,
         userWalletManager: UserWalletManager,
-        tokensConverter: TokensConverter,
+        derivePublicKeysUseCase: DerivePublicKeysUseCase,
+        getUserWalletUseCase: GetUserWalletUseCase,
+        addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     ): ReferralInteractor {
         return ReferralInteractorImpl(
             repository = referralRepository,
-            derivationManager = derivationManager,
             userWalletManager = userWalletManager,
-            tokensConverter = tokensConverter,
+            derivePublicKeysUseCase = derivePublicKeysUseCase,
+            getUserWalletUseCase = getUserWalletUseCase,
+            addCryptoCurrenciesUseCase = addCryptoCurrenciesUseCase,
         )
     }
 }
