@@ -7,19 +7,21 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_wallet_main_action"
-        style="@style/TapPrimaryButton"
-        android:layout_width="204dp"
+        style="@style/TapPrimaryIconButton"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/home_bottom_fl_scan_card_container_margin_bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        tools:icon="@drawable/ic_tangem_24"
+        app:iconSize="20dp"
         tools:text="Main Action" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_wallet_alternative_action"
         style="@style/TapTextButton"
-        android:layout_width="204dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/home_bottom_btn_alternative_action_margin_bottom"
         app:layout_constraintBottom_toBottomOf="parent"
