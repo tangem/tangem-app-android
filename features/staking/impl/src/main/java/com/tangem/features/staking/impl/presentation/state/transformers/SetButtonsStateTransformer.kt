@@ -47,15 +47,22 @@ internal class SetButtonsStateTransformer(
         val isCompleted = innerConfirmState == InnerConfirmationStakingState.COMPLETED
 
         val isIconVisible = isConfirmation && !isCompleted
+        val isPrimaryButtonDisabled = prevState.isPrimaryButtonDisabled()
         return NavigationButton(
             textReference = prevState.getButtonText(),
             iconRes = R.drawable.ic_tangem_24,
-            isSecondary = false,
+            isDimmed = isPrimaryButtonDisabled,
             isIconVisible = isIconVisible,
             showProgress = isInProgress,
             isEnabled = prevState.isButtonEnabled(),
-            onClick = { prevState.onPrimaryClick() },
-        ).takeIf { prevState.isPrimaryButtonVisible() }
+            onClick = {
+                if (isPrimaryButtonDisabled) {
+                    prevState.clickIntents.showPrimaryClickAlert()
+                } else {
+                    prevState.onPrimaryClick()
+                }
+            },
+        )
     }
 
     private fun getPrevButton(prevState: StakingUiState): NavigationButton? {
@@ -186,12 +193,12 @@ internal class SetButtonsStateTransformer(
         -> true
     }
 
-    private fun StakingUiState.isPrimaryButtonVisible(): Boolean {
+    private fun StakingUiState.isPrimaryButtonDisabled(): Boolean {
         val initialState = initialInfoState as? StakingStates.InitialInfoState.Data
         val hasNotStaking = initialState?.yieldBalance == InnerYieldBalanceState.Empty
         val isCardano = BlockchainUtils.isCardano(cryptoCurrencyBlockchainId)
 
-        return hasNotStaking || !(isCardano && currentStep == StakingStep.InitialInfo)
+        return !hasNotStaking && isCardano && currentStep == StakingStep.InitialInfo
     }
 
     private fun StakingUiState.isButtonEnabled(): Boolean {
