@@ -3,12 +3,13 @@ package com.tangem.features.onboarding.v2.entry.impl.model
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.navigate
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
@@ -25,7 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class OnboardingEntryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -74,13 +75,24 @@ internal class OnboardingEntryModel @Inject constructor(
                 titleProvider = titleProvider,
                 onDone = ::onVisaOnboardingDone,
             )
+            ProductType.Note -> OnboardingRoute.Note(
+                scanResponse = scanResponse,
+                titleProvider = titleProvider,
+                onDone = ::navigateToWalletScreen,
+            )
             else -> error("Unsupported")
         }
     }
 
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
-        stackNavigation.navigate {
-            listOf(OnboardingRoute.ManageTokens(userWallet))
+        if (userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
+            stackNavigation.navigate {
+                listOf(OnboardingRoute.ManageTokens(userWallet))
+            }
+        } else {
+            stackNavigation.navigate {
+                listOf(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            }
         }
     }
 
