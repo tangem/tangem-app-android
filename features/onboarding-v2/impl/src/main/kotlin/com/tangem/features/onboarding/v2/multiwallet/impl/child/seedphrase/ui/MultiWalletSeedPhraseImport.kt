@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.OutlinedTextField
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -137,7 +137,6 @@ private fun PhraseBlock(state: MultiWalletSeedPhraseUM.Import, modifier: Modifie
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
-        // TODO migrate to material3
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()
