@@ -9,23 +9,32 @@ import kotlinx.coroutines.flow.Flow
 /** Staking balance store */
 interface StakingBalanceStore {
 
-    /** Get flow of [YieldBalanceList] by [userWalletId] */
-    fun get(userWalletId: UserWalletId): Flow<Set<YieldBalance>>
+    /** Get flow of [YieldBalanceList] by [userWalletId] and [stakingIds] */
+    fun get(userWalletId: UserWalletId, stakingIds: List<StakingID>): Flow<Set<YieldBalance>>
 
-    /** Get flow of [YieldBalance] by [userWalletId], [address] and [integrationId] */
-    fun get(userWalletId: UserWalletId, address: String, integrationId: String): Flow<YieldBalance?>
+    /** Get flow of [YieldBalance] by [userWalletId] and [stakingID] */
+    fun get(userWalletId: UserWalletId, stakingID: StakingID): Flow<YieldBalance?>
 
-    /** Get [YieldBalanceList] synchronously or null by [userWalletId] */
+    /** Get all [YieldBalance] synchronously or null by [userWalletId] */
     suspend fun getSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>?
 
-    /** Get [YieldBalance] synchronously or null by [userWalletId], [address] and [integrationId] */
-    suspend fun getSyncOrNull(userWalletId: UserWalletId, address: String, integrationId: String): YieldBalance?
+    /** Get [YieldBalanceList] synchronously or null by [userWalletId] and [stakingIds] */
+    suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingIds: List<StakingID>): Set<YieldBalance>?
+
+    /** Get [YieldBalance] synchronously or null by [userWalletId] and [stakingID] */
+    suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingID: StakingID): YieldBalance?
 
     /** Store [items] by [userWalletId] */
     suspend fun store(userWalletId: UserWalletId, items: Set<YieldBalanceWrapperDTO>)
 
-    /** Store [item] by [userWalletId], [integrationId] and [address] */
-    suspend fun store(userWalletId: UserWalletId, integrationId: String, address: String, item: YieldBalanceWrapperDTO)
+    /** Store [item] by [userWalletId] and [stakingID] */
+    suspend fun store(userWalletId: UserWalletId, stakingID: StakingID, item: YieldBalanceWrapperDTO)
 
-    suspend fun refresh(userWalletId: UserWalletId, addressWithIntegrationIdMap: Map<String, String>)
+    /** Store [item] by [userWalletId] */
+    suspend fun storeSingleYieldBalance(userWalletId: UserWalletId, item: YieldBalance)
+
+    /** Refresh balances of [stakingIds] by [userWalletId] */
+    suspend fun refresh(userWalletId: UserWalletId, stakingIds: List<StakingID>)
+
+    data class StakingID(val integrationId: String, val address: String)
 }
