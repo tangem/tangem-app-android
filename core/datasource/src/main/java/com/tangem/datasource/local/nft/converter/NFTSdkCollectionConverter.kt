@@ -1,5 +1,6 @@
 package com.tangem.datasource.local.nft.converter
 
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.tokens.model.Network
 import com.tangem.utils.converter.Converter
@@ -19,9 +20,13 @@ class NFTSdkCollectionConverter(
             description = collection.description,
             logoUrl = collection.logoUrl,
             count = collection.count,
-            assets = collection.assets.map { asset ->
-                nftSdkAssetConverter.convert(network to asset)
-            },
+            assets = collection.assets
+                .map { asset ->
+                    nftSdkAssetConverter.convert(network to asset)
+                }
+                .filter {
+                    it.id !is NFTAsset.Identifier.Unknown
+                },
         )
     }
 }
