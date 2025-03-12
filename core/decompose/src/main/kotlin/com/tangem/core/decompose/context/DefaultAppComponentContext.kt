@@ -2,7 +2,7 @@ package com.tangem.core.decompose.context
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.essenty.instancekeeper.getOrCreate
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.navigation.AppNavigationProvider
 import com.tangem.core.decompose.navigation.DefaultAppNavigationProvider
 import com.tangem.core.decompose.navigation.DefaultRouter
@@ -15,7 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 class DefaultAppComponentContext(
     componentContext: ComponentContext,
     override val dispatchers: CoroutineDispatcherProvider,
-    override val hiltComponentBuilder: DecomposeComponent.Builder,
+    override val hiltComponentBuilder: ModelComponent.Builder,
     override val messageSender: UiMessageSender,
     private val replaceRouter: Router? = null,
 ) : AppComponentContext, ComponentContext by componentContext {
