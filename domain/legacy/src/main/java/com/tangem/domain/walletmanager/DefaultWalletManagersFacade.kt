@@ -15,6 +15,8 @@ import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.trustlines.AssetRequirementsManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.nft.models.NFTAsset
+import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.blockchain.transactionhistory.models.TransactionHistoryRequest
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.crypto.hdWallet.DerivationPath
@@ -637,6 +639,47 @@ class DefaultWalletManagersFacade(
         ) ?: return false
 
         return (walletManager as? UtxoBlockchainManager)?.allowConsolidation == true
+    }
+
+    override suspend fun getNFTCollections(userWalletId: UserWalletId, network: Network): List<NFTCollection> {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return emptyList()
+        val address = walletManager.wallet.address
+        return walletManager.getCollections(address)
+    }
+
+    override suspend fun getNFTAssets(
+        userWalletId: UserWalletId,
+        network: Network,
+        collectionIdentifier: NFTCollection.Identifier,
+    ): List<NFTAsset> {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return emptyList()
+        val address = walletManager.wallet.address
+        return walletManager.getAssets(address, collectionIdentifier)
+    }
+
+    override suspend fun getAsset(
+        userWalletId: UserWalletId,
+        network: Network,
+        collectionIdentifier: NFTCollection.Identifier,
+        assetIdentifier: NFTAsset.Identifier,
+    ): NFTAsset? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return null
+        return walletManager.getAsset(collectionIdentifier, assetIdentifier)
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
