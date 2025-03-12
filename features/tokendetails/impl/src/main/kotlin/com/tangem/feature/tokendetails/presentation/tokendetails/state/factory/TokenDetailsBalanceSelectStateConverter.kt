@@ -21,8 +21,13 @@ internal class TokenDetailsBalanceSelectStateConverter(
 
     override fun convert(value: TokenBalanceSegmentedButtonConfig): TokenDetailsState {
         return with(currentStateProvider()) {
-            if (stakingBlocksState !is StakingBlockUM.Staked) return this
             val cryptoCurrencyStatus = cryptoCurrencyStatusProvider() ?: return this
+
+            if (stakingBlocksState !is StakingBlockUM.Staked &&
+                stakingBlocksState !is StakingBlockUM.TemporaryUnavailable
+            ) {
+                return this
+            }
 
             val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
             val stakingCryptoAmount = yieldBalance?.getTotalWithRewardsStakingBalance()
