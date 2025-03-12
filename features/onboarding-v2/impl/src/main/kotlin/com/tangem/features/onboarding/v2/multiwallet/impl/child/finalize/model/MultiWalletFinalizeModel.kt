@@ -3,7 +3,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.repository.CardRepository
@@ -39,7 +39,7 @@ import javax.inject.Inject
 
 @Suppress("LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class MultiWalletFinalizeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -61,6 +61,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val backupCardIds = backupServiceHolder.backupService.get()?.backupCardIds.orEmpty()
 
     private var walletHasBackupError = false
+    private var hasRing = false
     val uiState = _uiState.asStateFlow()
     val onBackFlow = MutableSharedFlow<Unit>()
 
@@ -152,6 +153,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         val primaryCardBatchId = backupService.primaryCardBatchId ?: return
         val isRing = isRing(primaryCardBatchId)
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+        if (isRing) hasRing = true
 
         tangemSdkManager.changeProductType(isRing)
         backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
@@ -178,6 +180,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         val backupCardBatchId = backupService.backupCardsBatchIds.getOrNull(cardIndex) ?: return
         val isRing = isRing(backupCardBatchId)
         val iconScanRes = if (isRing) R.drawable.img_hand_scan_ring else null
+        if (isRing) hasRing = true
 
         tangemSdkManager.changeProductType(isRing)
         backupService.proceedBackup(iconScanRes = iconScanRes) { result ->
@@ -218,7 +221,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private fun finishBackup() {
         modelScope.launch {
             val scanResponse = params.multiWalletState.value.currentScanResponse
-
             val userWalletCreated = createUserWallet(scanResponse)
 
             val userWallet = when (params.parentParams.mode) {
@@ -247,6 +249,10 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
                     userWallet
                 }
+            }
+
+            if (hasRing) {
+                walletsRepository.setHasWalletsWithRing(userWallet.walletId)
             }
 
             // save user wallet for manage tokens screen
