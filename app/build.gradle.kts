@@ -102,6 +102,8 @@ dependencies {
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
+    implementation(projects.domain.nft)
+    implementation(projects.domain.nft.models)
     implementation(projects.domain.onramp)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
@@ -144,6 +146,7 @@ dependencies {
     implementation(projects.data.walletConnect)
     implementation(projects.data.markets)
     implementation(projects.data.manageTokens)
+    implementation(projects.data.nft)
     implementation(projects.data.onramp)
 
     /** Features */
