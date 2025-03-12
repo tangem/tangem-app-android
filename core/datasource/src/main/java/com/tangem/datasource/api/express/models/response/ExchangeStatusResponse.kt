@@ -2,6 +2,7 @@ package com.tangem.datasource.api.express.models.response
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import org.joda.time.DateTime
 
 @JsonClass(generateAdapter = true)
 data class ExchangeStatusResponse(
@@ -26,6 +27,12 @@ data class ExchangeStatusResponse(
 
     @Json(name = "refundContractAddress")
     val refundContractAddress: String? = null,
+
+    @Json(name = "createdAt")
+    val createdAt: DateTime? = null,
+
+    @Json(name = "averageDuration")
+    val averageDuration: Int? = null,
 )
 
 @JsonClass(generateAdapter = false)

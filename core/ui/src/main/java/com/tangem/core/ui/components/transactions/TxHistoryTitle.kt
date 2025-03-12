@@ -23,7 +23,7 @@ import com.tangem.core.ui.res.TangemThemePreview
  * @param modifier modifier
  */
 @Composable
-internal fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
+fun TxHistoryTitle(onExploreClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(TangemTheme.colors.background.primary)
