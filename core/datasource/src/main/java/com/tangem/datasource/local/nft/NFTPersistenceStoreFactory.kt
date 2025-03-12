@@ -26,6 +26,17 @@ class NFTPersistenceStoreFactory @Inject constructor(
 ) {
 
     fun provide(network: Network): NFTPersistenceStore {
+        val networkStringIdentifier = listOfNotNull(
+            network.id.value,
+            network.derivationPath.value,
+        ).joinToString("_") {
+            // remove all non-alphanumeric characters
+            it
+                .toCharArray()
+                .filter(Char::isLetterOrDigit)
+                .joinToString("")
+                .lowercase()
+        }
         return DefaultNFTPersistenceStore(
             collectionsPersistenceStore = DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
@@ -34,7 +45,7 @@ class NFTPersistenceStoreFactory @Inject constructor(
                     defaultValue = emptyList(),
                 ),
                 produceFile = {
-                    context.dataStoreFile(fileName = "nft_${network.name}_${network.derivationPath}_collections")
+                    context.dataStoreFile(fileName = "nft_${networkStringIdentifier}_collections")
                 },
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
             ),
@@ -45,7 +56,7 @@ class NFTPersistenceStoreFactory @Inject constructor(
                     defaultValue = emptyMap(),
                 ),
                 produceFile = {
-                    context.dataStoreFile(fileName = "nft_${network.name}_${network.derivationPath}_prices")
+                    context.dataStoreFile(fileName = "nft_${networkStringIdentifier}_prices")
                 },
                 scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
             ),
