@@ -48,5 +48,7 @@ sealed class NFTAsset {
         ) : Identifier()
 
         data class TON(val tokenAddress: String) : Identifier()
+
+        data object Unknown : Identifier()
     }
 }
