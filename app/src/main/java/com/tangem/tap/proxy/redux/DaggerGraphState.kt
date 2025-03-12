@@ -33,7 +33,6 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
-import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -67,7 +66,6 @@ data class DaggerGraphState(
     val urlOpener: UrlOpener? = null,
     val shareManager: ShareManager? = null,
     val appRouter: AppRouter? = null,
-    val pushNotificationsRouter: PushNotificationsRouter? = null,
     val transactionSignerFactory: TransactionSignerFactory? = null,
     val getUserCountryUseCase: GetUserCountryUseCase? = null,
     val onrampFeatureToggles: OnrampFeatureToggles? = null,

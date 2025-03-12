@@ -1,8 +1,6 @@
 package com.tangem.core.deeplink
 
 import android.content.Intent
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModel
 // [REDACTED_TODO_COMMENT]
 /**
  * Provides functionality to handle deep links.
@@ -20,17 +18,11 @@ interface DeepLinksRegistry {
 
     /**
      * Registers the given [deepLink].
-     *
-     * @see registerWithLifecycle
-     * @see registerWithViewModel
      */
     fun register(deepLink: DeepLink)
 
     /**
      * Registers the given [deepLinks].
-     *
-     * @see registerWithLifecycle
-     * @see registerWithViewModel
      */
     fun register(deepLinks: Collection<DeepLink>)
 
@@ -48,17 +40,6 @@ interface DeepLinksRegistry {
      * Unregisters deep links with the given [ids].
      * */
     fun unregisterByIds(ids: Collection<String>)
-
-    /**
-     * Registers the [deepLinks] when the [owner] is resumed and ensures that they are unregistered when the [owner] is
-     * stopped.
-     */
-    fun registerWithLifecycle(owner: LifecycleOwner, deepLinks: Collection<DeepLink>)
-
-    /**
-     * Registers the [deepLinks] and ensures that they are unregistered when the [ViewModel] is closed.
-     */
-    fun registerWithViewModel(viewModel: ViewModel, deepLinks: Collection<DeepLink>)
 
     /**
      * Triggers run last launched [Intent] with deeplink handlers that can handle delayed deeplink
