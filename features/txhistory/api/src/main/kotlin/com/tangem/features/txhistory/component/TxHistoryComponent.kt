@@ -16,8 +16,6 @@ interface TxHistoryComponent {
 
     fun LazyListScope.txHistoryContent(listState: LazyListState, state: TxHistoryUM)
 
-    fun reload()
-
     data class Params(
         val userWalletId: UserWalletId,
         val currency: CryptoCurrency,
