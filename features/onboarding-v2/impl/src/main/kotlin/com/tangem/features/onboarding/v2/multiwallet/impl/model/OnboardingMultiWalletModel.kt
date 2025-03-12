@@ -1,13 +1,14 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
@@ -22,7 +23,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -116,8 +117,13 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
                 scanResponse.primaryCard == null -> OnboardingMultiWalletState.Step.ScanPrimary
 
-            card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup ->
-                OnboardingMultiWalletState.Step.AddBackupDevice
+            card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup -> {
+                if (scanResponse.productType == ProductType.Wallet) {
+                    OnboardingMultiWalletState.Step.ChooseBackupOption
+                } else {
+                    OnboardingMultiWalletState.Step.AddBackupDevice
+                }
+            }
             card.wallets.isNotEmpty() && card.backupStatus?.isActive == true ->
                 OnboardingMultiWalletState.Step.Finalize
             else ->
