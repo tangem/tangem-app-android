@@ -1,7 +1,6 @@
 package com.tangem.data.nft
 
 import arrow.core.Either
-import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.datasource.local.nft.NFTPersistenceStore
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStore
@@ -11,6 +10,7 @@ import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.nft.repository.NFTRepository
@@ -20,11 +20,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
@@ -32,24 +29,20 @@ internal class DefaultNFTRepository @Inject constructor(
     private val nftPersistenceStoreFactory: NFTPersistenceStoreFactory,
     private val nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
     private val walletManagersFacade: WalletManagersFacade,
-    dispatchers: CoroutineDispatcherProvider,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : NFTRepository {
-
-    private val scope = CoroutineScope(dispatchers.io + SupervisorJob())
 
     private val jobs = mutableMapOf<Network, JobHolder>()
 
     private val nftRuntimeStores = mutableMapOf<Network, NFTRuntimeStore>()
     private val nftPersistenceStores = mutableMapOf<Network, NFTPersistenceStore>()
 
-    private val nftSdkAssetIdentifierConverter = NFTSdkAssetIdentifierConverter()
-    private val nftSdkCollectionIdentifierConverter = NFTSdkCollectionIdentifierConverter()
     private val nftSdkAssetConverter = NFTSdkAssetConverter(
-        nftSdkAssetIdentifierConverter = nftSdkAssetIdentifierConverter,
-        nftSdkCollectionIdentifierConverter = nftSdkCollectionIdentifierConverter,
+        nftSdkAssetIdentifierConverter = NFTSdkAssetIdentifierConverter,
+        nftSdkCollectionIdentifierConverter = NFTSdkCollectionIdentifierConverter,
     )
     private val collectionConverter = NFTSdkCollectionConverter(
-        nftSdkCollectionIdentifierConverter = nftSdkCollectionIdentifierConverter,
+        nftSdkCollectionIdentifierConverter = NFTSdkCollectionIdentifierConverter,
         nftSdkAssetConverter = nftSdkAssetConverter,
     )
 
@@ -64,12 +57,11 @@ internal class DefaultNFTRepository @Inject constructor(
             refreshCollections(userWalletId, networks)
         }
 
-    override suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>) {
+    override suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>) = coroutineScope {
         networks.map { network ->
-            scope.launch {
-                expireCollections(network)
-
+            launch(dispatchers.io) {
                 Either.catch {
+                    expireCollections(network)
                     walletManagersFacade.getNFTCollections(userWalletId, network)
                 }.onLeft {
                     saveFailedStateInRuntime(
@@ -115,9 +107,13 @@ internal class DefaultNFTRepository @Inject constructor(
             NFTCollections(
                 network = network,
                 content = NFTCollections.Content.Collections(
-                    collections = collections.map { collection ->
-                        collectionConverter.convert(network to collection)
-                    },
+                    collections = collections
+                        .map { collection ->
+                            collectionConverter.convert(network to collection)
+                        }
+                        .filter {
+                            it.id !is NFTCollection.Identifier.Unknown
+                        },
                     source = StatusSource.ACTUAL,
                 ),
             ),
@@ -169,9 +165,13 @@ internal class DefaultNFTRepository @Inject constructor(
             NFTCollections(
                 network = network,
                 content = NFTCollections.Content.Collections(
-                    collections = it?.map { collection ->
-                        collectionConverter.convert(network to collection)
-                    },
+                    collections = it
+                        ?.map { collection ->
+                            collectionConverter.convert(network to collection)
+                        }
+                        ?.filter {
+                            it.id !is NFTCollection.Identifier.Unknown
+                        },
                     source = StatusSource.CACHE,
                 ),
             )
@@ -184,7 +184,7 @@ internal class DefaultNFTRepository @Inject constructor(
             prices
                 .mapKeys {
                     val (assetId, _) = it
-                    nftSdkAssetIdentifierConverter.convert(assetId)
+                    NFTSdkAssetIdentifierConverter.convert(assetId)
                 }
                 .mapValues {
                     val (assetId, price) = it
@@ -202,7 +202,7 @@ internal class DefaultNFTRepository @Inject constructor(
             getNFTPersistenceStore(network)
                 .getCollectionsSync()
                 .orEmpty()
-                .associateBy(NFTCollection::identifier)
+                .associateBy(SdkNFTCollection::identifier)
 
         return this.map { updatedCollection ->
             if (!storedCollections.containsKey(updatedCollection.identifier)) {
