@@ -27,10 +27,6 @@ internal class DefaultTxHistoryComponent @AssistedInject constructor(
         txHistoryItems(listState, state)
     }
 
-    override fun reload() {
-        model.reload()
-    }
-
     @AssistedFactory
     interface Factory : TxHistoryComponent.Factory {
         override fun create(context: AppComponentContext, params: TxHistoryComponent.Params): DefaultTxHistoryComponent

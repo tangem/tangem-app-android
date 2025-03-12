@@ -8,8 +8,8 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.models.TxHistoryStateError
 import com.tangem.domain.txhistory.repository.TxHistoryRepositoryV2
@@ -66,6 +66,7 @@ internal class TxHistoryModel @Inject constructor(
     init {
         handleBalanceHiding()
         subscribeToUiItemChanges()
+        initListManager()
         loadTxInfo()
         subscribeToUpdateListener()
         subscribeOnCurrencyStatusUpdates()
@@ -81,6 +82,10 @@ internal class TxHistoryModel @Inject constructor(
         txHistoryUpdateListener.updates
             .onEach { reload() }
             .launchIn(modelScope)
+    }
+
+    private fun initListManager() {
+        modelScope.launch { txHistoryListManager.init() }
     }
 
     private fun loadTxInfo() {
