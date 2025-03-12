@@ -11,6 +11,7 @@ import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.isCompositePendingActions
 import com.tangem.features.staking.impl.presentation.state.utils.isTronStakedBalance
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isSkipAmountEnter
 import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -44,11 +45,17 @@ internal class SetConfirmationStateInitTransformer(
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         val actionType = when {
-            isEnter -> StakingActionCommonType.Enter
-            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartialUnstakeDisabled(prevState))
+            isEnter -> StakingActionCommonType.Enter(
+                skipEnterAmount = isSkipAmountEnter(prevState.cryptoCurrencyBlockchainId),
+            )
+            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled(prevState))
             else -> when (pendingAction?.type) {
-                StakingActionType.STAKE -> StakingActionCommonType.Enter
-                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(isPartialUnstakeDisabled(prevState))
+                StakingActionType.STAKE -> StakingActionCommonType.Enter(
+                    skipEnterAmount = isSkipAmountEnter(prevState.cryptoCurrencyBlockchainId),
+                )
+                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(
+                    partiallyUnstakeDisabled = isPartiallyUnstakeDisabled(prevState),
+                )
                 StakingActionType.CLAIM_REWARDS,
                 StakingActionType.RESTAKE_REWARDS,
                 -> StakingActionCommonType.Pending.Rewards
@@ -73,7 +80,7 @@ internal class SetConfirmationStateInitTransformer(
                 transactionDoneState = TransactionDoneState.Empty,
                 isApprovalNeeded = stakingApproval is StakingApproval.Needed,
                 allowance = stakingAllowance,
-                isAmountEditable = actionType == StakingActionCommonType.Enter ||
+                isAmountEditable = actionType is StakingActionCommonType.Enter ||
                     actionType is StakingActionCommonType.Exit &&
                     !actionType.partiallyUnstakeDisabled,
                 reduceAmountBy = null,
@@ -83,7 +90,7 @@ internal class SetConfirmationStateInitTransformer(
         )
     }
 
-    private fun isPartialUnstakeDisabled(state: StakingUiState): Boolean {
+    private fun isPartiallyUnstakeDisabled(state: StakingUiState): Boolean {
         val isSolana = BlockchainUtils.isSolana(state.cryptoCurrencyBlockchainId)
         val isValidatorPreferred = balanceState?.validator?.preferred == true
         if (isSolana && !isValidatorPreferred) {
