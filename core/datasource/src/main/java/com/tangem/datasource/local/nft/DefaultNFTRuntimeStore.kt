@@ -9,7 +9,6 @@ import com.tangem.domain.nft.models.NFTSalePrice
 import com.tangem.domain.tokens.model.Network
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
 internal class DefaultNFTRuntimeStore(
@@ -25,9 +24,7 @@ internal class DefaultNFTRuntimeStore(
 
     override fun getCollections(): Flow<NFTCollections> = collectionsRuntimeStore
         .get()
-        .combine(pricesRuntimeStore.get(), ::Pair)
-        .map {
-            val (collectionsData, prices) = it
+        .combine(pricesRuntimeStore.get()) { collectionsData, prices ->
             collectionsData.mergeWithPrices(prices)
         }
 
@@ -48,9 +45,7 @@ internal class DefaultNFTRuntimeStore(
     override fun getAsset(collectionId: NFTCollection.Identifier, assetId: NFTAsset.Identifier): Flow<NFTAsset> =
         collectionsRuntimeStore
             .get()
-            .combine(getSalePrice(assetId), ::Pair)
-            .map {
-                val (collectionsData, price) = it
+            .combine(getSalePrice(assetId)) { collectionsData, price ->
                 collectionsData
                     .getCollection(collectionId)
                     ?.getAsset(assetId)
