@@ -204,6 +204,7 @@ internal class StakingModel @Inject constructor(
 
     private val transactionsInProgress: CopyOnWriteArrayList<StakingTransaction> = CopyOnWriteArrayList()
 
+    private var actionsJobHolder: JobHolder = JobHolder()
     private var approvalJobHolder: JobHolder = JobHolder()
     private var feeJobHolder: JobHolder = JobHolder()
     private var sendTransactionJobHolder = JobHolder()
@@ -290,6 +291,7 @@ internal class StakingModel @Inject constructor(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = gasEstimate,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
                     updateNotifications()
@@ -309,6 +311,7 @@ internal class StakingModel @Inject constructor(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = fee,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
                     updateNotifications()
@@ -328,25 +331,26 @@ internal class StakingModel @Inject constructor(
                     },
                     onConstructError = { error ->
                         stakingEventFactory.createStakingErrorAlert(error)
-                        stateController.update(SetConfirmationStateResetAssentTransformer)
+                        stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                     },
                     onSendSuccess = { txUrl ->
                         stakingAnalyticSender.sendTransactionStakingAnalytics(stateController.value)
                         transactionsInProgress.clear()
-                        stateController.update(SetConfirmationStateCompletedTransformer(txUrl))
+                        stateController.update(SetConfirmationStateCompletedTransformer(txUrl, cryptoCurrencyStatus))
                     },
                     onSendError = { error ->
                         analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
                         stakingEventFactory.createSendTransactionErrorAlert(error)
-                        stateController.update(SetConfirmationStateResetAssentTransformer)
+                        stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                     },
                     onFeeIncreased = { increasedFee ->
                         stateController.updateAll(
-                            SetConfirmationStateResetAssentTransformer,
+                            SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus),
                             SetConfirmationStateAssentTransformer(
                                 appCurrencyProvider = Provider { appCurrency },
                                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                                 fee = increasedFee,
+                                cryptoCurrencyStatus = cryptoCurrencyStatus,
                             ),
                         )
                         stateController.updateEvent(
@@ -371,7 +375,9 @@ internal class StakingModel @Inject constructor(
                     }
                     if (!isApprovalInProgress) {
                         stakingStateRouter.onPrevClick()
-                        stateController.update(SetConfirmationStateResetAssentTransformer)
+                        stateController.update(
+                            SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
+                        )
                     }
                 }
                 null,
@@ -561,6 +567,7 @@ internal class StakingModel @Inject constructor(
         stateController.update(SetApprovalBottomSheetTypeChangeTransformer(approveType))
     }
 
+    @Suppress("LongMethod")
     override fun onApprovalClick() {
         modelScope.launch {
             stateController.update(
@@ -597,10 +604,13 @@ internal class StakingModel @Inject constructor(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = TransactionFee.Single(fee),
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
                     stakingEventFactory.createGenericErrorAlert(error.message ?: error.toString())
-                    stateController.update(SetConfirmationStateResetAssentTransformer)
+                    stateController.update(
+                        SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
+                    )
                     return@launch
                 },
                 ifRight = { it },
@@ -619,10 +629,13 @@ internal class StakingModel @Inject constructor(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = TransactionFee.Single(fee),
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
                     stakingEventFactory.createSendTransactionErrorAlert(error)
-                    stateController.update(SetConfirmationStateResetAssentTransformer)
+                    stateController.update(
+                        SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
+                    )
                 },
                 ifRight = {
                     stakingAnalyticSender.sendTransactionApprovalAnalytics(tokenCryptoCurrency)
@@ -856,10 +869,16 @@ internal class StakingModel @Inject constructor(
             },
             ifLeft = {
                 stakingEventFactory.createGenericErrorAlert(it.toString())
-                stateController.update(SetConfirmationStateResetAssentTransformer)
+                stateController.update(
+                    SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
+                )
             },
         )
-        getCurrencyStatusUpdatesUseCase(userWalletId, cryptoCurrencyId, false)
+        getCurrencyStatusUpdatesUseCase(
+            userWalletId = userWalletId,
+            currencyId = cryptoCurrencyId,
+            isSingleWalletWithTokens = false,
+        )
             .conflate()
             .distinctUntilChangedBy { it.getOrNull()?.value?.yieldBalance }
             .filter { value.currentStep == StakingStep.InitialInfo }
@@ -893,12 +912,14 @@ internal class StakingModel @Inject constructor(
                         setupApprovalNeeded()
                         setupIsAnyTokenStaked()
                         checkIfSubtractAvailable()
-                        subscribeOnActionsUpdates()
-                        subscribeOnStepChanges()
+                        subscribeOnActionsUpdates(status)
+                        subscribeOnStepChanges(status)
                     },
                     ifLeft = { error ->
                         stakingEventFactory.createGenericErrorAlert(error.toString())
-                        stateController.update(SetConfirmationStateResetAssentTransformer)
+                        stateController.update(
+                            SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus = cryptoCurrencyStatus),
+                        )
                     },
                 )
             }
@@ -928,13 +949,13 @@ internal class StakingModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    private fun subscribeOnStepChanges() {
+    private fun subscribeOnStepChanges(status: CryptoCurrencyStatus) {
         uiState
             .distinctUntilChangedBy { it.currentStep }
             .onEach {
                 when {
                     isInitState() -> {
-                        updateInitialData()
+                        updateInitialData(status)
                         balanceUpdater.partialUpdate()
                     }
                     isAssentState() -> {
@@ -955,32 +976,30 @@ internal class StakingModel @Inject constructor(
             .saveIn(stepChangesJobHolder)
     }
 
-    private fun subscribeOnActionsUpdates() {
-        getActionsUseCase(
-            userWalletId = userWalletId,
-            cryptoCurrencyId = cryptoCurrencyId,
-        )
+    private fun subscribeOnActionsUpdates(status: CryptoCurrencyStatus) {
+        getActionsUseCase(userWalletId = userWalletId, cryptoCurrencyId = cryptoCurrencyId)
             .conflate()
             .distinctUntilChanged()
             .onEach { result ->
                 result.getOrNull()?.let { actions ->
                     processingActions = actions
                     if (isInitState()) {
-                        updateInitialData()
+                        updateInitialData(status)
                     }
                 }
             }
             .flowOn(dispatchers.main)
             .launchIn(modelScope)
+            .saveIn(actionsJobHolder)
     }
 
-    private fun updateInitialData() {
+    private fun updateInitialData(status: CryptoCurrencyStatus) {
         stateController.updateAll(
             SetInitialDataStateTransformer(
                 clickIntents = this@StakingModel,
                 yield = yield,
                 isAnyTokenStaked = isAnyTokenStaked,
-                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                cryptoCurrencyStatus = status,
                 userWalletProvider = Provider { userWallet },
                 appCurrencyProvider = Provider { appCurrency },
                 balancesToShowProvider = Provider { balancesToShow },
