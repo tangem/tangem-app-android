@@ -15,18 +15,17 @@ import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
 
 internal class YieldBalancesConverter(
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<BalanceItem>>,
     private val yield: Yield,
 ) : Converter<Unit, InnerYieldBalanceState> {
 
     private val balanceItemConverter by lazy(LazyThreadSafetyMode.NONE) {
-        BalanceItemConverter(cryptoCurrencyStatusProvider, appCurrencyProvider, yield)
+        BalanceItemConverter(cryptoCurrencyStatus, appCurrencyProvider, yield)
     }
 
     override fun convert(value: Unit): InnerYieldBalanceState {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val appCurrency = appCurrencyProvider()
 
         val cryptoCurrency = cryptoCurrencyStatus.currency
@@ -68,7 +67,6 @@ internal class YieldBalancesConverter(
         .toPersistentList()
 
     private fun getRewardBlockType(): Pair<RewardBlockType, Boolean> {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val blockchainId = cryptoCurrencyStatus.currency.network.id.value
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         val rewards = yieldBalance?.balance?.items
