@@ -4,9 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
@@ -52,7 +52,12 @@ internal inline fun OnboardingEntry(
                         modifier = modifier,
                     )
                 }
-                OnboardingRoute.None -> {}
+                is OnboardingRoute.Note -> {
+                    (it.instance as ComposableContentComponent).Content(
+                        modifier = modifier,
+                    )
+                }
+                is OnboardingRoute.None -> {}
             }
         }
     }

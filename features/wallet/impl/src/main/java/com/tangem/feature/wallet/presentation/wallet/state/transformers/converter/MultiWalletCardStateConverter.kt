@@ -32,8 +32,7 @@ internal class MultiWalletCardStateConverter(
             title = title,
             additionalInfo = additionalInfo,
             imageResId = imageResId,
-            onRenameClick = onRenameClick,
-            onDeleteClick = onDeleteClick,
+            dropDownItems = dropDownItems,
         )
     }
 
@@ -43,8 +42,7 @@ internal class MultiWalletCardStateConverter(
             title = title,
             additionalInfo = additionalInfo,
             imageResId = imageResId,
-            onDeleteClick = onDeleteClick,
-            onRenameClick = onRenameClick,
+            dropDownItems = dropDownItems,
         )
     }
 
@@ -54,8 +52,7 @@ internal class MultiWalletCardStateConverter(
             title = title,
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = selectedWallet),
             imageResId = imageResId,
-            onRenameClick = onRenameClick,
-            onDeleteClick = onDeleteClick,
+            dropDownItems = dropDownItems,
             balance = fiatBalance.amount.format {
                 fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
             },
