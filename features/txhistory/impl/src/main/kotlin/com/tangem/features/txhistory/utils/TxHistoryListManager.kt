@@ -45,7 +45,7 @@ internal class TxHistoryListManager(
 
     val uiItems: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = uiManager.items
 
-    suspend fun startLoading() = coroutineScope {
+    suspend fun init() = coroutineScope {
         val batchFlow = repository.getTxHistoryBatchFlow(
             context = TxHistoryListBatchingContext(
                 actionsFlow = actionsFlow,
@@ -59,7 +59,9 @@ internal class TxHistoryListManager(
             .flowOn(dispatchers.default)
             .launchIn(scope = this)
             .saveIn(jobHolder)
+    }
 
+    suspend fun startLoading() {
         actionsFlow.emit(
             BatchAction.Reload(
                 requestParams = TxHistoryListConfig(userWalletId, currency, refresh = false),
