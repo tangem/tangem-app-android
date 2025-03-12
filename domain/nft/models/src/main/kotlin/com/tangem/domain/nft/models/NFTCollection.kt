@@ -14,5 +14,6 @@ data class NFTCollection(
     sealed class Identifier {
         data class EVM(val tokenAddress: String) : Identifier()
         data class TON(val contractAddress: String?) : Identifier()
+        data object Unknown : Identifier()
     }
 }
