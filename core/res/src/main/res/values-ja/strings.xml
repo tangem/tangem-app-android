@@ -818,6 +818,7 @@
   <string name="staking_notification_restake_rewards_text">獲得した報酬をステーキングに再投資し、潜在的な収益を増やします。</string>
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
+  <string name="staking_notification_ton_activate_account">TONでステーキングを開始するには、まず任意の金額の送金を行ってください。これにより、ウォレットがアクティブになります。</string>
   <string name="staking_notification_unlock_text">資金をステーキングから引き出すには、ロックを解除してください。ロック解除には%sかかります。</string>
   <string name="staking_notification_unstake_cosmos_text">資金は、21日間のロック解除期間後に使用可能になります。報酬は、ロック解除後の資金とともに引き出されます。</string>
   <string name="staking_notification_unstake_text">%sのステーキング解除期間後、資金はすぐ利用可能となります。</string>
@@ -920,7 +921,7 @@
   <string name="token_button_unavailability_reason_custom_token">カスタムトークンでは使用できません。</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">売却できる資金がありません。アカウントに入金して、売却できるようにしてください。</string>
   <string name="token_button_unavailability_reason_empty_balance_send">送金する資金がありません。アカウントに入金して、送金できるようにしてください。</string>
-  <string name="token_button_unavailability_reason_loading">データはまだ読み込まれていません。数秒かかる場合があります。しばらくしてからもう一度お試しください。</string>
+  <string name="token_button_unavailability_reason_loading">現在データを読み込んでいます。これには数秒かかる場合があります。しばらくしてからもう一度お試しください。</string>
   <string name="token_button_unavailability_reason_not_exchangeable">%sのスワップは、現在のプロバイダーではサポートされていませんが、より多くのオプションを追加できるよう取り組んでいます。</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">表示残高はキャッシュにより古くなっている可能性があります。</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">%sネットワーク上の保留中の取引が完了すると、資金の売却が可能になります。</string>
@@ -969,6 +970,7 @@
   <string name="twins_recreate_toolbar">Tangemツイン</string>
   <string name="twins_recreate_warning">この操作は元に戻せません。古いウォレットにはアクセスできなくなります。</string>
   <string name="twins_scan_twin_with_number">番号%sのツインカードをタップし、操作が終了するまで取り外さないでください。</string>
+  <string name="universal_error">エラーが発生しました。エラー コード：%s。サポートにお問い合わせください。</string>
   <string name="unlock_wallet_description_full">%sを使用するか、カード / リングをスキャンしてウォレットにアクセスしてください</string>
   <string name="unsupported_wc_version">接続に失敗しました：このdAppは、サポートされていないWallet Connectバージョン1.0を使用しています。正常に接続するには、dAppがWallet Connectバージョン2.0をサポートしていることを確認してください。</string>
   <string name="user_push_notification_agreement_argument_one">最新の機能とニュースをお届けします</string>
