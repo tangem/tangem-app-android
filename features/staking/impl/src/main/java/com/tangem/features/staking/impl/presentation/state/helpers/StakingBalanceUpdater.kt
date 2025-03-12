@@ -1,7 +1,7 @@
 package com.tangem.features.staking.impl.presentation.state.helpers
 
-import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.FetchActionsUseCase
+import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
