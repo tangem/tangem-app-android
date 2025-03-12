@@ -7,6 +7,8 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
 import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.models.scan.isRing
+import com.tangem.operations.sign.SignData
+import com.tangem.tap.domain.tasks.MultiSignHashTask
 import com.tangem.tap.domain.tasks.SignHashesTask
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
@@ -62,6 +64,40 @@ class TangemSigner(
         return when (result) {
             is CompletionResult.Success -> CompletionResult.Success(result.data.first())
             is CompletionResult.Failure -> CompletionResult.Failure(result.error)
+        }
+    }
+
+    override suspend fun multiSign(
+        dataToSign: List<SignData>,
+        publicKey: Wallet.PublicKey,
+    ): CompletionResult<Map<ByteArray, ByteArray>> {
+        return suspendCancellableCoroutine { continuation ->
+            val task = MultiSignHashTask(dataToSign, publicKey, twinKey?.getPairKey(publicKey.seedKey))
+
+            tangemSdk.startSessionWithRunnable(
+                runnable = task,
+                cardId = cardId,
+                initialMessage = initialMessage,
+            ) { result ->
+                when (result) {
+                    is CompletionResult.Success -> {
+                        signerCallback(
+                            TangemSignerResponse(
+                                totalSignedHashes = result.data.totalSignedHashes,
+                                remainingSignatures = result.data.remainingSignatures,
+                                isRing = result.data.batchId?.let(::isRing) ?: false,
+                            ),
+                        )
+                        if (continuation.isActive) {
+                            continuation.resume(CompletionResult.Success(result.data.signatures))
+                        }
+                    }
+                    is CompletionResult.Failure ->
+                        if (continuation.isActive) {
+                            continuation.resume(CompletionResult.Failure(result.error))
+                        }
+                }
+            }
         }
     }
 }

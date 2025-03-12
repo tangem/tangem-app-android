@@ -70,4 +70,6 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.reKotlin)
     implementation(deps.timber)
+    implementation(deps.arrow.core)
+    implementation(deps.arrow.fx)
 }
