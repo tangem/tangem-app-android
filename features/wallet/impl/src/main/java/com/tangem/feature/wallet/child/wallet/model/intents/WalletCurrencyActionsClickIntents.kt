@@ -40,6 +40,8 @@ import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.AVAILABLE
+import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent.Companion.toReasonAnalyticsText
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetExploreUrlUseCase
@@ -133,7 +135,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         analyticsEventHandler.send(
-            event = TokenScreenAnalyticsEvent.ButtonSend(cryptoCurrencyStatus.currency.symbol),
+            event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonSend(
+                token = cryptoCurrencyStatus.currency.symbol,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+            ),
         )
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
@@ -151,7 +157,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val userWalletId = stateHolder.getSelectedWalletId()
 
         analyticsEventHandler.send(
-            event = TokenScreenAnalyticsEvent.ButtonReceive(cryptoCurrencyStatus.currency.symbol),
+            event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonReceive(
+                token = cryptoCurrencyStatus.currency.symbol,
+                status = AVAILABLE,
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+            ),
         )
 
         analyticsEventHandler.send(
@@ -290,7 +300,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
         analyticsEventHandler.send(
-            event = TokenScreenAnalyticsEvent.ButtonSell(cryptoCurrencyStatus.currency.symbol),
+            event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonSell(
+                token = cryptoCurrencyStatus.currency.symbol,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+            ),
         )
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
@@ -314,7 +328,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         val userWallet = getSelectedWalletSyncUseCase.unwrap() ?: return
 
         analyticsEventHandler.send(
-            event = TokenScreenAnalyticsEvent.ButtonBuy(cryptoCurrencyStatus.currency.symbol),
+            event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonBuy(
+                token = cryptoCurrencyStatus.currency.symbol,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+            ),
         )
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
@@ -349,7 +367,11 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         unavailabilityReason: ScenarioUnavailabilityReason,
     ) {
         analyticsEventHandler.send(
-            event = TokenScreenAnalyticsEvent.ButtonExchange(cryptoCurrencyStatus.currency.symbol),
+            event = TokenScreenAnalyticsEvent.ButtonWithParams.ButtonExchange(
+                token = cryptoCurrencyStatus.currency.symbol,
+                status = unavailabilityReason.toReasonAnalyticsText(),
+                blockchain = cryptoCurrencyStatus.currency.network.name,
+            ),
         )
 
         if (handleUnavailabilityReason(unavailabilityReason)) return
