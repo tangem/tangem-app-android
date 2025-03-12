@@ -16,7 +16,6 @@ import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.toPersistentList
-import org.joda.time.DateTime
 import java.math.BigDecimal
 
 internal class RewardsValidatorStateConverter(
@@ -92,7 +91,6 @@ internal class RewardsValidatorStateConverter(
             isClickable = true,
             type = balance.type,
             isPending = balance.isPending,
-            date = balance.date ?: DateTime.now(),
         )
     }
 }
