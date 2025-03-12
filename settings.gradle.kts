@@ -275,6 +275,8 @@ include(":domain:manage-tokens:models")
 include(":domain:onramp")
 include(":domain:onramp:models")
 include(":domain:promo")
+include(":domain:nft")
+include(":domain:nft:models")
 // endregion Domain modules
 
 // region Data modules
@@ -298,6 +300,7 @@ include(":data:staking")
 include(":data:wallet-connect")
 include(":data:markets")
 include(":data:manage-tokens")
+include(":data:nft")
 include(":data:onramp")
 // endregion Data modules
 include(":domain:promo:models")
