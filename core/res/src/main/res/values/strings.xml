@@ -832,6 +832,7 @@
   <string name="staking_notification_restake_rewards_text">Reinvests your earned rewards in your staked amount, increasing potential earnings.</string>
   <string name="staking_notification_restake_text">Restake lets you move your funds from one validator to another without the need to unstake</string>
   <string name="staking_notification_stake_entire_balance_text">You’re about to stake your entire balance. We recommend leaving a small amount to cover network fees for unstaking or claiming rewards.</string>
+  <string name="staking_notification_ton_activate_account">To start staking in TON, first make an outgoing transaction of any amount — this will activate your wallet.</string>
   <string name="staking_notification_unlock_text">Unlock your money to withdraw it from staking process. Unlocking takes %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Your funds will be available for use after the 21-day unbonding period. Reward will be withdrawn along with your unstaking funds.</string>
   <string name="staking_notification_unstake_text">Your funds will be available for use after the %s unbonding period.</string>
@@ -934,7 +935,7 @@
   <string name="token_button_unavailability_reason_custom_token">Action is not available for custom tokens.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">You do not have funds to sell. Top up your account to be able to sell funds from it.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">You do not have funds to send. Top up your account to be able to send funds from it.</string>
-  <string name="token_button_unavailability_reason_loading">The data has not loaded yet. This may take a few seconds. Please try again later.</string>
+  <string name="token_button_unavailability_reason_loading">The data is currently loading. This may take a few seconds. Please try again later.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Swapping %s is not supported by current providers, but we are working to add more options.</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">The displayed balance might be outdated due to caching.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Selling funds will be available once the pending transaction(s) on the %s network is complete.</string>
@@ -983,6 +984,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">This action is irreversible. You will not have access to the old wallet.</string>
   <string name="twins_scan_twin_with_number">Tap the twin card with number %s and do not remove until the end of the operation</string>
+  <string name="universal_error">We\'ve encountered an error. Error code: %s. Please contact our support.</string>
   <string name="unlock_wallet_description_full">Use %s or scan a card/ring to have access to your wallet</string>
   <string name="unsupported_wc_version">Connection failed: This dApp uses Wallet Connect version 1.0, which is not supported. Please ensure the dApp supports Wallet Connect version 2.0 to connect successfully.</string>
   <string name="user_push_notification_agreement_argument_one">Stay up to date with the latest features and news</string>

@@ -175,7 +175,7 @@ sealed class AnalyticsParam {
     }
 
     companion object Key {
-        const val BLOCKCHAIN = "blockchain"
+        const val BLOCKCHAIN = "Blockchain"
         const val TOKEN_PARAM = "Token"
         const val SOURCE = "Source"
         const val BALANCE = "Balance"
@@ -210,5 +210,6 @@ sealed class AnalyticsParam {
         const val RESIDENCE = "Residence"
         const val PAYMENT_METHOD = "Payment Method"
         const val WATCHED = "Watched"
+        const val ACTION = "Action"
     }
 }
