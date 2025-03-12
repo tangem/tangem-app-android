@@ -4,7 +4,7 @@ import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.utils.converter.TwoWayConverter
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 
-class NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, NFTAsset.Identifier> {
+object NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, NFTAsset.Identifier> {
     override fun convert(value: SdkNFTAsset.Identifier): NFTAsset.Identifier = when (value) {
         is SdkNFTAsset.Identifier.EVM -> NFTAsset.Identifier.EVM(
             tokenId = value.tokenId,
@@ -13,7 +13,7 @@ class NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, N
         is SdkNFTAsset.Identifier.TON -> NFTAsset.Identifier.TON(
             tokenAddress = value.tokenAddress,
         )
-        is SdkNFTAsset.Identifier.Unknown -> error("unknown asset id")
+        is SdkNFTAsset.Identifier.Unknown -> NFTAsset.Identifier.Unknown
     }
 
     override fun convertBack(value: NFTAsset.Identifier): SdkNFTAsset.Identifier = when (value) {
@@ -24,5 +24,6 @@ class NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, N
         is NFTAsset.Identifier.TON -> SdkNFTAsset.Identifier.TON(
             tokenAddress = value.tokenAddress,
         )
+        is NFTAsset.Identifier.Unknown -> SdkNFTAsset.Identifier.Unknown
     }
 }
