@@ -11,6 +11,10 @@ inline fun <reified T> mapWithStringKeyTypes(): ParameterizedType {
     return Types.newParameterizedType(Map::class.java, String::class.java, T::class.java)
 }
 
+inline fun <reified K, reified T> mapWithCustomKeyTypes(): ParameterizedType {
+    return Types.newParameterizedType(Map::class.java, K::class.java, T::class.java)
+}
+
 inline fun <reified T> listTypes(): ParameterizedType {
     return Types.newParameterizedType(List::class.java, T::class.java)
 }
