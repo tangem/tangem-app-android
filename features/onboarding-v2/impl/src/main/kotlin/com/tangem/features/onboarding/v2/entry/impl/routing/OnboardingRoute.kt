@@ -10,6 +10,12 @@ sealed class OnboardingRoute : Route {
 
     data object None : OnboardingRoute()
 
+    data class Note(
+        val titleProvider: TitleProvider,
+        val scanResponse: ScanResponse,
+        val onDone: () -> Unit,
+    ) : OnboardingRoute()
+
     data class MultiWallet(
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
