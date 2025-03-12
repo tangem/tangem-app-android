@@ -111,6 +111,10 @@ internal class AddStakingNotificationsTransformer(
             )
         }.toImmutableList()
 
+        val isActualSources = with(cryptoCurrencyStatus.value) {
+            sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+        }
+
         return prevState.copy(
             confirmationState = confirmationState.copy(
                 notifications = notifications.toImmutableList(),
@@ -119,7 +123,7 @@ internal class AddStakingNotificationsTransformer(
                         it is NotificationUM.Error ||
                         it is NotificationUM.Warning.NetworkFeeUnreachable ||
                         it is StakingNotification.Warning.TransactionInProgress
-                },
+                } && isActualSources,
             ),
         )
     }
