@@ -920,6 +920,7 @@
   <string name="token_button_unavailability_reason_buy_unavailable">Comprar %s no está disponible con los proveedores actuales pero estamos trabajando para agregar más opciones.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">No tiene fondos para vender. Recargue su cuenta para poder vender fondos desde ella.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">No tienes fondos para enviar. Recarga tu cuenta para poder enviar fondos desde ella.</string>
+  <string name="token_button_unavailability_reason_loading">Los datos aún no se han cargado. Esto puede tardar unos segundos. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">El servicio de intercambio %s no está compatible con los proveedores actuales pero estamos trabajando para agregar más opciones.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">La venta de fondos estará disponible una vez que la(s) transacción(es) pendiente(s) en la red %s se complete</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">El envío de fondos estará disponible una vez que se completen las transacciones pendientes en la red %s.</string>
@@ -939,7 +940,7 @@
   <string name="token_swap_changelly_promotion_message">Cambie este token por otro por una tarifa de servicio de %1$s del %2$s al %3$s de febrero.</string>
   <string name="token_swap_changelly_promotion_title">Intercambio con Changelly, %s tarifa</string>
   <string name="token_swap_promotion_button">Intercambie ahora</string>
-  <string name="tokens_list_hot_crypto_header">Crypto-monnaies populaire 🔥</string>
+  <string name="tokens_list_hot_crypto_header">Criptomonedas populares 🔥</string>
   <string name="tokens_list_unavailable_to_purchase_header">No disponible para compra</string>
   <string name="tokens_list_unavailable_to_sell_header">No disponible para vender</string>
   <string name="tokens_list_unavailable_to_swap_header">No disponible para cambio desde %s</string>
