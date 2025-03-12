@@ -51,13 +51,13 @@ internal fun OnboardingMultiWallet(
                 modifier = Modifier
                     .padding(horizontal = 34.dp)
                     .padding(top = 20.dp)
-                    .weight(.4f)
+                    .weight(.48f)
                     .fillMaxWidth(),
                 state = artworksState,
             )
 
             Box(
-                modifier = Modifier.weight(.44f),
+                modifier = Modifier.weight(.52f),
                 contentAlignment = Alignment.BottomStart,
             ) {
                 childContent(Modifier)
