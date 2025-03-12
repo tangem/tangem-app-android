@@ -10,6 +10,8 @@ import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.nft.models.NFTAsset
+import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
@@ -248,4 +250,19 @@ interface WalletManagersFacade {
      * @param network availability for network
      */
     suspend fun checkUtxoConsolidationAvailability(userWalletId: UserWalletId, network: Network): Boolean
+
+    suspend fun getNFTCollections(userWalletId: UserWalletId, network: Network): List<NFTCollection>
+
+    suspend fun getNFTAssets(
+        userWalletId: UserWalletId,
+        network: Network,
+        collectionIdentifier: NFTCollection.Identifier,
+    ): List<NFTAsset>
+
+    suspend fun getAsset(
+        userWalletId: UserWalletId,
+        network: Network,
+        collectionIdentifier: NFTCollection.Identifier,
+        assetIdentifier: NFTAsset.Identifier,
+    ): NFTAsset?
 }
