@@ -16,6 +16,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isTron
+import com.tangem.utils.extensions.isPositive
 import com.tangem.utils.isNullOrZero
 import com.tangem.utils.transformer.Transformer
 import java.math.BigDecimal
@@ -57,7 +58,7 @@ internal class AmountRequirementStateTransformer(
             amountState.amountTextField.isError -> amountState.amountTextField.error
             requirementError != null -> requirementError
             isIntegerOnlyError -> when (actionType) {
-                StakingActionCommonType.Enter -> resourceReference(
+                is StakingActionCommonType.Enter -> resourceReference(
                     R.string.staking_amount_tron_integer_error,
                     wrappedList(roundedDownCrypto),
                 )
@@ -92,7 +93,7 @@ internal class AmountRequirementStateTransformer(
         if (isAlreadyErrorState || isAmountZero) return null
 
         return when (actionType) {
-            StakingActionCommonType.Enter -> {
+            is StakingActionCommonType.Enter -> {
                 val enterRequirements = yield.args.enter.args[Yield.Args.ArgType.AMOUNT]
                 enterRequirements?.getError(amountDecimal, R.string.staking_amount_requirement_error)
             }
@@ -107,7 +108,7 @@ internal class AmountRequirementStateTransformer(
     private fun isIntegerOnlyError(amountState: AmountState.Data, actionType: StakingActionCommonType): Boolean {
         val cryptoAmountValue = amountState.amountTextField.cryptoAmount.value ?: return false
 
-        val isEnterOrExit = actionType == StakingActionCommonType.Enter || actionType is StakingActionCommonType.Exit
+        val isEnterOrExit = actionType is StakingActionCommonType.Enter || actionType is StakingActionCommonType.Exit
         val isTron = isTron(cryptoCurrencyStatus.currency.network.id.value)
 
         val isIntegerOnly = cryptoAmountValue.isZero() || cryptoAmountValue.remainder(BigDecimal.ONE).isZero()
@@ -116,17 +117,30 @@ internal class AmountRequirementStateTransformer(
     }
 
     private fun AddressArgument.getError(amount: BigDecimal, @StringRes errorTextRes: Int): TextReference? {
-        val isExceedsRequirements = maximum?.compareTo(amount) == -1 ||
-            minimum?.compareTo(amount) == 1
+        val isExceedsMinRequirement = minimum?.compareTo(amount) == 1
+        val isExceedsMaxRequirement = if (maximum?.isPositive() == true) {
+            maximum?.compareTo(amount) == -1
+        } else {
+            cryptoCurrencyStatus.value.amount?.compareTo(amount) == 1
+        }
 
-        return resourceReference(
-            errorTextRes,
-            wrappedList(
+        val errorText = when {
+            isExceedsMinRequirement -> {
                 minimum.format {
                     crypto(cryptoCurrencyStatus.currency)
-                },
-            ),
-        ).takeIf { required && isExceedsRequirements }
+                }
+            }
+            isExceedsMaxRequirement -> {
+                maximum.format {
+                    crypto(cryptoCurrencyStatus.currency)
+                }
+            }
+            else -> ""
+        }
+        return resourceReference(
+            errorTextRes,
+            wrappedList(errorText),
+        ).takeIf { required && (isExceedsMinRequirement || isExceedsMaxRequirement) }
     }
 
     data class Data(
