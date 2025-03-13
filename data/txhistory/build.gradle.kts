@@ -14,6 +14,7 @@ dependencies {
 
     implementation(projects.core.utils)
     implementation(projects.core.datasource)
+    implementation(projects.core.pagination)
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
     implementation(projects.domain.tokens.models)
