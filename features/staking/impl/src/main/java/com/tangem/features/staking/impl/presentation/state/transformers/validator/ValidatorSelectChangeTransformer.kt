@@ -17,8 +17,9 @@ internal class ValidatorSelectChangeTransformer(
         val validatorState = prevState.validatorState as? StakingStates.ValidatorState.Data
         val confirmationState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
 
-        val isRestake = prevState.actionType == StakingActionCommonType.Pending.Restake
-        val isEnter = prevState.actionType == StakingActionCommonType.Enter
+        val isRestake = prevState.actionType == StakingActionCommonType.Pending.Restake ||
+            prevState.actionType is StakingActionCommonType.Pending.Stake
+        val isEnter = prevState.actionType is StakingActionCommonType.Enter
         val isFromInfoScreen = prevState.currentStep == StakingStep.InitialInfo
         val isVoteLocked = confirmationState?.pendingAction?.type == StakingActionType.VOTE_LOCKED
 
