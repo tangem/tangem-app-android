@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.entry.impl.routing
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 
@@ -32,6 +33,10 @@ sealed class OnboardingRoute : Route {
 
     data class ManageTokens(
         val userWallet: UserWallet,
+    ) : OnboardingRoute()
+
+    data class AskBiometry(
+        val modelCallbacks: AskBiometryComponent.ModelCallbacks,
     ) : OnboardingRoute()
 
     data class Done(
