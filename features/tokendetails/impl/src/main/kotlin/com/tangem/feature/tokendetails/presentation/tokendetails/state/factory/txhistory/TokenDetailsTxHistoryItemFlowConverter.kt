@@ -7,7 +7,7 @@ import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistory
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
-import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.CoroutineScope

@@ -2,8 +2,8 @@ package com.tangem.core.ui.components
 
 import androidx.annotation.FloatRange
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.Text
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -27,13 +27,13 @@ fun ResizableText(
     maxLines: Int = Int.MAX_VALUE,
     style: TextStyle = LocalTextStyle.current,
 ) {
-    val fontSizeValue = remember { mutableStateOf(fontSizeRange.max.value) }
+    val fontSizeValue = remember { mutableFloatStateOf(fontSizeRange.max.value) }
     val readyToDraw = remember { mutableStateOf(false) }
 
     val textState = remember { mutableStateOf(text) }
     if (textState.value != text) {
         readyToDraw.value = false
-        fontSizeValue.value = fontSizeRange.max.value
+        fontSizeValue.floatValue = fontSizeRange.max.value
         textState.value = text
     }
 
@@ -41,18 +41,18 @@ fun ResizableText(
         text = text,
         modifier = modifier.drawWithContent { if (readyToDraw.value) drawContent() },
         color = color,
-        fontSize = fontSizeValue.value.sp,
+        fontSize = fontSizeValue.floatValue.sp,
         overflow = overflow,
         softWrap = false,
         maxLines = maxLines,
         onTextLayout = {
             if (it.hasVisualOverflow) {
-                val nextFontSizeValue = fontSizeValue.value - fontSizeRange.step.value
+                val nextFontSizeValue = fontSizeValue.floatValue - fontSizeRange.step.value
                 if (nextFontSizeValue <= fontSizeRange.min.value) {
-                    fontSizeValue.value = fontSizeRange.min.value
+                    fontSizeValue.floatValue = fontSizeRange.min.value
                     readyToDraw.value = true
                 } else {
-                    fontSizeValue.value = nextFontSizeValue * COEFFICIENT
+                    fontSizeValue.floatValue = nextFontSizeValue * COEFFICIENT
                 }
             } else {
                 readyToDraw.value = true
