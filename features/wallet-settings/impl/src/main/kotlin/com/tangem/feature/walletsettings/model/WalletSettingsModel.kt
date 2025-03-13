@@ -6,7 +6,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.utils.AnalyticsContextProxy
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -21,6 +21,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsSyncUseCase
@@ -31,6 +32,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsItemUM
 import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
+import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -40,7 +42,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@ComponentScoped
+@ModelScoped
 internal class WalletSettingsModel @Inject constructor(
     getWalletUseCase: GetUserWalletUseCase,
     paramsContainer: ParamsContainer,
@@ -53,6 +55,8 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val reduxStateHolder: ReduxStateHolder,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
+    private val walletsRepository: WalletsRepository,
+    private val nftFeatureToggles: NFTFeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -68,11 +72,19 @@ internal class WalletSettingsModel @Inject constructor(
     init {
         getWalletUseCase.invokeFlow(params.userWalletId)
             .distinctUntilChanged()
-            .onEach { maybeWallet ->
-                val wallet = maybeWallet.getOrNull() ?: return@onEach
+            .combine(walletsRepository.nftEnabledStatus(params.userWalletId)) { maybeWallet, nftEnabled ->
+                val wallet = maybeWallet.getOrNull() ?: return@combine
                 val isRenameWalletAvailable = getShouldSaveUserWalletsSyncUseCase()
                 state.update { value ->
-                    value.copy(items = buildItems(wallet, dialogNavigation, isRenameWalletAvailable))
+                    value.copy(
+                        items = buildItems(
+                            userWallet = wallet,
+                            dialogNavigation = dialogNavigation,
+                            isRenameWalletAvailable = isRenameWalletAvailable,
+                            isNFTFeatureEnabled = nftFeatureToggles.isNFTEnabled,
+                            isNFTEnabled = nftEnabled,
+                        ),
+                    )
                 }
             }
             .launchIn(modelScope)
@@ -82,6 +94,8 @@ internal class WalletSettingsModel @Inject constructor(
         userWallet: UserWallet,
         dialogNavigation: SlotNavigation<DialogConfig>,
         isRenameWalletAvailable: Boolean,
+        isNFTFeatureEnabled: Boolean,
+        isNFTEnabled: Boolean,
     ): PersistentList<WalletSettingsItemUM> = itemsBuilder.buildItems(
         userWalletId = userWallet.walletId,
         userWalletName = userWallet.name,
@@ -90,6 +104,9 @@ internal class WalletSettingsModel @Inject constructor(
         isManageTokensAvailable = userWallet.isMultiCurrency,
         isRenameWalletAvailable = isRenameWalletAvailable,
         renameWallet = { openRenameWalletDialog(userWallet, dialogNavigation) },
+        isNFTFeatureEnabled = isNFTFeatureEnabled,
+        isNFTEnabled = isNFTEnabled,
+        onCheckedNFTChange = ::onCheckedNFTChange,
         forgetWallet = {
             val message = DialogMessage(
                 message = resourceReference(R.string.user_wallet_list_delete_prompt),
@@ -150,5 +167,15 @@ internal class WalletSettingsModel @Inject constructor(
         )
 
         router.push(AppRoute.OnboardingWallet())
+    }
+
+    private fun onCheckedNFTChange(isChecked: Boolean) {
+        modelScope.launch {
+            if (isChecked) {
+                walletsRepository.enableNFT(params.userWalletId)
+            } else {
+                walletsRepository.disableNFT(params.userWalletId)
+            }
+        }
     }
 }
