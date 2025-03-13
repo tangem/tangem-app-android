@@ -208,10 +208,12 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.swipeRefreshLayout)
     implementation(deps.androidx.fragment.compose)
+    implementation(deps.androidx.workmanager)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
     implementation(deps.lifecycle.compose)
+    implementation(deps.hilt.work)
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
@@ -250,6 +252,7 @@ dependencies {
     implementation(deps.hilt.android)
 
     kapt(deps.hilt.kapt)
+    kapt(deps.hilt.compilerx)
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
