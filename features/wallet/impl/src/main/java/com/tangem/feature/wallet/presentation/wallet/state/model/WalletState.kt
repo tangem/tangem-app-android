@@ -12,6 +12,7 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.holder.TxHistor
 import com.tangem.feature.wallet.presentation.wallet.state.model.holder.WalletStateHolder
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 
 internal const val NOT_INITIALIZED_WALLET_INDEX = -1
 
@@ -112,6 +113,28 @@ internal sealed interface WalletState : WalletStateHolder {
                 bottomSheetConfig = bottomSheetConfig,
                 onUnlockNotificationClick = onUnlockNotificationClick,
             ) {
+
+            override val balancesAndLimitBlockState: BalancesAndLimitsBlockState? = null
+        }
+
+        data class AccessTokenLocked(
+            override val walletCardState: WalletCardState,
+            override val buttons: PersistentList<WalletManageButton>,
+            override val bottomSheetConfig: TangemBottomSheetConfig?,
+            val onExploreClick: () -> Unit,
+            val onUnlockVisaAccessNotificationClick: () -> Unit,
+        ) : Visa(),
+            TxHistoryStateHolder by LockedTxHistoryStateHolder(onExploreClick),
+            WalletStateHolder by LockedWalletStateHolder(
+                walletCardState = walletCardState,
+                buttons = buttons,
+                bottomSheetConfig = bottomSheetConfig,
+                onUnlockNotificationClick = {},
+            ) {
+
+            override val warnings: ImmutableList<WalletNotification> = persistentListOf(
+                WalletNotification.UnlockVisaAccess(onUnlockClick = onUnlockVisaAccessNotificationClick),
+            )
 
             override val balancesAndLimitBlockState: BalancesAndLimitsBlockState? = null
         }
