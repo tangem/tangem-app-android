@@ -43,3 +43,15 @@ class Debouncer {
         const val DEFAULT_WAIT_TIME_MS = 500L
     }
 }
+
+fun CoroutineScope.launchOnCancellation(block: suspend () -> Unit) {
+    launch {
+        try {
+            awaitCancellation()
+        } finally {
+            withContext(NonCancellable) {
+                block()
+            }
+        }
+    }
+}
