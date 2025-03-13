@@ -18,8 +18,6 @@ import javax.crypto.spec.SecretKeySpec
 
 private const val KEY_SIZE = 256
 
-private const val RSA_PUB_KEY = "TODO" // TODO add RSA public key [REDACTED_TASK_KEY]
-
 class SetVisaPinCodeUseCase(
     private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
 ) {
@@ -30,9 +28,10 @@ class SetVisaPinCodeUseCase(
         pinCode: String,
     ): Either<Throwable, Unit> = Either.catch {
         val visaActivationRepository = visaActivationRepositoryFactory.create(visaCardId)
+        val rsaPublicKey = visaActivationRepository.getPinCodeRsaEncryptionPublicKey()
 
         val sessionKey = generateSessionKey()
-        val sessionId = getSessionId(RSA_PUB_KEY, sessionKey)
+        val sessionId = getSessionId(rsaPublicKey, sessionKey)
 
         val secureRandom = SecureRandom()
         val iv = ByteArray(size = 16)
