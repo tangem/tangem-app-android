@@ -106,6 +106,7 @@ dependencies {
     implementation(projects.features.tokendetails.api)
     implementation(projects.features.wallet.api)
     implementation(projects.features.walletSettings.api)
+    implementation(projects.features.biometry.api)
 
     /** Common modules */
     implementation(projects.common)
