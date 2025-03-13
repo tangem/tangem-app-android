@@ -2,7 +2,11 @@ package com.tangem.feature.wallet.child.wallet.model
 
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.dismiss
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
@@ -23,12 +27,15 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationU
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.model.PushNotificationsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletEvent.DemonstrateWalletsScrollPreview.Direction
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
+import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
@@ -67,11 +74,13 @@ internal class WalletModel @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val walletFeatureToggles: WalletFeatureToggles,
+    private val biometryFeatureToggles: BiometryFeatureToggles,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
-    analyticsEventsHandler: AnalyticsEventHandler,
 ) : Model() {
 
+    val askBiometryModelCallbacks = AskBiometryModelCallbacks()
     val uiState: StateFlow<WalletScreenState> = stateHolder.uiState
 
     private val walletsUpdateJobHolder = JobHolder()
@@ -116,7 +125,15 @@ internal class WalletModel @Inject constructor(
         modelScope.launch(dispatchers.main) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
-            if (isShowSaveWalletScreenEnabled()) innerWalletRouter.openSaveUserWalletScreen()
+            if (isShowSaveWalletScreenEnabled()) {
+                if (biometryFeatureToggles.isAskForBiometryEnabled) {
+                    innerWalletRouter.dialogNavigation.activate(
+                        configuration = WalletDialogConfig.AskForBiometry,
+                    )
+                } else {
+                    innerWalletRouter.openSaveUserWalletScreen()
+                }
+            }
         }
     }
 
@@ -444,6 +461,18 @@ internal class WalletModel @Inject constructor(
                 onConsume = onConsume,
             ),
         )
+    }
+
+    inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {
+        override fun onAllowed() {
+            analyticsEventsHandler.send(MainScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.On))
+            innerWalletRouter.dialogNavigation.dismiss()
+        }
+
+        override fun onDenied() {
+            analyticsEventsHandler.send(MainScreenAnalyticsEvent.EnableBiometrics(AnalyticsParam.OnOffState.Off))
+            innerWalletRouter.dialogNavigation.dismiss()
+        }
     }
 
     private companion object {

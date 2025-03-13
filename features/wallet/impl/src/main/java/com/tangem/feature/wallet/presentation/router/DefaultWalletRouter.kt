@@ -13,6 +13,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
+import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,6 +26,7 @@ internal class DefaultWalletRouter @Inject constructor(
     private val urlOpener: UrlOpener,
     private val reduxStateHolder: ReduxStateHolder,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
+    private val biometryFeatureToggles: BiometryFeatureToggles,
 ) : InnerWalletRouter {
 
     override val dialogNavigation: SlotNavigation<WalletDialogConfig> = SlotNavigation()
@@ -98,7 +100,9 @@ internal class DefaultWalletRouter @Inject constructor(
     }
 
     override fun openSaveUserWalletScreen() {
-        router.push(AppRoute.SaveWallet)
+        if (biometryFeatureToggles.isAskForBiometryEnabled.not()) {
+            router.push(AppRoute.SaveWallet)
+        }
     }
 
     override fun isWalletLastScreen(): Boolean {
