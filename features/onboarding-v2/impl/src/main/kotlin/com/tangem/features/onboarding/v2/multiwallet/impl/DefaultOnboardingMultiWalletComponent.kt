@@ -70,7 +70,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     private val innerNavigationStateFlow = instanceKeeper.getOrCreateSimple(key = "innerNavigationState") {
         MutableStateFlow(
-            MultiWalletInnerNavigationState(1, 5),
+            MultiWalletInnerNavigationState(1, 6),
         )
     }
 
