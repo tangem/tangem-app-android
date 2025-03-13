@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.entry.impl.routing
 
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.managetokens.component.OnboardingManageTokensComponent
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -13,6 +14,7 @@ internal class OnboardingChildFactory @Inject constructor(
     private val onboardingManageTokensComponentFactory: OnboardingManageTokensComponent.Factory,
     private val onboardingDoneComponentFactory: OnboardingDoneComponent.Factory,
     private val onBoardingVisaComponentFactory: OnboardingVisaComponent.Factory,
+    private val askBiometryComponentFactory: AskBiometryComponent.Factory,
     private val onboardingNoteComponentFactory: OnboardingNoteComponent.Factory,
 ) {
 
@@ -57,7 +59,14 @@ internal class OnboardingChildFactory @Inject constructor(
                     onDone = route.onDone,
                 ),
             )
-            else -> Unit
+            is OnboardingRoute.AskBiometry -> askBiometryComponentFactory.create(
+                context = childContext,
+                params = AskBiometryComponent.Params(
+                    bottomSheetVariant = false,
+                    modelCallbacks = route.modelCallbacks,
+                ),
+            )
+            is OnboardingRoute.None -> Unit
         }
     }
 }
