@@ -2,7 +2,6 @@ package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.decompose.di.ComponentScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
@@ -31,7 +30,6 @@ import dagger.assisted.AssistedInject
 import kotlinx.collections.immutable.toImmutableList
 
 @Suppress("LongParameterList")
-@ComponentScoped
 internal class TokenActionsHandler @AssistedInject constructor(
     private val router: Router,
     private val clipboardManager: ClipboardManager,
