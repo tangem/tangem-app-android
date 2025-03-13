@@ -2,7 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.welcome.model
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.visa.model.VisaCardId
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class OnboardingVisaWelcomeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
