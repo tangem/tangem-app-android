@@ -14,6 +14,7 @@ import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
+import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
@@ -44,9 +45,12 @@ internal class StakingInfoNotificationsFactory(
         addStakingLowBalanceNotification(prevState, actionAmount)
 
         when (prevState.actionType) {
-            StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
+            is StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
             is StakingActionCommonType.Exit -> addExitInfoNotifications()
-            is StakingActionCommonType.Pending -> addPendingInfoNotifications(prevState)
+            is StakingActionCommonType.Pending -> {
+                addCardanoRestakeMinimumAmountNotification(feeValue)
+                addPendingInfoNotifications(prevState)
+            }
         }
     }
 
@@ -70,7 +74,9 @@ internal class StakingInfoNotificationsFactory(
         sendingAmount: BigDecimal,
         feeValue: BigDecimal,
     ) {
+        addCardanoStakeMinimumAmountNotification(feeValue)
         addTronRevoteNotification()
+        addCardanoStakeNotification()
         addStakingEntireBalanceNotification(sendingAmount, feeValue)
     }
 
@@ -149,6 +155,48 @@ internal class StakingInfoNotificationsFactory(
         }
     }
 
+    private fun MutableList<NotificationUM>.addCardanoStakeNotification() {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.id.value)
+
+        if (isCardano) {
+            add(
+                StakingNotification.Info.Ordinary(
+                    title = resourceReference(R.string.staking_notification_additional_ada_deposit_title),
+                    text = resourceReference(R.string.staking_notification_additional_ada_deposit_text),
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addCardanoStakeMinimumAmountNotification(feeValue: BigDecimal) {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.id.value)
+        val balance = cryptoCurrencyStatus.value.amount.orZero()
+        if (isCardano && balance - feeValue < MINIMUM_STAKE_BALANCE) {
+            add(
+                StakingNotification.Error.MinimumAmountNotReachedError(
+                    title = resourceReference(R.string.staking_notification_minimum_balance_title),
+                    subtitle = resourceReference(R.string.staking_notification_minimum_stake_ada_text),
+                ),
+            )
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addCardanoRestakeMinimumAmountNotification(feeValue: BigDecimal) {
+        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
+        val isCardano = isCardano(cryptoCurrencyStatus.currency.network.id.value)
+        val balance = cryptoCurrencyStatus.value.amount.orZero()
+        if (isCardano && balance - feeValue < MINIMUM_RESTAKE_BALANCE) {
+            add(
+                StakingNotification.Error.MinimumAmountNotReachedError(
+                    title = resourceReference(R.string.staking_notification_minimum_restake_ada_title),
+                    subtitle = resourceReference(R.string.staking_notification_minimum_restake_ada_text),
+                ),
+            )
+        }
+    }
+
     private fun MutableList<NotificationUM>.addStakingEntireBalanceNotification(
         sendingAmount: BigDecimal,
         feeValue: BigDecimal,
@@ -158,7 +206,7 @@ internal class StakingInfoNotificationsFactory(
 
         val isEntireBalance = sendingAmount.plus(feeValue) == balance
 
-        if (isEntireBalance && isSubtractAvailable) {
+        if (isEntireBalance && isSubtractAvailable && !isCardano(cryptoCurrencyStatus.currency.network.id.value)) {
             add(StakingNotification.Info.StakeEntireBalance)
         }
     }
@@ -178,5 +226,10 @@ internal class StakingInfoNotificationsFactory(
         if (exitRequirements.required && isNotEnoughLeft) {
             add(StakingNotification.Warning.LowStakedBalance)
         }
+    }
+
+    private companion object {
+        val MINIMUM_STAKE_BALANCE = "5".toBigDecimal()
+        val MINIMUM_RESTAKE_BALANCE = "3".toBigDecimal()
     }
 }

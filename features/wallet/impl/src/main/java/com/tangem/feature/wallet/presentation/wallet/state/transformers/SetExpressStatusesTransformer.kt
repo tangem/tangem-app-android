@@ -10,7 +10,7 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.SingleWalletOnrampTransactionConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
 
