@@ -20,10 +20,6 @@ interface SettingsRepository {
 
     suspend fun setSendTapHelpPreviewAvailability(isEnabled: Boolean)
 
-    suspend fun wasApplicationStopped(): Boolean
-
-    suspend fun setWasApplicationStopped(value: Boolean)
-
     suspend fun shouldOpenWelcomeScreenOnResume(): Boolean
 
     suspend fun setShouldOpenWelcomeScreenOnResume(value: Boolean)
