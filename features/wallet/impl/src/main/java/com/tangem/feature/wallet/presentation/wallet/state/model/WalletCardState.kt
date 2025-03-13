@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.StringsSigns.DASH_SIGN
+import kotlinx.collections.immutable.ImmutableList
 
 /** Wallet card state */
 @Immutable
@@ -23,11 +24,8 @@ internal sealed interface WalletCardState {
     @get:DrawableRes
     val imageResId: Int?
 
-    /** Lambda be invoked when Rename button is clicked */
-    val onRenameClick: (UserWalletId) -> Unit
-
-    /** Lambda be invoked when Delete button is clicked */
-    val onDeleteClick: (UserWalletId) -> Unit
+    /** Wallet drop down items */
+    val dropDownItems: ImmutableList<WalletDropDownItems>
 
     /**
      * Wallet card content state
@@ -35,8 +33,7 @@ internal sealed interface WalletCardState {
      * @property id             wallet id
      * @property title          wallet name
      * @property imageResId     wallet image resource id
-     * @property onRenameClick  lambda be invoked when Rename button is clicked
-     * @property onDeleteClick  lambda be invoked when Delete button is clicked
+     * @property dropDownItems  wallet dropdown items
      * @property additionalInfo wallet additional info
      * @property cardCount      number of cards in the wallet
      * @property balance        wallet balance
@@ -46,8 +43,7 @@ internal sealed interface WalletCardState {
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId) -> Unit,
-        override val onDeleteClick: (UserWalletId) -> Unit,
+        override val dropDownItems: ImmutableList<WalletDropDownItems>,
         val isBalanceFlickering: Boolean,
         val cardCount: Int?,
         val balance: String,
@@ -61,16 +57,14 @@ internal sealed interface WalletCardState {
      * @property title          wallet name
      * @property additionalInfo wallet additional info
      * @property imageResId     wallet image resource id
-     * @property onRenameClick  lambda be invoked when Rename button is clicked
-     * @property onDeleteClick  lambda be invoked when Delete button is clicked
+     * @property dropDownItems  wallet dropdown items
      */
     data class LockedContent(
         override val id: UserWalletId,
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId) -> Unit,
-        override val onDeleteClick: (UserWalletId) -> Unit,
+        override val dropDownItems: ImmutableList<WalletDropDownItems>,
     ) : WalletCardState
 
     /**
@@ -79,16 +73,14 @@ internal sealed interface WalletCardState {
      * @property id            wallet id
      * @property title         wallet name
      * @property imageResId    wallet image resource id
-     * @property onRenameClick lambda be invoked when Rename button is clicked
-     * @property onDeleteClick lambda be invoked when Delete button is clicked
+     * @property dropDownItems  wallet dropdown items
      */
     data class Error(
         override val id: UserWalletId,
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo? = defaultAdditionalInfo,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId) -> Unit,
-        override val onDeleteClick: (UserWalletId) -> Unit,
+        override val dropDownItems: ImmutableList<WalletDropDownItems>,
     ) : WalletCardState {
 
         private companion object {
@@ -103,24 +95,25 @@ internal sealed interface WalletCardState {
      * @property id            wallet id
      * @property title         wallet name
      * @property imageResId    wallet image resource id
-     * @property onRenameClick lambda be invoked when Rename button is clicked
-     * @property onDeleteClick lambda be invoked when Delete button is clicked
+     * @property dropDownItems  wallet dropdown items
      */
     data class Loading(
         override val id: UserWalletId,
         override val title: String,
         override val additionalInfo: WalletAdditionalInfo? = null,
         override val imageResId: Int?,
-        override val onRenameClick: (UserWalletId) -> Unit,
-        override val onDeleteClick: (UserWalletId) -> Unit,
+        override val dropDownItems: ImmutableList<WalletDropDownItems>,
     ) : WalletCardState
 
-    fun copySealed(title: String = this.title): WalletCardState {
+    fun copySealed(
+        title: String = this.title,
+        dropDownItems: ImmutableList<WalletDropDownItems> = this.dropDownItems,
+    ): WalletCardState {
         return when (this) {
-            is Content -> copy(title = title)
-            is Error -> copy(title = title)
-            is Loading -> copy(title = title)
-            is LockedContent -> copy(title = title)
+            is Content -> copy(title = title, dropDownItems = dropDownItems)
+            is Error -> copy(title = title, dropDownItems = dropDownItems)
+            is Loading -> copy(title = title, dropDownItems = dropDownItems)
+            is LockedContent -> copy(title = title, dropDownItems = dropDownItems)
         }
     }
 
