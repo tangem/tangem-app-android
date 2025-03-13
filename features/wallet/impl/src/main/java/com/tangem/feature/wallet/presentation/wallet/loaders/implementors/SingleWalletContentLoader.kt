@@ -10,11 +10,18 @@ import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
+import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.WalletWarningsAnalyticsSender
 import com.tangem.feature.wallet.presentation.wallet.domain.GetSingleWalletWarningsFactory
-import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.wallet.subscribers.PrimaryCurrencySubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.SingleWalletButtonsSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.SingleWalletNotificationsSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.TxHistorySubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletDropDownItemsSubscriber
+import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
 
 @Suppress("LongParameterList")
 internal class SingleWalletContentLoader(
@@ -31,6 +38,7 @@ internal class SingleWalletContentLoader(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getOnrampTransactionsUseCase: GetOnrampTransactionsUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
+    private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val walletWarningsAnalyticsSender: WalletWarningsAnalyticsSender,
 ) : WalletContentLoader(id = userWallet.walletId) {
@@ -58,6 +66,11 @@ internal class SingleWalletContentLoader(
                 clickIntents = clickIntents,
                 getSingleWalletWarningsFactory = getSingleWalletWarningsFactory,
                 walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
+            ),
+            WalletDropDownItemsSubscriber(
+                stateHolder = stateHolder,
+                shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
+                clickIntents = clickIntents,
             ),
             SingleWalletExpressStatusesSubscriber(
                 userWallet = userWallet,

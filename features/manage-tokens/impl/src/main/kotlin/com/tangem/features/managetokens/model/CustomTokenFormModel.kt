@@ -2,7 +2,7 @@ package com.tangem.features.managetokens.model
 
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -37,7 +37,7 @@ import javax.inject.Inject
 
 // TODO: Divide to sub-components: [REDACTED_JIRA]
 @Suppress("LongParameterList", "LargeClass")
-@ComponentScoped
+@ModelScoped
 internal class CustomTokenFormModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val customCurrencyValidator: CustomCurrencyValidator,

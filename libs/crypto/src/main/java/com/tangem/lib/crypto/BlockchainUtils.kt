@@ -18,6 +18,7 @@ import java.math.BigDecimal
  * Temporary solution for domain specific logic for Blockchain.
  * Instead of creating repositories and unnecessary and overkill use cases
  */
+@Suppress("TooManyFunctions")
 object BlockchainUtils {
 
     private const val XRP_X_ADDRESS = 'X'
@@ -135,6 +136,12 @@ object BlockchainUtils {
             Blockchain.Binance, Blockchain.BinanceTestnet -> true
             else -> false
         }
+    }
+
+    fun isIncludeStakingTotalBalance(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+
+        return blockchain != Blockchain.Cardano
     }
 
     private fun getNetworkStandardName(blockchain: Blockchain): String {

@@ -6,11 +6,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.FaultyDecomposeApi
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.fade
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stackAnimation
-import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.slide
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
@@ -70,7 +70,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
 
     private val innerNavigationStateFlow = instanceKeeper.getOrCreateSimple(key = "innerNavigationState") {
         MutableStateFlow(
-            MultiWalletInnerNavigationState(1, 5),
+            MultiWalletInnerNavigationState(1, 6),
         )
     }
 
@@ -80,6 +80,8 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         innerNavigation = innerNavigationStateFlow,
         backups = model.backups,
     )
+
+    val backButtonClickFlow = MutableSharedFlow<Unit>()
 
     private val childStack: Value<ChildStack<OnboardingMultiWalletState.Step, ComposableContentComponent>> =
         childStack(
@@ -95,8 +97,6 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
                 )
             },
         )
-
-    val backButtonClickFlow = MutableSharedFlow<Unit>()
 
     override val innerNavigation: InnerNavigation = object : InnerNavigation {
         override val state = innerNavigationStateFlow
@@ -117,7 +117,7 @@ internal class DefaultOnboardingMultiWalletComponent @AssistedInject constructor
         source = bottomSheetNavigation,
         serializer = null,
         handleBackButton = false,
-        childFactory = { configuration, componentContext ->
+        childFactory = { _, componentContext ->
             MultiWalletAccessCodeComponent(
                 context = childByContext(componentContext),
                 params = childParams,
