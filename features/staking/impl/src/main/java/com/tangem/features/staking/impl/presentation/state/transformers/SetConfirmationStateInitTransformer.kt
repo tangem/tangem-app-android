@@ -41,6 +41,7 @@ internal class SetConfirmationStateInitTransformer(
     private val isImplicitExit: Boolean
         get() = pendingAction == null && pendingActions?.isEmpty() == true || isTronStakedBalance
 
+    @Suppress("CyclomaticComplexMethod")
     override fun transform(prevState: StakingUiState): StakingUiState {
         val actionType = when {
             isEnter -> StakingActionCommonType.Enter(
