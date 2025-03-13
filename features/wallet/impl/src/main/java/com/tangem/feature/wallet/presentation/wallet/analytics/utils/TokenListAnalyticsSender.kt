@@ -8,6 +8,7 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -19,13 +20,12 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 internal class TokenListAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val checkIsWalletToppedUpUseCase: CheckIsWalletToppedUpUseCase,

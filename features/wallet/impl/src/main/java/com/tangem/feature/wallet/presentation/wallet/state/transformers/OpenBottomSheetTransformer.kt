@@ -31,6 +31,9 @@ internal class OpenBottomSheetTransformer(
             is WalletState.Visa.Locked -> prevState.copy(
                 bottomSheetConfig = updateConfig(),
             )
+            is WalletState.Visa.AccessTokenLocked -> prevState.copy(
+                bottomSheetConfig = updateConfig(),
+            )
         }
     }
 

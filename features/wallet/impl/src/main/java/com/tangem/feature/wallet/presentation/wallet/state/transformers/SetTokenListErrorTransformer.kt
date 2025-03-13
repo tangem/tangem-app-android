@@ -61,8 +61,7 @@ internal class SetTokenListErrorTransformer(
             title = title,
             additionalInfo = WalletAdditionalInfoFactory.resolve(wallet = selectedWallet),
             imageResId = imageResId,
-            onRenameClick = onRenameClick,
-            onDeleteClick = onDeleteClick,
+            dropDownItems = dropDownItems,
             balance = BigDecimal.ZERO.format {
                 fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
             },

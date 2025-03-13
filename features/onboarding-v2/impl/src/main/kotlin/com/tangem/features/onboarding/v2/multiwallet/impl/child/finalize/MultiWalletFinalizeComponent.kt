@@ -32,7 +32,7 @@ internal class MultiWalletFinalizeComponent(
         params.innerNavigation.update {
             it.copy(
                 stackSize = 7,
-                stackMaxSize = 8,
+                stackMaxSize = 9,
             )
         }
         params.parentParams.titleProvider.changeTitle(

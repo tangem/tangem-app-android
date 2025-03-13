@@ -34,7 +34,7 @@ import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.*
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider

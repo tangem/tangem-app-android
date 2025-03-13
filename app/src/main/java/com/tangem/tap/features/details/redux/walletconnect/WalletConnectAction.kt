@@ -15,7 +15,10 @@ sealed class WalletConnectAction : Action {
 
     data class OpenSession(
         val wcUri: String,
-    ) : WalletConnectAction()
+        val source: SourceType,
+    ) : WalletConnectAction() {
+        enum class SourceType { QR, DEEPLINK, ETC }
+    }
 
     data class DisconnectSession(val topic: String) : WalletConnectAction()
 

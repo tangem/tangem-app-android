@@ -4,7 +4,7 @@ import arrow.core.Either
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
@@ -31,7 +31,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class UserWalletsFetcher @Inject constructor(
     getWalletsUseCase: GetWalletsUseCase,
     private val getWalletTotalBalanceUseCase: GetWalletTotalBalanceUseCase,

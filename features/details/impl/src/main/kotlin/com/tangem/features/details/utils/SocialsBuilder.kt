@@ -1,7 +1,7 @@
 package com.tangem.features.details.utils
 
 import androidx.compose.ui.text.intl.Locale
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.impl.R
@@ -9,7 +9,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class SocialsBuilder @Inject constructor(
     private val urlOpener: UrlOpener,
 ) {

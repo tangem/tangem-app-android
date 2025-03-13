@@ -2,9 +2,12 @@ package com.tangem.plugin.configuration.configurations.extension
 
 import com.android.build.gradle.BaseExtension
 import com.tangem.plugin.configuration.model.AppConfig
+import com.tangem.plugin.configuration.utils.findPlugin
 import com.tangem.plugin.configuration.utils.findVersion
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.plugins
 
 internal fun BaseExtension.configureCompileSdk() {
     compileSdkVersion(AppConfig.compileSdkVersion)
@@ -30,10 +33,8 @@ internal fun BaseExtension.configureCompose(project: Project) {
     }
 
     buildFeatures.compose = useCompose
-    
+
     if (useCompose) {
-        composeOptions {
-            kotlinCompilerExtensionVersion = project.findVersion(alias = "compose-compiler").requiredVersion
-        }
+        project.plugins.apply(project.findPlugin("kotlin-compose-compiler").pluginId)
     }
 }

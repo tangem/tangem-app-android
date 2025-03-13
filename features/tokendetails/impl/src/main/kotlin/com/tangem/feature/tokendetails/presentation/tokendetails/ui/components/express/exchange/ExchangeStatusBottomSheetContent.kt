@@ -24,7 +24,7 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus.Companion.isFailed
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotifications
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
 
 @Composable
@@ -88,14 +88,15 @@ internal fun ExchangeStatusBottomSheetContent(state: ExchangeUM) {
 }
 
 @Composable
-private fun Notification(state: ExchangeStatusNotifications, activeStatus: ExchangeStatus?) {
+private fun Notification(state: ExchangeStatusNotification, activeStatus: ExchangeStatus?) {
     AnimatedContent(
         targetState = state,
         modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
         label = "Exchange Status Notification Change",
+        contentKey = { it::class.java },
     ) { notification ->
         when (notification) {
-            is ExchangeStatusNotifications.CommonNotification -> {
+            is ExchangeStatusNotification.CommonNotification -> {
                 com.tangem.core.ui.components.notifications.Notification(
                     config = notification.config,
                     iconTint = when {
@@ -106,7 +107,7 @@ private fun Notification(state: ExchangeStatusNotifications, activeStatus: Excha
                     containerColor = TangemTheme.colors.background.action,
                 )
             }
-            is ExchangeStatusNotifications.TokenRefunded -> {
+            is ExchangeStatusNotification.TokenRefunded -> {
                 CurrencyNotification(
                     config = notification.config,
                     containerColor = TangemTheme.colors.background.action,

@@ -2,7 +2,7 @@ package com.tangem.features.details.model
 
 import arrow.core.getOrElse
 import com.tangem.core.analytics.AppInstanceIdProvider
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 @Suppress("LongParameterList")
 internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,

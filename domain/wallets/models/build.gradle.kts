@@ -1,7 +1,7 @@
 plugins {
     alias(deps.plugins.kotlin.jvm)
     alias(deps.plugins.kotlin.serialization)
-    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -18,6 +18,6 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
-    kapt(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     // endregion
 }

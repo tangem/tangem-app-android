@@ -26,6 +26,7 @@ dependencies {
     implementation(deps.kotlin.immutable.collections)
 
     /** Core modules */
+    implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)

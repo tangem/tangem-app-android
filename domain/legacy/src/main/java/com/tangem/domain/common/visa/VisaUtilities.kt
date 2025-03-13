@@ -6,6 +6,7 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.models.scan.CardDTO
 
 private const val VISA_BATCH_START = "AE"
+private const val VISA_BATCH_START_2 = "FFFC"
 
 object VisaUtilities {
 
@@ -24,6 +25,6 @@ object VisaUtilities {
 
     fun isVisaCard(firmwareVersion: Double, batchId: String): Boolean {
         return firmwareVersion in FirmwareVersion.visaRange &&
-            batchId.startsWith(VISA_BATCH_START)
+            (batchId.startsWith(VISA_BATCH_START) || batchId.startsWith(VISA_BATCH_START_2))
     }
 }

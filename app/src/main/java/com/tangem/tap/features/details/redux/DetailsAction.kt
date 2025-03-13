@@ -1,9 +1,9 @@
 package com.tangem.tap.features.details.redux
 
-import androidx.lifecycle.LifecycleCoroutineScope
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.models.scan.ScanResponse
+import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
 sealed class DetailsAction : Action {
@@ -27,7 +27,7 @@ sealed class DetailsAction : Action {
         }
 
         data class CheckBiometricsStatus(
-            val lifecycleScope: LifecycleCoroutineScope,
+            val coroutineScope: CoroutineScope,
         ) : AppSettings()
 
         data object EnrollBiometrics : AppSettings()

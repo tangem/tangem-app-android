@@ -297,6 +297,21 @@ sealed class NotificationUM(val config: NotificationConfig) {
         )
     }
 
+    sealed interface Sui {
+
+        data object NotEnoughCoinForTokenTransaction : Error(
+            title = resourceReference(id = R.string.sui_not_enough_coin_for_fee_title),
+            subtitle = resourceReference(
+                id = R.string.sui_not_enough_coin_for_fee_description,
+                formatArgs = wrappedList(
+                    BigDecimal.ONE.format {
+                        crypto(Blockchain.Sui.currency, Blockchain.Sui.decimals())
+                    },
+                ),
+            ),
+        )
+    }
+
     sealed interface Koinos {
         data class InsufficientRecoverableMana(
             val mana: BigDecimal,

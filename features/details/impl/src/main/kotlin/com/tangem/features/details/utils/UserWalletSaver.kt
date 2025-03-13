@@ -7,7 +7,7 @@ import arrow.core.raise.fold
 import arrow.core.raise.recover
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.models.AnalyticsParam
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.navigation.popTo
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -33,7 +33,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
-@ComponentScoped
+@ModelScoped
 @Suppress("LongParameterList")
 internal class UserWalletSaver @Inject constructor(
     private val scanCardProcessor: ScanCardProcessor,
