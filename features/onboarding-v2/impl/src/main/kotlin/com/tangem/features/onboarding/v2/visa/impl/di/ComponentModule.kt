@@ -1,6 +1,6 @@
 package com.tangem.features.onboarding.v2.visa.impl.di
 
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
 import com.tangem.features.onboarding.v2.visa.impl.DefaultOnboardingVisaComponent
@@ -30,7 +30,7 @@ internal interface ComponentModule {
 }
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface ModelModule {
 
     @Binds

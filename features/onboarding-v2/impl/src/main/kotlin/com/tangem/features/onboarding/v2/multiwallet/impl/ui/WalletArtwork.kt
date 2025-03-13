@@ -2,10 +2,12 @@
 
 package com.tangem.features.onboarding.v2.multiwallet.impl.ui
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -13,18 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.zIndex
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.common.ui.WalletCard
 import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
@@ -106,7 +104,7 @@ fun WalletArtworks(
             }
         }
 
-        val circleColor = TangemTheme.colors.background.secondary
+        val circleColor = TangemTheme.colors.button.secondary
 
         Canvas(
             modifier = Modifier
@@ -241,36 +239,21 @@ private fun AnimatedWalletCards(
     }
 }
 
-@Composable
-private fun WalletCard(url: String?, modifier: Modifier = Modifier) {
-    AsyncImage(
-        modifier = modifier,
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(url)
-            .crossfade(true)
-            .build(),
-        placeholder = painterResource(R.drawable.card_placeholder_black),
-        error = painterResource(R.drawable.card_placeholder_black),
-        fallback = painterResource(R.drawable.card_placeholder_black),
-        contentDescription = null,
-    )
-}
-
 private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeightDp: Float, density: Float) =
     when (this) {
         WalletArtworksState.Hidden -> listOf()
         is WalletArtworksState.Folded -> listOf(
             CardsTransitionState(
-                WalletCardTransitionState(),
-                WalletCardTransitionState(),
-                WalletCardTransitionState(),
+                WalletCardTransitionState(alpha = 1f),
+                WalletCardTransitionState(alpha = 0f),
+                WalletCardTransitionState(alpha = 0f),
             ),
         )
         is WalletArtworksState.Stack -> listOf(
             CardsTransitionState(
-                walletCard1 = WalletCardTransitionState(),
-                walletCard2 = WalletCardTransitionState(),
-                walletCard3 = WalletCardTransitionState(),
+                WalletCardTransitionState(alpha = 1f),
+                WalletCardTransitionState(alpha = 0f),
+                WalletCardTransitionState(alpha = 0f),
             ),
             CardsTransitionState(
                 walletCard1 = WalletCardTransitionState().copy(
@@ -451,11 +434,14 @@ private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeigh
     }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Preview(showBackground = true, widthDp = 360, heightDp = 640, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun Preview() {
     TangemThemePreview {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .background(TangemTheme.colors.background.primary)
+                .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             var state: WalletArtworksState by remember { mutableStateOf(WalletArtworksState.Folded) }
