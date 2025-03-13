@@ -136,13 +136,13 @@ internal class DefaultRampManager(
         cryptoCurrency: CryptoCurrency,
     ): ExchangeableState {
         return withContext(dispatchers.io) {
-            val initializationStatus = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
+            val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
                 ?: return@withContext ExchangeableState.Loading
-            when (initializationStatus) {
+            when (asset) {
                 is Lce.Error -> ExchangeableState.Error
                 is Lce.Loading -> ExchangeableState.Loading
                 is Lce.Content -> {
-                    val foundAsset = initializationStatus.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
+                    val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
                     foundAsset?.exchangeAvailable?.toExchangeableState() ?: ExchangeableState.AssetNotFound
                 }
             }
