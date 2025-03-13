@@ -78,10 +78,6 @@ private fun BalancesBlock(balances: BalancesAndLimitsBottomSheetConfig.Balance, 
                 title = stringReference("Debit"),
                 value = balances.debit,
             )
-            BlockItem(
-                title = stringReference("Pending refund"),
-                value = balances.pending,
-            )
         },
         description = {
             InfoButton(onClick = balances.onInfoClick)
@@ -180,7 +176,6 @@ private class BalancesAndLimitsBottomSheetParameterProvider :
                     availableBalance = "392.45 USDT",
                     blockedBalance = "36.00 USDT",
                     debit = "00.00 USDT",
-                    pending = "20.99 USDT",
                     amlVerified = "356.45 USDT",
                     onInfoClick = {},
                 ),
