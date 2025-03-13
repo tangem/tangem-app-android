@@ -1,23 +1,32 @@
 package com.tangem.tap
 
+import android.app.job.JobScheduler
+import android.content.Context
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.work.OneTimeWorkRequest
+import androidx.work.WorkManager
 import com.tangem.common.routing.AppRoute
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
+import com.tangem.tap.LockTimerWorker.Companion.TAG
 import com.tangem.tap.common.extensions.dispatchNavigationAction
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 
 internal class LockUserWalletsTimer(
-    owner: LifecycleOwner,
+    private val context: Context,
     private val settingsRepository: SettingsRepository,
-    private val duration: Duration = with(Duration) { 10.minutes },
+    private val duration: Duration = with(Duration) { 5.minutes },
     private val userWalletsListManager: UserWalletsListManager,
     private val coroutineScope: CoroutineScope,
-) : LifecycleOwner by owner,
+) : LifecycleOwner by context as LifecycleOwner,
     DefaultLifecycleObserver {
 
     private var delayJob: Job? = null
@@ -31,19 +40,15 @@ internal class LockUserWalletsTimer(
     }
 
     override fun onStart(owner: LifecycleOwner) {
+        WorkManager.getInstance(context).cancelAllWorkByTag(TAG)
         coroutineScope.launch {
-            val wasApplicationStopped = settingsRepository.wasApplicationStopped()
             val shouldOpenWelcomeScreenOnResume = settingsRepository.shouldOpenWelcomeScreenOnResume()
-
             Timber.i(
                 """
                 Owner resumed
-                |- Was stopped: $wasApplicationStopped
                 |- Need to open welcome screen: $shouldOpenWelcomeScreenOnResume
                 """.trimIndent(),
             )
-
-            settingsRepository.setWasApplicationStopped(value = false)
 
             if (shouldOpenWelcomeScreenOnResume) {
                 store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
@@ -58,10 +63,9 @@ internal class LockUserWalletsTimer(
 
     override fun onStop(owner: LifecycleOwner) {
         Timber.i("Owner stopped")
+        delayJob = null
 
-        coroutineScope.launch {
-            settingsRepository.setWasApplicationStopped(value = true)
-        }
+        startTimerWorker()
     }
 
     fun restart() {
@@ -73,6 +77,15 @@ internal class LockUserWalletsTimer(
             """.trimIndent(),
         )
         start(log = false)
+    }
+
+    private fun startTimerWorker() {
+        val lockWorkRequest = OneTimeWorkRequest.Builder(LockTimerWorker::class.java)
+            .addTag(TAG)
+            .setInitialDelay(duration.inWholeSeconds, TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(context).enqueue(lockWorkRequest)
     }
 
     private fun start(log: Boolean = true) {
@@ -87,6 +100,9 @@ internal class LockUserWalletsTimer(
         delayJob = createDelayJob()
     }
 
+    /**
+     * This job used only when app is foreground when background use [JobScheduler]
+     */
     private fun createDelayJob(): Job = coroutineScope.launch {
         val startTime = System.currentTimeMillis()
 
@@ -96,22 +112,16 @@ internal class LockUserWalletsTimer(
 
         if (userWalletsListManager.hasUserWallets) {
             val currentTime = System.currentTimeMillis()
-            val wasApplicationStopped = settingsRepository.wasApplicationStopped()
 
             Timber.i(
                 """
                         Finished
-                        |- App is stopped: $wasApplicationStopped
                         |- Millis passed: ${currentTime - startTime}
                 """.trimIndent(),
             )
 
             userWalletsListManager.lock()
-            if (wasApplicationStopped) {
-                settingsRepository.setShouldOpenWelcomeScreenOnResume(value = true)
-            } else {
-                store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
-            }
+            store.dispatchNavigationAction { replaceAll(AppRoute.Welcome()) }
         }
     }
 }

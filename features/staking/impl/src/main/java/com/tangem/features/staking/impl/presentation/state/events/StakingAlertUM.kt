@@ -5,6 +5,7 @@ import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.features.staking.impl.R
 
 @Immutable
@@ -46,6 +47,18 @@ internal sealed class StakingAlertUM : AlertUM {
         override val onConfirmClick: (() -> Unit)? = null
         override val title: TextReference = resourceReference(id = R.string.staking_error_no_validators_title)
         override val message: TextReference = resourceReference(id = R.string.staking_error_no_validators_message)
+        override val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
+    }
+
+    data class StakeMoreClickUnavailable(
+        val cryptoCurrency: CryptoCurrency,
+    ) : StakingAlertUM() {
+        override val onConfirmClick: (() -> Unit)? = null
+        override val title: TextReference? = null
+        override val message: TextReference = resourceReference(
+            id = R.string.staking_stake_more_button_unavailability_reason,
+            wrappedList(cryptoCurrency.name, cryptoCurrency.symbol),
+        )
         override val confirmButtonText: TextReference = resourceReference(id = R.string.common_ok)
     }
 }

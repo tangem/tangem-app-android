@@ -3,6 +3,8 @@ package com.tangem.datasource.di
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.PolymorphicJsonAdapterFactory
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.blockchain.nft.models.NFTAsset
+import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
 import com.tangem.datasource.api.common.adapter.DateTimeAdapter
@@ -44,6 +46,18 @@ class MoshiModule {
                 NamePolymorphicAdapterFactory.of(NetworkStatusDM::class.java)
                     .withSubtype(NetworkStatusDM.Verified::class.java, "amounts")
                     .withSubtype(NetworkStatusDM.NoAccount::class.java, "amount_to_create_account"),
+            )
+            .add(
+                PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
+                    .withSubtype(NFTCollection.Identifier.EVM::class.java, "evm")
+                    .withSubtype(NFTCollection.Identifier.TON::class.java, "ton")
+                    .withDefaultValue(NFTCollection.Identifier.Unknown),
+            )
+            .add(
+                PolymorphicJsonAdapterFactory.of(NFTAsset.Identifier::class.java, "bc")
+                    .withSubtype(NFTAsset.Identifier.EVM::class.java, "evm")
+                    .withSubtype(NFTAsset.Identifier.TON::class.java, "ton")
+                    .withDefaultValue(NFTAsset.Identifier.Unknown),
             )
             .addLast(KotlinJsonAdapterFactory())
             .addStakeKitEnumFallbackAdapters()

@@ -20,13 +20,21 @@ internal object StakingNotification {
         buttonState = buttonState,
         onCloseClick = onCloseClick,
     ) {
-        data class StakedPositionNotFoundError(val message: String) : StakingNotification.Error(
+        data class StakedPositionNotFoundError(val message: String) : Error(
             title = stringReference(message),
             subtitle = stringReference(message),
         )
 
-        data class Common(val subtitle: TextReference) : StakingNotification.Error(
+        data class Common(val subtitle: TextReference) : Error(
             title = resourceReference(R.string.common_error),
+            subtitle = subtitle,
+        )
+
+        data class MinimumAmountNotReachedError(
+            val title: TextReference,
+            val subtitle: TextReference,
+        ) : Error(
+            title = title,
             subtitle = subtitle,
         )
     }
@@ -46,9 +54,9 @@ internal object StakingNotification {
         data class TransactionInProgress(
             val title: TextReference,
             val description: TextReference,
-        ) : StakingNotification.Warning(title = title, subtitle = description)
+        ) : Warning(title = title, subtitle = description)
 
-        data object LowStakedBalance : StakingNotification.Warning(
+        data object LowStakedBalance : Warning(
             title = resourceReference(R.string.staking_notification_low_staked_balance_title),
             subtitle = resourceReference(R.string.staking_notification_low_staked_balance_text),
         )
@@ -67,12 +75,12 @@ internal object StakingNotification {
     ) {
         data class EarnRewards(
             val subtitleText: TextReference,
-        ) : StakingNotification.Info(
+        ) : Info(
             title = resourceReference(R.string.staking_notification_earn_rewards_title),
             subtitle = subtitleText,
         )
 
-        data object StakeEntireBalance : StakingNotification.Info(
+        data object StakeEntireBalance : Info(
             title = resourceReference(R.string.common_network_fee_title),
             subtitle = resourceReference(R.string.staking_notification_stake_entire_balance_text),
         )
@@ -80,7 +88,7 @@ internal object StakingNotification {
         data class Unstake(
             val cooldownPeriodDays: Int,
             @StringRes val subtitleRes: Int,
-        ) : StakingNotification.Info(
+        ) : Info(
             title = resourceReference(R.string.common_unstake),
             subtitle = resourceReference(
                 subtitleRes,
@@ -97,7 +105,7 @@ internal object StakingNotification {
         data class Ordinary(
             val title: TextReference,
             val text: TextReference,
-        ) : StakingNotification.Info(
+        ) : Info(
             title = title,
             subtitle = text,
         )

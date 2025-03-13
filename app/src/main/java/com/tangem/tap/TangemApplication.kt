@@ -1,6 +1,8 @@
 package com.tangem.tap
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
@@ -78,7 +80,7 @@ lateinit var store: Store<AppState>
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 internal lateinit var derivationsFinder: DerivationsFinder
 
-abstract class TangemApplication : Application(), ImageLoaderFactory {
+abstract class TangemApplication : Application(), ImageLoaderFactory, Configuration.Provider {
 
     // region DI
     private val entryPoint: ApplicationEntryPoint
@@ -209,6 +211,14 @@ abstract class TangemApplication : Application(), ImageLoaderFactory {
 
     private val uiMessageSender: UiMessageSender
         get() = entryPoint.getUiMessageSender()
+
+    private val workerFactory: HiltWorkerFactory
+        get() = entryPoint.getWorkerFactory()
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     // endregion
 

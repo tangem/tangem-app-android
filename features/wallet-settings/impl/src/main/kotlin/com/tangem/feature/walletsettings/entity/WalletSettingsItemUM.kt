@@ -16,6 +16,13 @@ internal sealed class WalletSettingsItemUM {
         val blocks: ImmutableList<BlockUM>,
     ) : WalletSettingsItemUM()
 
+    data class WithSwitch(
+        override val id: String,
+        val title: TextReference,
+        val isChecked: Boolean,
+        val onCheckedChange: (Boolean) -> Unit,
+    ) : WalletSettingsItemUM()
+
     data class WithText(
         override val id: String,
         val title: TextReference,

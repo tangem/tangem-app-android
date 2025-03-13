@@ -50,6 +50,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.analytics.models)
     implementation(projects.core.datasource)
+    implementation(projects.core.decompose)
 
     /** Common */
     implementation(projects.common.ui)
@@ -83,6 +84,7 @@ dependencies {
     /** Feature modules */
     implementation(projects.features.send.api)
     implementation(projects.features.tokendetails.api)
+    implementation(projects.features.txhistory.api)
     implementation(projects.features.qrScanning.api)
 
     /** DI */
