@@ -1,14 +1,14 @@
 package com.tangem.feature.wallet.presentation.wallet.analytics.utils
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 internal class WalletWarningsSingleEventSender @Inject constructor(
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val screenLifecycleProvider: ScreenLifecycleProvider,
