@@ -121,6 +121,8 @@ object PreferencesKeys {
 
     val SEED_FIRST_NOTIFICATION_SHOW_TIME by lazy { longPreferencesKey("seedFirstNotificationTime") }
 
+    val WALLETS_NFT_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "walletsNftEnabledStates") }
+
     fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")
 
     // region Permission
