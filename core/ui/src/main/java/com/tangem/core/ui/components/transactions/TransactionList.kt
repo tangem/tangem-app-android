@@ -104,7 +104,7 @@ private fun LazyListScope.contentItems(
 }
 
 @Composable
-private fun PendingTxsBlock(pendingTxs: ImmutableList<TransactionState>, isBalanceHidden: Boolean) {
+fun PendingTxsBlock(pendingTxs: ImmutableList<TransactionState>, isBalanceHidden: Boolean) {
     Column(
         modifier = Modifier
             .padding(top = TangemTheme.dimens.spacing12)
