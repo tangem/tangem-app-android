@@ -19,11 +19,10 @@ internal class DefaultCacheRegistry(
     private val mutexes = ConcurrentHashMap<String, Mutex>()
 
     override suspend fun isExpired(key: String): Boolean {
-        val cacheKey = cacheKeysStore.getSyncOrNull(key) ?: return true
+        cacheKeysStore.getSyncOrNull(key) ?: return true
 
-        return cacheKey.updatedAt
-            .plus(cacheKey.expiresIn)
-            .isBefore(LocalDateTime.now())
+        // disabled cache expiration by time, update always using refresh flag
+        return false
     }
 
     override suspend fun invalidate(key: String) {
