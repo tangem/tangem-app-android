@@ -44,6 +44,7 @@ internal class RenameWalletsTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             is WalletState.Visa.Locked,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
                 Timber.e("Impossible to rename wallet in locked state")
                 prevState
