@@ -11,7 +11,6 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
-import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 
 @Composable
 internal inline fun OnboardingEntry(
@@ -31,34 +30,7 @@ internal inline fun OnboardingEntry(
             stack = childStack,
             animation = stackAnimation(slide()),
         ) {
-            when (it.configuration) {
-                is OnboardingRoute.MultiWallet -> {
-                    (it.instance as OnboardingMultiWalletComponent).Content(
-                        modifier = modifier,
-                    )
-                }
-                is OnboardingRoute.ManageTokens -> {
-                    (it.instance as ComposableContentComponent).Content(
-                        modifier = modifier,
-                    )
-                }
-                is OnboardingRoute.Done -> {
-                    (it.instance as ComposableContentComponent).Content(
-                        modifier = modifier,
-                    )
-                }
-                is OnboardingRoute.Visa -> {
-                    (it.instance as ComposableContentComponent).Content(
-                        modifier = modifier,
-                    )
-                }
-                is OnboardingRoute.Note -> {
-                    (it.instance as ComposableContentComponent).Content(
-                        modifier = modifier,
-                    )
-                }
-                is OnboardingRoute.None -> {}
-            }
+            (it.instance as? ComposableContentComponent)?.Content(modifier = modifier)
         }
     }
 }
