@@ -10,6 +10,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.features.staking.impl.presentation.state.*
 import com.tangem.features.staking.impl.presentation.state.utils.getPendingActionTitle
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.ImmutableList
@@ -37,7 +38,7 @@ internal class SetButtonsStateTransformer(
         return prevState.copy(buttonsState = buttonsState)
     }
 
-    private fun getPrimaryButton(prevState: StakingUiState): NavigationButton {
+    private fun getPrimaryButton(prevState: StakingUiState): NavigationButton? {
         val confirmState = prevState.confirmationState as? StakingStates.ConfirmationState.Data
         val innerConfirmState = confirmState?.innerState
 
@@ -46,14 +47,21 @@ internal class SetButtonsStateTransformer(
         val isCompleted = innerConfirmState == InnerConfirmationStakingState.COMPLETED
 
         val isIconVisible = isConfirmation && !isCompleted
+        val isPrimaryButtonDisabled = prevState.isPrimaryButtonDisabled()
         return NavigationButton(
             textReference = prevState.getButtonText(),
             iconRes = R.drawable.ic_tangem_24,
-            isSecondary = false,
+            isDimmed = isPrimaryButtonDisabled,
             isIconVisible = isIconVisible,
             showProgress = isInProgress,
             isEnabled = prevState.isButtonEnabled(),
-            onClick = { prevState.onPrimaryClick() },
+            onClick = {
+                if (isPrimaryButtonDisabled) {
+                    prevState.clickIntents.showPrimaryClickAlert()
+                } else {
+                    prevState.onPrimaryClick()
+                }
+            },
         )
     }
 
@@ -125,7 +133,7 @@ internal class SetButtonsStateTransformer(
                 resourceReference(R.string.common_close)
             } else {
                 when (actionType) {
-                    StakingActionCommonType.Enter -> {
+                    is StakingActionCommonType.Enter -> {
                         val amount = amountState.amountTextField.cryptoAmount.value.orZero()
                         if (confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
                             resourceReference(R.string.give_permission_title)
@@ -162,7 +170,7 @@ internal class SetButtonsStateTransformer(
                 clickIntents.onNextClick()
             } else {
                 val amount = amountState.amountTextField.cryptoAmount.value.orZero()
-                val isEnterAction = actionType == StakingActionCommonType.Enter
+                val isEnterAction = actionType is StakingActionCommonType.Enter
                 if (isEnterAction && confirmationState.isApprovalNeeded && confirmationState.allowance < amount) {
                     clickIntents.showApprovalBottomSheet()
                 } else {
@@ -183,6 +191,14 @@ internal class SetButtonsStateTransformer(
         -> false
         StakingStep.Amount,
         -> true
+    }
+
+    private fun StakingUiState.isPrimaryButtonDisabled(): Boolean {
+        val initialState = initialInfoState as? StakingStates.InitialInfoState.Data
+        val hasNotStaking = initialState?.yieldBalance == InnerYieldBalanceState.Empty
+        val isCardano = BlockchainUtils.isCardano(cryptoCurrencyBlockchainId)
+
+        return !hasNotStaking && isCardano && currentStep == StakingStep.InitialInfo
     }
 
     private fun StakingUiState.isButtonEnabled(): Boolean {
