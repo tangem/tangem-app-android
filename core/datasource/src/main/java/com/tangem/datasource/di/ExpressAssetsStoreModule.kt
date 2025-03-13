@@ -9,6 +9,7 @@ import com.tangem.datasource.local.datastore.RuntimeDataStore
 import com.tangem.datasource.local.token.DefaultExpressAssetsStore
 import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.datasource.utils.MoshiDataStoreSerializer
+import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithStringKeyTypes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -35,7 +36,7 @@ internal object ExpressAssetsStoreModule {
             persistenceStore = DataStoreFactory.create(
                 serializer = MoshiDataStoreSerializer(
                     moshi = moshi,
-                    types = mapWithStringKeyTypes<Asset>(),
+                    types = mapWithStringKeyTypes(listTypes<Asset>()),
                     defaultValue = emptyMap(),
                 ),
                 produceFile = { context.dataStoreFile("express_assets") },
