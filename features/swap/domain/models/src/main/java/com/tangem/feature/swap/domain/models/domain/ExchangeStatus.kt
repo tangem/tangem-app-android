@@ -4,6 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
+import org.joda.time.DateTime
 
 @JsonClass(generateAdapter = true)
 data class ExchangeStatusModel(
@@ -25,7 +26,18 @@ data class ExchangeStatusModel(
     val refundTokensResponse: UserTokensResponse.Token? = null,
     @Json(ignore = true)
     val refundCurrency: CryptoCurrency? = null,
-)
+    @Json(name = "createdAt")
+    val createdAt: DateTime? = null,
+    @Json(name = "averageDuration")
+    val averageDuration: Int? = null,
+) {
+    val hasLongTime: Boolean
+        get() = if (createdAt != null && averageDuration != null) {
+            DateTime.now().minusSeconds(averageDuration * 5) > createdAt
+        } else {
+            false
+        }
+}
 
 @JsonClass(generateAdapter = false)
 enum class ExchangeStatus {
