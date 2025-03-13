@@ -18,6 +18,7 @@ internal class StakeKitErrorConverter(
                 message = stakeKitErrorResponse.message,
                 code = stakeKitErrorResponse.code,
                 methodName = stakeKitErrorResponse.path,
+                details = stakeKitErrorResponse.details?.let(StakeKitErrorDetailsConverter::convert),
             )
         } catch (e: Exception) {
             StakingError.StakeKitUnknownError(value)
