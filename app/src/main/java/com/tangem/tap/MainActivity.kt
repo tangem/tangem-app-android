@@ -355,7 +355,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         lockUserWalletsTimer = LockUserWalletsTimer(
-            owner = this,
+            context = this,
             settingsRepository = settingsRepository,
             userWalletsListManager = userWalletsListManager,
             coroutineScope = mainScope,
