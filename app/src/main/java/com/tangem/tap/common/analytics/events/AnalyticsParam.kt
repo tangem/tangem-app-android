@@ -113,6 +113,7 @@ sealed class AnalyticsParam {
         const val SEED_PHRASE_LENGTH = "Seed Phrase Length"
         const val DAPP_NAME = "DApp Name"
         const val DAPP_URL = "DApp Url"
+        const val NETWORKS = "Networks"
         const val METHOD_NAME = "Method Name"
         const val VALIDATION = "Validation"
         const val BLOCKCHAIN_EXCEPTION_HOST = "exception_host"

@@ -20,7 +20,6 @@ data class VisaCurrency(
         val available: BigDecimal,
         val blocked: BigDecimal,
         val debt: BigDecimal,
-        val pendingRefund: BigDecimal,
     )
 
     data class Limits(

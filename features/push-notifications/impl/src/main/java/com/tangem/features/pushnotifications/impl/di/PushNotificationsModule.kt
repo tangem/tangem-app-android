@@ -1,24 +1,25 @@
 package com.tangem.features.pushnotifications.impl.di
 
-import com.tangem.common.routing.AppRouter
-import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
-import com.tangem.features.pushnotifications.impl.navigation.DefaultPushNotificationsRouter
+import com.tangem.core.decompose.model.Model
+import com.tangem.features.pushnotifications.api.PushNotificationsComponent
+import com.tangem.features.pushnotifications.impl.DefaultPushNotificationsComponent
+import com.tangem.features.pushnotifications.impl.model.PushNotificationsModel
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.scopes.ActivityScoped
+import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.ClassKey
+import dagger.multibindings.IntoMap
 
-/**
- * DI module provides implementation of [PushNotificationsRouter]
- */
 @Module
-@InstallIn(ActivityComponent::class)
-object PushNotificationsModule {
+@InstallIn(SingletonComponent::class)
+internal interface PushNotificationsModule {
 
-    @Provides
-    @ActivityScoped
-    fun provideDisclaimerRouter(appRouter: AppRouter): PushNotificationsRouter {
-        return DefaultPushNotificationsRouter(appRouter)
-    }
+    @Binds
+    fun bindComponentFactory(impl: DefaultPushNotificationsComponent.Factory): PushNotificationsComponent.Factory
+
+    @Binds
+    @IntoMap
+    @ClassKey(PushNotificationsModel::class)
+    fun bindModel(model: PushNotificationsModel): Model
 }
