@@ -12,7 +12,7 @@ import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionBottomS
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.api.ParamsInterceptorHolder
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
@@ -33,7 +33,6 @@ import com.tangem.domain.staking.model.StakingApproval
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
-import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -42,8 +41,6 @@ import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetAllowanceUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
-import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
-import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
@@ -87,7 +84,7 @@ import kotlin.properties.Delegates
 
 @Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class StakingModel @Inject constructor(
     paramsContainer: ParamsContainer,
     private val stateController: StakingStateController,
@@ -106,7 +103,6 @@ internal class StakingModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
-    private val validateTransactionUseCase: ValidateTransactionUseCase,
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val isAnyTokenStakedUseCase: IsAnyTokenStakedUseCase,
@@ -243,7 +239,7 @@ internal class StakingModel @Inject constructor(
                 return
             }
             isInitialInfoStep && noBalanceState -> {
-                stateController.update(
+                val list = buildList {
                     SetConfirmationStateInitTransformer(
                         isEnter = true,
                         isExplicitExit = false,
@@ -252,8 +248,27 @@ internal class StakingModel @Inject constructor(
                         stakingApproval = stakingApproval,
                         stakingAllowance = stakingAllowance,
                         yieldArgs = yield.args,
-                    ),
-                )
+                    ).let(::add)
+                    if (yield.args.enter.isPartialAmountDisabled) {
+                        ValidatorSelectChangeTransformer(
+                            selectedValidator = yield.preferredValidators.firstOrNull(),
+                            yield = yield,
+                        ).let(::add)
+                        SetAmountDataTransformer(
+                            clickIntents = this@StakingModel,
+                            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                            userWalletProvider = Provider { userWallet },
+                            appCurrencyProvider = Provider { appCurrency },
+                        ).let(::add)
+                        AmountMaxValueStateTransformer(
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            minimumTransactionAmount = minimumTransactionAmount,
+                            actionType = uiState.value.actionType,
+                            yield = yield,
+                        ).let(::add)
+                    }
+                }
+                stateController.updateAll(*list.toTypedArray())
             }
         }
         stakingStateRouter.onNextClick()
@@ -280,13 +295,13 @@ internal class StakingModel @Inject constructor(
                     )
                     updateNotifications()
                 },
-                onStakingFeeError = {
-                    stateController.update(AddStakingErrorTransformer())
-                    updateNotifications(GetFeeError.UnknownError)
+                onStakingFeeError = { stakingFeeError ->
+                    stateController.update(AddStakingErrorTransformer)
+                    updateNotifications(stakingError = stakingFeeError)
                 },
                 onFeeError = { error ->
                     analyticsEventHandler.send(StakingAnalyticsEvent.TransactionError)
-                    stateController.update(AddStakingErrorTransformer())
+                    stateController.update(AddStakingErrorTransformer)
                     updateNotifications(error)
                 },
                 onApprovalFee = { fee ->
@@ -406,7 +421,7 @@ internal class StakingModel @Inject constructor(
                 StakingEvent.ShowAlert(StakingAlertUM.NoAvailableValidators),
             )
         } else {
-            if (uiState.value.actionType == StakingActionCommonType.Enter) {
+            if (uiState.value.actionType is StakingActionCommonType.Enter) {
                 stateController.updateAll(
                     ValidatorSelectChangeTransformer(
                         selectedValidator = null,
@@ -631,7 +646,7 @@ internal class StakingModel @Inject constructor(
         }.saveIn(approvalJobHolder)
     }
 
-    private fun updateNotifications(feeError: GetFeeError? = null) {
+    private fun updateNotifications(feeError: GetFeeError? = null, stakingError: StakingError? = null) {
         modelScope.launch {
             val confirmationState = value.confirmationState as? StakingStates.ConfirmationState.Data
             val feeState = confirmationState?.feeState as? FeeState.Content
@@ -648,16 +663,6 @@ internal class StakingModel @Inject constructor(
                 ).getOrNull()
             } else {
                 null
-            }
-            val validation = amount?.let {
-                validateTransactionUseCase(
-                    userWalletId = userWalletId,
-                    amount = amount.convertToSdkAmount(cryptoCurrencyStatus.currency),
-                    fee = feeState?.fee,
-                    memo = null,
-                    destination = "",
-                    network = cryptoCurrencyStatus.currency.network,
-                ).leftOrNull()
             }
 
             val balanceAfterTransaction = calculateBalanceAfterTransaction(
@@ -679,10 +684,10 @@ internal class StakingModel @Inject constructor(
                     appCurrencyProvider = Provider { appCurrency },
                     feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     currencyWarning = currencyWarning,
-                    validatorError = validation,
                     currencyCheck = currencyStatus,
                     isSubtractAvailable = isAmountSubtractAvailable,
                     feeError = feeError,
+                    stakingError = stakingError,
                     yield = yield,
                 ),
             )
@@ -728,7 +733,7 @@ internal class StakingModel @Inject constructor(
     ): BigDecimal? {
         // TODO split for different networks
         val subtractedBalanceAmount = when (actionType) {
-            StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
+            is StakingActionCommonType.Enter -> checkAndCalculateSubtractedAmount(
                 isAmountSubtractAvailable = isAmountSubtractAvailable,
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                 amountValue = amount.orZero(),
@@ -835,6 +840,14 @@ internal class StakingModel @Inject constructor(
         innerRouter.openTokenDetails(userWalletId, cryptoCurrency)
     }
 
+    override fun showPrimaryClickAlert() {
+        stateController.updateEvent(
+            StakingEvent.ShowAlert(
+                StakingAlertUM.StakeMoreClickUnavailable(cryptoCurrencyStatus.currency),
+            ),
+        )
+    }
+
     private suspend fun setupApprovalNeeded() {
         stakingApproval = isApproveNeededUseCase(cryptoCurrencyStatus.currency).fold(
             ifRight = { approval ->
@@ -854,7 +867,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private suspend fun setupIsAnyTokenStaked() {
-        isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() ?: false
+        isAnyTokenStaked = isAnyTokenStakedUseCase(userWalletId).getOrNull() == true
     }
 
     private fun subscribeOnCurrencyStatusUpdates() {
@@ -951,7 +964,7 @@ internal class StakingModel @Inject constructor(
                 when {
                     isInitState() -> {
                         updateInitialData(status)
-                        balanceUpdater.initialUpdate()
+                        balanceUpdater.partialUpdate()
                     }
                     isAssentState() -> {
                         getFee()
@@ -1043,7 +1056,7 @@ internal class StakingModel @Inject constructor(
     }
 
     private fun isExplicitExit(balanceType: BalanceType, pendingAction: PendingAction?): Boolean {
-        return balanceType == BalanceType.STAKED && pendingAction?.type != StakingActionType.RESTAKE
+        return balanceType == BalanceType.STAKED && pendingAction?.type?.isRestake == false
     }
 
     private fun isAssentState(): Boolean {
