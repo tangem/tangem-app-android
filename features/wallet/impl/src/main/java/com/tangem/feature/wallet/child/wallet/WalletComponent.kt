@@ -13,13 +13,16 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
+import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.decompose.ComposableDialogComponent
 import com.tangem.core.ui.utils.findActivity
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.feature.wallet.presentation.wallet.ui.WalletScreen
 import com.tangem.feature.walletsettings.component.RenameWalletComponent
+import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.markets.entry.MarketsEntryComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -31,6 +34,7 @@ internal class WalletComponent @AssistedInject constructor(
     @Assisted navigate: (WalletRoute) -> Unit,
     private val renameWalletComponentFactory: RenameWalletComponent.Factory,
     private val marketsEntryComponentFactory: MarketsEntryComponent.Factory,
+    private val askBiometryComponentFactory: AskBiometryComponent.Factory,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: WalletModel = getOrCreateModel()
@@ -56,6 +60,15 @@ internal class WalletComponent @AssistedInject constructor(
                         ),
                     )
                 }
+                is WalletDialogConfig.AskForBiometry -> {
+                    askBiometryComponentFactory.create(
+                        context = childByContext(componentContext),
+                        params = AskBiometryComponent.Params(
+                            bottomSheetVariant = true,
+                            modelCallbacks = model.askBiometryModelCallbacks,
+                        ),
+                    )
+                }
             }
         },
     )
@@ -74,7 +87,11 @@ internal class WalletComponent @AssistedInject constructor(
             marketsEntryComponent = marketsEntryComponent,
         )
 
-        dialog.child?.instance?.Dialog()
+        when (val dialog = dialog.child?.instance) {
+            is ComposableDialogComponent -> dialog.Dialog()
+            is ComposableBottomSheetComponent -> dialog.BottomSheet()
+            else -> {}
+        }
     }
 
     @AssistedFactory
