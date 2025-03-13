@@ -30,7 +30,7 @@ internal class MultiWalletCreateWalletComponent(
             params.innerNavigation.update {
                 it.copy(
                     stackSize = 2,
-                    stackMaxSize = 8,
+                    stackMaxSize = 9,
                 )
             }
 

@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.VisaWalletSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 
 internal class VisaWalletContentLoader(
     private val userWallet: UserWallet,

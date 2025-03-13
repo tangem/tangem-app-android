@@ -2,7 +2,7 @@ package com.tangem.features.onboarding.v2.multiwallet.impl.child.scanprimary.mod
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.common.util.cardTypesResolver
@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
-@ComponentScoped
+@ModelScoped
 internal class Wallet1ScanPrimaryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,

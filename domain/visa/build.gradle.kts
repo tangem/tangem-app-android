@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -24,4 +25,5 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
     implementation(deps.moshi)
     implementation(deps.moshi.kotlin)
+    ksp(deps.moshi.kotlin.codegen)
 }

@@ -8,8 +8,11 @@ import com.tangem.datasource.local.preferences.utils.storeObject
 import com.tangem.domain.balancehiding.BalanceHidingSettings
 import com.tangem.domain.balancehiding.repositories.BalanceHidingRepository
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
-internal class DefaultBalanceHidingRepository(
+@Singleton
+internal class DefaultBalanceHidingRepository @Inject constructor(
     private val appPreferencesStore: AppPreferencesStore,
 ) : BalanceHidingRepository {
 

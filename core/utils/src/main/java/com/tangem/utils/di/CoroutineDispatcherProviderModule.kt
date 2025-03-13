@@ -9,7 +9,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-interface CoroutineDispatcherProviderModule {
+internal interface CoroutineDispatcherProviderModule {
 
     @Binds
     fun bindCoroutineDispatcherProvider(
