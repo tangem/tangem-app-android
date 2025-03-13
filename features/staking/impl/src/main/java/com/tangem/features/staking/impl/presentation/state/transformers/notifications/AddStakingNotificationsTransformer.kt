@@ -54,6 +54,7 @@ internal class AddStakingNotificationsTransformer(
         isSubtractAvailable = isSubtractAvailable,
     )
 
+    @Suppress("LongMethod")
     override fun transform(prevState: StakingUiState): StakingUiState {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount.orZero()
