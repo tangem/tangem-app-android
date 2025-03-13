@@ -40,7 +40,6 @@ sealed class AppRoute(val path: String) : Route {
         val isTosAccepted: Boolean,
     ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}")
 
-    @Deprecated("Do not use! Should be replaced by an implementation in onboarding component")
     @Serializable
     data object OnboardingNote : AppRoute(path = "/onboarding/note")
 
