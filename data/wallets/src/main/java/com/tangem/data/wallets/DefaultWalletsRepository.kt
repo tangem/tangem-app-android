@@ -11,6 +11,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.PreferencesKeys.SEED_FIRST_NOTIFICATION_SHOW_TIME
 import com.tangem.datasource.local.preferences.utils.get
+import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -200,6 +201,30 @@ internal class DefaultWalletsRepository(
             it.toMutableMap().apply {
                 this[id] = value
             }
+        }
+    }
+
+    override fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean> = appPreferencesStore
+        .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+        .map { it[userWalletId.stringValue] == true }
+
+    override suspend fun enableNFT(userWalletId: UserWalletId) {
+        appPreferencesStore.editData {
+            it.setObjectMap(
+                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                value = it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                    .plus(userWalletId.stringValue to true),
+            )
+        }
+    }
+
+    override suspend fun disableNFT(userWalletId: UserWalletId) {
+        appPreferencesStore.editData {
+            it.setObjectMap(
+                key = PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY,
+                value = it.getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+                    .plus(userWalletId.stringValue to false),
+            )
         }
     }
 }
