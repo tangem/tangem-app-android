@@ -15,19 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.zIndex
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.common.ui.WalletCard
 import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
@@ -242,22 +237,6 @@ private fun AnimatedWalletCards(
             url = url1,
         )
     }
-}
-
-@Composable
-private fun WalletCard(url: String?, modifier: Modifier = Modifier) {
-    AsyncImage(
-        modifier = modifier,
-        model = ImageRequest.Builder(LocalContext.current)
-            .data(url)
-            .crossfade(true)
-            .build(),
-        placeholder = painterResource(R.drawable.card_placeholder_black),
-        error = painterResource(R.drawable.card_placeholder_black),
-        fallback = painterResource(R.drawable.card_placeholder_black),
-        contentScale = ContentScale.Fit,
-        contentDescription = null,
-    )
 }
 
 private fun WalletArtworksState.toTransitionSetState(maxWidthDp: Float, maxHeightDp: Float, density: Float) =
