@@ -135,9 +135,9 @@ internal class DefaultRampManager(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): ExchangeableState {
-        val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
-            ?: return ExchangeableState.Error
         return withContext(dispatchers.io) {
+            val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
+                ?: return@withContext ExchangeableState.Loading
             when (asset) {
                 is Lce.Error -> ExchangeableState.Error
                 is Lce.Loading -> ExchangeableState.Loading
