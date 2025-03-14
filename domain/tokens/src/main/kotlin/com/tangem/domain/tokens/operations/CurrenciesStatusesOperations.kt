@@ -9,10 +9,12 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.tokens.model.Quote
+import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations.Companion.RETRY_DELAY
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 
 class CurrenciesStatusesOperations(
@@ -29,6 +31,7 @@ class CurrenciesStatusesOperations(
             }
             .retryWhen { cause, _ ->
                 emit(Error.DataError(cause).left())
+                delay(RETRY_DELAY)
                 true
             }
     }
