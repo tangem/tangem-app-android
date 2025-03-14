@@ -25,6 +25,8 @@ data class UserTokensResponse(
         override fun equals(other: Any?): Boolean {
             val otherToken = other as? Token ?: return false
 
+            // use only this fields is enough and correct to compare, don't add id or smth
+            // to avoid duplicates for tokens on main screen
             return otherToken.contractAddress == this.contractAddress &&
                 otherToken.networkId == this.networkId &&
                 otherToken.derivationPath == this.derivationPath &&
