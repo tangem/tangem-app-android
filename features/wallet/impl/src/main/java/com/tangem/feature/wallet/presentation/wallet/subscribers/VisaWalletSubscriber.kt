@@ -11,13 +11,13 @@ import com.tangem.domain.visa.GetVisaTxHistoryUseCase
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetBalancesAndLimitsTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetVisaInfoTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.VisaTxHistoryItemStateConverter
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -62,7 +62,7 @@ internal class VisaWalletSubscriber(
 
     private fun setLoadedCurrencyState(maybeCurrency: Either<Throwable, VisaCurrency>) {
         stateController.update(
-            SetBalancesAndLimitsTransformer(
+            SetVisaInfoTransformer(
                 userWallet = userWallet,
                 maybeVisaCurrency = maybeCurrency,
                 clickIntents = clickIntents,
