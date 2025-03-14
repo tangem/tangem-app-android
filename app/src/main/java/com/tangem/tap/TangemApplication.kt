@@ -53,6 +53,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
@@ -220,6 +221,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
             .setWorkerFactory(workerFactory)
             .build()
 
+    private val onlineCardVerifier: OnlineCardVerifier
+        get() = entryPoint.getOnlineCardVerifier()
+
     // endregion
 
     override fun onCreate() {
@@ -322,6 +326,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     clipboardManager = clipboardManager,
                     settingsManager = settingsManager,
                     uiMessageSender = uiMessageSender,
+                    onlineCardVerifier = onlineCardVerifier,
                 ),
             ),
         )

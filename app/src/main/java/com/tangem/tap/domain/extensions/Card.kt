@@ -6,8 +6,8 @@ import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.models.Artwork
-import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.operations.attestation.api.models.CardVerifyAndGetInfo
 
 fun CardDTO.signedHashesCount(): Int {
     return wallets.sumOf { it.totalSignedHashes ?: 0 }
