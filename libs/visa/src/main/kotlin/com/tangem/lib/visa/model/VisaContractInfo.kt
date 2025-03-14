@@ -9,6 +9,7 @@ data class VisaContractInfo(
     val balances: Balances,
     val oldLimits: Limits,
     val newLimits: Limits,
+    val paymentAccountAddress: String,
     val limitsChangeDate: Instant,
 ) {
 
@@ -25,7 +26,6 @@ data class VisaContractInfo(
         val available: Available,
         val blocked: BigDecimal,
         val debt: BigDecimal,
-        val pendingRefund: BigDecimal,
     ) {
 
         data class Available(
