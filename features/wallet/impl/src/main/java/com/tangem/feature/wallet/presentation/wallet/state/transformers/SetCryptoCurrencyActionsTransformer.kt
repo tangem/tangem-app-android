@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 import timber.log.Timber
