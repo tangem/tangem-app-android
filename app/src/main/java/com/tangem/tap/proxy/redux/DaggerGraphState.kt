@@ -33,6 +33,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.domain.scanCard.CardScanningFeatureToggles
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
@@ -77,4 +78,5 @@ data class DaggerGraphState(
     val clipboardManager: ClipboardManager? = null,
     val settingsManager: SettingsManager? = null,
     val uiMessageSender: UiMessageSender? = null,
+    val onlineCardVerifier: OnlineCardVerifier? = null,
 ) : StateType
