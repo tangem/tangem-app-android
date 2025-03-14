@@ -46,9 +46,16 @@ internal class DefaultQuotesStore(
     }
 
     override suspend fun getSync(currenciesIds: Set<CryptoCurrency.RawID>): Set<Quote> {
-        return runtimeStore.getSyncOrDefault(default = emptySet())
-            .filter { it.rawCurrencyId in currenciesIds }
-            .toSet()
+        val runtimeQuotes = runtimeStore.getSyncOrNull()
+        val cachedQuotes = getCachedQuotes(currenciesIds = currenciesIds)
+
+        if (runtimeQuotes.isNullOrEmpty() && cachedQuotes.isEmpty()) return emptySet()
+
+        return mergeQuotes(
+            currenciesIds = currenciesIds,
+            cachedQuotes = cachedQuotes,
+            runtimeQuotes = runtimeQuotes.orEmpty(),
+        )
     }
 
     override suspend fun store(response: QuotesResponse) {
