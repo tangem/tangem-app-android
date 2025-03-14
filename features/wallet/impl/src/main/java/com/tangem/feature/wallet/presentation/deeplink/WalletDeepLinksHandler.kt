@@ -1,7 +1,5 @@
 package com.tangem.feature.wallet.presentation.deeplink
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -13,8 +11,9 @@ import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.utils.coroutines.launchOnCancellation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -32,14 +31,14 @@ internal class WalletDeepLinksHandler @Inject constructor(
 
     private var deepLinksMap = mutableMapOf<UserWalletId, List<DeepLink>>()
 
-    fun registerForWallet(viewModel: ViewModel, userWallet: UserWallet) {
+    fun registerForWallet(scope: CoroutineScope, userWallet: UserWallet) {
         val deepLinks = deepLinksMap.getOrPut(userWallet.walletId) {
-            getDeepLinks(userWallet, viewModel.viewModelScope)
+            getDeepLinks(userWallet, scope)
         }
         deepLinksRegistry.unregisterByIds(deepLinks.map { it.id })
         deepLinksRegistry.register(deepLinks = deepLinks)
 
-        viewModel.addCloseable {
+        scope.launchOnCancellation {
             deepLinksRegistry.unregister(deepLinks)
         }
     }

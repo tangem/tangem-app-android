@@ -4,11 +4,18 @@ plugins {
     alias(deps.plugins.android.library)
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
 android {
     namespace = "com.tangem.libs.visa"
+
+    packaging {
+        resources {
+            excludes += "/META-INF/*"
+        }
+    }
 }
 
 dependencies {
@@ -24,7 +31,7 @@ dependencies {
     implementation(deps.okHttp.prettyLogging)
     implementation(deps.retrofit)
     implementation(deps.retrofit.moshi)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Libs - Other */

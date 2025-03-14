@@ -1,5 +1,6 @@
 package com.tangem.tap
 
+import androidx.hilt.work.HiltWorkerFactory
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.data.card.TransactionSignerFactory
@@ -139,4 +140,6 @@ interface ApplicationEntryPoint {
 
     @GlobalUiMessageSender
     fun getUiMessageSender(): UiMessageSender
+
+    fun getWorkerFactory(): HiltWorkerFactory
 }
