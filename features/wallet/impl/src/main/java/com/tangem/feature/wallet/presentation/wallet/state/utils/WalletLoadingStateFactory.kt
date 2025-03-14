@@ -67,7 +67,7 @@ internal class WalletLoadingStateFactory(
         return WalletState.Visa.Content(
             pullToRefreshConfig = createPullToRefreshConfig(),
             walletCardState = userWallet.toLoadingWalletCardState(),
-            buttons = createMultiWalletActions(userWallet),
+            buttons = createVisaDimmedButtons(),
             warnings = persistentListOf(),
             bottomSheetConfig = null,
             balancesAndLimitBlockState = BalancesAndLimitsBlockState.Loading,
@@ -76,7 +76,6 @@ internal class WalletLoadingStateFactory(
                     value = TxHistoryState.getDefaultLoadingTransactions(clickIntents::onExploreClick),
                 ),
             ),
-            depositButtonState = DepositButtonState(isEnabled = false, clickIntents::onDepositClick),
         )
     }
 
@@ -114,6 +113,13 @@ internal class WalletLoadingStateFactory(
                 dimContent = false,
                 onClick = { clickIntents.onMultiWalletSellClick(userWalletId = userWallet.walletId) },
             ),
+        )
+    }
+
+    private fun createVisaDimmedButtons(): PersistentList<WalletManageButton> {
+        return persistentListOf(
+            WalletManageButton.Receive(enabled = true, dimContent = true, onClick = {}, onLongClick = null),
+            WalletManageButton.Buy(enabled = true, dimContent = true, onClick = {}),
         )
     }
 
