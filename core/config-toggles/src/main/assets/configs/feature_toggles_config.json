@@ -66,5 +66,9 @@
     {
         "name": "NOTE_REFACTORING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "NEW_ATTESTATION_ENABLED",
+        "version": "undefined"
     }
 ]
