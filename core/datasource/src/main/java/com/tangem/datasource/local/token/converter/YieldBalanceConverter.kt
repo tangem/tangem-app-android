@@ -7,14 +7,18 @@ import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceItem
 import com.tangem.utils.converter.Converter
 
-internal class YieldBalanceConverter(private val isCached: Boolean) : Converter<YieldBalanceWrapperDTO, YieldBalance> {
+internal class YieldBalanceConverter(
+    private val source: StatusSource,
+) : Converter<YieldBalanceWrapperDTO, YieldBalance> {
+
+    constructor(isCached: Boolean) : this(source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL)
 
     override fun convert(value: YieldBalanceWrapperDTO): YieldBalance {
         return if (value.balances.isEmpty()) {
             YieldBalance.Empty(
                 integrationId = value.integrationId,
                 address = value.addresses.address,
-                source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
+                source = source,
             )
         } else {
             YieldBalance.Data(
@@ -40,7 +44,7 @@ internal class YieldBalanceConverter(private val isCached: Boolean) : Converter<
                         .sortedWith(compareBy({ it.type }, { it.amount })),
                     integrationId = value.integrationId,
                 ),
-                source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
+                source = source,
             )
         }
     }
