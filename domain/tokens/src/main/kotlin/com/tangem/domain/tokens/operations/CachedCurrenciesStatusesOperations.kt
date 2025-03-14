@@ -112,7 +112,13 @@ class CachedCurrenciesStatusesOperations(
                         val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
                         quotesRepository.fetchQuotes(rawCurrenciesIds)
                     },
-                    async { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies) },
+                    async {
+                        if (currencies.size == 1) {
+                            stakingRepository.fetchSingleYieldBalance(userWalletId, currencies.first())
+                        } else {
+                            stakingRepository.fetchMultiYieldBalance(userWalletId, currencies)
+                        }
+                    },
                 )
             }
                 .map { }
@@ -251,6 +257,6 @@ class CachedCurrenciesStatusesOperations(
     }
 
     companion object {
-        private const val RETRY_DELAY = 2000L
+        internal const val RETRY_DELAY = 2000L
     }
 }
