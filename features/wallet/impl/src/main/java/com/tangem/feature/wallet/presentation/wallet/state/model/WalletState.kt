@@ -96,7 +96,6 @@ internal sealed interface WalletState : WalletStateHolder {
             override val bottomSheetConfig: TangemBottomSheetConfig?,
             override val balancesAndLimitBlockState: BalancesAndLimitsBlockState,
             override val txHistoryState: TxHistoryState,
-            val depositButtonState: DepositButtonState,
         ) : Visa()
 
         data class Locked(
