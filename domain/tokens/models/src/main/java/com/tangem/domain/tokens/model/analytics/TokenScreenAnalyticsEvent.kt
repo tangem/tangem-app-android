@@ -1,6 +1,10 @@
 package com.tangem.domain.tokens.model.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam.Key.ACTION
+import com.tangem.core.analytics.models.AnalyticsParam.Key.BLOCKCHAIN
+import com.tangem.core.analytics.models.AnalyticsParam.Key.STATUS
+import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 
 /**
@@ -34,29 +38,89 @@ sealed class TokenScreenAnalyticsEvent(
         params = mapOf("Token" to token),
     )
 
-    class ButtonBuy(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Buy",
-        params = mapOf("Token" to token),
-    )
+    sealed class ButtonWithParams(
+        event: String,
+        token: String,
+        blockchain: String,
+        status: String?,
+    ) : TokenScreenAnalyticsEvent(
+        event = event,
+        params = buildMap {
+            put(TOKEN_PARAM, token)
+            put(BLOCKCHAIN, blockchain)
+            status?.let { put(STATUS, it) }
+        },
+    ) {
 
-    class ButtonSell(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Sell",
-        params = mapOf("Token" to token),
-    )
+        class ButtonBuy(
+            token: String,
+            blockchain: String,
+            status: String?,
+        ) : ButtonWithParams(
+            event = "Button - Buy",
+            token = token,
+            status = status,
+            blockchain = blockchain,
+        )
 
-    class ButtonExchange(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Exchange",
-        params = mapOf("Token" to token),
-    )
+        class ButtonSell(
+            token: String,
+            status: String,
+            blockchain: String,
+        ) : ButtonWithParams(
+            event = "Button - Sell",
+            token = token,
+            status = status,
+            blockchain = blockchain,
+        )
 
-    class ButtonSend(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Send",
-        params = mapOf("Token" to token),
-    )
+        class ButtonExchange(
+            token: String,
+            status: String,
+            blockchain: String,
+        ) : ButtonWithParams(
+            event = "Button - Exchange",
+            token = token,
+            status = status,
+            blockchain = blockchain,
+        )
 
-    class ButtonReceive(token: String) : TokenScreenAnalyticsEvent(
-        event = "Button - Receive",
-        params = mapOf("Token" to token),
+        class ButtonSend(
+            token: String,
+            status: String,
+            blockchain: String,
+        ) : ButtonWithParams(
+            event = "Button - Send",
+            token = token,
+            status = status,
+            blockchain = blockchain,
+        )
+
+        class ButtonReceive(
+            token: String,
+            status: String,
+            blockchain: String,
+        ) : ButtonWithParams(
+            event = "Button - Receive",
+            token = token,
+            status = status,
+            blockchain = blockchain,
+        )
+    }
+
+    class ActionButtonDisabled(
+        token: String,
+        status: String,
+        blockchain: String,
+        action: String,
+    ) : TokenScreenAnalyticsEvent(
+        event = "Action Button Disabled",
+        params = mapOf(
+            TOKEN_PARAM to token,
+            STATUS to status,
+            BLOCKCHAIN to blockchain,
+            ACTION to action,
+        ),
     )
 
     class ButtonCopyAddress(token: String) : TokenScreenAnalyticsEvent(
@@ -89,45 +153,43 @@ sealed class TokenScreenAnalyticsEvent(
         params = mapOf("Token" to token),
     )
 
-    class NoticeActionInactive(token: String, tokenAction: TokenAction, reason: String) : TokenScreenAnalyticsEvent(
-        event = "Notice - Action Inactive",
-        params = buildMap {
-            put("Token", token)
-            put("Action", tokenAction.action)
-            if (reason.isNotEmpty()) {
-                put("Reason", reason)
-            }
-        },
-    ) {
-        sealed class TokenAction(val action: String) {
-            data object BuyAction : TokenAction("Buy")
-            data object SellAction : TokenAction("Sell")
-            data object SwapAction : TokenAction("Swap")
-            data object SendAction : TokenAction("Send")
-            data object ReceiveAction : TokenAction("Receive")
-        }
-    }
-
     companion object {
+        const val AVAILABLE = "Available"
         private const val UNAVAILABLE = "Unavailable"
         private const val EMPTY = "Empty"
         private const val PENDING = "Pending"
         private const val CACHING = "Caching"
+        private const val CUSTOM_TOKEN = "Custom Token"
+        private const val BLOCKCHAIN_UNREACHABLE = "Blockchain Unreachable"
+        private const val ASSET_NOT_FOUND = "Asset NotFound"
+        private const val ASSET_LOADING = "Assets Loading"
+        private const val ASSETS_ERROR = "Assets Error"
+        private const val NO_QUOTE = "Quotes Unavailable"
+        private const val SINGLE_WALLET = "Single Wallet"
+        private const val LOADING = "Loading"
+        private const val ASSET_REQUIREMENT = "AssetRequirement"
 
+        @Suppress("CyclomaticComplexMethod")
         fun ScenarioUnavailabilityReason.toReasonAnalyticsText(): String {
             return when (this) {
                 is ScenarioUnavailabilityReason.BuyUnavailable,
                 is ScenarioUnavailabilityReason.NotExchangeable,
                 is ScenarioUnavailabilityReason.NotSupportedBySellService,
                 is ScenarioUnavailabilityReason.StakingUnavailable,
-                ScenarioUnavailabilityReason.UnassociatedAsset,
                 -> UNAVAILABLE
+                ScenarioUnavailabilityReason.UnassociatedAsset -> ASSET_REQUIREMENT
                 is ScenarioUnavailabilityReason.EmptyBalance -> EMPTY
                 is ScenarioUnavailabilityReason.PendingTransaction -> PENDING
                 ScenarioUnavailabilityReason.UsedOutdatedData -> CACHING
-                ScenarioUnavailabilityReason.None,
-                ScenarioUnavailabilityReason.Unreachable,
-                -> ""
+                ScenarioUnavailabilityReason.None -> AVAILABLE
+                ScenarioUnavailabilityReason.Unreachable -> BLOCKCHAIN_UNREACHABLE
+                is ScenarioUnavailabilityReason.AssetNotFound -> ASSET_NOT_FOUND
+                is ScenarioUnavailabilityReason.CustomToken -> CUSTOM_TOKEN
+                is ScenarioUnavailabilityReason.ExpressLoading -> ASSET_LOADING
+                is ScenarioUnavailabilityReason.ExpressUnreachable -> ASSETS_ERROR
+                ScenarioUnavailabilityReason.SingleWallet -> SINGLE_WALLET
+                is ScenarioUnavailabilityReason.TokenNoQuotes -> NO_QUOTE
+                ScenarioUnavailabilityReason.DataLoading -> LOADING
             }
         }
     }
