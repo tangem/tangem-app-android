@@ -33,3 +33,6 @@ local.properties
 **/fastlane/Preview.html
 **/fastlane/screenshots
 **/fastlane/test_output
+
+# Kotlin Plugin
+.kotlin/
