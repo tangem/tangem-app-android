@@ -85,7 +85,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrenc
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.MarketsEntryComponent
@@ -230,11 +229,6 @@ private fun WalletContent(
             }
 
             (selectedWallet as? WalletState.Visa.Content)?.let {
-                depositButton(
-                    modifier = itemModifier.fillMaxWidth(),
-                    state = it.depositButtonState,
-                )
-
                 balancesAndLimitsBlock(
                     modifier = itemModifier,
                     state = it.balancesAndLimitBlockState,
