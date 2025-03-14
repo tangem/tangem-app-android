@@ -74,4 +74,6 @@ internal object StakingClickIntentsStub : StakingClickIntents {
     override fun openTokenDetails(cryptoCurrency: CryptoCurrency) {}
 
     override fun onActiveStakeAnalytic() {}
+
+    override fun showPrimaryClickAlert() {}
 }
