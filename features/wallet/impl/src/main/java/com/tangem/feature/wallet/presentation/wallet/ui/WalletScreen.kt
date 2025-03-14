@@ -67,6 +67,10 @@ import com.tangem.core.ui.test.TestTags
 import com.tangem.core.ui.utils.lineTo
 import com.tangem.core.ui.utils.moveTo
 import com.tangem.core.ui.utils.toPx
+import com.tangem.feature.wallet.presentation.wallet.state.model.ActionsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.BalancesAndLimitsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.VisaTxDetailsBottomSheetConfig
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAlertState
 import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.preview.WalletScreenPreviewData.walletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
@@ -81,7 +85,6 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrenc
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.MarketsEntryComponent
@@ -92,8 +95,6 @@ import kotlin.math.roundToInt
 
 @Composable
 internal fun WalletScreen(state: WalletScreenState, marketsEntryComponent: MarketsEntryComponent) {
-    BackHandler(onBack = state.onBackClick)
-
     // It means that screen is still initializing
     if (state.selectedWalletIndex == NOT_INITIALIZED_WALLET_INDEX) return
 
@@ -228,11 +229,6 @@ private fun WalletContent(
             }
 
             (selectedWallet as? WalletState.Visa.Content)?.let {
-                depositButton(
-                    modifier = itemModifier.fillMaxWidth(),
-                    state = it.depositButtonState,
-                )
-
                 balancesAndLimitsBlock(
                     modifier = itemModifier,
                     state = it.balancesAndLimitBlockState,
