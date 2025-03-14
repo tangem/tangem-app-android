@@ -5,6 +5,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.SetVisaPinCodeUseCase
@@ -57,24 +58,28 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
     }
 
     private fun onPinCodeChange(pin: String) {
-        if (pin.all { it.isDigit() }) {
+        if (PinCodeValidation.validateAllDigits(pin)) {
+            val isError = PinCodeValidation.validateLength(pin) && PinCodeValidation.validate(pin).not()
+
             _uiState.update {
                 it.copy(
                     pinCode = pin,
-                    submitButtonEnabled = checkPinCode(pin),
+                    submitButtonEnabled = PinCodeValidation.validate(pin),
+                    error = if (isError) stringReference("Invalid PIN: avoid sequences or repeats") else null,
                 )
             }
         }
     }
 
     private fun onSubmitClick() {
-        if (checkPinCode(_uiState.value.pinCode).not()) return
+        val pinCode = _uiState.value.pinCode
+        if (PinCodeValidation.validate(pinCode).not()) return
 
         modelScope.launch {
             loading(true)
 
             setVisaPinCodeUseCase(
-                pinCode = _uiState.value.pinCode,
+                pinCode = pinCode,
                 visaCardId = visaCardId,
                 activationOrderId = params.activationOrderInfo.orderId,
             ).onLeft {
@@ -86,10 +91,6 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
 
             loading(false)
         }
-    }
-
-    private fun checkPinCode(pin: String): Boolean {
-        return pin.length == PIN_CODE_LENGTH
     }
 
     private fun loading(state: Boolean) {
