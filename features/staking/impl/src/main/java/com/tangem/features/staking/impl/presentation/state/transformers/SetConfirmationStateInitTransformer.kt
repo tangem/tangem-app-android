@@ -63,7 +63,9 @@ internal class SetConfirmationStateInitTransformer(
             actionType = actionType,
             balanceState = balanceState,
             confirmationState = StakingStates.ConfirmationState.Data(
-                isPrimaryButtonEnabled = false,
+                isPrimaryButtonEnabled = with(cryptoCurrencyStatus.value) {
+                    sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+                },
                 innerState = InnerConfirmationStakingState.ASSENT,
                 feeState = FeeState.Loading,
                 notifications = persistentListOf(),
