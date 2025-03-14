@@ -5,25 +5,28 @@ import com.tangem.common.ui.amountScreen.converters.AmountStateConverter
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.components.list.RoundedListWithDividersItemData
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.*
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
+import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
+import com.tangem.features.staking.impl.presentation.state.StakingStep
+import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.bottomsheet.InfoType
 import com.tangem.features.staking.impl.presentation.state.converters.RewardsValidatorStateConverter
 import com.tangem.features.staking.impl.presentation.state.converters.YieldBalancesConverter
 import com.tangem.features.staking.impl.presentation.state.utils.getRewardScheduleText
-import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isPolkadot
 import com.tangem.utils.Provider
 import com.tangem.utils.isNullOrZero
@@ -37,7 +40,7 @@ internal class SetInitialDataStateTransformer(
     private val clickIntents: StakingClickIntents,
     private val yield: Yield,
     private val isAnyTokenStaked: Boolean,
-    private val cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus>,
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val userWalletProvider: Provider<UserWallet>,
     private val appCurrencyProvider: Provider<AppCurrency>,
     private val balancesToShowProvider: Provider<List<BalanceItem>>,
@@ -46,20 +49,20 @@ internal class SetInitialDataStateTransformer(
     private val iconStateConverter by lazy(::CryptoCurrencyToIconStateConverter)
 
     private val rewardsValidatorStateConverter by lazy(LazyThreadSafetyMode.NONE) {
-        RewardsValidatorStateConverter(cryptoCurrencyStatusProvider, appCurrencyProvider, yield)
+        RewardsValidatorStateConverter(cryptoCurrencyStatus, appCurrencyProvider, yield)
     }
 
     private val yieldBalancesConverter by lazy(LazyThreadSafetyMode.NONE) {
         YieldBalancesConverter(
-            cryptoCurrencyStatusProvider,
-            appCurrencyProvider,
-            balancesToShowProvider,
-            yield,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            appCurrencyProvider = appCurrencyProvider,
+            balancesToShowProvider = balancesToShowProvider,
+            yield = yield,
         )
     }
 
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val cryptoCurrency = cryptoCurrencyStatusProvider().currency
+        val cryptoCurrency = cryptoCurrencyStatus.currency
         return prevState.copy(
             title = TextReference.EMPTY,
             cryptoCurrencyName = cryptoCurrency.name,
@@ -77,8 +80,12 @@ internal class SetInitialDataStateTransformer(
 
     private fun createInitialInfoState(): StakingStates.InitialInfoState.Data {
         val yieldBalance = yieldBalancesConverter.convert(Unit)
+
+        val status = cryptoCurrencyStatus.value
         return StakingStates.InitialInfoState.Data(
-            isPrimaryButtonEnabled = !cryptoCurrencyStatusProvider().value.amount.isNullOrZero(),
+            isPrimaryButtonEnabled = with(status) {
+                !amount.isNullOrZero() && sources.yieldBalanceSource.isActual() && sources.networkSource.isActual()
+            },
             showBanner = !isAnyTokenStaked && yieldBalance == InnerYieldBalanceState.Empty,
             aprRange = getAprRange(yield.preferredValidators),
             infoItems = getInfoItems(),
@@ -92,8 +99,6 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun getInfoItems(): PersistentList<RoundedListWithDividersItemData> {
-        val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
-
         return listOfNotNull(
             createAnnualPercentageRateItem(),
             createAvailableItem(cryptoCurrencyStatus),
@@ -187,7 +192,7 @@ internal class SetInitialDataStateTransformer(
     private fun createRewardScheduleItem(): RoundedListWithDividersItemData? {
         val endTextReference = getRewardScheduleText(
             rewardSchedule = yield.metadata.rewardSchedule,
-            networkId = cryptoCurrencyStatusProvider().currency.network.id.value,
+            networkId = cryptoCurrencyStatus.currency.network.id.value,
             decapitalize = false,
         ) ?: return null
 
@@ -200,7 +205,7 @@ internal class SetInitialDataStateTransformer(
     }
 
     private fun createInitialAmountState(): AmountState {
-        val cryptoBalanceValue = cryptoCurrencyStatusProvider().value
+        val cryptoBalanceValue = cryptoCurrencyStatus.value
         val maxEnterAmount = EnterAmountBoundary(
             amount = cryptoBalanceValue.amount,
             fiatAmount = cryptoBalanceValue.fiatAmount,
@@ -208,7 +213,7 @@ internal class SetInitialDataStateTransformer(
         )
         return AmountStateConverter(
             clickIntents = clickIntents,
-            cryptoCurrencyStatusProvider = cryptoCurrencyStatusProvider,
+            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
             appCurrencyProvider = appCurrencyProvider,
             iconStateConverter = iconStateConverter,
             maxEnterAmount = maxEnterAmount,
