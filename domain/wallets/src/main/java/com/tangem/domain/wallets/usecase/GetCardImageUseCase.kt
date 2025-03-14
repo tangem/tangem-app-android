@@ -6,7 +6,6 @@ import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.domain.wallets.models.Artwork
 import com.tangem.operations.attestation.OnlineCardVerifier
-import com.tangem.operations.attestation.TangemApi
 
 /**
  * Use case for getting card image url
@@ -30,7 +29,11 @@ class GetCardImageUseCase(private val verifier: OnlineCardVerifier = OnlineCardV
                 if (artworkId.isNullOrEmpty()) {
                     getFallbackArtworkUrl(cardId)
                 } else {
-                    getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId)
+                    OnlineCardVerifier.getUrlForArtwork(
+                        cardId = cardId,
+                        cardPublicKey = cardPublicKey.toHexString(),
+                        artworkId = artworkId,
+                    )
                 }
             }
 
@@ -50,10 +53,5 @@ class GetCardImageUseCase(private val verifier: OnlineCardVerifier = OnlineCardV
                 else -> getDefaultFallbackUrl()
             }
         }
-    }
-
-    private fun getUrlForArtwork(cardId: String, cardPublicKeyHex: String, artworkId: String): String {
-        return TangemApi.Companion.BaseUrl.VERIFY.url + TangemApi.ARTWORK +
-            "?artworkId=$artworkId&CID=$cardId&publicKey=$cardPublicKeyHex"
     }
 }
