@@ -5,7 +5,7 @@ import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState.TxHistoryItemState
 import com.tangem.core.ui.utils.toDateFormatWithTodayYesterday
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.utils.converter.Converter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
