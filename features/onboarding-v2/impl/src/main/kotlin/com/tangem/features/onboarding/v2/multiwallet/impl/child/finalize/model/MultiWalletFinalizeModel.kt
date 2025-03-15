@@ -6,6 +6,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.feedback.GetCardInfoUseCase
@@ -52,6 +53,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val walletsRepository: WalletsRepository,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -80,6 +82,8 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     fun onBack() {
         if (uiState.value.scanPrimary) {
             modelScope.launch { onBackFlow.emit(Unit) }
+        } else {
+            uiMessageSender.send(CantLeaveFinalizeDialog)
         }
     }
 
