@@ -245,15 +245,13 @@ sealed class AppRoute(val path: String) : Route {
     /**
      * Onboarding V2
      * @property scanResponse scan response, determines onboarding route by the product type
-     * @property startFromBackup (MultiWallet param, doesn't affect other types) start onboarding from backup
      * @property mode (MultiWallet param, doesn't affect other types) onboarding mode
      */
     @Serializable
     data class Onboarding(
         val scanResponse: ScanResponse,
-        val startFromBackup: Boolean = false,
         val mode: Mode = Mode.Onboarding,
-    ) : AppRoute(path = "/onboarding_v2${if (startFromBackup) "/backup" else ""}") {
+    ) : AppRoute(path = "/onboarding_v2/${mode.name}") {
 
         enum class Mode {
             Onboarding, // general Mode
