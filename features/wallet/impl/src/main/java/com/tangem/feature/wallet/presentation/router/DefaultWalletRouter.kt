@@ -53,7 +53,6 @@ internal class DefaultWalletRouter @Inject constructor(
             router.push(
                 AppRoute.Onboarding(
                     scanResponse = scanResponse,
-                    startFromBackup = true,
                     mode = if (continueBackup) {
                         AppRoute.Onboarding.Mode.AddBackup
                     } else {

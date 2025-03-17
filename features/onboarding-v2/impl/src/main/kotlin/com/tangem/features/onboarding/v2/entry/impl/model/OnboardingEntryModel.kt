@@ -92,10 +92,16 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
-        if (userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
-            stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
-        } else {
-            navigateToFinalScreenFlow()
+        when {
+            params.multiWalletMode == OnboardingEntryComponent.MultiWalletMode.AddBackup -> {
+                stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            }
+            userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed() -> {
+                stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
+            }
+            else -> {
+                navigateToFinalScreenFlow()
+            }
         }
     }
 
