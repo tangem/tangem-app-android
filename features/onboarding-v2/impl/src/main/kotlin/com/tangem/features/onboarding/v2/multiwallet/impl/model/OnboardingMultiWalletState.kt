@@ -24,7 +24,7 @@ data class OnboardingMultiWalletState(
      *                                    -> [Done]
      *
      * Wallet2/Ring
-     * CreateWallet -> SeedPhrase -> AddBackupDevice -> FinishBackup -> [Done]
+     * CreateWallet -> SeedPhrase -> AddBackupDevice -> Finalize -> [Done]
      *              |
      *              -> AddBackupDevice -> Finalize -> [Done]
      */
