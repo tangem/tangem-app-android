@@ -10,11 +10,11 @@ import com.tangem.operations.attestation.OnlineCardVerifier
 /**
  * Use case for getting card image url
  *
- * @property verifier REST API
+ * @property verifier online card verifier
  *
 * [REDACTED_AUTHOR]
  */
-class GetCardImageUseCase(private val verifier: OnlineCardVerifier = OnlineCardVerifier()) {
+class GetCardImageUseCase(private val verifier: OnlineCardVerifier) {
 
     /**
      * Get card image url

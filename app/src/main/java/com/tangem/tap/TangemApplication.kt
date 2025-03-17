@@ -46,11 +46,10 @@ import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.operations.attestation.OnlineCardVerifier
@@ -147,9 +146,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
         get() = entryPoint.getSaveTwinsOnboardingShownUseCase()
 
-    private val generateWalletNameUseCase: GenerateWalletNameUseCase
-        get() = entryPoint.getWalletNameGenerateUseCase()
-
     private val cardRepository: CardRepository
         get() = entryPoint.getCardRepository()
 
@@ -182,9 +178,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     private val transactionSignerFactory: TransactionSignerFactory
         get() = entryPoint.getTransactionSignerFactory()
-
-    private val getUserCountryUseCase: GetUserCountryUseCase
-        get() = entryPoint.getGetUserCountryCodeUseCase()
 
     private val onrampFeatureToggles: OnrampFeatureToggles
         get() = entryPoint.getOnrampFeatureToggles()
@@ -224,6 +217,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val onlineCardVerifier: OnlineCardVerifier
         get() = entryPoint.getOnlineCardVerifier()
 
+    private val userWalletBuilderFactory: UserWalletBuilder.Factory
+        get() = entryPoint.getUserWalletBuilderFactory()
     // endregion
 
     override fun onCreate() {
@@ -304,7 +299,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
-                    generateWalletNameUseCase = generateWalletNameUseCase,
                     cardRepository = cardRepository,
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
@@ -315,7 +309,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     shareManager = shareManager,
                     appRouter = appRouter,
                     transactionSignerFactory = transactionSignerFactory,
-                    getUserCountryUseCase = getUserCountryUseCase,
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
@@ -326,6 +319,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     settingsManager = settingsManager,
                     uiMessageSender = uiMessageSender,
                     onlineCardVerifier = onlineCardVerifier,
+                    userWalletBuilderFactory = userWalletBuilderFactory,
                 ),
             ),
         )
