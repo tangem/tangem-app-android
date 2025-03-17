@@ -202,7 +202,6 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
-                        startBackupFlow = route.startFromBackup,
                         multiWalletMode = when (route.mode) {
                             AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
                             AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
@@ -641,7 +640,6 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
-                        startBackupFlow = route.startFromBackup,
                         multiWalletMode = when (route.mode) {
                             AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
                             AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
