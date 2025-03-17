@@ -24,7 +24,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.Artwork
@@ -782,9 +781,10 @@ private suspend fun updateWallet(
 }
 
 private suspend fun createUserWallet(scanResponse: ScanResponse, backupState: BackupState): UserWallet {
-    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+    val userWalletBuilder = store.inject(DaggerGraphState::userWalletBuilderFactory).create(scanResponse)
+
     return requireNotNull(
-        value = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
+        value = userWalletBuilder
             .backupCardsIds(backupState.backupCardIds.toSet())
             .hasBackupError(backupState.hasBackupError)
             .build(),
