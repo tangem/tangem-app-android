@@ -106,12 +106,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     private fun getInitialStep(): OnboardingMultiWalletState.Step {
         val scanResponse = params.scanResponse
         val card = scanResponse.card
-        val backupService = backupServiceHolder.backupService.get()!!
 
         return when {
-            // interrupted backup
-            backupService.hasIncompletedBackup -> OnboardingMultiWalletState.Step.Finalize
-
             // Add backup button
             // Wallet1 without backup and userwallet's scanResponse doesn't contain primary card.
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
