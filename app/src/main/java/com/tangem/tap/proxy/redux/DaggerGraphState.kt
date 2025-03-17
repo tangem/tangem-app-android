@@ -26,11 +26,10 @@ import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.operations.attestation.OnlineCardVerifier
@@ -57,7 +56,6 @@ data class DaggerGraphState(
     val generalUserWalletsListManager: UserWalletsListManager? = null,
     val wasTwinsOnboardingShownUseCase: WasTwinsOnboardingShownUseCase? = null,
     val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase? = null,
-    val generateWalletNameUseCase: GenerateWalletNameUseCase? = null,
     val cardRepository: CardRepository? = null,
     val settingsRepository: SettingsRepository? = null,
     val blockchainSDKFactory: BlockchainSDKFactory? = null,
@@ -68,7 +66,6 @@ data class DaggerGraphState(
     val shareManager: ShareManager? = null,
     val appRouter: AppRouter? = null,
     val transactionSignerFactory: TransactionSignerFactory? = null,
-    val getUserCountryUseCase: GetUserCountryUseCase? = null,
     val onrampFeatureToggles: OnrampFeatureToggles? = null,
     val environmentConfigStorage: EnvironmentConfigStorage? = null,
     val onboardingV2FeatureToggles: OnboardingV2FeatureToggles? = null,
@@ -79,4 +76,5 @@ data class DaggerGraphState(
     val settingsManager: SettingsManager? = null,
     val uiMessageSender: UiMessageSender? = null,
     val onlineCardVerifier: OnlineCardVerifier? = null,
+    val userWalletBuilderFactory: UserWalletBuilder.Factory? = null,
 ) : StateType
