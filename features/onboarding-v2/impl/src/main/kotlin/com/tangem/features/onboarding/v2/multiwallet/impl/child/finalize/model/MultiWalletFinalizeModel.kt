@@ -64,18 +64,31 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private var walletHasBackupError = false
     private var hasRing = false
+
     val uiState = _uiState.asStateFlow()
     val onBackFlow = MutableSharedFlow<Unit>()
-
     val onEvent = MutableSharedFlow<MultiWalletFinalizeComponent.Event>()
 
     init {
-        // save scan response to preferences to be able
-        // to continue finalize process after app restart
         modelScope.launch {
+            // save scan response to preferences to be able
+            // to continue finalize process after app restart
             onboardingRepository.saveUnfinishedFinalizeOnboarding(
                 scanResponse = multiWalletState.value.currentScanResponse,
             )
+
+            // sets proper artwork state for initial step
+            // (if we start from backup cards, we need to show proper artwork) (AND-9374)
+            when (getInitialStep()) {
+                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
+                MultiWalletFinalizeUM.Step.BackupDevice1 -> {
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
+                }
+                MultiWalletFinalizeUM.Step.BackupDevice2 -> {
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
+                    onEvent.emit(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded)
+                }
+            }
         }
     }
 
@@ -90,21 +103,6 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private fun getInitialState(): MultiWalletFinalizeUM {
         val backupService = backupServiceHolder.backupService.get() ?: return MultiWalletFinalizeUM()
         val initialStep = getInitialStep()
-
-        // sets proper artwork state for initial step
-        // (if we start from backup cards, we need to show proper artwork) (AND-9374)
-        modelScope.launch {
-            when (initialStep) {
-                MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
-                MultiWalletFinalizeUM.Step.BackupDevice1 -> {
-                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
-                }
-                MultiWalletFinalizeUM.Step.BackupDevice2 -> {
-                    onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
-                    onEvent.emit(MultiWalletFinalizeComponent.Event.TwoBackupCardsAdded)
-                }
-            }
-        }
 
         val batchId = when (initialStep) {
             MultiWalletFinalizeUM.Step.Primary -> backupService.primaryCardBatchId
@@ -123,7 +121,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             onScanClick = ::onLinkClick,
             scanPrimary = initialStep == MultiWalletFinalizeUM.Step.Primary,
             cardNumber = cardId?.lastMasked().orEmpty(),
-            step = getInitialStep(),
+            step = initialStep,
         )
     }
 
