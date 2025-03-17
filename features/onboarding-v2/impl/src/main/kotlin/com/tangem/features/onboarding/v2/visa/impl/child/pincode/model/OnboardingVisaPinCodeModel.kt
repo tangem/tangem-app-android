@@ -14,7 +14,6 @@ import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.OnboardingVisaPinCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -32,7 +31,7 @@ import javax.inject.Inject
 internal class OnboardingVisaPinCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val generateWalletNameUseCase: GenerateWalletNameUseCase,
+    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
     private val authTokenStorage: VisaAuthTokenStorage,
     private val otpStorage: VisaAuthTokenStorage,
@@ -112,9 +111,8 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
         )
 
         requireNotNull(
-            value = UserWalletBuilder(
-                scanResponse.copy(visaCardActivationStatus = newActivationStatus),
-                generateWalletNameUseCase,
+            value = userWalletBuilderFactory.create(
+                scanResponse = scanResponse.copy(visaCardActivationStatus = newActivationStatus),
             ).build(),
             lazyMessage = { "User wallet not created" },
         )
