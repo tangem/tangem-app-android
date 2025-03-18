@@ -80,6 +80,7 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsB
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.actions
+import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
@@ -241,6 +242,8 @@ private fun WalletContent(
                 isBalanceHidden = state.isHidingMode,
                 modifier = movableItemModifier,
             )
+
+            nftCollections(state = selectedWallet, itemModifier = itemModifier)
 
             organizeTokens(state = selectedWallet, itemModifier = itemModifier)
         }
@@ -697,6 +700,16 @@ internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modi
                 )
             }
         }
+    }
+}
+
+internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modifier) {
+    (state as? WalletState.MultiCurrency)?.let {
+        nftCollections(
+            modifier = itemModifier,
+            state = it.nftState,
+            onClick = {},
+        )
     }
 }
 
