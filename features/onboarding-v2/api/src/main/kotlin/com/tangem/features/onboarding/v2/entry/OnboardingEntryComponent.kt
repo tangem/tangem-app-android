@@ -8,7 +8,6 @@ interface OnboardingEntryComponent : ComposableContentComponent {
 
     data class Params(
         val scanResponse: ScanResponse,
-        val startBackupFlow: Boolean,
         val multiWalletMode: MultiWalletMode,
     )
 
