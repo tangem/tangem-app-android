@@ -419,7 +419,10 @@ internal class SendModel @Inject constructor(
         return filterNot { it.isLocked }
             .mapNotNull { wallet ->
                 val addresses = if (!wallet.isMultiCurrency) {
-                    getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
+                    getCryptoCurrencyUseCase(
+                        userWallet = wallet,
+                        cryptoCurrencyId = cryptoCurrency.id.value,
+                    ).getOrNull()?.let {
                         if (it.network.id == cryptoCurrency.network.id) {
                             getNetworkAddressesUseCase.invokeSync(wallet.walletId, it.network)
                         } else {
