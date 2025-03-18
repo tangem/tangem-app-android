@@ -69,6 +69,7 @@ object OnboardingHelper {
         }
     }
 
+    @Suppress("CyclomaticComplexMethod")
     fun whereToNavigate(scanResponse: ScanResponse): AppRoute {
         val newOnboardingSupportTypes = scanResponse.productType == ProductType.Wallet2 ||
             scanResponse.productType == ProductType.Ring ||
@@ -103,7 +104,11 @@ object OnboardingHelper {
             } else {
                 AppRoute.OnboardingOther
             }
-            ProductType.Twins -> AppRoute.OnboardingTwins
+            ProductType.Twins -> if (featureToggles.isTwinRefactoringEnabled) {
+                AppRoute.Onboarding(scanResponse = scanResponse)
+            } else {
+                AppRoute.OnboardingTwins
+            }
             ProductType.Start2Coin,
             ProductType.Visa,
             -> throw UnsupportedOperationException("Onboarding for ${type.name} cards is not supported")
