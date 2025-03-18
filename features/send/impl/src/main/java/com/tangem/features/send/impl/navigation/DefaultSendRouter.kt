@@ -4,7 +4,6 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import javax.inject.Inject
@@ -35,7 +34,7 @@ internal class DefaultSendRouter @Inject constructor(
     override fun openQrCodeScanner(network: String) {
         router.push(
             AppRoute.QrScanning(
-                source = SourceType.SEND,
+                source = AppRoute.QrScanning.Source.SEND,
                 networkName = network,
             ),
         )
