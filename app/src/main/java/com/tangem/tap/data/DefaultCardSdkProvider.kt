@@ -15,6 +15,7 @@ import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.sdk.DefaultSessionViewDelegate
+import com.tangem.sdk.api.featuretoggles.CardSdkFeatureToggles
 import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.nfc.NfcManager
@@ -34,6 +35,7 @@ import javax.inject.Singleton
 internal class DefaultCardSdkProvider @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val cardSdkFeatureToggles: CardSdkFeatureToggles,
 ) : CardSdkProvider, CardSdkOwner {
 
     private val observer = Observer()
@@ -108,7 +110,9 @@ internal class DefaultCardSdkProvider @Inject constructor(
             authenticationManager = authenticationManager,
             keystoreManager = keystoreManager,
             wordlist = Wordlist.getWordlist(activity),
-            config = config,
+            config = config.apply {
+                isNewOnlineAttestationEnabled = cardSdkFeatureToggles.isNewAttestationEnabled
+            },
         )
 
         holder = Holder(
