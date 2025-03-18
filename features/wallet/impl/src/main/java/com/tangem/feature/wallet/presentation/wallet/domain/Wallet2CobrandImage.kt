@@ -49,6 +49,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF33"),
     ),
 
+    BitcoinPizza2(
+        cards2ResId = R.drawable.ill_pizza_day2_card2_120_106,
+        cards3ResId = R.drawable.ill_pizza_day2_card3_120_106,
+        batchIds = setOf("AF990019"),
+    ),
+
     BTC365(
         cards2ResId = R.drawable.ill_btc365_card2_120_106,
         cards3ResId = R.drawable.ill_btc365_card3_120_106,
@@ -65,6 +71,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_changenow_card2_120_106,
         cards3ResId = R.drawable.ill_changenow_card3_120_106,
         batchIds = setOf("BB000013"),
+    ),
+
+    Chilliz(
+        cards2ResId = R.drawable.ill_chilliz_card2_120_106,
+        cards3ResId = R.drawable.ill_chilliz_card3_120_106,
+        batchIds = setOf("BB000016"),
     ),
 
     CoinMetrica(
@@ -206,6 +218,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF43", "AF44", "AF45", "AF78", "AF79", "AF80"),
     ),
 
+    RamenCat(
+        cards2ResId = R.drawable.ill_ramen_cat_cards2_120_106,
+        cards3ResId = R.drawable.ill_ramen_cat_cards3_120_106,
+        batchIds = setOf("AF990006", "AF990007", "AF990008"),
+    ),
+
     RedPanda(
         cards2ResId = R.drawable.ill_red_panda_card2_120_106,
         cards3ResId = R.drawable.ill_red_panda_card3_120_106,
@@ -216,6 +234,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_rizo_card2_120_106,
         cards3ResId = R.drawable.ill_rizo_card3_120_106,
         batchIds = setOf("BB000012"),
+    ),
+
+    Sakura(
+        cards2ResId = R.drawable.ill_sakura_card2_120_106,
+        cards3ResId = R.drawable.ill_sakura_card3_120_106,
+        batchIds = setOf("AF990029", "AF990030", "AF990031"),
     ),
 
     SatoshiFriends(
