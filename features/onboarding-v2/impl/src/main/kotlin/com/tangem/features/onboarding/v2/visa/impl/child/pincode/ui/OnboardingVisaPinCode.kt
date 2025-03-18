@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,7 +32,10 @@ import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
@@ -91,13 +95,29 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
 @Composable
 private fun PinCodeSection(state: OnboardingVisaPinCodeUM, modifier: Modifier = Modifier) {
     val focusRequester = remember { FocusRequester() }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        PinCode(
+            modifier = modifier,
+            value = state.pinCode,
+            onValueChange = state.onPinCodeChange,
+            focusRequester = focusRequester,
+        )
 
-    PinCode(
-        modifier = modifier,
-        value = state.pinCode,
-        onValueChange = state.onPinCodeChange,
-        focusRequester = focusRequester,
-    )
+        AnimatedVisibility(
+            visible = state.error != null,
+        ) {
+            val error = remember(this) { requireNotNull(state.error) }
+            Column {
+                SpacerH4()
+                Text(
+                    text = error.resolveReference(),
+                    style = TangemTheme.typography.caption2,
+                    color = TangemTheme.colors.text.warning,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         delay(timeMillis = 300)
@@ -134,9 +154,11 @@ private fun PinCode(
                 keyboardType = KeyboardType.Number,
                 imeAction = ImeAction.Done,
             ),
-            keyboardActions = KeyboardActions(onDone = {
-                keyboardController?.hide()
-            },),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide()
+                },
+            ),
             modifier = Modifier
                 .alpha(alpha = 0.01f)
                 .focusRequester(focusRequester),
@@ -194,6 +216,7 @@ private fun Preview() {
         OnboardingVisaPinCode(
             state = OnboardingVisaPinCodeUM(
                 pinCode = "1234",
+                error = stringReference("PIN Code error"),
             ),
         )
     }
