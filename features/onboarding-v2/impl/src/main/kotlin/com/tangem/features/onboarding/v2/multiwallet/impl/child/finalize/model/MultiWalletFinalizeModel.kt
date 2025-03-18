@@ -21,6 +21,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
+import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -96,7 +97,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
         if (uiState.value.scanPrimary) {
             modelScope.launch { onBackFlow.emit(Unit) }
         } else {
-            uiMessageSender.send(CantLeaveFinalizeDialog)
+            uiMessageSender.send(CantLeaveBackupDialog)
         }
     }
 
