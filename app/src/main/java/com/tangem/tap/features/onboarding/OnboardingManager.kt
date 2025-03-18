@@ -7,8 +7,8 @@ import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.operations.attestation.api.models.CardVerifyAndGetInfo
 import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
