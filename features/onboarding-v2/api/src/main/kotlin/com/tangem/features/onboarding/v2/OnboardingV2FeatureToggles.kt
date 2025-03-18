@@ -4,4 +4,5 @@ interface OnboardingV2FeatureToggles {
     val isOnboardingV2Enabled: Boolean
     val isVisaOnboardingEnabled: Boolean
     val isNoteRefactoringEnabled: Boolean
+    val isTwinRefactoringEnabled: Boolean
 }
