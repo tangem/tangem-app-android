@@ -1,14 +1,14 @@
 package com.tangem.data.nft
 
 import arrow.core.Either
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.local.nft.NFTPersistenceStore
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStore
 import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
-import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
-import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
@@ -20,8 +20,10 @@ import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.coroutines.*
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
@@ -34,82 +36,82 @@ internal class DefaultNFTRepository @Inject constructor(
 
     private val jobs = mutableMapOf<Network, JobHolder>()
 
-    private val nftRuntimeStores = mutableMapOf<Network, NFTRuntimeStore>()
-    private val nftPersistenceStores = mutableMapOf<Network, NFTPersistenceStore>()
-
-    private val nftSdkAssetConverter = NFTSdkAssetConverter(
-        nftSdkAssetIdentifierConverter = NFTSdkAssetIdentifierConverter,
-        nftSdkCollectionIdentifierConverter = NFTSdkCollectionIdentifierConverter,
-    )
-    private val collectionConverter = NFTSdkCollectionConverter(
-        nftSdkCollectionIdentifierConverter = NFTSdkCollectionIdentifierConverter,
-        nftSdkAssetConverter = nftSdkAssetConverter,
-    )
+    private val nftRuntimeStores = mutableMapOf<String, NFTRuntimeStore>()
+    private val nftPersistenceStores = mutableMapOf<String, NFTPersistenceStore>()
 
     override fun observeCollections(userWalletId: UserWalletId, networks: List<Network>): Flow<List<NFTCollections>> =
-        flow {
-            emitAll(
-                combine(
-                    networks.map { getNFTRuntimeStore(it).getCollections() },
-                ) { it.asList() },
-            )
-        }.onStart {
-            refreshCollections(userWalletId, networks)
-        }
+        flow { emitAll(observeCollectionsInternal(userWalletId, networks)) }
+
+    private suspend fun observeCollectionsInternal(
+        userWalletId: UserWalletId,
+        networks: List<Network>,
+    ): Flow<List<NFTCollections>> = combine(
+        networks.map { observeCollectionsInternal(userWalletId, it) },
+    ) { it.asList() }
+
+    private suspend fun observeCollectionsInternal(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Flow<NFTCollections> = if (network.canHandleNFTs()) {
+        getNFTRuntimeStore(userWalletId, network).getCollections()
+    } else {
+        flowOf(NFTCollections.empty(network))
+    }
 
     override suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>) = coroutineScope {
-        networks.map { network ->
-            launch(dispatchers.io) {
-                Either.catch {
-                    expireCollections(network)
-                    walletManagersFacade.getNFTCollections(userWalletId, network)
-                }.onLeft {
-                    saveFailedStateInRuntime(
-                        network = network,
-                        error = it,
-                    )
-                }.onRight {
-                    val mergedCollections = it.mergeWithStoredAssets(network)
+        networks.mapNotNull { network ->
+            if (network.canHandleNFTs()) {
+                launch(dispatchers.io) {
+                    Either.catch {
+                        expireCollections(userWalletId, network)
+                        walletManagersFacade.getNFTCollections(userWalletId, network)
+                    }.onLeft {
+                        saveFailedStateInRuntime(
+                            userWalletId = userWalletId,
+                            network = network,
+                            error = it,
+                        )
+                    }.onRight {
+                        val mergedCollections = it.mergeWithStoredAssets(userWalletId, network)
 
-                    saveCollectionsInRuntime(
-                        network = network,
-                        collections = mergedCollections,
-                    )
-                    saveCollectionsInPersistence(
-                        network = network,
-                        collections = mergedCollections,
-                    )
-                }
-            }.saveIn(getJobHolder(network))
+                        saveCollectionsInRuntime(
+                            userWalletId = userWalletId,
+                            network = network,
+                            collections = mergedCollections,
+                        )
+                        saveCollectionsInPersistence(
+                            userWalletId = userWalletId,
+                            network = network,
+                            collections = mergedCollections,
+                        )
+                    }
+                }.saveIn(getJobHolder(network))
+            } else {
+                null
+            }
         }.joinAll()
     }
 
-    private suspend fun expireCollections(network: Network) {
-        val runtimeStore = getNFTRuntimeStore(network)
-
+    private suspend fun expireCollections(userWalletId: UserWalletId, network: Network) {
+        val runtimeStore = getNFTRuntimeStore(userWalletId, network)
         val expiredCollections = runtimeStore
             .getCollectionsSync()
-            .let { collections ->
-                collections.copy(
-                    content = when (val content = collections.content) {
-                        is NFTCollections.Content.Collections -> content.copy(
-                            source = StatusSource.CACHE,
-                        )
-                        is NFTCollections.Content.Error -> content
-                    },
-                )
-            }
+            .changeStatusSource(StatusSource.CACHE)
         runtimeStore.saveCollections(expiredCollections)
     }
 
-    private suspend fun saveCollectionsInRuntime(network: Network, collections: List<SdkNFTCollection>) {
-        getNFTRuntimeStore(network).saveCollections(
+    private suspend fun saveCollectionsInRuntime(
+        userWalletId: UserWalletId,
+        network: Network,
+        collections: List<SdkNFTCollection>,
+    ) {
+        getNFTRuntimeStore(userWalletId, network).saveCollections(
             NFTCollections(
                 network = network,
                 content = NFTCollections.Content.Collections(
                     collections = collections
                         .map { collection ->
-                            collectionConverter.convert(network to collection)
+                            NFTSdkCollectionConverter.convert(network to collection)
                         }
                         .filter {
                             it.id !is NFTCollection.Identifier.Unknown
@@ -120,19 +122,30 @@ internal class DefaultNFTRepository @Inject constructor(
         )
     }
 
-    private suspend fun saveFailedStateInRuntime(network: Network, error: Throwable) {
-        getNFTRuntimeStore(network).saveCollections(
-            NFTCollections(
-                network = network,
-                content = NFTCollections.Content.Error(
-                    error = error,
-                ),
-            ),
-        )
+    private suspend fun saveFailedStateInRuntime(userWalletId: UserWalletId, network: Network, error: Throwable) {
+        getNFTRuntimeStore(userWalletId, network).let { store ->
+            val storedCollections = store.getCollectionsSync()
+            val content = storedCollections.content
+            val updatedCollections = if (content is NFTCollections.Content.Collections && content.collections != null) {
+                // if there is any cached collections in store, then mark them as not actual and emit anyway
+                storedCollections.changeStatusSource(StatusSource.ONLY_CACHE)
+            } else {
+                // otherwise, just emit an error
+                NFTCollections(
+                    network = network,
+                    content = NFTCollections.Content.Error(error),
+                )
+            }
+            store.saveCollections(updatedCollections)
+        }
     }
 
-    private suspend fun saveCollectionsInPersistence(network: Network, collections: List<SdkNFTCollection>) {
-        getNFTPersistenceStore(network).saveCollections(collections)
+    private suspend fun saveCollectionsInPersistence(
+        userWalletId: UserWalletId,
+        network: Network,
+        collections: List<SdkNFTCollection>,
+    ) {
+        getNFTPersistenceStore(userWalletId, network).saveCollections(collections)
     }
 
     private fun getJobHolder(network: Network): JobHolder = jobs[network] ?: run {
@@ -141,65 +154,85 @@ internal class DefaultNFTRepository @Inject constructor(
         }
     }
 
-    private fun getNFTPersistenceStore(network: Network): NFTPersistenceStore = nftPersistenceStores[network] ?: run {
-        nftPersistenceStoreFactory.provide(network).also {
-            nftPersistenceStores[network] = it
+    private fun getNFTPersistenceStore(userWalletId: UserWalletId, network: Network): NFTPersistenceStore {
+        val storeId = (userWalletId to network).formatted()
+        return nftPersistenceStores[storeId] ?: run {
+            nftPersistenceStoreFactory.provide(userWalletId, network).also {
+                nftPersistenceStores[storeId] = it
+            }
         }
     }
 
-    private suspend fun getNFTRuntimeStore(network: Network): NFTRuntimeStore = nftRuntimeStores[network] ?: run {
-        nftRuntimeStoreFactory.provide(network).also {
-            nftRuntimeStores[network] = it
-            val storedCollections = getStoredCollections(network)
-            val storedPrices = getStoredPrices(network)
-            it.initialize(
-                collections = storedCollections,
-                prices = storedPrices,
-            )
+    private suspend fun getNFTRuntimeStore(userWalletId: UserWalletId, network: Network): NFTRuntimeStore {
+        val storeId = (userWalletId to network).formatted()
+        return nftRuntimeStores[storeId] ?: run {
+            nftRuntimeStoreFactory.provide(network).also {
+                nftRuntimeStores[storeId] = it
+                val storedCollections = getStoredCollections(userWalletId, network)
+                val storedPrices = getStoredPrices(userWalletId, network)
+                it.initialize(
+                    collections = storedCollections,
+                    prices = storedPrices,
+                )
+            }
         }
     }
 
-    private suspend fun getStoredCollections(network: Network) = getNFTPersistenceStore(network)
-        .getCollectionsSync()
-        .let {
-            NFTCollections(
-                network = network,
-                content = NFTCollections.Content.Collections(
-                    collections = it
-                        ?.map { collection ->
-                            collectionConverter.convert(network to collection)
-                        }
-                        ?.filter {
-                            it.id !is NFTCollection.Identifier.Unknown
-                        },
-                    source = StatusSource.CACHE,
-                ),
-            )
-        }
-
-    private suspend fun getStoredPrices(network: Network) = getNFTPersistenceStore(network)
-        .getSalePricesSync()
-        .orEmpty()
-        .let { prices ->
-            prices
-                .mapKeys {
-                    val (assetId, _) = it
-                    NFTSdkAssetIdentifierConverter.convert(assetId)
-                }
-                .mapValues {
-                    val (assetId, price) = it
-                    NFTSalePrice.Value(
-                        assetId = assetId,
-                        value = price.value,
-                        symbol = price.symbol,
+    private suspend fun getStoredCollections(userWalletId: UserWalletId, network: Network) =
+        getNFTPersistenceStore(userWalletId, network)
+            .getCollectionsSync()
+            .let {
+                NFTCollections(
+                    network = network,
+                    content = NFTCollections.Content.Collections(
+                        collections = it
+                            ?.map { collection ->
+                                NFTSdkCollectionConverter.convert(network to collection)
+                            }
+                            ?.filter {
+                                it.id !is NFTCollection.Identifier.Unknown
+                            },
                         source = StatusSource.CACHE,
-                    )
-                }
-        }
+                    ),
+                )
+            }
 
-    private suspend fun List<SdkNFTCollection>.mergeWithStoredAssets(network: Network): List<SdkNFTCollection> {
+    private suspend fun getStoredPrices(userWalletId: UserWalletId, network: Network) =
+        getNFTPersistenceStore(userWalletId, network)
+            .getSalePricesSync()
+            .orEmpty()
+            .let { prices ->
+                prices
+                    .mapKeys {
+                        val (assetId, _) = it
+                        NFTSdkAssetIdentifierConverter.convert(assetId)
+                    }
+                    .mapValues {
+                        val (assetId, price) = it
+                        NFTSalePrice.Value(
+                            assetId = assetId,
+                            value = price.value,
+                            symbol = price.symbol,
+                            source = StatusSource.CACHE,
+                        )
+                    }
+            }
+
+    private fun NFTCollections.changeStatusSource(source: StatusSource) = copy(
+        content = when (val content = content) {
+            is NFTCollections.Content.Collections -> content.copy(
+                source = source,
+            )
+            is NFTCollections.Content.Error -> content
+        },
+    )
+
+    private suspend fun List<SdkNFTCollection>.mergeWithStoredAssets(
+        userWalletId: UserWalletId,
+        network: Network,
+    ): List<SdkNFTCollection> {
         val storedCollections =
-            getNFTPersistenceStore(network)
+            getNFTPersistenceStore(userWalletId, network)
                 .getCollectionsSync()
                 .orEmpty()
                 .associateBy(SdkNFTCollection::identifier)
@@ -224,4 +257,11 @@ internal class DefaultNFTRepository @Inject constructor(
             }
         }
     }
+
+    private fun Pair<UserWalletId, Network>.formatted(): String {
+        val (walletId, network) = this
+        return walletId.stringValue + "_" + network.id.value + "_" + network.derivationPath.value
+    }
+
+    private fun Network.canHandleNFTs(): Boolean = Blockchain.fromNetworkId(backendId)?.canHandleNFTs() == true
 }
