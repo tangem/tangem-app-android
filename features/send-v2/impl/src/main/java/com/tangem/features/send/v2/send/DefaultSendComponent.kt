@@ -14,6 +14,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.send.model.SendModel
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -63,7 +65,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
     private fun createChild(route: SendRoute, factoryContext: AppComponentContext) = when (route) {
         SendRoute.Empty -> getStubComponent()
         is SendRoute.Destination -> getDestinationComponent(factoryContext, route)
-        is SendRoute.Amount -> getAmountComponent()
+        is SendRoute.Amount -> getAmountComponent(factoryContext, route)
         is SendRoute.Fee -> getFeeComponent()
         SendRoute.Confirm -> getConfirmComponent()
     }
@@ -82,7 +84,20 @@ internal class DefaultSendComponent @AssistedInject constructor(
             ),
         )
 
-    private fun getAmountComponent() = getStubComponent() // todo
+    private fun getAmountComponent(factoryContext: AppComponentContext, route: SendRoute) = SendAmountComponent(
+        appComponentContext = factoryContext,
+        params = SendAmountComponentParams.AmountParams(
+            state = model.uiState.value.amountUM,
+            currentRoute = currentRoute.filterIsInstance<SendRoute.Amount>(),
+            analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
+            userWallet = model.userWallet,
+            appCurrency = model.appCurrency,
+            cryptoCurrencyStatus = model.cryptoCurrencyStatus,
+            callback = model,
+            isEditMode = route.isEditMode,
+            predefinedAmountValue = model.predefinedAmountValue,
+        ),
+    )
 
     private fun getFeeComponent() = getStubComponent() // todo
 
