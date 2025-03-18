@@ -14,7 +14,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.model.VisaCardActivationStatus
-import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
@@ -250,8 +249,9 @@ object OnboardingHelper {
         hasBackupError: Boolean,
         alreadyCreatedWallet: UserWallet? = null,
     ) {
-        val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
-        val userWallet = alreadyCreatedWallet ?: UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
+        val userWalletBuilderFactory = store.inject(DaggerGraphState::userWalletBuilderFactory)
+
+        val userWallet = alreadyCreatedWallet ?: userWalletBuilderFactory.create(scanResponse)
             .hasBackupError(hasBackupError)
             .backupCardsIds(backupCardsIds?.toSet())
             .build()
