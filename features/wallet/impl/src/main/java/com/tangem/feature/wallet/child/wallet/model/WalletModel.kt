@@ -10,9 +10,11 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -41,6 +43,7 @@ import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -76,6 +79,8 @@ internal class WalletModel @Inject constructor(
     private val walletFeatureToggles: WalletFeatureToggles,
     private val biometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val fetchNFTCollectionsUseCase: FetchNFTCollectionsUseCase,
+    private val walletsRepository: WalletsRepository,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -86,6 +91,7 @@ internal class WalletModel @Inject constructor(
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
     private val expressStatusJobHolder = JobHolder()
+    private val walletsNFTsUpdateJobHolder = JobHolder()
     private var needToRefreshWallet = false
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
@@ -103,6 +109,7 @@ internal class WalletModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeOnExpressTransactionsUpdates()
+        subscribeOnNFTUpdates()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
     }
@@ -160,7 +167,10 @@ internal class WalletModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .map {
-                walletsUpdateActionResolver.resolve(wallets = it, currentState = stateHolder.value)
+                walletsUpdateActionResolver.resolve(
+                    wallets = it,
+                    currentState = stateHolder.value,
+                )
             }
             .onEach(::updateWallets)
             .flowOn(dispatchers.main)
@@ -254,6 +264,29 @@ internal class WalletModel @Inject constructor(
                 ),
             )
         }.saveIn(expressStatusJobHolder)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun subscribeOnNFTUpdates() {
+        getWalletsUseCase()
+            .conflate()
+            .distinctUntilChanged()
+            .flatMapLatest { wallets ->
+                wallets
+                    .map { wallet ->
+                        walletsRepository.nftEnabledStatus(wallet.walletId)
+                            .distinctUntilChanged()
+                            .onEach { nftEnabled ->
+                                if (nftEnabled) {
+                                    fetchNFTCollectionsUseCase.invoke(wallet.walletId)
+                                }
+                            }
+                    }
+                    .merge()
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+            .saveIn(walletsNFTsUpdateJobHolder)
     }
 
     private fun needToRefreshTimer() {
