@@ -26,6 +26,9 @@ dependencies {
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
 
+    /** Domain modules */
+    implementation(projects.domain.nft.models)
+
     /** Common */
     implementation(projects.common.ui)
     implementation(projects.common.routing)
