@@ -33,6 +33,7 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.features.nft.NFTFeatureToggles
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -57,6 +58,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val walletsRepository: WalletsRepository,
     private val nftFeatureToggles: NFTFeatureToggles,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -156,17 +158,25 @@ internal class WalletSettingsModel @Inject constructor(
 
     private fun onLinkMoreCardsClick(scanResponse: ScanResponse) {
         analyticsEventHandler.send(Settings.ButtonCreateBackup)
-
         analyticsContextProxy.addContext(scanResponse)
 
-        reduxStateHolder.dispatch(
-            LegacyAction.StartOnboardingProcess(
-                scanResponse = scanResponse,
-                canSkipBackup = false,
-            ),
-        )
+        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
+            router.push(
+                AppRoute.Onboarding(
+                    scanResponse = scanResponse,
+                    mode = AppRoute.Onboarding.Mode.AddBackup,
+                ),
+            )
+        } else {
+            reduxStateHolder.dispatch(
+                LegacyAction.StartOnboardingProcess(
+                    scanResponse = scanResponse,
+                    canSkipBackup = false,
+                ),
+            )
 
-        router.push(AppRoute.OnboardingWallet())
+            router.push(AppRoute.OnboardingWallet())
+        }
     }
 
     private fun onCheckedNFTChange(isChecked: Boolean) {
