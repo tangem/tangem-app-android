@@ -20,7 +20,6 @@ import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
@@ -49,7 +48,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
-    private val generateWalletNameUseCase: GenerateWalletNameUseCase,
+    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
@@ -279,7 +278,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
         return requireNotNull(
-            value = UserWalletBuilder(scanResponse, generateWalletNameUseCase)
+            value = userWalletBuilderFactory.create(scanResponse = scanResponse)
                 .backupCardsIds(backupCardIds.toSet())
                 .hasBackupError(walletHasBackupError)
                 .build(),
