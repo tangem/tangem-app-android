@@ -242,7 +242,9 @@ private suspend fun readCard(): CompletionResult<ScanResponse> {
 }
 
 private suspend fun loadArtworkForCard(cardId: String, cardPublicKey: ByteArray, defaultArtwork: Uri?): Uri {
-    return when (val cardInfo = OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)) {
+    val onlineCardVerifier = store.inject(DaggerGraphState::onlineCardVerifier)
+
+    return when (val cardInfo = onlineCardVerifier.getCardInfo(cardId, cardPublicKey)) {
         is Result.Success -> {
             val artworkId = cardInfo.data.artwork?.id
             if (artworkId.isNullOrEmpty()) {
