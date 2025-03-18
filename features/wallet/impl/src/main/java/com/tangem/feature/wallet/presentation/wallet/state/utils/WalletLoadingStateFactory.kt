@@ -1,14 +1,14 @@
 package com.tangem.feature.wallet.presentation.wallet.state.utils
 
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
-import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -41,6 +41,7 @@ internal class WalletLoadingStateFactory(
             warnings = persistentListOf(),
             bottomSheetConfig = null,
             tokensListState = WalletTokensListState.ContentState.Loading,
+            nftState = WalletNFTItemUM.Hidden,
         )
     }
 
@@ -80,7 +81,10 @@ internal class WalletLoadingStateFactory(
     }
 
     private fun createPullToRefreshConfig(): PullToRefreshConfig {
-        return PullToRefreshConfig(onRefresh = { clickIntents.onRefreshSwipe(it.value) }, isRefreshing = false)
+        return PullToRefreshConfig(
+            onRefresh = { clickIntents.onRefreshSwipe(it.value) },
+            isRefreshing = false,
+        )
     }
 
     private fun UserWallet.toLoadingWalletCardState(): WalletCardState {
