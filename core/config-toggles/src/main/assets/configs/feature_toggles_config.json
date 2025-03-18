@@ -74,5 +74,9 @@
     {
         "name": "TWIN_REFACTORING_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "SEND_V2_ENABLED",
+        "version": "undefined"
     }
 ]
