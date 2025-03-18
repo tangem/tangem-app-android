@@ -20,11 +20,11 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.send.SendRoute
-import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.analytics.SendDestinationAnalyticEvents
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.*
+import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationWalletUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
