@@ -40,7 +40,12 @@ fun AmountScreenContent(
                 bottom = TangemTheme.dimens.spacing16,
             ),
     ) {
-        amountField(amountState = amountState, isBalanceHidden = isBalanceHidden)
+        amountField(
+            amountState = amountState,
+            isBalanceHidden = isBalanceHidden,
+            onValueChange = clickIntents::onAmountValueChange,
+            onValuePastedTriggerDismiss = clickIntents::onAmountPasteTriggerDismiss,
+        )
         buttons(
             segmentedButtonConfig = amountState.segmentedButtonConfig,
             clickIntents = clickIntents,
