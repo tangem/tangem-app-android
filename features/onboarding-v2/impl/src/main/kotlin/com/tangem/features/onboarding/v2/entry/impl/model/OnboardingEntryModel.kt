@@ -8,6 +8,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.common.util.cardTypesResolver
@@ -18,6 +19,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.onboarding.v2.TitleProvider
+import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.impl.analytics.OnboardingEntryEvent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
@@ -40,6 +42,7 @@ internal class OnboardingEntryModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val askBiometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingEntryComponent.Params>()
@@ -53,6 +56,14 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     val startRoute = routeByProductType(params.scanResponse)
+
+    fun onManageTokensDone() {
+        navigateToFinalScreenFlow()
+    }
+
+    fun onBack() {
+        uiMessageSender.send(CantLeaveBackupDialog)
+    }
 
     private fun routeByProductType(scanResponse: ScanResponse): OnboardingRoute {
         val multiWalletNavigationMode = when (params.multiWalletMode) {
@@ -92,15 +103,17 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
-        if (userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed()) {
-            stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
-        } else {
-            navigateToFinalScreenFlow()
+        when {
+            params.multiWalletMode == OnboardingEntryComponent.MultiWalletMode.AddBackup -> {
+                stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            }
+            userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed() -> {
+                stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
+            }
+            else -> {
+                navigateToFinalScreenFlow()
+            }
         }
-    }
-
-    fun onManageTokensDone() {
-        navigateToFinalScreenFlow()
     }
 
     private fun onVisaOnboardingDone() {
