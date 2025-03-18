@@ -70,5 +70,9 @@
     {
         "name": "NEW_ATTESTATION_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "TWIN_REFACTORING_ENABLED",
+        "version": "undefined"
     }
 ]
