@@ -7,6 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.visa.exception.RefreshTokenExpiredException
 import com.tangem.domain.visa.model.VisaCurrency
 import com.tangem.domain.wallets.models.UserWallet
@@ -15,11 +16,14 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletAdditiona
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletManageButton
 import com.tangem.utils.extensions.isZero
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import org.joda.time.DateTime
 import org.joda.time.Days
 
-internal class SetBalancesAndLimitsTransformer(
+internal class SetVisaInfoTransformer(
     private val userWallet: UserWallet,
     private val maybeVisaCurrency: Either<Throwable, VisaCurrency>,
     private val clickIntents: WalletClickIntents,
@@ -35,15 +39,15 @@ internal class SetBalancesAndLimitsTransformer(
             }
 
             return prevState.copy(
+                buttons = createVisaButtonsDimmed(),
                 walletCardState = getErrorWalletCardState(prevState.walletCardState),
-                depositButtonState = prevState.depositButtonState.copy(isEnabled = false),
                 balancesAndLimitBlockState = BalancesAndLimitsBlockState.Error,
             )
         }
 
         return prevState.copy(
+            buttons = createVisaButtons(visaCurrency = visaCurrency),
             walletCardState = getContentWalletCardState(prevState.walletCardState, visaCurrency),
-            depositButtonState = prevState.depositButtonState.copy(isEnabled = true),
             balancesAndLimitBlockState = getContentBlockState(visaCurrency),
         )
     }
@@ -113,6 +117,45 @@ internal class SetBalancesAndLimitsTransformer(
             bottomSheetConfig = prevState.bottomSheetConfig,
             onExploreClick = clickIntents::onExploreClick,
             onUnlockVisaAccessNotificationClick = clickIntents::onUnlockVisaAccessClick,
+        )
+    }
+
+    private fun createVisaButtonsDimmed(): PersistentList<WalletManageButton> {
+        return persistentListOf(
+            WalletManageButton.Receive(enabled = true, dimContent = true, onClick = {}, onLongClick = null),
+            WalletManageButton.Buy(enabled = true, dimContent = true, onClick = {}),
+        )
+    }
+
+    private fun createVisaButtons(visaCurrency: VisaCurrency): PersistentList<WalletManageButton> {
+        // [Second Visa Iteration] Make VisaCurrency contain CryptoCurrencyStatus
+        val cryptoCurrencyStatus = CryptoCurrencyStatus(
+            currency = visaCurrency.cryptoCurrency,
+            value = CryptoCurrencyStatus.Loaded(
+                amount = visaCurrency.balances.available,
+                fiatAmount = visaCurrency.balances.available.multiply(visaCurrency.fiatRate),
+                fiatRate = visaCurrency.fiatRate,
+                priceChange = visaCurrency.priceChange,
+                yieldBalance = null,
+                hasCurrentNetworkTransactions = false,
+                pendingTransactions = emptySet(),
+                networkAddress = visaCurrency.paymentAccountAddress,
+                sources = CryptoCurrencyStatus.Sources(),
+            ),
+        )
+
+        return return persistentListOf(
+            WalletManageButton.Receive(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onReceiveClick(cryptoCurrencyStatus = cryptoCurrencyStatus) },
+                onLongClick = { clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus = cryptoCurrencyStatus) },
+            ),
+            WalletManageButton.Buy(
+                enabled = true,
+                dimContent = false,
+                onClick = { clickIntents.onMultiWalletBuyClick(userWalletId = userWallet.walletId) },
+            ),
         )
     }
 }
