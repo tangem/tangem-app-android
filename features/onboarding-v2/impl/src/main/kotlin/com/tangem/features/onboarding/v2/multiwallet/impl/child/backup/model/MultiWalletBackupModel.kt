@@ -14,6 +14,7 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -49,6 +50,7 @@ class MultiWalletBackupModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val cardRepository: CardRepository,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")
@@ -275,6 +277,8 @@ class MultiWalletBackupModel @Inject constructor(
                 cardId = cardId,
                 allowsRequestAccessCodeFromRepository = false,
             )
+
+            cardRepository.finishCardActivation(cardId)
         }
     }
 }
