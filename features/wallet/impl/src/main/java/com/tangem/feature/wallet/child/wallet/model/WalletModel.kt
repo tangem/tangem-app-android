@@ -398,29 +398,16 @@ internal class WalletModel @Inject constructor(
             action.selectedWalletIndex
         }
 
-        /*
-         * Should not show scroll animation if WalletScreen isn't in the background.
-         * Example, reset card
-         */
-        if (screenLifecycleProvider.isBackgroundState.value) {
-            updateStateByDeleteWalletTransformer(
-                selectedWalletIndex = newSelectedWalletIndex,
-                deletedWalletId = action.deletedWalletId,
-            )
-        } else {
-            withContext(dispatchers.io) { delay(timeMillis = 1000) }
-
-            scrollToWallet(
-                prevIndex = action.deletedWalletIndex,
-                newIndex = action.selectedWalletIndex,
-                onConsume = {
-                    updateStateByDeleteWalletTransformer(
-                        selectedWalletIndex = newSelectedWalletIndex,
-                        deletedWalletId = action.deletedWalletId,
-                    )
-                },
-            )
-        }
+        scrollToWallet(
+            prevIndex = action.deletedWalletIndex,
+            newIndex = action.selectedWalletIndex,
+            onConsume = {
+                updateStateByDeleteWalletTransformer(
+                    selectedWalletIndex = newSelectedWalletIndex,
+                    deletedWalletId = action.deletedWalletId,
+                )
+            },
+        )
     }
 
     private fun updateStateByDeleteWalletTransformer(selectedWalletIndex: Int, deletedWalletId: UserWalletId) {
@@ -452,15 +439,20 @@ internal class WalletModel @Inject constructor(
     }
 
     private fun scrollToWallet(prevIndex: Int, newIndex: Int, onConsume: () -> Unit = {}) {
-        stateHolder.update(
-            ScrollToWalletTransformer(
-                prevIndex = prevIndex,
-                newIndex = newIndex,
-                currentStateProvider = Provider(action = stateHolder::value),
-                stateUpdater = { newState -> stateHolder.update { newState } },
-                onConsume = onConsume,
-            ),
-        )
+        // Should not show scroll animation if WalletScreen isn't in the background.
+        if (screenLifecycleProvider.isBackgroundState.value) {
+            onConsume()
+        } else {
+            stateHolder.update(
+                ScrollToWalletTransformer(
+                    prevIndex = prevIndex,
+                    newIndex = newIndex,
+                    currentStateProvider = Provider(action = stateHolder::value),
+                    stateUpdater = { newState -> stateHolder.update { newState } },
+                    onConsume = onConsume,
+                ),
+            )
+        }
     }
 
     inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {
