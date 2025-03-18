@@ -53,7 +53,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
             popBack = {
                 popInternal { success ->
                     if (success.not()) {
-                        model.stackNavigation.pop()
+                        model.onBack()
                     }
                 }
             },
@@ -113,15 +113,15 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                 stepperComponent.state.update {
                     it.copy(
                         currentStep = when (stack.active.configuration) {
-                            is OnboardingRoute.AskBiometry -> 7
-                            is OnboardingRoute.ManageTokens -> 8
+                            is OnboardingRoute.ManageTokens -> 7
+                            is OnboardingRoute.AskBiometry -> 8
                             is OnboardingRoute.Done -> 9
                             else -> error("Unsupported route")
                         },
                         steps = 9,
                         title = when (stack.active.configuration) {
-                            is OnboardingRoute.AskBiometry -> resourceReference(R.string.onboarding_navbar_save_wallet)
                             is OnboardingRoute.ManageTokens -> resourceReference(R.string.main_manage_tokens)
+                            is OnboardingRoute.AskBiometry -> resourceReference(R.string.onboarding_navbar_save_wallet)
                             is OnboardingRoute.Done -> resourceReference(R.string.onboarding_done_header)
                             else -> error("Unsupported route")
                         },
@@ -144,8 +144,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val innerStackState by innerStack.subscribeAsState()
 
-        // prevent back navigation
-        BackHandler { }
+        BackHandler { model.onBack() }
 
         OnboardingEntry(
             modifier = modifier,
