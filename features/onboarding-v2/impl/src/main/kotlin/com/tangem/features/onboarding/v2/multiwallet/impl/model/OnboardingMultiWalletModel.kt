@@ -5,10 +5,9 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
@@ -34,7 +33,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val backupServiceHolder: BackupServiceHolder,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val onboardingRepository: OnboardingRepository,
     private val getCardImageUseCase: GetCardImageUseCase,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
@@ -65,22 +64,14 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             st.copy(
                 dialog = interruptBackupDialog(
                     onConfirm = {
-                        removeFinalizeScanResponseState()
-                        router.pop()
+                        modelScope.launch {
+                            onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                            router.pop()
+                        }
                     },
                     dismiss = { _uiState.update { it.copy(dialog = null) } },
                 ),
             )
-        }
-    }
-
-    private fun removeFinalizeScanResponseState() {
-        // discarding onboarding means we have to remove scan response from preferences
-        // to prevent showing finalize screen dialog on next app start
-        modelScope.launch {
-            appPreferencesStore.editData { mutablePreferences ->
-                mutablePreferences.remove(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY)
-            }
         }
     }
 
@@ -110,12 +101,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     private fun getInitialStep(): OnboardingMultiWalletState.Step {
         val scanResponse = params.scanResponse
         val card = scanResponse.card
-        val backupService = backupServiceHolder.backupService.get()!!
 
         return when {
-            // interrupted backup
-            backupService.hasIncompletedBackup -> OnboardingMultiWalletState.Step.Finalize
-
             // Add backup button
             // Wallet1 without backup and userwallet's scanResponse doesn't contain primary card.
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
