@@ -6,6 +6,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.feedback.GetCardInfoUseCase
@@ -19,6 +20,7 @@ import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
+import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
@@ -51,6 +53,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
     private val cardRepository: CardRepository,
     private val onboardingRepository: OnboardingRepository,
     private val walletsRepository: WalletsRepository,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<MultiWalletChildParams>()
@@ -61,35 +64,22 @@ internal class MultiWalletFinalizeModel @Inject constructor(
 
     private var walletHasBackupError = false
     private var hasRing = false
+
     val uiState = _uiState.asStateFlow()
     val onBackFlow = MutableSharedFlow<Unit>()
-
     val onEvent = MutableSharedFlow<MultiWalletFinalizeComponent.Event>()
 
     init {
-        // save scan response to preferences to be able
-        // to continue finalize process after app restart
         modelScope.launch {
+            // save scan response to preferences to be able
+            // to continue finalize process after app restart
             onboardingRepository.saveUnfinishedFinalizeOnboarding(
                 scanResponse = multiWalletState.value.currentScanResponse,
             )
-        }
-    }
 
-    fun onBack() {
-        if (uiState.value.scanPrimary) {
-            modelScope.launch { onBackFlow.emit(Unit) }
-        }
-    }
-
-    private fun getInitialState(): MultiWalletFinalizeUM {
-        val backupService = backupServiceHolder.backupService.get() ?: return MultiWalletFinalizeUM()
-        val initialStep = getInitialStep()
-
-        // sets proper artwork state for initial step
-        // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
-        modelScope.launch {
-            when (initialStep) {
+            // sets proper artwork state for initial step
+            // (if we start from backup cards, we need to show proper artwork) ([REDACTED_TASK_KEY])
+            when (getInitialStep()) {
                 MultiWalletFinalizeUM.Step.Primary -> { /* state is already set */ }
                 MultiWalletFinalizeUM.Step.BackupDevice1 -> {
                     onEvent.emit(MultiWalletFinalizeComponent.Event.OneBackupCardAdded)
@@ -100,6 +90,19 @@ internal class MultiWalletFinalizeModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun onBack() {
+        if (uiState.value.scanPrimary) {
+            modelScope.launch { onBackFlow.emit(Unit) }
+        } else {
+            uiMessageSender.send(CantLeaveBackupDialog)
+        }
+    }
+
+    private fun getInitialState(): MultiWalletFinalizeUM {
+        val backupService = backupServiceHolder.backupService.get() ?: return MultiWalletFinalizeUM()
+        val initialStep = getInitialStep()
 
         val batchId = when (initialStep) {
             MultiWalletFinalizeUM.Step.Primary -> backupService.primaryCardBatchId
@@ -118,7 +121,7 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             onScanClick = ::onLinkClick,
             scanPrimary = initialStep == MultiWalletFinalizeUM.Step.Primary,
             cardNumber = cardId?.lastMasked().orEmpty(),
-            step = getInitialStep(),
+            step = initialStep,
         )
     }
 
