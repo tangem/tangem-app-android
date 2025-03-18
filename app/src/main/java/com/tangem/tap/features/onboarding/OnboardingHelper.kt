@@ -82,7 +82,6 @@ object OnboardingHelper {
 
             return AppRoute.Onboarding(
                 scanResponse = scanResponse,
-                startFromBackup = false,
                 mode = when (backupState.startedSource) {
                     BackupStartedSource.Onboarding -> AppRoute.Onboarding.Mode.Onboarding
                     BackupStartedSource.CreateBackup -> AppRoute.Onboarding.Mode.AddBackup
@@ -92,11 +91,7 @@ object OnboardingHelper {
 
         return when (val type = scanResponse.productType) {
             ProductType.Note -> if (featureToggles.isNoteRefactoringEnabled) {
-                AppRoute.Onboarding(
-                    scanResponse = scanResponse,
-                    startFromBackup = false,
-                    mode = AppRoute.Onboarding.Mode.Onboarding,
-                )
+                AppRoute.Onboarding(scanResponse = scanResponse)
             } else {
                 AppRoute.OnboardingNote
             }
