@@ -17,8 +17,8 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.biometry.impl.ui.state.AskBiometryUM
 import com.tangem.features.biometry.R
+import com.tangem.features.biometry.impl.ui.state.AskBiometryUM
 
 @Composable
 internal fun AskBiometry(state: AskBiometryUM, modifier: Modifier = Modifier) {
