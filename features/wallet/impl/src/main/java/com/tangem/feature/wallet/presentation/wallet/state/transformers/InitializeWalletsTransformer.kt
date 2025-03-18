@@ -38,7 +38,9 @@ internal class InitializeWalletsTransformer(
                     if (userWallet.isLocked) {
                         createLockedState(userWallet)
                     } else {
-                        walletLoadingStateFactory.create(userWallet)
+                        walletLoadingStateFactory.create(
+                            userWallet = userWallet,
+                        )
                     }
                 }
                 .toImmutableList(),

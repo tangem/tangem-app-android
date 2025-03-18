@@ -2,10 +2,10 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
-import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlinx.collections.immutable.toImmutableList
 
@@ -38,7 +38,11 @@ internal class ReinitializeWalletTransformer(
         return prevState.copy(
             wallets = prevState.wallets
                 .filterNot { it.walletCardState.id == prevWalletId }
-                .plus(element = walletLoadingStateFactory.create(newUserWallet))
+                .plus(
+                    element = walletLoadingStateFactory.create(
+                        userWallet = newUserWallet,
+                    ),
+                )
                 .toImmutableList(),
         )
     }
