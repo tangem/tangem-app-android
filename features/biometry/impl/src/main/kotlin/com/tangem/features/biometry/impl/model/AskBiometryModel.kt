@@ -66,15 +66,6 @@ internal class AskBiometryModel @Inject constructor(
         }
     }
 
-    private fun onAllowClick() {
-        _uiState.update { it.copy(showProgress = true) }
-        allowToUseBiometrics()
-    }
-
-    private fun dontAllow() {
-        params.modelCallbacks.onDenied()
-    }
-
     fun dismiss() {
         modelScope.launch {
             dismissBSFlow.emit(Unit)
@@ -83,12 +74,14 @@ internal class AskBiometryModel @Inject constructor(
         }
     }
 
-    private fun allowToUseBiometrics() {
+    private fun onAllowClick() {
         modelScope.launch {
             if (tangemSdkManager.checkNeedEnrollBiometrics()) {
                 showEnrollBiometricsDialog()
                 return@launch
             }
+
+            _uiState.update { it.copy(showProgress = true) }
 
             /*
 
@@ -99,12 +92,17 @@ internal class AskBiometryModel @Inject constructor(
                 uiMessageSender.send(
                     SnackbarMessage(stringReference("No selected user wallet")),
                 )
+                _uiState.update { it.copy(showProgress = false) }
 
                 return@launch
             }
 
             handleSuccessAllowing(selectedUserWallet)
         }
+    }
+
+    private fun dontAllow() {
+        params.modelCallbacks.onDenied()
     }
 
     private suspend fun handleSuccessAllowing(userWallet: UserWallet) {
