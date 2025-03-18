@@ -13,7 +13,3 @@ interface Transformer<S> {
 fun <T> MutableStateFlow<T>.update(transformer: Transformer<T>) {
     update { transformer.transform(this.value) }
 }
-
-fun <T> MutableStateFlow<T>.updateAll(vararg transformers: Transformer<T>) {
-    transformers.forEach { transformer -> update { transformer.transform(this.value) } }
-}
