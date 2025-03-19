@@ -1,4 +1,4 @@
-package com.tangem.features.onboarding.v2.multiwallet.impl.analytics
+package com.tangem.features.onboarding.v2.common.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 
@@ -36,6 +36,16 @@ sealed class OnboardingEvent(
             data object NewSeed : WalletCreationType(value = "New Seed")
             data object SeedImport : WalletCreationType(value = "Seed Import")
         }
+    }
+
+    sealed class Topup(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : OnboardingEvent("Onboarding / Top Up", event, params) {
+
+        object ScreenOpened : Topup("Activation Screen Opened")
+
+        object ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")
     }
 
     sealed class Backup(
