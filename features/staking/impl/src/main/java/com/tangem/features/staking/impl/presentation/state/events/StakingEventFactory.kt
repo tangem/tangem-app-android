@@ -46,4 +46,9 @@ internal class StakingEventFactory(
         val alert = StakingEvent.ShowAlert(alert = StakingAlertUM.ValidatorsUnavailable)
         stateController.updateEvent(alert)
     }
+
+    fun createInitializeAccountAlert() {
+        val alert = StakingEvent.ShowAlert(alert = StakingAlertUM.InitializeAccount)
+        stateController.updateEvent(alert)
+    }
 }
