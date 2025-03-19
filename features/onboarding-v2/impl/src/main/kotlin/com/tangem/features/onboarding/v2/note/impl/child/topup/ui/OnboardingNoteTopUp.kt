@@ -17,7 +17,6 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
-import com.tangem.features.onboarding.v2.note.impl.ALL_STEPS_TOP_CONTAINER_WEIGHT
 import com.tangem.features.onboarding.v2.note.impl.child.topup.ui.state.OnboardingNoteTopUpUM
 
 @Composable
@@ -35,15 +34,16 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
             isRefreshing = state.isRefreshing,
             modifier = Modifier
                 .padding(horizontal = 34.dp)
-                .padding(top = 20.dp)
-                .weight(ALL_STEPS_TOP_CONTAINER_WEIGHT)
+                .padding(top = 16.dp)
+                .height(228.dp)
                 .fillMaxWidth(),
         )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(32.dp)
+                .padding(horizontal = 32.dp)
+                .padding(top = 16.dp)
                 .weight(1.0f),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
