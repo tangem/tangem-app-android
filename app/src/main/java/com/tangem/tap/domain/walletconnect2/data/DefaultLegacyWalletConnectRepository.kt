@@ -133,10 +133,28 @@ internal class DefaultLegacyWalletConnectRepository(
                     return
                 }
 
+                val optionalMissingNetwork = findMissingNetworks(
+                    namespaces = sessionProposal.optionalNamespaces,
+                    userNamespaces = this@DefaultLegacyWalletConnectRepository.userNamespaces ?: emptyMap(),
+                )
+
                 val optionalWithoutMissingNetworks = removeMissingNetworks(
                     namespaces = sessionProposal.optionalNamespaces,
                     userNamespaces = this@DefaultLegacyWalletConnectRepository.userNamespaces ?: emptyMap(),
                 )
+
+                // for cases when optionalNamespaces is not empty but we doesn't support none of them
+                if (optionalMissingNetwork.isNotEmpty() && optionalWithoutMissingNetworks.isEmpty()) {
+                    Timber.i("Not added optional blockchains: $optionalMissingNetwork")
+                    scope.launch {
+                        _events.emit(
+                            WalletConnectEvents.SessionApprovalError(
+                                WalletConnectError.ApprovalErrorMissingNetworks(optionalMissingNetwork.toList()),
+                            ),
+                        )
+                    }
+                    return
+                }
 
                 val requiredChainIds = sessionProposal.requiredNamespaces.values.flatMap { it.chains ?: emptyList() }
                 val optionalChainIds = optionalWithoutMissingNetworks.toList()
