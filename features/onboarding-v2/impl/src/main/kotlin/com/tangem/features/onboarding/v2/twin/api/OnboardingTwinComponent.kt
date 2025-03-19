@@ -11,7 +11,12 @@ interface OnboardingTwinComponent : ComposableContentComponent {
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
         val modelCallbacks: ModelCallbacks,
-    )
+        val mode: Mode,
+    ) {
+        enum class Mode {
+            CreateWallet, RecreateWallet
+        }
+    }
 
     interface ModelCallbacks {
         fun onDone()
