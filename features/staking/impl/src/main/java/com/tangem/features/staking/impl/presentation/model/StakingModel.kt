@@ -333,7 +333,10 @@ internal class StakingModel @Inject constructor(
                         stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                     },
                     onSendSuccess = { txUrl ->
-                        stakingAnalyticSender.sendTransactionStakingAnalytics(stateController.value)
+                        stakingAnalyticSender.sendTransactionStakingAnalytics(
+                            stateController.value,
+                            cryptoCurrencyStatus,
+                        )
                         transactionsInProgress.clear()
                         stateController.update(SetConfirmationStateCompletedTransformer(txUrl, cryptoCurrencyStatus))
                     },
