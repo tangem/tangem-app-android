@@ -10,7 +10,7 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
-import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
+import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage

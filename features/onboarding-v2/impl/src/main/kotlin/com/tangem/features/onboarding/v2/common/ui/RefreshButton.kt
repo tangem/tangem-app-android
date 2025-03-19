@@ -43,7 +43,7 @@ internal fun RefreshButton(isRefreshing: Boolean, onRefreshBalanceClick: () -> U
             Icon(
                 painter = painterResource(id = R.drawable.ic_refresh_24),
                 contentDescription = null,
-                tint = TangemTheme.colors.text.disabled,
+                tint = TangemTheme.colors.text.primary1,
                 modifier = Modifier.padding(TangemTheme.dimens.spacing12),
             )
         }
