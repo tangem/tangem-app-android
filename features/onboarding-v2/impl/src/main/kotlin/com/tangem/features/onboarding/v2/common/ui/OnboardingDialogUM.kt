@@ -1,4 +1,4 @@
-package com.tangem.features.onboarding.v2.multiwallet.impl.common.ui
+package com.tangem.features.onboarding.v2.common.ui
 
 import com.tangem.common.ui.alerts.models.AlertUM
 import com.tangem.core.ui.extensions.TextReference
