@@ -27,12 +27,14 @@ fun OnboardingNoteTopUpHeader(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .heightIn(min = 228.dp)
+            .widthIn(max = 450.dp),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .padding(vertical = 24.dp, horizontal = 32.dp)
+                .padding(vertical = 24.dp)
                 .fillMaxSize()
                 .background(
                     TangemTheme.colors.button.secondary,
