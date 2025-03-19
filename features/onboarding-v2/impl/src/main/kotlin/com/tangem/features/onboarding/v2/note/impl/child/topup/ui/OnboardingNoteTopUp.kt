@@ -28,7 +28,7 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.Bottom,
     ) {
-        OnboardinNoteTopUpHeader(
+        OnboardingNoteTopUpHeader(
             balance = state.balance,
             cardArtworkUrl = state.cardArtworkUrl,
             onRefreshBalanceClick = state.onRefreshBalanceClick,
