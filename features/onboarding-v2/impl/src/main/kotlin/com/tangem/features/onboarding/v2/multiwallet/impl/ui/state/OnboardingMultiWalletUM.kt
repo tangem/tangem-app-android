@@ -1,6 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.ui.state
 
-import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.OnboardingDialogUM
+import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 
 internal data class OnboardingMultiWalletUM(
     val artwork1Url: String? = null,
