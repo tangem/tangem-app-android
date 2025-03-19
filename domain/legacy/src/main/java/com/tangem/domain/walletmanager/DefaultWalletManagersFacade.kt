@@ -682,6 +682,12 @@ class DefaultWalletManagersFacade(
         return walletManager.getAsset(collectionIdentifier, assetIdentifier)
     }
 
+    override suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return false
+        return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
+    }
+
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
         if (tokens.isEmpty()) return
 
