@@ -8,5 +8,9 @@ interface EventLogger {
 }
 
 interface ErrorEventLogger {
-    fun logErrorEvent(error: Throwable, params: Map<String, String> = emptyMap())
+    fun logErrorEvent(event: String, params: Map<String, String> = emptyMap())
+}
+
+interface ExceptionLogger {
+    fun logException(error: Throwable, params: Map<String, String> = emptyMap())
 }
