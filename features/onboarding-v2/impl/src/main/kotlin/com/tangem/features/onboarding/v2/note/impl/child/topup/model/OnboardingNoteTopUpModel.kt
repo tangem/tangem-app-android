@@ -4,9 +4,11 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -20,7 +22,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@Suppress("UnusedPrivateMember")
+@Suppress("LongParameterList")
 @ModelScoped
 internal class OnboardingNoteTopUpModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -28,9 +30,12 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val userWalletBuilderFactory: UserWalletBuilder.Factory,
+    private val getLegacyTopUpUrlUseCase: GetLegacyTopUpUrlUseCase,
+    private val urlOpener: UrlOpener,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingNoteTopUpComponent.Params>()
+    private val commonState = params.childParams.commonState
     private val scanResponse = params.childParams.commonState.value.scanResponse
     private var userWallet: UserWallet? = null
 
@@ -68,7 +73,12 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     }
 
     private fun onBuyCryptoClick() {
-        // TODO [REDACTED_TASK_KEY]
+        val cryptoCurrencyStatus = params.childParams.commonState.value.cryptoCurrencyStatus ?: return
+        modelScope.launch {
+            getLegacyTopUpUrlUseCase(cryptoCurrencyStatus).onRight {
+                urlOpener.openUrl(it)
+            }
+        }
     }
 
     private fun onShowWalletAddressClick() {
@@ -100,6 +110,9 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     }
 
     private fun applyCryptoCurrencyStatusToState(status: CryptoCurrencyStatus) {
+        commonState.update {
+            it.copy(cryptoCurrencyStatus = status)
+        }
         _uiState.update {
             it.copy(
                 amountToCreateAccount = (status.value as? CryptoCurrencyStatus.NoAccount)
@@ -112,12 +125,15 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
                             )
                         },
                     ),
-                balance = (status.value as? CryptoCurrencyStatus.Loaded)?.amount?.format({
-                    crypto(
-                        symbol = status.currency.symbol,
-                        decimals = status.currency.decimals,
-                    )
-                },),
+                balance = (status.value as? CryptoCurrencyStatus.Loaded)?.amount?.format(
+                    {
+                        crypto(
+                            symbol = status.currency.symbol,
+                            decimals = status.currency.decimals,
+                        )
+                    },
+                ),
+                isTopUpDataLoading = status.value.networkAddress == null,
             )
         }
     }
