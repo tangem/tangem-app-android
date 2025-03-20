@@ -1,16 +1,18 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
-import com.google.firebase.analytics.FirebaseAnalytics
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsHandler
-import com.tangem.core.analytics.api.ErrorEventHandler
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.converters.AnalyticsErrorConverter
-import com.tangem.tap.common.analytics.events.Shop
 
 class FirebaseAnalyticsHandler(
     private val client: FirebaseAnalyticsClient,
-) : AnalyticsHandler, ErrorEventHandler {
+) : AnalyticsHandler, AnalyticsErrorHandler, AnalyticsExceptionHandler {
+
+    private val errorConverter = AnalyticsErrorConverter()
 
     override fun id(): String = ID
 
@@ -18,30 +20,17 @@ class FirebaseAnalyticsHandler(
         client.logEvent(eventId, params)
     }
 
-    override fun send(event: AnalyticsEvent) {
-        val error = event.error
-        when {
-            error != null -> {
-                val errorConverter = AnalyticsErrorConverter()
-                if (!errorConverter.canBeHandled(error)) return
+    override fun sendException(event: ExceptionAnalyticsEvent) {
+        if (!errorConverter.canBeHandled(event.exception)) return
 
-                val errorParams = errorConverter.convert(error).toMutableMap()
-                errorParams["Category"] = event.category
-                errorParams["Event"] = event.event
-                errorParams.putAll(event.params)
-                send(error, errorParams)
-            }
-            event is Shop.Purchased -> {
-                send(FirebaseAnalytics.Event.PURCHASE, event.params)
-            }
-            else -> {
-                super.send(event)
-            }
-        }
+        val errorParams = errorConverter.convert(event.exception).toMutableMap()
+        errorParams.putAll(event.params)
+
+        client.logException(event.exception, event.params)
     }
 
-    override fun send(error: Throwable, params: Map<String, String>) {
-        client.logErrorEvent(error, params)
+    override fun sendErrorEvent(event: AnalyticsEvent) {
+        send(event)
     }
 
     companion object {
