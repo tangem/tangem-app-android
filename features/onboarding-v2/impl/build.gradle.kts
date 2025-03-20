@@ -45,6 +45,7 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.onramp)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)

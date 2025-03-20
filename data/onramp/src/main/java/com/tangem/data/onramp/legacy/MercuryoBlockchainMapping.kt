@@ -1,12 +1,13 @@
-package com.tangem.tap.network.exchangeServices.mercuryo
+package com.tangem.data.onramp.legacy
 
 import com.tangem.blockchain.common.Blockchain
 
 /**
+ * Legacy onboarding note/twins to get top up URL from mercuryo
  * Map [Blockchain] to ids from [link](https://api.mercuryo.io/v1.6/lib/currencies) [crypto_currencies]
  */
 @Suppress("CyclomaticComplexMethod")
-internal val Blockchain.mercuryoNetwork: String?
+public val Blockchain.mercuryoNetwork: String?
     get() {
         return when (this) {
             Blockchain.Algorand -> "ALGORAND"
