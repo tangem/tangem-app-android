@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.note.impl.child.topup.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +27,7 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
             .fillMaxSize()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         OnboardingNoteTopUpHeader(
             balance = state.balance,
@@ -64,7 +66,15 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
             )
         }
 
-        BottomButtons(state)
+        if (state.isTopUpDataLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .padding(all = 32.dp)
+                    .size(36.dp),
+            )
+        } else {
+            BottomButtons(state)
+        }
     }
 }
 
