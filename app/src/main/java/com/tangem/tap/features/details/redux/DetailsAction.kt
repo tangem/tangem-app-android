@@ -10,7 +10,7 @@ sealed class DetailsAction : Action {
 
     data class PrepareScreen(
         val scanResponse: ScanResponse,
-        val shouldSaveUserWallets: Boolean,
+        val initializedAppSettingsState: AppSettingsState,
     ) : DetailsAction()
 
     sealed class AppSettings : DetailsAction() {
