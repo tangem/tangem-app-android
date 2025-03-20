@@ -9,6 +9,7 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.staking.analytics.StakeScreenSource
 import com.tangem.domain.staking.analytics.StakingAnalyticsEvent
+import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.*
 
 internal class StakingAnalyticSender(
@@ -75,14 +76,14 @@ internal class StakingAnalyticSender(
         )
     }
 
-    fun sendTransactionStakingAnalytics(value: StakingUiState) {
+    fun sendTransactionStakingAnalytics(value: StakingUiState, cryptoCurrencyStatus: CryptoCurrencyStatus) {
         val validatorState = value.validatorState as? StakingStates.ValidatorState.Data
         val validatorName = validatorState?.chosenValidator?.name ?: return
 
         analyticsEventHandler.send(
             Basic.TransactionSent(
                 sentFrom = AnalyticsParam.TxSentFrom.Staking(
-                    blockchain = value.cryptoCurrencyName,
+                    blockchain = cryptoCurrencyStatus.currency.network.name,
                     token = value.cryptoCurrencySymbol,
                     feeType = AnalyticsParam.FeeType.Normal,
                 ),
