@@ -5,10 +5,12 @@ import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
 /**
@@ -21,6 +23,8 @@ import com.tangem.domain.wallets.models.UserWalletId
 class AddCryptoCurrenciesUseCase(
     private val currenciesRepository: CurrenciesRepository,
     private val networksRepository: NetworksRepository,
+    private val stakingRepository: StakingRepository,
+    private val quotesRepository: QuotesRepository,
 ) {
 
     /**
@@ -105,6 +109,8 @@ class AddCryptoCurrenciesUseCase(
         val tokenToAdd = createTokenCurrency(userWalletId, contractAddress, networkId)
         addCurrencies(userWalletId, listOf(tokenToAdd))
         refreshUpdatedNetworks(userWalletId, listOf(tokenToAdd), existingCurrencies)
+        refreshUpdatedYieldBalances(userWalletId, existingCurrencies)
+        refreshUpdatedQuotes(existingCurrencies)
         tokenToAdd
     }
 
@@ -137,6 +143,24 @@ class AddCryptoCurrenciesUseCase(
         ) {
             raise(it)
         }
+    }
+
+    private suspend fun refreshUpdatedYieldBalances(
+        userWalletId: UserWalletId,
+        existingCurrencies: List<CryptoCurrency>,
+    ) {
+        stakingRepository.fetchMultiYieldBalance(
+            userWalletId = userWalletId,
+            cryptoCurrencies = existingCurrencies,
+            refresh = true,
+        )
+    }
+
+    private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
+        quotesRepository.fetchQuotes(
+            currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
+            refresh = true,
+        )
     }
 
     private suspend fun Raise<Throwable>.createTokenCurrency(
