@@ -5,6 +5,7 @@ data class OnboardingNoteTopUpUM(
     val availableForBuy: Boolean = true,
     val balance: String? = null,
     val isRefreshing: Boolean = false,
+    val isTopUpDataLoading: Boolean = true,
     val amountToCreateAccount: String? = null,
     val onBuyCryptoClick: () -> Unit = {},
     val onShowWalletAddressClick: () -> Unit = {},
