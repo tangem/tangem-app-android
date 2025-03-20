@@ -27,10 +27,14 @@ internal object TokensDomainModule {
     fun provideAddCryptoCurrenciesUseCase(
         currenciesRepository: CurrenciesRepository,
         networksRepository: NetworksRepository,
+        stakingRepository: StakingRepository,
+        quotesRepository: QuotesRepository,
     ): AddCryptoCurrenciesUseCase {
         return AddCryptoCurrenciesUseCase(
             currenciesRepository = currenciesRepository,
             networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
+            quotesRepository = quotesRepository,
         )
     }
 
