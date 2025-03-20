@@ -10,9 +10,11 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 
+@Suppress("LongParameterList")
 class SaveManagedTokensUseCase(
     private val customTokensRepository: CustomTokensRepository,
     private val walletManagersFacade: WalletManagersFacade,
@@ -20,6 +22,7 @@ class SaveManagedTokensUseCase(
     private val networksRepository: NetworksRepository,
     private val derivationsRepository: DerivationsRepository,
     private val stakingRepository: StakingRepository,
+    private val quotesRepository: QuotesRepository,
 ) {
 
     suspend operator fun invoke(
@@ -54,6 +57,8 @@ class SaveManagedTokensUseCase(
         )
 
         refreshUpdatedYieldBalances(userWalletId, existingCurrencies)
+
+        refreshUpdatedQuotes(addingCurrencies)
     }
 
     private suspend fun removeCurrenciesFromWalletManager(
@@ -101,6 +106,13 @@ class SaveManagedTokensUseCase(
         stakingRepository.fetchMultiYieldBalance(
             userWalletId = userWalletId,
             cryptoCurrencies = existingCurrencies,
+            refresh = true,
+        )
+    }
+
+    private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
+        quotesRepository.fetchQuotes(
+            currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
             refresh = true,
         )
     }

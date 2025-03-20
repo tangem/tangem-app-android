@@ -7,6 +7,7 @@ import com.tangem.domain.core.lce.LceFlow
 import com.tangem.domain.core.lce.lce
 import com.tangem.domain.core.lce.lceFlow
 import com.tangem.domain.core.utils.EitherFlow
+import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
@@ -44,30 +45,49 @@ class CachedCurrenciesStatusesOperations(
         userWalletId: UserWalletId,
         currenciesFlow: EitherFlow<TokenListError, List<CryptoCurrency>>,
     ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> = lceFlow {
-        currenciesFlow.flatMapLatest { maybeCurrencies ->
-            val isUpdating = MutableStateFlow(value = true)
+        val prevStatuses = MutableStateFlow(value = emptyList<CryptoCurrencyStatus>())
 
-            val nonEmptyCurrencies = maybeCurrencies
+        val isUpdating = MutableStateFlow(value = true)
+        val isFetchingStarted = MutableStateFlow(value = false)
+
+        val nonEmptyCurrencies = currenciesFlow.mapNotNull { it.getOrNull() }.firstOrNull()?.toNonEmptyListOrNull()
+
+        if (nonEmptyCurrencies != null) {
+            launch {
+                isFetchingStarted.value = true
+
+                val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
+                fetchComponents(userWalletId, networks, currenciesIds, nonEmptyCurrencies)
+            }
+                .invokeOnCompletion { isUpdating.value = false }
+        }
+
+        currenciesFlow.flatMapLatest { maybeCurrencies ->
+            val currencies = maybeCurrencies
                 .getOrElse { return@flatMapLatest flowOf(it.lceError()) }
                 .toNonEmptyListOrNull()
 
-            if (nonEmptyCurrencies.isNullOrEmpty()) {
+            if (currencies.isNullOrEmpty()) {
+                prevStatuses.value = emptyList()
                 return@flatMapLatest flowOf(TokenListError.EmptyTokens.lceError())
             }
 
             // This is only 'true' when the flow here is empty, such as during initial loading
             if (isLoading.get()) {
                 val loadingCurrencies = createCurrenciesStatuses(
-                    currencies = nonEmptyCurrencies,
+                    currencies = currencies,
                     maybeNetworkStatuses = null,
                     maybeQuotes = null,
                     maybeYieldBalances = null,
                     isUpdating = true,
                 )
+
+                loadingCurrencies.getOrNull()?.let { prevStatuses.value = it }
+
                 send(loadingCurrencies)
             }
 
-            val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
+            val (networks, currenciesIds) = getIds(currencies)
 
             fun createCurrenciesStatuses(
                 maybeQuotes: Either<TokenListError, Set<Quote>>?,
@@ -75,26 +95,46 @@ class CachedCurrenciesStatusesOperations(
                 maybeYieldBalances: Either<TokenListError, YieldBalanceList>?,
                 isUpdating: Boolean,
             ) = createCurrenciesStatuses(
-                currencies = nonEmptyCurrencies,
+                currencies = currencies,
                 maybeQuotes = maybeQuotes,
                 maybeNetworkStatuses = maybeNetworkStatuses,
                 maybeYieldBalances = maybeYieldBalances,
                 isUpdating = isUpdating,
             )
 
-            launch { fetchComponents(userWalletId, networks, currenciesIds, nonEmptyCurrencies) }
-                .invokeOnCompletion { isUpdating.value = false }
+            // removing token
+            val prevStatusesValue = prevStatuses.value
+            if (prevStatusesValue.size - currencies.size == 1) {
+                val removed = prevStatusesValue.map { it.currency } - currencies
+
+                return@flatMapLatest flowOf(
+                    prevStatusesValue.filter { it.currency !in removed }.lceContent(),
+                )
+            }
+
+            if (!isFetchingStarted.value) {
+                launch {
+                    isFetchingStarted.value = true
+
+                    fetchComponents(userWalletId, networks, currenciesIds, currencies)
+                }
+                    .invokeOnCompletion { isUpdating.value = false }
+            }
 
             combine(
                 flow = getQuotes(currenciesIds),
                 flow2 = getNetworksStatuses(userWalletId, networks),
-                flow3 = getYieldBalances(userWalletId, nonEmptyCurrencies),
+                flow3 = getYieldBalances(userWalletId, currencies),
                 flow4 = isUpdating,
                 transform = ::createCurrenciesStatuses,
             )
                 .distinctUntilChanged()
         }
-            .onEach(::send)
+            .onEach { statusesLce ->
+                statusesLce.getOrNull()?.let { prevStatuses.value = it }
+
+                send(statusesLce)
+            }
             .launchIn(scope = this)
     }
 
@@ -112,13 +152,7 @@ class CachedCurrenciesStatusesOperations(
                         val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
                         quotesRepository.fetchQuotes(rawCurrenciesIds)
                     },
-                    async {
-                        if (currencies.size == 1) {
-                            stakingRepository.fetchSingleYieldBalance(userWalletId, currencies.first())
-                        } else {
-                            stakingRepository.fetchMultiYieldBalance(userWalletId, currencies)
-                        }
-                    },
+                    async { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies) },
                 )
             }
                 .map { }
