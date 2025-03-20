@@ -1,7 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
@@ -12,6 +11,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
@@ -454,8 +454,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success(result.data))
                     }
                     is CompletionResult.Failure -> {
-                        val crashlytics = FirebaseCrashlytics.getInstance()
-
                         when (val error = result.error) {
                             is TangemSdkError.CardVerificationFailed -> {
                                 Analytics.send(
@@ -492,7 +490,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                                     GlobalAction.ShowDialog(BackupDialog.AttestationFailed),
                                 )
                             }
-                            else -> crashlytics.recordException(error)
+                            else -> Analytics.sendException(ExceptionAnalyticsEvent(error))
                         }
                     }
                 }
