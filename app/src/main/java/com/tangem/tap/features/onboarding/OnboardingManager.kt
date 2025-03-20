@@ -26,6 +26,7 @@ import java.math.BigDecimal
 /**
 [REDACTED_AUTHOR]
  */
+@Deprecated("Remove when navigation refactoring will be implemented")
 class OnboardingManager(var scanResponse: ScanResponse) {
 
     private val cardRepository: CardRepository by lazy { store.inject(DaggerGraphState::cardRepository) }
