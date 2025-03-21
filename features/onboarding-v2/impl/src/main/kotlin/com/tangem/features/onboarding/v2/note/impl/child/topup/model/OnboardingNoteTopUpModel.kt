@@ -4,20 +4,30 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.clipboard.ClipboardManager
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.note.impl.child.topup.OnboardingNoteTopUpComponent
 import com.tangem.features.onboarding.v2.note.impl.child.topup.ui.state.OnboardingNoteTopUpUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,6 +42,9 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     private val userWalletBuilderFactory: UserWalletBuilder.Factory,
     private val getLegacyTopUpUrlUseCase: GetLegacyTopUpUrlUseCase,
     private val urlOpener: UrlOpener,
+    private val clipboardManager: ClipboardManager,
+    private val shareManager: ShareManager,
+    private val rampStateManager: RampStateManager,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingNoteTopUpComponent.Params>()
@@ -44,6 +57,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
             onRefreshBalanceClick = ::refreshBalance,
             onBuyCryptoClick = ::onBuyCryptoClick,
             onShowWalletAddressClick = ::onShowWalletAddressClick,
+            onDismissBottomSheet = ::onDismissBottomSheet,
         ),
     )
 
@@ -79,10 +93,23 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
                 urlOpener.openUrl(it)
             }
         }
+        Analytics.send(OnboardingEvent.Topup.ButtonBuyCrypto(cryptoCurrencyStatus.currency))
     }
 
     private fun onShowWalletAddressClick() {
-        // TODO [REDACTED_TASK_KEY]
+        val currencyStatus = params.childParams.commonState.value.cryptoCurrencyStatus ?: return
+        val networkAddress = currencyStatus.value.networkAddress ?: return
+
+        _uiState.update {
+            it.copy(addressBottomSheetConfig = createReceiveBS(currencyStatus, networkAddress))
+        }
+        Analytics.send(OnboardingEvent.Topup.ButtonShowWalletAddress)
+    }
+
+    private fun onDismissBottomSheet() {
+        _uiState.update {
+            it.copy(addressBottomSheetConfig = null)
+        }
     }
 
     private suspend fun createUserWalletIfNull() {
@@ -110,9 +137,13 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     }
 
     private fun applyCryptoCurrencyStatusToState(status: CryptoCurrencyStatus) {
+        if (commonState.value.cryptoCurrencyStatus == null) {
+            loadAvailableForBuy(status)
+        }
         commonState.update {
             it.copy(cryptoCurrencyStatus = status)
         }
+
         _uiState.update {
             it.copy(
                 amountToCreateAccount = (status.value as? CryptoCurrencyStatus.NoAccount)
@@ -132,7 +163,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
                             decimals = status.currency.decimals,
                         )
                     },
-                ),
+                ).orEmpty(),
                 isTopUpDataLoading = status.value.networkAddress == null,
             )
         }
@@ -143,6 +174,48 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
             it.copy(isRefreshing = value)
         }
     }
+
+    private fun loadAvailableForBuy(cryptoCurrencyStatus: CryptoCurrencyStatus) {
+        val userWalletId = userWallet?.walletId ?: return
+
+        modelScope.launch {
+            val availableForBuy = rampStateManager.availableForBuy(
+                scanResponse = scanResponse,
+                userWalletId = userWalletId,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
+            )
+            _uiState.update {
+                it.copy(
+                    availableForBuy = availableForBuy,
+                    availableForBuyLoading = false,
+                )
+            }
+        }
+    }
+
+    private fun createReceiveBS(currencyStatus: CryptoCurrencyStatus, networkAddress: NetworkAddress) =
+        TangemBottomSheetConfig(
+            isShown = true,
+            onDismissRequest = uiState.value.onDismissBottomSheet,
+            content = TokenReceiveBottomSheetConfig(
+                name = currencyStatus.currency.name,
+                symbol = currencyStatus.currency.symbol,
+                network = currencyStatus.currency.network.name,
+                addresses = networkAddress.availableAddresses
+                    .mapToAddressModels(currencyStatus.currency)
+                    .toImmutableList(),
+                showMemoDisclaimer =
+                currencyStatus.currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
+                onCopyClick = {
+                    Analytics.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currencyStatus.currency.symbol))
+                    clipboardManager.setText(text = it, isSensitive = true)
+                },
+                onShareClick = {
+                    Analytics.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currencyStatus.currency.symbol))
+                    shareManager.shareText(text = it)
+                },
+            ),
+        )
 
     private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
         return requireNotNull(
