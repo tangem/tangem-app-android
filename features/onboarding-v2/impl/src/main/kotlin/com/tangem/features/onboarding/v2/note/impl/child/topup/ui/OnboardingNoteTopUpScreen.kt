@@ -1,9 +1,9 @@
 package com.tangem.features.onboarding.v2.note.impl.child.topup.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -11,9 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.SpacerH8
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -66,14 +66,10 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
             )
         }
 
-        if (state.isTopUpDataLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .padding(all = 32.dp)
-                    .size(36.dp),
-            )
-        } else {
-            BottomButtons(state)
+        BottomButtons(state)
+
+        state.addressBottomSheetConfig?.let { config ->
+            TokenReceiveBottomSheet(config = config)
         }
     }
 }
@@ -81,31 +77,32 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
 @Composable
 private fun BottomButtons(state: OnboardingNoteTopUpUM) {
     if (state.availableForBuy) {
-        PrimaryButtonIconEnd(
+        PrimaryButton(
             modifier = Modifier
-                .padding(horizontal = 16.dp)
+                .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
                 .fillMaxWidth(),
-            iconResId = R.drawable.ic_tangem_24,
             text = stringResourceSafe(R.string.onboarding_top_up_button_but_crypto),
             onClick = state.onBuyCryptoClick,
         )
-        SpacerH8()
-        SecondaryButton(
-            modifier = Modifier
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                .fillMaxWidth(),
-            text = stringResourceSafe(R.string.onboarding_top_up_button_show_wallet_address),
-            onClick = state.onShowWalletAddressClick,
-        )
     } else {
-        PrimaryButtonIconEnd(
+        PrimaryButton(
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
-            iconResId = R.drawable.ic_tangem_24,
             text = stringResourceSafe(R.string.onboarding_button_receive_crypto),
             onClick = state.onShowWalletAddressClick,
         )
+    }
+    AnimatedVisibility(visible = !state.availableForBuyLoading) {
+        if (state.availableForBuy) {
+            SecondaryButton(
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                    .fillMaxWidth(),
+                text = stringResourceSafe(R.string.onboarding_top_up_button_show_wallet_address),
+                onClick = state.onShowWalletAddressClick,
+            )
+        }
     }
 }
 
