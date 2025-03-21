@@ -100,7 +100,7 @@ internal class TokenListSortingOperations(
     private fun CryptoCurrencyStatus.getTotalBalance(): BigDecimal {
         val yieldBalance = value.yieldBalance as? YieldBalance.Data
         val totalYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance().orZero()
-        val totalFiatYieldBalance = if (!BlockchainUtils.isIncludeStakingTotalBalance(currency.network.id.value)) {
+        val totalFiatYieldBalance = if (BlockchainUtils.isIncludeStakingTotalBalance(currency.network.id.value)) {
             totalYieldBalance.multiply(value.fiatRate.orZero())
         } else {
             BigDecimal.ZERO
