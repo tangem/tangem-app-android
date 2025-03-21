@@ -20,7 +20,7 @@ import com.tangem.features.onboarding.v2.impl.R
 
 @Composable
 fun OnboardingNoteTopUpHeader(
-    balance: String?,
+    balance: String,
     cardArtworkUrl: String?,
     isRefreshing: Boolean,
     onRefreshBalanceClick: () -> Unit,
@@ -58,7 +58,7 @@ fun OnboardingNoteTopUpHeader(
             )
             SpacerH8()
             Text(
-                text = balance.orEmpty(),
+                text = balance,
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
