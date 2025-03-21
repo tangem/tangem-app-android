@@ -8,6 +8,7 @@ import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
+import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
@@ -55,6 +56,7 @@ import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -206,6 +208,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val uiMessageSender: UiMessageSender
         get() = entryPoint.getUiMessageSender()
 
+    private val blockchainExceptionHandler: BlockchainExceptionHandler
+        get() = entryPoint.getBlockchainExceptionHandler()
+
     private val workerFactory: HiltWorkerFactory
         get() = entryPoint.getWorkerFactory()
 
@@ -219,6 +224,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     private val userWalletBuilderFactory: UserWalletBuilder.Factory
         get() = entryPoint.getUserWalletBuilderFactory()
+
     // endregion
 
     override fun onCreate() {
@@ -264,7 +270,7 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         }
 
         loadNativeLibraries()
-        // ExceptionHandler.append(blockchainExceptionHandler) // TODO [REDACTED_TASK_KEY] Send only to Firebase
+        ExceptionHandler.append(blockchainExceptionHandler)
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
