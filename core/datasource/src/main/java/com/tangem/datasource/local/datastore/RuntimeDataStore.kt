@@ -2,10 +2,11 @@ package com.tangem.datasource.local.datastore
 
 import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import kotlinx.coroutines.flow.*
+import java.util.concurrent.ConcurrentHashMap
 
 internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
 
-    private val store: MutableSharedFlow<HashMap<String, Data>?> = MutableSharedFlow(replay = 1)
+    private val store: MutableSharedFlow<ConcurrentHashMap<String, Data>?> = MutableSharedFlow(replay = 1)
 
     init {
         store.tryEmit(value = null)
@@ -61,7 +62,7 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
 
     override suspend fun remove(keys: Collection<String>) {
         updateValue { value ->
-            HashMap(value.filterKeys { it !in keys })
+            ConcurrentHashMap(value.filterKeys { it !in keys })
         }
     }
 
@@ -69,8 +70,10 @@ internal class RuntimeDataStore<Data : Any> : StringKeyDataStore<Data> {
         store.emit(value = null)
     }
 
-    private suspend inline fun updateValue(update: (HashMap<String, Data>) -> HashMap<String, Data>) {
-        val storedData = store.firstOrNull() ?: hashMapOf()
+    private suspend inline fun updateValue(
+        update: (ConcurrentHashMap<String, Data>) -> ConcurrentHashMap<String, Data>,
+    ) {
+        val storedData = store.firstOrNull() ?: ConcurrentHashMap()
         val updatedData = update(storedData)
 
         store.emit(updatedData)
