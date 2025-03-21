@@ -1,6 +1,8 @@
 package com.tangem.features.onboarding.v2.common.analytics
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.domain.tokens.model.CryptoCurrency
 
 sealed class OnboardingEvent(
     category: String,
@@ -46,6 +48,11 @@ sealed class OnboardingEvent(
         object ScreenOpened : Topup("Activation Screen Opened")
 
         object ButtonShowWalletAddress : Topup("Button - Show the Wallet Address")
+
+        class ButtonBuyCrypto(currency: CryptoCurrency) : Topup(
+            event = "Button - Buy Crypto",
+            params = mapOf(AnalyticsParam.CURRENCY to currency.symbol),
+        )
     }
 
     sealed class Backup(
