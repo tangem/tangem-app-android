@@ -76,7 +76,6 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
         modelScope.launch {
             val userWallet = createUserWallet(scanResponse)
             saveWalletUseCase(userWallet, canOverride = true).onRight {
-                cardRepository.finishCardActivation(scanResponse.card.cardId)
                 params.onWalletCreated(userWallet)
             }
             _uiState.update {
