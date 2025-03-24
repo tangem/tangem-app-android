@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
@@ -329,6 +330,19 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             if (stack == appRouterConfig.stack) return@subscribe
 
             appRouterConfig.stack = stack
+
+            if (stack.size == 1) {
+                supportFragmentManager.run {
+                    val activeChildName = stack.first().path
+
+                    (0 until backStackEntryCount)
+                        .mapNotNull { getBackStackEntryAt(it).name }
+                        .filter { it != activeChildName }
+                        .forEach {
+                            popBackStackImmediate(it, POP_BACK_STACK_INCLUSIVE)
+                        }
+                }
+            }
 
             when (val child = childStack.active.instance) {
                 is RoutingComponent.Child.Initial -> Unit
