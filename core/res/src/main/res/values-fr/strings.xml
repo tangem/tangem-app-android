@@ -1038,7 +1038,7 @@
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain va s\'arrêter de fonctionner</string>
   <string name="warning_blocked_funds_for_fee_message">Veuillez déposer environ %1$s pour couvrir les frais de réseau</string>
   <string name="warning_blocked_funds_for_fee_title">Fonds insuffisants pour couvrir les frais de réseau</string>
-  <string name="warning_button_could_be_better">Pas terrible</string>
+  <string name="warning_button_could_be_better">Peut mieux faire</string>
   <string name="warning_button_like_it">J\'aime</string>
   <string name="warning_button_ok">Ok, compris!</string>
   <string name="warning_button_really_cool">Vraiment cool !</string>
