@@ -2,21 +2,25 @@ package com.tangem.features.onboarding.v2.note.impl.child.topup.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalTangemShimmer
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.common.ui.RefreshButton
 import com.tangem.features.onboarding.v2.common.ui.WalletCard
 import com.tangem.features.onboarding.v2.impl.R
+import com.valentinilk.shimmer.shimmer
 
 @Composable
 fun OnboardingNoteTopUpHeader(
@@ -58,10 +62,17 @@ fun OnboardingNoteTopUpHeader(
             )
             SpacerH8()
             Text(
-                text = balance,
+                modifier = if (balance.isEmpty()) {
+                    Modifier
+                        .width(120.dp)
+                        .clip(RoundedCornerShape(size = TangemTheme.dimens.radius3))
+                        .shimmer(LocalTangemShimmer.current)
+                } else {
+                    Modifier
+                },
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
-                textAlign = TextAlign.Center,
+                text = balance,
             )
             SpacerHMax()
             RefreshButton(
