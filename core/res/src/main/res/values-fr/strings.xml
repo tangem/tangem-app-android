@@ -580,6 +580,7 @@
   <string name="onboarding_top_up_body_no_account_error">Pour commencer, rechargez simplement le portefeuille avec plus de %1$s %2$s</string>
   <string name="onboarding_top_up_button_but_crypto">Acheter des crypto-monnaies</string>
   <string name="onboarding_top_up_button_show_wallet_address">Afficher l\'adresse du portefeuille</string>
+  <string name="onboarding_top_up_min_create_account_amount">Pour commencer, rechargez simplement le portefeuille avec plus de %1$s</string>
   <string name="onboarding_topup_title">Activer un portefeuille</string>
   <string name="onboarding_twin_exit_warning">Le processus de jumelage est partiellement terminé. Vous ne pouvez pas le quitter maintenant.</string>
   <string name="onboarding_twins_interrupt_warning">Si le processus de création du portefeuille est interrompu de quelque manière que ce soit, vous devrez recommencer</string>
