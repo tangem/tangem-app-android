@@ -33,11 +33,13 @@ import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
 import kotlinx.coroutines.delay
 
@@ -57,7 +59,7 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Create\nPIN Code",
+                text = stringResourceSafe(R.string.visa_onboarding_pin_code_title),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -66,7 +68,7 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
             SpacerH16()
 
             Text(
-                text = "Set up a 4-digit code.\nIt will be used for payments.",
+                text = stringResourceSafe(R.string.visa_onboarding_pin_code_description),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -83,7 +85,7 @@ internal fun OnboardingVisaPinCode(state: OnboardingVisaPinCodeUM, modifier: Mod
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
             primaryButton = NavigationButton(
-                textReference = TextReference.Str("Submit"),
+                textReference = resourceReference(R.string.common_submit),
                 onClick = state.onSubmitClick,
                 showProgress = state.submitButtonLoading,
                 isEnabled = state.submitButtonEnabled,
