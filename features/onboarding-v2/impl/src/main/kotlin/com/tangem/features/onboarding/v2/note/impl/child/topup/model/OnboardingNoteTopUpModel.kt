@@ -12,6 +12,7 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.GetLegacyTopUpUrlUseCase
@@ -23,10 +24,12 @@ import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.note.impl.child.topup.OnboardingNoteTopUpComponent
 import com.tangem.features.onboarding.v2.note.impl.child.topup.ui.state.OnboardingNoteTopUpUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.isPositive
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -45,12 +48,14 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
     private val clipboardManager: ClipboardManager,
     private val shareManager: ShareManager,
     private val rampStateManager: RampStateManager,
+    private val cardRepository: CardRepository,
+    private val saveWalletUseCase: SaveWalletUseCase,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingNoteTopUpComponent.Params>()
     private val commonState = params.childParams.commonState
     private val scanResponse = params.childParams.commonState.value.scanResponse
-    private var userWallet: UserWallet? = null
+    private var userWallet = params.childParams.commonState.value.userWallet
 
     private val _uiState = MutableStateFlow(
         OnboardingNoteTopUpUM(
@@ -117,7 +122,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
             return
         }
         val commonState = params.childParams.commonState.value
-        userWallet = commonState.userWallet ?: createUserWallet(scanResponse)
+        userWallet = commonState.userWallet ?: createAndSaveUserWallet(scanResponse)
     }
 
     private fun observeArtwork() {
@@ -140,14 +145,34 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
         if (commonState.value.cryptoCurrencyStatus == null) {
             loadAvailableForBuy(status)
         }
+
         commonState.update {
             it.copy(cryptoCurrencyStatus = status)
         }
 
+        val amount = when (status.value) {
+            is CryptoCurrencyStatus.Loaded -> status.value.amount
+            is CryptoCurrencyStatus.NoAccount -> status.value.amount
+            is CryptoCurrencyStatus.NoQuote -> status.value.amount
+            else -> null
+        }
+        val hasCurrentNetworkTransactions = when (status.value) {
+            is CryptoCurrencyStatus.Loaded -> status.value.hasCurrentNetworkTransactions
+            is CryptoCurrencyStatus.NoAccount -> status.value.hasCurrentNetworkTransactions
+            else -> false
+        }
+        val amountToCreateAccount = (status.value as? CryptoCurrencyStatus.NoAccount)?.amountToCreateAccount
+
+        if (amount?.isPositive() == true || hasCurrentNetworkTransactions) {
+            modelScope.launch {
+                cardRepository.finishCardActivation(scanResponse.card.cardId)
+                params.onDone()
+            }
+        }
+
         _uiState.update {
             it.copy(
-                amountToCreateAccount = (status.value as? CryptoCurrencyStatus.NoAccount)
-                    ?.amountToCreateAccount
+                amountToCreateAccount = amountToCreateAccount
                     ?.format(
                         {
                             crypto(
@@ -156,7 +181,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
                             )
                         },
                     ),
-                balance = (status.value as? CryptoCurrencyStatus.Loaded)?.amount?.format(
+                balance = amount?.format(
                     {
                         crypto(
                             symbol = status.currency.symbol,
@@ -217,10 +242,12 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
             ),
         )
 
-    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet {
-        return requireNotNull(
+    private suspend fun createAndSaveUserWallet(scanResponse: ScanResponse): UserWallet {
+        val wallet = requireNotNull(
             value = userWalletBuilderFactory.create(scanResponse = scanResponse).build(),
             lazyMessage = { "User wallet not created" },
         )
+        saveWalletUseCase(wallet, false)
+        return wallet
     }
 }
