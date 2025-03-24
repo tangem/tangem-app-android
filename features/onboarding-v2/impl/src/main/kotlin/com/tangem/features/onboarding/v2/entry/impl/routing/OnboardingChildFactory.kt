@@ -48,6 +48,7 @@ internal class OnboardingChildFactory @Inject constructor(
             is OnboardingRoute.Done -> onboardingDoneComponentFactory.create(
                 context = childContext,
                 params = OnboardingDoneComponent.Params(
+                    mode = route.mode,
                     onDone = route.onDone,
                 ),
             )
