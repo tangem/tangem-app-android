@@ -598,6 +598,7 @@
   <string name="onboarding_top_up_body_no_account_error">To get started, simply top up the wallet with more than %1$s %2$s</string>
   <string name="onboarding_top_up_button_but_crypto">Buy crypto</string>
   <string name="onboarding_top_up_button_show_wallet_address">Show the wallet\'s address</string>
+  <string name="onboarding_top_up_min_create_account_amount">To get started, simply top up the wallet with more than %1$s</string>
   <string name="onboarding_topup_title">Activate a wallet</string>
   <string name="onboarding_twin_exit_warning">The twinning process is partly complete. You can\'t exit it now.</string>
   <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over</string>
