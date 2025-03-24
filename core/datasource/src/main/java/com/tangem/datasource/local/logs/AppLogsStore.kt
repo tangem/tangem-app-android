@@ -4,18 +4,15 @@ import android.content.Context
 import com.tangem.datasource.BuildConfig
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormatterBuilder
 import timber.log.Timber
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileWriter
+import java.io.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -30,7 +27,7 @@ import javax.inject.Singleton
 @Singleton
 class AppLogsStore @Inject constructor(
     @ApplicationContext private val applicationContext: Context,
-    dispatchers: CoroutineDispatcherProvider,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
     private val scope = CoroutineScope(
@@ -38,8 +35,10 @@ class AppLogsStore @Inject constructor(
             CoroutineExceptionHandler { _, error -> Timber.e("AppLogsStore.scope is failed $error") },
     )
     private val mutex = Mutex()
+    private val zipMutex = Mutex()
 
-    private val file = File(applicationContext.filesDir, NEW_LOG_FILE_NAME)
+    private val file = File(applicationContext.filesDir, PERMITTED_FILE_NAME)
+    private val fileZip = File(applicationContext.filesDir, PERMITTED_FILE_NAME_ZIP)
 
     private val formatter = DateTimeFormatterBuilder()
         .appendDayOfMonth(2)
@@ -57,6 +56,16 @@ class AppLogsStore @Inject constructor(
 
     /** Get log file */
     fun getFile(): File? = if (file.exists()) file else null
+
+    suspend fun getZipFile(): File? {
+        return zipMutex.withLock {
+            if (file.exists()) {
+                zip(listOf(file), fileZip)
+            } else {
+                null
+            }
+        }
+    }
 
     /** Save log [message] */
     fun saveLogMessage(tag: String, message: String) {
@@ -133,8 +142,41 @@ class AppLogsStore @Inject constructor(
         }
     }
 
+    @Suppress("NestedBlockDepth")
+    private suspend fun zip(filesToCompress: List<File>, outputZipFile: File): File? {
+        return withContext(dispatchers.io) {
+            if (outputZipFile.exists() && !outputZipFile.delete()) {
+                return@withContext null
+            }
+
+            val buffer = ByteArray(BUFFER_SIZE)
+
+            FileOutputStream(outputZipFile).use { fos ->
+                ZipOutputStream(fos).use { zos ->
+                    filesToCompress.forEach { file ->
+                        FileInputStream(file).use { inStream ->
+                            val ze = ZipEntry(file.name)
+                            zos.putNextEntry(ze)
+                            var len: Int
+                            while (inStream.read(buffer).also { len = it } > 0) {
+                                zos.write(buffer, 0, len)
+                            }
+                        }
+                    }
+                    zos.finish() // Ensures the zip output is finalized
+                }
+            }
+            outputZipFile
+        }
+    }
+
     private companion object {
+        const val BUFFER_SIZE = 1024
+
         const val LOG_FILE_NAME = "logs.txt"
         const val NEW_LOG_FILE_NAME = "app_logs.txt"
+        // the only name that we allow to send as email to company addresses
+        const val PERMITTED_FILE_NAME = "log.txt"
+        const val PERMITTED_FILE_NAME_ZIP = "log.zip"
     }
 }
