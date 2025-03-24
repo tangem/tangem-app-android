@@ -57,8 +57,16 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
                 modifier = Modifier.padding(top = 16.dp),
             )
 
+            val text = if (state.amountToCreateAccount != null) {
+                stringResourceSafe(
+                    R.string.onboarding_top_up_min_create_account_amount,
+                    state.amountToCreateAccount,
+                )
+            } else {
+                stringResourceSafe(R.string.onboarding_top_up_body)
+            }
             Text(
-                text = stringResourceSafe(R.string.onboarding_top_up_body),
+                text = text,
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
