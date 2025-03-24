@@ -136,6 +136,7 @@
   <string name="common_fee_selector_option_market">マーケット</string>
   <string name="common_fee_selector_option_slow">遅い</string>
   <string name="common_fee_selector_title">速度と料金</string>
+  <string name="common_finish">終了</string>
   <string name="common_generate_addresses">アドレスを同期する</string>
   <string name="common_go_to_provider">プロバイダーへ移動</string>
   <string name="common_go_to_token">トークンへ移動</string>
@@ -155,6 +156,7 @@
   <string name="common_no_address">アドレスがありません</string>
   <string name="common_now">今</string>
   <string name="common_ok">わかりました</string>
+  <string name="common_open_in_browser">ブラウザで開く</string>
   <string name="common_origin_card">プライマリーカード</string>
   <string name="common_origin_ring">プライマリーリング</string>
   <string name="common_passphrase">パスフレーズ</string>
@@ -178,6 +180,7 @@
   <string name="common_send">送る</string>
   <string name="common_server_unavailable">サーバーが利用できません。しばらくしてからもう一度お試しください。</string>
   <string name="common_share">共有</string>
+  <string name="common_share_link">リンクを共有</string>
   <string name="common_sign">署名</string>
   <string name="common_sign_and_send">署名して送信</string>
   <string name="common_stake">ステーキング</string>
@@ -489,6 +492,19 @@
   <string name="markets_tooltip_message">これをドラッグするか、検索窓をタップして、マーケットから直接トークンを追加します</string>
   <string name="markets_tooltip_title">トークンを追加</string>
   <string name="nfc_error_unavailable">お使いのデバイスではNFCが使用できません</string>
+  <plurals name="nft_collections_count">
+    <item quantity="other">アイテム</item>
+  </plurals>
+  <string name="nft_collections_empty_description">ウォレットに送信されたNFTがここに表示されます。</string>
+  <string name="nft_collections_empty_title">コレクションはまだありません</string>
+  <string name="nft_collections_receive">NFTを受け取る</string>
+  <string name="nft_collections_title">NFTコレクション</string>
+  <string name="nft_collections_warning_subtitle">一部のデータが読み込まれない場合があります</string>
+  <string name="nft_collections_warning_title">一時的な読み込みの問題</string>
+  <string name="nft_wallet_count">%1$dコレクションの%2$dNFT</string>
+  <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
+  <string name="nft_wallet_title">NFTコレクション</string>
+  <string name="nft_wallet_unable_to_load">データを読み込めません</string>
   <string name="onboarding_access_code_feature_1_description">すべてのデバイスを保護するには、単一のアクセスコードを設定してください。</string>
   <string name="onboarding_access_code_feature_1_title">保護する</string>
   <string name="onboarding_access_code_feature_2_description">後で各カードおよびリングに個別のアクセスコードを設定できます。</string>
@@ -750,6 +766,8 @@
   <string name="send_summary_transaction_description_suffix_including">ネットワーク手数料%1$sを含む</string>
   <string name="send_transaction_success">取引は正常に署名され、ブロックチェーンノードに送信されました。ウォレットの残高はしばらくして更新されます。</string>
   <string name="send_tron_account_activation_error">%1$sはTronネットワークのアセットです。手数料を計算して取引を行うには、アカウントにTron（TRX）を入金する必要があります。</string>
+  <string name="send_validation_destination_tag_required_description">指定されたアドレスへの取引を完了するには、宛先タグ（メモ）が必要です。</string>
+  <string name="send_validation_destination_tag_required_title">宛先タグが必要です</string>
   <string name="sent_transaction_sent_title">取引が送信されました</string>
   <string name="settings_card_settings_footer">設定したいカードまたはリングをスキャンするために準備してください。</string>
   <string name="settings_forget_wallet">ウォレット削除</string>
@@ -847,6 +865,7 @@
   <string name="staking_rewards">報酬</string>
   <string name="staking_stake_locked">ステーキングはロックされています</string>
   <string name="staking_stake_more">もっとステーキングする</string>
+  <string name="staking_stake_more_button_unavailability_reason">%1$sをステーキングすると、 %2$s残高全体がステーキングされます。Tangemウォレットに入金した追加の%2$sも、自動的にステーキングされます。</string>
   <string name="staking_staked_amount">ステーキング中の金額</string>
   <string name="staking_summary_description_text">%1$sをステーキングし、報酬%2$sを受け取ります</string>
   <string name="staking_tap_to_unlock">タップしてロック解除</string>
@@ -985,6 +1004,20 @@
   <string name="user_wallet_list_rename_popup_title">ウォレット名の変更</string>
   <string name="user_wallet_list_unlock_all">すべてのロックを解除</string>
   <string name="user_wallet_list_unlock_all_with">%sですべてをロック解除</string>
+  <plurals name="visa_limits_available_for_days_title">
+    <item quantity="other">%d日間利用可能</item>
+  </plurals>
+  <string name="visa_main_balances_and_limits">残高と限度額</string>
+  <string name="visa_onboarding_close_alert_message">本当に終了してもよろしいですか？中断したところから後で続行できます。</string>
+  <string name="visa_onboarding_in_progress_description">長くはかかりません。アカウントを設定しています。</string>
+  <string name="visa_onboarding_in_progress_issuer_description">長くはかかりません。アクティベーションを完了しています。</string>
+  <string name="visa_onboarding_in_progress_title">準備完了です！</string>
+  <string name="visa_onboarding_pin_validation_error_message">無効な暗証番号：連続や繰り返しを避けてください</string>
+  <string name="visa_onboarding_wallet_connect_title">ウェブサイトに移動</string>
+  <string name="visa_onboarding_welcome_back_description">アカウントの設定を続けましょう。</string>
+  <string name="visa_onboarding_welcome_back_title">お帰りなさい！</string>
+  <string name="visa_onboarding_welcome_description">手順に従ってアカウントを設定してください。</string>
+  <string name="visa_onboarding_welcome_title">ようこそ！</string>
   <string name="visa_unlock_notification_button">ロック解除</string>
   <string name="visa_unlock_notification_subtitle">カードをスキャンしてアクセスロックを解除する</string>
   <string name="visa_unlock_notification_title">ロック解除が必要</string>
