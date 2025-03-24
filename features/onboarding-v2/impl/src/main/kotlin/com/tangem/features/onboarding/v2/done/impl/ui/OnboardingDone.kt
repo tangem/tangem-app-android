@@ -20,10 +20,16 @@ import com.tangem.core.ui.components.*
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.impl.R
 
+@Suppress("LongMethod")
 @Composable
-internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun OnboardingDone(
+    mode: OnboardingDoneComponent.Mode,
+    onContinueClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val composition by rememberLottieComposition(spec = LottieCompositionSpec.RawRes(R.raw.anim_confetti))
     val progress by animateLottieCompositionAsState(composition)
     var showConfetti by remember { mutableStateOf(false) }
@@ -57,7 +63,12 @@ internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Mo
             SpacerH12()
             Text(
                 modifier = Modifier.padding(horizontal = 32.dp),
-                text = stringResourceSafe(R.string.onboarding_subtitle_success_tangem_wallet_onboarding),
+                text = when (mode) {
+                    OnboardingDoneComponent.Mode.WalletCreated ->
+                        stringResourceSafe(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
+                    OnboardingDoneComponent.Mode.GoodToGo ->
+                        stringResourceSafe(R.string.visa_onboarding_success_screen_description)
+                },
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -100,6 +111,9 @@ internal fun OnboardingDone(onContinueClick: () -> Unit, modifier: Modifier = Mo
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        OnboardingDone(onContinueClick = {})
+        OnboardingDone(
+            mode = OnboardingDoneComponent.Mode.WalletCreated,
+            onContinueClick = {},
+        )
     }
 }
