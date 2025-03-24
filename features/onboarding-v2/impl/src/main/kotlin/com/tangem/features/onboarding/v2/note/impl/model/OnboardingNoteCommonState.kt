@@ -6,7 +6,7 @@ import com.tangem.domain.wallets.models.UserWallet
 
 internal data class OnboardingNoteCommonState(
     val scanResponse: ScanResponse,
-    val cardArtworkUrl: String? = null,
     val userWallet: UserWallet? = null,
+    val cardArtworkUrl: String? = null,
     val cryptoCurrencyStatus: CryptoCurrencyStatus? = null,
 )
