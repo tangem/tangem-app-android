@@ -66,6 +66,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
+    implementation(deps.compose.shimmer)
     implementation(deps.lottie.compose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
