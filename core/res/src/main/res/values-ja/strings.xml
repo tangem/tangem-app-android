@@ -588,6 +588,7 @@
   <string name="onboarding_top_up_body_no_account_error">始めるには、ウォレットに%1$s %2$s以上入金するだけです</string>
   <string name="onboarding_top_up_button_but_crypto">暗号資産を購入する</string>
   <string name="onboarding_top_up_button_show_wallet_address">ウォレットのアドレスを表示する</string>
+  <string name="onboarding_top_up_min_create_account_amount">始めるには、ウォレットに%1$s 以上入金するだけです</string>
   <string name="onboarding_topup_title">ウォレットを有効化する</string>
   <string name="onboarding_twin_exit_warning">ツイン化プロセスは部分的に完了しています。現在終了することはできません。</string>
   <string name="onboarding_twins_interrupt_warning">ウォレットの作成プロセスが何らかの理由で中断された場合は、最初からやり直す必要があります。</string>
