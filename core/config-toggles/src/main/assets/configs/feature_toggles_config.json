@@ -65,7 +65,7 @@
     },
     {
         "name": "NOTE_REFACTORING_ENABLED",
-        "version": "undefined"
+        "version": "5.23.0"
     },
     {
         "name": "NEW_ATTESTATION_ENABLED",

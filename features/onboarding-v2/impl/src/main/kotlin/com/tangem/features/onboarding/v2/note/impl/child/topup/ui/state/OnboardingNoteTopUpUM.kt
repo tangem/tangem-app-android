@@ -6,7 +6,7 @@ data class OnboardingNoteTopUpUM(
     val cardArtworkUrl: String? = null,
     val availableForBuy: Boolean = false,
     val availableForBuyLoading: Boolean = true,
-    val balance: String = "–",
+    val balance: String = "",
     val isRefreshing: Boolean = false,
     val isTopUpDataLoading: Boolean = true,
     val amountToCreateAccount: String? = null,
