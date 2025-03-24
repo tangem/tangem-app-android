@@ -5,7 +5,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.visa.SetVisaPinCodeUseCase
@@ -14,6 +14,7 @@ import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.OnboardingVisaPinCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -64,7 +65,11 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
                 it.copy(
                     pinCode = pin,
                     submitButtonEnabled = PinCodeValidation.validate(pin),
-                    error = if (isError) stringReference("Invalid PIN: avoid sequences or repeats") else null,
+                    error = if (isError) {
+                        resourceReference(R.string.visa_onboarding_pin_validation_error_message)
+                    } else {
+                        null
+                    },
                 )
             }
         }
@@ -116,9 +121,5 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
             ).build(),
             lazyMessage = { "User wallet not created" },
         )
-    }
-
-    private companion object {
-        const val PIN_CODE_LENGTH = 4
     }
 }
