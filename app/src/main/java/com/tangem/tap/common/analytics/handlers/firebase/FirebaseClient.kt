@@ -4,14 +4,15 @@ import android.os.Bundle
 import androidx.core.os.bundleOf
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.ktx.crashlytics
+import com.google.firebase.crashlytics.recordException
 import com.google.firebase.ktx.Firebase
-import com.tangem.core.analytics.api.ErrorEventLogger
+import com.tangem.core.analytics.api.ExceptionLogger
 import com.tangem.core.analytics.api.EventLogger
 
 /**
 [REDACTED_AUTHOR]
  */
-interface FirebaseAnalyticsClient : EventLogger, ErrorEventLogger
+interface FirebaseAnalyticsClient : EventLogger, ExceptionLogger
 
 internal class FirebaseClient : FirebaseAnalyticsClient {
 
@@ -27,11 +28,12 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
         )
     }
 
-    override fun logErrorEvent(error: Throwable, params: Map<String, String>) {
-        eventConverter.convertEventParams(params)
-            .forEach { fbCrashlytics.setCustomKey(it.key, it.value) }
-
-        fbCrashlytics.recordException(error)
+    // TODO [REDACTED_TASK_KEY] fix recordException usages in the app
+    override fun logException(error: Throwable, params: Map<String, String>) {
+        fbCrashlytics.recordException(error) {
+            eventConverter.convertEventParams(params)
+                .forEach { key(it.key, it.value) }
+        }
     }
 
     private fun Map<String, String>.toBundle(): Bundle = bundleOf(*this.toList().toTypedArray())
