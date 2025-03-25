@@ -169,6 +169,12 @@ internal enum class Wallet2CobrandImage(
         batchIds = setOf("AF95"),
     ),
 
+    Keiro(
+        cards2ResId = R.drawable.ill_keiro_card2_120_106,
+        cards3ResId = R.drawable.ill_keiro_card3_120_106,
+        batchIds = setOf("BB000017"),
+    ),
+
     KishuInu(
         cards2ResId = R.drawable.ill_kishu_inu_card2_120_106,
         cards3ResId = R.drawable.ill_kishu_inu_card3_120_106,
