@@ -28,7 +28,6 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
         )
     }
 
-    // TODO [REDACTED_TASK_KEY] fix recordException usages in the app
     override fun logException(error: Throwable, params: Map<String, String>) {
         fbCrashlytics.recordException(error) {
             eventConverter.convertEventParams(params)
