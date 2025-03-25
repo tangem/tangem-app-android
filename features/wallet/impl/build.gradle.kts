@@ -90,6 +90,8 @@ dependencies {
     implementation(projects.domain.onramp)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.nft)
+    implementation(projects.domain.nft.models)
 
     //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
     implementation(projects.features.onboarding)
@@ -108,6 +110,7 @@ dependencies {
     implementation(projects.features.wallet.api)
     implementation(projects.features.walletSettings.api)
     implementation(projects.features.biometry.api)
+    implementation(projects.features.nft.api)
 
     /** Common modules */
     implementation(projects.common)
