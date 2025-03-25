@@ -40,7 +40,7 @@ internal enum class Wallet2CobrandImage(
     BitcoinGold(
         cards2ResId = R.drawable.ill_bitcoingold_card2_120_106,
         cards3ResId = R.drawable.ill_bitcoingold_card3_120_106,
-        batchIds = setOf("AF71"),
+        batchIds = setOf("AF71", "AF990016", "AF990009"),
     ),
 
     BitcoinPizzaDay(
