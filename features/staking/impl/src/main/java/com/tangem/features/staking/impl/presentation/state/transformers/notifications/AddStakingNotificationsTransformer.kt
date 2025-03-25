@@ -98,9 +98,7 @@ internal class AddStakingNotificationsTransformer(
                 onReload = prevState.clickIntents::getFee,
                 feeValue = feeValue,
             )
-            addStakingErrorNotifications(
-                stakingError = stakingError,
-            )
+            addStakingErrorNotifications(stakingError = stakingError)
             // warnings
             addWarningNotifications(
                 prevState = prevState,
