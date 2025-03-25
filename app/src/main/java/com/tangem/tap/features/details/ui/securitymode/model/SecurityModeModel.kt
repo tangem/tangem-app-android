@@ -4,15 +4,15 @@ import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.analytics.api.AnalyticsExceptionHandler
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
@@ -33,7 +33,7 @@ internal class SecurityModeModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val cardSettingsInteractor: CardSettingsInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+    private val analyticsErrorHandler: AnalyticsErrorHandler,
 ) : Model() {
 
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
@@ -96,12 +96,7 @@ internal class SecurityModeModel @Inject constructor(
                 is CompletionResult.Failure -> {
                     val error = result.error
                     if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
-                        analyticsExceptionHandler.sendException(
-                            ExceptionAnalyticsEvent(
-                                exception = error,
-                                params = mapOf("Event" to "Security Mode Changed"),
-                            ),
-                        )
+                        analyticsErrorHandler.sendErrorEvent(TangemSdkErrorEvent(error))
                     }
                 }
                 else -> Unit
