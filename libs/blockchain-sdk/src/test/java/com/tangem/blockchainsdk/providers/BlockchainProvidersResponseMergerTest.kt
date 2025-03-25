@@ -2,7 +2,10 @@ package com.tangem.blockchainsdk.providers
 
 import com.google.common.truth.Truth
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.crashlytics.recordException
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import io.mockk.*
 import org.junit.Before
@@ -12,6 +15,14 @@ import org.junit.Test
 [REDACTED_AUTHOR]
  */
 internal class BlockchainProvidersResponseMergerTest {
+
+    private val blockchainProvidersResponseMerger = BlockchainProvidersResponseMerger(
+        object : AnalyticsExceptionHandler {
+            override fun sendException(event: ExceptionAnalyticsEvent) {
+                FirebaseCrashlytics.getInstance().recordException(event.exception)
+            }
+        },
+    )
 
     @Before
     fun setup() {
@@ -25,7 +36,7 @@ internal class BlockchainProvidersResponseMergerTest {
     fun test_if_both_configs_are_empty() {
         val expected = emptyMap<String, List<ProviderModel>>()
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = emptyMap(),
             remote = emptyMap(),
         )
@@ -37,7 +48,7 @@ internal class BlockchainProvidersResponseMergerTest {
     fun test_if_local_config_is_empty() {
         val expected = remoteResponse
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = emptyMap(),
             remote = remoteResponse,
         )
@@ -49,7 +60,7 @@ internal class BlockchainProvidersResponseMergerTest {
     fun test_if_remote_config_is_empty() {
         val expected = localResponse
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localResponse,
             remote = emptyMap(),
         )
@@ -61,7 +72,7 @@ internal class BlockchainProvidersResponseMergerTest {
     fun test_if_both_configs_are_not_empty() {
         val expected = remoteResponse
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localResponse,
             remote = remoteResponse,
         )
@@ -73,7 +84,7 @@ internal class BlockchainProvidersResponseMergerTest {
     fun test_if_configs_are_equal() {
         val expected = remoteResponse
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = remoteResponse,
             remote = remoteResponse,
         )
@@ -88,7 +99,7 @@ internal class BlockchainProvidersResponseMergerTest {
 
         val expected = localResponseWithEth + remoteResponse
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localResponseWithEth,
             remote = remoteResponse,
         )
@@ -103,7 +114,7 @@ internal class BlockchainProvidersResponseMergerTest {
         val eth = "ethereum" to emptyList<ProviderModel>()
         val remoteWithEth = remoteResponse + eth
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localResponse,
             remote = remoteWithEth,
         )
@@ -121,7 +132,7 @@ internal class BlockchainProvidersResponseMergerTest {
          */
         val expected = remoteResponse
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localResponse,
             remote = remoteWithoutLocal,
         )
@@ -137,7 +148,7 @@ internal class BlockchainProvidersResponseMergerTest {
 
         val expected = remoteResponse + ("ethereum" to listOf(nowNodesProvider))
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localResponse,
             remote = remoteWithEth,
         )
@@ -152,7 +163,7 @@ internal class BlockchainProvidersResponseMergerTest {
 
         val expected = remoteResponse
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localResponse,
             remote = remoteWithEth,
         )
@@ -170,7 +181,7 @@ internal class BlockchainProvidersResponseMergerTest {
 
         val expected = remoteResponse + eth.addSlash() + kaspa.addSlash()
 
-        val actual = BlockchainProvidersResponseMerger.merge(
+        val actual = blockchainProvidersResponseMerger.merge(
             local = localWithKaspa,
             remote = remoteWithEth,
         )
