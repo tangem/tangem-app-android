@@ -14,7 +14,6 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
@@ -41,6 +40,7 @@ import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationResponse
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
+import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.derivationsFinder
 import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
 import com.tangem.tap.domain.tasks.product.ResetBackupCardTask
@@ -224,12 +224,7 @@ internal class DefaultTangemSdkManager(
     private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
         if (result is CompletionResult.Failure) {
             (result.error as? TangemSdkError)?.let { error ->
-                Analytics.sendException(
-                    ExceptionAnalyticsEvent(
-                        exception = error,
-                        params = mapOf("Event" to "Scan"),
-                    ),
-                )
+                Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
             }
         }
     }
