@@ -46,7 +46,9 @@ internal class UnlockWalletTransformer(
             is WalletState.MultiCurrency.Locked,
             is WalletState.SingleCurrency.Locked,
             is WalletState.Visa.Locked,
-            -> walletLoadingStateFactory.create(userWallet = unlockedWallet)
+            -> walletLoadingStateFactory.create(
+                userWallet = unlockedWallet,
+            )
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
             is WalletState.Visa.Content,
