@@ -1,6 +1,5 @@
 package com.tangem.tap
 
-import android.os.Bundle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.core.os.bundleOf
@@ -21,15 +20,11 @@ internal class DecomposeFragment : ComposeFragment() {
     @Inject
     override lateinit var uiDependencies: UiDependencies
 
-    private lateinit var component: ComposableContentComponent
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
+    private val component by lazy(LazyThreadSafetyMode.NONE) {
         val tag = requireArguments().getString(TAG_KEY)
         val builder = componentsBuilders[tag]
 
-        component = requireNotNull(builder?.build()) {
+        requireNotNull(builder?.build()) {
             "Component builder is not set, call newInstance() for DecomposeFragment creation first."
         }
     }

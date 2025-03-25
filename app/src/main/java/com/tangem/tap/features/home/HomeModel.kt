@@ -117,7 +117,7 @@ internal class HomeModel @Inject constructor(
         store.dispatchWithMain(HomeAction.ScanInProgress(scanInProgress = false))
         delay(HIDE_PROGRESS_DELAY)
 
-        store.dispatchNavigationAction { push(AppRoute.Wallet) }
+        store.dispatchNavigationAction { replaceAll(AppRoute.Wallet) }
     }
 
     private fun sendSignedInCardAnalyticsEvent(scanResponse: ScanResponse) {
