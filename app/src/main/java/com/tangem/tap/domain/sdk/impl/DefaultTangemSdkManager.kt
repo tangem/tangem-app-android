@@ -14,7 +14,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.res.getStringSafe
 import com.tangem.crypto.bip39.DefaultMnemonic
 import com.tangem.crypto.hdWallet.DerivationPath
@@ -224,7 +224,12 @@ internal class DefaultTangemSdkManager(
     private fun sendScanResultsToAnalytics(result: CompletionResult<ScanResponse>) {
         if (result is CompletionResult.Failure) {
             (result.error as? TangemSdkError)?.let { error ->
-                Analytics.send(Basic.ScanError(error))
+                Analytics.sendException(
+                    ExceptionAnalyticsEvent(
+                        exception = error,
+                        params = mapOf("Event" to "Scan"),
+                    ),
+                )
             }
         }
     }
