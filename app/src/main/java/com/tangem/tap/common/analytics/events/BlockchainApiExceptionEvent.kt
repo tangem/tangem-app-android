@@ -2,7 +2,7 @@ package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
 
-class BlockchainExceptionEvent(
+class BlockchainApiExceptionEvent(
     selectedHost: String,
     exceptionHost: String,
     error: String,
