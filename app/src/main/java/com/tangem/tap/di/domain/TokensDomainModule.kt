@@ -5,7 +5,9 @@ import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.*
-import com.tangem.domain.tokens.operations.*
+import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
+import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
+import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.features.swap.SwapFeatureToggles
@@ -351,21 +353,13 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
     ): BaseCurrenciesStatusesOperations {
-        return if (tokensFeatureToggles.isBalancesCachingEnabled) {
-            CachedCurrenciesStatusesOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-            )
-        } else {
-            LceCurrenciesStatusesOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-            )
-        }
+        return CachedCurrenciesStatusesOperations(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
+            tokensFeatureToggles = tokensFeatureToggles,
+        )
     }
 
     @Provides
@@ -377,20 +371,12 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
     ): BaseCurrencyStatusOperations {
-        return if (tokensFeatureToggles.isBalancesCachingEnabled) {
-            CachedCurrenciesStatusesOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-            )
-        } else {
-            CurrenciesStatusesOperations(
-                currenciesRepository = currenciesRepository,
-                quotesRepository = quotesRepository,
-                networksRepository = networksRepository,
-                stakingRepository = stakingRepository,
-            )
-        }
+        return CachedCurrenciesStatusesOperations(
+            currenciesRepository = currenciesRepository,
+            quotesRepository = quotesRepository,
+            networksRepository = networksRepository,
+            stakingRepository = stakingRepository,
+            tokensFeatureToggles = tokensFeatureToggles,
+        )
     }
 }

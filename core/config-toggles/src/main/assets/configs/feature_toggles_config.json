@@ -44,10 +44,6 @@
         "version": "undefined"
     },
     {
-        "name": "BALANCES_CACHING_ENABLED",
-        "version": "5.21.0"
-    },
-    {
         "name": "NFT_ENABLED",
         "version": "undefined"
     },
@@ -81,6 +77,10 @@
     },
     {
         "name": "WALLET_CONNECT_REDESIGN_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "NETWORKS_LOADING_REFACTORING_ENABLED",
         "version": "undefined"
     }
 ]
