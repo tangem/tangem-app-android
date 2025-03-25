@@ -12,4 +12,6 @@ internal class DefaultOnboardingV2FeatureToggles @Inject constructor(
         get() = featureTogglesManager.isFeatureEnabled("VISA_ONBOARDING_ENABLED")
     override val isNoteRefactoringEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled("NOTE_REFACTORING_ENABLED")
+    override val isTwinRefactoringEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("TWIN_REFACTORING_ENABLED")
 }
