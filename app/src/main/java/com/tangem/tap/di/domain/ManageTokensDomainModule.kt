@@ -7,6 +7,7 @@ import com.tangem.domain.managetokens.repository.ManageTokensRepository
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
+import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
@@ -67,6 +68,7 @@ internal object ManageTokensDomainModule {
         networksRepository: NetworksRepository,
         derivationsRepository: DerivationsRepository,
         stakingRepository: StakingRepository,
+        quotesRepository: QuotesRepository,
     ): SaveManagedTokensUseCase {
         return SaveManagedTokensUseCase(
             customTokensRepository = customTokensRepository,
@@ -75,6 +77,7 @@ internal object ManageTokensDomainModule {
             networksRepository = networksRepository,
             derivationsRepository = derivationsRepository,
             stakingRepository = stakingRepository,
+            quotesRepository = quotesRepository,
         )
     }
 
