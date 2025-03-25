@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -44,7 +45,7 @@ internal fun OnboardingVisaOtherWallet(state: OnboardingVisaOtherWalletUM, modif
                 SpacerH12()
 
                 Text(
-                    text = "Go to Website",
+                    text = stringResourceSafe(R.string.visa_onboarding_wallet_connect_title),
                     style = TangemTheme.typography.h2,
                     color = TangemTheme.colors.text.primary1,
                     textAlign = TextAlign.Center,
@@ -53,9 +54,7 @@ internal fun OnboardingVisaOtherWallet(state: OnboardingVisaOtherWalletUM, modif
                 SpacerH12()
 
                 Text(
-                    text = "You will be able to complete your connection \n" +
-                        "on the third-party web-site \n" +
-                        "and back to the Tangem app",
+                    text = stringResourceSafe(R.string.visa_onboarding_wallet_connect_description),
                     style = TangemTheme.typography.body1,
                     color = TangemTheme.colors.text.secondary,
                     textAlign = TextAlign.Center,
@@ -68,7 +67,7 @@ internal fun OnboardingVisaOtherWallet(state: OnboardingVisaOtherWalletUM, modif
                 modifier = Modifier
                     .padding(horizontal = 16.dp)
                     .fillMaxWidth(),
-                text = "Open in Browser",
+                text = stringResourceSafe(R.string.common_open_in_browser),
                 onClick = state.onOpenInBrowserClick,
             )
 
@@ -78,7 +77,7 @@ internal fun OnboardingVisaOtherWallet(state: OnboardingVisaOtherWalletUM, modif
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                     .fillMaxWidth(),
-                text = "Share Link",
+                text = stringResourceSafe(R.string.common_share_link),
                 onClick = state.onOpenInBrowserClick,
             )
         }
