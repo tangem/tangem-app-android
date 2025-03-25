@@ -3,10 +3,12 @@ package com.tangem.feature.wallet.presentation.wallet.loaders.implementors
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
+import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.promo.GetStoryContentUseCase
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.RunPolkadotAccountHealthCheckUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.ShouldSaveUserWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.analytics.utils.TokenListAnalyticsSender
@@ -21,6 +23,7 @@ import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletActi
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletTokenListSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.MultiWalletWarningsSubscriber
 import com.tangem.feature.wallet.presentation.wallet.subscribers.WalletSubscriber
+import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.features.swap.SwapFeatureToggles
 
 @Suppress("LongParameterList")
@@ -34,6 +37,7 @@ internal class MultiWalletContentLoader(
     private val walletWarningsSingleEventSender: WalletWarningsSingleEventSender,
     private val walletWithFundsChecker: WalletWithFundsChecker,
     private val tokenListStore: MultiWalletTokenListStore,
+    private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getMultiWalletWarningsFactory: GetMultiWalletWarningsFactory,
@@ -42,6 +46,8 @@ internal class MultiWalletContentLoader(
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val swapFeatureToggles: SwapFeatureToggles,
     private val deepLinksRegistry: DeepLinksRegistry,
+    private val nftFeatureToggles: NFTFeatureToggles,
+    private val walletsRepository: WalletsRepository,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
     override fun create(): List<WalletSubscriber> {
@@ -58,6 +64,15 @@ internal class MultiWalletContentLoader(
                 runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
                 deepLinksRegistry = deepLinksRegistry,
             ).let(::add)
+            if (nftFeatureToggles.isNFTEnabled) {
+                WalletNFTListSubscriber(
+                    userWallet = userWallet,
+                    getNFTCollectionsUseCase = getNFTCollectionsUseCase,
+                    stateHolder = stateHolder,
+                    walletsRepository = walletsRepository,
+                    clickIntents = clickIntents,
+                ).let(::add)
+            }
             MultiWalletWarningsSubscriber(
                 userWallet = userWallet,
                 stateHolder = stateHolder,

@@ -43,6 +43,9 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.onboarding)
     implementation(projects.domain.visa)
+    implementation(projects.domain.tokens)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.onramp)
 
     /** Tangem libraries */
     implementation(projects.libs.tangemSdkApi)
@@ -63,6 +66,7 @@ dependencies {
     implementation(deps.compose.ui)
     implementation(deps.compose.ui.tooling)
     implementation(deps.compose.coil)
+    implementation(deps.compose.shimmer)
     implementation(deps.lottie.compose)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
