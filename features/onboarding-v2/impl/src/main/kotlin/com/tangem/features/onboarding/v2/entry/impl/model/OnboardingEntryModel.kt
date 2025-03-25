@@ -20,6 +20,7 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
+import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.impl.analytics.OnboardingEntryEvent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
@@ -105,7 +106,12 @@ internal class OnboardingEntryModel @Inject constructor(
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
         when {
             params.multiWalletMode == OnboardingEntryComponent.MultiWalletMode.AddBackup -> {
-                stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+                stackNavigation.replaceAll(
+                    OnboardingRoute.Done(
+                        mode = OnboardingDoneComponent.Mode.WalletCreated,
+                        onDone = ::navigateToWalletScreen,
+                    ),
+                )
             }
             userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed() -> {
                 stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
@@ -117,34 +123,58 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun onVisaOnboardingDone() {
-        navigateToFinalScreenFlow()
+        navigateToFinalScreenFlow(doneMode = OnboardingDoneComponent.Mode.GoodToGo)
     }
 
-    private fun navigateToFinalScreenFlow() {
+    private fun navigateToFinalScreenFlow(
+        doneMode: OnboardingDoneComponent.Mode = OnboardingDoneComponent.Mode.WalletCreated,
+    ) {
         if (askBiometryFeatureToggles.isAskForBiometryEnabled) {
             modelScope.launch {
                 if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
                     stackNavigation.replaceAll(
-                        OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks()),
+                        OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks(doneMode)),
                     )
                 } else {
-                    stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+                    stackNavigation.replaceAll(
+                        OnboardingRoute.Done(
+                            mode = doneMode,
+                            onDone = ::navigateToWalletScreen,
+                        ),
+                    )
                 }
             }
         } else {
-            stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            stackNavigation.replaceAll(
+                OnboardingRoute.Done(
+                    mode = doneMode,
+                    onDone = ::navigateToWalletScreen,
+                ),
+            )
         }
     }
 
-    inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {
+    inner class AskBiometryModelCallbacks(
+        private val doneMode: OnboardingDoneComponent.Mode,
+    ) : AskBiometryComponent.ModelCallbacks {
         override fun onAllowed() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.On))
-            stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            stackNavigation.replaceAll(
+                OnboardingRoute.Done(
+                    mode = doneMode,
+                    onDone = ::navigateToWalletScreen,
+                ),
+            )
         }
 
         override fun onDenied() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.Off))
-            stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            stackNavigation.replaceAll(
+                OnboardingRoute.Done(
+                    mode = doneMode,
+                    onDone = ::navigateToWalletScreen,
+                ),
+            )
         }
     }
 
