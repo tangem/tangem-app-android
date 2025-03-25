@@ -38,6 +38,8 @@ internal class YieldBalanceConverter(
                             pendingActions = PendingActionConverter
                                 .convertList(item.pendingActions)
                                 .sortedBy { it.passthrough },
+                            pendingActionsConstraints = PendingActionConstraintsConverter
+                                .convertList(item.pendingActionConstraints.orEmpty()),
                             isPending = false,
                         )
                     }
