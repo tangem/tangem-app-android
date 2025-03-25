@@ -27,7 +27,7 @@ internal class FirebaseClient : FirebaseAnalyticsClient {
             eventConverter.convertEventParams(params).toBundle(),
         )
     }
-// [REDACTED_TODO_COMMENT]
+
     override fun logException(error: Throwable, params: Map<String, String>) {
         fbCrashlytics.recordException(error) {
             eventConverter.convertEventParams(params)
