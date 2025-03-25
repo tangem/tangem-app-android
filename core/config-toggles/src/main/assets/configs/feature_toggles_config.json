@@ -65,6 +65,18 @@
     },
     {
         "name": "NOTE_REFACTORING_ENABLED",
+        "version": "5.23.0"
+    },
+    {
+        "name": "NEW_ATTESTATION_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "TWIN_REFACTORING_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "SEND_V2_ENABLED",
         "version": "undefined"
     }
 ]

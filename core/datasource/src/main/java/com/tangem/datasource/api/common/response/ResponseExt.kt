@@ -1,5 +1,7 @@
 package com.tangem.datasource.api.common.response
 
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.datasource.api.common.response.analytics.ApiErrorEvent
 import kotlinx.coroutines.TimeoutCancellationException
 import retrofit2.Response
 import timber.log.Timber
@@ -9,18 +11,20 @@ import java.net.UnknownHostException
 import java.util.concurrent.TimeoutException
 import javax.net.ssl.SSLHandshakeException
 
-internal fun <T : Any> Response<T>.toSafeApiResponse(): ApiResponse<T> {
+internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: AnalyticsErrorHandler): ApiResponse<T> {
     val body = body()
 
     return if (isSuccessful && body != null) {
         apiSuccess(body)
     } else {
         val code = ApiResponseError.HttpException.Code.values
-            .firstOrNull { it.code == code() }
+            .firstOrNull { it.numericCode == code() }
         val e = try {
             if (code == null) {
                 ApiResponseError.UnknownException(IllegalArgumentException("Unknown error status code: ${code()}"))
             } else {
+                sendHttpError(code, analyticsErrorHandler)
+
                 ApiResponseError.HttpException(code, message(), errorBody()?.string())
             }
         } catch (e: Exception) {
@@ -30,6 +34,21 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(): ApiResponse<T> {
 
         apiError(e)
     }
+}
+
+private fun <T : Any> Response<T>.sendHttpError(
+    code: ApiResponseError.HttpException.Code,
+    analyticsErrorHandler: AnalyticsErrorHandler,
+) {
+    val fullRequestUrl = raw().request.url.toUrl()
+    val shortUrl = fullRequestUrl.authority + fullRequestUrl.path
+    analyticsErrorHandler.sendErrorEvent(
+        ApiErrorEvent(
+            endpoint = shortUrl,
+            code = code.numericCode,
+            message = errorBody()?.string().orEmpty(),
+        ),
+    )
 }
 
 internal fun Throwable.toApiError(): ApiResponseError = when (this) {
