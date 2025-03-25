@@ -18,6 +18,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
 
+    implementation(projects.domain.legacy)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 
