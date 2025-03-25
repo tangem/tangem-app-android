@@ -684,7 +684,7 @@ class DefaultWalletManagersFacade(
 
     override suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
-        val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return false
+        val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return true
         return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
     }
 
