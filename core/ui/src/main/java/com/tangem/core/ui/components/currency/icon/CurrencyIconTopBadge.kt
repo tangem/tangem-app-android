@@ -14,7 +14,7 @@ import androidx.compose.ui.res.painterResource
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-internal fun TopBadge(
+fun CurrencyIconTopBadge(
     @DrawableRes iconResId: Int,
     alpha: Float,
     colorFilter: ColorFilter?,
@@ -36,28 +36,6 @@ internal fun TopBadge(
             colorFilter = colorFilter,
             alpha = alpha,
             contentDescription = null,
-        )
-    }
-}
-
-@Composable
-internal fun BottomBadge(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(TangemTheme.dimens.size12)
-            .background(
-                color = TangemTheme.colors.background.primary,
-                shape = CircleShape,
-            ),
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(all = TangemTheme.dimens.spacing2)
-                .matchParentSize()
-                .background(
-                    color = TangemTheme.colors.icon.informative,
-                    shape = CircleShape,
-                ),
         )
     }
 }
