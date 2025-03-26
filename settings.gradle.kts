@@ -134,9 +134,6 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
-include(":common")
-include(":common:ui-charts")
-include(":common:routing")
 
 // region Core modules
 include(":core:analytics")
@@ -154,6 +151,9 @@ include(":core:pagination")
 // endregion Core modules
 
 // region Common modules
+include(":common")
+include(":common:ui-charts")
+include(":common:routing")
 include(":common:ui")
 include(":common:google")
 // endregion
@@ -194,6 +194,8 @@ include(":features:tokendetails:impl")
 
 include(":features:send:api")
 include(":features:send:impl")
+include(":features:send-v2:api")
+include(":features:send-v2:impl")
 
 include(":features:manage-tokens:api")
 include(":features:manage-tokens:impl")
@@ -233,6 +235,9 @@ include(":features:biometry:impl")
 
 include(":features:nft:api")
 include(":features:nft:impl")
+
+include(":features:walletconnect:api")
+include(":features:walletconnect:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -268,6 +273,7 @@ include(":domain:qr-scanning:models")
 include(":domain:staking")
 include(":domain:staking:models")
 include(":domain:wallet-connect")
+include(":domain:wallet-connect:models")
 include(":domain:markets")
 include(":domain:markets:models")
 include(":domain:manage-tokens")
@@ -275,6 +281,7 @@ include(":domain:manage-tokens:models")
 include(":domain:onramp")
 include(":domain:onramp:models")
 include(":domain:promo")
+include(":domain:promo:models")
 include(":domain:nft")
 include(":domain:nft:models")
 // endregion Domain modules
@@ -303,4 +310,3 @@ include(":data:manage-tokens")
 include(":data:nft")
 include(":data:onramp")
 // endregion Data modules
-include(":domain:promo:models")
