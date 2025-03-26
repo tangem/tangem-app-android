@@ -16,7 +16,7 @@ import com.tangem.common.ui.charts.state.MarketChartLook
 import com.tangem.common.ui.charts.state.rememberMarketChartState
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
-import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
+import com.tangem.core.ui.components.UnableToLoadData
 
 @Composable
 internal fun MarketTokenDetailsChart(
