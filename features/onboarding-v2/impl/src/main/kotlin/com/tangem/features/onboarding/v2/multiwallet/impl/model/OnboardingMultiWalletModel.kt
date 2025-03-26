@@ -10,7 +10,7 @@ import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
-import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
+import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage
@@ -18,21 +18,25 @@ import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMul
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    analyticsHandler: AnalyticsEventHandler,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val analyticsHandler: AnalyticsEventHandler,
     private val backupServiceHolder: BackupServiceHolder,
     private val onboardingRepository: OnboardingRepository,
+    private val getCardImageUseCase: GetCardImageUseCase,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
-    private val getCardImageUseCase = GetCardImageUseCase()
     private val _uiState = MutableStateFlow(OnboardingMultiWalletUM())
 
     val state = MutableStateFlow(
