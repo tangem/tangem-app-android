@@ -5,7 +5,7 @@ import com.tangem.blockchain.nft.models.NFTCollection
 import kotlinx.coroutines.flow.Flow
 
 interface NFTPersistenceStore {
-    fun getCollections(): Flow<List<NFTCollection>>
+    fun getCollections(): Flow<List<NFTCollection>?>
 
     suspend fun getCollectionsSync(): List<NFTCollection>?
 

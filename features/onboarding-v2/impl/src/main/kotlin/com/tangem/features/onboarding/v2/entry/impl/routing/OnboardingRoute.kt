@@ -5,6 +5,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.TitleProvider
+import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 
 sealed class OnboardingRoute : Route {
@@ -40,6 +41,7 @@ sealed class OnboardingRoute : Route {
     ) : OnboardingRoute()
 
     data class Done(
+        val mode: OnboardingDoneComponent.Mode,
         val onDone: () -> Unit,
     ) : OnboardingRoute()
 }
