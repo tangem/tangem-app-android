@@ -21,6 +21,8 @@ import com.tangem.core.ui.components.rows.RowContentContainer
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.outsetBorder
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -45,10 +47,7 @@ internal fun OnboardingVisaChooseWallet(state: OnboardingVisaChooseWalletUM, mod
         ) {
             Notification(
                 config = NotificationConfig(
-                    subtitle = TextReference.Str(
-                        "Please choose the wallet you started the registration" +
-                            " process with to sign the transaction for creating your account on the Blockchain.",
-                    ),
+                    subtitle = resourceReference(R.string.visa_onboarding_approve_wallet_selector_notification_message),
                     iconResId = R.drawable.ic_alert_circle_24,
                 ),
                 iconTint = TangemTheme.colors.icon.accent,
@@ -62,7 +61,7 @@ internal fun OnboardingVisaChooseWallet(state: OnboardingVisaChooseWalletUM, mod
                         start = 12.dp,
                         end = 12.dp,
                     ),
-                text = "Choose wallet",
+                text = stringResourceSafe(R.string.visa_onboarding_wallet_list_header),
                 style = TangemTheme.typography.subtitle2,
                 color = TangemTheme.colors.text.tertiary,
             )
@@ -79,7 +78,7 @@ internal fun OnboardingVisaChooseWallet(state: OnboardingVisaChooseWalletUM, mod
                 .imePadding()
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
-            text = "Continue",
+            text = stringResourceSafe(R.string.common_continue),
             onClick = state.onContinueClick,
         )
     }

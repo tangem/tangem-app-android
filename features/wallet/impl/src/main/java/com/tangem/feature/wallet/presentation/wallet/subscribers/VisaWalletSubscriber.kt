@@ -13,7 +13,7 @@ import com.tangem.domain.visa.model.VisaTxHistoryItem
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
-import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetBalancesAndLimitsTransformer
+import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetVisaInfoTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryCountTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsErrorTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.SetTxHistoryItemsTransformer
@@ -62,7 +62,7 @@ internal class VisaWalletSubscriber(
 
     private fun setLoadedCurrencyState(maybeCurrency: Either<Throwable, VisaCurrency>) {
         stateController.update(
-            SetBalancesAndLimitsTransformer(
+            SetVisaInfoTransformer(
                 userWallet = userWallet,
                 maybeVisaCurrency = maybeCurrency,
                 clickIntents = clickIntents,
