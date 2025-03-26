@@ -2,6 +2,7 @@ package com.tangem.feature.tokendetails.presentation.tokendetails.state.factory
 
 import arrow.core.getOrElse
 import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
+import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
@@ -14,9 +15,9 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsActionButton
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.lib.crypto.BlockchainUtils.isBitcoin
 import com.tangem.utils.converter.Converter
@@ -86,7 +87,7 @@ internal class TokenDetailsSkeletonStateConverter(
     private fun createMenu(cryptoCurrency: CryptoCurrency): TokenDetailsAppBarMenuConfig = TokenDetailsAppBarMenuConfig(
         items = buildList {
             addGenerateXPubMenuItem(cryptoCurrency)
-            TokenDetailsAppBarMenuConfig.MenuItem(
+            TangemDropdownMenuItem(
                 title = TextReference.Res(id = R.string.token_details_hide_token),
                 textColorProvider = { TangemTheme.colors.text.warning },
                 onClick = clickIntents::onHideClick,
@@ -94,9 +95,7 @@ internal class TokenDetailsSkeletonStateConverter(
         }.toImmutableList(),
     )
 
-    private fun MutableList<TokenDetailsAppBarMenuConfig.MenuItem>.addGenerateXPubMenuItem(
-        cryptoCurrency: CryptoCurrency,
-    ) {
+    private fun MutableList<TangemDropdownMenuItem>.addGenerateXPubMenuItem(cryptoCurrency: CryptoCurrency) {
         val userWallet = getUserWalletUseCase(userWalletId).getOrNull() ?: return
 
         val isBitcoin = isBitcoin(cryptoCurrency.network.id.value)
@@ -107,7 +106,7 @@ internal class TokenDetailsSkeletonStateConverter(
 
         if (isBitcoin && hasDerivations) {
             add(
-                TokenDetailsAppBarMenuConfig.MenuItem(
+                TangemDropdownMenuItem(
                     title = resourceReference(R.string.token_details_generate_xpub),
                     textColorProvider = { TangemTheme.colors.text.primary1 },
                     onClick = clickIntents::onGenerateExtendedKey,
