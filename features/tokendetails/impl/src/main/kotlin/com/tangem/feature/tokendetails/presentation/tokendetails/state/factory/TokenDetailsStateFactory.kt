@@ -7,6 +7,7 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
+import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
@@ -376,13 +377,13 @@ internal class TokenDetailsStateFactory(
         return copy(
             items = buildList {
                 if (isSupported && hasDerivations) {
-                    TokenDetailsAppBarMenuConfig.MenuItem(
+                    TangemDropdownMenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
                         textColorProvider = { TangemTheme.colors.text.primary1 },
                         onClick = clickIntents::onGenerateExtendedKey,
                     ).let(::add)
                 }
-                TokenDetailsAppBarMenuConfig.MenuItem(
+                TangemDropdownMenuItem(
                     title = TextReference.Res(id = R.string.token_details_hide_token),
                     textColorProvider = { TangemTheme.colors.text.warning },
                     onClick = clickIntents::onHideClick,
