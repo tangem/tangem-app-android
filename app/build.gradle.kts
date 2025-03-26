@@ -198,6 +198,8 @@ dependencies {
     implementation(projects.features.biometry.impl)
     implementation(projects.features.nft.api)
     implementation(projects.features.nft.impl)
+    implementation(projects.features.walletconnect.api)
+    implementation(projects.features.walletconnect.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
