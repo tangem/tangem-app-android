@@ -475,6 +475,16 @@ internal class WalletModel @Inject constructor(
         // Should not show scroll animation if WalletScreen isn't in the background.
         if (screenLifecycleProvider.isBackgroundState.value) {
             onConsume()
+            stateHolder.update(
+                ScrollToWalletTransformer(
+                    prevIndex = prevIndex,
+                    newIndex = newIndex,
+                    currentStateProvider = Provider(action = stateHolder::value),
+                    withScrollAnimation = false,
+                    stateUpdater = { newState -> stateHolder.update { newState } },
+                    onConsume = {},
+                ),
+            )
         } else {
             stateHolder.update(
                 ScrollToWalletTransformer(
