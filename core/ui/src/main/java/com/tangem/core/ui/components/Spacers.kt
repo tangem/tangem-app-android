@@ -15,6 +15,11 @@ fun SpacerH(height: Dp, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun SpacerH2(modifier: Modifier = Modifier) {
+    SpacerH(2.dp, modifier)
+}
+
+@Composable
 fun SpacerH4(modifier: Modifier = Modifier) {
     SpacerH(4.dp, modifier)
 }
