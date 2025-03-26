@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.common.ui
 
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.impl.R
 
 internal fun resetCardDialog(onConfirm: () -> Unit, dismiss: () -> Unit, onDismissButtonClick: () -> Unit) =

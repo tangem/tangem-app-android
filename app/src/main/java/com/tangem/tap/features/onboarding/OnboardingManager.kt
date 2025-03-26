@@ -7,8 +7,8 @@ import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.operations.attestation.api.models.CardVerifyAndGetInfo
 import com.tangem.tap.common.entities.ProgressState
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
@@ -26,16 +26,22 @@ import java.math.BigDecimal
 /**
 [REDACTED_AUTHOR]
  */
+@Deprecated("Remove when navigation refactoring will be implemented")
 class OnboardingManager(var scanResponse: ScanResponse) {
 
-    private val cardRepository: CardRepository = store.inject(DaggerGraphState::cardRepository)
+    private val cardRepository: CardRepository by lazy { store.inject(DaggerGraphState::cardRepository) }
+
+    private val onlineCardVerifier: OnlineCardVerifier by lazy { store.inject(DaggerGraphState::onlineCardVerifier) }
+
     private var cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null
 
     suspend fun loadArtworkUrl(): String {
         val cardInfo = cardInfo
-            ?: OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
+            ?: onlineCardVerifier.getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
+
         this.cardInfo = cardInfo
-        return scanResponse.card.getOrLoadCardArtworkUrl(cardInfo)
+
+        return scanResponse.card.getOrLoadCardArtworkUrl(cardInfo, onlineCardVerifier)
     }
 
     suspend fun updateBalance(walletManager: WalletManager): OnboardingWalletBalance {
