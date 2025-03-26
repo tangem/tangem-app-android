@@ -27,8 +27,12 @@ dependencies {
     kapt(deps.hilt.kapt)
 
     /* Reown - WalletConnect */
-    implementation(deps.reownCore)
-    implementation(deps.reownWeb3)
+    implementation(deps.reownCore) {
+        exclude(group = "app.cash.sqldelight", module = "android-driver")
+    }
+    implementation(deps.reownWeb3) {
+        exclude(group = "app.cash.sqldelight", module = "android-driver")
+    }
 
     /* Other */
     implementation(deps.kotlin.coroutines)
