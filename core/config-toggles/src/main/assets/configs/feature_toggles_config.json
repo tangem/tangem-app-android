@@ -78,5 +78,9 @@
     {
         "name": "SEND_V2_ENABLED",
         "version": "undefined"
+    },
+    {
+        "name": "WALLET_CONNECT_REDESIGN_ENABLED",
+        "version": "undefined"
     }
 ]
