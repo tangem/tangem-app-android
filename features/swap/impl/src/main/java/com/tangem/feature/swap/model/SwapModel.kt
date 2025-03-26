@@ -9,6 +9,7 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -82,6 +83,7 @@ internal class SwapModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val blockchainInteractor: BlockchainInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val analyticsErrorEventHandler: AnalyticsErrorHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
@@ -483,7 +485,7 @@ internal class SwapModel @Inject constructor(
         val receiveToken = dataState.toCryptoCurrency?.currency?.let {
             "${it.network.backendId}:${it.symbol}"
         }
-        analyticsEventHandler.send(
+        analyticsErrorEventHandler.sendErrorEvent(
             SwapEvents.NoticeProviderError(
                 sendToken = "${initialCurrencyFrom.network.backendId}:${initialCurrencyFrom.symbol}",
                 receiveToken = receiveToken ?: "",
