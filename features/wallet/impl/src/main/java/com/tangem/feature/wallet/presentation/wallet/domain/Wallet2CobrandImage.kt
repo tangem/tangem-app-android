@@ -40,7 +40,7 @@ internal enum class Wallet2CobrandImage(
     BitcoinGold(
         cards2ResId = R.drawable.ill_bitcoingold_card2_120_106,
         cards3ResId = R.drawable.ill_bitcoingold_card3_120_106,
-        batchIds = setOf("AF71"),
+        batchIds = setOf("AF71", "AF990016", "AF990009"),
     ),
 
     BitcoinPizzaDay(
@@ -167,6 +167,12 @@ internal enum class Wallet2CobrandImage(
         cards2ResId = R.drawable.ill_kaspy_card2_120_106,
         cards3ResId = R.drawable.ill_kaspy_card3_120_106,
         batchIds = setOf("AF95"),
+    ),
+
+    Keiro(
+        cards2ResId = R.drawable.ill_keiro_card2_120_106,
+        cards3ResId = R.drawable.ill_keiro_card3_120_106,
+        batchIds = setOf("BB000017"),
     ),
 
     KishuInu(

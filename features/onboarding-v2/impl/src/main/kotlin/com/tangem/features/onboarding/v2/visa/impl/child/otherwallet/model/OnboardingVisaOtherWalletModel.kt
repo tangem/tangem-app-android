@@ -68,10 +68,10 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
     }
 
     private fun onShareClicked() {
-        shareManager.shareText("https://tangem.com/")
+        shareManager.shareText("https://tangem.com/") // TODO
     }
 
     private fun onOpenInBrowserClicked() {
-        urlOpener.openUrl("https://tangem.com/")
+        urlOpener.openUrl("https://tangem.com/") // TODO
     }
 }
