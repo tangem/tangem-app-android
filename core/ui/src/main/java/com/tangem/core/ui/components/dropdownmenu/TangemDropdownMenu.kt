@@ -1,11 +1,17 @@
 @file:Suppress("TopLevelPropertyNaming")
-package com.tangem.feature.tokendetails.presentation.tokendetails.ui.components
+
+package com.tangem.core.ui.components.dropdownmenu
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.TransformOrigin
@@ -15,16 +21,19 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupPositionProvider
 import androidx.compose.ui.window.PopupProperties
+import com.tangem.core.ui.res.TangemTheme
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Just copy paste [DropdownMenu] from material3 with deleting vertical paddings.
  */
 @Composable
-internal fun TangemDropdownMenu(
+fun TangemDropdownMenu(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    offset: DpOffset = DpOffset(0.dp, 0.dp),
+    offset: DpOffset = DpOffset(x = TangemTheme.dimens.spacing20, y = TangemTheme.dimens.spacing10.times(-1)),
     properties: PopupProperties = PopupProperties(focusable = true),
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -142,10 +151,7 @@ private fun calculateTransformOrigin(parentBounds: IntRect, menuBounds: IntRect)
         menuBounds.width == 0 -> 0f
         else -> {
             val intersectionCenter =
-                (
-                    kotlin.math.max(parentBounds.left, menuBounds.left) +
-                        kotlin.math.min(parentBounds.right, menuBounds.right)
-                    ) / 2
+                (max(parentBounds.left, menuBounds.left) + min(parentBounds.right, menuBounds.right)) / 2
             (intersectionCenter - menuBounds.left).toFloat() / menuBounds.width
         }
     }
@@ -155,10 +161,7 @@ private fun calculateTransformOrigin(parentBounds: IntRect, menuBounds: IntRect)
         menuBounds.height == 0 -> 0f
         else -> {
             val intersectionCenter =
-                (
-                    kotlin.math.max(parentBounds.top, menuBounds.top) +
-                        kotlin.math.min(parentBounds.bottom, menuBounds.bottom)
-                    ) / 2
+                (max(parentBounds.top, menuBounds.top) + min(parentBounds.bottom, menuBounds.bottom)) / 2
             (intersectionCenter - menuBounds.top).toFloat() / menuBounds.height
         }
     }
