@@ -38,7 +38,7 @@ internal class ValidatorSelectChangeTransformer(
                 chosenValidator = selectedValidator ?: yield.preferredValidators.first(),
                 availableValidators = filteredValidators,
                 isPrimaryButtonEnabled = true,
-                isClickable = true,
+                isClickable = yield.preferredValidators.size > 1,
                 activeValidator = activeValidator,
                 isVisibleOnConfirmation = isEnter || isRestake || isVoteLocked,
             ),
