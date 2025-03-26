@@ -9,7 +9,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
@@ -147,9 +146,15 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class QrScanning(
-        val source: SourceType,
+        val source: Source,
         val networkName: String? = null,
-    ) : AppRoute(path = "/$source/qr_scanning${if (networkName != null) "/$networkName" else ""}")
+    ) : AppRoute(path = "/$source/qr_scanning${if (networkName != null) "/$networkName" else ""}") {
+
+        enum class Source {
+            WALLET_CONNECT,
+            SEND,
+        }
+    }
 
     @Serializable
     data class ReferralProgram(
