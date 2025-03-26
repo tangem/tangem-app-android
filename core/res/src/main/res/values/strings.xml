@@ -126,6 +126,7 @@
   </plurals>
   <string name="common_delete">Delete</string>
   <string name="common_disabled">Disabled</string>
+  <string name="common_disconnect">Disconnect</string>
   <string name="common_done">Done</string>
   <string name="common_enable">Enable</string>
   <string name="common_enabled">Enabled</string>
@@ -1213,6 +1214,13 @@
   <string name="warning_testnet_card_message">This is a Testnet card. It cannot process transactions and should only be used for testing and development purposes.</string>
   <string name="warning_testnet_card_title">For testing purposes only</string>
   <string name="warning_token_balance_not_updated">Balance may be outdated. Refresh the page.</string>
+  <string name="wc_connections">Connections</string>
+  <string name="wc_disconnect_all">Disconnect all</string>
+  <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
+  <string name="wc_disconnect_all_alert_title">Disconect All dApps</string>
+  <string name="wc_new_connection">New connection</string>
+  <string name="wc_no_sessions_desc">Connect your wallet to a different dApps</string>
+  <string name="wc_no_sessions_title">No sessions</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
