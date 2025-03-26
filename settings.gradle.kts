@@ -235,6 +235,9 @@ include(":features:biometry:impl")
 
 include(":features:nft:api")
 include(":features:nft:impl")
+
+include(":features:walletconnect:api")
+include(":features:walletconnect:impl")
 // endregion Feature modules
 
 // region Domain modules
