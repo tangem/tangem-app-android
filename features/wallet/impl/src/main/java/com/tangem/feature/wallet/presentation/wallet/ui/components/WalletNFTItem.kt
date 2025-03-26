@@ -394,7 +394,7 @@ private fun RowContentContainer(
 @Preview(widthDp = 360)
 @Preview(widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_WalletNFTItem_InLight(@PreviewParameter(WalletNFTItemProvider::class) state: WalletNFTItemUM) {
+private fun Preview_WalletNFTItem(@PreviewParameter(WalletNFTItemProvider::class) state: WalletNFTItemUM) {
     TangemThemePreview {
         WalletNFTItem(
             state = state,
