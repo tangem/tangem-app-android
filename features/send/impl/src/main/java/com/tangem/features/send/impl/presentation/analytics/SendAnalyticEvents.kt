@@ -151,6 +151,7 @@ internal enum class EnterAddressSource {
     QRCode,
     PasteButton,
     RecentAddress,
+    MyWallet,
 }
 
 internal enum class SelectedCurrencyType(val value: String) {
