@@ -9,6 +9,8 @@ internal sealed class WalletEvent {
     /** Change wallet with animation. Using [prevIndex] and [newIndex] to calculate offset */
     data class ChangeWallet(val prevIndex: Int, val newIndex: Int) : WalletEvent()
 
+    data class ChangeWalletWithoutScroll(val newIndex: Int) : WalletEvent()
+
     data class ShowError(val text: TextReference) : WalletEvent()
 
     data class ShowAlert(val state: WalletAlertState) : WalletEvent()
