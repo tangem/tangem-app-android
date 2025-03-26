@@ -22,6 +22,7 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
+import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -43,6 +44,7 @@ import com.tangem.utils.Provider
 import dagger.hilt.android.scopes.ActivityScoped
 import java.util.WeakHashMap
 import javax.inject.Inject
+import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedisegnedWalletConnectComponent
 
 @ActivityScoped
 @Suppress("LongParameterList", "LargeClass")
@@ -78,8 +80,10 @@ internal class ChildFactory @Inject constructor(
     private val walletComponentFactory: WalletEntryComponent.Factory,
     private val sendComponentFactoryV2: com.tangem.features.send.v2.api.SendComponent.Factory,
     private val sendFeatureToggles: SendFeatureToggles,
+    private val redesignedWalletConnectComponentFactory: RedisegnedWalletConnectComponent.Factory,
     private val testerRouter: TesterRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
+    private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
 
     fun createChild(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
@@ -296,11 +300,19 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.WalletConnectSessions -> {
-                createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
-                    params = Unit,
-                    componentFactory = walletConnectComponentFactory,
-                )
+                if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
+                    createComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = redesignedWalletConnectComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = walletConnectComponentFactory,
+                    )
+                }
             }
             is AppRoute.QrScanning -> {
                 val source = when (route.source) {
@@ -574,11 +586,19 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.WalletConnectSessions -> {
-                route.asComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
-                    params = Unit,
-                    componentFactory = walletConnectComponentFactory,
-                )
+                if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = redesignedWalletConnectComponentFactory,
+                    )
+                } else {
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = walletConnectComponentFactory,
+                    )
+                }
             }
             is AppRoute.CurrencyDetails -> {
                 route.asComponentChild(
