@@ -1,20 +1,18 @@
 package com.tangem.features.send.impl.presentation.state.recipient
 
-import arrow.core.Either
-import arrow.core.getOrElse
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.domain.txhistory.models.TxHistoryItem
-import com.tangem.domain.transaction.error.ValidateAddressError
+import com.tangem.domain.transaction.error.AddressValidation
+import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
+import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.domain.AvailableWallet
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.toPersistentList
-import timber.log.Timber
 
 internal class RecipientSendFactory(
     private val stateRouterProvider: Provider<StateRouter>,
@@ -66,10 +64,7 @@ internal class RecipientSendFactory(
         )
     }
 
-    fun getOnRecipientAddressValidState(
-        value: String,
-        maybeValidAddress: Either<ValidateAddressError, Unit>,
-    ): SendUiState {
+    fun getOnRecipientAddressValidState(value: String, maybeValidAddress: AddressValidationResult): SendUiState {
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val state = currentStateProvider()
         val isEditState = stateRouterProvider().isEditState
@@ -78,10 +73,7 @@ internal class RecipientSendFactory(
         val isValidMemo = validateWalletMemoUseCase(
             memo = recipientState.memoTextField?.value.orEmpty(),
             network = cryptoCurrencyStatus.currency.network,
-        ).getOrElse {
-            Timber.e("Failed to validateWalletMemoUseCase: $it")
-            false
-        }
+        ).isRight()
 
         return state.copyWrapped(
             isEditState = isEditState,
@@ -92,10 +84,10 @@ internal class RecipientSendFactory(
                     error = maybeValidAddress.fold(
                         ifLeft = {
                             when (it) {
-                                ValidateAddressError.InvalidAddress -> resourceReference(
+                                AddressValidation.Error.InvalidAddress -> resourceReference(
                                     R.string.send_recipient_address_error,
                                 )
-                                ValidateAddressError.AddressInWallet -> resourceReference(
+                                AddressValidation.Error.AddressInWallet -> resourceReference(
                                     R.string.send_error_address_same_as_wallet,
                                 )
                                 else -> null
@@ -143,10 +135,7 @@ internal class RecipientSendFactory(
         val isValidMemo = validateWalletMemoUseCase(
             memo = value,
             network = cryptoCurrencyStatus.currency.network,
-        ).getOrElse {
-            Timber.e("Failed to validateWalletMemoUseCase: $it")
-            false
-        }
+        ).isRight()
 
         return state.copyWrapped(
             isEditState = isEditState,
