@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
 import com.tangem.domain.onramp.*
 import com.tangem.domain.onramp.repositories.HotCryptoRepository
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
@@ -241,5 +242,11 @@ internal object OnrampDomainModule {
     @Singleton
     fun provideFetchHotCryptoUseCase(hotCryptoRepository: HotCryptoRepository): FetchHotCryptoUseCase {
         return FetchHotCryptoUseCase(hotCryptoRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetLegacyTopUpUrlUseCase(legacyTopUpRepository: LegacyTopUpRepository): GetLegacyTopUpUrlUseCase {
+        return GetLegacyTopUpUrlUseCase(legacyTopUpRepository)
     }
 }
