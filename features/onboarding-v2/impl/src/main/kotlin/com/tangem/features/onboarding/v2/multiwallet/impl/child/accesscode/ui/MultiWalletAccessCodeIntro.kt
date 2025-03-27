@@ -31,7 +31,7 @@ internal fun MultiWalletAccessCodeIntro(modifier: Modifier = Modifier) {
             color = TangemTheme.colors.text.primary1,
         )
         Icon(
-            imageVector = ImageVector.vectorResource(R.drawable.ic_access_code),
+            imageVector = ImageVector.vectorResource(R.drawable.ic_access_code_119),
             tint = TangemTheme.colors.icon.informative,
             contentDescription = null,
         )
