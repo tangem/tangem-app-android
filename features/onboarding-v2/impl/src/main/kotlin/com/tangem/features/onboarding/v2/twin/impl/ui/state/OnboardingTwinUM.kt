@@ -13,6 +13,7 @@ internal sealed class OnboardingTwinUM {
 
     data class Welcome(
         override val isLoading: Boolean = false,
+        val pairCardNumber: Int = 2,
         val onContinueClick: () -> Unit = {},
     ) : OnboardingTwinUM() {
         override val stepIndex = 0
@@ -31,13 +32,18 @@ internal sealed class OnboardingTwinUM {
 
     data class ScanCard(
         override val isLoading: Boolean = false,
-        val artworkStep: TwinWalletArtworkUM.Leapfrog.Step,
+        val artworkStep: TwinWalletArtworkUM.Leapfrog.Step = TwinWalletArtworkUM.Leapfrog.Step.FirstCard,
         val step: Step = Step.First,
         val onScanClick: () -> Unit = {},
     ) : OnboardingTwinUM() {
 
         enum class Step {
             First, Second, Third
+        }
+
+        val cardNumber: Int = when (artworkStep) {
+            TwinWalletArtworkUM.Leapfrog.Step.FirstCard -> 1
+            TwinWalletArtworkUM.Leapfrog.Step.SecondCard -> 2
         }
 
         override val stepIndex: Int = 1
