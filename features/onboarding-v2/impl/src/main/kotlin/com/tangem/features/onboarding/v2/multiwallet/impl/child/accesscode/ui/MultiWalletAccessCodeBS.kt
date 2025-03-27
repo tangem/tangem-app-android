@@ -36,7 +36,7 @@ private fun Content(state: MultiWalletAccessCodeUM, modifier: Modifier = Modifie
             modifier = Modifier.weight(1f),
             targetState = state.step,
             transitionSpec = TangemAnimations.AnimatedContent
-                .slide { initial, target -> initial.ordinal > target.ordinal },
+                .slide { initial, target -> target.ordinal > initial.ordinal },
             label = "AnimatedContent",
         ) { step ->
             when (step) {
