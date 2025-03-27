@@ -56,7 +56,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensLis
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.onramp.OnrampFeatureToggles
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -125,7 +124,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
     private val onrampFeatureToggles: OnrampFeatureToggles,
-    private val swapFeatureToggles: SwapFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -632,9 +630,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private suspend fun getSwapRoute(targetRoute: AppRoute): AppRoute {
-        val isSwapStoriesEnabled = swapFeatureToggles.isPromoStoriesEnabled
         val maybeSwapStories = getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
-        val showSwapStories = maybeSwapStories.getOrNull() != null && isSwapStoriesEnabled
+        val showSwapStories = maybeSwapStories.getOrNull() != null
 
         return if (showSwapStories) {
             AppRoute.Stories(
