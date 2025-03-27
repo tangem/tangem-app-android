@@ -10,7 +10,10 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
-import com.tangem.tap.domain.walletconnect2.domain.*
+import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
+import com.tangem.tap.domain.walletconnect2.domain.WcJrpcMethods
+import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
+import com.tangem.tap.domain.walletconnect2.domain.WcRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.*
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.OpenSession.SourceType
@@ -96,6 +99,8 @@ internal class DefaultLegacyWalletConnectRepository(
 
     private fun defineWalletDelegate(): WalletKit.WalletDelegate {
         return object : WalletKit.WalletDelegate {
+
+            @Suppress("LongMethod")
             override fun onSessionProposal(
                 sessionProposal: Wallet.Model.SessionProposal,
                 verifyContext: Wallet.Model.VerifyContext,
@@ -144,14 +149,27 @@ internal class DefaultLegacyWalletConnectRepository(
                 )
 
                 // for cases when optionalNamespaces is not empty but we doesn't support none of them
-                if (optionalMissingNetwork.isNotEmpty() && optionalWithoutMissingNetworks.isEmpty()) {
+                if (optionalMissingNetwork.isNotEmpty() &&
+                    optionalWithoutMissingNetworks.isEmpty() &&
+                    sessionProposal.requiredNamespaces.isEmpty() // if requiredNamespaces is not empty we can connect
+                ) {
                     Timber.i("Not added optional blockchains: $optionalMissingNetwork")
+
+                    val unsupportedNetworks = sessionProposal.optionalNamespaces.values
+                        .flatMap { it.chains ?: emptyList() }
+                        .filter { blockchainHelper.chainIdToNetworkIdOrNull(it) == null }
+
                     scope.launch {
-                        _events.emit(
+                        val error = if (unsupportedNetworks.isNotEmpty()) {
+                            WalletConnectEvents.SessionApprovalError(
+                                WalletConnectError.ApprovalErrorUnsupportedNetwork(unsupportedNetworks),
+                            )
+                        } else {
                             WalletConnectEvents.SessionApprovalError(
                                 WalletConnectError.ApprovalErrorMissingNetworks(optionalMissingNetwork.toList()),
-                            ),
-                        )
+                            )
+                        }
+                        _events.emit(error)
                     }
                     return
                 }
