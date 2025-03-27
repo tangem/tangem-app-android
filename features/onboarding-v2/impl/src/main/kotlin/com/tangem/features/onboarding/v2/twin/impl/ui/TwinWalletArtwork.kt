@@ -33,18 +33,19 @@ import com.tangem.features.onboarding.v2.impl.R
 import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
-internal sealed class TwinWalletArtworkState {
-    data object Spread : TwinWalletArtworkState()
+@Immutable
+internal sealed class TwinWalletArtworkUM {
+    data object Spread : TwinWalletArtworkUM()
 
     data class Leapfrog(
         val step: Step,
-    ) : TwinWalletArtworkState() {
+    ) : TwinWalletArtworkUM() {
         enum class Step {
             FirstCard, SecondCard
         }
     }
 
-    data object TopUp : TwinWalletArtworkState()
+    data object TopUp : TwinWalletArtworkUM()
 }
 
 private data class CardsTransitionState(
@@ -65,7 +66,7 @@ private data class WalletCardTransitionState(
 @Suppress("LongMethod")
 @Composable
 internal fun TwinWalletArtworks(
-    state: TwinWalletArtworkState,
+    state: TwinWalletArtworkUM,
     balance: String,
     isRefreshing: Boolean,
     onRefreshBalanceClick: () -> Unit,
@@ -109,7 +110,7 @@ internal fun TwinWalletArtworks(
         }
 
         AnimatedVisibility(
-            visible = state == TwinWalletArtworkState.TopUp,
+            visible = state == TwinWalletArtworkUM.TopUp,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -134,7 +135,7 @@ internal fun TwinWalletArtworks(
 
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.Center),
-            visible = state == TwinWalletArtworkState.TopUp,
+            visible = state == TwinWalletArtworkUM.TopUp,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -151,7 +152,7 @@ internal fun TwinWalletArtworks(
                 )
                 SpacerH8()
                 Text(
-                    text = balance.orEmpty(),
+                    text = balance,
                     style = TangemTheme.typography.h2,
                     color = TangemTheme.colors.text.primary1,
                     textAlign = TextAlign.Center,
@@ -162,7 +163,7 @@ internal fun TwinWalletArtworks(
 
         AnimatedVisibility(
             modifier = Modifier.align(Alignment.BottomCenter),
-            visible = state == TwinWalletArtworkState.TopUp,
+            visible = state == TwinWalletArtworkUM.TopUp,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -234,12 +235,12 @@ private fun AnimatedTwinCards(
 }
 
 @Suppress("MagicNumber", "LongMethod", "UnnecessaryParentheses")
-private fun TwinWalletArtworkState.toTransitionSetState(
+private fun TwinWalletArtworkUM.toTransitionSetState(
     maxWidthDp: Float,
     maxHeightDp: Float,
     density: Float,
 ): List<CardsTransitionState> = when (this) {
-    TwinWalletArtworkState.Spread -> {
+    TwinWalletArtworkUM.Spread -> {
         val scale = 0.8f
         listOf(
             CardsTransitionState(
@@ -262,7 +263,7 @@ private fun TwinWalletArtworkState.toTransitionSetState(
             ),
         )
     }
-    is TwinWalletArtworkState.Leapfrog -> {
+    is TwinWalletArtworkUM.Leapfrog -> {
         val translationY = -(maxHeightDp / 2) * density
         val secondCardPlace = WalletCardTransitionState().copy(
             xTranslation = 0f,
@@ -272,7 +273,7 @@ private fun TwinWalletArtworkState.toTransitionSetState(
             yScale = 0.83f,
         )
 
-        if (step == TwinWalletArtworkState.Leapfrog.Step.FirstCard) {
+        if (step == TwinWalletArtworkUM.Leapfrog.Step.FirstCard) {
             listOf(
                 CardsTransitionState(
                     walletCard1 = WalletCardTransitionState(
@@ -306,7 +307,7 @@ private fun TwinWalletArtworkState.toTransitionSetState(
             )
         }
     }
-    TwinWalletArtworkState.TopUp -> {
+    TwinWalletArtworkUM.TopUp -> {
         val scale = 0.4f
         val yTranslation = -maxHeightDp * density - 24 * density
         listOf(
@@ -339,7 +340,7 @@ private fun Preview() {
                 .fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            var state: TwinWalletArtworkState by remember { mutableStateOf(TwinWalletArtworkState.TopUp) }
+            var state: TwinWalletArtworkUM by remember { mutableStateOf(TwinWalletArtworkUM.TopUp) }
 
             TwinWalletArtworks(
                 state = state,
@@ -359,12 +360,12 @@ private fun Preview() {
                     .align(Alignment.TopStart),
                 onClick = {
                     val list = listOf(
-                        TwinWalletArtworkState.Spread,
-                        TwinWalletArtworkState.Leapfrog(step = TwinWalletArtworkState.Leapfrog.Step.FirstCard),
-                        TwinWalletArtworkState.Leapfrog(step = TwinWalletArtworkState.Leapfrog.Step.SecondCard),
-                        TwinWalletArtworkState.Leapfrog(step = TwinWalletArtworkState.Leapfrog.Step.FirstCard),
-                        TwinWalletArtworkState.Leapfrog(step = TwinWalletArtworkState.Leapfrog.Step.SecondCard),
-                        TwinWalletArtworkState.TopUp,
+                        TwinWalletArtworkUM.Spread,
+                        TwinWalletArtworkUM.Leapfrog(step = TwinWalletArtworkUM.Leapfrog.Step.FirstCard),
+                        TwinWalletArtworkUM.Leapfrog(step = TwinWalletArtworkUM.Leapfrog.Step.SecondCard),
+                        TwinWalletArtworkUM.Leapfrog(step = TwinWalletArtworkUM.Leapfrog.Step.FirstCard),
+                        TwinWalletArtworkUM.Leapfrog(step = TwinWalletArtworkUM.Leapfrog.Step.SecondCard),
+                        TwinWalletArtworkUM.TopUp,
                     )
 
                     state = list[index % list.size]
