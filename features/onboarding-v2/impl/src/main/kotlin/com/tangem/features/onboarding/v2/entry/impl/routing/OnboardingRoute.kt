@@ -7,6 +7,7 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 
 sealed class OnboardingRoute : Route {
 
@@ -30,6 +31,12 @@ sealed class OnboardingRoute : Route {
         val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
         val onDone: () -> Unit,
+    ) : OnboardingRoute()
+
+    data class Twins(
+        val titleProvider: TitleProvider,
+        val scanResponse: ScanResponse,
+        val mode: OnboardingTwinComponent.Params.Mode,
     ) : OnboardingRoute()
 
     data class ManageTokens(
