@@ -10,7 +10,7 @@ import com.tangem.utils.converter.TwoWayConverter
  *
 [REDACTED_AUTHOR]
  */
-internal object NetworkDerivationPathConverter :
+object NetworkDerivationPathConverter :
     TwoWayConverter<NetworkStatusDM.DerivationPath, Network.DerivationPath> {
 
     override fun convert(value: NetworkStatusDM.DerivationPath): Network.DerivationPath {
