@@ -1,4 +1,4 @@
-package com.tangem.data.walletconnect
+package com.tangem.data.walletconnect.sessions
 
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.walletconnect.utils.WcSdkObserver
