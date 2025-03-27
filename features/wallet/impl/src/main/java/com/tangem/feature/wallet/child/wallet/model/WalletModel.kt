@@ -40,7 +40,6 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -76,7 +75,6 @@ internal class WalletModel @Inject constructor(
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val biometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val fetchNFTCollectionsUseCase: FetchNFTCollectionsUseCase,
@@ -346,7 +344,6 @@ internal class WalletModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -387,7 +384,6 @@ internal class WalletModel @Inject constructor(
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
     }
@@ -404,7 +400,6 @@ internal class WalletModel @Inject constructor(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -415,7 +410,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
+    private fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
         walletScreenContentLoader.cancel(action.deletedWalletId)
         tokenListStore.remove(action.deletedWalletId)
 
@@ -460,7 +455,6 @@ internal class WalletModel @Inject constructor(
                 unlockedWallets = action.unlockedWallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
