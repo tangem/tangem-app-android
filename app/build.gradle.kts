@@ -1,5 +1,5 @@
-import java.util.Properties
 import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+import java.util.Properties
 
 plugins {
     alias(deps.plugins.android.application)
@@ -291,6 +291,7 @@ dependencies {
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Testing libraries */
+    testImplementation(projects.common.test)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
     testImplementation(deps.test.mockk)
