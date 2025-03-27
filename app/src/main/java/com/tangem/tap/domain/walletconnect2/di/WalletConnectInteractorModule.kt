@@ -33,7 +33,6 @@ internal object WalletConnectInteractorModule {
     fun provideWalletConnectInteractor(
         wcRepository: LegacyWalletConnectRepository,
         wcSessionsRepository: WalletConnectSessionsRepository,
-        walletConnectFeatureToggles: WalletConnectFeatureToggles,
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
@@ -44,7 +43,7 @@ internal object WalletConnectInteractorModule {
             walletConnectRepository = wcRepository,
             sessionsRepository = wcSessionsRepository,
             sdkHelper = WalletConnectSdkHelper(),
-            blockchainHelper = TangemWcBlockchainHelper(walletConnectFeatureToggles),
+            blockchainHelper = TangemWcBlockchainHelper(),
             currenciesRepository = currenciesRepository,
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
@@ -69,13 +68,11 @@ internal object WalletConnectModule {
         application: Application,
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
-        walletConnectFeatureToggles: WalletConnectFeatureToggles,
     ): LegacyWalletConnectRepository {
         return DefaultLegacyWalletConnectRepository(
             application = application,
             wcRequestDeserializer = wcRequestDeserializer,
             analyticsHandler = analyticsHandler,
-            walletConnectFeatureToggles = walletConnectFeatureToggles,
         )
     }
 
