@@ -309,6 +309,7 @@ include(":data:staking")
 include(":data:wallet-connect")
 include(":data:markets")
 include(":data:manage-tokens")
+include(":data:networks")
 include(":data:nft")
 include(":data:onramp")
 // endregion Data modules
