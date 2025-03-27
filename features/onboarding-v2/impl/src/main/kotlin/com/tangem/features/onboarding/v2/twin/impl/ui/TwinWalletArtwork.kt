@@ -116,7 +116,7 @@ internal fun TwinWalletArtworks(
         ) {
             Box(
                 modifier = Modifier
-                    .padding(vertical = 24.dp, horizontal = 32.dp)
+                    .padding(vertical = 24.dp, horizontal = 16.dp)
                     .fillMaxSize()
                     .background(
                         TangemTheme.colors.button.secondary,
