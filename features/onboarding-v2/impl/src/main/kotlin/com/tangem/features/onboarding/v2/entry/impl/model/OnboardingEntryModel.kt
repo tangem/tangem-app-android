@@ -15,6 +15,8 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.BiometryFeatureToggles
@@ -22,9 +24,11 @@ import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
+import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent.Mode
 import com.tangem.features.onboarding.v2.entry.impl.analytics.OnboardingEntryEvent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
+import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
@@ -44,6 +48,7 @@ internal class OnboardingEntryModel @Inject constructor(
     private val askBiometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
+    private val userWalletsListManager: UserWalletsListManager,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingEntryComponent.Params>()
@@ -57,6 +62,7 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     val startRoute = routeByProductType(params.scanResponse)
+    val onboardingTwinModelCallbacks = OnboardingTwinModelCallbacks()
 
     fun onManageTokensDone() {
         navigateToFinalScreenFlow()
@@ -67,28 +73,25 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun routeByProductType(scanResponse: ScanResponse): OnboardingRoute {
-        val multiWalletNavigationMode = when (params.multiWalletMode) {
-            OnboardingEntryComponent.MultiWalletMode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
-            OnboardingEntryComponent.MultiWalletMode.AddBackup -> OnboardingMultiWalletComponent.Mode.AddBackup
-        }
-
         return when (scanResponse.productType) {
-            ProductType.Wallet -> OnboardingRoute.MultiWallet(
-                scanResponse = scanResponse,
-                withSeedPhraseFlow = false,
-                titleProvider = titleProvider,
-                onDone = ::onMultiWalletOnboardingDone,
-                mode = multiWalletNavigationMode,
-            )
-            ProductType.Ring,
+            ProductType.Wallet,
             ProductType.Wallet2,
-            -> OnboardingRoute.MultiWallet(
-                scanResponse = scanResponse,
-                withSeedPhraseFlow = true,
-                titleProvider = titleProvider,
-                onDone = ::onMultiWalletOnboardingDone,
-                mode = multiWalletNavigationMode,
-            )
+            ProductType.Ring,
+            -> {
+                val multiWalletNavigationMode = when (params.mode) {
+                    Mode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
+                    Mode.AddBackupWallet1 -> OnboardingMultiWalletComponent.Mode.AddBackup
+                    else -> error("Incorrect onboarding type")
+                }
+
+                OnboardingRoute.MultiWallet(
+                    scanResponse = scanResponse,
+                    withSeedPhraseFlow = scanResponse.productType != ProductType.Wallet,
+                    titleProvider = titleProvider,
+                    onDone = ::onMultiWalletOnboardingDone,
+                    mode = multiWalletNavigationMode,
+                )
+            }
             ProductType.Visa -> OnboardingRoute.Visa(
                 scanResponse = scanResponse,
                 titleProvider = titleProvider,
@@ -99,17 +102,31 @@ internal class OnboardingEntryModel @Inject constructor(
                 titleProvider = titleProvider,
                 onDone = ::navigateToFinalScreenFlow,
             )
+            ProductType.Twins -> {
+                val mode = when (params.mode) {
+                    Mode.Onboarding -> OnboardingTwinComponent.Params.Mode.CreateWallet
+                    Mode.WelcomeOnlyTwin -> OnboardingTwinComponent.Params.Mode.WelcomeOnly
+                    Mode.RecreateWalletTwin -> OnboardingTwinComponent.Params.Mode.RecreateWallet
+                    else -> error("Incorrect onboarding type")
+                }
+
+                OnboardingRoute.Twins(
+                    scanResponse = scanResponse,
+                    titleProvider = titleProvider,
+                    mode = mode,
+                )
+            }
             else -> error("Unsupported")
         }
     }
 
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
         when {
-            params.multiWalletMode == OnboardingEntryComponent.MultiWalletMode.AddBackup -> {
+            params.mode == Mode.AddBackupWallet1 -> {
                 stackNavigation.replaceAll(
                     OnboardingRoute.Done(
                         mode = OnboardingDoneComponent.Mode.WalletCreated,
-                        onDone = ::navigateToWalletScreen,
+                        onDone = ::exitComponentScreen,
                     ),
                 )
             }
@@ -139,7 +156,7 @@ internal class OnboardingEntryModel @Inject constructor(
                     stackNavigation.replaceAll(
                         OnboardingRoute.Done(
                             mode = doneMode,
-                            onDone = ::navigateToWalletScreen,
+                            onDone = ::exitComponentScreen,
                         ),
                     )
                 }
@@ -148,7 +165,7 @@ internal class OnboardingEntryModel @Inject constructor(
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
                     mode = doneMode,
-                    onDone = ::navigateToWalletScreen,
+                    onDone = ::exitComponentScreen,
                 ),
             )
         }
@@ -162,7 +179,7 @@ internal class OnboardingEntryModel @Inject constructor(
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
                     mode = doneMode,
-                    onDone = ::navigateToWalletScreen,
+                    onDone = ::exitComponentScreen,
                 ),
             )
         }
@@ -172,23 +189,55 @@ internal class OnboardingEntryModel @Inject constructor(
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
                     mode = doneMode,
-                    onDone = ::navigateToWalletScreen,
+                    onDone = ::exitComponentScreen,
                 ),
             )
         }
     }
 
-    private fun navigateToWalletScreen() {
+    private fun exitComponentScreen() {
         if (askBiometryFeatureToggles.isAskForBiometryEnabled) {
-            router.replaceAll(AppRoute.Wallet)
-        } else {
-            modelScope.launch(NonCancellable) {
-                router.replaceAll(AppRoute.Wallet)
-                if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
-                    delay(timeMillis = 1_800)
-                    router.push(AppRoute.SaveWallet)
+            if (userWalletsListManager.hasUserWallets) {
+                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
+
+                if (isLocked) {
+                    router.replaceAll(AppRoute.Welcome())
+                } else {
+                    router.replaceAll(AppRoute.Wallet)
                 }
+            } else {
+                router.replaceAll(AppRoute.Home)
             }
+        } else {
+            if (userWalletsListManager.hasUserWallets) {
+                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
+
+                if (isLocked) {
+                    router.replaceAll(AppRoute.Welcome())
+                } else {
+                    modelScope.launch(NonCancellable) {
+                        router.replaceAll(AppRoute.Wallet)
+                        if (tangemSdkManager.checkCanUseBiometry() &&
+                            settingsRepository.shouldShowSaveUserWalletScreen()
+                        ) {
+                            delay(timeMillis = 1_800)
+                            router.push(AppRoute.SaveWallet)
+                        }
+                    }
+                }
+            } else {
+                router.replaceAll(AppRoute.Home)
+            }
+        }
+    }
+
+    inner class OnboardingTwinModelCallbacks : OnboardingTwinComponent.ModelCallbacks {
+        override fun onDone() {
+            navigateToFinalScreenFlow()
+        }
+
+        override fun onBack() {
+            router.pop()
         }
     }
 }
