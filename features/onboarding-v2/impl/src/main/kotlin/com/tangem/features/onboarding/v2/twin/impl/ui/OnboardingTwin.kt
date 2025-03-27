@@ -5,15 +5,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.onboarding.v2.twin.impl.ui.state.OnboardingTwinUM
 
 @Suppress("UnusedPrivateMember")
 @Composable
-fun OnboardingTwin(modifier: Modifier = Modifier) {
-    Column {
+internal fun OnboardingTwin(state: OnboardingTwinUM, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         Box {
             // TODO
         }
+    }
+
+    if (state is OnboardingTwinUM.TopUp) {
+        TokenReceiveBottomSheet(config = state.bottomSheetConfig)
     }
 }
 
@@ -21,6 +27,6 @@ fun OnboardingTwin(modifier: Modifier = Modifier) {
 @Composable
 private fun Preview() {
     TangemThemePreview {
-        OnboardingTwin()
+        OnboardingTwin(OnboardingTwinUM.Welcome())
     }
 }
