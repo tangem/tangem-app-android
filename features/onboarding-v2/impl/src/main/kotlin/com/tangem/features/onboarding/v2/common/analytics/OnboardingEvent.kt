@@ -92,4 +92,22 @@ sealed class OnboardingEvent(
             params = mapOf("Action" to "Cancel"),
         )
     }
+
+    sealed class Twins(
+        event: String,
+        params: Map<String, String> = mapOf(),
+    ) : OnboardingEvent("Onboarding / Twins", event, params) {
+
+        data object ScreenOpened : Twins("Twinning Screen Opened")
+        data object SetupStarted : Twins("Twin Setup Started")
+        data object SetupFinished : Twins("Twin Setup Finished")
+    }
+
+    data class OfflineAttestationFailed(
+        val source: AnalyticsParam.ScreensSources,
+    ) : OnboardingEvent(
+        category = "Error",
+        event = "Offline Attestation Failed",
+        params = mapOf(AnalyticsParam.SOURCE to source.value),
+    )
 }
