@@ -77,6 +77,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
     implementation(deps.firebase.crashlytics)
+    implementation(tangemDeps.card.core)
 
     /** DI */
     implementation(deps.hilt.android)
