@@ -11,6 +11,8 @@ import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,13 +27,15 @@ internal class SendModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model(),
     SendDestinationComponent.ModelCallback,
-    SendAmountComponent.ModelCallback {
+    SendAmountComponent.ModelCallback,
+    SendFeeComponent.ModelCallback {
 
     private val _uiState = MutableStateFlow(initialState())
     val uiState = _uiState.asStateFlow()
 
     var userWallet: UserWallet by Delegates.notNull()
     var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
     var predefinedAmountValue: String? = null
 
@@ -39,12 +43,17 @@ internal class SendModel @Inject constructor(
         _uiState.update { it.copy(destinationUM = destinationUM) }
     }
 
-    override fun onAmountResult(state: AmountState) {
-        _uiState.update { it.copy(amountUM = state) }
+    override fun onAmountResult(amountUM: AmountState) {
+        _uiState.update { it.copy(amountUM = amountUM) }
+    }
+
+    override fun onFeeResult(feeUM: FeeUM) {
+        _uiState.update { it.copy(feeUM = feeUM) }
     }
 
     private fun initialState(): SendUM = SendUM(
         amountUM = AmountState.Empty(),
         destinationUM = DestinationUM.Empty(),
+        feeUM = FeeUM.Empty(),
     )
 }
