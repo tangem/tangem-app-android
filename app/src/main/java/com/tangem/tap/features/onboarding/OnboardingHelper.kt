@@ -85,7 +85,7 @@ object OnboardingHelper {
                 scanResponse = scanResponse,
                 mode = when (backupState.startedSource) {
                     BackupStartedSource.Onboarding -> AppRoute.Onboarding.Mode.Onboarding
-                    BackupStartedSource.CreateBackup -> AppRoute.Onboarding.Mode.AddBackup
+                    BackupStartedSource.CreateBackup -> AppRoute.Onboarding.Mode.AddBackupWallet1
                 },
             )
         }
