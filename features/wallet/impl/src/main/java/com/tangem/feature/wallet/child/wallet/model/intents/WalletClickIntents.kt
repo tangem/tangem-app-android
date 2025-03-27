@@ -141,9 +141,7 @@ internal class WalletClickIntents @Inject constructor(
 
                 async { rampStateManager.fetchSellServiceData() }.let(::add)
 
-                if (onrampFeatureToggles.isHotTokensEnabled) {
-                    async { fetchHotCryptoUseCase() }.let(::add)
-                }
+                async { fetchHotCryptoUseCase() }.let(::add)
 
                 if (isWalletNFTEnabledSyncUseCase.invoke(userWallet.walletId)) {
                     async { fetchNFTCollectionsUseCase(userWalletId = userWallet.walletId) }.let(::add)
