@@ -9,7 +9,6 @@ import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletAdditionalInfoFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.*
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +21,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 internal class WalletLoadingStateFactory(
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) {
 
     fun create(userWallet: UserWallet): WalletState {
@@ -99,7 +97,7 @@ internal class WalletLoadingStateFactory(
 
     private fun createMultiWalletActions(userWallet: UserWallet): PersistentList<WalletManageButton> {
         val isSingleWalletWithToken = userWallet.scanResponse.cardTypesResolver.isSingleWalletWithToken()
-        if (!walletFeatureToggles.isMainActionButtonsEnabled || isSingleWalletWithToken) return persistentListOf()
+        if (isSingleWalletWithToken) return persistentListOf()
 
         return persistentListOf(
             WalletManageButton.Buy(
