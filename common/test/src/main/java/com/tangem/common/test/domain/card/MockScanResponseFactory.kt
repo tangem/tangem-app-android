@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.card
+package com.tangem.common.test.domain.card
 
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.FirmwareVersion
@@ -14,7 +14,7 @@ import java.util.Date
 /**
 [REDACTED_AUTHOR]
  */
-object ScanResponseMockFactory {
+object MockScanResponseFactory {
 
     private val genericFirmwareVersion = CardDTO.FirmwareVersion(
         major = 3,
