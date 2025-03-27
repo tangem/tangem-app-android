@@ -7,7 +7,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenSta
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 
@@ -15,14 +14,12 @@ internal class UnlockWalletTransformer(
     private val unlockedWallets: List<UserWallet>,
     private val clickIntents: WalletClickIntents,
     private val walletImageResolver: WalletImageResolver,
-    private val walletFeatureToggles: WalletFeatureToggles,
 ) : WalletScreenStateTransformer {
 
     private val walletLoadingStateFactory by lazy {
         WalletLoadingStateFactory(
             clickIntents = clickIntents,
             walletImageResolver = walletImageResolver,
-            walletFeatureToggles = walletFeatureToggles,
         )
     }
 
