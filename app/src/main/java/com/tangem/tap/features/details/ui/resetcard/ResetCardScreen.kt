@@ -140,9 +140,9 @@ private fun ConditionCheckBox(checkedState: Boolean, onCheckedChange: (Boolean) 
                 Icon(
                     painter = painterResource(
                         if (checked) {
-                            R.drawable.ic_accepted
+                            R.drawable.ic_accepted_20
                         } else {
-                            R.drawable.ic_unticked
+                            R.drawable.ic_unticked_20
                         },
                     ),
                     contentDescription = null,
