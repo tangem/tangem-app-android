@@ -5,17 +5,10 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.tap.domain.walletconnect2.domain.WcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.Account
-import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 
-internal class TangemWcBlockchainHelper(
-    featureToggles: WalletConnectFeatureToggles,
-) : WcBlockchainHelper {
+internal class TangemWcBlockchainHelper : WcBlockchainHelper {
 
-    private val supportedNonEvmBlockchains = if (featureToggles.isSolanaTxSignEnabled) {
-        setOf(Blockchain.Solana, Blockchain.SolanaTestnet)
-    } else {
-        emptySet()
-    }
+    private val supportedNonEvmBlockchains = setOf(Blockchain.Solana, Blockchain.SolanaTestnet)
 
     override fun chainIdToNetworkIdOrNull(chainId: String): String? {
         val parsedId = chainId.parseId() ?: return null
