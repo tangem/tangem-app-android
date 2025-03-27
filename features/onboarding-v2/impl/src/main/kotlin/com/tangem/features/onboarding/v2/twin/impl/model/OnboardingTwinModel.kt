@@ -19,7 +19,6 @@ import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBotto
 import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
-import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
@@ -44,6 +43,7 @@ import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent.Params.Mode
+import com.tangem.features.onboarding.v2.twin.impl.DefaultOnboardingTwinComponent
 import com.tangem.features.onboarding.v2.twin.impl.ui.TwinWalletArtworkUM
 import com.tangem.features.onboarding.v2.twin.impl.ui.state.OnboardingTwinUM
 import com.tangem.sdk.api.TangemSdkManager
@@ -58,6 +58,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.math.BigDecimal
 import javax.inject.Inject
 
 @Suppress("LongParameterList", "LargeClass")
@@ -87,7 +88,10 @@ internal class OnboardingTwinModel @Inject constructor(
     private val _uiState = MutableStateFlow(
         when (params.mode) {
             Mode.WelcomeOnly -> {
-                OnboardingTwinUM.Welcome(onContinueClick = ::saveWalletAndDone)
+                OnboardingTwinUM.Welcome(
+                    pairCardNumber = firstCardTwinNumber.pairNumber().number,
+                    onContinueClick = ::saveWalletAndDone,
+                )
             }
             Mode.RecreateWallet -> {
                 OnboardingTwinUM.ResetWarning(
@@ -100,12 +104,16 @@ internal class OnboardingTwinModel @Inject constructor(
                 )
             }
             Mode.CreateWallet -> {
-                OnboardingTwinUM.Welcome(onContinueClick = ::navigateToFirstScan)
+                OnboardingTwinUM.Welcome(
+                    pairCardNumber = firstCardTwinNumber.pairNumber().number,
+                    onContinueClick = ::navigateToFirstScan,
+                )
             }
         },
     )
 
     val uiState = _uiState.asStateFlow()
+    val innerNavigationState = MutableStateFlow(DefaultOnboardingTwinComponent.TwinInnerNavigationState(1))
 
     init {
         if (_uiState.value is OnboardingTwinUM.Welcome) {
@@ -144,15 +152,15 @@ internal class OnboardingTwinModel @Inject constructor(
     }
 
     private fun createFirstWallet() {
-        setLoading(true)
-
         modelScope.launch {
+            setLoading(false)
+
             val result = tangemSdkManager.createFirstTwinWallet(
                 cardId = params.scanResponse.card.cardId,
                 initialMessage = Message(
                     tangemSdkManager.getString(
                         R.string.twins_recreate_title_format,
-                        wrappedList(firstCardTwinNumber.number),
+                        firstCardTwinNumber.number,
                     ),
                 ),
             )
@@ -183,6 +191,10 @@ internal class OnboardingTwinModel @Inject constructor(
                             },
                         )
                     }
+
+                    innerNavigationState.update {
+                        it.copy(stackSize = 2)
+                    }
                 }
             }
         }
@@ -206,7 +218,7 @@ internal class OnboardingTwinModel @Inject constructor(
                 initialMessage = Message(
                     tangemSdkManager.getString(
                         R.string.twins_recreate_title_format,
-                        wrappedList(secondCardNumber),
+                        secondCardNumber,
                     ),
                 ),
             )
@@ -230,14 +242,16 @@ internal class OnboardingTwinModel @Inject constructor(
                             },
                         )
                     }
+
+                    innerNavigationState.update {
+                        it.copy(stackSize = 3)
+                    }
                 }
             }
         }
     }
 
     private fun createThirdWallet(secondCardPublicKey: ByteArray) {
-        setLoading(true)
-
         modelScope.launch {
             val result = tangemSdkManager.finalizeTwin(
                 secondCardPublicKey = secondCardPublicKey,
@@ -246,7 +260,7 @@ internal class OnboardingTwinModel @Inject constructor(
                 initialMessage = Message(
                     tangemSdkManager.getString(
                         R.string.twins_recreate_title_format,
-                        wrappedList(firstCardTwinNumber.number),
+                        firstCardTwinNumber.number,
                     ),
                 ),
             )
@@ -276,15 +290,21 @@ internal class OnboardingTwinModel @Inject constructor(
                         return@launch
                     }
 
-                    fetchCurrencyStatusUseCase(
+                    userWalletsListManager.save(userWallet, canOverride = true)
+
+                    fetchCurrencyStatusUseCase.invoke(
                         userWalletId = userWallet.walletId,
                         refresh = true,
-                    )
+                    ).onLeft {
+                        Timber.e("Unable to fetch currency status: $it")
+                        setLoading(false)
+                    }
 
                     val cryptoCurrencyStatus =
                         getPrimaryCurrencyStatusUpdatesUseCase.invoke(userWallet.walletId).firstOrNull()?.getOrNull()
                             ?: run {
                                 setLoading(false)
+                                Timber.e("Unable to get currency status")
                                 return@launch
                             }
 
@@ -303,20 +323,28 @@ internal class OnboardingTwinModel @Inject constructor(
                         onShowAddressClick = { onShowAddressClick(cryptoCurrencyStatus) },
                         isLoading = true,
                     )
+
+                    innerNavigationState.update {
+                        it.copy(stackSize = 4)
+                    }
                 }.saveIn(cryptoCurrencyStatusJobHolder)
             }
         }
     }
 
     private fun applyCryptoCurrencyStatusToState(status: CryptoCurrencyStatus) {
-        update<OnboardingTwinUM.TopUp> {
-            it.copy(
-                balance = (status.value as? CryptoCurrencyStatus.Loaded)?.amount
-                    ?.format { crypto(status.currency) } ?: "",
-                onBuyCryptoClick = { onBuyCryptoClick(status) },
-                onShowAddressClick = { onShowAddressClick(status) },
-                isLoading = false,
-            )
+        val amount = (status.value as? CryptoCurrencyStatus.Loaded)?.amount ?: return
+        if (amount > BigDecimal.ZERO) {
+            params.modelCallbacks.onDone()
+        } else {
+            update<OnboardingTwinUM.TopUp> {
+                it.copy(
+                    balance = BigDecimal.ZERO.format { crypto(status.currency) },
+                    onBuyCryptoClick = { onBuyCryptoClick(status) },
+                    onShowAddressClick = { onShowAddressClick(status) },
+                    isLoading = false,
+                )
+            }
         }
     }
 
@@ -386,7 +414,6 @@ internal class OnboardingTwinModel @Inject constructor(
     }
 
     private fun showCardVerificationFailedDialog(error: TangemError) {
-        setLoading(false)
         if (error !is TangemSdkError.CardVerificationFailed) return
 
         analyticsEventHandler.send(OnboardingEvent.OfflineAttestationFailed(AnalyticsParam.ScreensSources.Onboarding))
