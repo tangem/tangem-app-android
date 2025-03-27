@@ -56,7 +56,6 @@ import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.swap.SwapComponent
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
@@ -96,7 +95,6 @@ internal class SwapModel @Inject constructor(
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val featureToggles: SwapFeatureToggles,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
     private val urlOpener: UrlOpener,
@@ -166,10 +164,8 @@ internal class SwapModel @Inject constructor(
 
     init {
         modelScope.launch {
-            if (featureToggles.isPromoStoriesEnabled) {
-                initStories()
-                swapRouter.openScreen(SwapNavScreen.PromoStories)
-            }
+            initStories()
+            swapRouter.openScreen(SwapNavScreen.PromoStories)
         }
         modelScope.launch(dispatchers.io) {
             val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
