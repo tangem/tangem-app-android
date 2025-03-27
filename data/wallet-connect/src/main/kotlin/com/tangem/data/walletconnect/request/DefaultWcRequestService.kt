@@ -6,7 +6,6 @@ import com.tangem.data.walletconnect.utils.toOurModel
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
-import com.tangem.domain.walletconnect.request.WcRequestHandler
 import com.tangem.domain.walletconnect.request.WcRequestService
 import com.tangem.domain.walletconnect.respond.WcRespondService
 import kotlinx.coroutines.CoroutineScope
@@ -16,7 +15,7 @@ import kotlinx.coroutines.launch
 internal class DefaultWcRequestService(
     private val sessionsManager: WcSessionsManager,
     private val respondService: WcRespondService,
-    private val requestAdapters: List<WcRequestHandler<WcMethod>>,
+    private val requestAdapters: Set<WcMethodHandler<WcMethod>>,
     private val scope: CoroutineScope, // todo(wc) is ok inject scope? featureScope like Decompose Model scope
 ) : WcRequestService, WcSdkObserver {
 
@@ -32,7 +31,7 @@ internal class DefaultWcRequestService(
         val params = sr.request.params
         scope.launch {
             val session = sessionsManager.findSessionByTopic(sr.topic)
-            val handler: WcRequestHandler<WcMethod>? = requestAdapters.firstOrNull { it.canHandle(method) }
+            val handler: WcMethodHandler<WcMethod>? = requestAdapters.firstOrNull { it.canHandle(method) }
 
             val deserialized: WcMethod? = handler?.deserialize(method, params)
             if (handler == null || deserialized == null || session == null) {
