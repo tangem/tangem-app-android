@@ -23,3 +23,17 @@ internal fun exitOnboardingDialog(onConfirm: () -> Unit): DialogMessage {
         },
     )
 }
+
+internal fun interruptBackupDialog(onConfirm: () -> Unit) = DialogMessage(
+    title = resourceReference(R.string.onboarding_exit_alert_title),
+    message = resourceReference(R.string.onboarding_exit_alert_message),
+    firstAction = EventMessageAction(
+        title = resourceReference(R.string.common_ok),
+        warning = true,
+        onClick = onConfirm,
+    ),
+    secondAction = EventMessageAction(
+        title = resourceReference(R.string.common_cancel),
+        onClick = {},
+    ),
+)
