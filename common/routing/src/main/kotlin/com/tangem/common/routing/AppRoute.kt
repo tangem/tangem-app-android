@@ -260,7 +260,9 @@ sealed class AppRoute(val path: String) : Route {
 
         enum class Mode {
             Onboarding, // general Mode
-            AddBackup, // continue backup process for existing wallet 1
+            AddBackupWallet1, // continue backup process for existing wallet 1
+            WelcomeOnlyTwin, // show welcome screen and then navigate to wallet for twins
+            RecreateWalletTwin, // reset twins
         }
     }
 

@@ -5,14 +5,15 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.features.onboarding.v2.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
-import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.interruptBackupDialog
 import com.tangem.features.onboarding.v2.multiwallet.impl.model.OnboardingMultiWalletState.FinalizeStage
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
 import com.tangem.operations.backup.BackupService
@@ -35,6 +36,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     private val backupServiceHolder: BackupServiceHolder,
     private val onboardingRepository: OnboardingRepository,
     private val getCardImageUseCase: GetCardImageUseCase,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val _uiState = MutableStateFlow(OnboardingMultiWalletUM())
@@ -60,19 +62,16 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     }
 
     fun onBack() {
-        _uiState.update { st ->
-            st.copy(
-                dialog = interruptBackupDialog(
-                    onConfirm = {
-                        modelScope.launch {
-                            onboardingRepository.clearUnfinishedFinalizeOnboarding()
-                            router.pop()
-                        }
-                    },
-                    dismiss = { _uiState.update { it.copy(dialog = null) } },
-                ),
-            )
-        }
+        uiMessageSender.send(
+            interruptBackupDialog(
+                onConfirm = {
+                    modelScope.launch {
+                        onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                        router.pop()
+                    }
+                },
+            ),
+        )
     }
 
     private fun subscribeToBackups() {

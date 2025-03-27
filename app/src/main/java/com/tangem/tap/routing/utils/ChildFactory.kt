@@ -210,9 +210,12 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
-                        multiWalletMode = when (route.mode) {
-                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
-                            AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                        mode = when (route.mode) {
+                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.Mode.Onboarding
+                            AppRoute.Onboarding.Mode.AddBackupWallet1 -> OnboardingEntryComponent.Mode.AddBackupWallet1
+                            AppRoute.Onboarding.Mode.WelcomeOnlyTwin -> OnboardingEntryComponent.Mode.WelcomeOnlyTwin
+                            AppRoute.Onboarding.Mode.RecreateWalletTwin ->
+                                OnboardingEntryComponent.Mode.RecreateWalletTwin
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
@@ -702,9 +705,12 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
-                        multiWalletMode = when (route.mode) {
-                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
-                            AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                        mode = when (route.mode) {
+                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.Mode.Onboarding
+                            AppRoute.Onboarding.Mode.AddBackupWallet1 -> OnboardingEntryComponent.Mode.AddBackupWallet1
+                            AppRoute.Onboarding.Mode.WelcomeOnlyTwin -> OnboardingEntryComponent.Mode.WelcomeOnlyTwin
+                            AppRoute.Onboarding.Mode.RecreateWalletTwin ->
+                                OnboardingEntryComponent.Mode.RecreateWalletTwin
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
