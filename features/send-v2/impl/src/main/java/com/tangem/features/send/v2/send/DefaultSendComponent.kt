@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
+import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -17,6 +18,9 @@ import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
+import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponent
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -66,7 +70,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
         SendRoute.Empty -> getStubComponent()
         is SendRoute.Destination -> getDestinationComponent(factoryContext, route)
         is SendRoute.Amount -> getAmountComponent(factoryContext, route)
-        is SendRoute.Fee -> getFeeComponent()
+        is SendRoute.Fee -> getFeeComponent(factoryContext)
         SendRoute.Confirm -> getConfirmComponent()
     }
 
@@ -99,7 +103,30 @@ internal class DefaultSendComponent @AssistedInject constructor(
         ),
     )
 
-    private fun getFeeComponent() = getStubComponent() // todo
+    private fun getFeeComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+        val state = model.uiState.value
+        val sendAmount = (state.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
+        val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
+        return if (sendAmount != null && destinationAddress != null) {
+            SendFeeComponent(
+                appComponentContext = factoryContext,
+                params = SendFeeComponentParams.FeeParams(
+                    state = model.uiState.value.feeUM,
+                    currentRoute = currentRoute.filterIsInstance<SendRoute.Fee>(),
+                    analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
+                    userWallet = model.userWallet,
+                    cryptoCurrencyStatus = model.cryptoCurrencyStatus,
+                    feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
+                    appCurrency = model.appCurrency,
+                    sendAmount = sendAmount,
+                    destinationAddress = destinationAddress,
+                    callback = model,
+                ),
+            )
+        } else {
+            getStubComponent()
+        }
+    }
 
     private fun getConfirmComponent() = getStubComponent() // todo
 
