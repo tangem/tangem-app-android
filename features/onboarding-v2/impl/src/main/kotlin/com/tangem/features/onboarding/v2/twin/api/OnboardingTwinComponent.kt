@@ -8,18 +8,19 @@ import com.tangem.features.onboarding.v2.TitleProvider
 interface OnboardingTwinComponent : ComposableContentComponent {
 
     data class Params(
-        val titleProvider: TitleProvider,
         val scanResponse: ScanResponse,
         val modelCallbacks: ModelCallbacks,
+        val titleProvider: TitleProvider,
         val mode: Mode,
     ) {
         enum class Mode {
-            CreateWallet, RecreateWallet
+            WelcomeOnly, CreateWallet, RecreateWallet
         }
     }
 
     interface ModelCallbacks {
         fun onDone()
+        fun onBack()
     }
 
     interface Factory : ComponentFactory<Params, OnboardingTwinComponent>
