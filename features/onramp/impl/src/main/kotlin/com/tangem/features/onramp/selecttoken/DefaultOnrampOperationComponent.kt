@@ -6,7 +6,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.onramp.hottokens.HotCryptoComponent
 import com.tangem.features.onramp.selecttoken.model.OnrampOperationModel
 import com.tangem.features.onramp.selecttoken.ui.OnrampSelectToken
@@ -20,7 +19,6 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     onrampTokenListComponentFactory: OnrampTokenListComponent.Factory,
     @Assisted private val params: OnrampOperationComponent.Params,
-    private val onrampFeatureToggles: OnrampFeatureToggles,
     private val hotCryptoComponentFactory: HotCryptoComponent.Factory,
 ) : AppComponentContext by appComponentContext, OnrampOperationComponent {
 
@@ -54,7 +52,7 @@ internal class DefaultOnrampOperationComponent @AssistedInject constructor(
     }
 
     private fun createHotCryptoComponent(): HotCryptoComponent? {
-        return if (onrampFeatureToggles.isHotTokensEnabled && params is OnrampOperationComponent.Params.Buy) {
+        return if (params is OnrampOperationComponent.Params.Buy) {
             hotCryptoComponentFactory.create(
                 context = child(key = "hot_crypto"),
                 params = HotCryptoComponent.Params(

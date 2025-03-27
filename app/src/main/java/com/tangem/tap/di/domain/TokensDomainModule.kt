@@ -10,7 +10,6 @@ import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.*
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.tap.domain.tokens.DefaultTokensFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -211,7 +210,6 @@ internal object TokensDomainModule {
         currenciesRepository: CurrenciesRepository,
         stakingRepository: StakingRepository,
         promoRepository: PromoRepository,
-        swapFeatureToggles: SwapFeatureToggles,
         dispatchers: CoroutineDispatcherProvider,
         currencyStatusOperations: BaseCurrencyStatusOperations,
     ): GetCryptoCurrencyActionsUseCase {
@@ -221,7 +219,6 @@ internal object TokensDomainModule {
             currenciesRepository = currenciesRepository,
             stakingRepository = stakingRepository,
             promoRepository = promoRepository,
-            swapFeatureToggles = swapFeatureToggles,
             dispatchers = dispatchers,
             currencyStatusOperations = currencyStatusOperations,
         )
