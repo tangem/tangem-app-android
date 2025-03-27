@@ -153,10 +153,11 @@ include(":core:error")
 
 // region Common modules
 include(":common")
-include(":common:ui-charts")
-include(":common:routing")
-include(":common:ui")
 include(":common:google")
+include(":common:routing")
+include(":common:test")
+include(":common:ui")
+include(":common:ui-charts")
 // endregion
 
 // region Libs modules

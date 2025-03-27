@@ -1,13 +1,15 @@
-package com.tangem.tap.domain.card
+package com.tangem.common.test.domain.token
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.FeePaidCurrency
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.toNetworkId
+import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.data.common.currency.CryptoCurrencyFactory
 import com.tangem.data.common.currency.getNetworkDerivationPath
 import com.tangem.data.common.currency.getNetworkStandardType
+import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.util.derivationStyleProvider
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -16,13 +18,13 @@ import com.tangem.domain.tokens.model.Network
 /**
 [REDACTED_AUTHOR]
  */
-internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
+class MockCryptoCurrencyFactory(private val scanResponse: ScanResponse = defaultScanResponse) {
 
     private val factory = CryptoCurrencyFactory(excludedBlockchains = ExcludedBlockchains())
 
-    val cardano by lazy { listOf(createCoin(blockchain = Blockchain.Cardano)) }
-    val chia by lazy { listOf(element = createCoin(Blockchain.Chia)) }
-    val ethereum by lazy { listOf(element = createCoin(Blockchain.Ethereum)) }
+    val cardano by lazy { createCoin(blockchain = Blockchain.Cardano) }
+    val chia by lazy { createCoin(Blockchain.Chia) }
+    val ethereum by lazy { createCoin(Blockchain.Ethereum) }
 
     val chiaAndEthereum by lazy {
         listOf(
@@ -44,16 +46,16 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
         )
     }
 
-    private fun createCoin(blockchain: Blockchain): CryptoCurrency {
+    fun createCoin(blockchain: Blockchain): CryptoCurrency {
         val network = Network(
             id = Network.ID(blockchain.id),
             backendId = blockchain.toNetworkId(),
             name = blockchain.fullName,
             isTestnet = blockchain.isTestnet(),
             derivationPath = getNetworkDerivationPath(
-                blockchain,
+                blockchain = blockchain,
                 extraDerivationPath = null,
-                scanResponse.derivationStyleProvider,
+                cardDerivationStyleProvider = scanResponse.derivationStyleProvider,
             ),
             currencySymbol = blockchain.currency,
             standardType = getNetworkStandardType(blockchain),
@@ -66,7 +68,7 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
     }
 
     // Impossible to create custom token by CryptoCurrencyFactory because it works with URI under the hood
-    private fun createCustomToken(blockchain: Blockchain, derivationBlockchain: Blockchain): CryptoCurrency {
+    fun createCustomToken(blockchain: Blockchain, derivationBlockchain: Blockchain): CryptoCurrency {
         return CryptoCurrency.Token(
             id = CryptoCurrency.ID(
                 prefix = CryptoCurrency.ID.Prefix.TOKEN_PREFIX,
@@ -98,12 +100,20 @@ internal class CryptoCurrenciesMocks(private val scanResponse: ScanResponse) {
         )
     }
 
-    private fun createToken(blockchain: Blockchain): CryptoCurrency {
+    fun createToken(blockchain: Blockchain): CryptoCurrency {
         return factory.createToken(
             sdkToken = Token(symbol = "NEVER-MIND", contractAddress = "NEVER-MIND", decimals = 8),
             blockchain = blockchain,
             extraDerivationPath = null,
             scanResponse = scanResponse,
         )!!
+    }
+
+    private companion object {
+
+        val defaultScanResponse = MockScanResponseFactory.create(
+            cardConfig = GenericCardConfig(2),
+            derivedKeys = emptyMap(),
+        )
     }
 }
