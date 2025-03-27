@@ -21,19 +21,3 @@ internal fun resetCardDialog(onConfirm: () -> Unit, dismiss: () -> Unit, onDismi
             dismiss()
         },
     )
-
-internal fun interruptBackupDialog(onConfirm: () -> Unit, dismiss: () -> Unit) = OnboardingDialogUM(
-    title = resourceReference(R.string.onboarding_exit_alert_title),
-    message = resourceReference(R.string.onboarding_exit_alert_message),
-    confirmButtonText = resourceReference(R.string.common_ok),
-    dismissButtonText = resourceReference(R.string.common_cancel),
-    dismissWarningColor = true,
-    onDismiss = dismiss,
-    onConfirmClick = {
-        onConfirm()
-        dismiss()
-    },
-    onDismissButtonClick = {
-        dismiss()
-    },
-)
