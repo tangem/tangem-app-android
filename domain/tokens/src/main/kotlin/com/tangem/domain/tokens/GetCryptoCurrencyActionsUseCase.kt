@@ -14,7 +14,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.transaction.models.AssetRequirementsCondition
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.*
@@ -33,7 +32,6 @@ class GetCryptoCurrencyActionsUseCase(
     private val stakingRepository: StakingRepository,
     private val promoRepository: PromoRepository,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val currencyStatusOperations: BaseCurrencyStatusOperations,
 ) {
 
@@ -420,7 +418,6 @@ class GetCryptoCurrencyActionsUseCase(
             val exchangeableState = withTimeoutOrNull(REQUEST_EXCHANGE_DATA_TIMEOUT) {
                 rampManager.availableForSwap(userWallet.walletId, cryptoCurrency)
             } ?: ExchangeableState.Loading
-            val swapStoriesEnabled = swapFeatureToggles.isPromoStoriesEnabled
             val currencyName = cryptoCurrency.name
 
             val reason = when (exchangeableState) {
@@ -433,7 +430,7 @@ class GetCryptoCurrencyActionsUseCase(
                 ExchangeableState.NotExchangeable -> ScenarioUnavailabilityReason.NotExchangeable(currencyName)
             }
 
-            val isShowBadge = reason == ScenarioUnavailabilityReason.None && shouldShowSwapStories && swapStoriesEnabled
+            val isShowBadge = reason == ScenarioUnavailabilityReason.None && shouldShowSwapStories
             TokenActionsState.ActionState.Swap(
                 unavailabilityReason = reason,
                 showBadge = isShowBadge,
