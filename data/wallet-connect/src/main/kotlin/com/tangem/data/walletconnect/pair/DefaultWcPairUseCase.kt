@@ -7,15 +7,21 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.toOurModel
+import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSession
+import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
-import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionProposal
+import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import timber.log.Timber
 import kotlin.coroutines.resume
@@ -25,10 +31,10 @@ val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro", "The Sandbox")
 @Suppress("UnusedPrivateMember") // todo(wc) remove after add mapping
 internal class DefaultWcPairUseCase(
     private val sessionsManager: WcSessionsManager,
+    private val associateNetworksDelegate: AssociateNetworksDelegate,
+    private val caipNamespaceDelegate: CaipNamespaceDelegate,
 ) : WcPairUseCase, WcSdkObserver {
 
-    private val onWalletSelect = Channel<UserWallet>()
-    private val onAccountSelect = Channel<Any>()
     private val onCallTerminalAction = Channel<TerminalAction>()
     private val onSessionProposal =
         Channel<Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>>(Channel.BUFFERED)
@@ -40,91 +46,66 @@ internal class DefaultWcPairUseCase(
 
             // call sdk.pair and wait result, finish flow on error
             walletKitPair(uri).onLeft { throwable ->
-                emit(WcPairState.Error(throwable))
+                emit(WcPairState.Error(WcPairError.Unknown(throwable.localizedMessage.orEmpty())))
                 return@flow
             }
             // wait for sdk onSessionProposal callback
-            val (sdkSessionProposal, verifyContext) = onSessionProposal.receiveAsFlow().map { (fist, second) ->
-                val ourCopy = WcSdkSessionProposal(
-                    name = fist.name,
-                    description = fist.description,
-                    url = fist.url,
-                    proposerPublicKey = fist.proposerPublicKey,
-                )
-                ourCopy to second
-            }.first { (sessionProposal, verifyContext) ->
-                true // todo(wc) check verifyContext? compare uri?
-            }
+            val (sdkSessionProposal, verifyContext) = onSessionProposal.receiveAsFlow()
+                .first { (sessionProposal, verifyContext) ->
+                    true // todo(wc) check verifyContext? compare uri?
+                }
 
             // check unsupported dApps, just local constant for now, finish if unsupported
             if (sdkSessionProposal.name in unsupportedDApps) {
                 Timber.i("Unsupported DApp")
-                val error = WcPairState
-                    .Error(RuntimeException("todo(wc) use domain exception")) // todo(wc) WalletConnectError.UnsupportedDApp
+                val error = WcPairState.Error(WcPairError.UnsupportedDApp)
                 emit(error)
                 return@flow
             }
 
-            // flow that collect terminal and all middle actions
-            val actionsFlow = channelFlow<TerminalAction> {
-                val userWallet = onWalletSelect.receiveAsFlow()
-                    .stateIn(scope = this, started = SharingStarted.Lazily, initialValue = selectedWallet)
-                val accountSelect = onAccountSelect.receiveAsFlow()
-                    .stateIn(scope = this, started = SharingStarted.Lazily, initialValue = Any())
-                // combine all middle variables and emit new ProposalState to main FlowCollector
-                combine(accountSelect, userWallet) { account, selectedWallet ->
-                    buildProposalState(sdkSessionProposal, verifyContext, account, selectedWallet)
-                }.onEach { newProposalState -> this@flow.emit(newProposalState) }
-                    .launchIn(this)
-
-                // collect terminal action and emit to this inner channelFlow, unlike combine above
-                onCallTerminalAction.receiveAsFlow()
-                    .onEach { this.channel.send(it) }
-                    .launchIn(this)
-            }
+            val proposalState = buildProposalState(sdkSessionProposal, verifyContext)
+                .fold(ifLeft = { WcPairState.Error(it) }, ifRight = { it })
+            emit(proposalState)
 
             // wait first terminal action and continue WC pair flow
-            val sessionForApprove: WcSessionProposal = when (val terminalAction = actionsFlow.first()) {
+            val terminalAction = onCallTerminalAction.receiveAsFlow().first()
+            val sessionForApprove: WcSessionApprove? = when (terminalAction) {
                 is TerminalAction.Approve -> terminalAction.sessionForApprove
                 TerminalAction.Reject -> {
                     // non suspending WalletKit.rejectSession call
-                    rejectSession(sdkSessionProposal)
-                    return@flow
+                    rejectSession(sdkSessionProposal.proposerPublicKey)
+                    null
                 }
             }
+            // finish flow if rejected above
+            sessionForApprove ?: return@flow
 
             // start flow of approving in wc sdk
             emit(WcPairState.Approving.Loading(sessionForApprove))
-            fun mapResult(either: Either<Throwable, WcSession>) =
-                WcPairState.Approving.Result(sessionForApprove, either)
             // call sdk approve and wait result
-            walletKitApproveSession(sessionForApprove).onLeft { emit(mapResult(it.left())) }.onRight {
-                // wait for sdk callback
-                val result = when (val settledSession = onSessionSettleResponse.receiveAsFlow().first()) {
-                    is Wallet.Model.SettledSessionResponse.Error -> mapResult(
-                        // WalletConnectError.ExternalApprovalError(settledSession.errorMessage) todo(wc)
-                        RuntimeException("todo(wc) use domain exception").left(),
-                    )
+            val either = walletKitApproveSession(
+                sessionForApprove = sessionForApprove,
+                sdkSessionProposal = sdkSessionProposal,
+            ).fold(
+                ifLeft = { WcPairError.ExternalApprovalError(it.localizedMessage.orEmpty()).left() },
+                ifRight = {
+                    when (val settledSession = onSessionSettleResponse.receiveAsFlow().first()) {
+                        is Wallet.Model.SettledSessionResponse.Error -> WcPairError.ExternalApprovalError(
+                            settledSession.errorMessage,
+                        ).left()
 
-                    is Wallet.Model.SettledSessionResponse.Result -> {
-                        val newSession = settledSession.session.toDomain(sessionForApprove.wallet)
-                        sessionsManager.saveSessions(sessionForApprove.wallet.walletId, newSession)
-                        mapResult(newSession.right())
+                        is Wallet.Model.SettledSessionResponse.Result -> {
+                            val newSession = settledSession.session.toDomain(sessionForApprove.walletId)
+                            sessionsManager.saveSessions(sessionForApprove.walletId, newSession)
+                            newSession.right()
+                        }
                     }
-                }
-                emit(result)
-            }
+                },
+            )
+            emit(WcPairState.Approving.Result(sessionForApprove, either))
         }
 
-    override fun onWalletSelect(selectedWallet: UserWallet) {
-        onWalletSelect.trySend(selectedWallet)
-    }
-
-    override fun onAccountSelect(account: Any) {
-        onAccountSelect.trySend(account)
-    }
-
-    override fun approve(sessionForApprove: WcSessionProposal) {
+    override fun approve(sessionForApprove: WcSessionApprove) {
         onCallTerminalAction.trySend(TerminalAction.Approve(sessionForApprove))
     }
 
@@ -162,10 +143,22 @@ internal class DefaultWcPairUseCase(
             )
         }
 
-    private suspend fun walletKitApproveSession(sessionForApprove: WcSessionProposal): Either<Throwable, Unit> =
-        suspendCancellableCoroutine { continuation ->
+    private suspend fun walletKitApproveSession(
+        sessionForApprove: WcSessionApprove,
+        sdkSessionProposal: Wallet.Model.SessionProposal,
+    ): Either<Throwable, Unit> {
+        val namespaces = caipNamespaceDelegate.associate(
+            sdkSessionProposal,
+            sessionForApprove.walletId,
+            sessionForApprove.network.map { it.network },
+        )
+        val sessionApprove = Wallet.Params.SessionApprove(
+            proposerPublicKey = sdkSessionProposal.proposerPublicKey,
+            namespaces = namespaces,
+        )
+        return suspendCancellableCoroutine { continuation ->
             WalletKit.approveSession(
-                params = TODO("wc sdk model"),
+                params = sessionApprove,
                 onSuccess = {
                     Timber.i("Approved successfully: $it")
                     continuation.resume(Unit.right())
@@ -176,11 +169,12 @@ internal class DefaultWcPairUseCase(
                 },
             )
         }
+    }
 
-    private fun rejectSession(sessionProposal: WcSdkSessionProposal) {
+    private fun rejectSession(proposerPublicKey: String) {
         WalletKit.rejectSession(
             params = Wallet.Params.SessionReject(
-                proposerPublicKey = sessionProposal.proposerPublicKey,
+                proposerPublicKey = proposerPublicKey,
                 reason = "",
             ),
             onSuccess = {
@@ -192,25 +186,38 @@ internal class DefaultWcPairUseCase(
         )
     }
 
-    private fun buildProposalState(
-        sessionProposal: WcSdkSessionProposal,
+    private suspend fun buildProposalState(
+        sessionProposal: Wallet.Model.SessionProposal,
         verifyContext: Wallet.Model.VerifyContext,
-        selectedAccount: Any,
-        userWallet: UserWallet,
-    ): WcPairState.Proposal {
-        // todo(wc) a lot of mapping from Wallet.Model.SessionProposal to our Blockchain, Network, ect
-        // todo(wc) check security status by Wallet.Model.VerifyContext or Blockaid, don't know for now
-        val mock: WcSessionProposal = TODO()
-        return WcPairState.Proposal(mock, Any())
-    }
+    ): Either<WcPairError, WcPairState.Proposal> = runCatching {
+        val proposalNetwork = associateNetworksDelegate.associate(sessionProposal)
+        val appMetaData = WcAppMetaData(
+            name = sessionProposal.name,
+            description = sessionProposal.description,
+            url = sessionProposal.url,
+            icons = sessionProposal.icons.map { it.toString() },
+            redirect = sessionProposal.redirect,
+        )
+        val dAppSession = WcSessionProposal(
+            dAppMetaData = appMetaData,
+            proposalNetwork = proposalNetwork,
+            securityStatus = Any(),
+        )
+        WcPairState.Proposal(dAppSession)
+    }.fold(onSuccess = { it.right() }, onFailure = {
+        when (it) {
+            is WcPairError -> it.left()
+            else -> WcPairError.Unknown(it.localizedMessage.orEmpty()).left()
+        }
+    },)
 
-    private fun Wallet.Model.Session.toDomain(userWallet: UserWallet): WcSession = WcSession(
-        userWalletId = userWallet.walletId,
+    private fun Wallet.Model.Session.toDomain(walletId: UserWalletId): WcSession = WcSession(
+        userWalletId = walletId,
         sdkModel = this.toOurModel(),
     )
 
     private sealed interface TerminalAction {
-        data class Approve(val sessionForApprove: WcSessionProposal) : TerminalAction
+        data class Approve(val sessionForApprove: WcSessionApprove) : TerminalAction
         data object Reject : TerminalAction
     }
 }
