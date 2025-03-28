@@ -1,15 +1,19 @@
 package com.tangem.domain.walletconnect.model
 
-import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionProposal
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
+import com.tangem.domain.wallets.models.UserWalletId
 
 data class WcSessionProposal(
-    val dAppInfo: WcSdkSessionProposal,
+    val dAppMetaData: WcAppMetaData,
+    val proposalNetwork: Map<UserWalletId, ProposalNetwork>,
+    val securityStatus: Any,
+) {
 
-    // todo(wc) should map for all user wallets?
-    val wallet: UserWallet,
-    val missingChains: List<Network>,
-    val availableChains: List<Network>,
-    val notAddedChains: List<Network>,
-)
+    data class ProposalNetwork(
+        val walletId: UserWalletId,
+        val missingRequired: Set<WcNetwork.Supported>,
+        val required: Set<WcNetwork.Supported>,
+        val available: Set<WcNetwork.Supported>,
+        val notAdded: Set<WcNetwork.Supported>,
+    )
+}
