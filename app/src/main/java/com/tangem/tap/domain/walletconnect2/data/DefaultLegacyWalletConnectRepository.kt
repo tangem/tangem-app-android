@@ -98,6 +98,8 @@ internal class DefaultLegacyWalletConnectRepository(
 
     private fun defineWalletDelegate(): WalletKit.WalletDelegate {
         return object : WalletKit.WalletDelegate {
+
+            @Suppress("LongMethod")
             override fun onSessionProposal(
                 sessionProposal: Wallet.Model.SessionProposal,
                 verifyContext: Wallet.Model.VerifyContext,
@@ -146,14 +148,27 @@ internal class DefaultLegacyWalletConnectRepository(
                 )
 
                 // for cases when optionalNamespaces is not empty but we doesn't support none of them
-                if (optionalMissingNetwork.isNotEmpty() && optionalWithoutMissingNetworks.isEmpty()) {
+                if (optionalMissingNetwork.isNotEmpty() &&
+                    optionalWithoutMissingNetworks.isEmpty() &&
+                    sessionProposal.requiredNamespaces.isEmpty() // if requiredNamespaces is not empty we can connect
+                ) {
                     Timber.i("Not added optional blockchains: $optionalMissingNetwork")
+
+                    val unsupportedNetworks = sessionProposal.optionalNamespaces.values
+                        .flatMap { it.chains ?: emptyList() }
+                        .filter { blockchainHelper.chainIdToNetworkIdOrNull(it) == null }
+
                     scope.launch {
-                        _events.emit(
+                        val error = if (unsupportedNetworks.isNotEmpty()) {
+                            WalletConnectEvents.SessionApprovalError(
+                                WalletConnectError.ApprovalErrorUnsupportedNetwork(unsupportedNetworks),
+                            )
+                        } else {
                             WalletConnectEvents.SessionApprovalError(
                                 WalletConnectError.ApprovalErrorMissingNetworks(optionalMissingNetwork.toList()),
-                            ),
-                        )
+                            )
+                        }
+                        _events.emit(error)
                     }
                     return
                 }
