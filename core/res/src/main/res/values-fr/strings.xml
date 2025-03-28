@@ -126,6 +126,7 @@
   </plurals>
   <string name="common_delete">Supprimer</string>
   <string name="common_disabled">Désactivé</string>
+  <string name="common_disconnect">Se déconnecter</string>
   <string name="common_done">Exécuté</string>
   <string name="common_enable">Activer</string>
   <string name="common_enabled">Activé</string>
@@ -580,6 +581,7 @@
   <string name="onboarding_top_up_body_no_account_error">Pour commencer, rechargez simplement le portefeuille avec plus de %1$s %2$s</string>
   <string name="onboarding_top_up_button_but_crypto">Acheter des crypto-monnaies</string>
   <string name="onboarding_top_up_button_show_wallet_address">Afficher l\'adresse du portefeuille</string>
+  <string name="onboarding_top_up_min_create_account_amount">Pour commencer, rechargez simplement le portefeuille avec plus de %1$s</string>
   <string name="onboarding_topup_title">Activer un portefeuille</string>
   <string name="onboarding_twin_exit_warning">Le processus de jumelage est partiellement terminé. Vous ne pouvez pas le quitter maintenant.</string>
   <string name="onboarding_twins_interrupt_warning">Si le processus de création du portefeuille est interrompu de quelque manière que ce soit, vous devrez recommencer</string>
@@ -1038,7 +1040,7 @@
   <string name="warning_beacon_chain_retirement_title">BNB Beacon Chain va s\'arrêter de fonctionner</string>
   <string name="warning_blocked_funds_for_fee_message">Veuillez déposer environ %1$s pour couvrir les frais de réseau</string>
   <string name="warning_blocked_funds_for_fee_title">Fonds insuffisants pour couvrir les frais de réseau</string>
-  <string name="warning_button_could_be_better">Pas terrible</string>
+  <string name="warning_button_could_be_better">Peut mieux faire</string>
   <string name="warning_button_like_it">J\'aime</string>
   <string name="warning_button_ok">Ok, compris!</string>
   <string name="warning_button_really_cool">Vraiment cool !</string>
