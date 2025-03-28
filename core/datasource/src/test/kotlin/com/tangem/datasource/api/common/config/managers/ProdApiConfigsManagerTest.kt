@@ -152,7 +152,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 id = ApiConfig.ID.TangemTech,
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
-                    baseUrl = "https://api.tangem-tech.com/v1/",
+                    baseUrl = "https://api.tangem.org/v1/",
                     headers = mapOf(
                         "card_id" to ProviderSuspend { APP_CARD_ID },
                         "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
