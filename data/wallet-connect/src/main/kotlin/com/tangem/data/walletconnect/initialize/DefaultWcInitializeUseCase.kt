@@ -6,9 +6,9 @@ import com.reown.android.CoreClient
 import com.reown.android.relay.ConnectionType
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import com.tangem.data.walletconnect.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
+import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import timber.log.Timber
