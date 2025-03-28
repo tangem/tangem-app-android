@@ -2,6 +2,7 @@ package com.tangem.tap.routing.utils
 
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
+import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.QrScanningComponent
 import com.tangem.feature.referral.api.ReferralComponent
 import com.tangem.feature.stories.api.StoriesComponent
@@ -15,11 +16,13 @@ import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
 import com.tangem.features.send.api.SendComponent
-import com.tangem.features.swap.SwapComponent
+import com.tangem.features.send.v2.api.SendFeatureToggles
 import com.tangem.features.staking.api.StakingComponent
+import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
+import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
@@ -40,6 +43,7 @@ import com.tangem.utils.Provider
 import dagger.hilt.android.scopes.ActivityScoped
 import java.util.WeakHashMap
 import javax.inject.Inject
+import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedisegnedWalletConnectComponent
 
 @ActivityScoped
 @Suppress("LongParameterList", "LargeClass")
@@ -73,8 +77,12 @@ internal class ChildFactory @Inject constructor(
     private val referralComponentFactory: ReferralComponent.Factory,
     private val pushNotificationsComponentFactory: PushNotificationsComponent.Factory,
     private val walletComponentFactory: WalletEntryComponent.Factory,
+    private val sendComponentFactoryV2: com.tangem.features.send.v2.api.SendComponent.Factory,
+    private val sendFeatureToggles: SendFeatureToggles,
+    private val redesignedWalletConnectComponentFactory: RedisegnedWalletConnectComponent.Factory,
     private val testerRouter: TesterRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
+    private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) {
 
     fun createChild(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
@@ -201,9 +209,12 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
-                        multiWalletMode = when (route.mode) {
-                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
-                            AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                        mode = when (route.mode) {
+                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.Mode.Onboarding
+                            AppRoute.Onboarding.Mode.AddBackupWallet1 -> OnboardingEntryComponent.Mode.AddBackupWallet1
+                            AppRoute.Onboarding.Mode.WelcomeOnlyTwin -> OnboardingEntryComponent.Mode.WelcomeOnlyTwin
+                            AppRoute.Onboarding.Mode.RecreateWalletTwin ->
+                                OnboardingEntryComponent.Mode.RecreateWalletTwin
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
@@ -255,18 +266,33 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Send -> {
-                createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
-                    params = SendComponent.Params(
-                        userWalletId = route.userWalletId,
-                        currency = route.currency,
-                        transactionId = route.transactionId,
-                        amount = route.amount,
-                        tag = route.tag,
-                        destinationAddress = route.destinationAddress,
-                    ),
-                    componentFactory = sendComponentFactory,
-                )
+                if (sendFeatureToggles.isSendV2Enabled) {
+                    createComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = com.tangem.features.send.v2.api.SendComponent.Params(
+                            userWalletId = route.userWalletId,
+                            currency = route.currency,
+                            transactionId = route.transactionId,
+                            amount = route.amount,
+                            tag = route.tag,
+                            destinationAddress = route.destinationAddress,
+                        ),
+                        componentFactory = sendComponentFactoryV2,
+                    )
+                } else {
+                    createComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = SendComponent.Params(
+                            userWalletId = route.userWalletId,
+                            currency = route.currency,
+                            transactionId = route.transactionId,
+                            amount = route.amount,
+                            tag = route.tag,
+                            destinationAddress = route.destinationAddress,
+                        ),
+                        componentFactory = sendComponentFactory,
+                    )
+                }
             }
             is AppRoute.Home -> {
                 createComponentChild(
@@ -276,17 +302,29 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.WalletConnectSessions -> {
-                createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
-                    params = Unit,
-                    componentFactory = walletConnectComponentFactory,
-                )
+                if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
+                    createComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = redesignedWalletConnectComponentFactory,
+                    )
+                } else {
+                    createComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = walletConnectComponentFactory,
+                    )
+                }
             }
             is AppRoute.QrScanning -> {
+                val source = when (route.source) {
+                    AppRoute.QrScanning.Source.SEND -> SourceType.SEND
+                    AppRoute.QrScanning.Source.WALLET_CONNECT -> SourceType.WALLET_CONNECT
+                }
                 createComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
                     params = QrScanningComponent.Params(
-                        source = route.source,
+                        source = source,
                         networkName = route.networkName,
                     ),
                     componentFactory = qrScanningComponentFactory,
@@ -399,18 +437,33 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { SaveWalletBottomSheetFragment() })
             }
             is AppRoute.Send -> {
-                route.asComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
-                    params = SendComponent.Params(
-                        userWalletId = route.userWalletId,
-                        currency = route.currency,
-                        transactionId = route.transactionId,
-                        amount = route.amount,
-                        tag = route.tag,
-                        destinationAddress = route.destinationAddress,
-                    ),
-                    componentFactory = sendComponentFactory,
-                )
+                if (sendFeatureToggles.isSendV2Enabled) {
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = com.tangem.features.send.v2.api.SendComponent.Params(
+                            userWalletId = route.userWalletId,
+                            currency = route.currency,
+                            transactionId = route.transactionId,
+                            amount = route.amount,
+                            tag = route.tag,
+                            destinationAddress = route.destinationAddress,
+                        ),
+                        componentFactory = sendComponentFactoryV2,
+                    )
+                } else {
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = SendComponent.Params(
+                            userWalletId = route.userWalletId,
+                            currency = route.currency,
+                            transactionId = route.transactionId,
+                            amount = route.amount,
+                            tag = route.tag,
+                            destinationAddress = route.destinationAddress,
+                        ),
+                        componentFactory = sendComponentFactory,
+                    )
+                }
             }
             is AppRoute.AppSettings -> {
                 route.asComponentChild(
@@ -482,10 +535,14 @@ internal class ChildFactory @Inject constructor(
                 route.asFragmentChild(Provider { OnboardingWalletFragment() })
             }
             is AppRoute.QrScanning -> {
+                val source = when (route.source) {
+                    AppRoute.QrScanning.Source.SEND -> SourceType.SEND
+                    AppRoute.QrScanning.Source.WALLET_CONNECT -> SourceType.WALLET_CONNECT
+                }
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
                     params = QrScanningComponent.Params(
-                        source = route.source,
+                        source = source,
                         networkName = route.networkName,
                     ),
                     componentFactory = qrScanningComponentFactory,
@@ -531,11 +588,19 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.WalletConnectSessions -> {
-                route.asComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
-                    params = Unit,
-                    componentFactory = walletConnectComponentFactory,
-                )
+                if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = redesignedWalletConnectComponentFactory,
+                    )
+                } else {
+                    route.asComponentChild(
+                        contextProvider = contextProvider(route, contextFactory),
+                        params = Unit,
+                        componentFactory = walletConnectComponentFactory,
+                    )
+                }
             }
             is AppRoute.CurrencyDetails -> {
                 route.asComponentChild(
@@ -645,9 +710,12 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
-                        multiWalletMode = when (route.mode) {
-                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
-                            AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                        mode = when (route.mode) {
+                            AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.Mode.Onboarding
+                            AppRoute.Onboarding.Mode.AddBackupWallet1 -> OnboardingEntryComponent.Mode.AddBackupWallet1
+                            AppRoute.Onboarding.Mode.WelcomeOnlyTwin -> OnboardingEntryComponent.Mode.WelcomeOnlyTwin
+                            AppRoute.Onboarding.Mode.RecreateWalletTwin ->
+                                OnboardingEntryComponent.Mode.RecreateWalletTwin
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
