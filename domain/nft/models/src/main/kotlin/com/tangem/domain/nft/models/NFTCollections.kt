@@ -17,4 +17,14 @@ data class NFTCollections(
             val error: Throwable,
         ) : Content()
     }
+
+    companion object {
+        fun empty(network: Network) = NFTCollections(
+            network = network,
+            content = Content.Collections(
+                collections = null,
+                source = StatusSource.ACTUAL,
+            ),
+        )
+    }
 }
