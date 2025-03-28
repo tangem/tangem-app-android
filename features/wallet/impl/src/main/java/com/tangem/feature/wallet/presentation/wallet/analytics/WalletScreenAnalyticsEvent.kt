@@ -10,8 +10,7 @@ sealed class WalletScreenAnalyticsEvent {
     sealed class Basic(
         event: String,
         params: Map<String, String> = mapOf(),
-        error: Throwable? = null,
-    ) : AnalyticsEvent(category = "Basic", event = event, params = params, error = error) {
+    ) : AnalyticsEvent(category = "Basic", event = event, params = params) {
 
         class WalletToppedUp(userWalletId: UserWalletId, walletType: AnalyticsParam.WalletType) :
             Basic(
