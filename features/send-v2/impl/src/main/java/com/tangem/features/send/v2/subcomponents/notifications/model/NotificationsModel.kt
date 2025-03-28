@@ -55,7 +55,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 @Stable
 @ModelScoped
-class NotificationsModel @Inject constructor(
+internal class NotificationsModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val appRouter: AppRouter,
