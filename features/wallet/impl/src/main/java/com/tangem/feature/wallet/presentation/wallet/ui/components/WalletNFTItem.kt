@@ -131,7 +131,20 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
     RowContentContainer(
         modifier = modifier,
         icon = {
-            CollectionsPreviewsPlaceholder()
+            Box(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size36)
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                    .background(TangemTheme.colors.field.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    painter = painterResource(R.drawable.ic_error_sync_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
         },
         text = {
             Text(
@@ -158,7 +171,12 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
     RowContentContainer(
         modifier = modifier,
         icon = {
-            CollectionsPreviewsPlaceholder()
+            Box(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size36)
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                    .background(TangemTheme.colors.field.primary),
+            )
         },
         text = {
             TextShimmer(
@@ -175,16 +193,6 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
             )
         },
         enabled = false,
-    )
-}
-
-@Composable
-private fun CollectionsPreviewsPlaceholder(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(TangemTheme.dimens.size36)
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
-            .background(TangemTheme.colors.field.primary),
     )
 }
 
@@ -207,7 +215,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
                 is CollectionPreview.Image -> {
                     SubcomposeAsyncImage(
                         modifier = modifier,
-                        model = s,
+                        model = s.url,
                         loading = {
                             RectangleShimmer(radius = 0.dp)
                         },
@@ -386,7 +394,7 @@ private fun RowContentContainer(
 @Preview(widthDp = 360)
 @Preview(widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_WalletNFTItem_InLight(@PreviewParameter(WalletNFTItemProvider::class) state: WalletNFTItemUM) {
+private fun Preview_WalletNFTItem(@PreviewParameter(WalletNFTItemProvider::class) state: WalletNFTItemUM) {
     TangemThemePreview {
         WalletNFTItem(
             state = state,
