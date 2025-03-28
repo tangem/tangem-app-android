@@ -21,7 +21,7 @@ object ClipboardOrScanQrDialog {
             }
             setNegativeButton(context.getText(R.string.wallet_connect_scan_new_code)) { _, _ ->
                 store.dispatchNavigationAction {
-                    push(AppRoute.QrScanning(source = SourceType.WALLET_CONNECT))
+                    push(AppRoute.QrScanning(source = AppRoute.QrScanning.Source.WALLET_CONNECT))
                 }
             }
             setOnDismissListener {

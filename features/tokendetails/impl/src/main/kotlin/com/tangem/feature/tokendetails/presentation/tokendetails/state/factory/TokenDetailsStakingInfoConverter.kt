@@ -155,7 +155,11 @@ internal class TokenDetailsStakingInfoConverter(
         }
 
         return when (rewardBlockType) {
-            RewardBlockType.Rewards -> resourceReference(
+            RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
+            RewardBlockType.RewardUnavailable -> TextReference.EMPTY
+            RewardBlockType.RewardsRequirementsError,
+            RewardBlockType.Rewards,
+            -> resourceReference(
                 R.string.staking_details_rewards_to_claim,
                 wrappedList(
                     stakingRewardAmount.format {
@@ -166,8 +170,6 @@ internal class TokenDetailsStakingInfoConverter(
                     },
                 ),
             )
-            RewardBlockType.NoRewards -> resourceReference(R.string.staking_details_no_rewards_to_claim)
-            RewardBlockType.RewardUnavailable -> TextReference.EMPTY
         }
     }
 }
