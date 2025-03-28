@@ -1,5 +1,7 @@
 package com.tangem.feature.qrscanning.model
 
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.runtime.Stable
 import com.tangem.common.routing.AppRouter
 import com.tangem.core.decompose.di.ModelScoped
@@ -85,7 +87,22 @@ internal class QrScanningModel @Inject constructor(
 
     override fun onDestroy() {
         super.onDestroy()
-        // don't forget enable reader mode after scan complete
-        cardSdkProvider.sdk.forceEnableReaderMode()
+        forceEnableReaderModeDelayed()
+    }
+
+    private fun forceEnableReaderModeDelayed() {
+        // we need to delay task because some devices can't enable until navigation completes
+        Handler(Looper.getMainLooper())
+            .postDelayed(
+                {
+                    // don't forget enable reader mode after scan complete
+                    cardSdkProvider.sdk.forceEnableReaderMode()
+                },
+                DELAY_BEFORE_CALL_ENABLE_NFC,
+            )
+    }
+
+    private companion object {
+        const val DELAY_BEFORE_CALL_ENABLE_NFC = 1000L
     }
 }
