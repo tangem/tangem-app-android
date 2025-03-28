@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.utils.getFiatString
+import com.tangem.common.ui.notifications.NotificationsFactory.addRequireDestinationFlagErrorNotification
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -110,6 +111,10 @@ object NotificationsFactory {
                 ),
             )
         }
+    }
+
+    fun MutableList<NotificationUM>.addRequireDestinationFlagErrorNotification() {
+        add(NotificationUM.Error.DestinationMemoRequired)
     }
 
     fun MutableList<NotificationUM>.addMinimumAmountErrorNotification(
@@ -326,6 +331,9 @@ object NotificationsFactory {
                 error = validationError,
                 onReduceClick = onReduceClick,
             )
+            is BlockchainSdkError.XRP -> addXRPTransactionValidationError(
+                error = validationError,
+            )
             null -> minAdaValue?.let {
                 add(
                     NotificationUM.Cardano.MinAdaValueCharged(
@@ -403,6 +411,12 @@ object NotificationsFactory {
                 )
             }
             else -> {}
+        }
+    }
+
+    private fun MutableList<NotificationUM>.addXRPTransactionValidationError(error: BlockchainSdkError.XRP) {
+        when (error) {
+            is BlockchainSdkError.XRP.DestinationMemoRequired -> addRequireDestinationFlagErrorNotification()
         }
     }
 
