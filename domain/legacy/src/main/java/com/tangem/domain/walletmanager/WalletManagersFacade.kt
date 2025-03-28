@@ -265,4 +265,10 @@ interface WalletManagersFacade {
         collectionIdentifier: NFTCollection.Identifier,
         assetIdentifier: NFTAsset.Identifier,
     ): NFTAsset?
+
+    /**
+     * If wallet manager implements [InitializableAccount] then returns [InitializableAccount.isAccountInitialized]
+     * value. Otherwise always return true
+     */
+    suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean
 }
