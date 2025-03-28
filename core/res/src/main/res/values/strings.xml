@@ -842,7 +842,7 @@
   <string name="staking_notification_low_staked_balance_title">Low staked balance</string>
   <string name="staking_notification_minimum_balance_error_text">A minimum of %1$s %2$s is required for restaking. Please top up your balance.</string>
   <string name="staking_notification_minimum_balance_error_title">Not enough %s</string>
-  <string name="staking_notification_minimum_balance_title"> Insufficient Balance for Staking</string>
+  <string name="staking_notification_minimum_balance_title">Insufficient Balance for Staking</string>
   <string name="staking_notification_minimum_restake_ada_text">A minimum of 3 ADA is required for restaking. Please top up your balance.</string>
   <string name="staking_notification_minimum_restake_ada_title">Not enough ADA</string>
   <string name="staking_notification_minimum_stake_ada_text">The minimum amount required for staking must exceed 5 ADA. Please top up your balance to start staking.</string>
