@@ -5,6 +5,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
 import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationModel
+import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -29,4 +30,9 @@ internal interface SendModelModule {
     @IntoMap
     @ClassKey(SendDestinationModel::class)
     fun provideSendDestinationModel(model: SendDestinationModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(SendFeeModel::class)
+    fun provideSendFeeModel(model: SendFeeModel): Model
 }
