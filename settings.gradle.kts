@@ -286,6 +286,7 @@ include(":domain:promo")
 include(":domain:promo:models")
 include(":domain:nft")
 include(":domain:nft:models")
+include(":domain:networks")
 // endregion Domain modules
 
 // region Data modules
