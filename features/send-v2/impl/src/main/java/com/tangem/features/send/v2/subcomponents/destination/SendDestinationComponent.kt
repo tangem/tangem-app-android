@@ -21,6 +21,8 @@ internal class SendDestinationComponent(
 
     private val model: SendDestinationModel = getOrCreateModel(params = params, router = router)
 
+    fun updateState(state: DestinationUM) = model.updateState(state)
+
     @Composable
     override fun Content(modifier: Modifier) {
         val state = model.uiState.collectAsStateWithLifecycle()
