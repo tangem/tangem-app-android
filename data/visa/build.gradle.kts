@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.tokens.models)
 
     /** Project - Utils */
     implementation(projects.core.utils)
