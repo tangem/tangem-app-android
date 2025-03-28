@@ -126,6 +126,7 @@
   </plurals>
   <string name="common_delete">Entfernen</string>
   <string name="common_disabled">Deaktiviert</string>
+  <string name="common_disconnect">Trennen</string>
   <string name="common_done">Erledigt</string>
   <string name="common_enable">Aktivieren</string>
   <string name="common_enabled">Aktiviert</string>
@@ -498,6 +499,10 @@
   <string name="markets_tooltip_message">Rufe dies auf oder tippe auf die Suchleiste, um Token direkt vom Markt hinzuzufügen</string>
   <string name="markets_tooltip_title">Token hinzufügen</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
+  <plurals name="nft_collections_count">
+    <item quantity="one">%d Stück</item>
+    <item quantity="other">%d Stücke</item>
+  </plurals>
   <string name="nft_wallet_count">%1$d NFTs in der %2$d Sammlung</string>
   <string name="nft_wallet_receive_nft">Tippe hier, um das erste NFT zu erhalten</string>
   <string name="nft_wallet_title">NFT-Sammlungen</string>
@@ -1011,6 +1016,7 @@
     <item quantity="other">Verfügbar für %d Tage</item>
   </plurals>
   <string name="visa_main_balances_and_limits">Guthaben und Limits</string>
+  <string name="visa_onboarding_access_code_navigation_title">Zugangscode</string>
   <string name="visa_onboarding_approve_wallet_selector_notification_message">Bitte wähle die Wallet aus, mit der Du den Registrierungsprozess gestartet hast, um die Transaktion zur Erstellung Deines Kontos auf der Blockchain zu signieren</string>
   <string name="visa_onboarding_close_alert_message">Möchtest Du den Vorgang wirklich beenden? Du kannst später dort fortfahren, wo Du aufgehört hast.</string>
   <string name="visa_onboarding_in_progress_description">Das wird nicht lange dauern. Wir richten gerade Dein Konto ein.</string>
@@ -1157,6 +1163,12 @@
   <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
+  <string name="wc_connections">Verbindungen</string>
+  <string name="wc_disconnect_all">Alle trennen</string>
+  <string name="wc_disconnect_all_alert_title">Alle dApps trennen</string>
+  <string name="wc_new_connection">Neue Verbindung</string>
+  <string name="wc_no_sessions_desc">Verbinde Deine Wallet mit einer anderen dApp</string>
+  <string name="wc_no_sessions_title">Keine Sitzungen</string>
   <string name="welcome_interrupted_backup_alert_discard">Verwerfen</string>
   <string name="welcome_interrupted_backup_alert_message">Du hast eine unterbrochene Sicherung. Möchtest du diese fortsetzen?</string>
   <string name="welcome_interrupted_backup_alert_resume">Ja, fortsetzen</string>
