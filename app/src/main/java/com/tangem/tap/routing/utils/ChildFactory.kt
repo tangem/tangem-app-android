@@ -37,7 +37,6 @@ import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragm
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.welcome.component.WelcomeComponent
-import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.utils.Provider
@@ -614,7 +613,13 @@ internal class ChildFactory @Inject constructor(
                 )
             }
             is AppRoute.Welcome -> {
-                route.asFragmentChild(Provider { WelcomeFragment() })
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = WelcomeComponent.Params(
+                        intent = route.intent,
+                    ),
+                    componentFactory = welcomeComponentFactory,
+                )
             }
             is AppRoute.TesterMenu -> {
                 Child.LegacyIntent(testerRouter.getEntryIntent())
