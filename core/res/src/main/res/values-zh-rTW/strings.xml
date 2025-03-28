@@ -53,6 +53,7 @@
   <string name="common_create">創造</string>
   <string name="common_delete">刪除</string>
   <string name="common_disabled">禁用</string>
+  <string name="common_disconnect">斷開連接</string>
   <string name="common_done">完成</string>
   <string name="common_enable">允許</string>
   <string name="common_enabled">啟用</string>
