@@ -82,7 +82,6 @@ data class TokenSwapInfo(
 
 data class RequestApproveStateData(
     val fee: TxFeeState,
-    val approveData: String,
     val fromTokenAmount: SwapAmount,
     val spenderAddress: String,
 )
