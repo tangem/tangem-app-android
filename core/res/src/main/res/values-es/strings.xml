@@ -126,6 +126,7 @@
   </plurals>
   <string name="common_delete">Suprimir</string>
   <string name="common_disabled">Desactivado</string>
+  <string name="common_disconnect">Desconectar</string>
   <string name="common_done">Listo</string>
   <string name="common_enable">Activar</string>
   <string name="common_enabled">Activado</string>
@@ -139,6 +140,7 @@
   <string name="common_fee_selector_option_market">Mercado</string>
   <string name="common_fee_selector_option_slow">Lento</string>
   <string name="common_fee_selector_title">Velocidad y tarifa</string>
+  <string name="common_finish">Finalizar</string>
   <string name="common_generate_addresses">Sincronizar direcciones</string>
   <string name="common_go_to_provider">Ir al proveedor</string>
   <string name="common_go_to_token">Ir al token</string>
@@ -158,6 +160,7 @@
   <string name="common_no_address">Ninguna dirección</string>
   <string name="common_now">Ahora</string>
   <string name="common_ok">OK</string>
+  <string name="common_open_in_browser">Abrir en el navegador</string>
   <string name="common_origin_card">Tarjeta principal</string>
   <string name="common_origin_ring">Anillo primario</string>
   <string name="common_passphrase">Frase de contraseña</string>
@@ -181,6 +184,7 @@
   <string name="common_send">Enviar</string>
   <string name="common_server_unavailable">El servidor no está disponible, por favor inténtelo de nuevo más tarde</string>
   <string name="common_share">Compartir</string>
+  <string name="common_share_link">Compartir enlace</string>
   <string name="common_sign">Firme</string>
   <string name="common_sign_and_send">Firme y envíe</string>
   <string name="common_stake">Stake</string>
@@ -272,6 +276,8 @@
   <string name="express_exchange_by">Intercambio por %s</string>
   <string name="express_exchange_notification_failed_text">Visite el sitio web del proveedor para reembolsar su dinero</string>
   <string name="express_exchange_notification_failed_title">Operación fallida por el proveedor</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Su intercambio está tardando más de lo esperado. Por favor, consulte al soporte del proveedor para obtener ayuda.</string>
+  <string name="express_exchange_notification_long_transaction_time_title">Tiempo de transacción prolongado</string>
   <string name="express_exchange_notification_refund_text">El monto de la transacción fue reembolsado en %1$s a su billetera debido a OKX o reglas puente. %2$s</string>
   <string name="express_exchange_notification_refund_title">El monto fue reembolsado en %1$s (red %2$s)</string>
   <string name="express_exchange_notification_verification_text">Visite el sitio web del proveedor para la verificación</string>
@@ -578,6 +584,7 @@
   <string name="onboarding_top_up_body_no_account_error">Para empezar, simplemente recargue la billetera con más de %1$s %2$s</string>
   <string name="onboarding_top_up_button_but_crypto">Comprar cripto</string>
   <string name="onboarding_top_up_button_show_wallet_address">Mostrar la dirección de la billetera</string>
+  <string name="onboarding_top_up_min_create_account_amount">Para empezar, simplemente recargue la billetera con más de %1$s</string>
   <string name="onboarding_topup_title">Activar una billetera</string>
   <string name="onboarding_twin_exit_warning">El proceso de emparejamiento está parcialmente completo. No puede salir ahora.</string>
   <string name="onboarding_twins_interrupt_warning">Si el proceso de creación del wallet se interrumpe de alguna manera, tendrá que empezar de nuevo</string>
@@ -758,6 +765,8 @@
   <string name="send_summary_transaction_description_suffix_including">incluida una tarifa de red de %1$s</string>
   <string name="send_transaction_success">La transacción se firmó con éxito y se envió al nodo blockchain. El saldo de la billetera se actualizará después de un tiempo.</string>
   <string name="send_tron_account_activation_error">%1$s  es un activo en la red Tron. Para calcular la tarifa y realizar una transacción, deba depositar algo de Tron (TRX) en su cuenta.</string>
+  <string name="send_validation_destination_tag_required_description">Es necesario una etiqueta de destino (memo) para completar esta transacción para la dirección especificada.</string>
+  <string name="send_validation_destination_tag_required_title">Etiqueta de destino obligatoria</string>
   <string name="sent_transaction_sent_title">Transacción enviada</string>
   <string name="settings_card_settings_footer">Escanee la tarjeta/anillo que quiere configurar</string>
   <string name="settings_forget_wallet">Olvidar la billetera</string>
@@ -779,6 +788,7 @@
   <string name="staking_details_estimated_profit">%s beneficio estimado</string>
   <string name="staking_details_market_rating">Calificación de mercado</string>
   <string name="staking_details_metrics_block_header">Métrica</string>
+  <string name="staking_details_min_rewards_notification">Según las reglas de la red %1$s, se pueden reclamar recompensas desde %2$s. Las cantidades a continuación se acreditarán en su cuenta al deshacer el staking.</string>
   <string name="staking_details_minimum_requirement">Mínimo requerido</string>
   <string name="staking_details_no_rewards_to_claim">No hay recompensas para reclamar</string>
   <string name="staking_details_reward_claiming">Reclamo de recompensa</string>
@@ -816,11 +826,16 @@
   <string name="staking_notification_low_staked_balance_title">Saldo de staking bajo</string>
   <string name="staking_notification_minimum_balance_error_text">Un mínimo de %1$s %2$s es necesario para añadir más staking. Por favor recargue su saldo.</string>
   <string name="staking_notification_minimum_balance_error_title">No tiene suficiente %s</string>
+  <string name="staking_notification_minimum_balance_title">Saldo insuficiente para Staking</string>
+  <string name="staking_notification_minimum_restake_ada_text">Se requiere un mínimo de 3 ADA para hacer más staking. Por favor, recargue su saldo.</string>
+  <string name="staking_notification_minimum_restake_ada_title">No hay suficiente ADA</string>
+  <string name="staking_notification_minimum_stake_ada_text">La cantidad mínima requerida para hacer staking debe ser superior a 5 ADA. Recargue su saldo para continuar.</string>
   <string name="staking_notification_network_error_text">El staking no está disponible actualmente debido a las condiciones de la red. Inténtelo de nuevo más tarde.</string>
   <string name="staking_notification_new_validator_funds_transfer">El staking en la red %1$s con un nuevo validador transferirá automáticamente todos los fondos previamente en staking a este validador.</string>
   <string name="staking_notification_restake_rewards_text">Reinvierta las recompensas obtenidas en el monto apostado, aumentando las ganancias potenciales.</string>
   <string name="staking_notification_restake_text">La opción de volver a staking le permite mover sus fondos de un validador a otro sin necesidad de retirarlos.</string>
   <string name="staking_notification_stake_entire_balance_text">Está a punto de hacer staking con todo su saldo. Recomendamos dejar una cantidad para cubrir las tarifas de la red por unstaking o reclamo de recompensas.</string>
+  <string name="staking_notification_ton_activate_account">Para empezar a hacer staking en TON, realice primero una transacción de salida de cualquier importe - esto activará su billetera.</string>
   <string name="staking_notification_unlock_text">Desbloquee su dinero para retirarlo del proceso de staking. El desbloqueo demora %s minuto.</string>
   <string name="staking_notification_unstake_cosmos_text">Sus fondos estarán disponibles para su uso después del período de desvinculación de 21 días. La recompensa se retirará junto con los fondos de desvinculación.</string>
   <string name="staking_notification_unstake_text">Sus fondos estarán disponibles para su uso después del período de desvinculación de %s.</string>
@@ -849,6 +864,7 @@
   <string name="staking_rewards">Recompensas</string>
   <string name="staking_stake_locked">El stake está bloqueado</string>
   <string name="staking_stake_more">Hacer más staking</string>
+  <string name="staking_stake_more_button_unavailability_reason">Al hacer staking de %1$s, se realiza sobre todo su saldo de %2$s. Cualquier %2$s adicional que deposite en su billetera Tangem también se pondrá en staking automáticamente.</string>
   <string name="staking_staked_amount">Monto del staking</string>
   <string name="staking_summary_description_text">Ud hace el staking de %1$s y recibirá %2$s</string>
   <string name="staking_tap_to_unlock">Toque para desbloquear</string>
@@ -883,6 +899,8 @@
   <string name="story_meet_title">Descubra Tangem</string>
   <string name="story_web3_description">Intercambie, compre NFT, haga préstamos y depósitos en más de 100 servicios descentralizados diferentes</string>
   <string name="story_web3_title">Compatible con Web 3.0</string>
+  <string name="sui_not_enough_coin_for_fee_description">Se requiere una transacción entrante de al menos %1$s para proceder</string>
+  <string name="sui_not_enough_coin_for_fee_title">Fondos insuficientes</string>
   <string name="swap_give_permission_fee_footer">La red cobrará una tarifa de aprobación de token para verificar que está autorizando el uso de su token para el swap.</string>
   <string name="swap_promo_text">Intercambie más tokens a mejores tasas directamente en su billetera.</string>
   <string name="swap_promo_title">¡Nuevo proveedor de intercambio disponible!</string>
@@ -918,10 +936,12 @@
   <string name="toast_undo">Cancelar</string>
   <string name="token_button_unavailability_generic_description">Esta operación no está disponible actualmente. Por favor, inténtalo de nuevo más tarde.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">Comprar %s no está disponible con los proveedores actuales pero estamos trabajando para agregar más opciones.</string>
+  <string name="token_button_unavailability_reason_custom_token">La acción no está disponible para tokens personalizados.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">No tiene fondos para vender. Recargue su cuenta para poder vender fondos desde ella.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">No tienes fondos para enviar. Recarga tu cuenta para poder enviar fondos desde ella.</string>
   <string name="token_button_unavailability_reason_loading">Los datos aún no se han cargado. Esto puede tardar unos segundos. Por favor, inténtelo de nuevo más tarde.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">El servicio de intercambio %s no está compatible con los proveedores actuales pero estamos trabajando para agregar más opciones.</string>
+  <string name="token_button_unavailability_reason_out_of_date_balance">Es posible que el saldo mostrado esté desactualizado debido al almacenamiento en caché.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">La venta de fondos estará disponible una vez que la(s) transacción(es) pendiente(s) en la red %s se complete</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">El envío de fondos estará disponible una vez que se completen las transacciones pendientes en la red %s.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Vender %s no es compatible con los proveedores actuales, pero estamos trabajando para agregar más opciones.</string>
@@ -968,6 +988,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Esta acción es irreversible. No tendrá acceso la billetera antigua.</string>
   <string name="twins_scan_twin_with_number">Toque la tarjeta gemela con el número %s y no la retira hasta el final de la operación</string>
+  <string name="universal_error">Hemos encontrado un error. Código de error: %s. Póngase en contacto con nuestro servicio de asistencia.</string>
   <string name="unlock_wallet_description_full">Use %s o escanee una tarjeta/anillo para tener acceso a su billetera</string>
   <string name="unsupported_wc_version">Error de conexión: Esta dApp utiliza la versión 1.0 de Wallet Connect, que no es compatible. Asegúrese de que la dApp sea compatible con la versión 2.0 de Wallet Connect para conectarse correctamente.</string>
   <string name="user_push_notification_agreement_argument_one">Manténgase actualizado con las últimas funciones y noticias</string>
@@ -1111,6 +1132,7 @@
   <string name="warning_some_token_balances_not_updated">No se han podido actualizar los saldos de algunos tokens</string>
   <string name="warning_testnet_card_message">Esta es una tarjeta de Testnet. No puede procesar transacciones y solo deba usarse para pruebas y desarrollo.</string>
   <string name="warning_testnet_card_title">Solo para fines de prueba</string>
+  <string name="warning_token_balance_not_updated">El saldo podría estar desactualizado. Actualice la página.</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorar</string>
   <string name="welcome_interrupted_backup_alert_message">Tiene un backup interrumpido. ¿Quiere reanudarlo?</string>
   <string name="welcome_interrupted_backup_alert_resume">Sí, reanudar</string>
