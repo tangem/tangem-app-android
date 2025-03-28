@@ -10,7 +10,7 @@ import com.tangem.domain.tokens.mock.MockQuotes
 import com.tangem.domain.tokens.mock.MockTokens
 import com.tangem.domain.tokens.mock.MockTokensStates
 import com.tangem.domain.tokens.model.*
-import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations
+import com.tangem.domain.tokens.operations.CachedCurrenciesStatusesOperations
 import com.tangem.domain.tokens.repository.MockCurrenciesRepository
 import com.tangem.domain.tokens.repository.MockNetworksRepository
 import com.tangem.domain.tokens.repository.MockQuotesRepository
@@ -164,7 +164,7 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
         quotes: Flow<Either<DataError, Set<Quote>>> = flowOf(MockQuotes.quotes.right()),
         statuses: Flow<Either<DataError, Set<NetworkStatus>>> = flowOf(MockNetworks.verifiedNetworksStatuses.right()),
     ) = GetPrimaryCurrencyStatusUpdatesUseCase(
-        currencyStatusOperations = CurrenciesStatusesOperations(
+        currencyStatusOperations = CachedCurrenciesStatusesOperations(
             currenciesRepository = MockCurrenciesRepository(
                 sortTokensResult = Unit.right(),
                 removeCurrencyResult = removeCurrencyResult,
@@ -176,6 +176,9 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
             quotesRepository = MockQuotesRepository(quotes),
             networksRepository = MockNetworksRepository(statuses),
             stakingRepository = MockStakingRepository(),
+            tokensFeatureToggles = object : TokensFeatureToggles {
+                override val isNetworksLoadingRefactoringEnabled: Boolean = false
+            },
         ),
         dispatchers = dispatchers,
     )
