@@ -32,7 +32,7 @@ fun Modifier.roundedShapeItemDecoration(
     val applyShape: Modifier.(shape: RoundedCornerShape?) -> Modifier = { shape ->
         if (backgroundColor != null) {
             if (shape != null) {
-                background(color = backgroundColor, shape = shape)
+                clip(shape).background(color = backgroundColor, shape = shape)
             } else {
                 background(color = backgroundColor)
             }

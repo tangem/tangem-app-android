@@ -235,13 +235,25 @@ internal class LegacyScanProcessor @Inject constructor(
             } else {
                 Analytics.setContext(scanResponse)
 
+                val isTwinRefactoringEnabled =
+                    store.inject(DaggerGraphState::onboardingV2FeatureToggles).isTwinRefactoringEnabled
+
                 val wasTwinsOnboardingShown =
                     store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase).invokeSync()
 
                 if (scanResponse.twinsIsTwinned() && !wasTwinsOnboardingShown) {
                     onWalletNotCreated()
-                    store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
-                    navigateTo(AppRoute.OnboardingTwins) { onProgressStateChange(it) }
+                    if (isTwinRefactoringEnabled) {
+                        navigateTo(
+                            AppRoute.Onboarding(
+                                scanResponse = scanResponse,
+                                mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
+                            ),
+                        ) { onProgressStateChange(it) }
+                    } else {
+                        store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
+                        navigateTo(AppRoute.OnboardingTwins) { onProgressStateChange(it) }
+                    }
                 } else {
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     onSuccess(scanResponse)
