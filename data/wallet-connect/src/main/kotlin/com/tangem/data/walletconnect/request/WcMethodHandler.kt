@@ -1,14 +1,14 @@
-package com.tangem.domain.walletconnect.request
+package com.tangem.data.walletconnect.request
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcRequest
 
-interface WcRequestHandler<M : WcMethod> {
+interface WcMethodHandler<out M : WcMethod> {
     fun canHandle(methodName: String): Boolean
     fun deserialize(methodName: String, params: String): M?
-    fun handle(wcRequest: WcRequest<M>)
+    fun handle(wcRequest: WcRequest<WcMethod>)
 
     companion object {
         @OptIn(ExperimentalStdlibApi::class)
