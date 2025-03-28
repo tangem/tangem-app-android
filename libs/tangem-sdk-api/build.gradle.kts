@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.visa.models)
 
+    implementation(projects.core.configToggles)
     implementation(projects.core.res)
 
     /** Tangem libraries */
