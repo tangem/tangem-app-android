@@ -729,7 +729,7 @@ internal class SendModel @Inject constructor(
         val memo = uiState.value.getRecipientState(stateRouter.isEditState)?.memoTextField?.value
         val isValidMemo = validateMemo(memo)
 
-        val isRecent = type == EnterAddressSource.RecentAddress
+        val isRecent = type == EnterAddressSource.RecentAddress || type == EnterAddressSource.MyWallet
         if (isRecent && isValidAddress && isValidMemo) onNextClick(stateRouter.isEditState)
     }
 // endregion
