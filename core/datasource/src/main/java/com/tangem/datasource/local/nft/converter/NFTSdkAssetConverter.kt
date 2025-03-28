@@ -7,14 +7,11 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.utils.converter.Converter
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 
-class NFTSdkAssetConverter(
-    private val nftSdkAssetIdentifierConverter: NFTSdkAssetIdentifierConverter,
-    private val nftSdkCollectionIdentifierConverter: NFTSdkCollectionIdentifierConverter,
-) : Converter<Pair<Network, SdkNFTAsset>, NFTAsset> {
+object NFTSdkAssetConverter : Converter<Pair<Network, SdkNFTAsset>, NFTAsset> {
     override fun convert(value: Pair<Network, SdkNFTAsset>): NFTAsset {
         val (network, asset) = value
-        val assetId = nftSdkAssetIdentifierConverter.convert(asset.identifier)
-        val collectionId = nftSdkCollectionIdentifierConverter.convert(asset.collectionIdentifier)
+        val assetId = NFTSdkAssetIdentifierConverter.convert(asset.identifier)
+        val collectionId = NFTSdkCollectionIdentifierConverter.convert(asset.collectionIdentifier)
         return NFTAsset.Value(
             id = assetId,
             collectionId = collectionId,
