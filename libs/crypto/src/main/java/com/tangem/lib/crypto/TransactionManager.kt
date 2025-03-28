@@ -1,6 +1,7 @@
 package com.tangem.lib.crypto
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.lib.crypto.models.*
 import java.math.BigInteger
 
@@ -14,7 +15,7 @@ interface TransactionManager {
      * @param currencyToSend currency to send in tx
      * @param destinationAddress address to send tx
      * @param increaseBy percents in format 125 = 25%
-     * @param data data for tx
+     * @param callData tx smart contract call data
      * @param derivationPath derivation path
      * @return
      */
@@ -26,7 +27,7 @@ interface TransactionManager {
         currencyToSend: Currency,
         destinationAddress: String,
         increaseBy: Int?,
-        data: String?,
+        callData: SmartContractCallData?,
         derivationPath: String?,
     ): ProxyFees
 
