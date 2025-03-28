@@ -24,6 +24,7 @@ sealed class AmountState {
      * @param appCurrencyCode app currency code
      * @param isEditingDisabled indicated whether amount is editable
      * @param reduceAmountBy reduces amount to be sent by specified value
+     * @param isIgnoreReduce ignores reduce amount value
      */
     data class Data(
         override val isPrimaryButtonEnabled: Boolean,
@@ -37,6 +38,7 @@ sealed class AmountState {
         val appCurrencyCode: String,
         val isEditingDisabled: Boolean = false,
         val reduceAmountBy: BigDecimal = BigDecimal.ZERO,
+        val isIgnoreReduce: Boolean = false,
     ) : AmountState()
 
     data class Empty(
