@@ -16,7 +16,7 @@ internal class FirebaseLogClient(
         logger.logEvent(event, params)
     }
 
-    override fun logErrorEvent(error: Throwable, params: Map<String, String>) {
-        logger.logErrorEvent(error, params)
+    override fun logException(error: Throwable, params: Map<String, String>) {
+        logger.logException(error, params)
     }
 }

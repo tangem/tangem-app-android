@@ -54,7 +54,7 @@ internal class DefaultWalletRouter @Inject constructor(
                 AppRoute.Onboarding(
                     scanResponse = scanResponse,
                     mode = if (continueBackup) {
-                        AppRoute.Onboarding.Mode.AddBackup
+                        AppRoute.Onboarding.Mode.AddBackupWallet1
                     } else {
                         AppRoute.Onboarding.Mode.Onboarding
                     },
