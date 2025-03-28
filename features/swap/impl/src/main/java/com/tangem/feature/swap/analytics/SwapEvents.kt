@@ -117,6 +117,7 @@ sealed class SwapEvents(
             "Error Code" to errorCode.toString(),
         ),
     )
+    // TODO parameters
 
     // region Promo activity
     data class ChangellyActivity(
