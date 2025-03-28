@@ -74,6 +74,7 @@ internal class SendNotificationFactory(
             val sendState = state.sendState ?: return@map persistentListOf()
             val feeState = state.getFeeState(isEditState) ?: return@map persistentListOf()
             val amountState = state.getAmountState(isEditState) as? AmountState.Data ?: return@map persistentListOf()
+            val recipientState = state.getRecipientState(isEditState)
 
             val amountValue = amountState.amountTextField.cryptoAmount.value.orZero()
             val feeValue = feeState.fee?.amount?.value.orZero()
@@ -118,6 +119,7 @@ internal class SendNotificationFactory(
                 )
                 addWarningNotifications(
                     amountState = amountState,
+                    recipientState = recipientState,
                     feeState = feeState,
                     sendState = sendState,
                     sendingAmount = sendingAmount,
@@ -233,6 +235,7 @@ internal class SendNotificationFactory(
 
     private suspend fun MutableList<NotificationUM>.addWarningNotifications(
         amountState: AmountState.Data,
+        recipientState: SendStates.RecipientState?,
         feeState: SendStates.FeeState,
         sendState: SendStates.SendState,
         sendingAmount: BigDecimal,
@@ -247,8 +250,8 @@ internal class SendNotificationFactory(
                 userWalletId = userWalletId,
                 amount = amountValue.convertToSdkAmount(cryptoCurrencyStatus.currency),
                 fee = feeState.fee,
-                memo = null,
-                destination = "",
+                memo = recipientState?.memoTextField?.value.orEmpty(),
+                destination = recipientState?.addressTextField?.value.orEmpty(),
                 network = cryptoCurrencyStatus.currency.network,
             ).leftOrNull()
         }
