@@ -63,7 +63,13 @@ data class BalanceItem(
     val validatorAddress: String?,
     val date: DateTime?,
     val pendingActions: List<PendingAction>,
+    val pendingActionsConstraints: List<PendingActionConstraints>,
     val isPending: Boolean,
+)
+
+data class PendingActionConstraints(
+    val type: StakingActionType,
+    val amountArg: PendingAction.PendingActionArgs.Amount?,
 )
 
 data class PendingAction(
@@ -135,5 +141,21 @@ enum class BalanceType(val order: Int) {
 enum class RewardBlockType {
     NoRewards,
     Rewards,
+    RewardsRequirementsError,
     RewardUnavailable,
+    ;
+
+    /**
+     * Indicated whether action can be performed on available reward
+     * For example, pending action CLAIM_REWARDS could be called
+     */
+    val isActionable: Boolean
+        get() = when (this) {
+            NoRewards,
+            RewardUnavailable,
+            -> false
+            RewardsRequirementsError,
+            Rewards,
+            -> true
+        }
 }

@@ -12,7 +12,7 @@ internal class ScanCardExceptionConverter : TwoWayConverter<TangemError, ScanCar
         else -> ScanCardException.UnknownException(value)
     }
 
-    override fun convertBack(value: ScanCardException): TangemError {
+    override fun convertBack(value: ScanCardException): TangemSdkError {
         return when (value) {
             is ScanCardException.UnknownException -> TangemSdkError.ExceptionError(value)
             is ScanCardException.UserCancelled -> TangemSdkError.UserCancelled()
@@ -31,7 +31,7 @@ internal class ScanCardExceptionConverter : TwoWayConverter<TangemError, ScanCar
         else -> ScanCardException.UnknownException(value)
     }
 
-    private fun concertScanChainException(value: ScanCardException.ChainException): TangemError {
+    private fun concertScanChainException(value: ScanCardException.ChainException): TangemSdkError {
         return when (val e = value as? ScanChainException) {
             is ScanChainException.DisclaimerWasCanceled -> TangemSdkError.UserCancelled()
             is ScanChainException.OnboardingNeeded,

@@ -161,7 +161,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
                     onDone = {
-                        model.stackNavigation.push(OnboardingVisaRoute.PinCode(activationOrderInfo = it))
+                        model.stackNavigation.pushNew(OnboardingVisaRoute.PinCode(activationOrderInfo = it))
                     },
                 ),
             )
@@ -174,7 +174,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 params = OnboardingVisaPinCodeComponent.Params(
                     childParams = childParams,
                     onDone = {
-                        model.stackNavigation.push(
+                        model.stackNavigation.pushNew(
                             OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.PinCode),
                         )
                     },
@@ -190,7 +190,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 params = OnboardingVisaApproveComponent.Params(
                     childParams = childParams,
                     onDone = {
-                        model.stackNavigation.push(
+                        model.stackNavigation.pushNew(
                             OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.Approve),
                         )
                     },

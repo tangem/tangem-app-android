@@ -25,12 +25,13 @@ import com.tangem.core.ui.components.fields.visualtransformations.AmountVisualTr
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import com.tangem.core.ui.utils.rememberDecimalFormat
 import kotlinx.coroutines.delay
 
+@Deprecated("Use AmountField with clicks")
 @Composable
 internal fun AmountField(amountField: AmountFieldModel, appCurrencyCode: String) {
     val decimalFormat = rememberDecimalFormat()
@@ -81,6 +82,60 @@ internal fun AmountField(amountField: AmountFieldModel, appCurrencyCode: String)
 }
 
 @Composable
+internal fun AmountField(
+    amountField: AmountFieldModel,
+    appCurrencyCode: String,
+    onValueChange: (String) -> Unit,
+    onValuePastedTriggerDismiss: () -> Unit,
+) {
+    val decimalFormat = rememberDecimalFormat()
+    val isFiatValue = amountField.isFiatValue
+    val currencyCode = if (isFiatValue) appCurrencyCode else null
+    val (primaryAmount, primaryValue) = if (isFiatValue) {
+        amountField.fiatAmount to amountField.fiatValue
+    } else {
+        amountField.cryptoAmount to amountField.value
+    }
+    val requester = remember { FocusRequester() }
+
+    AmountTextField(
+        value = primaryValue,
+        decimals = primaryAmount.decimals,
+        visualTransformation = AmountVisualTransformation(
+            decimals = primaryAmount.decimals,
+            symbol = primaryAmount.currencySymbol,
+            currencyCode = currencyCode,
+            decimalFormat = decimalFormat,
+        ),
+        onValueChange = onValueChange,
+        keyboardOptions = amountField.keyboardOptions,
+        keyboardActions = amountField.keyboardActions,
+        textStyle = TangemTheme.typography.h2.copy(
+            color = TangemTheme.colors.text.primary1,
+            textAlign = TextAlign.Center,
+        ),
+        isAutoResize = true,
+        isValuePasted = amountField.isValuePasted,
+        onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
+        modifier = Modifier
+            .focusRequester(requester)
+            .padding(
+                top = TangemTheme.dimens.spacing24,
+                start = TangemTheme.dimens.spacing12,
+                end = TangemTheme.dimens.spacing12,
+            )
+            .requiredHeightIn(min = TangemTheme.dimens.size32),
+    )
+
+    LaunchedEffect(key1 = Unit) {
+        delay(timeMillis = 200)
+        requester.requestFocus()
+    }
+
+    AmountSecondary(amountField, appCurrencyCode)
+}
+
+@Composable
 private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: String) {
     val secondaryAmount = if (amountField.isFiatValue) amountField.cryptoAmount else amountField.fiatAmount
     Box(
@@ -96,11 +151,12 @@ private fun AmountSecondary(amountField: AmountFieldModel, appCurrencyCode: Stri
         val text = if (amountField.isFiatValue) {
             secondaryAmount.value.format { crypto(secondaryAmount.currencySymbol, secondaryAmount.decimals) }
         } else {
-            BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = secondaryAmount.value,
-                fiatCurrencySymbol = secondaryAmount.currencySymbol,
-                fiatCurrencyCode = appCurrencyCode,
-            )
+            secondaryAmount.value.format {
+                fiat(
+                    fiatCurrencySymbol = secondaryAmount.currencySymbol,
+                    fiatCurrencyCode = appCurrencyCode,
+                )
+            }
         }
         Text(
             text = text,

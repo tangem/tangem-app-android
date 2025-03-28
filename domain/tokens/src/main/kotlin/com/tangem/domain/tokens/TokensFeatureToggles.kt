@@ -7,5 +7,5 @@ package com.tangem.domain.tokens
  */
 interface TokensFeatureToggles {
 
-    val isBalancesCachingEnabled: Boolean
+    val isNetworksLoadingRefactoringEnabled: Boolean
 }
