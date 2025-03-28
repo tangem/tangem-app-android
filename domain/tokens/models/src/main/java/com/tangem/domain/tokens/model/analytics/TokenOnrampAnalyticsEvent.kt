@@ -8,7 +8,7 @@ import com.tangem.core.analytics.models.AnalyticsParam.Key.TOKEN_PARAM
 class TokenOnrampAnalyticsEvent(
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent("Onramp", event, params, null) {
+) : AnalyticsEvent("Onramp", event, params) {
 
     class OnrampStatusOpened(tokenSymbol: String, provider: String, fiatCurrency: String) : TokenScreenAnalyticsEvent(
         event = "Onramp Status Opened",
