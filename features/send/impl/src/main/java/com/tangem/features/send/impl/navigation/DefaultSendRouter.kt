@@ -33,10 +33,7 @@ internal class DefaultSendRouter @Inject constructor(
 
     override fun openQrCodeScanner(network: String) {
         router.push(
-            AppRoute.QrScanning(
-                source = AppRoute.QrScanning.Source.SEND,
-                networkName = network,
-            ),
+            AppRoute.QrScanning(source = AppRoute.QrScanning.Source.Send(network)),
         )
     }
 }
