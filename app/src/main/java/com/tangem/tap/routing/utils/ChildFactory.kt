@@ -87,31 +87,28 @@ internal class ChildFactory @Inject constructor(
 
     fun createChild(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
         return if (routingFeatureToggles.isNavigationRefactoringEnabled) {
-            createChildNew(route, contextFactory)
+            createChildNew(route, contextFactory(route))
         } else {
             createChildLegacy(route, contextFactory)
         }
     }
 
     @Suppress("LongMethod", "CyclomaticComplexMethod")
-    private fun createChildNew(route: AppRoute, contextFactory: (route: AppRoute) -> AppComponentContext): Child {
-        componentContexts[route] = contextFactory(route)
-
-        // region Child creation
+    private fun createChildNew(route: AppRoute, context: AppComponentContext): Child {
         return when (route) {
             is AppRoute.Initial -> {
                 Child.Initial
             }
             is AppRoute.Details -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = DetailsComponent.Params(route.userWalletId),
                     componentFactory = detailsComponentFactory,
                 )
             }
             is AppRoute.Disclaimer -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = DisclaimerComponent.Params(route.isTosAccepted),
                     componentFactory = disclaimerComponentFactory,
                 )
@@ -124,14 +121,14 @@ internal class ChildFactory @Inject constructor(
                 }
 
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = ManageTokensComponent.Params(route.userWalletId, source),
                     componentFactory = manageTokensComponentFactory,
                 )
             }
             is AppRoute.Welcome -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = WelcomeComponent.Params(
                         intent = route.intent,
                     ),
@@ -143,14 +140,14 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.WalletSettings -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = WalletSettingsComponent.Params(route.userWalletId),
                     componentFactory = walletSettingsComponentFactory,
                 )
             }
             is AppRoute.MarketsTokenDetails -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = MarketsTokenDetailsComponent.Params(
                         token = route.token,
                         appCurrency = route.appCurrency,
@@ -167,7 +164,7 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.Onramp -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = OnrampComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrency = route.currency,
@@ -178,35 +175,35 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.OnrampSuccess -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = OnrampSuccessComponent.Params(route.externalTxId),
                     componentFactory = onrampSuccessComponentFactory,
                 )
             }
             is AppRoute.BuyCrypto -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = BuyCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = buyCryptoComponentFactory,
                 )
             }
             is AppRoute.SellCrypto -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = SellCryptoComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = sellCryptoComponentFactory,
                 )
             }
             is AppRoute.SwapCrypto -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = SwapSelectTokensComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = swapSelectTokensComponentFactory,
                 )
             }
             is AppRoute.Onboarding -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = OnboardingEntryComponent.Params(
                         scanResponse = route.scanResponse,
                         mode = when (route.mode) {
@@ -222,7 +219,7 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.Stories -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = StoriesComponent.Params(
                         storyId = route.storyId,
                         nextScreen = route.nextScreen,
@@ -233,7 +230,7 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.CurrencyDetails -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = TokenDetailsComponent.Params(
                         userWalletId = route.userWalletId,
                         currency = route.currency,
@@ -243,7 +240,7 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.Staking -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = StakingComponent.Params(
                         userWalletId = route.userWalletId,
                         cryptoCurrencyId = route.cryptoCurrencyId,
@@ -254,7 +251,7 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.Swap -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = SwapComponent.Params(
                         currencyFrom = route.currencyFrom,
                         currencyTo = route.currencyTo,
@@ -268,7 +265,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.Send -> {
                 if (sendFeatureToggles.isSendV2Enabled) {
                     createComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
+                        context = context,
                         params = com.tangem.features.send.v2.api.SendComponent.Params(
                             userWalletId = route.userWalletId,
                             currency = route.currency,
@@ -281,7 +278,7 @@ internal class ChildFactory @Inject constructor(
                     )
                 } else {
                     createComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
+                        context = context,
                         params = SendComponent.Params(
                             userWalletId = route.userWalletId,
                             currency = route.currency,
@@ -296,7 +293,7 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.Home -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = Unit,
                     componentFactory = homeComponentFactory,
                 )
@@ -304,13 +301,13 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.WalletConnectSessions -> {
                 if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) {
                     createComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
+                        context = context,
                         params = Unit,
                         componentFactory = redesignedWalletConnectComponentFactory,
                     )
                 } else {
                     createComponentChild(
-                        contextProvider = contextProvider(route, contextFactory),
+                        context = context,
                         params = Unit,
                         componentFactory = walletConnectComponentFactory,
                     )
@@ -322,7 +319,7 @@ internal class ChildFactory @Inject constructor(
                     is AppRoute.QrScanning.Source.WalletConnect -> SourceType.WALLET_CONNECT
                 }
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = QrScanningComponent.Params(
                         source = source,
                         networkName = (route.source as? AppRoute.QrScanning.Source.Send)?.networkName,
@@ -332,35 +329,35 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.AccessCodeRecovery -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = Unit,
                     componentFactory = accessCodeRecoveryComponentFactory,
                 )
             }
             is AppRoute.CardSettings -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = CardSettingsComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = cardSettingsComponentFactory,
                 )
             }
             is AppRoute.AppCurrencySelector -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = Unit,
                     componentFactory = appCurrencySelectorComponentFactory,
                 )
             }
             is AppRoute.AppSettings -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = Unit,
                     componentFactory = appSettingsComponentFactory,
                 )
             }
             is AppRoute.DetailsSecurity -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = SecurityModeComponent.Params(
                         userWalletId = route.userWalletId,
                     ),
@@ -369,7 +366,7 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.ResetToFactory -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = ResetCardComponent.Params(
                         userWalletId = route.userWalletId,
                         cardId = route.cardId,
@@ -381,21 +378,21 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.ReferralProgram -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = ReferralComponent.Params(route.userWalletId),
                     componentFactory = referralComponentFactory,
                 )
             }
             is AppRoute.PushNotification -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = Unit,
                     componentFactory = pushNotificationsComponentFactory,
                 )
             }
             is AppRoute.Wallet -> {
                 createComponentChild(
-                    contextProvider = contextProvider(route, contextFactory),
+                    context = context,
                     params = Unit,
                     componentFactory = walletComponentFactory,
                 )
