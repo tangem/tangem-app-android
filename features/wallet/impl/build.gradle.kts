@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.domain.analytics)
     implementation(projects.domain.visa)
     implementation(projects.domain.staking.models)
+    implementation(projects.domain.staking)
     implementation(projects.domain.markets.models)
     implementation(projects.domain.feedback)
     implementation(projects.domain.onramp.models)
