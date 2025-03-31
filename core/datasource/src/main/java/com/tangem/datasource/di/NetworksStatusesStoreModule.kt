@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
@@ -25,22 +26,29 @@ import kotlinx.coroutines.SupervisorJob
 internal object NetworksStatusesStoreModule {
 
     @Provides
-    fun provideNetworksStatusesStore(
+    fun providePersistenceNetworksStatusesStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
+    ): DataStore<Map<String, Set<NetworkStatusDM>>> {
+        return DataStoreFactory.create(
+            serializer = MoshiDataStoreSerializer(
+                moshi = moshi,
+                types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
+                defaultValue = emptyMap(),
+            ),
+            produceFile = { context.dataStoreFile(fileName = "networks_statuses") },
+            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+        )
+    }
+
+    @Provides
+    fun provideNetworksStatusesStore(
+        persistenceNetworksStatusesStore: DataStore<Map<String, Set<NetworkStatusDM>>>,
     ): NetworksStatusesStore {
         return DefaultNetworksStatusesStore(
             runtimeDataStore = RuntimeDataStore(),
-            persistenceDataStore = DataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = mapWithStringKeyTypes(valueTypes = setTypes<NetworkStatusDM>()),
-                    defaultValue = emptyMap(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "networks_statuses") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
-            ),
+            persistenceDataStore = persistenceNetworksStatusesStore,
         )
     }
 }
