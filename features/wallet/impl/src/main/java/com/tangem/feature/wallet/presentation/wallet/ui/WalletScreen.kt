@@ -59,6 +59,7 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalIsNavigationRefactoringEnabled
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -427,7 +428,11 @@ private inline fun BaseScaffoldWithMarkets(
                             .padding(bottom = 24.dp)
                             .fillMaxWidth(fraction = 0.7f),
                         isVisible = state.showMarketsOnboarding,
-                        availableHeight = maxHeight - statusBarHeight - bottomBarHeight,
+                        availableHeight = if (LocalIsNavigationRefactoringEnabled.current) {
+                            maxHeight
+                        } else {
+                            maxHeight - statusBarHeight - bottomBarHeight
+                        },
                         bottomSheetState = bottomSheetState,
                     )
                 }
