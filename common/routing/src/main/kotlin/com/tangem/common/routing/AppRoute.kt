@@ -256,6 +256,7 @@ sealed class AppRoute(val path: String) : Route {
         enum class Mode {
             Onboarding, // general Mode
             AddBackup, // continue backup process for existing wallet 1
+            ContinueFinalize, // continue finalize process (unfinished backup dialog)
         }
     }
 
