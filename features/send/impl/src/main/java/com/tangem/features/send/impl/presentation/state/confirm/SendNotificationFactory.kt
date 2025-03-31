@@ -1,9 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.confirm
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -29,13 +27,14 @@ import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.*
-import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
@@ -297,7 +296,7 @@ internal class SendNotificationFactory(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
-        val threshold = Blockchain.Tezos.minimalAmount()
+        val threshold = getTezosThreshold()
         val isTotalBalance = sendAmount >= balance && balance > threshold
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
