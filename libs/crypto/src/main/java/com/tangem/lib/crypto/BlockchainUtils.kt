@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.compatibility.l2BlockchainsList
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.lib.crypto.converter.XrpTaggedAddressConverter
 import com.tangem.lib.crypto.models.XrpTaggedAddress
 import java.math.BigDecimal
@@ -125,7 +124,7 @@ object BlockchainUtils {
         return l2BlockchainsList.contains(blockchain)
     }
 
-    fun getTezosThreshold(): BigDecimal = Blockchain.Tezos.minimalAmount()
+    fun getTezosThreshold(): BigDecimal = BigDecimal.ONE.movePointLeft(Blockchain.Tezos.decimals())
 
     /**
      * Blockchains not affecting total balance counting on errors
