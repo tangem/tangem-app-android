@@ -227,7 +227,9 @@ internal class MultiWalletFinalizeModel @Inject constructor(
             val userWalletCreated = createUserWallet(scanResponse)
 
             val userWallet = when (params.parentParams.mode) {
-                OnboardingMultiWalletComponent.Mode.Onboarding -> {
+                OnboardingMultiWalletComponent.Mode.Onboarding,
+                OnboardingMultiWalletComponent.Mode.ContinueFinalize,
+                -> {
                     userWalletsListManager.save(
                         userWallet = userWalletCreated.copy(
                             scanResponse = scanResponse.updateScanResponseAfterBackup(),
