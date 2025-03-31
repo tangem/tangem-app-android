@@ -13,6 +13,8 @@ import com.tangem.domain.staking.model.StakingAvailability
 import com.tangem.domain.staking.model.StakingEntryInfo
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.utils.getRewardStakingBalance
+import com.tangem.domain.staking.utils.getTotalStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.IconState
@@ -55,7 +57,7 @@ internal class TokenDetailsStakingInfoConverter(
     private fun getStakingInfoBlock(status: CryptoCurrencyStatus, state: TokenDetailsState): StakingBlockUM? {
         val yieldBalance = status.value.yieldBalance as? YieldBalance.Data
 
-        val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance()
+        val stakingCryptoAmount = yieldBalance?.getTotalStakingBalance(status.currency.network.id.value)
         val pendingBalances = yieldBalance?.balance?.items ?: emptyList()
 
         val iconState = state.tokenInfoBlockState.iconState
