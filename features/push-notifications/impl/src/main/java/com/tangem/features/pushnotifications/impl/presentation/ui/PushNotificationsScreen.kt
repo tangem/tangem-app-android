@@ -1,9 +1,7 @@
 package com.tangem.features.pushnotifications.impl.presentation.ui
 
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.showcase.Showcase
 import com.tangem.core.ui.components.showcase.model.ShowcaseButtonModel
@@ -21,7 +19,7 @@ internal fun PushNotificationsScreen(
     onAllowPermission: () -> Unit,
     onDenyPermission: () -> Unit,
 ) {
-    val isClicked = remember { mutableStateOf(false) }
+    var isClicked by remember { mutableStateOf(false) }
     val requestPushPermission = requestPushPermission(
         isClicked = isClicked,
         onAllow = onAllowPermission,
@@ -45,7 +43,7 @@ internal fun PushNotificationsScreen(
         primaryButton = ShowcaseButtonModel(
             buttonText = resourceReference(R.string.common_allow),
             onClick = {
-                isClicked.value = true
+                isClicked = true
                 onRequest()
                 requestPushPermission()
             },
