@@ -463,10 +463,6 @@ fun Blockchain.amountToCreateAccount(walletManager: WalletManager, token: Token?
     }
 }
 
-fun Blockchain.minimalAmount(): BigDecimal {
-    return BigDecimal.ONE.movePointLeft(decimals())
-}
-
 const val OLD_POLYGON_NAME = "matic-network"
 const val NEW_POLYGON_NAME = "polygon-ecosystem-token"
 
