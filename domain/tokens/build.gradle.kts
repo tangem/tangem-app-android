@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.features.swap.domain.models)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.promo)
+    implementation(projects.domain.networks)
 
     /** Project - Api */
     implementation(projects.features.send.api)
@@ -50,6 +51,7 @@ dependencies {
     /** Tests */
     testImplementation(deps.test.junit)
     testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.mockk)
     testImplementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
