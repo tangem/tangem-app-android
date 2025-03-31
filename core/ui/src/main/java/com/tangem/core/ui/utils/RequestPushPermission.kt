@@ -2,7 +2,6 @@ package com.tangem.core.ui.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -16,7 +15,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 @Composable
 fun requestPushPermission(
     pushPermission: String?,
-    isClicked: MutableState<Boolean>,
+    isClicked: Boolean,
     onAllow: () -> Unit,
     onDeny: () -> Unit,
 ): () -> Unit {
@@ -26,7 +25,7 @@ fun requestPushPermission(
 
     // Check if user granted permission and close bottom sheet
     LaunchedEffect(key1 = permissionState?.status, isClicked) {
-        if (!isClicked.value) return@LaunchedEffect
+        if (!isClicked) return@LaunchedEffect
         if (permissionState?.status?.isGranted == true) {
             onAllow()
         } else {
