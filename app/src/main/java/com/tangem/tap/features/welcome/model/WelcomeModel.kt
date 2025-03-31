@@ -2,6 +2,7 @@ package com.tangem.tap.features.welcome.model
 
 import com.tangem.common.core.TangemError
 import com.tangem.core.analytics.Analytics
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.finisher.AppFinisher
@@ -23,6 +24,7 @@ import org.rekotlin.StoreSubscriber
 import javax.inject.Inject
 
 // FIXME: Remove redux: [REDACTED_JIRA]
+@ModelScoped
 internal class WelcomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val appFinisher: AppFinisher,
