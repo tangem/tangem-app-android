@@ -14,8 +14,8 @@ import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
-import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.isZero
@@ -121,36 +121,27 @@ class TokenItemStateConverter(
 
     companion object {
 
-        fun CryptoCurrencyStatus.getFormattedFiatAmount(appCurrency: AppCurrency, includeStaking: Boolean): String {
+        fun CryptoCurrencyStatus.getFormattedFiatAmount(appCurrency: AppCurrency): String {
             val fiatAmount = value.fiatAmount ?: return DASH_SIGN
 
-            val totalAmount = if (includeStaking) {
-                val fiatYieldBalance = value.fiatRate?.times(getStakedBalance()).orZero()
-
-                fiatAmount.plus(fiatYieldBalance)
-            } else {
-                fiatAmount
-            }
+            val fiatYieldBalance = value.fiatRate?.times(getStakedBalance()).orZero()
+            val totalAmount = fiatAmount.plus(fiatYieldBalance)
 
             return totalAmount.format {
                 fiat(fiatCurrencyCode = appCurrency.code, fiatCurrencySymbol = appCurrency.symbol)
             }
         }
 
-        fun CryptoCurrencyStatus.getFormattedCryptoAmount(includeStaking: Boolean): String {
+        fun CryptoCurrencyStatus.getFormattedCryptoAmount(): String {
             val cryptoAmount = value.amount ?: return DASH_SIGN
 
-            val totalAmount = if (includeStaking) {
-                cryptoAmount.plus(getStakedBalance())
-            } else {
-                cryptoAmount
-            }
+            val totalAmount = cryptoAmount.plus(getStakedBalance())
 
             return totalAmount.format { crypto(currency) }
         }
 
-        private fun CryptoCurrencyStatus.getStakedBalance() =
-            (value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance().orZero()
+        private fun CryptoCurrencyStatus.getStakedBalance() = (value.yieldBalance as? YieldBalance.Data)
+            ?.getTotalWithRewardsStakingBalance(blockchainId = currency.network.id.value).orZero()
 
         private fun createTitleState(currencyStatus: CryptoCurrencyStatus): TokenItemState.TitleState {
             return when (val value = currencyStatus.value) {
@@ -200,11 +191,7 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.Subtitle2State.TextContent(
-                        text = status.getFormattedCryptoAmount(
-                            includeStaking = BlockchainUtils.isIncludeStakingTotalBalance(
-                                status.currency.network.id.value,
-                            ),
-                        ),
+                        text = status.getFormattedCryptoAmount(),
                         isFlickering = status.value.isFlickering(),
                     )
                 }
@@ -227,12 +214,7 @@ class TokenItemStateConverter(
                 is CryptoCurrencyStatus.NoAccount,
                 -> {
                     TokenItemState.FiatAmountState.Content(
-                        text = status.getFormattedFiatAmount(
-                            appCurrency = appCurrency,
-                            includeStaking = BlockchainUtils.isIncludeStakingTotalBalance(
-                                status.currency.network.id.value,
-                            ),
-                        ),
+                        text = status.getFormattedFiatAmount(appCurrency = appCurrency),
                         isFlickering = status.value.isFlickering(),
                         icons = buildList {
                             if (!status.getStakedBalance().isZero()) {
