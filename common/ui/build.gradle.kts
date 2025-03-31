@@ -35,6 +35,7 @@ dependencies {
     implementation(projects.domain.models)
     implementation(projects.domain.legacy)
     implementation(projects.domain.staking.models)
+    implementation(projects.domain.staking)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.wallets.models)
