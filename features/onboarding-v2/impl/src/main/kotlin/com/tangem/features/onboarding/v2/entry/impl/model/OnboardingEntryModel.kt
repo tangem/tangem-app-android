@@ -67,8 +67,12 @@ internal class OnboardingEntryModel @Inject constructor(
 
     private fun routeByProductType(scanResponse: ScanResponse): OnboardingRoute {
         val multiWalletNavigationMode = when (params.multiWalletMode) {
-            OnboardingEntryComponent.MultiWalletMode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
-            OnboardingEntryComponent.MultiWalletMode.AddBackup -> OnboardingMultiWalletComponent.Mode.AddBackup
+            OnboardingEntryComponent.MultiWalletMode.Onboarding ->
+                OnboardingMultiWalletComponent.Mode.Onboarding
+            OnboardingEntryComponent.MultiWalletMode.AddBackup ->
+                OnboardingMultiWalletComponent.Mode.AddBackup
+            OnboardingEntryComponent.MultiWalletMode.ContinueFinalize ->
+                OnboardingMultiWalletComponent.Mode.ContinueFinalize
         }
 
         return when (scanResponse.productType) {
