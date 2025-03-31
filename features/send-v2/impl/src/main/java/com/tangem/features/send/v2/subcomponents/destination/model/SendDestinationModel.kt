@@ -117,10 +117,7 @@ internal class SendDestinationModel @Inject constructor(
     override fun onQrCodeScanClick() {
         analyticsEventHandler.send(SendDestinationAnalyticEvents.QrCodeButtonClicked(analyticsCategoryName))
         router.push(
-            AppRoute.QrScanning(
-                source = AppRoute.QrScanning.Source.SEND,
-                networkName = cryptoCurrency.network.name,
-            ),
+            AppRoute.QrScanning(source = AppRoute.QrScanning.Source.Send(cryptoCurrency.network.name)),
         )
     }
 

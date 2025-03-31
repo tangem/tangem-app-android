@@ -145,14 +145,19 @@ sealed class AppRoute(val path: String) : Route {
     data object WalletConnectSessions : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
-    data class QrScanning(
-        val source: Source,
-        val networkName: String? = null,
-    ) : AppRoute(path = "/$source/qr_scanning${if (networkName != null) "/$networkName" else ""}") {
+    data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
 
-        enum class Source {
-            WALLET_CONNECT,
-            SEND,
+        @Serializable
+        sealed class Source {
+            val path: String
+                get() = when (this) {
+                    is Send -> "/$networkName"
+                    WalletConnect -> ""
+                }
+
+            data class Send(val networkName: String) : Source()
+
+            data object WalletConnect : Source()
         }
     }
 

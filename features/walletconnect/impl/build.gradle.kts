@@ -18,10 +18,15 @@ dependencies {
     implementation(projects.core.configToggles)
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.common.routing)
 
     /** Domain models */
+    implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+
+    /** Domain */
+    implementation(projects.domain.qrScanning)
 
     /** DI */
     implementation(deps.hilt.android)
@@ -39,6 +44,7 @@ dependencies {
     implementation(deps.compose.ui.tooling)
 
     /** Other */
+    implementation(deps.arrow.core)
     implementation(deps.decompose.ext.compose)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
