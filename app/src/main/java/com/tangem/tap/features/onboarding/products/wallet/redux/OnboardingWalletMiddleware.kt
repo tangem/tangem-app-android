@@ -624,7 +624,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             if (action.unfinishedBackupScanResponse != null) {
                 // onboarding V2
                 store.dispatchNavigationAction {
-                    push(AppRoute.Onboarding(scanResponse = action.unfinishedBackupScanResponse))
+                    push(
+                        AppRoute.Onboarding(
+                            scanResponse = action.unfinishedBackupScanResponse,
+                            mode = AppRoute.Onboarding.Mode.ContinueFinalize,
+                        ),
+                    )
                 }
             } else {
                 store.dispatch(
