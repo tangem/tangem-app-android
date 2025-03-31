@@ -14,6 +14,7 @@ interface OnboardingEntryComponent : ComposableContentComponent {
     enum class MultiWalletMode {
         Onboarding,
         AddBackup,
+        ContinueFinalize,
     }
 
     interface Factory : ComponentFactory<Params, OnboardingEntryComponent>

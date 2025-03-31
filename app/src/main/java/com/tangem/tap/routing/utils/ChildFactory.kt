@@ -204,6 +204,8 @@ internal class ChildFactory @Inject constructor(
                         multiWalletMode = when (route.mode) {
                             AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
                             AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                            AppRoute.Onboarding.Mode.ContinueFinalize ->
+                                OnboardingEntryComponent.MultiWalletMode.ContinueFinalize
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
@@ -648,6 +650,8 @@ internal class ChildFactory @Inject constructor(
                         multiWalletMode = when (route.mode) {
                             AppRoute.Onboarding.Mode.Onboarding -> OnboardingEntryComponent.MultiWalletMode.Onboarding
                             AppRoute.Onboarding.Mode.AddBackup -> OnboardingEntryComponent.MultiWalletMode.AddBackup
+                            AppRoute.Onboarding.Mode.ContinueFinalize ->
+                                OnboardingEntryComponent.MultiWalletMode.ContinueFinalize
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
