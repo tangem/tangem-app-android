@@ -108,6 +108,7 @@ dependencies {
     implementation(projects.domain.onramp)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.networks)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -150,6 +151,7 @@ dependencies {
     implementation(projects.data.manageTokens)
     implementation(projects.data.nft)
     implementation(projects.data.onramp)
+    implementation(projects.data.networks)
 
     /** Features */
     implementation(projects.features.onboarding)
