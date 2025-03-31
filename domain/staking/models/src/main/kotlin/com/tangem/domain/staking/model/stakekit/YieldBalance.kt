@@ -15,30 +15,7 @@ sealed class YieldBalance {
         override val address: String,
         val balance: YieldBalanceItem,
         val source: StatusSource,
-    ) : YieldBalance() {
-        fun getTotalWithRewardsStakingBalance(): BigDecimal {
-            return balance.items.sumOf { it.amount }
-        }
-
-        fun getTotalStakingBalance(): BigDecimal {
-            return balance.items
-                .filterNot { it.type == BalanceType.REWARDS }
-                .sumOf { it.amount }
-        }
-
-        fun getRewardStakingBalance(): BigDecimal {
-            return balance.items
-                .filter { it.type == BalanceType.REWARDS }
-                .sumOf { it.amount }
-        }
-
-        fun getValidatorsCount(): Int {
-            return balance.items
-                .filterNot { it.validatorAddress.isNullOrBlank() }
-                .distinctBy { it.validatorAddress }
-                .size
-        }
-    }
+    ) : YieldBalance()
 
     data class Empty(
         override val integrationId: String?,
