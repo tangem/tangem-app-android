@@ -23,6 +23,7 @@ dependencies {
     implementation(projects.domain.txhistory.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.staking.models)
+    implementation(projects.domain.staking)
 
     /** Project - Data */
     implementation(projects.core.datasource)
