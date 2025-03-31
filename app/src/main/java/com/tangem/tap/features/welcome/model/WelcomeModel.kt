@@ -15,7 +15,6 @@ import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.features.welcome.redux.WelcomeState
 import com.tangem.tap.features.welcome.ui.WelcomeScreenState
 import com.tangem.tap.features.welcome.ui.model.WarningModel
-import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,8 +41,6 @@ internal class WelcomeModel @Inject constructor(
     val state: MutableStateFlow<WelcomeScreenState> = MutableStateFlow(initialState)
 
     init {
-        store.dispatch(WelcomeAction.SetCoroutineScope(mainScope))
-
         subscribeToStoreChanges()
         initGlobalState()
 
@@ -89,7 +86,6 @@ internal class WelcomeModel @Inject constructor(
     }
 
     override fun onDestroy() {
-        store.dispatch(WelcomeAction.ClearCoroutineScope)
         store.unsubscribe(subscriber = this)
 
         super.onDestroy()
