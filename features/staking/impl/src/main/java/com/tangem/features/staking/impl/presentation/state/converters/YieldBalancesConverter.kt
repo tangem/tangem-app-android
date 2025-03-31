@@ -7,6 +7,7 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
+import com.tangem.domain.staking.utils.getRewardStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.YieldReward
@@ -31,11 +32,10 @@ internal class YieldBalancesConverter(
         val appCurrency = appCurrencyProvider()
 
         val cryptoCurrency = cryptoCurrencyStatus.currency
-        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance
+        val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         val balanceToShowItems = balancesToShowProvider()
 
-        return if (yieldBalance is YieldBalance.Data || balanceToShowItems.any { it.isPending }) {
-            val yieldBalance = yieldBalance as? YieldBalance.Data
+        return if (yieldBalance != null || balanceToShowItems.any { it.isPending }) {
             val cryptoRewardsValue = yieldBalance?.getRewardStakingBalance()
 
             val fiatRate = cryptoCurrencyStatus.value.fiatRate
