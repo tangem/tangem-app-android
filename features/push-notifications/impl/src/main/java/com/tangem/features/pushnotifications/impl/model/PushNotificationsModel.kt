@@ -17,7 +17,7 @@ import javax.inject.Inject
 
 @Stable
 @ModelScoped
-class PushNotificationsModel @Inject constructor(
+internal class PushNotificationsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val neverRequestPermissionUseCase: NeverRequestPermissionUseCase,
     private val neverToInitiallyAskPermissionUseCase: NeverToInitiallyAskPermissionUseCase,
