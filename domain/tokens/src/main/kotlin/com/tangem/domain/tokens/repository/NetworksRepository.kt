@@ -36,17 +36,6 @@ interface NetworksRepository {
     suspend fun fetchNetworkStatuses(userWalletId: UserWalletId, networks: Set<Network>, refresh: Boolean = false)
 
     /**
-     * Retrieves updates of network statuses of specified blockchain networks for a specific user wallet.
-     *
-     * Loads remote network statuses if they have expired.
-     *
-     * @param userWalletId The unique identifier of the user wallet.
-     * @param networks A set of network which statuses are to be retrieved.
-     * @return A [Flow] emitting a set of [NetworkStatus] objects corresponding to the specified networks.
-     */
-    fun getNetworkStatusesUpdatesLegacy(userWalletId: UserWalletId, networks: Set<Network>): Flow<Set<NetworkStatus>>
-
-    /**
      * Fetches pending transactions for given network
      *
      * @param userWalletId The unique identifier of the user wallet.
