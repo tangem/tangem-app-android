@@ -318,14 +318,14 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.QrScanning -> {
                 val source = when (route.source) {
-                    AppRoute.QrScanning.Source.SEND -> SourceType.SEND
-                    AppRoute.QrScanning.Source.WALLET_CONNECT -> SourceType.WALLET_CONNECT
+                    is AppRoute.QrScanning.Source.Send -> SourceType.SEND
+                    is AppRoute.QrScanning.Source.WalletConnect -> SourceType.WALLET_CONNECT
                 }
                 createComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
                     params = QrScanningComponent.Params(
                         source = source,
-                        networkName = route.networkName,
+                        networkName = (route.source as? AppRoute.QrScanning.Source.Send)?.networkName,
                     ),
                     componentFactory = qrScanningComponentFactory,
                 )
@@ -536,14 +536,14 @@ internal class ChildFactory @Inject constructor(
             }
             is AppRoute.QrScanning -> {
                 val source = when (route.source) {
-                    AppRoute.QrScanning.Source.SEND -> SourceType.SEND
-                    AppRoute.QrScanning.Source.WALLET_CONNECT -> SourceType.WALLET_CONNECT
+                    is AppRoute.QrScanning.Source.Send -> SourceType.SEND
+                    is AppRoute.QrScanning.Source.WalletConnect -> SourceType.WALLET_CONNECT
                 }
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
                     params = QrScanningComponent.Params(
                         source = source,
-                        networkName = route.networkName,
+                        networkName = (route.source as? AppRoute.QrScanning.Source.Send)?.networkName,
                     ),
                     componentFactory = qrScanningComponentFactory,
                 )
