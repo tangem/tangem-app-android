@@ -17,6 +17,7 @@ import com.tangem.domain.tokens.repository.MockQuotesRepository
 import com.tangem.domain.tokens.repository.MockStakingRepository
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
+import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -176,9 +177,12 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
             quotesRepository = MockQuotesRepository(quotes),
             networksRepository = MockNetworksRepository(statuses),
             stakingRepository = MockStakingRepository(),
+
             tokensFeatureToggles = object : TokensFeatureToggles {
                 override val isNetworksLoadingRefactoringEnabled: Boolean = false
             },
+            singleNetworkStatusSupplier = mockk(),
+            multiNetworkStatusFetcher = mockk(),
         ),
         dispatchers = dispatchers,
     )
