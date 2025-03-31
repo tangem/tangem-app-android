@@ -45,7 +45,7 @@
     },
     {
         "name": "NEW_ATTESTATION_ENABLED",
-        "version": "undefined"
+        "version": "5.23.0"
     },
     {
         "name": "TWIN_REFACTORING_ENABLED",
@@ -61,6 +61,6 @@
     },
     {
         "name": "NETWORKS_LOADING_REFACTORING_ENABLED",
-        "version": "undefined"
+        "version": "5.23.0"
     }
 ]
