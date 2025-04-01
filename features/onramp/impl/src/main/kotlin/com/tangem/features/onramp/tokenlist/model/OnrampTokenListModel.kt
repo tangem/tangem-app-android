@@ -11,13 +11,13 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.core.utils.getOrElse
-import com.tangem.domain.exchange.ExchangeableState
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
@@ -230,7 +230,7 @@ internal class OnrampTokenListModel @Inject constructor(
                     scanResponse = scanResponse,
                     userWalletId = params.userWalletId,
                     cryptoCurrency = status.currency,
-                )
+                ).isAvailable()
             }
             OnrampOperation.SELL -> {
                 rampStateManager.availableForSell(
@@ -242,21 +242,14 @@ internal class OnrampTokenListModel @Inject constructor(
                 val isAvailable = rampStateManager.availableForSwap(
                     userWalletId = params.userWalletId,
                     cryptoCurrency = status.currency,
-                ).isSwapAvailable() && !status.currency.isCustom
+                ).isAvailable() && !status.currency.isCustom
 
                 isAvailable && status.value !is CryptoCurrencyStatus.NoQuote
             }
         }
     }
 
-    private fun ExchangeableState.isSwapAvailable(): Boolean {
-        return when (this) {
-            ExchangeableState.AssetNotFound,
-            ExchangeableState.Error,
-            ExchangeableState.Loading,
-            ExchangeableState.NotExchangeable,
-            -> false
-            ExchangeableState.Exchangeable -> true
-        }
+    private fun ScenarioUnavailabilityReason.isAvailable(): Boolean {
+        return this == ScenarioUnavailabilityReason.None
     }
 }
