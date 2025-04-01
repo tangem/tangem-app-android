@@ -6,6 +6,7 @@ import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -33,6 +34,8 @@ class FetchTokenListUseCase(
     private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     /**
@@ -104,10 +107,20 @@ class FetchTokenListUseCase(
         networks: Set<Network>,
         refresh: Boolean,
     ) {
-        catch(
-            block = { networksRepository.getNetworkStatusesSync(userWalletId, networks, refresh) },
-        ) {
-            raise(TokenListError.DataError(it))
+        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+            if (refresh) {
+                multiNetworkStatusFetcher(
+                    params = MultiNetworkStatusFetcher.Params(userWalletId, networks),
+                )
+                    .mapLeft { TokenListError.DataError(it) }
+                    .bind()
+            }
+        } else {
+            catch(
+                block = { networksRepository.getNetworkStatusesSync(userWalletId, networks, refresh) },
+            ) {
+                raise(TokenListError.DataError(it))
+            }
         }
     }
 
