@@ -10,5 +10,6 @@ internal data class NFTCollectionUM(
     val logoUrl: String?,
     val description: TextReference,
     val assets: NFTCollectionAssetsListUM,
+    val isExpanded: Boolean,
     val onExpandClick: () -> Unit,
 )
