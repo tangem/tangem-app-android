@@ -34,19 +34,19 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = { }) {
+internal fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier) {
     when (state) {
         is WalletNFTItemUM.Hidden -> Unit
         is WalletNFTItemUM.Empty -> WalletNFTItemEmpty(
             modifier = modifier,
-            onClick = onClick,
+            onClick = state.onItemClick,
         )
         is WalletNFTItemUM.Failed -> WalletNFTItemFailed(modifier = modifier)
         is WalletNFTItemUM.Loading -> WalletNFTItemLoading(modifier = modifier)
 
         is WalletNFTItemUM.Content -> WalletNFTItemContent(
             state = state,
-            onClick = onClick,
+            onClick = state.onItemClick,
             modifier = modifier,
         )
     }
@@ -396,16 +396,15 @@ private fun RowContentContainer(
 @Composable
 private fun Preview_WalletNFTItem(@PreviewParameter(WalletNFTItemProvider::class) state: WalletNFTItemUM) {
     TangemThemePreview {
-        WalletNFTItem(
-            state = state,
-            onClick = {},
-        )
+        WalletNFTItem(state = state)
     }
 }
 
 private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletNFTItemUM>(
     collection = listOf(
-        WalletNFTItemUM.Empty,
+        WalletNFTItemUM.Empty(
+            onItemClick = { },
+        ),
         WalletNFTItemUM.Loading,
         WalletNFTItemUM.Failed,
         WalletNFTItemUM.Content(
@@ -415,6 +414,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = true,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -424,6 +424,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = false,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -434,6 +435,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = false,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -445,6 +447,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = false,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -456,6 +459,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = true,
+            onItemClick = { },
         ),
     ),
 )
