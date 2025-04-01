@@ -7,6 +7,8 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
+import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
@@ -28,7 +30,8 @@ internal class SendModel @Inject constructor(
 ) : Model(),
     SendDestinationComponent.ModelCallback,
     SendAmountComponent.ModelCallback,
-    SendFeeComponent.ModelCallback {
+    SendFeeComponent.ModelCallback,
+    SendConfirmComponent.ModelCallback {
 
     private val _uiState = MutableStateFlow(initialState())
     val uiState = _uiState.asStateFlow()
@@ -38,6 +41,10 @@ internal class SendModel @Inject constructor(
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
     var predefinedAmountValue: String? = null
+
+    override fun onResult(sendUM: SendUM) {
+        _uiState.value = sendUM
+    }
 
     override fun onDestinationResult(destinationUM: DestinationUM) {
         _uiState.update { it.copy(destinationUM = destinationUM) }
@@ -55,5 +62,6 @@ internal class SendModel @Inject constructor(
         amountUM = AmountState.Empty(),
         destinationUM = DestinationUM.Empty(),
         feeUM = FeeUM.Empty(),
+        confirmUM = ConfirmUM.Empty,
     )
 }
