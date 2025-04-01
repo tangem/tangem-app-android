@@ -24,6 +24,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.ui)
+    implementation(projects.core.utils)
 
     /** Project - Common */
     implementation(projects.common.routing)
