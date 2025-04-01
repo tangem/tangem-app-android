@@ -153,6 +153,8 @@ internal class DefaultNFTRepository @Inject constructor(
         }.saveIn(getCollectionJobHolder(collectionId)).join()
     }
 
+    override suspend fun isNFTSupported(network: Network): Boolean = network.canHandleNFTs()
+
     private suspend fun refreshSalePrice(
         userWalletId: UserWalletId,
         network: Network,
