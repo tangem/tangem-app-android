@@ -4,9 +4,9 @@ import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
+import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
