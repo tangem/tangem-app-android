@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.navigation)
     implementation(projects.core.datasource)
+    implementation(projects.core.error.ext)
 
     /** Common */
     implementation(projects.common.ui)
