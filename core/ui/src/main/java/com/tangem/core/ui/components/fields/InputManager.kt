@@ -1,4 +1,4 @@
-package com.tangem.features.onramp.utils
+package com.tangem.core.ui.components.fields
 
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.withDebounce
@@ -12,7 +12,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
-internal class InputManager @Inject constructor() {
+class InputManager @Inject constructor() {
 
     val query: Flow<String>
         get() = _query
