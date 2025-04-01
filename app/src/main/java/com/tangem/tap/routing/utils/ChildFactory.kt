@@ -12,6 +12,7 @@ import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
+import com.tangem.features.nft.component.NFTCollectionsComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
@@ -80,6 +81,7 @@ internal class ChildFactory @Inject constructor(
     private val sendComponentFactoryV2: com.tangem.features.send.v2.api.SendComponent.Factory,
     private val sendFeatureToggles: SendFeatureToggles,
     private val redesignedWalletConnectComponentFactory: RedisegnedWalletConnectComponent.Factory,
+    private val nftCollectionsComponentFactory: NFTCollectionsComponent.Factory,
     private val testerRouter: TesterRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
@@ -397,6 +399,12 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = walletComponentFactory,
                 )
             }
+            is AppRoute.NFTCollections ->
+                createComponentChild(
+                    context = context,
+                    params = NFTCollectionsComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = nftCollectionsComponentFactory,
+                )
             is AppRoute.OnboardingNote,
             is AppRoute.SaveWallet,
             is AppRoute.OnboardingOther,
@@ -729,6 +737,12 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = storiesComponentFactory,
                 )
             }
+            is AppRoute.NFTCollections ->
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = NFTCollectionsComponent.Params(userWalletId = route.userWalletId),
+                    componentFactory = nftCollectionsComponentFactory,
+                )
         }
         // endregion
     }
