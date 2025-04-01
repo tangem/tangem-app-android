@@ -5,9 +5,13 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.error.VisaActivationError
+import com.tangem.domain.visa.error.VisaAuthorizationAPIError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -36,6 +40,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     private val otpStorage: VisaOTPStorage,
     private val userWalletBuilderFactory: UserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<Config>()
@@ -58,7 +63,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     is VisaActivationRemoteState.CardWalletSignatureRequired,
                     VisaActivationRemoteState.BlockedForActivation,
                     -> {
-// [REDACTED_TODO_COMMENT]
+                        uiMessageSender.showErrorDialog(VisaActivationError.InconsistentRemoteState)
                         return@launch
                     }
                     is VisaActivationRemoteState.CustomerWalletSignatureRequired,
@@ -92,7 +97,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         val newTokens = runCatching {
             visaAuthRepository.refreshAccessTokens(authTokens.refreshToken)
         }.getOrElse {
-// [REDACTED_TODO_COMMENT]
+            uiMessageSender.showErrorDialog(VisaAuthorizationAPIError)
             return
         }
 
