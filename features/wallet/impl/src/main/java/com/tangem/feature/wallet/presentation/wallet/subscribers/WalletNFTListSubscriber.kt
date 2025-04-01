@@ -11,13 +11,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 
-@Suppress("UnusedPrivateMember")
 internal class WalletNFTListSubscriber(
     private val userWallet: UserWallet,
     private val stateHolder: WalletStateController,
     private val walletsRepository: WalletsRepository,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
-    clickIntents: WalletClickIntents,
+    private val clickIntents: WalletClickIntents,
 ) : WalletSubscriber() {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -27,8 +26,7 @@ internal class WalletNFTListSubscriber(
         .flatMapLatest { nftEnabled ->
             // if NFT is enabled for this wallet, then start observing changes from store and apply transformer if need
             if (nftEnabled) {
-                getNFTCollectionsUseCase
-                    .launch(userWallet.walletId)
+                getNFTCollectionsUseCase(userWallet.walletId)
                     .shareIn(
                         scope = coroutineScope,
                         started = SharingStarted.WhileSubscribed(),
@@ -36,7 +34,11 @@ internal class WalletNFTListSubscriber(
                     )
                     .onEach {
                         stateHolder.update(
-                            SetNFTCollectionsTransformer(userWallet.walletId, it),
+                            SetNFTCollectionsTransformer(
+                                userWalletId = userWallet.walletId,
+                                nftCollections = it,
+                                onItemClick = { clickIntents.onNFTClick(userWallet.walletId) },
+                            ),
                         )
                     }
             } else {
