@@ -25,6 +25,6 @@ internal class SendFeeComponent(
     }
 
     interface ModelCallback {
-        fun onFeeResult(state: FeeUM)
+        fun onFeeResult(feeUM: FeeUM)
     }
 }
