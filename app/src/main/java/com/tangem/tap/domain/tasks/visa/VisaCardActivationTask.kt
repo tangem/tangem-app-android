@@ -9,11 +9,13 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.CompletionCallback
+import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.map
 import com.tangem.common.timemeasure.RealtimeMonotonicTimeSource
+import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.CryptoUtils
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
@@ -22,6 +24,8 @@ import com.tangem.datasource.local.visa.hasSavedOTP
 import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.visa.error.VisaActivationError
+import com.tangem.domain.visa.error.VisaAuthorizationAPIError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -68,7 +72,7 @@ class VisaCardActivationTask @AssistedInject constructor(
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         if (card.cardId != activationInput.cardId) {
-            return CompletionResult.Failure(TangemSdkError.Underlying(VisaActivationError.WrongCard.message))
+            return CompletionResult.Failure(VisaActivationError.WrongCard.tangemError)
         }
 
         val visaActivationRepository = visaActivationRepositoryFactory.create(
@@ -149,7 +153,7 @@ class VisaCardActivationTask @AssistedInject constructor(
 
     private suspend fun SessionContext.getDataToSign(
         signedChallenge: VisaAuthSignedChallenge,
-    ): Either<TangemSdkError.Underlying, VisaDataToSignByCardWallet> = either {
+    ): Either<TangemError, VisaDataToSignByCardWallet> = either {
         catch(
             block = {
                 val tokens = visaAuthRepository.getAccessTokens(signedChallenge)
@@ -158,13 +162,13 @@ class VisaCardActivationTask @AssistedInject constructor(
 
                 val remoteState = visaActivationRepository.getActivationRemoteState()
                 if (remoteState !is VisaActivationRemoteState.CardWalletSignatureRequired) {
-                    raise(TangemSdkError.Underlying(VisaActivationError.WrongRemoteState.message))
+                    raise(VisaActivationError.WrongRemoteState.tangemError)
                 }
 
                 visaActivationRepository.getCardWalletAcceptanceData(remoteState.request)
             },
             catch = {
-                raise(TangemSdkError.Underlying("Underlying network error:  ${it.message ?: ""}"))
+                raise(VisaAuthorizationAPIError.tangemError)
             },
         )
     }
@@ -246,10 +250,10 @@ class VisaCardActivationTask @AssistedInject constructor(
                 ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         val derivedPublicKey = wallet.derivedKeys[VisaUtilities.visaDefaultDerivationPath]
-            ?: return CompletionResult.Failure(TangemSdkError.Underlying(VisaActivationError.MissingWallet.message))
+            ?: return CompletionResult.Failure(VisaActivationError.MissingWallet.tangemError)
 
         val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(derivedPublicKey.publicKey)
-            .getOrElse { return CompletionResult.Failure(TangemSdkError.Underlying(it.message)) }
+            .getOrElse { return CompletionResult.Failure(it.tangemError) }
             .value
 
         val task = SignHashCommand(
@@ -291,7 +295,7 @@ class VisaCardActivationTask @AssistedInject constructor(
     ): CompletionResult<VisaCardActivationResponse> {
         val otp = otpStorage.getOTP(cardId) ?: run {
             createOTP()
-            otpStorage.getOTP(cardId) ?: return CompletionResult.Failure(TangemSdkError.Underlying("OTP not found"))
+            otpStorage.getOTP(cardId) ?: return CompletionResult.Failure(VisaActivationError.MissingRootOTP.tangemError)
         }
 
         val signedActivationData = dataToSign.sign(
