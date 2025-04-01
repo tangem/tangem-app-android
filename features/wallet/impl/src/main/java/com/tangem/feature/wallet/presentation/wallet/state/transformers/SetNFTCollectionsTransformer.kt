@@ -1,7 +1,7 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.nft.models.NFTCollections
+import com.tangem.domain.nft.models.*
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNFTItemUM
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
@@ -10,16 +10,21 @@ import kotlinx.collections.immutable.toPersistentList
 internal class SetNFTCollectionsTransformer(
     userWalletId: UserWalletId,
     private val nftCollections: List<NFTCollections>,
+    private val onItemClick: () -> Unit,
 ) : WalletStateTransformer(userWalletId) {
 
     override fun transform(prevState: WalletState): WalletState = when (prevState) {
         is WalletState.MultiCurrency.Content -> prevState.copy(
             nftState = when {
-                allCollectionsFailed() -> WalletNFTItemUM.Failed
-                anyCollectionFailed() && allLoadedCollectionsEmpty() -> WalletNFTItemUM.Failed
-                allCollectionsLoaded() && allCollectionsEmpty() -> WalletNFTItemUM.Empty
-                !allCollectionsLoaded() && allCollectionsEmpty() -> WalletNFTItemUM.Loading
-                else -> createContentNFTItemUM()
+                nftCollections.allCollectionsFailed() ->
+                    WalletNFTItemUM.Failed
+                nftCollections.anyCollectionFailed() && nftCollections.allLoadedCollectionsEmpty() ->
+                    WalletNFTItemUM.Failed
+                nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
+                    WalletNFTItemUM.Empty(onItemClick)
+                !nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
+                    WalletNFTItemUM.Loading
+                else -> createContentNFTItemUM(onItemClick)
             },
         )
         is WalletState.SingleCurrency.Content,
@@ -31,7 +36,7 @@ internal class SetNFTCollectionsTransformer(
         -> prevState
     }
 
-    private fun createContentNFTItemUM(): WalletNFTItemUM.Content {
+    private fun createContentNFTItemUM(onItemClick: () -> Unit): WalletNFTItemUM.Content {
         val collectionsContent = nftCollections
             .map { it.content }
             .filterIsInstance<NFTCollections.Content.Collections>()
@@ -61,32 +66,8 @@ internal class SetNFTCollectionsTransformer(
             assetsCount = collections
                 .sumOf { it.count },
             isFlickering = isFlickering,
+            onItemClick = onItemClick,
         )
-    }
-
-    private fun allCollectionsFailed() = nftCollections.all {
-        it.content is NFTCollections.Content.Error
-    }
-
-    private fun anyCollectionFailed() = nftCollections.any {
-        it.content is NFTCollections.Content.Error
-    }
-
-    private fun allLoadedCollectionsEmpty() = nftCollections
-        .map { it.content }
-        .filterIsInstance<NFTCollections.Content.Collections>()
-        .all { it.collections.isNullOrEmpty() }
-
-    private fun allCollectionsLoaded() = nftCollections.all {
-        val content = it.content
-        content is NFTCollections.Content.Collections &&
-            content.source != StatusSource.CACHE
-    }
-
-    private fun allCollectionsEmpty() = nftCollections.all {
-        val content = it.content
-        content is NFTCollections.Content.Collections &&
-            content.collections.isNullOrEmpty()
     }
 
     companion object {
