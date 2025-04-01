@@ -16,7 +16,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.common.map
 import com.tangem.common.timemeasure.RealtimeMonotonicTimeSource
 import com.tangem.core.error.ext.tangemError
-import com.tangem.crypto.CryptoUtils
+import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.datasource.local.visa.VisaOtpData
@@ -31,6 +31,7 @@ import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.operations.GenerateOTPCommand
 import com.tangem.operations.attestation.AttestCardKeyCommand
+import com.tangem.operations.derivation.DeriveWalletPublicKeyTask
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.operations.sign.SignHashResponse
@@ -55,6 +56,8 @@ class VisaCardActivationTask @AssistedInject constructor(
     private val visaAuthRepository: VisaAuthRepository,
     private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
 ) : CardSessionRunnable<VisaCardActivationResponse> {
+
+    override val allowsRequestAccessCodeFromRepository: Boolean = false
 
     private class SessionContext(
         val visaActivationRepository: VisaActivationRepository,
@@ -105,7 +108,7 @@ class VisaCardActivationTask @AssistedInject constructor(
     private suspend fun SessionContext.signAuthorizationChallenge(
         challengeToSign: VisaAuthChallenge.Card,
     ): CompletionResult<VisaCardActivationResponse> {
-        val attestationCommand = AttestCardKeyCommand(challenge = CryptoUtils.generateRandomBytes(length = 16))
+        val attestationCommand = AttestCardKeyCommand(challenge = challengeToSign.challenge.hexToBytes())
         val timedResult = RealtimeMonotonicTimeSource.measureTimedValue {
             suspendCancellableCoroutine { continuation ->
                 attestationCommand.run(session = session) { attestationResponse ->
@@ -249,8 +252,14 @@ class VisaCardActivationTask @AssistedInject constructor(
             card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
                 ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
-        val derivedPublicKey = wallet.derivedKeys[VisaUtilities.visaDefaultDerivationPath]
-            ?: return CompletionResult.Failure(VisaActivationError.MissingWallet.tangemError)
+        val derivedPublicKey = when (val deriveKeyResult = deriveKey(wallet.publicKey)) {
+            is CompletionResult.Failure -> {
+                return CompletionResult.Failure(deriveKeyResult.error)
+            }
+            is CompletionResult.Success -> {
+                deriveKeyResult.data
+            }
+        }
 
         val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(derivedPublicKey.publicKey)
             .getOrElse { return CompletionResult.Failure(it.tangemError) }
@@ -286,6 +295,20 @@ class VisaCardActivationTask @AssistedInject constructor(
                 CompletionResult.Failure(result.error)
             }
         }
+    }
+
+    private suspend fun SessionContext.deriveKey(publicKey: ByteArray): CompletionResult<ExtendedPublicKey> {
+        val derivationPath = VisaUtilities.visaDefaultDerivationPath
+            ?: return CompletionResult.Failure(VisaActivationError.FailedToCreateAddress.tangemError)
+
+        val derivationTask = DeriveWalletPublicKeyTask(publicKey, derivationPath)
+        val derivationTaskResult = suspendCancellableCoroutine { continuation ->
+            derivationTask.run(session) { result ->
+                continuation.resume(result)
+            }
+        }
+
+        return derivationTaskResult
     }
 
     private suspend fun SessionContext.handleSignedData(
