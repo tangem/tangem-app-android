@@ -27,6 +27,7 @@ dependencies {
     /** Project - Common */
     implementation(projects.core.ui)
     implementation(projects.core.utils)
+    implementation(projects.core.res)
     implementation(projects.libs.crypto)
 
     /** Project - Domain */

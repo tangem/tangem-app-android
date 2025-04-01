@@ -1,7 +1,7 @@
-package com.tangem.core.ui.components.bottomsheets.chooseaddress
+package com.tangem.common.ui.bottomsheet.chooseaddress
 
+import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
 import kotlinx.collections.immutable.ImmutableList
 
 class ChooseAddressBottomSheetConfig(
