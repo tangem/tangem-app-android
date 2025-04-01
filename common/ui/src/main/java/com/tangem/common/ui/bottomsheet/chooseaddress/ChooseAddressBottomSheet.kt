@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.bottomsheets.chooseaddress
+package com.tangem.common.ui.bottomsheet.chooseaddress
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SimpleSettingsRow
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
