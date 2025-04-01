@@ -5,6 +5,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.nft.collections.DefaultNFTCollectionsComponent
 import com.tangem.features.nft.collections.model.NFTCollectionsModel
 import com.tangem.features.nft.component.NFTCollectionsComponent
+import com.tangem.features.nft.component.NFTReceiveComponent
+import com.tangem.features.nft.receive.DefaultNFTReceiveComponent
+import com.tangem.features.nft.receive.model.NFTReceiveModel
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -30,10 +33,21 @@ internal object NFTFeatureModule {
 internal interface NFTFeatureModuleBinds {
     @Binds
     @Singleton
-    fun bindComponentFactory(impl: DefaultNFTCollectionsComponent.Factory): NFTCollectionsComponent.Factory
+    fun bindNFTCollectionsComponentFactory(
+        impl: DefaultNFTCollectionsComponent.Factory,
+    ): NFTCollectionsComponent.Factory
 
     @Binds
     @IntoMap
     @ClassKey(NFTCollectionsModel::class)
-    fun bindModel(model: NFTCollectionsModel): Model
+    fun bindNFTCollectionsModel(model: NFTCollectionsModel): Model
+
+    @Binds
+    @Singleton
+    fun bindNFTReceiveComponentFactory(impl: DefaultNFTReceiveComponent.Factory): NFTReceiveComponent.Factory
+
+    @Binds
+    @IntoMap
+    @ClassKey(NFTReceiveModel::class)
+    fun bindNFTReceiveModel(model: NFTReceiveModel): Model
 }
