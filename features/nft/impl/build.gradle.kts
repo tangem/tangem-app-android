@@ -27,7 +27,10 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Domain modules */
+    implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
+    implementation(projects.domain.tokens.models)
+    implementation(projects.domain.wallets.models)
 
     /** Common */
     implementation(projects.common.ui)
