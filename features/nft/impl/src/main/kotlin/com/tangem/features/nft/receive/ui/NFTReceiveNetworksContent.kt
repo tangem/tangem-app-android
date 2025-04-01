@@ -1,9 +1,8 @@
 package com.tangem.features.nft.receive.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,57 +13,39 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.fields.SearchBar
-import com.tangem.core.ui.components.fields.entity.SearchBarUM
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.impl.R
 import com.tangem.features.nft.receive.entity.NFTNetworkUM
-import com.tangem.features.nft.receive.entity.NFTReceiveNetworksUM
+import com.tangem.features.nft.receive.entity.NFTReceiveUM
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun NFTReceiveNetworks(state: NFTReceiveNetworksUM, modifier: Modifier = Modifier) {
+internal fun NFTReceiveNetworksContent(state: NFTReceiveUM.Networks.Content, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
 
-    Column(
+    LazyColumn(
         modifier = modifier
-            .fillMaxSize()
-            .background(TangemTheme.colors.background.secondary)
-            .padding(
-                start = TangemTheme.dimens.spacing16,
-                end = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing16,
-            ),
+            .fillMaxWidth()
+            .clip(TangemTheme.shapes.roundedCornersXMedium)
+            .background(TangemTheme.colors.background.primary)
+            .animateContentSize(),
+        state = listState,
     ) {
-        SearchBar(
-            state = state.searchBar,
-            // TODO fix colors after merging [REDACTED_TASK_KEY]
-        )
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    vertical = TangemTheme.dimens.spacing16,
-                )
-                .clip(TangemTheme.shapes.roundedCornersXMedium)
-                .background(TangemTheme.colors.background.primary),
-            state = listState,
+        item(
+            key = "title",
         ) {
-            item(
-                key = "title",
-            ) {
-                Title()
-            }
-            items(
-                items = state.networks,
-                key = NFTNetworkUM::id,
-            ) { network ->
-                NFTNetwork(state = network)
-            }
+            Title()
+        }
+        items(
+            items = state.items,
+            key = NFTNetworkUM::id,
+        ) { network ->
+            NFTNetwork(
+                state = network,
+                modifier = Modifier.animateItem(),
+            )
         }
     }
 }
@@ -91,16 +72,9 @@ private fun Title(modifier: Modifier = Modifier) {
 @Composable
 private fun Preview_NFTReceiveNetworksUM() {
     TangemThemePreview {
-        NFTReceiveNetworks(
-            state = NFTReceiveNetworksUM(
-                searchBar = SearchBarUM(
-                    placeholderText = resourceReference(R.string.common_search),
-                    query = "",
-                    onQueryChange = { },
-                    isActive = false,
-                    onActiveChange = { },
-                ),
-                networks = persistentListOf(
+        NFTReceiveNetworksContent(
+            state = NFTReceiveUM.Networks.Content(
+                items = persistentListOf(
                     NFTNetworkUM(
                         id = "item1",
                         name = "Ethereum",
