@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.bottomsheets
+package com.tangem.core.ui.components.bottomsheets.sheet
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
