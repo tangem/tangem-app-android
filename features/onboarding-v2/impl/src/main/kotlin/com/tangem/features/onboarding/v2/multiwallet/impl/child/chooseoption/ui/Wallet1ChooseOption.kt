@@ -39,9 +39,8 @@ fun Wallet1ChooseOption(
         Column(
             Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
                 .weight(1f)
-                .padding(top = 32.dp, bottom = 16.dp),
+                .padding(vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             val pagerState = rememberPagerState { CarouselItems.size }
@@ -49,6 +48,8 @@ fun Wallet1ChooseOption(
             HorizontalPager(pagerState) { selectedIndex ->
                 Column(
                     modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                         .padding(start = 32.dp, end = 32.dp, bottom = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
