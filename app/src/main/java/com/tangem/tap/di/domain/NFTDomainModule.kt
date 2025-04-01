@@ -1,5 +1,6 @@
 package com.tangem.tap.di.domain
 
+import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
 import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.nft.repository.NFTRepository
@@ -34,6 +35,14 @@ internal object NFTDomainModule {
     ): FetchNFTCollectionsUseCase {
         return FetchNFTCollectionsUseCase(
             currenciesRepository = currenciesRepository,
+            nftRepository = nftRepository,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun providesFetchNFTCollectionAssetsUseCase(nftRepository: NFTRepository): FetchNFTCollectionAssetsUseCase {
+        return FetchNFTCollectionAssetsUseCase(
             nftRepository = nftRepository,
         )
     }
