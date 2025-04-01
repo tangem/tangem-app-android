@@ -10,8 +10,10 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.settings.*
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
@@ -79,6 +81,7 @@ internal class WalletModel @Inject constructor(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val fetchNFTCollectionsUseCase: FetchNFTCollectionsUseCase,
     private val walletsRepository: WalletsRepository,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -352,6 +355,10 @@ internal class WalletModel @Inject constructor(
             clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
+
+        if (action.selectedWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+            fetchCurrencyStatusUseCase(userWalletId = action.selectedWallet.walletId)
+        }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
