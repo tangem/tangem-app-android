@@ -22,4 +22,10 @@ dependencies {
 
     /* Core */
     api(projects.core.pagination)
+    testImplementation(projects.core.pagination)
+
+    /* Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
 }
