@@ -34,7 +34,7 @@ internal fun NFTCollectionsFailed(state: NFTCollectionsUM.Failed, modifier: Modi
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             text = stringResourceSafe(R.string.nft_collections_receive),
-            onClick = { },
+            onClick = state.onReceiveClick,
         )
     }
 }
