@@ -5,6 +5,10 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.error.ext.universalError
+import com.tangem.core.ui.utils.showErrorDialog
+import com.tangem.domain.visa.error.VisaAPIError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
@@ -28,6 +32,7 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<Config>()
@@ -68,24 +73,29 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
                 visaActivationRepository.getCardWalletAcceptanceData(params.dataToSignRequest)
             }.getOrElse {
                 loading(false)
-                // TODO show alert
+                uiMessageSender.showErrorDialog(VisaAPIError)
                 return@launch
             }
 
             val result = tangemSdkManager.activateVisaCard(
                 mode = VisaCardActivationTaskMode.SignOnly(dataToSignByCardWallet = dataToSignByCardWallet),
                 activationInput = params.activationInput,
-            ) as? CompletionResult.Success ?: run {
-                loading(false)
-                // TODO show alert
-                return@launch
+            )
+
+            val resultData = when (result) {
+                is CompletionResult.Failure -> {
+                    loading(false)
+                    uiMessageSender.showErrorDialog(result.error.universalError)
+                    return@launch
+                }
+                is CompletionResult.Success -> result.data
             }
 
             runCatching {
-                visaActivationRepository.activateCard(result.data.signedActivationData)
+                visaActivationRepository.activateCard(resultData.signedActivationData)
             }.onFailure {
                 loading(false)
-                // TODO show alert
+                uiMessageSender.showErrorDialog(VisaAPIError)
                 return@launch
             }
 
