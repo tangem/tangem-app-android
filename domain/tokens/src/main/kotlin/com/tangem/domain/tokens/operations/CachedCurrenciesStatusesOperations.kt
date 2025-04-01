@@ -11,6 +11,7 @@ import com.tangem.domain.core.utils.EitherFlow
 import com.tangem.domain.core.utils.lceContent
 import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
@@ -36,10 +37,19 @@ class CachedCurrenciesStatusesOperations(
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
+    multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
-    BaseCurrencyStatusOperations(currenciesRepository, quotesRepository, networksRepository, stakingRepository) {
+    BaseCurrencyStatusOperations(
+        currenciesRepository = currenciesRepository,
+        quotesRepository = quotesRepository,
+        networksRepository = networksRepository,
+        stakingRepository = stakingRepository,
+        multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+        singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+        tokensFeatureToggles = tokensFeatureToggles,
+    ) {
 
     override fun getCurrenciesStatuses(
         userWalletId: UserWalletId,
