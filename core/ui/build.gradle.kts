@@ -6,6 +6,13 @@ plugins {
 
 android {
     namespace = "com.tangem.core.ui"
+
+    packaging {
+        resources {
+            // To build and run composable preview
+            merges += "paymentrequest.proto"
+        }
+    }
 }
 
 dependencies {
