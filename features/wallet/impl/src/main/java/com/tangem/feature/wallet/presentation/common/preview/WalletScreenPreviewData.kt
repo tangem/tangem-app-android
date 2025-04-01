@@ -125,6 +125,7 @@ internal object WalletScreenPreviewData {
                 collectionsCount = 1,
                 assetsCount = 3,
                 isFlickering = false,
+                onItemClick = { },
             ),
         )
     }
