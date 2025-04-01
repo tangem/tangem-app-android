@@ -7,12 +7,11 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletNFTItem
 
 private const val NFT_COLLECTIONS_CONTENT_TYPE = "NFTCollections"
 
-internal fun LazyListScope.nftCollections(state: WalletNFTItemUM, onClick: () -> Unit, modifier: Modifier = Modifier) {
+internal fun LazyListScope.nftCollections(state: WalletNFTItemUM, modifier: Modifier = Modifier) {
     item(key = NFT_COLLECTIONS_CONTENT_TYPE, contentType = NFT_COLLECTIONS_CONTENT_TYPE) {
         WalletNFTItem(
             modifier = modifier,
             state = state,
-            onClick = onClick,
         )
     }
 }
