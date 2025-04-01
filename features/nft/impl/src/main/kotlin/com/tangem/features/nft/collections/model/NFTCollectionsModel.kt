@@ -1,5 +1,6 @@
 package com.tangem.features.nft.collections.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,7 +12,8 @@ import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
-import com.tangem.features.nft.collections.entity.*
+import com.tangem.features.nft.collections.entity.NFTCollectionsStateUM
+import com.tangem.features.nft.collections.entity.NFTCollectionsUM
 import com.tangem.features.nft.collections.entity.transformer.ChangeCollectionExpandedStateTransformer
 import com.tangem.features.nft.collections.entity.transformer.ToggleSearchBarTransformer
 import com.tangem.features.nft.collections.entity.transformer.UpdateDataStateTransformer
@@ -119,7 +121,11 @@ internal class NFTCollectionsModel @Inject constructor(
     }
 
     private fun onReceiveClick() {
-        // TODO move to receive
+        router.push(
+            AppRoute.NFTReceive(
+                userWalletId = params.userWalletId,
+            ),
+        )
     }
 
     private fun navigateBack() {
