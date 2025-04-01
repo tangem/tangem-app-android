@@ -4,15 +4,20 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.nft.FilterNFTAvailableNetworksUseCase
 import com.tangem.domain.nft.GetNFTAvailableNetworksUseCase
+import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.features.nft.component.NFTReceiveComponent
 import com.tangem.features.nft.impl.R
 import com.tangem.features.nft.receive.entity.NFTReceiveUM
+import com.tangem.features.nft.receive.entity.transformer.ShowReceiveBottomSheetTransformer
 import com.tangem.features.nft.receive.entity.transformer.ToggleSearchBarTransformer
 import com.tangem.features.nft.receive.entity.transformer.UpdateDataStateTransformer
 import com.tangem.features.nft.receive.entity.transformer.UpdateSearchQueryTransformer
@@ -22,6 +27,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class NFTReceiveModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
@@ -29,6 +35,9 @@ internal class NFTReceiveModel @Inject constructor(
     private val searchManager: InputManager,
     private val getNFTAvailableNetworksUseCase: GetNFTAvailableNetworksUseCase,
     private val filterNFTAvailableNetworksUseCase: FilterNFTAvailableNetworksUseCase,
+    private val getNFTNetworkStatusUseCase: GetNFTNetworkStatusUseCase,
+    private val clipboardManager: ClipboardManager,
+    private val shareManager: ShareManager,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -89,9 +98,47 @@ internal class NFTReceiveModel @Inject constructor(
         }
     }
 
-    @Suppress("UnusedPrivateMember")
+    private fun onReceiveBottomSheetDismiss() {
+        _state.update {
+            it.copy(
+                bottomSheetConfig = it.bottomSheetConfig?.copy(isShown = false),
+            )
+        }
+    }
+
     private fun onNetworkClick(network: Network) {
-        // TODO show receive bottom sheet
+        modelScope.launch {
+            val networkStatus = getNFTNetworkStatusUseCase.invoke(
+                userWalletId = params.userWalletId,
+                network = network,
+            ) ?: return@launch
+
+            when (val value = networkStatus.value) {
+                is NetworkStatus.Verified -> {
+                    _state.update {
+                        ShowReceiveBottomSheetTransformer(
+                            network = network,
+                            networkAddress = value.address,
+                            onDismissBottomSheet = ::onReceiveBottomSheetDismiss,
+                            onCopyClick = ::onCopyClick,
+                            onShareClick = ::onShareClick,
+                        ).transform(it)
+                    }
+                }
+                is NetworkStatus.MissedDerivation,
+                is NetworkStatus.NoAccount,
+                is NetworkStatus.Unreachable,
+                -> Unit
+            }
+        }
+    }
+
+    private fun onCopyClick(text: String) {
+        clipboardManager.setText(text = text, isSensitive = true)
+    }
+
+    private fun onShareClick(text: String) {
+        shareManager.shareText(text = text)
     }
 
     private fun navigateBack() {
