@@ -259,12 +259,19 @@ interface WalletManagersFacade {
         collectionIdentifier: NFTCollection.Identifier,
     ): List<NFTAsset>
 
-    suspend fun getAsset(
+    suspend fun getNFTAsset(
         userWalletId: UserWalletId,
         network: Network,
         collectionIdentifier: NFTCollection.Identifier,
         assetIdentifier: NFTAsset.Identifier,
     ): NFTAsset?
+
+    suspend fun getNFTSalePrice(
+        userWalletId: UserWalletId,
+        network: Network,
+        collectionIdentifier: NFTCollection.Identifier,
+        assetIdentifier: NFTAsset.Identifier,
+    ): NFTAsset.SalePrice?
 
     /**
      * If wallet manager implements [InitializableAccount] then returns [InitializableAccount.isAccountInitialized]
