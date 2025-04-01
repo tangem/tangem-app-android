@@ -32,4 +32,5 @@ dependencies {
     implementation(projects.domain.transaction.models)
     implementation(projects.domain.demo)
     implementation(projects.domain.card)
+    api(projects.domain.networks)
 }
