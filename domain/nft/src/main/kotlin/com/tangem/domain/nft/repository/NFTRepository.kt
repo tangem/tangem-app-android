@@ -12,4 +12,6 @@ interface NFTRepository {
     suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>)
 
     suspend fun refreshAssets(userWalletId: UserWalletId, network: Network, collectionId: NFTCollection.Identifier)
+
+    suspend fun isNFTSupported(network: Network): Boolean
 }
