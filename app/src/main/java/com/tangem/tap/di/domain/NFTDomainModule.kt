@@ -3,6 +3,7 @@ package com.tangem.tap.di.domain
 import com.tangem.domain.nft.*
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -58,4 +59,11 @@ internal object NFTDomainModule {
     ): FilterNFTAvailableNetworksUseCase = FilterNFTAvailableNetworksUseCase(
         dispatchers = dispatchers,
     )
+
+    @Provides
+    @Singleton
+    fun providesGetNFTNetworkStatusUseCase(networksRepository: NetworksRepository): GetNFTNetworkStatusUseCase =
+        GetNFTNetworkStatusUseCase(
+            networksRepository = networksRepository,
+        )
 }
