@@ -14,7 +14,7 @@ class GetNFTCollectionsUseCase(
 ) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun launch(userWalletId: UserWalletId): Flow<List<NFTCollections>> = currenciesRepository
+    operator fun invoke(userWalletId: UserWalletId): Flow<List<NFTCollections>> = currenciesRepository
         .getWalletCurrenciesUpdates(userWalletId)
         .flatMapLatest {
             val networks = it
