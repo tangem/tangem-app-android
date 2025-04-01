@@ -1,14 +1,4 @@
 plugins {
-    alias(deps.plugins.android.library)
-    alias(deps.plugins.kotlin.android)
+    alias(deps.plugins.kotlin.jvm)
     id("configuration")
-}
-
-android {
-    namespace = "com.tangem.core.error"
-}
-
-dependencies {
-    implementation(tangemDeps.card.core)
-    implementation(tangemDeps.blockchain)
 }
