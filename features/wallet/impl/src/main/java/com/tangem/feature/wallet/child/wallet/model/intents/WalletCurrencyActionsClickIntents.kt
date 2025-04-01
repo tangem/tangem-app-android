@@ -169,7 +169,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         stateHolder.showBottomSheet(
             createReceiveBottomSheetContent(
                 currency = cryptoCurrencyStatus.currency,
-                addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return,
+                addresses = cryptoCurrencyStatus.value.networkAddress ?: return,
             ),
             userWalletId,
         )
@@ -189,13 +189,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun createReceiveBottomSheetContent(
         currency: CryptoCurrency,
-        addresses: Set<NetworkAddress.Address>,
+        addresses: NetworkAddress,
     ): TangemBottomSheetConfigContent {
         return TokenReceiveBottomSheetConfig(
-            name = currency.name,
-            symbol = currency.symbol,
-            network = currency.network.name,
-            addresses = addresses.mapToAddressModels(currency).toImmutableList(),
+            asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                name = currency.name,
+                symbol = currency.symbol,
+            ),
+            network = currency.network,
+            networkAddress = addresses,
             showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
@@ -488,7 +490,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {
-                    showChooseAddressBottomSheet(userWalletId, addresses.availableAddresses, currencyStatus.currency)
+                    showChooseAddressBottomSheet(userWalletId, addresses, currencyStatus.currency)
                 }
                 is NetworkAddress.Single -> {
                     router.openUrl(
@@ -506,12 +508,17 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun showChooseAddressBottomSheet(
         userWalletId: UserWalletId,
-        addresses: Set<NetworkAddress.Address>,
+        addresses: NetworkAddress,
         currency: CryptoCurrency,
     ) {
         stateHolder.showBottomSheet(
             ChooseAddressBottomSheetConfig(
-                addressModels = addresses.mapToAddressModels(currency).toImmutableList(),
+                asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                    name = currency.name,
+                    symbol = currency.symbol,
+                ),
+                network = currency.network,
+                networkAddress = addresses,
                 onClick = {
                     onAddressTypeSelected(
                         userWalletId = userWalletId,
