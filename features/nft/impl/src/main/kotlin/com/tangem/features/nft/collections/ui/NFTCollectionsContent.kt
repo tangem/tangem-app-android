@@ -1,12 +1,16 @@
 package com.tangem.features.nft.collections.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,17 +28,12 @@ import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.collections.entity.*
-import com.tangem.features.nft.collections.entity.NFTCollectionAssetUM
-import com.tangem.features.nft.collections.entity.NFTCollectionAssetsListUM
-import com.tangem.features.nft.collections.entity.NFTCollectionUM
-import com.tangem.features.nft.collections.entity.NFTCollectionsUM
-import com.tangem.features.nft.collections.entity.NFTSalePriceUM
 import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
 @Suppress("LongMethod")
 @Composable
-internal fun NFTCollectionsContent(state: NFTCollectionsUM.Content, modifier: Modifier = Modifier) {
+internal fun NFTCollectionsContent(content: NFTCollectionsUM.Content, modifier: Modifier = Modifier) {
     val listState = rememberLazyListState()
 
     Box(
@@ -48,29 +47,34 @@ internal fun NFTCollectionsContent(state: NFTCollectionsUM.Content, modifier: Mo
             ),
     ) {
         Column(
-            modifier = Modifier,
+            modifier = Modifier
+                .fillMaxWidth(),
         ) {
             SearchBar(
-                state = state.search,
+                state = content.search,
                 colors = TangemSearchBarDefaults.secondaryTextFieldColors,
             )
-            state.warnings.fastForEach {
-                NFTCollectionWarning(
-                    modifier = Modifier
-                        .padding(top = TangemTheme.dimens.spacing16),
-                    state = it,
-                )
+            content.warnings.fastForEach {
+                key(it.id) {
+                    NFTCollectionWarning(
+                        modifier = Modifier
+                            .padding(top = TangemTheme.dimens.spacing16),
+                        state = it,
+                    )
+                }
             }
             LazyColumn(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .padding(
                         top = TangemTheme.dimens.spacing16,
+                        bottom = TangemTheme.dimens.spacing60,
                     )
                     .clip(TangemTheme.shapes.roundedCornersXMedium)
                     .background(TangemTheme.colors.background.primary),
                 state = listState,
             ) {
-                state.collections.fastForEach { collection ->
+                content.collections.fastForEach { collection ->
                     item(key = collection.id) {
                         NFTCollection(
                             modifier = Modifier.fillMaxWidth(),
@@ -78,23 +82,26 @@ internal fun NFTCollectionsContent(state: NFTCollectionsUM.Content, modifier: Mo
                         )
                     }
                     when (val assets = collection.assets) {
-                        is NFTCollectionAssetsListUM.Collapsed -> Unit
-                        is NFTCollectionAssetsListUM.Expanded.Loading -> {
+                        is NFTCollectionAssetsListUM.Init -> Unit
+                        is NFTCollectionAssetsListUM.Loading -> {
                             assetsListLoading(
                                 collectionId = collection.id,
                                 content = assets,
+                                expanded = collection.isExpanded,
                             )
                         }
-                        is NFTCollectionAssetsListUM.Expanded.Failed -> {
+                        is NFTCollectionAssetsListUM.Failed -> {
                             assetsListFailed(
                                 collectionId = collection.id,
                                 content = assets,
+                                expanded = collection.isExpanded,
                             )
                         }
-                        is NFTCollectionAssetsListUM.Expanded.Content -> {
+                        is NFTCollectionAssetsListUM.Content -> {
                             assetsListContent(
                                 collectionId = collection.id,
                                 content = assets,
+                                expanded = collection.isExpanded,
                             )
                         }
                     }
@@ -106,14 +113,15 @@ internal fun NFTCollectionsContent(state: NFTCollectionsUM.Content, modifier: Mo
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             text = stringResourceSafe(R.string.nft_collections_receive),
-            onClick = { },
+            onClick = content.onReceiveClick,
         )
     }
 }
 
 private fun LazyListScope.assetsListLoading(
     collectionId: String,
-    content: NFTCollectionAssetsListUM.Expanded.Loading,
+    content: NFTCollectionAssetsListUM.Loading,
+    expanded: Boolean,
 ) {
     val itemsCount = content.itemsCount
     val rowCount = (itemsCount + 1) / 2
@@ -121,60 +129,71 @@ private fun LazyListScope.assetsListLoading(
         item(
             key = "loading_${collectionId}_$rowIndex",
         ) {
-            val paddingValues = PaddingValues(
-                start = TangemTheme.dimens.spacing6,
-                top = TangemTheme.dimens.spacing6,
-                end = TangemTheme.dimens.spacing6,
-                bottom = TangemTheme.dimens.spacing20,
-            )
-            Row(
-                modifier = Modifier
-                    .padding(TangemTheme.dimens.spacing6)
-                    .animateItem(),
-            ) {
-                NFTCollectionAssetLoading(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(paddingValues),
+            AnimatedVisibility(visible = expanded) {
+                val paddingValues = PaddingValues(
+                    start = TangemTheme.dimens.spacing6,
+                    top = TangemTheme.dimens.spacing6,
+                    end = TangemTheme.dimens.spacing6,
+                    bottom = TangemTheme.dimens.spacing20,
                 )
-                if (rowIndex == rowCount - 1 && itemsCount % 2 != 0) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(paddingValues),
-                    )
-                } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TangemTheme.dimens.spacing6)
+                        .animateContentSize(),
+                ) {
                     NFTCollectionAssetLoading(
                         modifier = Modifier
                             .weight(1f)
                             .padding(paddingValues),
                     )
+                    if (rowIndex == rowCount - 1 && itemsCount % 2 != 0) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(paddingValues),
+                        )
+                    } else {
+                        NFTCollectionAssetLoading(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(paddingValues),
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-private fun LazyListScope.assetsListFailed(collectionId: String, content: NFTCollectionAssetsListUM.Expanded.Failed) {
+private fun LazyListScope.assetsListFailed(
+    collectionId: String,
+    content: NFTCollectionAssetsListUM.Failed,
+    expanded: Boolean,
+) {
     item(
         key = "failed_$collectionId",
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(TangemTheme.dimens.size142),
-            contentAlignment = Alignment.Center,
-        ) {
-            UnableToLoadData(
-                onRetryClick = content.onRetryClick,
-            )
+        AnimatedVisibility(visible = expanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(TangemTheme.dimens.size142)
+                    .animateContentSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                UnableToLoadData(
+                    onRetryClick = content.onRetryClick,
+                )
+            }
         }
     }
 }
 
 private fun LazyListScope.assetsListContent(
     collectionId: String,
-    content: NFTCollectionAssetsListUM.Expanded.Content,
+    content: NFTCollectionAssetsListUM.Content,
+    expanded: Boolean,
 ) {
     val items = content.items
     val itemsCount = items.size
@@ -185,36 +204,43 @@ private fun LazyListScope.assetsListContent(
         item(
             key = "content_${collectionId}_${item1.id}_${item2?.id}",
         ) {
-            val paddingValues = PaddingValues(
-                start = TangemTheme.dimens.spacing6,
-                top = TangemTheme.dimens.spacing6,
-                end = TangemTheme.dimens.spacing6,
-                bottom = TangemTheme.dimens.spacing20,
-            )
-            Row(
-                modifier = Modifier
-                    .padding(TangemTheme.dimens.spacing6)
-                    .animateItem(),
-            ) {
-                NFTCollectionAsset(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(paddingValues),
-                    state = item1,
+            AnimatedVisibility(visible = expanded) {
+                val paddingValues = PaddingValues(
+                    start = TangemTheme.dimens.spacing6,
+                    top = TangemTheme.dimens.spacing6,
+                    end = TangemTheme.dimens.spacing6,
+                    bottom = TangemTheme.dimens.spacing20,
                 )
-                if (item2 == null) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(paddingValues),
-                    )
-                } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(TangemTheme.dimens.spacing6)
+                        .animateContentSize(),
+                ) {
                     NFTCollectionAsset(
                         modifier = Modifier
                             .weight(1f)
+                            .clip(TangemTheme.shapes.roundedCornersXMedium)
+                            .clickable { item1.onItemClick() }
                             .padding(paddingValues),
-                        state = item2,
+                        state = item1,
                     )
+                    if (item2 == null) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(paddingValues),
+                        )
+                    } else {
+                        NFTCollectionAsset(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(TangemTheme.shapes.roundedCornersXMedium)
+                                .clickable { item2.onItemClick() }
+                                .padding(paddingValues),
+                            state = item2,
+                        )
+                    }
                 }
             }
         }
@@ -228,7 +254,7 @@ private fun LazyListScope.assetsListContent(
 private fun Preview_NFTCollectionsContent() {
     TangemThemePreview {
         NFTCollectionsContent(
-            state = NFTCollectionsUM.Content(
+            content = NFTCollectionsUM.Content(
                 search = SearchBarUM(
                     placeholderText = resourceReference(R.string.common_search),
                     query = "",
@@ -243,7 +269,8 @@ private fun Preview_NFTCollectionsContent() {
                         logoUrl = "",
                         networkIconId = R.drawable.img_eth_22,
                         description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Collapsed,
+                        assets = NFTCollectionAssetsListUM.Content(persistentListOf()),
+                        isExpanded = false,
                         onExpandClick = { },
                     ),
                     NFTCollectionUM(
@@ -252,9 +279,10 @@ private fun Preview_NFTCollectionsContent() {
                         logoUrl = "",
                         networkIconId = R.drawable.img_eth_22,
                         description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Expanded.Loading(
+                        assets = NFTCollectionAssetsListUM.Loading(
                             itemsCount = 1,
                         ),
+                        isExpanded = true,
                         onExpandClick = { },
                     ),
                     NFTCollectionUM(
@@ -263,9 +291,10 @@ private fun Preview_NFTCollectionsContent() {
                         logoUrl = "",
                         networkIconId = R.drawable.img_eth_22,
                         description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Expanded.Failed(
+                        assets = NFTCollectionAssetsListUM.Failed(
                             onRetryClick = { },
                         ),
+                        isExpanded = true,
                         onExpandClick = { },
                     ),
                     NFTCollectionUM(
@@ -274,7 +303,7 @@ private fun Preview_NFTCollectionsContent() {
                         logoUrl = "",
                         networkIconId = R.drawable.img_eth_22,
                         description = TextReference.Str("3 items"),
-                        assets = NFTCollectionAssetsListUM.Expanded.Content(
+                        assets = NFTCollectionAssetsListUM.Content(
                             items = persistentListOf(
                                 NFTCollectionAssetUM(
                                     id = "item1",
@@ -299,11 +328,13 @@ private fun Preview_NFTCollectionsContent() {
                                 ),
                             ),
                         ),
+                        isExpanded = true,
                         onExpandClick = { },
                     ),
                 ),
                 warnings = persistentListOf(
                     NFTCollectionsWarningUM(
+                        id = "loading troubles",
                         config = NotificationConfig(
                             title = TextReference.Res(R.string.nft_collections_warning_title),
                             subtitle = TextReference.Res(R.string.nft_collections_warning_subtitle),
