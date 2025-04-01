@@ -102,12 +102,12 @@ internal class TokenActionsHandler @AssistedInject constructor(
                     }
                 },
                 content = TokenReceiveBottomSheetConfig(
-                    name = currency.name,
-                    symbol = currency.symbol,
-                    network = currency.network.name,
-                    addresses = networkAddress.availableAddresses
-                        .mapToAddressModels(currency)
-                        .toImmutableList(),
+                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                        name = currency.name,
+                        symbol = currency.symbol,
+                    ),
+                    network = currency.network,
+                    networkAddress = networkAddress,
                     showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                     onCopyClick = {},
                     onShareClick = {},
