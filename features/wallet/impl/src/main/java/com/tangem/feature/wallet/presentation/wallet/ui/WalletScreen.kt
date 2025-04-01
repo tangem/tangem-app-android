@@ -713,7 +713,6 @@ internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modi
         nftCollections(
             modifier = itemModifier,
             state = it.nftState,
-            onClick = {},
         )
     }
 }

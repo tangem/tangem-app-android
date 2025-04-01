@@ -277,4 +277,9 @@ sealed class AppRoute(val path: String) : Route {
         val nextScreen: AppRoute,
         val screenSource: String,
     ) : AppRoute(path = "/stories$storyId")
+
+    @Serializable
+    data class NFTCollections(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/nft_collections/${userWalletId.stringValue}")
 }
