@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.isNullOrEmpty
 import com.tangem.core.ui.extensions.resolveReference
