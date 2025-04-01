@@ -1,10 +1,9 @@
 package com.tangem.tap.di.domain
 
-import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
-import com.tangem.domain.nft.FetchNFTCollectionsUseCase
-import com.tangem.domain.nft.GetNFTCollectionsUseCase
+import com.tangem.domain.nft.*
 import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -20,30 +19,43 @@ internal object NFTDomainModule {
     fun providesGetNFTCollectionsUseCase(
         currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
-    ): GetNFTCollectionsUseCase {
-        return GetNFTCollectionsUseCase(
-            currenciesRepository = currenciesRepository,
-            nftRepository = nftRepository,
-        )
-    }
+    ): GetNFTCollectionsUseCase = GetNFTCollectionsUseCase(
+        currenciesRepository = currenciesRepository,
+        nftRepository = nftRepository,
+    )
 
     @Provides
     @Singleton
     fun providesFetchNFTCollectionsUseCase(
         currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
-    ): FetchNFTCollectionsUseCase {
-        return FetchNFTCollectionsUseCase(
-            currenciesRepository = currenciesRepository,
-            nftRepository = nftRepository,
-        )
-    }
+    ): FetchNFTCollectionsUseCase = FetchNFTCollectionsUseCase(
+        currenciesRepository = currenciesRepository,
+        nftRepository = nftRepository,
+    )
 
     @Provides
     @Singleton
-    fun providesFetchNFTCollectionAssetsUseCase(nftRepository: NFTRepository): FetchNFTCollectionAssetsUseCase {
-        return FetchNFTCollectionAssetsUseCase(
+    fun providesFetchNFTCollectionAssetsUseCase(nftRepository: NFTRepository): FetchNFTCollectionAssetsUseCase =
+        FetchNFTCollectionAssetsUseCase(
             nftRepository = nftRepository,
         )
-    }
+
+    @Provides
+    @Singleton
+    fun providesGetNFTAvailableNetworksUseCase(
+        nftRepository: NFTRepository,
+        currenciesRepository: CurrenciesRepository,
+    ): GetNFTAvailableNetworksUseCase = GetNFTAvailableNetworksUseCase(
+        currenciesRepository = currenciesRepository,
+        nftRepository = nftRepository,
+    )
+
+    @Provides
+    @Singleton
+    fun providesFilterNFTAvailableNetworksUseCase(
+        dispatchers: CoroutineDispatcherProvider,
+    ): FilterNFTAvailableNetworksUseCase = FilterNFTAvailableNetworksUseCase(
+        dispatchers = dispatchers,
+    )
 }
