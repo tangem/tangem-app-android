@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.bottomsheets.tokenreceive
+package com.tangem.common.ui.bottomsheet.receive
 
 import android.content.res.Configuration
 import androidx.compose.animation.animateColorAsState
@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.res.getStringSafe
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.SecondaryButtonIconStart
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
