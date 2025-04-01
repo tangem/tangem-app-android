@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -63,4 +66,17 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
             }
         },
     )
+
+    ShowBottomSheet(state.bottomSheetConfig)
+}
+
+@Composable
+private fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
+    if (bottomSheetConfig != null) {
+        when (bottomSheetConfig.content) {
+            is TokenReceiveBottomSheetConfig -> {
+                TokenReceiveBottomSheet(config = bottomSheetConfig)
+            }
+        }
+    }
 }
