@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.bottomsheets
+package com.tangem.core.ui.components.bottomsheets.sheet
 
 import android.content.res.Configuration
 import androidx.compose.runtime.Composable
