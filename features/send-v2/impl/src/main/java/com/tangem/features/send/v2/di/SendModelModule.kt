@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.send.v2.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
 import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationModel
@@ -35,4 +36,9 @@ internal interface SendModelModule {
     @IntoMap
     @ClassKey(SendFeeModel::class)
     fun provideSendFeeModel(model: SendFeeModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(SendConfirmModel::class)
+    fun provideSendConfirmModel(model: SendConfirmModel): Model
 }
