@@ -12,7 +12,7 @@ object NFTSdkAssetConverter : Converter<Pair<Network, SdkNFTAsset>, NFTAsset> {
         val (network, asset) = value
         val assetId = NFTSdkAssetIdentifierConverter.convert(asset.identifier)
         val collectionId = NFTSdkCollectionIdentifierConverter.convert(asset.collectionIdentifier)
-        return NFTAsset.Value(
+        return NFTAsset(
             id = assetId,
             collectionId = collectionId,
             network = network,
@@ -25,23 +25,22 @@ object NFTSdkAssetConverter : Converter<Pair<Network, SdkNFTAsset>, NFTAsset> {
                     assetId = assetId,
                     value = it.value,
                     symbol = it.symbol,
-                    source = StatusSource.CACHE,
                 )
             } ?: NFTSalePrice.Empty(assetId = assetId),
             rarity = asset.rarity?.let {
-                NFTAsset.Value.Rarity(
+                NFTAsset.Rarity(
                     rank = it.rank,
                     label = it.label,
                 )
             },
             media = asset.media?.let {
-                NFTAsset.Value.Media(
+                NFTAsset.Media(
                     url = it.url,
                     mimetype = it.mimetype,
                 )
             },
             traits = asset.traits.map {
-                NFTAsset.Value.Trait(
+                NFTAsset.Trait(
                     name = it.name,
                     value = it.value,
                 )

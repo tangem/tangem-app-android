@@ -2,7 +2,6 @@ package com.tangem.features.nft.collections.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -10,11 +9,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH2
@@ -26,13 +28,16 @@ import com.tangem.features.nft.collections.entity.NFTSalePriceUM
 @Composable
 internal fun NFTCollectionAsset(state: NFTCollectionAssetUM, modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .clickable { state.onItemClick() },
+        modifier = modifier,
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier
-                .aspectRatio(1f),
-            model = state.imageUrl,
+                .aspectRatio(1f)
+                .clip(TangemTheme.shapes.roundedCornersXMedium),
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(state.imageUrl)
+                .crossfade(true)
+                .build(),
             loading = {
                 RectangleShimmer(radius = TangemTheme.dimens.radius16)
             },
@@ -43,6 +48,7 @@ internal fun NFTCollectionAsset(state: NFTCollectionAssetUM, modifier: Modifier 
                         .background(TangemTheme.colors.field.primary),
                 )
             },
+            contentScale = ContentScale.Crop,
             contentDescription = null,
         )
         SpacerH12()
