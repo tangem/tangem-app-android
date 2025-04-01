@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.bottomsheets.tokenreceive
+package com.tangem.common.ui.bottomsheet.receive
 
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import kotlinx.collections.immutable.ImmutableList
