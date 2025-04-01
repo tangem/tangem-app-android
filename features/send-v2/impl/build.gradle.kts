@@ -59,6 +59,7 @@ dependencies {
     implementation(deps.compose.material3)
     implementation(deps.decompose.ext.compose)
     implementation(deps.androidx.activity.compose)
+    implementation(deps.androidx.paging.runtime)
 
     /** Other dependencies */
     implementation(deps.kotlin.immutable.collections)
