@@ -1,5 +1,6 @@
 package com.tangem.datasource.local.nft.converter
 
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.tokens.model.Network
@@ -23,6 +24,16 @@ object NFTSdkCollectionConverter : Converter<Pair<Network, SdkNFTCollection>, NF
                 }
                 .filter {
                     it.id !is NFTAsset.Identifier.Unknown
+                }
+                .let {
+                    if (it.isEmpty()) {
+                        NFTCollection.Assets.Empty
+                    } else {
+                        NFTCollection.Assets.Value(
+                            items = it,
+                            source = StatusSource.CACHE,
+                        )
+                    }
                 },
         )
     }
