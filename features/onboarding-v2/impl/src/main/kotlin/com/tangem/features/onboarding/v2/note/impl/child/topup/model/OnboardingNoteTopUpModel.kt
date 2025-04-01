@@ -20,6 +20,7 @@ import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkAddress
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.models.UserWallet
@@ -171,22 +172,18 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
         _uiState.update {
             it.copy(
                 amountToCreateAccount = amountToCreateAccount
-                    ?.format(
-                        {
-                            crypto(
-                                symbol = status.currency.symbol,
-                                decimals = status.currency.decimals,
-                            )
-                        },
-                    ),
-                balance = amount?.format(
-                    {
+                    ?.format {
                         crypto(
                             symbol = status.currency.symbol,
                             decimals = status.currency.decimals,
                         )
                     },
-                ).orEmpty(),
+                balance = amount?.format {
+                    crypto(
+                        symbol = status.currency.symbol,
+                        decimals = status.currency.decimals,
+                    )
+                }.orEmpty(),
                 isTopUpDataLoading = status.value.networkAddress == null,
             )
         }
@@ -209,7 +206,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
             )
             _uiState.update {
                 it.copy(
-                    availableForBuy = availableForBuy,
+                    availableForBuy = availableForBuy == ScenarioUnavailabilityReason.None,
                     availableForBuyLoading = false,
                 )
             }
