@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.note.impl.child.topup.model
 
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -8,8 +9,6 @@ import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.card.repository.CardRepository
@@ -30,7 +29,6 @@ import com.tangem.features.onboarding.v2.note.impl.child.topup.OnboardingNoteTop
 import com.tangem.features.onboarding.v2.note.impl.child.topup.ui.state.OnboardingNoteTopUpUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isPositive
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -223,12 +221,12 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
             isShown = true,
             onDismissRequest = uiState.value.onDismissBottomSheet,
             content = TokenReceiveBottomSheetConfig(
-                name = currencyStatus.currency.name,
-                symbol = currencyStatus.currency.symbol,
-                network = currencyStatus.currency.network.name,
-                addresses = networkAddress.availableAddresses
-                    .mapToAddressModels(currencyStatus.currency)
-                    .toImmutableList(),
+                asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                    name = currencyStatus.currency.name,
+                    symbol = currencyStatus.currency.symbol,
+                ),
+                network = currencyStatus.currency.network,
+                networkAddress = networkAddress,
                 showMemoDisclaimer =
                 currencyStatus.currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                 onCopyClick = {

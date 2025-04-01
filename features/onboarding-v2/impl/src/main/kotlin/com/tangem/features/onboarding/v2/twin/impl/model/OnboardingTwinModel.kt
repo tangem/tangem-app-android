@@ -16,7 +16,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -51,7 +50,6 @@ import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
-import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -370,12 +368,12 @@ internal class OnboardingTwinModel @Inject constructor(
                         }
                     },
                     content = TokenReceiveBottomSheetConfig(
-                        name = currency.name,
-                        symbol = currency.symbol,
-                        network = currency.network.name,
-                        addresses = networkAddress.availableAddresses
-                            .mapToAddressModels(currency)
-                            .toImmutableList(),
+                        asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                            name = currency.name,
+                            symbol = currency.symbol,
+                        ),
+                        network = currency.network,
+                        networkAddress = networkAddress,
                         showMemoDisclaimer =
                         currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                         onCopyClick = {},

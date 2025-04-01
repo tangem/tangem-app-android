@@ -6,7 +6,6 @@ import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
@@ -267,10 +266,12 @@ internal class TokenDetailsStateFactory(
                 isShown = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = TokenReceiveBottomSheetConfig(
-                    name = currency.name,
-                    symbol = currency.symbol,
-                    network = currency.network.name,
-                    addresses = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
+                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                        name = currency.name,
+                        symbol = currency.symbol,
+                    ),
+                    network = currency.network,
+                    networkAddress = networkAddress,
                     showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                     onCopyClick = onCopyClick,
                     onShareClick = onShareClick,
@@ -288,7 +289,12 @@ internal class TokenDetailsStateFactory(
                 isShown = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
-                    addressModels = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
+                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                        name = currency.name,
+                        symbol = currency.symbol,
+                    ),
+                    network = currency.network,
+                    networkAddress = networkAddress,
                     onClick = clickIntents::onAddressTypeSelected,
                 ),
             ),
