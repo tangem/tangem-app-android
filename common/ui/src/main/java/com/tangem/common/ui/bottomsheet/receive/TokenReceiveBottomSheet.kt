@@ -67,7 +67,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
             QrCodeContent(content = content, onAddressChange = { selectedAddress = it })
 
             Info(
-                currency = content.symbol,
+                symbol = content.asset.displaySymbol,
                 network = content.network,
                 showMemoDisclaimer = content.showMemoDisclaimer,
             )
@@ -82,7 +82,7 @@ private fun TokenReceiveBottomSheetContent(content: TokenReceiveBottomSheetConfi
 }
 
 @Composable
-private fun Info(currency: String, network: String, showMemoDisclaimer: Boolean, modifier: Modifier = Modifier) {
+private fun Info(symbol: TextReference, network: String, showMemoDisclaimer: Boolean, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -104,7 +104,7 @@ private fun Info(currency: String, network: String, showMemoDisclaimer: Boolean,
             config = NotificationConfig(
                 title = resourceReference(
                     R.string.receive_bottom_sheet_warning_title,
-                    wrappedList(currency, network),
+                    wrappedList(symbol.resolveReference(), network),
                 ),
                 subtitle = resourceReference(R.string.receive_bottom_sheet_warning_message_description),
                 iconResId = R.drawable.ic_alert_circle_24,
@@ -189,9 +189,8 @@ private fun QrCodePage(content: TokenReceiveBottomSheetConfig, qrCodePainter: Pa
     ) {
         Text(
             text = stringResourceSafe(
-                R.string.receive_bottom_sheet_warning_message,
-                getName(content = content, index = currentIndex),
-                content.symbol,
+                R.string.receive_bottom_sheet_warning_message_compact,
+                content.addresses[currentIndex].fullName.resolveReference(),
                 content.network,
             ),
             color = TangemTheme.colors.text.primary1,
@@ -212,15 +211,6 @@ private fun QrCodePage(content: TokenReceiveBottomSheetConfig, qrCodePainter: Pa
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.subtitle1,
         )
-    }
-}
-
-@Composable
-private fun getName(content: TokenReceiveBottomSheetConfig, index: Int): String {
-    return if (content.addresses.size < 2) {
-        content.name
-    } else {
-        "${content.addresses[index].displayName.resolveReference()} ${content.name}"
     }
 }
 
@@ -291,12 +281,18 @@ private fun Preview_TokenReceiveBottomSheet(
 private class TokenReceiveBottomSheetConfigPreviewProvider : PreviewParameterProvider<TokenReceiveBottomSheetConfig> {
     val address = AddressModel(
         displayName = stringReference("Address 1"),
+        fullName = combinedReference(
+            stringReference("Address 1"),
+            stringReference(" Stellar"),
+        ),
         value = "0xe5178c7d4d0e861ed2e9414e045b501226b0de8d",
         type = AddressModel.Type.Default,
     )
     private val baseConfig = TokenReceiveBottomSheetConfig(
-        name = "Stellar",
-        symbol = "XLM",
+        asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+            name = "Stellar",
+            symbol = "XLM",
+        ),
         network = "Ethereum",
         addresses = persistentListOf(address),
         showMemoDisclaimer = false,
