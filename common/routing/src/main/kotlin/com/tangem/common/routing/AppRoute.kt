@@ -282,4 +282,9 @@ sealed class AppRoute(val path: String) : Route {
     data class NFTCollections(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/nft_collections/${userWalletId.stringValue}")
+
+    @Serializable
+    data class NFTReceive(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/nft_receive/${userWalletId.stringValue}")
 }
