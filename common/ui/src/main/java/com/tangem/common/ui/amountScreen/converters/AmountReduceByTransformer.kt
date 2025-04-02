@@ -62,6 +62,7 @@ class AmountReduceByTransformer(
         val isCheckFailed = isExceedBalance || isLessThanMinimumIfProvided
         return prevState.copy(
             isPrimaryButtonEnabled = !isZero && !isCheckFailed,
+            reduceAmountBy = value.reduceAmountBy,
             amountTextField = amountTextField.copy(
                 value = cryptoValue,
                 fiatValue = fiatValue,

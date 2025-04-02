@@ -10,15 +10,11 @@ internal sealed class DestinationTextFieldUM {
     /** Current value */
     abstract val value: String
 
-    /** Lambda be invoked when value is been changed */
-    abstract val onValueChange: (String) -> Unit
-
     /** Keyboard options */
     abstract val keyboardOptions: KeyboardOptions
 
     data class RecipientAddress(
         override val value: String,
-        override val onValueChange: (String) -> Unit,
         override val keyboardOptions: KeyboardOptions,
         val placeholder: TextReference,
         val label: TextReference,
@@ -29,7 +25,6 @@ internal sealed class DestinationTextFieldUM {
 
     data class RecipientMemo(
         override val value: String,
-        override val onValueChange: (String) -> Unit,
         override val keyboardOptions: KeyboardOptions,
         val placeholder: TextReference,
         val label: TextReference,
