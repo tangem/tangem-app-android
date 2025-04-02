@@ -39,8 +39,12 @@ internal class DefaultSendComponent @AssistedInject constructor(
         popCallback = { onChildBack() },
     )
 
-    private val initialRoute = SendRoute.Empty
-    private val currentRoute = MutableStateFlow<SendRoute>(initialRoute)
+    private val initialRoute = if (params.amount == null) {
+        SendRoute.Destination(isEditMode = false)
+    } else {
+        SendRoute.Empty
+    }
+    private val currentRoute = MutableStateFlow(initialRoute)
 
     private val model: SendModel = getOrCreateModel(params = params, router = innerRouter)
 
@@ -77,12 +81,12 @@ internal class DefaultSendComponent @AssistedInject constructor(
     private fun getDestinationComponent(factoryContext: AppComponentContext, route: SendRoute) =
         SendDestinationComponent(
             appComponentContext = factoryContext,
-            params = SendDestinationComponent.Params(
+            params = SendDestinationComponentParams.DestinationParams(
                 state = model.uiState.value.destinationUM,
                 currentRoute = currentRoute.filterIsInstance<SendRoute.Destination>(),
                 analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
                 userWallet = model.userWallet,
-                cryptoCurrencyStatus = model.cryptoCurrencyStatus,
+                cryptoCurrency = params.currency,
                 callback = model,
                 isEditMode = route.isEditMode,
             ),
