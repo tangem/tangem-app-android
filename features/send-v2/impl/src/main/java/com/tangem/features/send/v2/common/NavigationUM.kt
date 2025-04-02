@@ -1,9 +1,11 @@
 package com.tangem.features.send.v2.common
 
 import androidx.annotation.DrawableRes
+import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 
+@Immutable
 internal sealed class NavigationUM {
     data class Content(
         val title: TextReference,
