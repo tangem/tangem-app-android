@@ -59,6 +59,7 @@ import com.tangem.core.ui.components.snackbar.TangemSnackbar
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.event.StateEvent
 import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.res.LocalIsNavigationRefactoringEnabled
 import com.tangem.core.ui.res.LocalMainBottomSheetColor
 import com.tangem.core.ui.res.LocalWindowSize
 import com.tangem.core.ui.res.TangemTheme
@@ -80,12 +81,12 @@ import com.tangem.feature.wallet.presentation.wallet.ui.components.TokenActionsB
 import com.tangem.feature.wallet.presentation.wallet.ui.components.WalletsList
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.*
 import com.tangem.feature.wallet.presentation.wallet.ui.components.common.actions
+import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.nftCollections
 import com.tangem.feature.wallet.presentation.wallet.ui.components.multicurrency.organizeTokensButton
 import com.tangem.feature.wallet.presentation.wallet.ui.components.singlecurrency.marketPriceBlock
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.BalancesAndLimitsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.VisaTxDetailsBottomSheet
 import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.balancesAndLimitsBlock
-import com.tangem.feature.wallet.presentation.wallet.ui.components.visa.depositButton
 import com.tangem.feature.wallet.presentation.wallet.ui.utils.changeWalletAnimator
 import com.tangem.features.markets.entry.BottomSheetState
 import com.tangem.features.markets.entry.MarketsEntryComponent
@@ -230,11 +231,6 @@ private fun WalletContent(
             }
 
             (selectedWallet as? WalletState.Visa.Content)?.let {
-                depositButton(
-                    modifier = itemModifier.fillMaxWidth(),
-                    state = it.depositButtonState,
-                )
-
                 balancesAndLimitsBlock(
                     modifier = itemModifier,
                     state = it.balancesAndLimitBlockState,
@@ -247,6 +243,8 @@ private fun WalletContent(
                 isBalanceHidden = state.isHidingMode,
                 modifier = movableItemModifier,
             )
+
+            nftCollections(state = selectedWallet, itemModifier = itemModifier)
 
             organizeTokens(state = selectedWallet, itemModifier = itemModifier)
         }
@@ -430,7 +428,11 @@ private inline fun BaseScaffoldWithMarkets(
                             .padding(bottom = 24.dp)
                             .fillMaxWidth(fraction = 0.7f),
                         isVisible = state.showMarketsOnboarding,
-                        availableHeight = maxHeight - statusBarHeight - bottomBarHeight,
+                        availableHeight = if (LocalIsNavigationRefactoringEnabled.current) {
+                            maxHeight
+                        } else {
+                            maxHeight - statusBarHeight - bottomBarHeight
+                        },
                         bottomSheetState = bottomSheetState,
                     )
                 }
@@ -703,6 +705,15 @@ internal fun LazyListScope.organizeTokens(state: WalletState, itemModifier: Modi
                 )
             }
         }
+    }
+}
+
+internal fun LazyListScope.nftCollections(state: WalletState, itemModifier: Modifier) {
+    (state as? WalletState.MultiCurrency)?.let {
+        nftCollections(
+            modifier = itemModifier,
+            state = it.nftState,
+        )
     }
 }
 
