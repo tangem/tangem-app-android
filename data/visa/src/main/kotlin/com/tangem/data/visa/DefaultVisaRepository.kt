@@ -43,11 +43,9 @@ internal class DefaultVisaRepository @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val visaApiRequestMaker: VisaApiRequestMaker,
     private val visaApi: TangemVisaApi,
+    private val visaCurrencyFactory: VisaCurrencyFactory,
 ) : VisaRepository {
 
-    private val currencyFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
-        VisaCurrencyFactory()
-    }
     private val txDetailsFactory by lazy(mode = LazyThreadSafetyMode.NONE) {
         VisaTxDetailsFactory()
     }
@@ -79,20 +77,22 @@ internal class DefaultVisaRepository @Inject constructor(
 
     private suspend fun fetchVisaCurrency(userWalletId: UserWalletId, address: String) {
         val contractInfoProvider = visaLibLoader.getOrCreateProvider()
+        val paymentAccountAddress = getPaymentAccountAddress(userWalletId)
+        val userWallet = findVisaUserWallet(userWalletId)
 
         parZip(
             dispatchers.io,
             {
                 contractInfoProvider.getContractInfo(
                     walletAddress = address,
-                    paymentAccountAddress = getPaymentAccountAddress(userWalletId),
+                    paymentAccountAddress = paymentAccountAddress,
                 )
             },
             { getFiatRate() },
             { contractInfo, fiatRate ->
                 fetchedCurrencies.update { value ->
                     value.apply {
-                        put(address, currencyFactory.create(contractInfo, fiatRate))
+                        put(address, visaCurrencyFactory.create(userWallet, contractInfo, fiatRate))
                     }
                 }
             },
@@ -157,7 +157,7 @@ internal class DefaultVisaRepository @Inject constructor(
             )
         }
 
-        // TODO select correct account when multiple accounts are available (will be implemented when backend is ready)
+        // There will be only one payment account (backend has filtered for us), so we can take the first one
         customerInfo.paymentAccounts.firstOrNull()?.paymentAccountAddress
     }.getOrNull()
 
@@ -187,14 +187,14 @@ internal class DefaultVisaRepository @Inject constructor(
         }
     }
 
-    private suspend fun getFiatRate(): BigDecimal? {
+    private suspend fun getFiatRate(): BigDecimal {
         val fiatCurrencyId = VisaConstants.fiatCurrency.code.lowercase()
         val quotes = tangemTechApi.getQuotes(
             currencyId = fiatCurrencyId,
             coinIds = VisaConstants.TOKEN_ID,
         ).getOrThrow()
 
-        return quotes.quotes[VisaConstants.TOKEN_ID]?.price
+        return quotes.quotes[VisaConstants.TOKEN_ID]?.price ?: error("No price found")
     }
 
     private fun makeWalletAddresses(userWallet: UserWallet): Set<Address> {
