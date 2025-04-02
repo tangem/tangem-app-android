@@ -27,10 +27,11 @@ internal class SendAmountComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val isBalanceHidden by params.isBalanceHidingFlow.collectAsStateWithLifecycle()
 
         AmountScreenContent(
             amountState = state,
-            isBalanceHidden = false,
+            isBalanceHidden = isBalanceHidden,
             clickIntents = model,
             modifier = Modifier.background(TangemTheme.colors.background.tertiary),
         )
