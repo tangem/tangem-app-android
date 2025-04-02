@@ -7,6 +7,7 @@ import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
 import com.tangem.features.send.v2.subcomponents.destination.model.SendDestinationModel
 import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeModel
+import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationsModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -41,4 +42,9 @@ internal interface SendModelModule {
     @IntoMap
     @ClassKey(SendConfirmModel::class)
     fun provideSendConfirmModel(model: SendConfirmModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(NotificationsModel::class)
+    fun provideNotificationsModel(model: NotificationsModel): Model
 }
