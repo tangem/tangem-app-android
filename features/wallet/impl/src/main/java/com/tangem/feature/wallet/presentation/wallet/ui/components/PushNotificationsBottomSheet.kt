@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
@@ -36,7 +34,7 @@ internal fun PushNotificationsBottomSheet(config: TangemBottomSheetConfig) {
 
 @Composable
 private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetConfig, onDismiss: () -> Unit) {
-    val isClicked = remember { mutableStateOf(false) }
+    var isClicked by remember { mutableStateOf(false) }
     val requestPushPermission = requestPushPermission(
         pushPermission = getPushPermissionOrNull(),
         isClicked = isClicked,
@@ -86,7 +84,7 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
             PrimaryButton(
                 text = stringResourceSafe(R.string.common_allow),
                 onClick = {
-                    isClicked.value = true
+                    isClicked = true
                     content.onRequest()
                     requestPushPermission()
                 },
