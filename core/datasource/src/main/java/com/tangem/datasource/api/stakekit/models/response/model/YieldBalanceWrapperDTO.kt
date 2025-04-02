@@ -3,6 +3,7 @@ package com.tangem.datasource.api.stakekit.models.response.model
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import com.tangem.datasource.api.stakekit.models.request.Address
+import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO.PendingAction.PendingActionArgs.Amount
 import com.tangem.datasource.api.stakekit.models.response.model.action.StakingActionTypeDTO
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -31,6 +32,8 @@ data class BalanceDTO(
     val pricePerShare: BigDecimal,
     @Json(name = "pendingActions")
     val pendingActions: List<PendingAction>,
+    @Json(name = "pendingActionConstraints")
+    val pendingActionConstraints: List<PendingActionConstraints>?,
     @Json(name = "token")
     val tokenDTO: TokenDTO,
     @Json(name = "validatorAddress")
@@ -99,7 +102,7 @@ data class BalanceDTO(
             @JsonClass(generateAdapter = true)
             data class Amount(
                 @Json(name = "required")
-                val required: Boolean,
+                val required: Boolean = true,
                 @Json(name = "minimum")
                 val minimum: BigDecimal?,
                 @Json(name = "maximum")
@@ -135,6 +138,14 @@ data class BalanceDTO(
             )
         }
     }
+
+    @JsonClass(generateAdapter = true)
+    data class PendingActionConstraints(
+        @Json(name = "type")
+        val type: StakingActionTypeDTO,
+        @Json(name = "amount")
+        val amountArg: Amount,
+    )
 
     @JsonClass(generateAdapter = true)
     data class Required(
