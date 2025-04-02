@@ -40,7 +40,7 @@ internal class SendDestinationComponent(
         val isEditMode: Boolean,
     )
 
-    interface ModelCallback {
+    interface ModelCallback : SendNavigationModelCallback {
         fun onDestinationResult(destinationUM: DestinationUM)
     }
 }
