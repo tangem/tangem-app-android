@@ -88,6 +88,7 @@ class InvalidatePendingTransactionsUseCase(
                 validatorAddress = action.validatorAddress ?: action.validatorAddresses?.get(0) ?: "",
                 date = null,
                 pendingActions = emptyList(),
+                pendingActionsConstraints = emptyList(),
                 isPending = true,
             ),
         )
