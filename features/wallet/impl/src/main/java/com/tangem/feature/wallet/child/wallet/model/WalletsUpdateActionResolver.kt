@@ -231,7 +231,10 @@ internal class WalletsUpdateActionResolver @Inject constructor(
          * @property prevWalletId   previous selected wallet id
          * @property selectedWallet selected wallet
          */
-        data class ReinitializeWallet(val prevWalletId: UserWalletId, val selectedWallet: UserWallet) : Action() {
+        data class ReinitializeWallet(
+            val prevWalletId: UserWalletId,
+            val selectedWallet: UserWallet,
+        ) : Action() {
 
             override fun toString(): String {
                 return "ReinitializeWallet(prevWalletId = $prevWalletId, selectedWallet = ${selectedWallet.walletId})"
