@@ -108,11 +108,11 @@ internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
 var notificationsHandler: NotificationsHandler? = null
 
 private val coroutineContext: CoroutineContext
-    get() = Job() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
+    get() = SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
 val scope = CoroutineScope(coroutineContext)
 
 private val mainCoroutineContext: CoroutineContext
-    get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
+    get() = SupervisorJob() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
 
 @Suppress("LargeClass")
