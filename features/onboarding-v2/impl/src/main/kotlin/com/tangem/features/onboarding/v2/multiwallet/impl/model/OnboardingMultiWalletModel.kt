@@ -46,7 +46,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             currentStep = getInitialStep(),
             currentScanResponse = params.scanResponse,
             accessCode = null,
-            isThreeCards = true,
+            isThreeCards = isThreeCardsInit(),
             resultUserWallet = null,
             startFromFinalize = getInitialStartFromFinalize(),
         ),
@@ -102,6 +102,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
         val card = scanResponse.card
 
         return when {
+            params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize ->
+                OnboardingMultiWalletState.Step.Finalize
             // Add backup button
             // Wallet1 without backup and userwallet's scanResponse doesn't contain primary card.
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
@@ -131,6 +133,18 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 FinalizeStage.ScanBackupSecondCard
             }
             else -> null
+        }
+    }
+
+    private fun isThreeCardsInit(): Boolean {
+        val backupService = backupServiceHolder.backupService.get() ?: return true
+        return when (backupService.currentState) {
+            BackupService.State.FinalizingPrimaryCard,
+            is BackupService.State.FinalizingBackupCard,
+            -> {
+                backupService.addedBackupCardsCount > 1
+            }
+            else -> true
         }
     }
 
