@@ -22,6 +22,7 @@ import javax.inject.Singleton
 internal class BlockchainProvidersResponseLoader @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val blockchainProvidersStorage: BlockchainProvidersStorage,
+    private val blockchainProvidersResponseMerger: BlockchainProvidersResponseMerger,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
@@ -31,7 +32,7 @@ internal class BlockchainProvidersResponseLoader @Inject constructor(
 
         return loadRemote().fold(
             onSuccess = { remoteResponse ->
-                BlockchainProvidersResponseMerger.merge(
+                blockchainProvidersResponseMerger.merge(
                     local = localResponse,
                     remote = remoteResponse,
                 )
