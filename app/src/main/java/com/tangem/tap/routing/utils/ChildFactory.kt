@@ -13,6 +13,7 @@ import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.nft.component.NFTCollectionsComponent
+import com.tangem.features.nft.component.NFTDetailsComponent
 import com.tangem.features.nft.component.NFTReceiveComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
@@ -84,6 +85,7 @@ internal class ChildFactory @Inject constructor(
     private val redesignedWalletConnectComponentFactory: RedisegnedWalletConnectComponent.Factory,
     private val nftCollectionsComponentFactory: NFTCollectionsComponent.Factory,
     private val nftReceiveComponentFactory: NFTReceiveComponent.Factory,
+    private val nftDetailsComponentFactory: NFTDetailsComponent.Factory,
     private val testerRouter: TesterRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
@@ -414,6 +416,12 @@ internal class ChildFactory @Inject constructor(
                     context = context,
                     params = NFTReceiveComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = nftReceiveComponentFactory,
+                )
+            is AppRoute.NFTDetails ->
+                createComponentChild(
+                    context = context,
+                    params = NFTDetailsComponent.Params(userWalletId = route.userWalletId, nftAsset = route.nftAsset),
+                    componentFactory = nftDetailsComponentFactory,
                 )
             is AppRoute.OnboardingNote,
             is AppRoute.SaveWallet,
@@ -760,6 +768,12 @@ internal class ChildFactory @Inject constructor(
                     contextProvider = contextProvider(route, contextFactory),
                     params = NFTReceiveComponent.Params(userWalletId = route.userWalletId),
                     componentFactory = nftReceiveComponentFactory,
+                )
+            is AppRoute.NFTDetails ->
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = NFTDetailsComponent.Params(userWalletId = route.userWalletId, nftAsset = route.nftAsset),
+                    componentFactory = nftDetailsComponentFactory,
                 )
         }
         // endregion
