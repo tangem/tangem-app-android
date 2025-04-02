@@ -12,6 +12,7 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.operations.CurrenciesStatusesOperations.Error
@@ -28,6 +29,7 @@ class CachedCurrenciesStatusesOperations(
     private val quotesRepository: QuotesRepository,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
+    @Suppress("UnusedPrivateMember") private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(currenciesRepository, quotesRepository, networksRepository, stakingRepository) {
 
@@ -258,6 +260,7 @@ class CachedCurrenciesStatusesOperations(
                 true
             }
             .distinctUntilChanged()
+            .onEmpty { emit(Error.EmptyNetworksStatuses.left()) }
     }
 
     private fun getNetworksStatuses(

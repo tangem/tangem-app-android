@@ -19,7 +19,7 @@ internal class SendAmountPastedTriggerDismissConverter(
 
         return state.copyWrapped(
             isEditState = isEditState,
-            amountState = AmountPastedTriggerDismissTransformer().transform(amountState),
+            amountState = AmountPastedTriggerDismissTransformer.transform(amountState),
         )
     }
 }
