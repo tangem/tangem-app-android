@@ -8,12 +8,12 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.v2.common.NavigationUM
 import com.tangem.features.send.v2.impl.R
+import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
@@ -208,7 +208,20 @@ internal class SendFeeModel @Inject constructor(
         modelScope.launch {
             callFeeUseCase().fold(
                 ifRight = {
-                    feeCheckReloadTrigger.callbackCheckResult(true)
+                    sendFeeAlertFactory.getFeeUpdatedAlert(
+                        newFee = it,
+                        feeUM = uiState.value,
+                        proceedAction = {
+                            modelScope.launch {
+                                feeCheckReloadTrigger.callbackCheckResult(true)
+                            }
+                        },
+                        stopAction = {
+                            modelScope.launch {
+                                feeCheckReloadTrigger.callbackCheckResult(false)
+                            }
+                        },
+                    )
                     _uiState.update(
                         SendFeeLoadedTransformer(
                             fees = it,
@@ -223,7 +236,7 @@ internal class SendFeeModel @Inject constructor(
                 ifLeft = { feeError ->
                     feeCheckReloadTrigger.callbackCheckResult(false)
                     _uiState.update(SendFeeFailedTransformer(feeError))
-                    sendFeeAlertFactory.getFeeUnreachableErrorState(::checkLoadFee)
+                    sendFeeAlertFactory.getFeeUnreachableErrorState(::loadFee)
                     updateFeeNotifications()
                 },
             )
@@ -265,7 +278,7 @@ internal class SendFeeModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (state, _) ->
+        ).distinctUntilChanged().onEach { (state, _) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.common_fee_selector_title),
