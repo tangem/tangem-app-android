@@ -208,6 +208,10 @@ internal class DefaultWalletsRepository(
         .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
         .map { it[userWalletId.stringValue] == true }
 
+    override fun nftEnabledStatuses(): Flow<Map<UserWalletId, Boolean>> = appPreferencesStore
+        .getObjectMap<Boolean>(PreferencesKeys.WALLETS_NFT_ENABLED_STATES_KEY)
+        .map { it.mapKeys { UserWalletId(it.key) } }
+
     override suspend fun enableNFT(userWalletId: UserWalletId) {
         appPreferencesStore.editData {
             it.setObjectMap(
