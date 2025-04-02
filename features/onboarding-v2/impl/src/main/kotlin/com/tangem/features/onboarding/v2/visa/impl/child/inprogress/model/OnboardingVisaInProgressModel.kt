@@ -5,16 +5,19 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.datasource.local.visa.VisaOTPStorage
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.visa.error.VisaActivationError
+import com.tangem.domain.visa.error.VisaAuthorizationAPIError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Params
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
@@ -35,8 +38,9 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     private val visaAuthRepository: VisaAuthRepository,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val otpStorage: VisaOTPStorage,
-    private val generateWalletNameUseCase: GenerateWalletNameUseCase,
+    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<Config>()
@@ -59,7 +63,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     is VisaActivationRemoteState.CardWalletSignatureRequired,
                     VisaActivationRemoteState.BlockedForActivation,
                     -> {
-                        // TODO show alert inconsistent state
+                        uiMessageSender.showErrorDialog(VisaActivationError.InconsistentRemoteState)
                         return@launch
                     }
                     is VisaActivationRemoteState.CustomerWalletSignatureRequired,
@@ -93,7 +97,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         val newTokens = runCatching {
             visaAuthRepository.refreshAccessTokens(authTokens.refreshToken)
         }.getOrElse {
-            // TODO show alert
+            uiMessageSender.showErrorDialog(VisaAuthorizationAPIError)
             return
         }
 
@@ -110,9 +114,8 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
             val newActivationStatus = VisaCardActivationStatus.Activated(visaAuthTokens = authTokens)
 
             requireNotNull(
-                value = UserWalletBuilder(
-                    scanResponse.copy(visaCardActivationStatus = newActivationStatus),
-                    generateWalletNameUseCase,
+                value = userWalletBuilderFactory.create(
+                    scanResponse = scanResponse.copy(visaCardActivationStatus = newActivationStatus),
                 ).build(),
                 lazyMessage = { "User wallet not created" },
             )
