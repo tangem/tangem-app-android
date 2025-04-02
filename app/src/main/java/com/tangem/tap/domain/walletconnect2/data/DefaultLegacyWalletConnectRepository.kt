@@ -9,6 +9,7 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.pair.unsupportedDApps
+import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
