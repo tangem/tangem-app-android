@@ -18,8 +18,10 @@ import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
+import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.WcMethod
+import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.request.WcRequestService
@@ -82,7 +84,21 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun defaultWcSessionsManager(): DefaultWcSessionsManager = DefaultWcSessionsManager()
+    fun defaultWcSessionsManager(
+        store: WalletConnectStore,
+        dispatchers: CoroutineDispatcherProvider,
+        legacyStore: WalletConnectSessionsRepository,
+        getWallets: GetWalletsUseCase,
+    ): DefaultWcSessionsManager {
+        val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
+        return DefaultWcSessionsManager(
+            store = store,
+            dispatchers = dispatchers,
+            legacyStore = legacyStore,
+            getWallets = getWallets,
+            scope = scope,
+        )
+    }
 
     @Provides
     @Singleton
