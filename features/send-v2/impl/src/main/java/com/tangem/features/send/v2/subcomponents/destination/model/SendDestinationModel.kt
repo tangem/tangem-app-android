@@ -357,7 +357,7 @@ internal class SendDestinationModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (state, route) ->
+        ).distinctUntilChanged().onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_recipient_label),
