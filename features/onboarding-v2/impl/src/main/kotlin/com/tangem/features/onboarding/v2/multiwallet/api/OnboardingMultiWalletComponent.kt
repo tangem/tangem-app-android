@@ -20,6 +20,7 @@ interface OnboardingMultiWalletComponent : ComposableContentComponent, InnerNavi
     enum class Mode {
         Onboarding,
         AddBackup,
+        ContinueFinalize,
     }
 
     interface Factory : ComponentFactory<Params, OnboardingMultiWalletComponent>
