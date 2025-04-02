@@ -19,6 +19,8 @@ import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
@@ -44,6 +46,7 @@ internal class SendDestinationModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val appRouter: AppRouter,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -254,46 +257,45 @@ internal class SendDestinationModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach {
-            // todo
-            // params.callback.onNavigationResult(
-            //     NavigationUM.Content(
-            //         title = resourceReference(R.string.send_recipient_label),
-            //         subtitle = null,
-            //         backIconRes = if (route.isEditMode) {
-            //             R.drawable.ic_back_24
-            //         } else {
-            //             R.drawable.ic_close_24
-            //         },
-            //         backIconClick = {
-            //             if (route.isEditMode) {
-            //                 router.pop()
-            //             } else {
-            //                 appRouter.pop()
-            //             }
-            //         },
-            //         additionalIconRes = R.drawable.ic_qrcode_scan_24,
-            //         additionalIconClick = {
-            //             router.push(
-            //                 AppRoute.QrScanning(
-            //                     source = AppRoute.QrScanning.Source.SEND,
-            //                     networkName = cryptoCurrency.network.name,
-            //                 ),
-            //             )
-            //         },
-            //         primaryButton = ButtonsUM.PrimaryButtonUM(
-            //             text = if (route.isEditMode) {
-            //                 resourceReference(R.string.common_continue)
-            //             } else {
-            //                 resourceReference(R.string.common_next)
-            //             },
-            //             isEnabled = state.isPrimaryButtonEnabled,
-            //             onClick = ::onNextClick,
-            //         ),
-            //         prevButton = null,
-            //         secondaryPairButtonsUM = null,
-            //     ),
-            // )
+        ).onEach { (state, route) ->
+            params.callback.onNavigationResult(
+                NavigationUM.Content(
+                    title = resourceReference(R.string.send_recipient_label),
+                    subtitle = null,
+                    backIconRes = if (route.isEditMode) {
+                        R.drawable.ic_back_24
+                    } else {
+                        R.drawable.ic_close_24
+                    },
+                    backIconClick = {
+                        if (route.isEditMode) {
+                            router.pop()
+                        } else {
+                            analyticsEventHandler.send(
+                                SendAnalyticEvents.CloseButtonClicked(
+                                    source = SendScreenSource.Address,
+                                    isFromSummary = false,
+                                    isValid = state.isPrimaryButtonEnabled,
+                                ),
+                            )
+                            appRouter.pop()
+                        }
+                    },
+                    additionalIconRes = R.drawable.ic_qrcode_scan_24,
+                    additionalIconClick = ::onQrCodeScanClick,
+                    primaryButton = ButtonsUM.PrimaryButtonUM(
+                        text = if (route.isEditMode) {
+                            resourceReference(R.string.common_continue)
+                        } else {
+                            resourceReference(R.string.common_next)
+                        },
+                        isEnabled = state.isPrimaryButtonEnabled,
+                        onClick = ::onNextClick,
+                    ),
+                    prevButton = null,
+                    secondaryPairButtonsUM = null,
+                ),
+            )
         }.launchIn(modelScope)
     }
 
