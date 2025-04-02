@@ -1,6 +1,4 @@
-package com.tangem.tap.domain.walletconnect2.domain
-
-import com.tangem.tap.domain.walletconnect2.domain.models.Session
+package com.tangem.domain.walletconnect.model.legacy
 
 interface WalletConnectSessionsRepository {
     suspend fun loadSessions(userWallet: String): List<Session>
