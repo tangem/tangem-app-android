@@ -16,6 +16,8 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
+import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
@@ -200,40 +202,39 @@ internal class SendAmountModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (_, _) ->
-            // todo
-            // params.callback.onNavigationResult(
-            //     NavigationUM.Content(
-            //         title = resourceReference(R.string.send_amount_label),
-            //         subtitle = null,
-            //         backIconRes = R.drawable.ic_back_24,
-            //         backIconClick = {
-            //             if (route.isEditMode) {
-            //                 saveResult()
-            //             }
-            //             router.pop()
-            //         },
-            //         primaryButton = ButtonsUM.PrimaryButtonUM(
-            //             text = if (route.isEditMode) {
-            //                 resourceReference(R.string.common_continue)
-            //             } else {
-            //                 resourceReference(R.string.common_next)
-            //             },
-            //             isEnabled = state.isPrimaryButtonEnabled,
-            //             onClick = ::onAmountNext,
-            //         ),
-            //         prevButton = ButtonsUM.PrimaryButtonUM(
-            //             text = TextReference.EMPTY,
-            //             iconResId = R.drawable.ic_back_24,
-            //             isEnabled = true,
-            //             onClick = {
-            //                 saveResult()
-            //                 router.pop()
-            //             },
-            //         ).takeIf { route.isEditMode.not() },
-            //         secondaryPairButtonsUM = null,
-            //     ),
-            // )
+        ).onEach { (state, route) ->
+            params.callback.onNavigationResult(
+                NavigationUM.Content(
+                    title = resourceReference(R.string.send_amount_label),
+                    subtitle = null,
+                    backIconRes = R.drawable.ic_back_24,
+                    backIconClick = {
+                        if (!route.isEditMode) {
+                            saveResult()
+                        }
+                        router.pop()
+                    },
+                    primaryButton = ButtonsUM.PrimaryButtonUM(
+                        text = if (route.isEditMode) {
+                            resourceReference(R.string.common_continue)
+                        } else {
+                            resourceReference(R.string.common_next)
+                        },
+                        isEnabled = state.isPrimaryButtonEnabled,
+                        onClick = ::onAmountNext,
+                    ),
+                    prevButton = ButtonsUM.PrimaryButtonUM(
+                        text = TextReference.EMPTY,
+                        iconResId = R.drawable.ic_back_24,
+                        isEnabled = true,
+                        onClick = {
+                            saveResult()
+                            router.pop()
+                        },
+                    ).takeIf { route.isEditMode.not() },
+                    secondaryPairButtonsUM = null,
+                ),
+            )
         }.launchIn(modelScope)
     }
 }
