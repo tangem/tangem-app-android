@@ -6,8 +6,10 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.*
+import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
+import com.tangem.features.staking.impl.presentation.state.YieldReward
 import com.tangem.lib.crypto.BlockchainUtils.isBSC
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.utils.Provider
@@ -33,7 +35,8 @@ internal class YieldBalancesConverter(
         val balanceToShowItems = balancesToShowProvider()
 
         return if (yieldBalance is YieldBalance.Data || balanceToShowItems.any { it.isPending }) {
-            val cryptoRewardsValue = (yieldBalance as? YieldBalance.Data)?.getRewardStakingBalance()
+            val yieldBalance = yieldBalance as? YieldBalance.Data
+            val cryptoRewardsValue = yieldBalance?.getRewardStakingBalance()
 
             val fiatRate = cryptoCurrencyStatus.value.fiatRate
             val fiatRewardsValue = if (fiatRate != null && cryptoRewardsValue != null) {
@@ -41,17 +44,25 @@ internal class YieldBalancesConverter(
             } else {
                 null
             }
-            val (type, isActionable) = getRewardBlockType()
+            val type = getRewardBlockType()
+            val pendingRewardsConstraints = yieldBalance?.balance?.items
+                ?.firstOrNull { it.type == BalanceType.REWARDS }
+                ?.pendingActionsConstraints
+                ?.firstOrNull { it.type == StakingActionType.CLAIM_REWARDS }
+
             InnerYieldBalanceState.Data(
-                rewardsCrypto = cryptoRewardsValue.format { crypto(cryptoCurrency) },
-                rewardsFiat = fiatRewardsValue.format {
-                    fiat(
-                        fiatCurrencyCode = appCurrency.code,
-                        fiatCurrencySymbol = appCurrency.symbol,
-                    )
-                },
-                rewardBlockType = type,
-                isActionable = isActionable,
+                reward = YieldReward(
+                    rewardsCrypto = cryptoRewardsValue.format { crypto(cryptoCurrency) },
+                    rewardsFiat = fiatRewardsValue.format {
+                        fiat(
+                            fiatCurrencyCode = appCurrency.code,
+                            fiatCurrencySymbol = appCurrency.symbol,
+                        )
+                    },
+                    rewardBlockType = type,
+                    rewardConstraints = pendingRewardsConstraints,
+                ),
+                isActionable = type.isActionable,
                 balances = balanceToShowItems.mapBalances(),
             )
         } else {
@@ -66,7 +77,7 @@ internal class YieldBalancesConverter(
         .sortedBy { it.type.order }
         .toPersistentList()
 
-    private fun getRewardBlockType(): Pair<RewardBlockType, Boolean> {
+    private fun getRewardBlockType(): RewardBlockType {
         val blockchainId = cryptoCurrencyStatus.currency.network.id.value
         val yieldBalance = cryptoCurrencyStatus.value.yieldBalance as? YieldBalance.Data
         val rewards = yieldBalance?.balance?.items
@@ -76,9 +87,10 @@ internal class YieldBalancesConverter(
         val isRewardsClaimable = rewards?.isNotEmpty() == true
 
         return when {
-            isSolana(blockchainId) || isBSC(blockchainId) -> RewardBlockType.RewardUnavailable to false
-            isRewardsClaimable -> RewardBlockType.Rewards to isActionable
-            else -> RewardBlockType.NoRewards to false
+            isSolana(blockchainId) || isBSC(blockchainId) -> RewardBlockType.RewardUnavailable
+            isRewardsClaimable && isActionable -> RewardBlockType.Rewards
+            isRewardsClaimable && !isActionable -> RewardBlockType.RewardsRequirementsError
+            else -> RewardBlockType.NoRewards
         }
     }
 }
