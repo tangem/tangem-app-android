@@ -1,7 +1,6 @@
 package com.tangem.features.onboarding.v2.done.impl
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
@@ -18,7 +17,8 @@ internal class DefaultOnboardingDoneComponent @AssistedInject constructor(
     @Composable
     override fun Content(modifier: Modifier) {
         OnboardingDone(
-            onContinueClick = remember(this) { params.onDone },
+            mode = params.mode,
+            onContinueClick = params.onDone,
         )
     }
 
