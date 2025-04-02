@@ -510,10 +510,14 @@
   <string name="nft_collections_title">NFT collections</string>
   <string name="nft_collections_warning_subtitle">Some data may not load</string>
   <string name="nft_collections_warning_title">Temporary loading problems</string>
+  <string name="nft_empty_search">No results. Please try another request.</string>
+  <string name="nft_receive_title">Receive NFT</string>
+  <string name="nft_receive_subtitle">To My wallet</string>
   <string name="nft_wallet_count">%1$d NFTs in %2$d collection</string>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
   <string name="nft_wallet_title">NFT collections</string>
   <string name="nft_wallet_unable_to_load">Unable to load the data</string>
+  <string name="nft_receive_choose_network">Choose network</string>
   <string name="onboarding_access_code_feature_1_description">Set up a single access code to protect all your devices.</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">Set an individual access code for each card or ring later.</string>
