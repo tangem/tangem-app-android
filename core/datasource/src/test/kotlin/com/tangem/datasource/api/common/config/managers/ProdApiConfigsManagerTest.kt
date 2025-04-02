@@ -89,6 +89,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is StakeKit -> createStakeKitModel()
                 is TangemVisaAuth -> createVisaAuthModel()
                 is TangemVisa -> createVisaModel()
+                is TangemCardSdk -> createTangemCardSdkModel()
             }
         }
 
@@ -200,6 +201,16 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "Android" },
                     ),
+                ),
+            )
+        }
+
+        private fun createTangemCardSdkModel(): Model {
+            return Model(
+                id = ApiConfig.ID.TangemCardSdk,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.PROD,
+                    baseUrl = "https://api.tangem-tech.com/",
                 ),
             )
         }
