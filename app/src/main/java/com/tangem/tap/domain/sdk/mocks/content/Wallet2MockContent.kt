@@ -32,6 +32,11 @@ object Wallet2MockContent : MockContent {
             name = "TANGEM 2.0",
             publicKey = byteArrayOf(2, -120, 89, -52, -60, 36, -73, -17, 103, 107, -110, -36, 3, 110, -122, 72, 43, -38, 8, 30, -50, 25, -23, -17, 38, 94, 5, -112, -20, 9, 54, -24, -32),
         ),
+        manufacturer = Card.Manufacturer(
+            name = "TANGEM SDK",
+            manufactureDate = Date(1743759687),
+            signature = byteArrayOf(),
+        ),
         walletCurves = listOf(
             EllipticCurve.Secp256k1,
             EllipticCurve.Ed25519,

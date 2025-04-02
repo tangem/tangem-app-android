@@ -32,6 +32,11 @@ object WalletMockContent : MockContent {
             name = "TANGEM AG",
             publicKey = byteArrayOf(3, 86, -25, -61, 55, 99, 41, -33, -82, 115, -120, -33, 22, -107, 103, 3, -122, 16, 60, -110, 72, 106, -121, 100, 79, -87, -27, 18, -55, -49, 78, -110, -2),
         ),
+        manufacturer = Card.Manufacturer(
+            name = "TANGEM",
+            manufactureDate = Date(1743759687),
+            signature = byteArrayOf(),
+        ),
         walletCurves = listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519, EllipticCurve.Bls12381G2Aug),
         firmwareVersion = FirmwareVersion(
             major = 4,
