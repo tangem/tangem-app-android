@@ -13,6 +13,8 @@ android {
 
 dependencies {
     implementation(projects.features.walletconnect.api)
+    implementation(projects.domain.walletConnect)
+    implementation(projects.domain.walletConnect.models)
 
     /** Core */
     implementation(projects.core.configToggles)
