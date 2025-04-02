@@ -16,7 +16,7 @@ import com.tangem.wallet.databinding.LayoutBackupAccessCodeBinding
 
 class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
 
-    var binding: LayoutBackupAccessCodeBinding? = null
+    private var binding: LayoutBackupAccessCodeBinding? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,7 +33,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
         }
     }
 
-    fun showInfoScreen() = with(binding!!) {
+    fun showInfoScreen() = binding?.run {
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
         accessCodeTitle.text = context.getText(R.string.onboarding_access_code_intro_title)
         layoutBackupAccessCodeInfo.root.show()
@@ -43,7 +43,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
         }
     }
 
-    fun showEnterAccessCode() = with(binding!!) {
+    fun showEnterAccessCode() = binding?.run {
         layoutBackupAccessCodeInfo.root.hide()
         layoutBackupAccessCodeSubmit.root.show()
         accessCodeTitle.text = context.getText(R.string.onboarding_access_code_intro_title)
@@ -56,7 +56,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
         }
     }
 
-    fun showReenterAccessCode() = with(binding!!) {
+    fun showReenterAccessCode() = binding?.run {
         layoutBackupAccessCodeInfo.root.hide()
         layoutBackupAccessCodeSubmit.root.show()
         accessCodeTitle.text = context.getText(R.string.onboarding_access_code_repeat_code_title)
@@ -69,7 +69,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
         }
     }
 
-    fun showError(error: AccessCodeError?) = with(binding!!.layoutBackupAccessCodeSubmit) {
+    fun showError(error: AccessCodeError?) = binding?.layoutBackupAccessCodeSubmit?.run {
         when (error) {
             AccessCodeError.CodeTooShort ->
                 tilAccessCode.error = context.getString(R.string.onboarding_access_code_too_short)
