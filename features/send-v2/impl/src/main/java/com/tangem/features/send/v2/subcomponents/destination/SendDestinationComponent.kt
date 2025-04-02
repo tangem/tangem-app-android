@@ -29,7 +29,6 @@ internal class SendDestinationComponent(
         SendDestinationContent(state = state, clickIntents = model, isBalanceHidden = isBalanceHidden)
     }
 
-
     interface ModelCallback : SendNavigationModelCallback {
         fun onDestinationResult(destinationUM: DestinationUM)
     }

@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
+    api(projects.core.pagination)
 
     /** Tangem SDK */
     implementation(tangemDeps.blockchain)
@@ -51,6 +52,8 @@ dependencies {
     implementation(projects.domain.settings)
     implementation(projects.domain.feedback)
     implementation(projects.domain.txhistory)
+    implementation(projects.domain.balanceHiding.models)
+    implementation(projects.domain.balanceHiding)
 
     /** Compose libraries */
     implementation(deps.compose.foundation)
@@ -64,6 +67,7 @@ dependencies {
     /** Other dependencies */
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.timber)
+    implementation(deps.androidx.paging.runtime)
 
     /** DI */
     implementation(deps.hilt.android)
