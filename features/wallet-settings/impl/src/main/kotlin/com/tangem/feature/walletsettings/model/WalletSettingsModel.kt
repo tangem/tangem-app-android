@@ -164,7 +164,7 @@ internal class WalletSettingsModel @Inject constructor(
             router.push(
                 AppRoute.Onboarding(
                     scanResponse = scanResponse,
-                    mode = AppRoute.Onboarding.Mode.AddBackup,
+                    mode = AppRoute.Onboarding.Mode.AddBackupWallet1,
                 ),
             )
         } else {

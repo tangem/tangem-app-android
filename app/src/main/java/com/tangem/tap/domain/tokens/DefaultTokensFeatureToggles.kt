@@ -7,6 +7,6 @@ internal class DefaultTokensFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) : TokensFeatureToggles {
 
-    override val isBalancesCachingEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "BALANCES_CACHING_ENABLED")
+    override val isNetworksLoadingRefactoringEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "NETWORKS_LOADING_REFACTORING_ENABLED")
 }
