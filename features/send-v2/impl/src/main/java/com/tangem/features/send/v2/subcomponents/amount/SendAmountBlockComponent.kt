@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.amount
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -20,7 +21,7 @@ internal class SendAmountBlockComponent(
     val onClick: () -> Unit,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
-    private val model: SendAmountModel = getOrCreateModel(params = params, router = router)
+    private val model: SendAmountModel = getOrCreateModel(params = params)
 
     init {
         model.uiState.onEach {
@@ -32,14 +33,13 @@ internal class SendAmountBlockComponent(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val state = model.uiState.collectAsStateWithLifecycle()
-        val isClickEnabled = params.blockClickEnableFlow.collectAsStateWithLifecycle()
-        val isEditingDisabled = params.blockEditDisabledFlow.collectAsStateWithLifecycle()
+        val state by model.uiState.collectAsStateWithLifecycle()
+        val isClickEnabled by params.blockClickEnableFlow.collectAsStateWithLifecycle()
 
         AmountBlock(
-            amountState = state.value,
-            isClickDisabled = !isClickEnabled.value,
-            isEditingDisabled = isEditingDisabled.value,
+            amountState = state,
+            isClickDisabled = !isClickEnabled,
+            isEditingDisabled = params.isPredefinedValues,
             onClick = onClick,
         )
     }
