@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface WcSessionsManager {
     val sessions: Flow<Map<UserWalletId, List<WcSession>>>
-    suspend fun saveSessions(userWalletId: UserWalletId, session: WcSession)
-    suspend fun removeSessions(userWalletId: UserWalletId, session: WcSession)
+    suspend fun saveSession(userWalletId: UserWalletId, session: WcSession)
+    suspend fun removeSession(userWalletId: UserWalletId, session: WcSession)
     suspend fun findSessionByTopic(topic: String): WcSession?
 }
