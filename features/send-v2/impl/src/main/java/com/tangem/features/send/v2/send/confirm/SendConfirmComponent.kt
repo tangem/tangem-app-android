@@ -18,6 +18,8 @@ import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
+import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
+import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
@@ -33,22 +35,22 @@ internal class SendConfirmComponent(
 
     private val blockClickEnableFlow = MutableStateFlow(false)
 
-    // private val destinationBlockComponent =
-    // SendDestinationBlockComponent(
-    //     appComponentContext = child("sendConfirmDestinationBlock"),
-    //     params = SendDestinationComponentParams.DestinationBlockParams(
-    //         state = model.uiState.value.destinationUM,
-    //         analyticsCategoryName = params.analyticsCategoryName,
-    //         userWallet = params.userWallet,
-    //         cryptoCurrency = params.cryptoCurrencyStatus.currency,
-    //         blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
-    //         isPredefinedValues = params.predefinedValues is Params.PredefinedValues.Content,
-    //         predefinedAddressValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.address,
-    //         predefinedMemoValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.tag,
-    //     ),
-    //     onResult = model::onDestinationResult,
-    //     onClick = model::showEditDestination,
-    // )
+    private val destinationBlockComponent =
+        SendDestinationBlockComponent(
+            appComponentContext = child("sendConfirmDestinationBlock"),
+            params = SendDestinationComponentParams.DestinationBlockParams(
+                state = model.uiState.value.destinationUM,
+                analyticsCategoryName = params.analyticsCategoryName,
+                userWallet = params.userWallet,
+                cryptoCurrency = params.cryptoCurrencyStatus.currency,
+                blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
+                isPredefinedValues = params.predefinedValues is Params.PredefinedValues.Content,
+                predefinedAddressValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.address,
+                predefinedMemoValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.tag,
+            ),
+            onResult = model::onDestinationResult,
+            onClick = model::showEditDestination,
+        )
 
     private val amountBlockComponent = SendAmountBlockComponent(
         appComponentContext = child("sendConfirmAmountBlock"),
@@ -59,9 +61,8 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
-            blockEditDisabledFlow = TODO(),
-            // isPredefinedValues = params.predefinedValues is Params.PredefinedValues.Content,
-            // predefinedAmountValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.amount,
+            isPredefinedValues = params.predefinedValues is Params.PredefinedValues.Content,
+            predefinedAmountValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.amount,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -109,8 +110,7 @@ internal class SendConfirmComponent(
     }
 
     fun updateState(state: SendUM) {
-        // todo
-        // destinationBlockComponent.updateState(state.destinationUM)
+        destinationBlockComponent.updateState(state.destinationUM)
         amountBlockComponent.updateState(state.amountUM)
         feeBlockComponent.updateState(state.feeUM)
         model.updateState(state)
@@ -123,7 +123,7 @@ internal class SendConfirmComponent(
 
         SendConfirmContent(
             sendUM = state,
-            // destinationBlockComponent = destinationBlockComponent,
+            destinationBlockComponent = destinationBlockComponent,
             amountBlockComponent = amountBlockComponent,
             feeBlockComponent = feeBlockComponent,
             notificationsComponent = notificationsComponent,
