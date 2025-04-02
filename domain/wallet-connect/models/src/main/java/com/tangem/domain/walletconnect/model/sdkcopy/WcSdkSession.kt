@@ -5,4 +5,5 @@ package com.tangem.domain.walletconnect.model.sdkcopy
  */
 data class WcSdkSession(
     val topic: String,
+    val appMetaData: WcAppMetaData,
 )
