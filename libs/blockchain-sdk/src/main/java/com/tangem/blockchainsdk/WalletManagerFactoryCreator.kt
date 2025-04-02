@@ -32,9 +32,7 @@ internal class WalletManagerFactoryCreator @Inject constructor(
             config = config,
             blockchainProviderTypes = blockchainProviderTypes,
             accountCreator = accountCreator,
-            featureToggles = BlockchainFeatureToggles(
-                isEthereumEIP1559Enabled = true,
-            ),
+            featureToggles = BlockchainFeatureToggles(),
             blockchainDataStorage = blockchainDataStorage,
             loggers = listOf(blockchainSDKLogger),
         )
