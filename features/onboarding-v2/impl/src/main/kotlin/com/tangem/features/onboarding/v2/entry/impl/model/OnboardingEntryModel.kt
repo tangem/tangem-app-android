@@ -81,6 +81,7 @@ internal class OnboardingEntryModel @Inject constructor(
                 val multiWalletNavigationMode = when (params.mode) {
                     Mode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
                     Mode.AddBackupWallet1 -> OnboardingMultiWalletComponent.Mode.AddBackup
+                    Mode.ContinueFinalize -> OnboardingMultiWalletComponent.Mode.ContinueFinalize
                     else -> error("Incorrect onboarding type")
                 }
 
