@@ -2,7 +2,9 @@ package com.tangem.domain.nft.models
 
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.Network
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class NFTAsset(
     val id: Identifier,
     val collectionId: NFTCollection.Identifier,
@@ -18,29 +20,44 @@ data class NFTAsset(
     val source: StatusSource,
 ) {
 
+    @Serializable
     data class Media(
         val mimetype: String?,
         val url: String,
     )
 
+    @Serializable
     data class Rarity(
         val rank: String,
         val label: String,
     )
 
+    @Serializable
     data class Trait(
         val name: String,
         val value: String,
     )
 
+    @Serializable
     sealed class Identifier {
+        abstract val stringValue: String
+
+        @Serializable
         data class EVM(
             val tokenId: String,
             val tokenAddress: String,
-        ) : Identifier()
+        ) : Identifier() {
+            override val stringValue: String = "${tokenAddress}_$tokenId"
+        }
 
-        data class TON(val tokenAddress: String) : Identifier()
+        @Serializable
+        data class TON(val tokenAddress: String) : Identifier() {
+            override val stringValue: String = tokenAddress
+        }
 
-        data object Unknown : Identifier()
+        @Serializable
+        data object Unknown : Identifier() {
+            override val stringValue: String = ""
+        }
     }
 }
