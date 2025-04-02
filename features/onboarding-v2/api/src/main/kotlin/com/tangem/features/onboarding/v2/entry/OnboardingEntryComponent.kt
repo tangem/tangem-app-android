@@ -16,6 +16,7 @@ interface OnboardingEntryComponent : ComposableContentComponent {
         AddBackupWallet1,
         WelcomeOnlyTwin,
         RecreateWalletTwin,
+        ContinueFinalize,
     }
 
     interface Factory : ComponentFactory<Params, OnboardingEntryComponent>
