@@ -157,5 +157,6 @@ public val Blockchain.mercuryoNetwork: String?
             Blockchain.Scroll, Blockchain.ScrollTestnet -> null
             Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> null
             Blockchain.KaspaTestnet -> null
+            Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> null
         }
     }
