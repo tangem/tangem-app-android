@@ -13,6 +13,7 @@ import javax.inject.Singleton
 interface SendAmountReduceTrigger {
     suspend fun triggerReduceBy(reduceBy: ReduceByData)
     suspend fun triggerReduceTo(reduceTo: BigDecimal)
+    suspend fun triggerIgnoreReduce()
 }
 
 /**
@@ -21,6 +22,7 @@ interface SendAmountReduceTrigger {
 interface SendAmountReduceListener {
     val reduceToTriggerFlow: Flow<BigDecimal>
     val reduceByTriggerFlow: Flow<ReduceByData>
+    val ignoreReduceTriggerFlow: Flow<Unit>
 }
 
 @Singleton
@@ -29,6 +31,7 @@ internal class DefaultSendAmountReduceTrigger @Inject constructor() :
     SendAmountReduceListener {
     override val reduceToTriggerFlow = MutableSharedFlow<BigDecimal>()
     override val reduceByTriggerFlow = MutableSharedFlow<ReduceByData>()
+    override val ignoreReduceTriggerFlow = MutableSharedFlow<Unit>()
 
     override suspend fun triggerReduceBy(reduceBy: ReduceByData) {
         reduceByTriggerFlow.emit(reduceBy)
@@ -36,5 +39,9 @@ internal class DefaultSendAmountReduceTrigger @Inject constructor() :
 
     override suspend fun triggerReduceTo(reduceTo: BigDecimal) {
         reduceToTriggerFlow.emit(reduceTo)
+    }
+
+    override suspend fun triggerIgnoreReduce() {
+        ignoreReduceTriggerFlow.emit(Unit)
     }
 }
