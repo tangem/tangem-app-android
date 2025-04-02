@@ -16,7 +16,7 @@ internal sealed class DestinationUM {
         val wallets: ImmutableList<DestinationRecipientListUM>,
         val networkName: String,
         val isValidating: Boolean = false,
-        val isEditingDisabled: Boolean = false,
+        val isInitialized: Boolean = false,
     ) : DestinationUM()
 
     data class Empty(
