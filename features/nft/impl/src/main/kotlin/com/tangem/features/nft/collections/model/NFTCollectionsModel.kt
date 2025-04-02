@@ -115,9 +115,13 @@ internal class NFTCollectionsModel @Inject constructor(
         // TODO refresh all
     }
 
-    @Suppress("UnusedPrivateMember")
     private fun onAssetClick(asset: NFTAsset) {
-        // TODO move to details
+        router.push(
+            AppRoute.NFTDetails(
+                userWalletId = params.userWalletId,
+                nftAsset = asset,
+            ),
+        )
     }
 
     private fun onReceiveClick() {
