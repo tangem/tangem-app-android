@@ -6,6 +6,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.derivation.DerivationConfigV2
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.test.domain.card.MockScanResponseFactory
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.common.configs.MultiWalletCardConfig
@@ -20,7 +22,7 @@ internal class MissedDerivationsFinderTest {
 
     @Test
     fun `empty derivations for empty currencies`() {
-        val scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
+        val scanResponse = MockScanResponseFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
         val finder = MissedDerivationsFinder(scanResponse)
 
         val actual = finder.find(emptyList())
@@ -31,10 +33,10 @@ internal class MissedDerivationsFinderTest {
     @Test
     fun `empty derivations for non supported blockchains`() {
         // Bls is not supported
-        val scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
+        val scanResponse = MockScanResponseFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap())
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = CryptoCurrenciesMocks(scanResponse).chia
+        val currencies = MockCryptoCurrencyFactory(scanResponse).chia.let(::listOf)
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).isEmpty()
@@ -43,7 +45,7 @@ internal class MissedDerivationsFinderTest {
     @Test
     fun `derivations ONLY for supported blockchains`() {
         // Bls is not supported
-        val scanResponse = ScanResponseMockFactory.create(
+        val scanResponse = MockScanResponseFactory.create(
             cardConfig = GenericCardConfig(2),
             derivedKeys = emptyMap(),
         ).let {
@@ -55,7 +57,7 @@ internal class MissedDerivationsFinderTest {
         }
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = CryptoCurrenciesMocks(scanResponse).chiaAndEthereum
+        val currencies = MockCryptoCurrencyFactory(scanResponse).chiaAndEthereum
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(
@@ -66,10 +68,10 @@ internal class MissedDerivationsFinderTest {
 
     @Test
     fun `derivations for custom token`() {
-        val scanResponse = ScanResponseMockFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
+        val scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = CryptoCurrenciesMocks(scanResponse).ethereumTokenWithBinanceDerivation
+        val currencies = MockCryptoCurrencyFactory(scanResponse).ethereumTokenWithBinanceDerivation
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(
@@ -83,10 +85,10 @@ internal class MissedDerivationsFinderTest {
 
     @Test
     fun `derivations for cardano`() {
-        val scanResponse = ScanResponseMockFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
+        val scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap())
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = CryptoCurrenciesMocks(scanResponse).cardano
+        val currencies = MockCryptoCurrencyFactory(scanResponse).cardano.let(::listOf)
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(
@@ -105,13 +107,13 @@ internal class MissedDerivationsFinderTest {
 
     @Test
     fun `empty derivations for already derived currencies`() {
-        val scanResponse = ScanResponseMockFactory.create(
+        val scanResponse = MockScanResponseFactory.create(
             cardConfig = Wallet2CardConfig,
             derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
         )
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = CryptoCurrenciesMocks(scanResponse).ethereum
+        val currencies = MockCryptoCurrencyFactory(scanResponse).ethereum.let(::listOf)
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).isEmpty()
@@ -119,13 +121,13 @@ internal class MissedDerivationsFinderTest {
 
     @Test
     fun `derivations ONLY for never derived currencies`() {
-        val scanResponse = ScanResponseMockFactory.create(
+        val scanResponse = MockScanResponseFactory.create(
             cardConfig = MultiWalletCardConfig,
             derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
         )
         val finder = MissedDerivationsFinder(scanResponse)
 
-        val currencies = CryptoCurrenciesMocks(scanResponse).ethereumAndStellar
+        val currencies = MockCryptoCurrencyFactory(scanResponse).ethereumAndStellar
         val actual = finder.find(currencies)
 
         Truth.assertThat(actual).containsExactly(
