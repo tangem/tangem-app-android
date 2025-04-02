@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.models)
     implementation(projects.domain.nft.models)
+    implementation(projects.domain.walletConnect.models)
 
     /** Tangem libraries */
     implementation(tangemDeps.blockchain)
