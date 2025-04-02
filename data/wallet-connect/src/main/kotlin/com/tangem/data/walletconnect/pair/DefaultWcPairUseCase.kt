@@ -96,7 +96,7 @@ internal class DefaultWcPairUseCase(
 
                         is Wallet.Model.SettledSessionResponse.Result -> {
                             val newSession = settledSession.session.toDomain(sessionForApprove.walletId)
-                            sessionsManager.saveSessions(sessionForApprove.walletId, newSession)
+                            sessionsManager.saveSession(sessionForApprove.walletId, newSession)
                             newSession.right()
                         }
                     }
