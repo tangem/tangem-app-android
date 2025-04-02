@@ -1,16 +1,20 @@
 package com.tangem.features.nft.collections.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -24,6 +28,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.collections.entity.NFTCollectionAssetUM
 import com.tangem.features.nft.collections.entity.NFTSalePriceUM
+import com.tangem.features.nft.impl.R
 
 @Composable
 internal fun NFTCollectionAsset(state: NFTCollectionAssetUM, modifier: Modifier = Modifier) {
@@ -42,11 +47,7 @@ internal fun NFTCollectionAsset(state: NFTCollectionAssetUM, modifier: Modifier 
                 RectangleShimmer(radius = TangemTheme.dimens.radius16)
             },
             error = {
-                Box(
-                    modifier = Modifier
-                        .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
-                        .background(TangemTheme.colors.field.primary),
-                )
+                Placeholder()
             },
             contentScale = ContentScale.Crop,
             contentDescription = null,
@@ -62,6 +63,22 @@ internal fun NFTCollectionAsset(state: NFTCollectionAssetUM, modifier: Modifier 
         SpacerH2()
         NFTSalePrice(
             state = state.price,
+        )
+    }
+}
+
+@Composable
+private fun Placeholder(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .clip(shape = TangemTheme.shapes.roundedCornersXMedium)
+            .background(TangemTheme.colors.field.focused),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            modifier = Modifier.size(TangemTheme.dimens.size52),
+            painter = painterResource(R.drawable.ic_nft_placeholder_76),
+            contentDescription = null,
         )
     }
 }
