@@ -77,7 +77,7 @@ internal class SendFeeAlertFactory @Inject constructor(
         return isFeeTooHigh
     }
 
-    fun getFeeUpdatedAlert(newFee: TransactionFee, feeUM: FeeUM, onFeeNotIncreased: () -> Unit) {
+    fun getFeeUpdatedAlert(newFee: TransactionFee, feeUM: FeeUM, proceedAction: () -> Unit, stopAction: () -> Unit) {
         if (feeUM !is FeeUM.Content) return
         val feeSelectorUM = feeUM.feeSelectorUM as? FeeSelectorUM.Content ?: return
         val newFee = when (newFee) {
@@ -100,12 +100,16 @@ internal class SendFeeAlertFactory @Inject constructor(
                 DialogMessage(
                     message = resourceReference(id = R.string.send_notification_high_fee_title),
                     dismissOnFirstAction = true,
-                    firstActionBuilder = { okAction() },
-                    secondActionBuilder = { cancelAction() },
+                    firstActionBuilder = {
+                        okAction { proceedAction(); onDismissRequest() }
+                    },
+                    secondActionBuilder = {
+                        cancelAction { stopAction(); onDismissRequest() }
+                    },
                 ),
             )
         } else {
-            onFeeNotIncreased()
+            proceedAction()
         }
     }
 
