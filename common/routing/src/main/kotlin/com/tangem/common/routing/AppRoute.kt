@@ -9,7 +9,6 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.serialization.Serializable
@@ -146,10 +145,21 @@ sealed class AppRoute(val path: String) : Route {
     data object WalletConnectSessions : AppRoute(path = "/wallet_connect_sessions")
 
     @Serializable
-    data class QrScanning(
-        val source: SourceType,
-        val networkName: String? = null,
-    ) : AppRoute(path = "/$source/qr_scanning${if (networkName != null) "/$networkName" else ""}")
+    data class QrScanning(val source: Source) : AppRoute(path = "/$source/qr_scanning${source.path}") {
+
+        @Serializable
+        sealed class Source {
+            val path: String
+                get() = when (this) {
+                    is Send -> "/$networkName"
+                    WalletConnect -> ""
+                }
+
+            data class Send(val networkName: String) : Source()
+
+            data object WalletConnect : Source()
+        }
+    }
 
     @Serializable
     data class ReferralProgram(
@@ -255,7 +265,9 @@ sealed class AppRoute(val path: String) : Route {
 
         enum class Mode {
             Onboarding, // general Mode
-            AddBackup, // continue backup process for existing wallet 1
+            AddBackupWallet1, // continue backup process for existing wallet 1
+            WelcomeOnlyTwin, // show welcome screen and then navigate to wallet for twins
+            RecreateWalletTwin, // reset twins
             ContinueFinalize, // continue finalize process (unfinished backup dialog)
         }
     }
@@ -266,4 +278,14 @@ sealed class AppRoute(val path: String) : Route {
         val nextScreen: AppRoute,
         val screenSource: String,
     ) : AppRoute(path = "/stories$storyId")
+
+    @Serializable
+    data class NFTCollections(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/nft_collections/${userWalletId.stringValue}")
+
+    @Serializable
+    data class NFTReceive(
+        val userWalletId: UserWalletId,
+    ) : AppRoute(path = "/nft_receive/${userWalletId.stringValue}")
 }
