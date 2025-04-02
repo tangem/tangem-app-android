@@ -268,6 +268,7 @@ sealed class AppRoute(val path: String) : Route {
             AddBackupWallet1, // continue backup process for existing wallet 1
             WelcomeOnlyTwin, // show welcome screen and then navigate to wallet for twins
             RecreateWalletTwin, // reset twins
+            ContinueFinalize, // continue finalize process (unfinished backup dialog)
         }
     }
 
