@@ -15,6 +15,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.features.send.v2.send.ui.state.ButtonsUM
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -34,6 +37,8 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
@@ -479,71 +484,70 @@ internal class SendConfirmModel @Inject constructor(
         }
     }
 
-    fun configConfirmNavigation() {
+    private fun configConfirmNavigation() {
         combine(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
         ).onEach { (state, _) ->
-            // todo
-            // val amountUM = state.amountUM as? AmountState.Data
-            // val confirmUM = state.confirmUM
-            // params.callback.onResult(
-            //     state.copy(
-            //         navigationUM = NavigationUM.Content(
-            //             title = resourceReference(
-            //                 id = R.string.send_summary_title,
-            //                 formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
-            //             ),
-            //             subtitle = amountUM?.title,
-            //             backIconRes = R.drawable.ic_close_24,
-            //             backIconClick = {
-            //                 analyticsEventHandler.send(
-            //                     SendAnalyticEvents.CloseButtonClicked(
-            //                         source = SendScreenSource.Confirm,
-            //                         isFromSummary = true,
-            //                         isValid = confirmUM.isPrimaryButtonEnabled,
-            //                     ),
-            //                 )
-            //                 appRouter.pop()
-            //             },
-            //             primaryButton = ButtonsUM.PrimaryButtonUM(
-            //                 text = when (confirmUM) {
-            //                     is ConfirmUM.Success -> resourceReference(R.string.common_close)
-            //                     is ConfirmUM.Content -> if (confirmUM.isSending) {
-            //                         resourceReference(R.string.send_sending)
-            //                     } else {
-            //                         resourceReference(R.string.common_send)
-            //                     }
-            //                     else -> resourceReference(R.string.common_send)
-            //                 },
-            //                 iconResId = R.drawable.ic_tangem_24.takeIf { confirmUM is ConfirmUM.Content },
-            //                 isEnabled = confirmUM.isPrimaryButtonEnabled,
-            //                 isHapticClick = confirmUM is ConfirmUM.Content && !confirmUM.isSending,
-            //                 onClick = {
-            //                     when (confirmUM) {
-            //                         is ConfirmUM.Success -> appRouter.pop()
-            //                         is ConfirmUM.Content -> if (confirmUM.isSending) {
-            //                             return@PrimaryButtonUM
-            //                         } else {
-            //                             onSendClick()
-            //                         }
-            //                         else -> return@PrimaryButtonUM
-            //                     }
-            //                 },
-            //             ),
-            //             prevButton = null,
-            //             secondaryPairButtonsUM = ButtonsUM.SecondaryPairButtonsUM(
-            //                 leftText = resourceReference(R.string.common_explore),
-            //                 leftIconResId = R.drawable.ic_web_24,
-            //                 onLeftClick = ::onExploreClick,
-            //                 rightText = resourceReference(R.string.common_share),
-            //                 rightIconResId = R.drawable.ic_share_24,
-            //                 onRightClick = ::onShareClick,
-            //             ).takeIf { confirmUM is ConfirmUM.Success },
-            //         ),
-            //     ),
-            // )
+            val amountUM = state.amountUM as? AmountState.Data
+            val confirmUM = state.confirmUM
+            params.callback.onResult(
+                state.copy(
+                    navigationUM = NavigationUM.Content(
+                        title = resourceReference(
+                            id = R.string.send_summary_title,
+                            formatArgs = wrappedList(params.cryptoCurrencyStatus.currency.name),
+                        ),
+                        subtitle = amountUM?.title,
+                        backIconRes = R.drawable.ic_close_24,
+                        backIconClick = {
+                            analyticsEventHandler.send(
+                                SendAnalyticEvents.CloseButtonClicked(
+                                    source = SendScreenSource.Confirm,
+                                    isFromSummary = true,
+                                    isValid = confirmUM.isPrimaryButtonEnabled,
+                                ),
+                            )
+                            appRouter.pop()
+                        },
+                        primaryButton = ButtonsUM.PrimaryButtonUM(
+                            text = when (confirmUM) {
+                                is ConfirmUM.Success -> resourceReference(R.string.common_close)
+                                is ConfirmUM.Content -> if (confirmUM.isSending) {
+                                    resourceReference(R.string.send_sending)
+                                } else {
+                                    resourceReference(R.string.common_send)
+                                }
+                                else -> resourceReference(R.string.common_send)
+                            },
+                            iconResId = R.drawable.ic_tangem_24.takeIf { confirmUM is ConfirmUM.Content },
+                            isEnabled = confirmUM.isPrimaryButtonEnabled,
+                            isHapticClick = confirmUM is ConfirmUM.Content && !confirmUM.isSending,
+                            onClick = {
+                                when (confirmUM) {
+                                    is ConfirmUM.Success -> appRouter.pop()
+                                    is ConfirmUM.Content -> if (confirmUM.isSending) {
+                                        return@PrimaryButtonUM
+                                    } else {
+                                        onSendClick()
+                                    }
+                                    else -> return@PrimaryButtonUM
+                                }
+                            },
+                        ),
+                        prevButton = null,
+                        secondaryPairButtonsUM = ButtonsUM.SecondaryPairButtonsUM(
+                            leftText = resourceReference(R.string.common_explore),
+                            leftIconResId = R.drawable.ic_web_24,
+                            onLeftClick = ::onExploreClick,
+                            rightText = resourceReference(R.string.common_share),
+                            rightIconResId = R.drawable.ic_share_24,
+                            onRightClick = ::onShareClick,
+                        ).takeIf { confirmUM is ConfirmUM.Success },
+                    ),
+                ),
+            )
         }.launchIn(modelScope)
     }
 
