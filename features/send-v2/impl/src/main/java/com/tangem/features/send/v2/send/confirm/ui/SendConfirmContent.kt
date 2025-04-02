@@ -36,6 +36,7 @@ import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
+import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.notifications
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
@@ -50,7 +51,7 @@ private const val TAP_HELP_ANIMATION_DELAY = 500L
 @Composable
 internal fun SendConfirmContent(
     sendUM: SendUM,
-    // destinationBlockComponent: SendDestinationBlockComponent,
+    destinationBlockComponent: SendDestinationBlockComponent,
     amountBlockComponent: SendAmountBlockComponent,
     feeBlockComponent: SendFeeBlockComponent,
     notificationsComponent: NotificationsComponent,
@@ -64,7 +65,7 @@ internal fun SendConfirmContent(
         ) {
             blocks(
                 uiState = sendUM,
-                // destinationBlockComponent = destinationBlockComponent,
+                destinationBlockComponent = destinationBlockComponent,
                 amountBlockComponent = amountBlockComponent,
                 feeBlockComponent = feeBlockComponent,
             )
@@ -121,7 +122,7 @@ private fun SendingText(confirmUM: ConfirmUM.Content?, modifier: Modifier = Modi
 
 private fun LazyListScope.blocks(
     uiState: SendUM,
-    // destinationBlockComponent: SendDestinationBlockComponent,
+    destinationBlockComponent: SendDestinationBlockComponent,
     amountBlockComponent: SendAmountBlockComponent,
     feeBlockComponent: SendFeeBlockComponent,
 ) {
@@ -144,8 +145,7 @@ private fun LazyListScope.blocks(
                     modifier = Modifier.padding(vertical = 12.dp),
                 )
             }
-            // todo
-            // destinationBlockComponent.Content(modifier = Modifier)
+            destinationBlockComponent.Content(modifier = Modifier)
             amountBlockComponent.Content(modifier = Modifier)
             feeBlockComponent.Content(modifier = Modifier)
         }
