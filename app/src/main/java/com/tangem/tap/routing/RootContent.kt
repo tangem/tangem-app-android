@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -59,7 +60,9 @@ internal fun RootContent(
                         }
                         is RoutingComponent.Child.LegacyIntent -> {
                             // TODO: Remove and use it's own router: [REDACTED_JIRA]
-                            startActivity(context, instance.intent, Bundle.EMPTY)
+                            LaunchedEffect(instance) {
+                                startActivity(context, instance.intent, Bundle.EMPTY)
+                            }
                         }
                         is RoutingComponent.Child.LegacyFragment,
                         -> error("Unsupported child: $instance")
