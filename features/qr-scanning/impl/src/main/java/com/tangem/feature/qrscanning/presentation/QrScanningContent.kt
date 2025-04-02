@@ -6,9 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,11 +20,16 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.IntOffset
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.TopAppBarButton
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
+import com.tangem.core.ui.components.buttons.common.TangemButton
+import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
+import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.qrscanning.impl.R
@@ -57,6 +60,7 @@ internal fun QrScanningContent(
         )
         Overlay(
             message = uiState.message,
+            pasteAction = uiState.pasteAction,
         )
 
         TangemTopAppBar(
@@ -97,69 +101,100 @@ internal fun QrScanningContent(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
-private fun Overlay(message: TextReference?, overlayColor: Color = TangemColorPalette.Black.copy(alpha = 0.7f)) {
+private fun Overlay(
+    message: TextReference?,
+    pasteAction: PasteAction,
+    overlayColor: Color = TangemColorPalette.Black.copy(alpha = 0.7f),
+) {
     val whiteColor = TangemTheme.colors.text.constantWhite
     val borderWidth = with(LocalDensity.current) { TangemTheme.dimens.spacing4.toPx() }
     val borderLength = with(LocalDensity.current) { TangemTheme.dimens.size20.toPx() }
 
     val textMeasurer = rememberTextMeasurer()
-    val textPadding = with(LocalDensity.current) { TangemTheme.dimens.spacing24.toPx() }
-    val style = TangemTheme.typography.caption2.copy(textAlign = TextAlign.Center)
+    val textPadding = with(LocalDensity.current) { TangemTheme.dimens.spacing48.toPx() }
+    val style = TangemTheme.typography.body1.copy(textAlign = TextAlign.Center)
     val text = message?.resolveReference()
 
-    Canvas(modifier = Modifier.fillMaxSize()) {
-        val squareSize = size.minDimension * QR_CODE_SIZE
-        val verticalOffset = (size.height - squareSize) / 2f
-        val horizontalOffset = (size.width - squareSize) / 2f
-        drawRect(
-            color = overlayColor,
-            topLeft = Offset.Zero,
-            size = Size(size.width, verticalOffset),
-        )
-        drawRect(
-            color = overlayColor,
-            topLeft = Offset(0f, verticalOffset),
-            size = Size(horizontalOffset, squareSize),
-        )
-        drawRect(
-            color = overlayColor,
-            topLeft = Offset(horizontalOffset + squareSize, verticalOffset),
-            size = Size(horizontalOffset, squareSize),
-        )
-        drawRect(
-            color = overlayColor,
-            topLeft = Offset(0f, verticalOffset + squareSize),
-            size = Size(size.width, verticalOffset),
-        )
-        drawRect(
-            color = whiteColor,
-            topLeft = Offset(horizontalOffset, verticalOffset),
-            size = Size(squareSize, squareSize),
-            style = Stroke(
-                width = borderWidth,
-                join = StrokeJoin.Round,
-                pathEffect = PathEffect.dashPathEffect(
-                    intervals = floatArrayOf(2 * borderLength, squareSize - 2 * borderLength),
-                    phase = borderLength,
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val minDimension = minOf(this.constraints.minWidth, this.constraints.minHeight)
+        val squareSize = minDimension * QR_CODE_SIZE
+        val squareSizeInDp = with(LocalDensity.current) { squareSize.toDp() }
+        val verticalOffset = (constraints.minHeight - squareSize) / 2f
+        val horizontalOffset = (constraints.minWidth - squareSize) / 2f
+
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawRect(
+                color = overlayColor,
+                topLeft = Offset.Zero,
+                size = Size(size.width, verticalOffset),
+            )
+            drawRect(
+                color = overlayColor,
+                topLeft = Offset(0f, verticalOffset),
+                size = Size(horizontalOffset, squareSize),
+            )
+            drawRect(
+                color = overlayColor,
+                topLeft = Offset(horizontalOffset + squareSize, verticalOffset),
+                size = Size(horizontalOffset, squareSize),
+            )
+            drawRect(
+                color = overlayColor,
+                topLeft = Offset(0f, verticalOffset + squareSize),
+                size = Size(size.width, verticalOffset),
+            )
+            drawRect(
+                color = whiteColor,
+                topLeft = Offset(horizontalOffset, verticalOffset),
+                size = Size(squareSize, squareSize),
+                style = Stroke(
+                    width = borderWidth,
+                    join = StrokeJoin.Round,
+                    pathEffect = PathEffect.dashPathEffect(
+                        intervals = floatArrayOf(2 * borderLength, squareSize - 2 * borderLength),
+                        phase = borderLength,
+                    ),
                 ),
-            ),
-        )
-        text?.let {
-            val textLayoutResult = text.let {
-                textMeasurer.measure(
-                    text = it,
-                    style = style,
-                    constraints = Constraints.fixedWidth(squareSize.roundToInt()),
+            )
+            text?.let {
+                val textLayoutResult = text.let {
+                    textMeasurer.measure(
+                        text = it,
+                        style = style,
+                        constraints = Constraints.fixedWidth(squareSize.roundToInt()),
+                    )
+                }
+                drawText(
+                    textLayoutResult = textLayoutResult,
+                    color = whiteColor,
+                    topLeft = Offset(
+                        x = horizontalOffset,
+                        y = verticalOffset - textPadding - textLayoutResult.size.height,
+                    ),
                 )
             }
-            drawText(
-                textLayoutResult = textLayoutResult,
-                color = whiteColor,
-                topLeft = Offset(
-                    x = horizontalOffset,
-                    y = verticalOffset + squareSize + textPadding,
-                ),
+        }
+        if (pasteAction is PasteAction.Perform) {
+            TangemButton(
+                modifier = Modifier
+                    .offset(
+                        offset = {
+                            IntOffset(
+                                x = horizontalOffset.roundToInt(),
+                                y = (verticalOffset + squareSize + textPadding).roundToInt(),
+                            )
+                        },
+                    )
+                    .width(squareSizeInDp),
+                text = stringResourceSafe(id = R.string.wallet_connect_paste_from_clipboard),
+                colors = TangemButtonsDefaults.defaultTextButtonColors.copy(contentColor = whiteColor),
+                onClick = pasteAction.action,
+                textStyle = TangemTheme.typography.subtitle1,
+                icon = TangemButtonIconPosition.End(iconResId = R.drawable.ic_copy_24),
+                showProgress = false,
+                enabled = true,
             )
         }
     }

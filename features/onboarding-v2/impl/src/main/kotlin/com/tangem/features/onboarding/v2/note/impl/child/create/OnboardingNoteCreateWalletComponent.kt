@@ -9,6 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.note.impl.DefaultOnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.model.OnboardingNoteCreateWalletModel
 import com.tangem.features.onboarding.v2.note.impl.child.create.ui.OnboardingNoteCreateWallet
@@ -24,7 +25,7 @@ internal class OnboardingNoteCreateWalletComponent(
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
 
-        BackHandler(onBack = remember(this) { { params.childParams.onBack() } })
+        BackHandler(onBack = remember(this) { { params.childParams.onBack } })
 
         OnboardingNoteCreateWallet(
             modifier = modifier,
@@ -34,6 +35,6 @@ internal class OnboardingNoteCreateWalletComponent(
 
     data class Params(
         val childParams: DefaultOnboardingNoteComponent.ChildParams,
-        val onDone: () -> Unit,
+        val onWalletCreated: (UserWallet) -> Unit,
     )
 }

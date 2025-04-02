@@ -40,11 +40,9 @@ internal fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C
 }
 
 internal fun <C : ComposableContentComponent, P : Any, F : ComponentFactory<P, C>> createComponentChild(
-    contextProvider: Provider<AppComponentContext>,
+    context: AppComponentContext,
     params: P,
     componentFactory: F,
 ): Child {
-    val context = contextProvider()
-
     return Child.ComposableComponent(componentFactory.create(context, params))
 }

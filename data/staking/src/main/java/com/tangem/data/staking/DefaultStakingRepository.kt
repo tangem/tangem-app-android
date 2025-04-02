@@ -738,7 +738,7 @@ internal class DefaultStakingRepository(
     private companion object {
         const val YIELDS_STORE_KEY = "yields"
 
-        const val TON_INTEGRATION_ID = "ton-ton-tonwhales-pools-staking"
+        const val TON_INTEGRATION_ID = "ton-ton-chorus-one-pools-staking"
         const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
         const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
         const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
