@@ -15,6 +15,12 @@ import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.sdk.DefaultSessionViewDelegate
 import com.tangem.sdk.api.featuretoggles.CardSdkFeatureToggles
 import com.tangem.sdk.extensions.*
@@ -23,6 +29,11 @@ import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -37,6 +48,8 @@ internal class DefaultCardSdkProvider @Inject constructor(
     private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
     private val cardSdkFeatureToggles: CardSdkFeatureToggles,
+    private val apiConfigsManager: ApiConfigsManager,
+    appPreferencesStore: AppPreferencesStore,
 ) : CardSdkProvider, CardSdkOwner {
 
     private val observer = Observer()
@@ -45,6 +58,17 @@ internal class DefaultCardSdkProvider @Inject constructor(
 
     override val sdk: TangemSdk
         get() = holder?.sdk ?: tryToRegisterWithForegroundActivity()
+
+    init {
+        appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+            .map { it[ApiConfig.ID.TangemCardSdk.name] == ApiEnvironment.PROD }
+            .onEach { isProd ->
+                holder?.let {
+                    it.sdk.config.isTangemAttestationProdEnv = isProd
+                }
+            }
+            .launchIn(CoroutineScope(SupervisorJob() + dispatchers.main))
+    }
 
     override fun register(activity: FragmentActivity) = runBlocking(dispatchers.mainImmediate) {
         if (activity.isDestroyed || activity.isFinishing || activity.isChangingConfigurations) {
@@ -133,6 +157,9 @@ internal class DefaultCardSdkProvider @Inject constructor(
             wordlist = Wordlist.getWordlist(activity),
             config = config.apply {
                 isNewOnlineAttestationEnabled = cardSdkFeatureToggles.isNewAttestationEnabled
+
+                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemCardSdk)
+                isTangemAttestationProdEnv = apiConfig.environment == ApiEnvironment.PROD
             },
         )
 
@@ -186,7 +213,6 @@ internal class DefaultCardSdkProvider @Inject constructor(
 
         val config = Config(
             linkedTerminal = true,
-            allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.entries.toList(),
                 maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
