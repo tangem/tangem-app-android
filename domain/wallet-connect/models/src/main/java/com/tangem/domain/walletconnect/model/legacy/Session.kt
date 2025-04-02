@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.walletconnect2.domain.models
+package com.tangem.domain.walletconnect.model.legacy
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

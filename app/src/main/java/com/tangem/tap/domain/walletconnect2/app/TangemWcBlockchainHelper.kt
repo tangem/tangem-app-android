@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.tap.domain.walletconnect2.domain.WcBlockchainHelper
-import com.tangem.tap.domain.walletconnect2.domain.models.Account
+import com.tangem.domain.walletconnect.model.legacy.Account
 
 internal class TangemWcBlockchainHelper : WcBlockchainHelper {
 
