@@ -4,6 +4,7 @@ import arrow.core.getOrElse
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -28,7 +29,6 @@ import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
-import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
