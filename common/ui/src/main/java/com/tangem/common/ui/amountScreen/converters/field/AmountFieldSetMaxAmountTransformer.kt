@@ -27,7 +27,6 @@ class AmountFieldSetMaxAmountTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val maxAmount: EnterAmountBoundary,
     private val minAmount: EnterAmountBoundary?,
-    private val reduceAmountBy: BigDecimal = BigDecimal.ZERO,
 ) : Transformer<AmountState> {
 
     override fun transform(prevState: AmountState): AmountState {
@@ -47,7 +46,7 @@ class AmountFieldSetMaxAmountTransformer(
         val isLessThanMinimumIfProvided = minAmount?.amount?.let { decimalCryptoValue < it } == true
         return prevState.copy(
             isPrimaryButtonEnabled = !isLessThanMinimumIfProvided,
-            reduceAmountBy = reduceAmountBy,
+            reduceAmountBy = BigDecimal.ZERO,
             amountTextField = amountTextField.copy(
                 isValuePasted = true,
                 value = cryptoValue,
@@ -55,7 +54,7 @@ class AmountFieldSetMaxAmountTransformer(
                 isError = isLessThanMinimumIfProvided,
                 error = when {
                     isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
+                        val minimumAmount = minAmount?.amount.format { crypto(cryptoCurrencyStatus.currency) }
                         resourceReference(
                             R.string.transfer_notification_invalid_minimum_transaction_amount_text,
                             wrappedList(minimumAmount, minimumAmount),
