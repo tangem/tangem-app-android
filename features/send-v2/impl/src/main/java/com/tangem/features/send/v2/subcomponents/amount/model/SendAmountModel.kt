@@ -14,11 +14,14 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.components.currency.icon.converter.CryptoCurrencyToIconStateConverter
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.features.send.v2.common.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
 import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents
@@ -60,6 +63,7 @@ internal class SendAmountModel @Inject constructor(
         initMinBoundary()
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountReduceToTriggerUpdates()
+        subscribeOnAmountIgnoreReduceTriggerUpdates()
     }
 
     private fun initMinBoundary() {
@@ -79,7 +83,6 @@ internal class SendAmountModel @Inject constructor(
     }
 
     private fun initialState() {
-        val predefinedAmountValue = (params as? SendAmountComponentParams.AmountParams)?.predefinedAmountValue
         if (uiState.value is AmountState.Empty) {
             _uiState.update {
                 AmountStateConverterV2(
@@ -95,8 +98,9 @@ internal class SendAmountModel @Inject constructor(
                     ),
                 )
             }
-            if (predefinedAmountValue != null) {
-                onAmountValueChange(predefinedAmountValue)
+            val params = params as? SendAmountComponentParams.AmountBlockParams
+            if (params?.predefinedAmountValue != null) {
+                onAmountValueChange(params.predefinedAmountValue)
             }
         }
     }
@@ -191,6 +195,12 @@ internal class SendAmountModel @Inject constructor(
             .launchIn(modelScope)
     }
 
+    private fun subscribeOnAmountIgnoreReduceTriggerUpdates() {
+        sendAmountReduceListener.ignoreReduceTriggerFlow
+            .onEach { _uiState.update(AmountIgnoreReduceTransformer::transform) }
+            .launchIn(modelScope)
+    }
+
     private fun saveResult() {
         val params = params as? SendAmountComponentParams.AmountParams ?: return
         params.callback.onAmountResult(uiState.value)
@@ -202,7 +212,7 @@ internal class SendAmountModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (state, route) ->
+        ).distinctUntilChanged().onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
