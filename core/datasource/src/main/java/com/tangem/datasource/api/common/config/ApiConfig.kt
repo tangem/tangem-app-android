@@ -40,10 +40,8 @@ sealed class ApiConfig {
 
     companion object {
         internal const val DEBUG_BUILD_TYPE = "debug"
-        internal const val DEBUG_PG_BUILD_TYPE = "debugPG"
         internal const val INTERNAL_BUILD_TYPE = "internal"
         internal const val MOCKED_BUILD_TYPE = "mocked"
-        internal const val EXTERNAL_BUILD_TYPE = "external"
         internal const val RELEASE_BUILD_TYPE = "release"
     }
 }
