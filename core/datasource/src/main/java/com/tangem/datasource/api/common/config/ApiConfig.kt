@@ -26,6 +26,7 @@ sealed class ApiConfig {
         StakeKit,
         TangemVisaAuth,
         TangemVisa,
+        TangemCardSdk,
     }
 
     private fun initializeId(): ID {
@@ -35,6 +36,7 @@ sealed class ApiConfig {
             is StakeKit -> ID.StakeKit
             is TangemVisaAuth -> ID.TangemVisaAuth
             is TangemVisa -> ID.TangemVisa
+            is TangemCardSdk -> ID.TangemCardSdk
         }
     }
 
