@@ -9,6 +9,7 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -107,5 +108,13 @@ internal object ManageTokensDomainModule {
     @Singleton
     fun provideCheckCurrencyUnsupportedUseCase(repository: ManageTokensRepository): CheckCurrencyUnsupportedUseCase {
         return CheckCurrencyUnsupportedUseCase(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDistinctManagedCurrenciesTokenUseCase(
+        coroutineDispatchersProvider: CoroutineDispatcherProvider,
+    ): GetDistinctManagedCurrenciesUseCase {
+        return GetDistinctManagedCurrenciesUseCase(coroutineDispatchersProvider)
     }
 }
