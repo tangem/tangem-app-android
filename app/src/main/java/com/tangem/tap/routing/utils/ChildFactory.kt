@@ -216,6 +216,8 @@ internal class ChildFactory @Inject constructor(
                             AppRoute.Onboarding.Mode.WelcomeOnlyTwin -> OnboardingEntryComponent.Mode.WelcomeOnlyTwin
                             AppRoute.Onboarding.Mode.RecreateWalletTwin ->
                                 OnboardingEntryComponent.Mode.RecreateWalletTwin
+                            AppRoute.Onboarding.Mode.ContinueFinalize ->
+                                OnboardingEntryComponent.Mode.ContinueFinalize
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
@@ -729,6 +731,8 @@ internal class ChildFactory @Inject constructor(
                             AppRoute.Onboarding.Mode.WelcomeOnlyTwin -> OnboardingEntryComponent.Mode.WelcomeOnlyTwin
                             AppRoute.Onboarding.Mode.RecreateWalletTwin ->
                                 OnboardingEntryComponent.Mode.RecreateWalletTwin
+                            AppRoute.Onboarding.Mode.ContinueFinalize ->
+                                OnboardingEntryComponent.Mode.ContinueFinalize
                         },
                     ),
                     componentFactory = onboardingEntryComponentFactory,
