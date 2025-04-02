@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.models.AmountFieldModel
 import com.tangem.common.ui.amountScreen.utils.getFiatString
+import com.tangem.common.ui.notifications.NotificationsFactory.addRequireDestinationFlagErrorNotification
 import com.tangem.core.ui.extensions.networkIconResId
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.format
@@ -15,6 +16,8 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
+import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
@@ -110,6 +113,10 @@ object NotificationsFactory {
                 ),
             )
         }
+    }
+
+    fun MutableList<NotificationUM>.addRequireDestinationFlagErrorNotification() {
+        add(NotificationUM.Error.DestinationMemoRequired)
     }
 
     fun MutableList<NotificationUM>.addMinimumAmountErrorNotification(
@@ -235,6 +242,31 @@ object NotificationsFactory {
         }
     }
 
+    fun MutableList<NotificationUM>.addFeeCoverageNotification(
+        isFeeCoverage: Boolean,
+        enteredAmountValue: BigDecimal,
+        sendingValue: BigDecimal,
+        appCurrency: AppCurrency,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+    ) {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val fiatRate = cryptoCurrencyStatus.value.fiatRate
+
+        val cryptoDiff = enteredAmountValue.minus(sendingValue)
+        if (isFeeCoverage) {
+            add(
+                NotificationUM.Warning.FeeCoverageNotification(
+                    cryptoAmount = cryptoDiff.format { crypto(cryptoCurrency).uncapped() },
+                    fiatAmount = getFiatString(
+                        value = cryptoDiff,
+                        rate = fiatRate,
+                        appCurrency = appCurrency,
+                    ),
+                ),
+            )
+        }
+    }
+
     fun MutableList<NotificationUM>.addDustWarningNotification(
         dustValue: BigDecimal?,
         feeValue: BigDecimal,
@@ -326,6 +358,9 @@ object NotificationsFactory {
                 error = validationError,
                 onReduceClick = onReduceClick,
             )
+            is BlockchainSdkError.XRP -> addXRPTransactionValidationError(
+                error = validationError,
+            )
             null -> minAdaValue?.let {
                 add(
                     NotificationUM.Cardano.MinAdaValueCharged(
@@ -406,9 +441,50 @@ object NotificationsFactory {
         }
     }
 
+    private fun MutableList<NotificationUM>.addXRPTransactionValidationError(error: BlockchainSdkError.XRP) {
+        when (error) {
+            is BlockchainSdkError.XRP.DestinationMemoRequired -> addRequireDestinationFlagErrorNotification()
+        }
+    }
+
     fun MutableList<NotificationUM>.addRentExemptionNotification(rentWarning: CryptoCurrencyWarning.Rent?) {
         if (rentWarning == null) return
         add(NotificationUM.Solana.RentInfo(rentWarning))
+    }
+
+    fun MutableList<NotificationUM>.addHighFeeWarningNotification(
+        enteredAmountValue: BigDecimal,
+        cryptoCurrencyStatus: CryptoCurrencyStatus,
+        ignoreAmountReduce: Boolean,
+        onReduceClick: (
+            reduceAmountBy: BigDecimal,
+            reduceAmountByDiff: BigDecimal,
+            notification: Class<out NotificationUM>,
+        ) -> Unit,
+        onCloseClick: (Class<out NotificationUM>) -> Unit,
+    ) {
+        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
+        val threshold = getTezosThreshold()
+        val isTotalBalance = enteredAmountValue >= balance && balance > threshold
+        if (!ignoreAmountReduce && isTotalBalance && isTezos) {
+            add(
+                NotificationUM.Warning.HighFeeError(
+                    currencyName = cryptoCurrencyStatus.currency.name,
+                    amount = threshold.toPlainString(),
+                    onConfirmClick = {
+                        onReduceClick(
+                            threshold,
+                            threshold,
+                            NotificationUM.Warning.HighFeeError::class.java,
+                        )
+                    },
+                    onCloseClick = {
+                        onCloseClick(NotificationUM.Warning.HighFeeError::class.java)
+                    },
+                ),
+            )
+        }
     }
 
     private fun checkDustLimits(
