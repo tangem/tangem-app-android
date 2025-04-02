@@ -8,6 +8,7 @@ import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.markets.TokenMarketParams
 import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
@@ -288,4 +289,10 @@ sealed class AppRoute(val path: String) : Route {
     data class NFTReceive(
         val userWalletId: UserWalletId,
     ) : AppRoute(path = "/nft_receive/${userWalletId.stringValue}")
+
+    @Serializable
+    data class NFTDetails(
+        val userWalletId: UserWalletId,
+        val nftAsset: NFTAsset,
+    ) : AppRoute(path = "/nft_details/${userWalletId.stringValue}/${nftAsset.collectionId}/${nftAsset.id.stringValue}")
 }
