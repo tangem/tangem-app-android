@@ -6,9 +6,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
+import com.tangem.features.send.v2.common.SendNavigationModelCallback
 import com.tangem.features.send.v2.subcomponents.fee.model.SendFeeModel
 import com.tangem.features.send.v2.subcomponents.fee.ui.SendFeeContent
+import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 
 internal class SendFeeComponent(
     appComponentContext: AppComponentContext,
@@ -24,7 +25,7 @@ internal class SendFeeComponent(
         SendFeeContent(state = state.value, clickIntents = model)
     }
 
-    interface ModelCallback {
+    interface ModelCallback : SendNavigationModelCallback {
         fun onFeeResult(feeUM: FeeUM)
     }
 }
