@@ -108,25 +108,19 @@ internal class DefaultStakingRepository(
         return integrationIdMap.getOrDefault(getIntegrationKey(cryptoCurrencyId), null)
     }
 
-    override suspend fun fetchEnabledYields(refresh: Boolean) {
+    override suspend fun fetchEnabledYields() {
         withContext(dispatchers.io) {
-            cacheRegistry.invokeOnExpire(
-                key = YIELDS_STORE_KEY,
-                skipCache = refresh,
-                block = {
-                    when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
-                        is ApiResponse.Success -> stakingYieldsStore.store(
-                            stakingTokensWithYields.data.data.filter {
-                                it.isAvailable ?: false
-                            },
-                        )
-                        else -> {
-                            stakingYieldsStore.store(emptyList())
-                            throw (stakingTokensWithYields as ApiResponse.Error).cause
-                        }
-                    }
-                },
-            )
+            when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
+                is ApiResponse.Success -> stakingYieldsStore.store(
+                    stakingTokensWithYields.data.data.filter {
+                        it.isAvailable ?: false
+                    },
+                )
+                else -> {
+                    stakingYieldsStore.store(emptyList())
+                    throw (stakingTokensWithYields as ApiResponse.Error).cause
+                }
+            }
         }
     }
 
