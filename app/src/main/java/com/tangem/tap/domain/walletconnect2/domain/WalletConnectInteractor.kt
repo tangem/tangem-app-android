@@ -6,6 +6,9 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletconnect.model.legacy.Account
+import com.tangem.domain.walletconnect.model.legacy.Session
+import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
