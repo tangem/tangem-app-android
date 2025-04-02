@@ -6,7 +6,7 @@ import com.tangem.utils.transformer.Transformer
 /**
  * Dismisses indication on pasted value
  */
-class AmountPastedTriggerDismissTransformer : Transformer<AmountState> {
+object AmountPastedTriggerDismissTransformer : Transformer<AmountState> {
     override fun transform(prevState: AmountState): AmountState {
         if (prevState !is AmountState.Data) return prevState
 

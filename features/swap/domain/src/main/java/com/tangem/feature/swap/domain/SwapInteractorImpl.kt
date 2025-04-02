@@ -1909,6 +1909,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         is Fee.Tron,
         is Fee.VeChain,
         is Fee.Alephium,
+        is Fee.Hedera,
         -> null
     }
 
