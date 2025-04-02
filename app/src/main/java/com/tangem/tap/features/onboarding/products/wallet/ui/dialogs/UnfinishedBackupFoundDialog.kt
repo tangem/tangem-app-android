@@ -5,7 +5,7 @@ import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
+import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
