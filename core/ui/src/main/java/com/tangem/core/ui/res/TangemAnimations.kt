@@ -22,9 +22,9 @@ object TangemAnimations {
             forwardWhen: (initial: S, target: S) -> Boolean,
         ): AnimatedContentTransitionScope<S>.() -> ContentTransform = {
             val direction = if (forwardWhen(initialState, targetState)) {
-                AnimatedContentTransitionScope.SlideDirection.End
-            } else {
                 AnimatedContentTransitionScope.SlideDirection.Start
+            } else {
+                AnimatedContentTransitionScope.SlideDirection.End
             }
 
             slideIntoContainer(towards = direction, animationSpec = tween())

@@ -1,6 +1,7 @@
 package com.tangem.datasource.local.nft
 
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
@@ -11,10 +12,12 @@ import com.tangem.datasource.utils.MoshiDataStoreSerializer
 import com.tangem.datasource.utils.listTypes
 import com.tangem.datasource.utils.mapWithCustomKeyTypes
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import java.lang.reflect.ParameterizedType
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,41 +28,51 @@ class NFTPersistenceStoreFactory @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
 
-    fun provide(network: Network): NFTPersistenceStore {
-        val networkStringIdentifier = listOfNotNull(
-            network.id.value,
-            network.derivationPath.value,
-        ).joinToString("_") {
-            // remove all non-alphanumeric characters
-            it
-                .toCharArray()
-                .filter(Char::isLetterOrDigit)
-                .joinToString("")
-                .lowercase()
-        }
+    fun provide(userWalletId: UserWalletId, network: Network): NFTPersistenceStore {
+        // simplify network identifier so that is correct for a file name
+        // e.g. eth_m4460000 or theopennetwork_m446070
+        val networkStringId =
+            network.id.formatted() + network.derivationPath.formatted()?.let { "_$it" }.orEmpty()
+        // simplify user wallet id so that is correct for a file name
+        // e.g. 9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a
+        val userWalletStringId = userWalletId.formatted()
         return DefaultNFTPersistenceStore(
-            collectionsPersistenceStore = DataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = listTypes<NFTCollection>(),
-                    defaultValue = emptyList(),
-                ),
-                produceFile = {
-                    context.dataStoreFile(fileName = "nft_${networkStringIdentifier}_collections")
-                },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            collectionsPersistenceStore = createPersistenceStore(
+                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_eth_m4460000_collections
+                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_theopennetwork_m446070_collections
+                fileName = "nft_${userWalletStringId}_${networkStringId}_collections",
+                types = listTypes<NFTCollection>(),
+                defaultValue = emptyList(),
             ),
-            pricesPersistenceStore = DataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = mapWithCustomKeyTypes<NFTAsset.Identifier, NFTAsset.SalePrice>(),
-                    defaultValue = emptyMap(),
-                ),
-                produceFile = {
-                    context.dataStoreFile(fileName = "nft_${networkStringIdentifier}_prices")
-                },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+            pricesPersistenceStore = createPersistenceStore(
+                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_eth_m4460000_prices
+                // result file name example: nft_9a1a178f951a7115555568c09ebad8a882f3d96de25429f0017fe570931e208a_theopennetwork_m446070_prices
+                fileName = "nft_${userWalletStringId}_${networkStringId}_prices",
+                types = mapWithCustomKeyTypes<NFTAsset.Identifier, NFTAsset.SalePrice>(),
+                defaultValue = emptyMap(),
             ),
         )
     }
+
+    private fun <T> createPersistenceStore(fileName: String, types: ParameterizedType, defaultValue: T): DataStore<T> =
+        DataStoreFactory.create(
+            serializer = MoshiDataStoreSerializer(
+                moshi = moshi,
+                types = types,
+                defaultValue = defaultValue,
+            ),
+            produceFile = { context.dataStoreFile(fileName = fileName) },
+            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+        )
+
+    private fun Network.ID.formatted(): String = value
+        .filter(Char::isLetterOrDigit)
+        .lowercase()
+
+    private fun Network.DerivationPath.formatted(): String? = value
+        ?.filter(Char::isLetterOrDigit)
+        ?.lowercase()
+
+    private fun UserWalletId.formatted(): String = stringValue
+        .lowercase()
 }
