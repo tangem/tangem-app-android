@@ -15,6 +15,7 @@ import com.tangem.core.ui.utils.parseBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.utils.extensions.isZero
 import com.tangem.utils.transformer.Transformer
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
@@ -26,6 +27,7 @@ class AmountFieldSetMaxAmountTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     private val maxAmount: EnterAmountBoundary,
     private val minAmount: EnterAmountBoundary?,
+    private val reduceAmountBy: BigDecimal = BigDecimal.ZERO,
 ) : Transformer<AmountState> {
 
     override fun transform(prevState: AmountState): AmountState {
@@ -42,9 +44,10 @@ class AmountFieldSetMaxAmountTransformer(
 
         val cryptoValue = decimalCryptoValue.parseBigDecimal(cryptoDecimals)
         val fiatValue = decimalFiatValue?.parseBigDecimal(fiatDecimals, roundingMode = RoundingMode.HALF_UP).orEmpty()
-        val isLessThanMinimumIfProvided = minAmount?.amount?.let { decimalCryptoValue < it } ?: false
+        val isLessThanMinimumIfProvided = minAmount?.amount?.let { decimalCryptoValue < it } == true
         return prevState.copy(
             isPrimaryButtonEnabled = !isLessThanMinimumIfProvided,
+            reduceAmountBy = reduceAmountBy,
             amountTextField = amountTextField.copy(
                 isValuePasted = true,
                 value = cryptoValue,
@@ -52,10 +55,7 @@ class AmountFieldSetMaxAmountTransformer(
                 isError = isLessThanMinimumIfProvided,
                 error = when {
                     isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minAmount
-                            ?.amount
-                            ?.format { crypto(cryptoCurrencyStatus.currency) }
-                            .orEmpty()
+                        val minimumAmount = minAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
                         resourceReference(
                             R.string.transfer_notification_invalid_minimum_transaction_amount_text,
                             wrappedList(minimumAmount, minimumAmount),
