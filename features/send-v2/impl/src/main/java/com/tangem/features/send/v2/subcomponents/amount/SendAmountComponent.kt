@@ -11,6 +11,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.send.v2.common.SendNavigationModelCallback
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams.AmountParams
 import com.tangem.features.send.v2.subcomponents.amount.model.SendAmountModel
 
@@ -35,7 +36,7 @@ internal class SendAmountComponent(
         )
     }
 
-    interface ModelCallback {
+    interface ModelCallback : SendNavigationModelCallback {
         fun onAmountResult(amountUM: AmountState)
     }
 }
