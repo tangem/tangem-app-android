@@ -54,6 +54,7 @@ import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.operations.attestation.api.TangemApiServiceLogging
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
@@ -273,6 +274,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         ExceptionHandler.append(blockchainExceptionHandler)
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
+                createNetworkLoggingInterceptor(),
+                ChuckerInterceptor(this),
+            )
+            TangemApiServiceLogging.addInterceptors(
                 createNetworkLoggingInterceptor(),
                 ChuckerInterceptor(this),
             )
