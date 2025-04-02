@@ -4,30 +4,28 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationTextFieldUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.utils.transformer.Transformer
 
 internal class SendDestinationInitialStateTransformer(
-    val cryptoCurrencyStatus: CryptoCurrencyStatus,
-    val onAddressChange: (String, EnterAddressSource) -> Unit,
-    val onMemoChange: (String, Boolean) -> Unit,
+    val cryptoCurrency: CryptoCurrency,
+    val isInitialized: Boolean = false,
 ) : Transformer<DestinationUM> {
     override fun transform(prevState: DestinationUM): DestinationUM {
-        val memoType = when (cryptoCurrencyStatus.currency.network.transactionExtrasType) {
+        val memoType = when (cryptoCurrency.network.transactionExtrasType) {
             Network.TransactionExtrasType.NONE -> null
             Network.TransactionExtrasType.MEMO -> R.string.send_extras_hint_memo
             Network.TransactionExtrasType.DESTINATION_TAG -> R.string.send_destination_tag_field
         }
         return DestinationUM.Content(
             isPrimaryButtonEnabled = false,
+            isInitialized = isInitialized,
             addressTextField = DestinationTextFieldUM.RecipientAddress(
                 value = "",
-                onValueChange = { onAddressChange(it, EnterAddressSource.InputField) },
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next,
                     keyboardType = KeyboardType.Text,
@@ -40,7 +38,6 @@ internal class SendDestinationInitialStateTransformer(
             memoTextField = memoType?.let {
                 DestinationTextFieldUM.RecipientMemo(
                     value = "",
-                    onValueChange = { onMemoChange(it, false) },
                     keyboardOptions = KeyboardOptions(
                         imeAction = ImeAction.Done,
                         keyboardType = KeyboardType.Text,
@@ -55,7 +52,7 @@ internal class SendDestinationInitialStateTransformer(
             },
             wallets = loadingListState(WALLET_KEY_TAG, WALLET_DEFAULT_COUNT),
             recent = loadingListState(RECENT_KEY_TAG, RECENT_DEFAULT_COUNT),
-            networkName = cryptoCurrencyStatus.currency.network.name,
+            networkName = cryptoCurrency.network.name,
             isValidating = false,
         )
     }
