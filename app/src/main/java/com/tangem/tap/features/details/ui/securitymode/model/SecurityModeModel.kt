@@ -4,13 +4,15 @@ import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.routing.AppRouter
-import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.cardsettings.domain.CardSettingsInteractor
@@ -30,6 +32,8 @@ internal class SecurityModeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val cardSettingsInteractor: CardSettingsInteractor,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val analyticsErrorHandler: AnalyticsErrorHandler,
 ) : Model() {
 
     private val scannedScanResponse = cardSettingsInteractor.scannedScanResponse.value
@@ -85,14 +89,14 @@ internal class SecurityModeModel @Inject constructor(
             val paramValue = AnalyticsParam.SecurityMode.from(selectedOption)
             when (result) {
                 is CompletionResult.Success -> {
-                    Analytics.send(Settings.CardSettings.SecurityModeChanged(paramValue))
+                    analyticsEventHandler.send(Settings.CardSettings.SecurityModeChanged(paramValue))
 
                     store.dispatchNavigationAction(AppRouter::pop)
                 }
                 is CompletionResult.Failure -> {
                     val error = result.error
                     if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
-                        Analytics.send(Settings.CardSettings.SecurityModeChanged(paramValue, error))
+                        analyticsErrorHandler.sendErrorEvent(TangemSdkErrorEvent(error))
                     }
                 }
                 else -> Unit
