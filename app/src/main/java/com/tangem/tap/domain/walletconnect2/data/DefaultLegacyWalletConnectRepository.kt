@@ -459,7 +459,7 @@ internal class DefaultLegacyWalletConnectRepository(
         val session = currentSessions.find { it.topic == requestData.topic }
 
         analyticsHandler.send(
-            WalletConnect.SignatureRequestHandled(
+            WalletConnect.SignatureRequestFailed(
                 WalletConnect.RequestHandledParams(
                     dAppName = session?.name ?: "",
                     dAppUrl = session?.url ?: "",

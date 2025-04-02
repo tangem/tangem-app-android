@@ -17,7 +17,9 @@ object ClipboardOrScanQrDialog {
             setTitle(context.getString(R.string.common_select_action))
             setMessage(context.getText(R.string.wallet_connect_clipboard_alert))
             setPositiveButton(context.getText(R.string.wallet_connect_paste_from_clipboard)) { _, _ ->
-                store.dispatch(WalletConnectAction.OpenSession(wcUri, WalletConnectAction.OpenSession.SourceType.ETC))
+                store.dispatch(
+                    WalletConnectAction.OpenSession(wcUri, WalletConnectAction.OpenSession.SourceType.CLIPBOARD),
+                )
             }
             setNegativeButton(context.getText(R.string.wallet_connect_scan_new_code)) { _, _ ->
                 store.dispatchNavigationAction {
