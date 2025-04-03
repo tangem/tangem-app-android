@@ -2,7 +2,7 @@ package com.tangem.data.walletconnect.request
 
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.data.walletconnect.utils.toOurModel
+import com.tangem.data.walletconnect.utils.WcSdkSessionRequestConverter
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -16,7 +16,7 @@ internal class DefaultWcRequestService(
     private val sessionsManager: WcSessionsManager,
     private val respondService: WcRespondService,
     private val requestAdapters: Set<WcMethodHandler<WcMethod>>,
-    private val scope: CoroutineScope, // todo(wc) is ok inject scope? featureScope like Decompose Model scope
+    private val scope: CoroutineScope,
 ) : WcRequestService, WcSdkObserver {
 
     override val requests: MutableSharedFlow<WcRequest<*>> = MutableSharedFlow()
@@ -26,7 +26,7 @@ internal class DefaultWcRequestService(
         verifyContext: Wallet.Model.VerifyContext,
     ) {
         // Triggered when a Dapp sends SessionRequest to sign a transaction or a message
-        val sr = sessionRequest.toOurModel()
+        val sr = WcSdkSessionRequestConverter.convert(sessionRequest)
         val method = sr.request.method
         val params = sr.request.params
         scope.launch {
