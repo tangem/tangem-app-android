@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.text.input.ImeAction
 import com.tangem.common.extensions.isZero
 import com.tangem.common.ui.amountScreen.models.AmountState
+import com.tangem.common.ui.amountScreen.models.EnterAmountBoundary
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -24,6 +25,7 @@ import java.math.RoundingMode
 
 internal class AmountRequirementStateTransformer(
     private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val maxAmount: EnterAmountBoundary,
     private val yield: Yield,
     private val actionType: StakingActionCommonType,
 ) : Transformer<AmountState> {
@@ -121,7 +123,7 @@ internal class AmountRequirementStateTransformer(
         val isExceedsMaxRequirement = if (maximum?.isPositive() == true) {
             maximum?.compareTo(amount) == -1
         } else {
-            cryptoCurrencyStatus.value.amount?.compareTo(amount) == -1
+            maxAmount.amount?.compareTo(amount) == -1
         }
 
         val errorText = when {
