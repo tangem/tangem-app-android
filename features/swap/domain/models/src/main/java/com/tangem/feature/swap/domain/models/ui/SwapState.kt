@@ -137,6 +137,10 @@ data class TxFee(
             val gasBudget: Long,
             val gasPrice: Long,
         ) : Params()
+
+        data class Hedera(
+            val additionalHBARFee: BigDecimal,
+        ) : Params()
     }
 }
 
