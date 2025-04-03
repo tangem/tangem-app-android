@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 internal typealias WcSessionCollection = Set<WcSessionDTO>
 
-class DefaultWalletConnectStore(
+internal class DefaultWalletConnectStore(
     private val persistenceStore: DataStore<WcSessionCollection>,
 ) : WalletConnectStore {
 
