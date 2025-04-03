@@ -55,6 +55,7 @@ internal class DefaultWcInitializeUseCase(
             onSuccess = {
                 val walletDelegate = defineWalletDelegate()
                 WalletKit.setWalletDelegate(walletDelegate)
+                wcSdkObservers.forEach { it.onWcSdkInit() }
             },
             onError = { error ->
                 Timber.e("Error while initializing Web3Wallet: $error")
