@@ -17,7 +17,6 @@ import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMethod.SignMessage
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 
-@Suppress("UnusedPrivateClass") // todo(wc) remove later
 internal class WcEthNetwork(
     private val moshi: Moshi,
     private val respondService: WcRespondService,
