@@ -3,7 +3,7 @@ package com.tangem.data.walletconnect.sessions
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.data.walletconnect.utils.toOurModel
+import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
@@ -44,7 +44,7 @@ internal class DefaultWcSessionsManager constructor(
     override suspend fun findSessionByTopic(topic: String): WcSession? = withContext(dispatchers.io) {
         val storedSessions = store.findSessionByTopic(topic) ?: return@withContext null
         val sdkSession = WalletKit.getActiveSessionByTopic(topic) ?: return@withContext null
-        WcSession(userWalletId = storedSessions.walletId, sdkModel = sdkSession.toOurModel())
+        WcSession(userWalletId = storedSessions.walletId, sdkModel = WcSdkSessionConverter.convert(sdkSession))
     }
 
     override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
@@ -74,7 +74,7 @@ internal class DefaultWcSessionsManager constructor(
         val wcSessions = sdkSessions.mapNotNull { sdkSession ->
             val storedSessions = storeSessions.find { it.topic == sdkSession.topic }
                 ?: return@mapNotNull null
-            WcSession(userWalletId = storedSessions.walletId, sdkModel = sdkSession.toOurModel())
+            WcSession(userWalletId = storedSessions.walletId, sdkModel = WcSdkSessionConverter.convert(sdkSession))
         }
 
         val unknownStoredSessions = storeSessions
