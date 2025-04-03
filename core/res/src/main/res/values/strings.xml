@@ -179,6 +179,7 @@
   <string name="common_search">Search</string>
   <string name="common_search_tokens">Search tokens</string>
   <string name="common_second_no_param">sec</string>
+  <string name="common_see_all">See all</string>
   <string name="common_seed_phrase">Seed phrase</string>
   <string name="common_select_action">Select action</string>
   <string name="common_sell">Sell</string>
@@ -519,6 +520,16 @@
   <string name="nft_wallet_title">NFT collections</string>
   <string name="nft_wallet_unable_to_load">Unable to load the data</string>
   <string name="nft_receive_choose_network">Choose network</string>
+  <string name="nft_details_last_sale_price">Last sale price</string>
+  <string name="nft_details_rarity_label">Rarity label</string>
+  <string name="nft_details_rarity_rank">Rarity rank</string>
+  <string name="nft_details_traits">Traits</string>
+  <string name="nft_details_base_information">Base information</string>
+  <string name="nft_details_token_standard">Token Standard</string>
+  <string name="nft_details_contract_address">Contract Address</string>
+  <string name="nft_details_token_id">Token ID</string>
+  <string name="nft_details_token_address">Token Address</string>
+  <string name="nft_details_chain">Chain</string>
   <string name="onboarding_access_code_feature_1_description">Set up a single access code to protect all your devices.</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">Set an individual access code for each card or ring later.</string>
