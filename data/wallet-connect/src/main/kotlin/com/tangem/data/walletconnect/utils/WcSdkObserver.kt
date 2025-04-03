@@ -8,6 +8,8 @@ internal interface WcSdkObserver : WalletKit.WalletDelegate {
     override val onSessionAuthenticate: ((Wallet.Model.SessionAuthenticate, Wallet.Model.VerifyContext) -> Unit)?
         get() = super.onSessionAuthenticate
 
+    fun onWcSdkInit() {}
+
     override fun onConnectionStateChange(state: Wallet.Model.ConnectionState) {}
 
     override fun onError(error: Wallet.Model.Error) {}
