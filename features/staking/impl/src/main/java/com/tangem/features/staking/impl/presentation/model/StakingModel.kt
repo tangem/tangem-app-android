@@ -158,6 +158,7 @@ internal class StakingModel @Inject constructor(
             return invalidatePendingTransactionsUseCase(
                 balanceItems = yieldBalance?.balance?.items ?: emptyList(),
                 processingActions = processingActions,
+                token = yield.token,
             ).getOrElse { emptyList() }
         }
 
