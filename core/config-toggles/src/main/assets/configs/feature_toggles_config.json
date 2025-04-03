@@ -49,11 +49,11 @@
     },
     {
         "name": "TWIN_REFACTORING_ENABLED",
-        "version": "undefined"
+        "version": "5.23.0"
     },
     {
         "name": "SEND_V2_ENABLED",
-        "version": "undefined"
+        "version": "5.23.0"
     },
     {
         "name": "WALLET_CONNECT_REDESIGN_ENABLED",
