@@ -6,7 +6,7 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WcSdkObserver
-import com.tangem.data.walletconnect.utils.toOurModel
+import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -15,7 +15,6 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +27,6 @@ import kotlin.coroutines.resume
 
 val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro", "The Sandbox")
 
-@Suppress("UnusedPrivateMember") // todo(wc) remove after add mapping
 internal class DefaultWcPairUseCase(
     private val sessionsManager: WcSessionsManager,
     private val associateNetworksDelegate: AssociateNetworksDelegate,
@@ -40,8 +38,8 @@ internal class DefaultWcPairUseCase(
         Channel<Pair<Wallet.Model.SessionProposal, Wallet.Model.VerifyContext>>(Channel.BUFFERED)
     private val onSessionSettleResponse = Channel<Wallet.Model.SettledSessionResponse>(Channel.BUFFERED)
 
-    override fun pairFlow(uri: String, source: WcPairUseCase.Source, selectedWallet: UserWallet): Flow<WcPairState> =
-        flow {
+    override fun pairFlow(uri: String, source: WcPairUseCase.Source): Flow<WcPairState> {
+        return flow {
             emit(WcPairState.Loading)
 
             // call sdk.pair and wait result, finish flow on error
@@ -63,7 +61,7 @@ internal class DefaultWcPairUseCase(
                 return@flow
             }
 
-            val proposalState = buildProposalState(sdkSessionProposal, verifyContext)
+            val proposalState = buildProposalState(sdkSessionProposal)
                 .fold(ifLeft = { WcPairState.Error(it) }, ifRight = { it })
             emit(proposalState)
 
@@ -104,6 +102,7 @@ internal class DefaultWcPairUseCase(
             )
             emit(WcPairState.Approving.Result(sessionForApprove, either))
         }
+    }
 
     override fun approve(sessionForApprove: WcSessionApprove) {
         onCallTerminalAction.trySend(TerminalAction.Approve(sessionForApprove))
@@ -188,7 +187,6 @@ internal class DefaultWcPairUseCase(
 
     private suspend fun buildProposalState(
         sessionProposal: Wallet.Model.SessionProposal,
-        verifyContext: Wallet.Model.VerifyContext,
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
         val proposalNetwork = associateNetworksDelegate.associate(sessionProposal)
         val appMetaData = WcAppMetaData(
@@ -213,7 +211,7 @@ internal class DefaultWcPairUseCase(
 
     private fun Wallet.Model.Session.toDomain(walletId: UserWalletId): WcSession = WcSession(
         userWalletId = walletId,
-        sdkModel = this.toOurModel(),
+        sdkModel = WcSdkSessionConverter.convert(this),
     )
 
     private sealed interface TerminalAction {
