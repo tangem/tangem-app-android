@@ -9,7 +9,8 @@ import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @ModelScoped
@@ -56,6 +57,13 @@ internal class NFTDetailsModel @Inject constructor(
 
     private fun onSendClick() {
         // TODO implement
+        // router.push(
+        //     AppRoute.NFTSend(
+        //         userWalletId = params.userWalletId,
+        //         nftAsset = params.nftAsset,
+        //         nftCollectionName = params.nftCollectionName,
+        //     ),
+        // )
     }
 
     private fun navigateBack() {
