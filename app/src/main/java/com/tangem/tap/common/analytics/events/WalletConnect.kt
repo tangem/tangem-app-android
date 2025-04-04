@@ -18,6 +18,7 @@ internal sealed class WalletConnect(
             AnalyticsParam.SOURCE to when (source) {
                 SourceType.QR -> "QR"
                 SourceType.DEEPLINK -> "DeepLink"
+                SourceType.CLIPBOARD -> "Clipboard"
                 SourceType.ETC -> "etc"
             },
         ),
