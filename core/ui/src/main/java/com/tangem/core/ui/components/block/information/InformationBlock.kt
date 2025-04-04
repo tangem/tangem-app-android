@@ -30,7 +30,7 @@ class InformationBlockContentScope(val scope: BoxScope) : BoxScope by scope
 
 @Composable
 fun InformationBlock(
-    title: @Composable BoxScope.() -> Unit,
+    title: (@Composable BoxScope.() -> Unit)?,
     modifier: Modifier = Modifier,
     contentHorizontalPadding: Dp = TangemTheme.dimens.spacing12,
     shape: Shape = TangemTheme.shapes.roundedCornersXMedium,
@@ -43,7 +43,9 @@ fun InformationBlock(
             .background(color = TangemTheme.colors.background.action),
         horizontalAlignment = Alignment.Start,
     ) {
-        NetworkTitle(title = title, action = action)
+        if (title != null) {
+            NetworkTitle(title = title, action = action)
+        }
 
         if (content != null) {
             Box(
