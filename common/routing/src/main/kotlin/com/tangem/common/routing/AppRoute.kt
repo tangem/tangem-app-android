@@ -294,5 +294,6 @@ sealed class AppRoute(val path: String) : Route {
     data class NFTDetails(
         val userWalletId: UserWalletId,
         val nftAsset: NFTAsset,
+        val collectionName: String,
     ) : AppRoute(path = "/nft_details/${userWalletId.stringValue}/${nftAsset.collectionId}/${nftAsset.id.stringValue}")
 }
