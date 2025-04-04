@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.pushNew
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -69,7 +68,7 @@ internal class OnboardingVisaModel @Inject constructor(
             customerWalletAddress = result.customerWalletTargetAddress,
             request = result.customerWalletDataToSignRequest,
         )
-        stackNavigation.push(
+        stackNavigation.pushNew(
             if (foundWalletCardId != null) {
                 OnboardingVisaRoute.TangemWalletApproveOption(
                     foundWalletCardId = foundWalletCardId,
@@ -100,7 +99,7 @@ internal class OnboardingVisaModel @Inject constructor(
         route: OnboardingVisaRoute.ChooseWallet,
         event: OnboardingVisaChooseWalletComponent.Params.Event,
     ) {
-        stackNavigation.push(
+        stackNavigation.pushNew(
             when (event) {
                 OnboardingVisaChooseWalletComponent.Params.Event.TangemWallet ->
                     OnboardingVisaRoute.TangemWalletApproveOption(
