@@ -108,25 +108,19 @@ internal class DefaultStakingRepository(
         return integrationIdMap.getOrDefault(getIntegrationKey(cryptoCurrencyId), null)
     }
 
-    override suspend fun fetchEnabledYields(refresh: Boolean) {
+    override suspend fun fetchEnabledYields() {
         withContext(dispatchers.io) {
-            cacheRegistry.invokeOnExpire(
-                key = YIELDS_STORE_KEY,
-                skipCache = refresh,
-                block = {
-                    when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
-                        is ApiResponse.Success -> stakingYieldsStore.store(
-                            stakingTokensWithYields.data.data.filter {
-                                it.isAvailable ?: false
-                            },
-                        )
-                        else -> {
-                            stakingYieldsStore.store(emptyList())
-                            throw (stakingTokensWithYields as ApiResponse.Error).cause
-                        }
-                    }
-                },
-            )
+            when (val stakingTokensWithYields = stakeKitApi.getEnabledYields(preferredValidatorsOnly = false)) {
+                is ApiResponse.Success -> stakingYieldsStore.store(
+                    stakingTokensWithYields.data.data.filter {
+                        it.isAvailable ?: false
+                    },
+                )
+                else -> {
+                    stakingYieldsStore.store(emptyList())
+                    throw (stakingTokensWithYields as ApiResponse.Error).cause
+                }
+            }
         }
     }
 
@@ -738,7 +732,7 @@ internal class DefaultStakingRepository(
     private companion object {
         const val YIELDS_STORE_KEY = "yields"
 
-        const val TON_INTEGRATION_ID = "ton-ton-tonwhales-pools-staking"
+        const val TON_INTEGRATION_ID = "ton-ton-chorus-one-pools-staking"
         const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
         const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
         const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
