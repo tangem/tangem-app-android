@@ -489,7 +489,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
          * `android:configChanges="uiMode"` is set in the manifest.
          * */
-        updateAppBackground()
+        if (routingFeatureToggles.isNavigationRefactoringEnabled.not()) {
+            updateAppBackground()
+        }
     }
 
     private fun updateAppBackground() {
