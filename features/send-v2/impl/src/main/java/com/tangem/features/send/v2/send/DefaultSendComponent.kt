@@ -133,7 +133,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 currentRoute = currentRoute.filterIsInstance<SendRoute.Destination>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
-                userWallet = model.userWallet,
+                userWalletId = params.userWalletId,
                 cryptoCurrency = params.currency,
                 callback = model,
                 isEditMode = route.isEditMode,
