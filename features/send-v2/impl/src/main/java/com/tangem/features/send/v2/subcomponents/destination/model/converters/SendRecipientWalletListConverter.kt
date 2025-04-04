@@ -2,7 +2,6 @@ package com.tangem.features.send.v2.subcomponents.destination.model.converters
 
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationRecipientListUM
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.WALLET_DEFAULT_COUNT
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.WALLET_KEY_TAG
@@ -13,7 +12,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.toPersistentList
 
 internal class SendRecipientWalletListConverter(
-    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val senderAddress: String?,
     private val isUtxoConsolidationAvailable: Boolean,
 ) :
     Converter<List<DestinationWalletUM?>, PersistentList<DestinationRecipientListUM>> {
@@ -25,14 +24,11 @@ internal class SendRecipientWalletListConverter(
 
     private fun List<DestinationWalletUM?>.filterWallets(): PersistentList<DestinationRecipientListUM> {
         var walletsCounter = 0
-        val currentAddress: String = runCatching {
-            cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-        }.getOrNull().orEmpty()
 
         return this.filterNotNull()
             .filter {
                 val isCoin = it.cryptoCurrency is CryptoCurrency.Coin
-                val isNotSameAddress = it.address != currentAddress
+                val isNotSameAddress = it.address != senderAddress
                 val isNotBlankAddress = it.address.isNotBlank()
 
                 isNotBlankAddress && isCoin && (isNotSameAddress || isUtxoConsolidationAvailable)
