@@ -103,7 +103,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 config = OnboardingVisaWelcomeComponent.Config.Welcome,
                 params = OnboardingVisaWelcomeComponent.Params(
                     childParams = childParams,
-                    onDone = { model.stackNavigation.push(OnboardingVisaRoute.AccessCode) },
+                    onDone = { model.stackNavigation.pushNew(OnboardingVisaRoute.AccessCode) },
                 ),
             )
             is OnboardingVisaRoute.WelcomeBack -> OnboardingVisaWelcomeComponent(
@@ -146,6 +146,12 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 config = OnboardingVisaInProgressComponent.Config(
                     scanResponse = model.currentScanResponse.value,
+                    type = when (route.from) {
+                        OnboardingVisaRoute.InProgress.From.Approve ->
+                            OnboardingVisaInProgressComponent.Config.Type.AfterApprove
+                        OnboardingVisaRoute.InProgress.From.PinCode ->
+                            OnboardingVisaInProgressComponent.Config.Type.AfterPinCode
+                    },
                 ),
                 params = OnboardingVisaInProgressComponent.Params(
                     childParams = childParams,
