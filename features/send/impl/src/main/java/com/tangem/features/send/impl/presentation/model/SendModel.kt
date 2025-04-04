@@ -508,6 +508,20 @@ internal class SendModel @Inject constructor(
 
     override fun onNextClick(isFromEdit: Boolean) {
         val currentState = stateRouter.currentState.value
+        when (currentState.type) {
+            SendUiStateType.Fee,
+            SendUiStateType.EditFee,
+            -> if (uiState.value.feeState?.isPrimaryButtonEnabled == false) return
+            SendUiStateType.Amount,
+            SendUiStateType.EditAmount,
+            -> if (!uiState.value.amountState.isPrimaryButtonEnabled) return
+            SendUiStateType.Recipient,
+            SendUiStateType.EditRecipient,
+            -> if (uiState.value.recipientState?.isPrimaryButtonEnabled == false) return
+            SendUiStateType.Send -> if (uiState.value.sendState?.isPrimaryButtonEnabled == false) return
+            SendUiStateType.None -> return
+        }
+
         uiState.value = stateFactory.syncEditStates(isFromEdit = isFromEdit)
         sendScreenAnalyticSender.send(currentState.type, uiState.value)
         when (currentState.type) {
