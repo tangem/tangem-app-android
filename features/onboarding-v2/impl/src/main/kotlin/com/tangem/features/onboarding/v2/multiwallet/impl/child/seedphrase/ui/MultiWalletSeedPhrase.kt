@@ -12,7 +12,7 @@ internal fun MultiWalletSeedPhrase(state: MultiWalletSeedPhraseUM, modifier: Mod
     AnimatedContent(
         modifier = modifier.navigationBarsPadding(),
         targetState = state,
-        transitionSpec = TangemAnimations.AnimatedContent.slide { from, to -> to.order < from.order },
+        transitionSpec = TangemAnimations.AnimatedContent.slide { from, to -> to.order > from.order },
         contentKey = { st -> st::class.java },
         label = "animatedContent",
     ) { st ->
