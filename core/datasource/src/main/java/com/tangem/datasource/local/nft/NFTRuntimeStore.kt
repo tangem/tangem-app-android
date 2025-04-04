@@ -16,7 +16,9 @@ interface NFTRuntimeStore {
 
     fun getAsset(collectionId: NFTCollection.Identifier, assetId: NFTAsset.Identifier): Flow<NFTAsset?>
 
-    fun getSalePrice(assetId: NFTAsset.Identifier): Flow<NFTSalePrice?>
+    fun getSalePrice(assetId: NFTAsset.Identifier): Flow<NFTSalePrice>
+
+    suspend fun getSalePriceSync(assetId: NFTAsset.Identifier): NFTSalePrice
 
     suspend fun saveCollections(collections: NFTCollections)
 
