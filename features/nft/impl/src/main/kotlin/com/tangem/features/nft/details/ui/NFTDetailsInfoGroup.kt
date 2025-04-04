@@ -2,12 +2,11 @@ package com.tangem.features.nft.details.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -140,8 +139,11 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
         is NFTAssetUM.Rarity.Empty -> Unit
         is NFTAssetUM.Rarity.Content -> {
             if (state.showDivider) {
-                Divider(
-                    modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing12),
+                HorizontalDivider(
+                    modifier = Modifier.padding(
+                        horizontal = TangemTheme.dimens.spacing12,
+                    ),
+                    color = TangemTheme.colors.stroke.primary,
                 )
             }
             Row(
@@ -174,23 +176,6 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun Divider(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(TangemTheme.dimens.size8),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(TangemTheme.dimens.size1)
-                .background(TangemTheme.colors.stroke.primary),
-        )
     }
 }
 
