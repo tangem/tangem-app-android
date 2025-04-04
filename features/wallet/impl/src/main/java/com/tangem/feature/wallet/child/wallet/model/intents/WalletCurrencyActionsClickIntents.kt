@@ -11,10 +11,10 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
+import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.AddressModel
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.components.tokenlist.state.TokensListItemUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.WrappedList
@@ -56,7 +56,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.model.WalletTokensLis
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.CloseBottomSheetTransformer
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.features.onramp.OnrampFeatureToggles
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -125,7 +124,6 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     private val appRouter: AppRouter,
     private val rampStateManager: RampStateManager,
     private val onrampFeatureToggles: OnrampFeatureToggles,
-    private val swapFeatureToggles: SwapFeatureToggles,
 ) : BaseWalletClickIntents(), WalletCurrencyActionsClickIntents {
 
     override fun onSendClick(
@@ -171,7 +169,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
         stateHolder.showBottomSheet(
             createReceiveBottomSheetContent(
                 currency = cryptoCurrencyStatus.currency,
-                addresses = cryptoCurrencyStatus.value.networkAddress?.availableAddresses ?: return,
+                addresses = cryptoCurrencyStatus.value.networkAddress ?: return,
             ),
             userWalletId,
         )
@@ -191,13 +189,15 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun createReceiveBottomSheetContent(
         currency: CryptoCurrency,
-        addresses: Set<NetworkAddress.Address>,
+        addresses: NetworkAddress,
     ): TangemBottomSheetConfigContent {
         return TokenReceiveBottomSheetConfig(
-            name = currency.name,
-            symbol = currency.symbol,
-            network = currency.network.name,
-            addresses = addresses.mapToAddressModels(currency).toImmutableList(),
+            asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                name = currency.name,
+                symbol = currency.symbol,
+            ),
+            network = currency.network,
+            networkAddress = addresses,
             showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
             onCopyClick = {
                 analyticsEventHandler.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
@@ -490,7 +490,7 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
             when (val addresses = currencyStatus.value.networkAddress) {
                 is NetworkAddress.Selectable -> {
-                    showChooseAddressBottomSheet(userWalletId, addresses.availableAddresses, currencyStatus.currency)
+                    showChooseAddressBottomSheet(userWalletId, addresses, currencyStatus.currency)
                 }
                 is NetworkAddress.Single -> {
                     router.openUrl(
@@ -508,12 +508,17 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
 
     private fun showChooseAddressBottomSheet(
         userWalletId: UserWalletId,
-        addresses: Set<NetworkAddress.Address>,
+        addresses: NetworkAddress,
         currency: CryptoCurrency,
     ) {
         stateHolder.showBottomSheet(
             ChooseAddressBottomSheetConfig(
-                addressModels = addresses.mapToAddressModels(currency).toImmutableList(),
+                asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                    name = currency.name,
+                    symbol = currency.symbol,
+                ),
+                network = currency.network,
+                networkAddress = addresses,
                 onClick = {
                     onAddressTypeSelected(
                         userWalletId = userWalletId,
@@ -632,9 +637,8 @@ internal class WalletCurrencyActionsClickIntentsImplementor @Inject constructor(
     }
 
     private suspend fun getSwapRoute(targetRoute: AppRoute): AppRoute {
-        val isSwapStoriesEnabled = swapFeatureToggles.isPromoStoriesEnabled
         val maybeSwapStories = getStoryContentUseCase.invokeSync(StoryContentIds.STORY_FIRST_TIME_SWAP.id)
-        val showSwapStories = maybeSwapStories.getOrNull() != null && isSwapStoriesEnabled
+        val showSwapStories = maybeSwapStories.getOrNull() != null
 
         return if (showSwapStories) {
             AppRoute.Stories(
