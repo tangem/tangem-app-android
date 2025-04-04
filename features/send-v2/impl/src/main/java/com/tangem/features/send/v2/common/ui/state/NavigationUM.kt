@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.common
+package com.tangem.features.send.v2.common.ui.state
 
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable

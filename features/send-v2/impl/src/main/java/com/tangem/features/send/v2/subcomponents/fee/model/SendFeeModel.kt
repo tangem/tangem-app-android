@@ -11,7 +11,7 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
