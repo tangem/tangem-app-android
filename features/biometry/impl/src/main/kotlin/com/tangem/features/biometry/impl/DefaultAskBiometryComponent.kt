@@ -9,7 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.essenty.instancekeeper.getOrCreateSimple
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.features.biometry.AskBiometryComponent
