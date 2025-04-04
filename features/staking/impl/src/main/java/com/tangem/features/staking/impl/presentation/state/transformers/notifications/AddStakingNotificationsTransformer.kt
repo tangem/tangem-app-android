@@ -98,9 +98,7 @@ internal class AddStakingNotificationsTransformer(
                 onReload = prevState.clickIntents::getFee,
                 feeValue = feeValue,
             )
-            addStakingErrorNotifications(
-                stakingError = stakingError,
-            )
+            addStakingErrorNotifications(stakingError = stakingError, onReload = prevState.clickIntents::getFee)
             // warnings
             addWarningNotifications(
                 prevState = prevState,
@@ -136,7 +134,10 @@ internal class AddStakingNotificationsTransformer(
         )
     }
 
-    private fun MutableList<NotificationUM>.addStakingErrorNotifications(stakingError: StakingError?) {
+    private fun MutableList<NotificationUM>.addStakingErrorNotifications(
+        stakingError: StakingError?,
+        onReload: () -> Unit,
+    ) {
         when (stakingError) {
             is StakingError.StakeKitApiError -> {
                 if (stakingError.message != StakingErrors.MinimumAmountNotReachedError.message) {
@@ -146,9 +147,7 @@ internal class AddStakingNotificationsTransformer(
                 }
             }
             null -> Unit
-            else -> add(
-                StakingNotification.Error.Common(subtitle = stringReference(stakingError.toString())),
-            )
+            else -> add(NotificationUM.Warning.NetworkFeeUnreachable(onReload))
         }
     }
 
