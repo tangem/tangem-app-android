@@ -163,6 +163,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "scroll/test" -> Blockchain.ScrollTestnet
         "zklink" -> Blockchain.ZkLinkNova
         "zklink/test" -> Blockchain.ZkLinkNovaTestnet
+        "pepecoin" -> Blockchain.Pepecoin
+        "pepecoin/test" -> Blockchain.PepecoinTestnet
         else -> null
     }
 }
@@ -323,6 +325,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.ScrollTestnet -> "scroll/test"
         Blockchain.ZkLinkNova -> "zklink"
         Blockchain.ZkLinkNovaTestnet -> "zklink/test"
+        Blockchain.Pepecoin -> "pepecoin"
+        Blockchain.PepecoinTestnet -> "pepecoin/test"
     }
 }
 
@@ -425,6 +429,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.ApeChain, Blockchain.ApeChainTestnet -> "apecoin"
         Blockchain.Scroll, Blockchain.ScrollTestnet -> "scroll"
         Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> "zklink"
+        Blockchain.Pepecoin, Blockchain.PepecoinTestnet -> "pepecoin-network"
     }
 }
 
@@ -461,10 +466,6 @@ fun Blockchain.amountToCreateAccount(walletManager: WalletManager, token: Token?
         -> BigDecimal.ZERO
         else -> null
     }
-}
-
-fun Blockchain.minimalAmount(): BigDecimal {
-    return BigDecimal.ONE.movePointLeft(decimals())
 }
 
 const val OLD_POLYGON_NAME = "matic-network"

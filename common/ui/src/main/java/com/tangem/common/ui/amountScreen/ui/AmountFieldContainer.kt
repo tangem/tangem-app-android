@@ -24,6 +24,8 @@ internal fun LazyListScope.amountField(
     amountState: AmountState.Data,
     isBalanceHidden: Boolean,
     modifier: Modifier = Modifier,
+    onValueChange: (String) -> Unit,
+    onValuePastedTriggerDismiss: () -> Unit,
 ) {
     item(key = AMOUNT_FIELD_KEY) {
         Column(
@@ -63,6 +65,8 @@ internal fun LazyListScope.amountField(
             AmountField(
                 amountField = amountState.amountTextField,
                 appCurrencyCode = amountState.appCurrencyCode,
+                onValueChange = onValueChange,
+                onValuePastedTriggerDismiss = onValuePastedTriggerDismiss,
             )
         }
     }
