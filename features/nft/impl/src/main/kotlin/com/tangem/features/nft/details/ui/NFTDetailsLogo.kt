@@ -26,30 +26,32 @@ import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
 
 @Composable
-internal fun NFTDetailsLogo(state: NFTAssetUM.Media?, modifier: Modifier = Modifier) {
-    if (state == null) {
-        Placeholder(
-            modifier = modifier
-                .fillMaxWidth(),
-        )
-    } else {
-        SubcomposeAsyncImage(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(TangemTheme.shapes.roundedCornersXMedium),
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(state.url)
-                .crossfade(true)
-                .build(),
-            loading = {
-                RectangleShimmer(radius = TangemTheme.dimens.radius16)
-            },
-            error = {
-                Placeholder()
-            },
-            contentScale = ContentScale.Crop,
-            contentDescription = null,
-        )
+internal fun NFTDetailsLogo(state: NFTAssetUM.Media, modifier: Modifier = Modifier) {
+    when (state) {
+        is NFTAssetUM.Media.Empty -> {
+            Placeholder(
+                modifier = modifier.fillMaxWidth(),
+            )
+        }
+        is NFTAssetUM.Media.Content -> {
+            SubcomposeAsyncImage(
+                modifier = modifier
+                    .fillMaxWidth()
+                    .clip(TangemTheme.shapes.roundedCornersXMedium),
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(state.url)
+                    .crossfade(true)
+                    .build(),
+                loading = {
+                    RectangleShimmer(radius = TangemTheme.dimens.radius16)
+                },
+                error = {
+                    Placeholder()
+                },
+                contentScale = ContentScale.Crop,
+                contentDescription = null,
+            )
+        }
     }
 }
 
@@ -72,7 +74,7 @@ private fun Placeholder(modifier: Modifier = Modifier) {
 @Preview(widthDp = 360)
 @Preview(widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_NFTDetailsInfoBlock(@PreviewParameter(NFTAssetMediaProvider::class) state: NFTAssetUM.Media?) {
+private fun Preview_NFTDetailsInfoBlock(@PreviewParameter(NFTAssetMediaProvider::class) state: NFTAssetUM.Media) {
     TangemThemePreview {
         NFTDetailsLogo(
             state = state,
@@ -82,10 +84,10 @@ private fun Preview_NFTDetailsInfoBlock(@PreviewParameter(NFTAssetMediaProvider:
     }
 }
 
-private class NFTAssetMediaProvider : CollectionPreviewParameterProvider<NFTAssetUM.Media?>(
+private class NFTAssetMediaProvider : CollectionPreviewParameterProvider<NFTAssetUM.Media>(
     collection = listOf(
-        null,
-        NFTAssetUM.Media(
+        NFTAssetUM.Media.Empty,
+        NFTAssetUM.Media.Content(
             mimetype = "image/jpeg",
             url = "img1",
         ),
