@@ -36,7 +36,8 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.utils.convertToSdkAmount
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
@@ -47,7 +48,6 @@ import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmIn
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSendingStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformer
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
