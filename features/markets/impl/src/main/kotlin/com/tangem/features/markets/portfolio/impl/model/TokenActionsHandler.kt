@@ -1,13 +1,14 @@
 package com.tangem.features.markets.portfolio.impl.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
-import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.SnackbarMessage
@@ -41,6 +42,7 @@ internal class TokenActionsHandler @AssistedInject constructor(
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val messageSender: UiMessageSender,
     private val onrampFeatureToggles: OnrampFeatureToggles,
+    private val shareManager: ShareManager,
 ) {
 
     private val disabledActionsInDemoMode = buildSet {
@@ -109,8 +111,8 @@ internal class TokenActionsHandler @AssistedInject constructor(
                     network = currency.network,
                     networkAddress = networkAddress,
                     showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                    onCopyClick = {},
-                    onShareClick = {},
+                    onCopyClick = { clipboardManager.setText(networkAddress.defaultAddress.value, isSensitive = true) },
+                    onShareClick = { shareManager.shareText(networkAddress.defaultAddress.value) },
                 ),
             )
         }
