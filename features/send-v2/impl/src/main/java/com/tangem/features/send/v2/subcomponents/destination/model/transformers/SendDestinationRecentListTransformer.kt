@@ -1,6 +1,6 @@
 package com.tangem.features.send.v2.subcomponents.destination.model.transformers
 
-import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.features.send.v2.subcomponents.destination.model.converters.SendRecipientHistoryListConverter
@@ -9,7 +9,8 @@ import com.tangem.features.send.v2.subcomponents.destination.ui.state.Destinatio
 import com.tangem.utils.transformer.Transformer
 
 internal class SendDestinationRecentListTransformer(
-    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val senderAddress: String?,
+    private val cryptoCurrency: CryptoCurrency,
     private val isUtxoConsolidationAvailable: Boolean,
     private val destinationWalletList: List<DestinationWalletUM>,
     private val txHistoryList: List<TxHistoryItem>,
@@ -19,11 +20,11 @@ internal class SendDestinationRecentListTransformer(
 
         return state.copy(
             wallets = SendRecipientWalletListConverter(
-                cryptoCurrencyStatus,
-                isUtxoConsolidationAvailable,
+                senderAddress = senderAddress,
+                isUtxoConsolidationAvailable = isUtxoConsolidationAvailable,
             ).convert(destinationWalletList),
             recent = SendRecipientHistoryListConverter(
-                cryptoCurrency = cryptoCurrencyStatus.currency,
+                cryptoCurrency = cryptoCurrency,
             ).convert(txHistoryList),
         )
     }
