@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.send.confirm.ui.state
+package com.tangem.features.send.v2.common.ui.state
 
 import androidx.compose.runtime.Immutable
 import com.tangem.common.ui.notifications.NotificationUM
