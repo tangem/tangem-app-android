@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.send.ui
+package com.tangem.features.send.v2.common.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -14,11 +14,11 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.send.v2.send.SendRoute
-import com.tangem.features.send.v2.common.NavigationUM
-import com.tangem.features.send.v2.send.ui.state.SendUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
+import com.tangem.features.send.v2.send.ui.SendNavigationButtons
 
 @Composable
-internal fun SendContent(state: SendUM, stackState: ChildStack<SendRoute, ComposableContentComponent>) {
+internal fun SendContent(navigationUM: NavigationUM, stackState: ChildStack<SendRoute, ComposableContentComponent>) {
     Column(
         modifier = Modifier.Companion
             .background(color = TangemTheme.colors.background.tertiary)
@@ -27,7 +27,7 @@ internal fun SendContent(state: SendUM, stackState: ChildStack<SendRoute, Compos
             .systemBarsPadding(),
         horizontalAlignment = Alignment.Companion.CenterHorizontally,
     ) {
-        SendAppBar(navigationUM = state.navigationUM)
+        SendAppBar(navigationUM = navigationUM)
         Children(
             stack = stackState,
             animation = stackAnimation(slide()),
@@ -35,7 +35,7 @@ internal fun SendContent(state: SendUM, stackState: ChildStack<SendRoute, Compos
         ) {
             it.instance.Content(Modifier.weight(1f))
         }
-        SendNavigationButtons(navigationUM = state.navigationUM)
+        SendNavigationButtons(navigationUM = navigationUM)
     }
 }
 
