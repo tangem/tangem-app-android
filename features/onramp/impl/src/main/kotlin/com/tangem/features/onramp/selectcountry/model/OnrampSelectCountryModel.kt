@@ -4,6 +4,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.onramp.FetchOnrampCountriesUseCase
@@ -20,7 +21,6 @@ import com.tangem.features.onramp.selectcountry.entity.CountryListUMController
 import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsErrorTransformer
 import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsLoadingTransformer
 import com.tangem.features.onramp.selectcountry.entity.transformer.UpdateCountryItemsTransformer
-import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent

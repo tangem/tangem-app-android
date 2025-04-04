@@ -69,12 +69,10 @@ internal class Express(
         fun getInitialEnvironment(): ApiEnvironment {
             return when (BuildConfig.BUILD_TYPE) {
                 DEBUG_BUILD_TYPE,
-                DEBUG_PG_BUILD_TYPE,
                 -> ApiEnvironment.DEV
                 INTERNAL_BUILD_TYPE,
                 MOCKED_BUILD_TYPE,
                 -> ApiEnvironment.STAGE
-                EXTERNAL_BUILD_TYPE,
                 RELEASE_BUILD_TYPE,
                 -> ApiEnvironment.PROD
                 else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")

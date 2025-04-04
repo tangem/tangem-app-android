@@ -3,7 +3,6 @@ package com.tangem.tap.features.details.redux.walletconnect
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.common.routing.AppRoute
-import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.inject
@@ -57,21 +56,9 @@ class WalletConnectMiddleware {
                 walletConnectInteractor.disconnectSession(action.topic)
             }
             is WalletConnectAction.StartWalletConnect -> {
-                val uri = action.copiedUri
-                if (uri != null && isWalletConnectUri(uri)) {
-                    store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
-                } else {
-                    store.dispatchNavigationAction { push(AppRoute.QrScanning(SourceType.WALLET_CONNECT)) }
+                store.dispatchNavigationAction {
+                    push(AppRoute.QrScanning(AppRoute.QrScanning.Source.WalletConnect))
                 }
-            }
-            is WalletConnectAction.ShowClipboardOrScanQrDialog -> {
-                store.dispatchOnMain(
-                    GlobalAction.ShowDialog(
-                        WalletConnectDialog.ClipboardOrScanQr(
-                            action.wcUri,
-                        ),
-                    ),
-                )
             }
             is WalletConnectAction.OpenSession -> {
                 val index = action.wcUri.indexOf("@")
@@ -196,9 +183,5 @@ class WalletConnectMiddleware {
         val userWallet = userWalletsListManager.selectedUserWalletSync ?: return emptyList()
 
         return walletManagerFacade.getStoredWalletManagers(userWallet.walletId)
-    }
-
-    private fun isWalletConnectUri(uri: String): Boolean {
-        return walletConnectInteractor.isWalletConnectUri(uri)
     }
 }

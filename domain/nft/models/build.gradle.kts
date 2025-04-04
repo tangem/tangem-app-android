@@ -8,7 +8,10 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
 
+    implementation(projects.domain.core)
     implementation(projects.domain.models)
-
     implementation(projects.domain.tokens.models)
+
+    /* Utils */
+    implementation(deps.kotlin.serialization)
 }

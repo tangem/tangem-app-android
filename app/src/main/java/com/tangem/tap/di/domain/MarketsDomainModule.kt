@@ -4,7 +4,9 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.NetworksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
@@ -60,6 +62,8 @@ object MarketsDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         quotesRepository: QuotesRepository,
+        multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): SaveMarketTokensUseCase {
         return SaveMarketTokensUseCase(
             derivationsRepository = derivationsRepository,
@@ -68,6 +72,8 @@ object MarketsDomainModule {
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
             quotesRepository = quotesRepository,
+            multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 

@@ -991,6 +991,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 ApeChain, ApeChainTestnet,
                 Scroll, ScrollTestnet,
                 ZkLinkNova, ZkLinkNovaTestnet,
+                Pepecoin, PepecoinTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
@@ -1909,6 +1910,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         is Fee.Tron,
         is Fee.VeChain,
         is Fee.Alephium,
+        is Fee.Hedera,
         -> null
     }
 
