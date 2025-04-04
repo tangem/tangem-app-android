@@ -28,10 +28,8 @@ internal class NFTDetailsModel @Inject constructor(
         value = NFTDetailsUM(
             nftAsset = NFTAssetUM(
                 name = "",
-                salePrice = NFTAssetUM.SalePrice.Empty,
-                description = null,
-                rarity = null,
-                media = null,
+                media = NFTAssetUM.Media.Empty,
+                topInfo = NFTAssetUM.TopInfo.Empty,
                 traits = persistentListOf(),
                 baseInfoItems = persistentListOf(),
             ),
