@@ -3,8 +3,7 @@ package com.tangem.core.analytics.models
 sealed class Basic(
     event: String,
     params: Map<String, String> = mapOf(),
-    error: Throwable? = null,
-) : AnalyticsEvent("Basic", event, params, error) {
+) : AnalyticsEvent("Basic", event, params) {
 
     class CardWasScanned(
         source: AnalyticsParam.ScreensSources,
@@ -72,11 +71,6 @@ sealed class Basic(
             Card, Ring
         }
     }
-
-    class ScanError(error: Throwable) : Basic(
-        event = "Scan",
-        error = error,
-    )
 
     class ButtonSupport(source: AnalyticsParam.ScreensSources) : Basic(
         event = "Request Support",
