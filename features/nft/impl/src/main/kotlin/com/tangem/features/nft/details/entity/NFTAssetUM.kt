@@ -7,29 +7,31 @@ import kotlinx.collections.immutable.ImmutableList
 
 data class NFTAssetUM(
     val name: String,
-    val salePrice: SalePrice,
-    val description: String?,
-    val rarity: Rarity?,
-    val media: Media?,
+    val media: Media,
+    val topInfo: TopInfo,
     val traits: ImmutableList<BlockItem>,
     val baseInfoItems: ImmutableList<BlockItem>,
 ) {
-    data class Media(
-        val mimetype: String?,
-        val url: String,
-    )
 
-    data class Rarity(
-        val rank: String,
-        val label: String,
-    )
+    @Immutable
+    sealed class TopInfo {
+        data object Empty : TopInfo()
+        data class Content(
+            val title: TextReference?,
+            val salePrice: SalePrice,
+            val description: String?,
+            val rarity: Rarity,
+        ) : TopInfo()
+    }
 
-    data class BlockItem(
-        val title: TextReference,
-        val titleTextEllipsis: TextEllipsis = TextEllipsis.End,
-        val value: String,
-        val valueTextEllipsis: TextEllipsis = TextEllipsis.End,
-    )
+    @Immutable
+    sealed class Media {
+        data object Empty : Media()
+        data class Content(
+            val mimetype: String?,
+            val url: String,
+        ) : Media()
+    }
 
     @Immutable
     sealed class SalePrice {
@@ -37,4 +39,21 @@ data class NFTAssetUM(
         data object Empty : SalePrice()
         data class Content(val value: String, val fiatValue: String) : SalePrice()
     }
+
+    @Immutable
+    sealed class Rarity {
+        data object Empty : Rarity()
+        data class Content(
+            val rank: String,
+            val label: String,
+            val showDivider: Boolean,
+        ) : Rarity()
+    }
+
+    data class BlockItem(
+        val title: TextReference,
+        val titleTextEllipsis: TextEllipsis = TextEllipsis.End,
+        val value: String,
+        val valueTextEllipsis: TextEllipsis = TextEllipsis.End,
+    )
 }
