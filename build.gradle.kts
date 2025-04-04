@@ -1,90 +1,16 @@
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-
 plugins {
-    alias(deps.plugins.kotlin.android) apply false
-    alias(deps.plugins.kotlin.jvm) apply false
-    alias(deps.plugins.kotlin.serialization) apply false
-    alias(deps.plugins.kotlin.kapt) apply false
-    alias(deps.plugins.android.application) apply false
-    alias(deps.plugins.android.library) apply false
-    alias(deps.plugins.hilt.android) apply false
-    alias(deps.plugins.google.services) apply false
-    alias(deps.plugins.firebase.crashlytics) apply false
-    alias(deps.plugins.firebase.perf) apply false
-    alias(deps.plugins.room) apply false
-    alias(deps.plugins.kotlin.compose.compiler) apply false
-    alias(deps.plugins.ksp) apply false
+    kotlin("jvm") version "1.9.0"
 }
 
-val clean by tasks.registering {
-    delete(rootProject.buildDir)
-}
-
-interface Injected {
-    @get:Inject
-    val fs: FileSystemOperations
-}
-
-// Test Logging
-subprojects {
-    tasks.withType<Test> {
-        testLogging {
-            exceptionFormat = TestExceptionFormat.FULL
-            showStandardStreams = true
+repositories {
+    maven("https://maven.pkg.github.com/tangem/vico") {
+        credentials {
+            username = System.getenv("GITHUB_USER")
+            password = System.getenv("GITHUB_TOKEN")
         }
     }
 }
 
-val assembleInternalQA by tasks.registering {
-    group = "build"
-    description = "Builds internal APK to 'build/outputs' directory"
-
-    val appOutputApkDir = "$projectDir/app/build/outputs/apk/internal"
-    val rootOutputApkDir = "$buildDir/outputs"
-    val injected = objects.newInstance<Injected>()
-
-    dependsOn(":app:assembleInternal")
-
-    doFirst {
-        injected.fs.delete {
-            delete(appOutputApkDir)
-            delete("$rootOutputApkDir/app-internal.apk")
-        }
-    }
-    doLast {
-        injected.fs.copy {
-            from("$appOutputApkDir/app-internal.apk")
-            into(rootOutputApkDir)
-        }
-    }
-}
-
-val generateComposeMetrics by tasks.registering {
-    group = "other"
-    description = "Build internal APK and generates compose metrics to 'build/compose-metrics' directory"
-
-    subprojects {
-        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-            compilerOptions {
-                val outputDirectory = "${project.buildDir.absolutePath}/compose_metrics"
-                // Metrics
-                freeCompilerArgs.addAll(
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:metricsDestination=$outputDirectory",
-                )
-                // Reports
-                freeCompilerArgs.addAll(
-                    "-P",
-                    "plugin:androidx.compose.compiler.plugins.kotlin:reportsDestination=$outputDirectory",
-                )
-                // Compose strong skipping mode
-                // freeCompilerArgs.addAll(
-                //     "-P",
-                //     "plugin:androidx.compose.compiler.plugins.kotlin:experimentalStrongSkipping=true",
-                // )
-            }
-        }
-    }
-
-    finalizedBy(assembleInternalQA)
+dependencies {
+    implementation("com.tangem.vico.core:core:2.0.0-alpha.25-tangemtest")
 }
