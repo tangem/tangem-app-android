@@ -16,6 +16,8 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.haptic.TangemHapticEffect
 import com.tangem.core.ui.haptic.VibratorHapticManager
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
@@ -34,6 +36,7 @@ import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.StakingTransaction
+import com.tangem.domain.staking.utils.getValidatorsCount
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
@@ -114,6 +117,7 @@ internal class StakingModel @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getActionsUseCase: GetActionsUseCase,
     private val getYieldUseCase: GetYieldUseCase,
+    private val checkAccountInitializedUseCase: CheckAccountInitializedUseCase,
     private val paramsInterceptorHolder: ParamsInterceptorHolder,
     private val shareManager: ShareManager,
     @DelayedWork private val coroutineScope: CoroutineScope,
@@ -229,49 +233,62 @@ internal class StakingModel @Inject constructor(
     }
 
     override fun onNextClick(balanceState: BalanceState?) {
-        val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
-        val noBalanceState = balanceState == null
-        val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data
+        modelScope.launch {
+            val isInitialInfoStep = value.currentStep == StakingStep.InitialInfo
+            val noBalanceState = balanceState == null
+            val noYieldBalanceData = cryptoCurrencyStatus.value.yieldBalance !is YieldBalance.Data
+            val isAccountInitialized = checkAccountInitializedUseCase.invoke(
+                userWalletId = userWalletId,
+                network = cryptoCurrencyStatus.currency.network,
+            ).getOrElse {
+                Timber.e(it)
+                false
+            }
 
-        when {
-            isInitialInfoStep && noBalanceState && yield.allValidatorsFull && noYieldBalanceData -> {
-                stakingEventFactory.createStakingValidatorsUnavailableAlert()
-                return
-            }
-            isInitialInfoStep && noBalanceState -> {
-                val list = buildList {
-                    SetConfirmationStateInitTransformer(
-                        isEnter = true,
-                        isExplicitExit = false,
-                        balanceState = null,
-                        cryptoCurrencyStatus = cryptoCurrencyStatus,
-                        stakingApproval = stakingApproval,
-                        stakingAllowance = stakingAllowance,
-                        yieldArgs = yield.args,
-                    ).let(::add)
-                    if (yield.args.enter.isPartialAmountDisabled) {
-                        ValidatorSelectChangeTransformer(
-                            selectedValidator = yield.preferredValidators.firstOrNull(),
-                            yield = yield,
-                        ).let(::add)
-                        SetAmountDataTransformer(
-                            clickIntents = this@StakingModel,
-                            cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-                            userWalletProvider = Provider { userWallet },
-                            appCurrencyProvider = Provider { appCurrency },
-                        ).let(::add)
-                        AmountMaxValueStateTransformer(
-                            cryptoCurrencyStatus = cryptoCurrencyStatus,
-                            minimumTransactionAmount = minimumTransactionAmount,
-                            actionType = uiState.value.actionType,
-                            yield = yield,
-                        ).let(::add)
-                    }
+            when {
+                isInitialInfoStep && noBalanceState && yield.allValidatorsFull && noYieldBalanceData -> {
+                    stakingEventFactory.createStakingValidatorsUnavailableAlert()
+                    return@launch
                 }
-                stateController.updateAll(*list.toTypedArray())
+                isInitialInfoStep && noBalanceState && !isAccountInitialized -> {
+                    stakingEventFactory.createInitializeAccountAlert()
+                    return@launch
+                }
+                isInitialInfoStep && noBalanceState -> {
+                    val list = buildList {
+                        SetConfirmationStateInitTransformer(
+                            isEnter = true,
+                            isExplicitExit = false,
+                            balanceState = null,
+                            cryptoCurrencyStatus = cryptoCurrencyStatus,
+                            stakingApproval = stakingApproval,
+                            stakingAllowance = stakingAllowance,
+                            yieldArgs = yield.args,
+                        ).let(::add)
+                        if (yield.args.enter.isPartialAmountDisabled) {
+                            ValidatorSelectChangeTransformer(
+                                selectedValidator = yield.preferredValidators.firstOrNull(),
+                                yield = yield,
+                            ).let(::add)
+                            SetAmountDataTransformer(
+                                clickIntents = this@StakingModel,
+                                cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
+                                userWalletProvider = Provider { userWallet },
+                                appCurrencyProvider = Provider { appCurrency },
+                            ).let(::add)
+                            AmountMaxValueStateTransformer(
+                                cryptoCurrencyStatus = cryptoCurrencyStatus,
+                                minimumTransactionAmount = minimumTransactionAmount,
+                                actionType = uiState.value.actionType,
+                                yield = yield,
+                            ).let(::add)
+                        }
+                    }
+                    stateController.updateAll(*list.toTypedArray())
+                }
             }
+            stakingStateRouter.onNextClick()
         }
-        stakingStateRouter.onNextClick()
     }
 
     override fun getFee() {
@@ -497,19 +514,34 @@ internal class StakingModel @Inject constructor(
         analyticsEventHandler.send(StakingAnalyticsEvent.ButtonRewards)
         val rewardsValidators =
             stateController.value.rewardsValidatorsState as? StakingStates.RewardsValidatorsState.Data
-        val rewards = rewardsValidators?.rewards
-        if (rewards != null && rewards.isSingleItem()) {
-            onActiveStake(rewards.first())
-        } else {
-            analyticsEventHandler.send(
-                StakingAnalyticsEvent.ButtonValidator(
-                    source = StakeScreenSource.Info,
-                ),
+
+        val initialInfoState = stateController.value.initialInfoState as? StakingStates.InitialInfoState.Data
+        val yieldBalance = initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data
+        val rewardBlockType = yieldBalance?.reward?.rewardBlockType
+        val rewardPendingActionConstraints = yieldBalance?.reward?.rewardConstraints
+
+        if (rewardBlockType == RewardBlockType.RewardsRequirementsError) {
+            stakingEventFactory.createStakingRewardsMinimumRequirementsErrorAlert(
+                cryptoCurrencyName = cryptoCurrencyStatus.currency.name,
+                cryptoAmountValue = rewardPendingActionConstraints?.amountArg?.minimum?.format {
+                    crypto(cryptoCurrencyStatus.currency)
+                }.orEmpty(),
             )
-            stateController.update {
-                value.copy(actionType = StakingActionCommonType.Pending.Rewards)
+        } else {
+            val rewards = rewardsValidators?.rewards
+            if (rewards != null && rewards.isSingleItem()) {
+                onActiveStake(rewards.first())
+            } else {
+                analyticsEventHandler.send(
+                    StakingAnalyticsEvent.ButtonValidator(
+                        source = StakeScreenSource.Info,
+                    ),
+                )
+                stateController.update {
+                    value.copy(actionType = StakingActionCommonType.Pending.Rewards)
+                }
+                stakingStateRouter.showRewardsValidators()
             }
-            stakingStateRouter.showRewardsValidators()
         }
     }
 

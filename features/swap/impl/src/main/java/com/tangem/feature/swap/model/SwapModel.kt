@@ -9,6 +9,7 @@ import arrow.core.getOrElse
 import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.bottomsheet.permission.state.ApproveType
 import com.tangem.common.ui.bottomsheet.permission.state.GiveTxPermissionState.InProgress.getApproveTypeOrNull
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
@@ -55,7 +56,6 @@ import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.feature.swap.utils.formatToUIRepresentation
 import com.tangem.features.swap.SwapComponent
-import com.tangem.features.swap.SwapFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
 import com.tangem.utils.isNullOrZero
@@ -82,6 +82,7 @@ internal class SwapModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val blockchainInteractor: BlockchainInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val analyticsErrorEventHandler: AnalyticsErrorHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusSyncUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
@@ -94,7 +95,6 @@ internal class SwapModel @Inject constructor(
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val featureToggles: SwapFeatureToggles,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     swapInteractorFactory: SwapInteractor.Factory,
     private val urlOpener: UrlOpener,
@@ -164,10 +164,8 @@ internal class SwapModel @Inject constructor(
 
     init {
         modelScope.launch {
-            if (featureToggles.isPromoStoriesEnabled) {
-                initStories()
-                swapRouter.openScreen(SwapNavScreen.PromoStories)
-            }
+            initStories()
+            swapRouter.openScreen(SwapNavScreen.PromoStories)
         }
         modelScope.launch(dispatchers.io) {
             val fromStatus = getCryptoCurrencyStatusUseCase(userWalletId, initialCurrencyFrom.id).getOrNull()
@@ -483,7 +481,7 @@ internal class SwapModel @Inject constructor(
         val receiveToken = dataState.toCryptoCurrency?.currency?.let {
             "${it.network.backendId}:${it.symbol}"
         }
-        analyticsEventHandler.send(
+        analyticsErrorEventHandler.sendErrorEvent(
             SwapEvents.NoticeProviderError(
                 sendToken = "${initialCurrencyFrom.network.backendId}:${initialCurrencyFrom.symbol}",
                 receiveToken = receiveToken ?: "",

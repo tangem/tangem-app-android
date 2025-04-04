@@ -11,7 +11,9 @@ interface UserWalletsStore {
 
     val userWallets: Flow<List<UserWallet>>
 
-    suspend fun getSyncOrNull(key: UserWalletId): UserWallet?
+    fun getSyncOrNull(key: UserWalletId): UserWallet?
+
+    suspend fun getSyncStrict(key: UserWalletId): UserWallet
 
     suspend fun getAllSyncOrNull(): List<UserWallet>?
 
