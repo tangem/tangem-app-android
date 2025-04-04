@@ -29,11 +29,11 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
