@@ -41,7 +41,7 @@ internal class SendConfirmComponent(
             params = SendDestinationComponentParams.DestinationBlockParams(
                 state = model.uiState.value.destinationUM,
                 analyticsCategoryName = params.analyticsCategoryName,
-                userWallet = params.userWallet,
+                userWalletId = params.userWallet.walletId,
                 cryptoCurrency = params.cryptoCurrencyStatus.currency,
                 blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
                 isPredefinedValues = params.predefinedValues is Params.PredefinedValues.Content,
