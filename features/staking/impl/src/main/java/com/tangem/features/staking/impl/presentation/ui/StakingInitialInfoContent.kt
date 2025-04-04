@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.Density
 import com.tangem.common.ui.navigationButtons.NavigationButtonsState
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.inputrow.InputRowDefault
 import com.tangem.core.ui.components.inputrow.InputRowImageInfo
 import com.tangem.core.ui.components.list.roundedListWithDividersItems
@@ -38,19 +39,18 @@ import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
-import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.RewardBlockType
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.previewdata.InitialStakingStatePreview
 import com.tangem.features.staking.impl.presentation.state.stub.StakingClickIntentsStub
-import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
 import com.tangem.utils.StringsSigns.DOT
 import com.tangem.utils.extensions.orZero
 
@@ -214,14 +214,17 @@ private fun StakingRewardBlock(
     onRewardsClick: () -> Unit,
     isBalanceHidden: Boolean,
 ) {
-    val (text, textColor) = when (yieldBalanceState.rewardBlockType) {
-        RewardBlockType.Rewards -> {
+    val reward = yieldBalanceState.reward
+    val (text, textColor) = when (yieldBalanceState.reward.rewardBlockType) {
+        RewardBlockType.RewardsRequirementsError,
+        RewardBlockType.Rewards,
+        -> {
             annotatedReference {
-                append(yieldBalanceState.rewardsFiat.orMaskWithStars(isBalanceHidden))
+                append(reward.rewardsFiat.orMaskWithStars(isBalanceHidden))
                 appendSpace()
                 append(DOT)
                 appendSpace()
-                append(yieldBalanceState.rewardsCrypto.orMaskWithStars(isBalanceHidden))
+                append(reward.rewardsCrypto.orMaskWithStars(isBalanceHidden))
             } to TangemTheme.colors.text.primary1
         }
         RewardBlockType.RewardUnavailable -> {
@@ -232,7 +235,7 @@ private fun StakingRewardBlock(
             resourceReference(R.string.staking_details_no_rewards_to_claim) to TangemTheme.colors.text.tertiary
         }
     }
-    val isShowIcon = yieldBalanceState.rewardBlockType == RewardBlockType.Rewards && yieldBalanceState.isActionable
+    val isShowIcon = reward.rewardBlockType == RewardBlockType.Rewards && yieldBalanceState.isActionable
     InputRowDefault(
         title = resourceReference(R.string.staking_rewards),
         text = text,

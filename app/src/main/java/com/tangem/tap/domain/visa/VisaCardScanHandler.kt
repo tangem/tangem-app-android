@@ -8,11 +8,15 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
+import com.tangem.domain.visa.error.VisaActivationError
+import com.tangem.domain.visa.error.VisaAuthorizationAPIError
+import com.tangem.domain.visa.error.VisaCardScanError
 import com.tangem.domain.visa.model.*
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
@@ -71,9 +75,7 @@ internal class VisaCardScanHandler @Inject constructor(
         val derivationPath = VisaUtilities.visaDefaultDerivationPath ?: run {
             Timber.e("Failed to create derivation path while first scan")
 
-            return CompletionResult.Failure(
-                TangemSdkError.Underlying(VisaCardScanHandlerError.FailedToCreateDerivationPath.errorDescription),
-            )
+            return CompletionResult.Failure(VisaCardScanError.FailedToCreateDerivationPath.tangemError)
         }
 
         val derivationTask = DeriveWalletPublicKeyTask(wallet.publicKey, derivationPath)
@@ -104,32 +106,24 @@ internal class VisaCardScanHandler @Inject constructor(
 
         val derivationPath = VisaUtilities.visaDefaultDerivationPath ?: run {
             Timber.e("Failed to create derivation path while handling wallet authorization")
-            return CompletionResult.Failure(
-                TangemSdkError.Underlying(VisaCardScanHandlerError.FailedToCreateDerivationPath.errorDescription),
-            )
+            return CompletionResult.Failure(VisaCardScanError.FailedToCreateDerivationPath.tangemError)
         }
 
         val card = session.environment.card ?: return CompletionResult.Failure(TangemSdkError.MissingPreflightRead())
 
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: run {
             Timber.e("Failed to find extended public key while handling wallet authorization")
-            return CompletionResult.Failure(
-                TangemSdkError.Underlying(VisaCardScanHandlerError.FailedToFindDerivedWalletKey.errorDescription),
-            )
+            return CompletionResult.Failure(VisaCardScanError.FailedToFindWallet.tangemError)
         }
 
         val extendedPublicKey = wallet.derivedKeys[derivationPath] ?: run {
             Timber.e("Failed to find extended public key while handling wallet authorization")
-            return CompletionResult.Failure(
-                TangemSdkError.Underlying(VisaCardScanHandlerError.FailedToFindDerivedWalletKey.errorDescription),
-            )
+            return CompletionResult.Failure(VisaCardScanError.FailedToFindDerivedWalletKey.tangemError)
         }
 
         val walletAddress = VisaWalletPublicKeyUtility.generateAddressOnSecp256k1(extendedPublicKey.publicKey)
             .getOrElse {
-                return CompletionResult.Failure(
-                    TangemSdkError.Underlying("Cannot generate address on Visa curve"),
-                )
+                return CompletionResult.Failure(it.tangemError)
             }
 
         Timber.i("Requesting challenge for wallet authorization")
@@ -200,7 +194,7 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }.getOrElse {
             Timber.e("Failed to get challenge for Card authorization. Plain error: ${it.message}")
-            return CompletionResult.Failure(TangemSdkError.Underlying(it.message ?: "Unknown error"))
+            return CompletionResult.Failure(VisaAuthorizationAPIError.tangemError)
         }
 
         Timber.i("Received challenge to sign: ${challengeResponse.challenge}")
@@ -230,11 +224,7 @@ internal class VisaCardScanHandler @Inject constructor(
             )
         }.getOrElse {
             Timber.e("Failed to sign challenge with Card public key. Plain error: ${it.message}")
-            return CompletionResult.Failure(
-                TangemSdkError.Underlying(
-                    customMessage = it.message ?: "Unknown error",
-                ),
-            )
+            return CompletionResult.Failure(VisaAuthorizationAPIError.tangemError)
         }
 
         visaAuthTokenStorage.store(
@@ -251,7 +241,7 @@ internal class VisaCardScanHandler @Inject constructor(
         }
 
         if (error != null) {
-            return CompletionResult.Failure(TangemSdkError.Underlying(error.message))
+            return CompletionResult.Failure(error.tangemError)
         }
 
         val activationInput = VisaActivationInput(
