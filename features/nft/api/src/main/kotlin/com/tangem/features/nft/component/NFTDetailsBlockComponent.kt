@@ -5,7 +5,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.wallets.models.UserWalletId
 
-interface NFTDetailsComponent : ComposableContentComponent {
+interface NFTDetailsBlockComponent : ComposableContentComponent {
 
     data class Params(
         val userWalletId: UserWalletId,
@@ -13,5 +13,5 @@ interface NFTDetailsComponent : ComposableContentComponent {
         val nftCollectionName: String,
     )
 
-    interface Factory : ComponentFactory<Params, NFTDetailsComponent>
+    interface Factory : ComponentFactory<Params, NFTDetailsBlockComponent>
 }
