@@ -314,4 +314,5 @@ include(":data:manage-tokens")
 include(":data:networks")
 include(":data:nft")
 include(":data:onramp")
+include(":data:quotes")
 // endregion Data modules
