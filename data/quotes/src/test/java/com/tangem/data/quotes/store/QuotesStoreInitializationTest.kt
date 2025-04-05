@@ -1,35 +1,34 @@
-package com.tangem.data.networks.store
+package com.tangem.data.quotes.store
 
 import androidx.datastore.core.DataStore
 import com.google.common.truth.Truth
+import com.tangem.common.test.data.quote.MockQuoteResponseFactory
+import com.tangem.common.test.data.quote.toDomain
 import com.tangem.common.test.datastore.MockStateDataStore
-import com.tangem.common.test.domain.network.MockNetworkStatusFactory
-import com.tangem.data.networks.models.SimpleNetworkStatus
-import com.tangem.data.networks.toDataModel
-import com.tangem.data.networks.toSimple
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.tokens.model.Quote
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
+import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
  */
-internal class NetworksStatusesStoreInitializationTest {
+internal class QuotesStoreInitializationTest {
 
     @Test
     fun `test initialization if cache store is empty`() = runTest {
-        val runtimeStore = RuntimeSharedStore<WalletIdWithSimpleStatus>()
-        val persistenceStore: DataStore<WalletIdWithStatusDM> = mockk()
+        val runtimeStore = RuntimeSharedStore<Set<Quote>>()
+        val persistenceStore: DataStore<CurrencyIdWithQuote> = mockk()
 
         every { persistenceStore.data } returns emptyFlow()
 
-        DefaultNetworksStatusesStoreV2(
+        DefaultQuotesStoreV2(
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
@@ -40,44 +39,44 @@ internal class NetworksStatusesStoreInitializationTest {
 
     @Test
     fun `test initialization if cache store contains empty map`() = runTest {
-        val runtimeStore = RuntimeSharedStore<WalletIdWithSimpleStatus>()
-        val persistenceStore = MockStateDataStore<WalletIdWithStatusDM>(default = emptyMap())
+        val runtimeStore = RuntimeSharedStore<Set<Quote>>()
+        val persistenceStore = MockStateDataStore<CurrencyIdWithQuote>(default = emptyMap())
 
-        DefaultNetworksStatusesStoreV2(
+        DefaultQuotesStoreV2(
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
-        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptyMap<String, Set<SimpleNetworkStatus>>())
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(null)
     }
 
     @Test
     fun `test initialization if cache store is not empty`() = runTest {
-        val runtimeStore = RuntimeSharedStore<WalletIdWithSimpleStatus>()
-        val persistenceStore = MockStateDataStore<WalletIdWithStatusDM>(default = emptyMap())
+        val runtimeStore = RuntimeSharedStore<Set<Quote>>()
+        val persistenceStore = MockStateDataStore<CurrencyIdWithQuote>(default = emptyMap())
 
-        val status = MockNetworkStatusFactory.createVerified()
+        val btcQuote = "BTC" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.ZERO)
+        val ethQuote = "ETH" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.ONE)
 
         persistenceStore.updateData {
             it.toMutableMap().apply {
-                put(userWalletId.stringValue, setOf(status.toDataModel()!!))
+                this += btcQuote
+                this += ethQuote
             }
         }
 
-        DefaultNetworksStatusesStoreV2(
+        DefaultQuotesStoreV2(
             runtimeStore = runtimeStore,
             persistenceDataStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
-        val expectedStatus = status.toSimple().copy(value = status.value.copySealed(source = StatusSource.CACHE))
-        val expected = mapOf(userWalletId.stringValue to setOf(expectedStatus))
+        val expected = setOf(
+            btcQuote.toDomain(source = StatusSource.CACHE),
+            ethQuote.toDomain(source = StatusSource.CACHE),
+        )
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(expected)
-    }
-
-    private companion object {
-        val userWalletId = UserWalletId(stringValue = "011")
     }
 }
