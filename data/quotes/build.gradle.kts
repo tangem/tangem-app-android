@@ -15,6 +15,7 @@ dependencies {
 
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.wallets.models)
 
     implementation(deps.androidx.datastore)
