@@ -420,7 +420,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.NFTDetails ->
                 createComponentChild(
                     context = context,
-                    params = NFTDetailsComponent.Params(userWalletId = route.userWalletId, nftAsset = route.nftAsset),
+                    params = NFTDetailsComponent.Params(
+                        userWalletId = route.userWalletId,
+                        nftAsset = route.nftAsset,
+                        nftCollectionName = route.collectionName,
+                    ),
                     componentFactory = nftDetailsComponentFactory,
                 )
             is AppRoute.OnboardingNote,
@@ -772,7 +776,11 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.NFTDetails ->
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
-                    params = NFTDetailsComponent.Params(userWalletId = route.userWalletId, nftAsset = route.nftAsset),
+                    params = NFTDetailsComponent.Params(
+                        userWalletId = route.userWalletId,
+                        nftAsset = route.nftAsset,
+                        nftCollectionName = route.collectionName,
+                    ),
                     componentFactory = nftDetailsComponentFactory,
                 )
         }
