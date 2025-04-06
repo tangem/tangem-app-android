@@ -13,12 +13,17 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
 
+    implementation(projects.data.common)
+    implementation(projects.data.tokens)
+
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.quotes)
     implementation(projects.domain.wallets.models)
 
     implementation(deps.androidx.datastore)
+    implementation(deps.timber)
 
     implementation(deps.hilt.android)
     kapt(deps.hilt.kapt)
