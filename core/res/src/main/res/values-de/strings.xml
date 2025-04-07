@@ -503,6 +503,12 @@
     <item quantity="one">%d Stück</item>
     <item quantity="other">%d Stücke</item>
   </plurals>
+  <string name="nft_collections_empty_description">NFTs, die an Deine Wallet-Adresse gesendet werden, werden hier angezeigt.</string>
+  <string name="nft_collections_empty_title">Noch keine Kollektionen</string>
+  <string name="nft_collections_receive">NFT erhalten</string>
+  <string name="nft_collections_title">NFT-Kollektionen</string>
+  <string name="nft_collections_warning_subtitle">Einige Daten werden möglicherweise nicht geladen</string>
+  <string name="nft_collections_warning_title">Vorübergehende Ladeprobleme</string>
   <string name="nft_wallet_count">%1$d NFTs in der %2$d Sammlung</string>
   <string name="nft_wallet_receive_nft">Tippe hier, um das erste NFT zu erhalten</string>
   <string name="nft_wallet_title">NFT-Sammlungen</string>
@@ -522,7 +528,7 @@
   <string name="onboarding_activation_error_message">Bitte wiederhole den Vorgang. Die Karte oder Ring wird auf Werkseinstellungen zurückgesetzt.</string>
   <string name="onboarding_activation_error_title">Aktivierungsfehler</string>
   <string name="onboarding_add_tokens">Token hinzufügen</string>
-  <string name="onboarding_alert_message_not_max_backup_cards_added">Du hast einee Backup-Karte oder einen Backup-Ring hinzugefügt. Wenn der Backup-Prozess abgeschlossen ist, kannst Du keine weiteren Backup-Geräte hinzufügen. Wenn Du noch eine Karte oder einen Ring hast, fügen diese(n) zum Backup hinzu. Möchtest Du den Backup-Prozess fortsetzen?</string>
+  <string name="onboarding_alert_message_not_max_backup_cards_added">Du hast eine Backup-Karte oder einen Backup-Ring hinzugefügt. Nach Abschluss des Backup-Vorgangs kannst Du keine weiteren Backup-Geräte hinzufügen. Wenn Du eine weitere Karte oder einen weiteren Ring hast, fügen diesen dem Backup jetzt hinzu. Möchtest Du den Backup-Vorgang fortsetzen?</string>
   <string name="onboarding_backup_exit_warning">Der Sicherungsvorgang ist teilweise abgeschlossen. Du kannst ihn jetzt nicht beenden.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Die Passphrase ist eine fortschrittliche Sicherheitsfunktion, die von Krypto-Wallets verwendet wird. Sie fügt ein zusätzliches Wort oder eine Phrase deiner Wahl zu der bereits bestehenden Wiederherstellungsphrase hinzu, um einen brandneuen Satz von Adressen zu erzeugen.</string>
   <string name="onboarding_button_add_backup_card">Hinzufügen einer Sicherungskarte oder Ring</string>
@@ -1165,6 +1171,7 @@
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
   <string name="wc_connections">Verbindungen</string>
   <string name="wc_disconnect_all">Alle trennen</string>
+  <string name="wc_disconnect_all_alert_desc">Text über die Trennung aller dApps</string>
   <string name="wc_disconnect_all_alert_title">Alle dApps trennen</string>
   <string name="wc_new_connection">Neue Verbindung</string>
   <string name="wc_no_sessions_desc">Verbinde Deine Wallet mit einer anderen dApp</string>
