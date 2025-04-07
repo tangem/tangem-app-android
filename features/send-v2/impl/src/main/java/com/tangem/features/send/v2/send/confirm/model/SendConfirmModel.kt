@@ -485,7 +485,7 @@ internal class SendConfirmModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).distinctUntilChanged().onEach { (state, _) ->
+        ).onEach { (state, _) ->
             val amountUM = state.amountUM as? AmountState.Data
             val confirmUM = state.confirmUM
             params.callback.onResult(
