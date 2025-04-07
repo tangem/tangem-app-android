@@ -62,6 +62,7 @@ internal fun OnboardingTwin(state: OnboardingTwinUM, modifier: Modifier = Modifi
                 is OnboardingTwinUM.ScanCard -> ScanCard(st)
                 is OnboardingTwinUM.TopUp -> TopUp(st)
                 is OnboardingTwinUM.Welcome -> Welcome(st)
+                OnboardingTwinUM.TopUpPrepare -> {}
             }
         }
     }
