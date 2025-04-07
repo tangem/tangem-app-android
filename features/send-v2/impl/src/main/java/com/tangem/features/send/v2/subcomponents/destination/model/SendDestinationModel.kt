@@ -10,6 +10,9 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.qrscanning.models.SourceType
+import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.qrscanning.usecases.ParseQrCodeUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.GetNetworkAddressesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyAddress
@@ -58,6 +61,8 @@ internal class SendDestinationModel @Inject constructor(
     private val getNetworkAddressesUseCase: GetNetworkAddressesUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
     private val isUtxoConsolidationAvailableUseCase: IsUtxoConsolidationAvailableUseCase,
+    private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
+    private val parseQrCodeUseCase: ParseQrCodeUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), SendDestinationClickIntents {
     private val params: SendDestinationComponentParams = paramsContainer.require()
@@ -76,6 +81,7 @@ internal class SendDestinationModel @Inject constructor(
     init {
         initSenderAddress()
         configDestinationNavigation()
+        subscribeOnQRScannerResult()
         initialState()
     }
 
@@ -141,6 +147,28 @@ internal class SendDestinationModel @Inject constructor(
         analyticsEventHandler.send(SendDestinationAnalyticEvents.QrCodeButtonClicked(analyticsCategoryName))
         router.push(
             AppRoute.QrScanning(source = AppRoute.QrScanning.Source.Send(cryptoCurrency.network.name)),
+        )
+    }
+
+    private fun subscribeOnQRScannerResult() {
+        listenToQrScanningUseCase(SourceType.SEND)
+            .getOrElse { emptyFlow() }
+            .onEach(::onQrCodeScanned)
+            .launchIn(modelScope)
+    }
+
+    private fun onQrCodeScanned(address: String) {
+        val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull() ?: return
+        _uiState.update(
+            SendDestinationPredefinedStateTransformer(
+                address = parsedQrCode.address,
+                memo = parsedQrCode.memo,
+            ),
+        )
+        validate(
+            address = parsedQrCode.address,
+            memo = parsedQrCode.memo,
+            type = EnterAddressSource.QRCode,
         )
     }
 
