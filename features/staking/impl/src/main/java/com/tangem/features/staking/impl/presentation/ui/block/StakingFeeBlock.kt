@@ -32,17 +32,12 @@ import com.tangem.features.staking.impl.presentation.state.FeeState
 import java.math.BigDecimal
 
 @Composable
-internal fun StakingFeeBlock(feeState: FeeState, isTransactionSent: Boolean) {
-    val backgroundColor = if (isTransactionSent) {
-        TangemTheme.colors.background.action
-    } else {
-        TangemTheme.colors.button.disabled
-    }
+internal fun StakingFeeBlock(feeState: FeeState) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(backgroundColor)
+            .background(TangemTheme.colors.background.action)
             .padding(TangemTheme.dimens.spacing12),
     ) {
         Text(
@@ -144,10 +139,7 @@ private fun BoxScope.FeeError(feeState: FeeState) {
 @Composable
 private fun FeeBlockPreview(@PreviewParameter(FeeBlockPreviewProvider::class) value: FeeState) {
     TangemThemePreview {
-        StakingFeeBlock(
-            feeState = value,
-            isTransactionSent = false,
-        )
+        StakingFeeBlock(feeState = value)
     }
 }
 
