@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.destination.model.transformers
 
 import arrow.core.Either
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.error.AddressValidation
 import com.tangem.domain.transaction.error.AddressValidationResult
@@ -8,6 +9,7 @@ import com.tangem.domain.transaction.error.ValidateMemoError
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.utils.transformer.Transformer
+import kotlinx.collections.immutable.toPersistentList
 
 internal class SendDestinationValidationResultTransformer(
     private val addressValidationResult: AddressValidationResult,
@@ -39,6 +41,12 @@ internal class SendDestinationValidationResultTransformer(
                 isError = state.memoTextField.value.isNotEmpty() && !isValidMemo,
                 isEnabled = !shouldDisableMemo(),
             ),
+            recent = state.recent.map { recent ->
+                recent.copy(isVisible = !isValidAddress && (recent.isLoading || recent.title != TextReference.EMPTY))
+            }.toPersistentList(),
+            wallets = state.wallets.map { wallet ->
+                wallet.copy(isVisible = !isValidAddress && (wallet.isLoading || wallet.title != TextReference.EMPTY))
+            }.toPersistentList(),
         )
     }
 
