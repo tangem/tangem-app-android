@@ -157,7 +157,7 @@ internal class OnboardingTwinModel @Inject constructor(
 
     private fun createFirstWallet() {
         modelScope.launch {
-            setLoading(false)
+            setLoading(true)
 
             val result = tangemSdkManager.createFirstTwinWallet(
                 cardId = params.scanResponse.card.cardId,
@@ -170,7 +170,10 @@ internal class OnboardingTwinModel @Inject constructor(
             )
 
             when (result) {
-                is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
+                is CompletionResult.Failure -> {
+                    setLoading(false)
+                    showCardVerificationFailedDialog(result.error)
+                }
                 is CompletionResult.Success -> {
                     if (params.mode == Mode.CreateWallet) {
                         cardRepository.startCardActivation(result.data.cardId)
@@ -228,7 +231,10 @@ internal class OnboardingTwinModel @Inject constructor(
             )
 
             when (result) {
-                is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
+                is CompletionResult.Failure -> {
+                    setLoading(false)
+                    showCardVerificationFailedDialog(result.error)
+                }
                 is CompletionResult.Success -> {
                     if (params.mode == Mode.CreateWallet) {
                         cardRepository.startCardActivation(result.data.cardId)
@@ -257,6 +263,8 @@ internal class OnboardingTwinModel @Inject constructor(
 
     private fun createThirdWallet(secondCardPublicKey: ByteArray) {
         modelScope.launch {
+            setLoading(true)
+
             val result = tangemSdkManager.finalizeTwin(
                 secondCardPublicKey = secondCardPublicKey,
                 issuerKeyPair = getIssuerKeys(),
@@ -270,7 +278,10 @@ internal class OnboardingTwinModel @Inject constructor(
             )
 
             when (result) {
-                is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
+                is CompletionResult.Failure -> {
+                    setLoading(false)
+                    showCardVerificationFailedDialog(result.error)
+                }
                 is CompletionResult.Success -> {
                     scanComplete(result.data)
                 }
