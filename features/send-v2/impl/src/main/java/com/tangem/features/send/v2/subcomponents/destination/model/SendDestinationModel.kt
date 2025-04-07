@@ -82,6 +82,7 @@ internal class SendDestinationModel @Inject constructor(
     private fun initSenderAddress() {
         modelScope.launch {
             senderAddresses.value = getNetworkAddressesUseCase.invokeSync(userWalletId, cryptoCurrency.network)
+                .filter { cryptoCurrency.id == it.cryptoCurrency.id }
         }
         senderAddresses.onEach {
             getWalletsAndRecent()
