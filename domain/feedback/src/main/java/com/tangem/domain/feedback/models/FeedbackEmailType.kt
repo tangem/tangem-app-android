@@ -1,5 +1,7 @@
 package com.tangem.domain.feedback.models
 
+import com.tangem.domain.visa.model.VisaTxDetails
+
 /**
  * Email feedback type
  *
@@ -51,5 +53,16 @@ sealed interface FeedbackEmailType {
 
     data object CardAttestationFailed : FeedbackEmailType {
         override val cardInfo: CardInfo? = null
+    }
+
+    sealed class Visa : FeedbackEmailType {
+        data class DirectUserRequest(override val cardInfo: CardInfo) : Visa()
+
+        data class Activation(override val cardInfo: CardInfo) : Visa()
+
+        data class Dispute(
+            val visaTxDetails: VisaTxDetails,
+            override val cardInfo: CardInfo,
+        ) : Visa()
     }
 }
