@@ -15,7 +15,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.navigation.url.UrlOpener
-import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.feedback.GetCardInfoUseCase
@@ -49,6 +48,7 @@ import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSe
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmSentStateTransformer
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmationNotificationsTransformer
 import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
+import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
@@ -274,20 +274,14 @@ internal class SendConfirmModel @Inject constructor(
 
     private fun initialState() {
         val confirmUM = uiState.value.confirmUM
-        val amountUM = uiState.value.amountUM
-        val feeUM = uiState.value.feeUM
 
         modelScope.launch {
             val isShowTapHelp = isSendTapHelpEnabledUseCase().getOrElse { false }
-            if (confirmUM is ConfirmUM.Empty || feeUM is FeeUM.Empty) {
+            if (confirmUM is ConfirmUM.Empty) {
                 _uiState.update {
                     it.copy(
                         confirmUM = SendConfirmInitialStateTransformer(
-                            appCurrency = appCurrency,
-                            feeUM = feeUM,
-                            amountUM = amountUM,
                             isShowTapHelp = isShowTapHelp,
-                            isSubtracted = false,
                         ).transform(uiState.value.confirmUM),
                     )
                 }
@@ -472,15 +466,17 @@ internal class SendConfirmModel @Inject constructor(
                     feeError = feeError,
                 ),
             )
-        }
-        _uiState.update {
-            it.copy(
-                confirmUM = SendConfirmationNotificationsTransformer(
-                    feeUM = uiState.value.feeUM,
-                    analyticsEventHandler = analyticsEventHandler,
-                    cryptoCurrency = cryptoCurrencyStatus.currency,
-                ).transform(uiState.value.confirmUM),
-            )
+            _uiState.update {
+                it.copy(
+                    confirmUM = SendConfirmationNotificationsTransformer(
+                        feeUM = uiState.value.feeUM,
+                        amountUM = uiState.value.amountUM,
+                        analyticsEventHandler = analyticsEventHandler,
+                        cryptoCurrency = cryptoCurrencyStatus.currency,
+                        appCurrency = appCurrency,
+                    ).transform(uiState.value.confirmUM),
+                )
+            }
         }
     }
 
