@@ -11,6 +11,12 @@ internal sealed class OnboardingTwinUM {
     abstract val isLoading: Boolean
     abstract val artwork: TwinWalletArtworkUM
 
+    data object TopUpPrepare : OnboardingTwinUM() {
+        override val stepIndex: Int = 0
+        override val isLoading: Boolean = false
+        override val artwork: TwinWalletArtworkUM = TwinWalletArtworkUM.Spread
+    }
+
     data class Welcome(
         override val isLoading: Boolean = false,
         val pairCardNumber: Int = 2,
@@ -67,5 +73,6 @@ internal sealed class OnboardingTwinUM {
         is ResetWarning -> copy()
         is ScanCard -> copy(isLoading = isLoading)
         is TopUp -> copy(isLoading = isLoading)
+        TopUpPrepare -> this
     }
 }
