@@ -27,6 +27,7 @@ import com.tangem.datasource.local.config.issuers.IssuersConfigStorage
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
+import com.tangem.domain.common.util.twinsIsTwinned
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.models.scan.ScanResponse
@@ -54,6 +55,7 @@ import com.tangem.sdk.extensions.localizedDescriptionRes
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
@@ -108,10 +110,14 @@ internal class OnboardingTwinModel @Inject constructor(
                 )
             }
             Mode.CreateWallet -> {
-                OnboardingTwinUM.Welcome(
-                    pairCardNumber = firstCardTwinNumber.pairNumber().number,
-                    onContinueClick = ::navigateToFirstScan,
-                )
+                if (params.scanResponse.twinsIsTwinned()) {
+                    OnboardingTwinUM.TopUpPrepare
+                } else {
+                    OnboardingTwinUM.Welcome(
+                        pairCardNumber = firstCardTwinNumber.pairNumber().number,
+                        onContinueClick = ::navigateToFirstScan,
+                    )
+                }
             }
         },
     )
@@ -120,11 +126,19 @@ internal class OnboardingTwinModel @Inject constructor(
     val innerNavigationState = MutableStateFlow(DefaultOnboardingTwinComponent.TwinInnerNavigationState(1))
 
     init {
-        if (_uiState.value is OnboardingTwinUM.Welcome) {
-            analyticsEventHandler.send(OnboardingEvent.Twins.ScreenOpened)
-            modelScope.launch {
-                saveTwinsOnboardingShownUseCase()
+        when (_uiState.value) {
+            is OnboardingTwinUM.Welcome -> {
+                analyticsEventHandler.send(OnboardingEvent.Twins.ScreenOpened)
+                modelScope.launch {
+                    saveTwinsOnboardingShownUseCase()
+                }
             }
+            OnboardingTwinUM.TopUpPrepare -> {
+                modelScope.launch {
+                    setTopUpState(params.scanResponse)
+                }
+            }
+            else -> {}
         }
     }
 
@@ -298,52 +312,57 @@ internal class OnboardingTwinModel @Inject constructor(
             Mode.CreateWallet -> {
                 modelScope.launch {
                     setLoading(true)
-
-                    val userWallet = userWalletBuilderFactory.create(scanResponse).build() ?: run {
-                        Timber.e("User wallet not created")
-                        setLoading(false)
-                        return@launch
-                    }
-
-                    userWalletsListManager.save(userWallet, canOverride = true)
-
-                    fetchCurrencyStatusUseCase.invoke(
-                        userWalletId = userWallet.walletId,
-                        refresh = true,
-                    ).onLeft {
-                        Timber.e("Unable to fetch currency status: $it")
-                        setLoading(false)
-                    }
-
-                    val cryptoCurrencyStatus =
-                        getPrimaryCurrencyStatusUpdatesUseCase.invoke(userWallet.walletId).firstOrNull()?.getOrNull()
-                            ?: run {
-                                setLoading(false)
-                                Timber.e("Unable to get currency status")
-                                return@launch
-                            }
-
-                    launch {
-                        getPrimaryCurrencyStatusUpdatesUseCase.invoke(userWallet.walletId)
-                            .collect {
-                                it.onRight { status ->
-                                    applyCryptoCurrencyStatusToState(status)
-                                }
-                            }
-                    }
-
-                    _uiState.value = OnboardingTwinUM.TopUp(
-                        onBuyCryptoClick = { onBuyCryptoClick(cryptoCurrencyStatus) },
-                        onRefreshClick = { onRefreshBalanceClick(userWallet) },
-                        onShowAddressClick = { onShowAddressClick(cryptoCurrencyStatus) },
-                        isLoading = true,
-                    )
-
-                    innerNavigationState.update {
-                        it.copy(stackSize = 4)
-                    }
+                    setTopUpState(scanResponse)
                 }.saveIn(cryptoCurrencyStatusJobHolder)
             }
+        }
+    }
+
+    private suspend fun setTopUpState(scanResponse: ScanResponse) = coroutineScope {
+        val userWallet = userWalletBuilderFactory.create(scanResponse).build() ?: run {
+            Timber.e("User wallet not created")
+            setLoading(false)
+            return@coroutineScope
+        }
+
+        userWalletsListManager.save(userWallet, canOverride = true)
+
+        cardRepository.finishCardActivation(params.scanResponse.card.cardId)
+
+        fetchCurrencyStatusUseCase.invoke(
+            userWalletId = userWallet.walletId,
+            refresh = true,
+        ).onLeft {
+            Timber.e("Unable to fetch currency status: $it")
+            setLoading(false)
+        }
+
+        val cryptoCurrencyStatus =
+            getPrimaryCurrencyStatusUpdatesUseCase.invoke(userWallet.walletId).firstOrNull()?.getOrNull()
+                ?: run {
+                    setLoading(false)
+                    Timber.e("Unable to get currency status")
+                    return@coroutineScope
+                }
+
+        launch {
+            getPrimaryCurrencyStatusUpdatesUseCase.invoke(userWallet.walletId)
+                .collect {
+                    it.onRight { status ->
+                        applyCryptoCurrencyStatusToState(status)
+                    }
+                }
+        }
+
+        _uiState.value = OnboardingTwinUM.TopUp(
+            onBuyCryptoClick = { onBuyCryptoClick(cryptoCurrencyStatus) },
+            onRefreshClick = { onRefreshBalanceClick(userWallet) },
+            onShowAddressClick = { onShowAddressClick(cryptoCurrencyStatus) },
+            isLoading = true,
+        )
+
+        innerNavigationState.update {
+            it.copy(stackSize = 4)
         }
     }
 
