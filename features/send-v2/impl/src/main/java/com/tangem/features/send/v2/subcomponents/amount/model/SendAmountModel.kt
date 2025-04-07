@@ -212,7 +212,7 @@ internal class SendAmountModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).distinctUntilChanged().onEach { (state, route) ->
+        ).onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
