@@ -72,6 +72,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
         observeArtwork()
         modelScope.launch {
             createUserWalletIfNull()
+            cardRepository.finishCardActivation(scanResponse.card.cardId)
             observeCryptoCurrencyStatus()
             refreshBalance()
         }
@@ -163,10 +164,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
         val amountToCreateAccount = (status.value as? CryptoCurrencyStatus.NoAccount)?.amountToCreateAccount
 
         if (amount?.isPositive() == true || hasCurrentNetworkTransactions) {
-            modelScope.launch {
-                cardRepository.finishCardActivation(scanResponse.card.cardId)
-                params.onDone()
-            }
+            params.onDone()
         }
 
         _uiState.update {
