@@ -29,6 +29,7 @@ interface SendAmountReduceListener {
 internal class DefaultSendAmountReduceTrigger @Inject constructor() :
     SendAmountReduceTrigger,
     SendAmountReduceListener {
+
     override val reduceToTriggerFlow = MutableSharedFlow<BigDecimal>()
     override val reduceByTriggerFlow = MutableSharedFlow<ReduceByData>()
     override val ignoreReduceTriggerFlow = MutableSharedFlow<Unit>()
