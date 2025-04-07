@@ -71,7 +71,7 @@ internal class OnrampAddToPortfolioModel @Inject constructor(
 
             addCryptoCurrenciesUseCase(
                 userWalletId = params.userWalletId,
-                currencies = listOfNotNull(params.cryptoCurrency),
+                currency = params.cryptoCurrency,
             )
                 .onRight { params.onSuccessAdding(params.cryptoCurrency.id) }
                 .onLeft { changeAddButtonProgressStatus(isProgress = false) }
