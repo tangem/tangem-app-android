@@ -16,6 +16,9 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.navigation.share.ShareManager
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.format.bigdecimal.crypto
@@ -33,6 +36,7 @@ import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.analytics.TokenReceiveAnalyticsEvent
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -77,6 +81,8 @@ internal class OnboardingTwinModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val clipboardManager: ClipboardManager,
+    private val shareManager: ShareManager,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingTwinComponent.Params>()
@@ -151,7 +157,7 @@ internal class OnboardingTwinModel @Inject constructor(
 
     private fun createFirstWallet() {
         modelScope.launch {
-            setLoading(false)
+            setLoading(true)
 
             val result = tangemSdkManager.createFirstTwinWallet(
                 cardId = params.scanResponse.card.cardId,
@@ -164,7 +170,10 @@ internal class OnboardingTwinModel @Inject constructor(
             )
 
             when (result) {
-                is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
+                is CompletionResult.Failure -> {
+                    setLoading(false)
+                    showCardVerificationFailedDialog(result.error)
+                }
                 is CompletionResult.Success -> {
                     if (params.mode == Mode.CreateWallet) {
                         cardRepository.startCardActivation(result.data.cardId)
@@ -222,7 +231,10 @@ internal class OnboardingTwinModel @Inject constructor(
             )
 
             when (result) {
-                is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
+                is CompletionResult.Failure -> {
+                    setLoading(false)
+                    showCardVerificationFailedDialog(result.error)
+                }
                 is CompletionResult.Success -> {
                     if (params.mode == Mode.CreateWallet) {
                         cardRepository.startCardActivation(result.data.cardId)
@@ -251,6 +263,8 @@ internal class OnboardingTwinModel @Inject constructor(
 
     private fun createThirdWallet(secondCardPublicKey: ByteArray) {
         modelScope.launch {
+            setLoading(true)
+
             val result = tangemSdkManager.finalizeTwin(
                 secondCardPublicKey = secondCardPublicKey,
                 issuerKeyPair = getIssuerKeys(),
@@ -264,7 +278,10 @@ internal class OnboardingTwinModel @Inject constructor(
             )
 
             when (result) {
-                is CompletionResult.Failure -> showCardVerificationFailedDialog(result.error)
+                is CompletionResult.Failure -> {
+                    setLoading(false)
+                    showCardVerificationFailedDialog(result.error)
+                }
                 is CompletionResult.Success -> {
                     scanComplete(result.data)
                 }
@@ -376,8 +393,14 @@ internal class OnboardingTwinModel @Inject constructor(
                         networkAddress = networkAddress,
                         showMemoDisclaimer =
                         currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
-                        onCopyClick = {},
-                        onShareClick = {},
+                        onCopyClick = {
+                            Analytics.send(TokenReceiveAnalyticsEvent.ButtonCopyAddress(currency.symbol))
+                            clipboardManager.setText(text = it, isSensitive = true)
+                        },
+                        onShareClick = {
+                            Analytics.send(TokenReceiveAnalyticsEvent.ButtonShareAddress(currency.symbol))
+                            shareManager.shareText(text = it)
+                        },
                     ),
                 ),
             )
