@@ -2,8 +2,13 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.visa.GetVisaCurrencyUseCase
 import com.tangem.domain.visa.GetVisaTxDetailsUseCase
+import com.tangem.domain.visa.model.VisaTxDetails
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.BalancesAndLimitsBottomSheetConverter
 import com.tangem.feature.wallet.presentation.wallet.state.transformers.converter.VisaTxDetailsBottomSheetConverter
@@ -20,14 +25,20 @@ internal interface VisaWalletIntents {
     fun onVisaTransactionClick(id: String)
 
     fun onExploreClick(exploreUrl: String)
+
+    fun onDisputeClick(txDetails: VisaTxDetails)
 }
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class VisaWalletIntentsImplementor @Inject constructor(
     private val stateController: WalletStateController,
     private val eventSender: WalletEventSender,
     private val getVisaCurrencyUseCase: GetVisaCurrencyUseCase,
     private val getVisaTxDetailsUseCase: GetVisaTxDetailsUseCase,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val getUserWalletsUseCase: GetWalletsUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : BaseWalletClickIntents(), VisaWalletIntents {
 
@@ -77,5 +88,21 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
 
     override fun onExploreClick(exploreUrl: String) {
         router.openUrl(exploreUrl)
+    }
+
+    override fun onDisputeClick(txDetails: VisaTxDetails) {
+        modelScope.launch {
+            val userWalletId = stateController.getSelectedWalletId()
+            val userWallet = getUserWalletsUseCase.invokeSync()
+                .firstOrNull { it.walletId == userWalletId } ?: return@launch
+            val cardInfo = getCardInfoUseCase.invoke(userWallet.scanResponse).getOrNull() ?: return@launch
+
+            sendFeedbackEmailUseCase(
+                FeedbackEmailType.Visa.Dispute(
+                    cardInfo = cardInfo,
+                    visaTxDetails = txDetails,
+                ),
+            )
+        }
     }
 }
