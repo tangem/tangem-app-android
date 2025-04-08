@@ -9,6 +9,9 @@ android {
 }
 
 dependencies {
+    implementation(projects.core.datasource)
+    implementation(projects.core.utils)
+
     implementation(projects.data.common)
 
     implementation(projects.domain.legacy)
