@@ -1,16 +1,23 @@
-package com.tangem.features.nft
+package com.tangem.features.nft.di
 
 import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.nft.DefaultNFTFeatureToggles
+import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.features.nft.collections.DefaultNFTCollectionsComponent
 import com.tangem.features.nft.collections.model.NFTCollectionsModel
 import com.tangem.features.nft.component.NFTCollectionsComponent
+import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.nft.component.NFTDetailsComponent
 import com.tangem.features.nft.component.NFTReceiveComponent
+import com.tangem.features.nft.component.NFTAssetTraitsComponent
 import com.tangem.features.nft.details.DefaultNFTDetailsComponent
+import com.tangem.features.nft.details.block.DefaultNFTDetailsBlockComponent
 import com.tangem.features.nft.details.model.NFTDetailsModel
 import com.tangem.features.nft.receive.DefaultNFTReceiveComponent
 import com.tangem.features.nft.receive.model.NFTReceiveModel
+import com.tangem.features.nft.traits.DefaultNFTAssetTraitsComponent
+import com.tangem.features.nft.traits.model.NFTAssetTraitsModel
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -62,4 +69,19 @@ internal interface NFTFeatureModuleBinds {
     @IntoMap
     @ClassKey(NFTDetailsModel::class)
     fun bindNFTDetailsModel(model: NFTDetailsModel): Model
+
+    @Binds
+    @Singleton
+    fun bindNFTDetailsBlockComponentFactory(
+        impl: DefaultNFTDetailsBlockComponent.Factory,
+    ): NFTDetailsBlockComponent.Factory
+
+    @Binds
+    @Singleton
+    fun bindNFTTraitsComponentFactory(impl: DefaultNFTAssetTraitsComponent.Factory): NFTAssetTraitsComponent.Factory
+
+    @Binds
+    @IntoMap
+    @ClassKey(NFTAssetTraitsModel::class)
+    fun bindNFTTraitsModel(model: NFTAssetTraitsModel): Model
 }
