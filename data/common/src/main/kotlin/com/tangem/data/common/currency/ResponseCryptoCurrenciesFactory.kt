@@ -31,6 +31,14 @@ class ResponseCryptoCurrenciesFactory(
             .toList()
     }
 
+    fun createCurrencies(tokens: List<UserTokensResponse.Token>, scanResponse: ScanResponse): List<CryptoCurrency> {
+        return tokens
+            .asSequence()
+            .mapNotNull { createCurrency(it, scanResponse) }
+            .distinctBy(CryptoCurrency::id)
+            .toList()
+    }
+
     fun createCurrency(responseToken: UserTokensResponse.Token, scanResponse: ScanResponse): CryptoCurrency? {
         var blockchain = Blockchain.fromNetworkId(responseToken.networkId)
         if (blockchain == null || blockchain == Blockchain.Unknown) {
