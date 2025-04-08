@@ -35,6 +35,7 @@ dependencies {
 
     /* Tangem libraries */
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 
     /* Reown - WalletConnect */
     implementation(deps.reownCore) {
@@ -47,4 +48,10 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+
+    /* Tests */
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.turbine)
 }
