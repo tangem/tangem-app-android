@@ -9,7 +9,7 @@ import com.tangem.utils.converter.Converter
  *
 [REDACTED_AUTHOR]
  */
-internal object NetworkStatusDataModelConverter : Converter<NetworkStatus, NetworkStatusDM?> {
+object NetworkStatusDataModelConverter : Converter<NetworkStatus, NetworkStatusDM?> {
 
     override fun convert(value: NetworkStatus): NetworkStatusDM? {
         return when (val status = value.value) {
