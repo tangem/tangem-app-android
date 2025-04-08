@@ -14,6 +14,7 @@ import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.request.WcMethodHandler
 import com.tangem.data.walletconnect.respond.DefaultWcRespondService
+import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.datasource.di.SdkMoshi
@@ -25,7 +26,6 @@ import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsReposit
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.request.WcRequestService
-import com.tangem.domain.walletconnect.respond.WcRespondService
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -131,9 +131,8 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun wcEthNetwork(@SdkMoshi moshi: Moshi, respondService: WcRespondService): WcEthNetwork = WcEthNetwork(
+    fun wcEthNetwork(@SdkMoshi moshi: Moshi): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
-        respondService = respondService,
     )
 
     @Provides
