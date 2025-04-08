@@ -15,7 +15,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.presentation.wallet.subscribers.*
-import com.tangem.features.swap.SwapFeatureToggles
 
 @Suppress("LongParameterList")
 internal class SingleWalletWithTokenContentLoader(
@@ -32,7 +31,6 @@ internal class SingleWalletWithTokenContentLoader(
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val deepLinksRegistry: DeepLinksRegistry,
 ) : WalletContentLoader(id = userWallet.walletId) {
 
@@ -57,13 +55,11 @@ internal class SingleWalletWithTokenContentLoader(
                 walletWarningsAnalyticsSender = walletWarningsAnalyticsSender,
                 walletWarningsSingleEventSender = walletWarningsSingleEventSender,
             ).let(::add)
-            if (swapFeatureToggles.isPromoStoriesEnabled) {
-                MultiWalletActionButtonsSubscriber(
-                    userWallet = userWallet,
-                    stateHolder = stateHolder,
-                    getStoryContentUseCase = getStoryContentUseCase,
-                ).let(::add)
-            }
+            MultiWalletActionButtonsSubscriber(
+                userWallet = userWallet,
+                stateHolder = stateHolder,
+                getStoryContentUseCase = getStoryContentUseCase,
+            ).let(::add)
             WalletDropDownItemsSubscriber(
                 stateHolder = stateHolder,
                 shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
