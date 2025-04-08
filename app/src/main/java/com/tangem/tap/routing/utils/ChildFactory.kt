@@ -15,6 +15,7 @@ import com.tangem.features.markets.details.MarketsTokenDetailsComponent
 import com.tangem.features.nft.component.NFTCollectionsComponent
 import com.tangem.features.nft.component.NFTDetailsComponent
 import com.tangem.features.nft.component.NFTReceiveComponent
+import com.tangem.features.nft.component.NFTAssetTraitsComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
@@ -87,6 +88,7 @@ internal class ChildFactory @Inject constructor(
     private val nftCollectionsComponentFactory: NFTCollectionsComponent.Factory,
     private val nftReceiveComponentFactory: NFTReceiveComponent.Factory,
     private val nftDetailsComponentFactory: NFTDetailsComponent.Factory,
+    private val nftAssetTraitsComponentFactory: NFTAssetTraitsComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val testerRouter: TesterRouter,
     private val routingFeatureToggles: RoutingFeatureToggles,
@@ -428,6 +430,12 @@ internal class ChildFactory @Inject constructor(
                         nftCollectionName = route.collectionName,
                     ),
                     componentFactory = nftDetailsComponentFactory,
+                )
+            is AppRoute.NFTAssetTraits ->
+                createComponentChild(
+                    context = context,
+                    params = NFTAssetTraitsComponent.Params(nftAsset = route.nftAsset),
+                    componentFactory = nftAssetTraitsComponentFactory,
                 )
             is AppRoute.NFTSend -> {
                 createComponentChild(
@@ -795,6 +803,12 @@ internal class ChildFactory @Inject constructor(
                         nftCollectionName = route.collectionName,
                     ),
                     componentFactory = nftDetailsComponentFactory,
+                )
+            is AppRoute.NFTAssetTraits ->
+                route.asComponentChild(
+                    contextProvider = contextProvider(route, contextFactory),
+                    params = NFTAssetTraitsComponent.Params(nftAsset = route.nftAsset),
+                    componentFactory = nftAssetTraitsComponentFactory,
                 )
             is AppRoute.NFTSend -> {
                 route.asComponentChild(
