@@ -13,6 +13,8 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
 
+    implementation(projects.core.utils)
+
     implementation(projects.domain.core)
     implementation(projects.domain.models)
     implementation(projects.domain.nft.models)

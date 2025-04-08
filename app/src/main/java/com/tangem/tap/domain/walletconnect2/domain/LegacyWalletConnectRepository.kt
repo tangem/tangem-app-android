@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.tap.domain.walletconnect2.domain.models.*
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.OpenSession.SourceType
 import kotlinx.coroutines.flow.Flow
