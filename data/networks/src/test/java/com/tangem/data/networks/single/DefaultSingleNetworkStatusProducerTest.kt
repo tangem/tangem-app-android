@@ -9,6 +9,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -27,10 +28,12 @@ internal class DefaultSingleNetworkStatusProducerTest {
     )
 
     private val multiNetworkStatusSupplier = mockk<MultiNetworkStatusSupplier>()
+    private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val producer = DefaultSingleNetworkStatusProducer(
         params = params,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
+        dispatchers = dispatchers,
     )
 
     @Test
