@@ -58,7 +58,7 @@ class AmountFieldChangeTransformer(
 
         val checkValue = if (amountTextField.isFiatValue) fiatValue else cryptoValue
         val isExceedBalance = checkValue.checkExceedBalance(maxEnterAmount, amountTextField)
-        val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } ?: false
+        val isLessThanMinimumIfProvided = minimumTransactionAmount?.amount?.let { decimalCryptoValue < it } == true
         val isZero = if (amountTextField.isFiatValue) {
             decimalFiatValue.isNullOrZero()
         } else {
@@ -67,6 +67,7 @@ class AmountFieldChangeTransformer(
         val isCheckFailed = isExceedBalance || isLessThanMinimumIfProvided
         return prevState.copy(
             isPrimaryButtonEnabled = !isZero && !isCheckFailed,
+            reduceAmountBy = BigDecimal.ZERO,
             amountTextField = amountTextField.copy(
                 value = cryptoValue,
                 fiatValue = fiatValue,
@@ -74,10 +75,10 @@ class AmountFieldChangeTransformer(
                 error = when {
                     isExceedBalance -> resourceReference(R.string.send_validation_amount_exceeds_balance)
                     isLessThanMinimumIfProvided -> {
-                        val minimumAmount = minimumTransactionAmount
-                            ?.amount
-                            ?.format { crypto(cryptoCurrencyStatus.currency) }
-                            .orEmpty()
+                        val minimumAmount = minimumTransactionAmount?.amount.format {
+                            crypto(cryptoCurrencyStatus.currency)
+                        }
+
                         resourceReference(
                             R.string.transfer_notification_invalid_minimum_transaction_amount_text,
                             wrappedList(minimumAmount, minimumAmount),
@@ -98,6 +99,7 @@ class AmountFieldChangeTransformer(
     private fun AmountState.Data.emptyState(): AmountState.Data {
         return copy(
             isPrimaryButtonEnabled = false,
+            reduceAmountBy = BigDecimal.ZERO,
             amountTextField = amountTextField.copy(
                 value = "",
                 fiatValue = "",
