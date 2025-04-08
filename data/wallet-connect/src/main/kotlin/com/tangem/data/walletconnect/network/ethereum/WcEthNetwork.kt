@@ -8,10 +8,8 @@ import com.tangem.data.walletconnect.request.WcMethodHandler
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcRequest
-import com.tangem.domain.walletconnect.respond.WcRespondService
 import com.tangem.domain.walletconnect.usecase.WcUseCase
 import com.tangem.domain.walletconnect.usecase.WcUseCasesFlowProvider
-import com.tangem.domain.walletconnect.usecase.ethereum.EthPersonalSignUseCase
 import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMethod.SignMessage
 import kotlinx.coroutines.channels.Channel
@@ -19,7 +17,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 
 internal class WcEthNetwork(
     private val moshi: Moshi,
-    private val respondService: WcRespondService,
 ) : WcMethodHandler<WcEthMethod>, WcUseCasesFlowProvider, WcNamespaceConverter {
 
     private val _useCases: Channel<WcUseCase> = Channel(Channel.BUFFERED)
@@ -46,7 +43,7 @@ internal class WcEthNetwork(
     override fun handle(wcRequest: WcRequest<WcMethod>) {
         wcRequest as WcRequest<WcEthMethod>
         val useCase = when (wcRequest.method) {
-            is SignMessage -> EthPersonalSignUseCase(wcRequest as WcRequest<SignMessage>, respondService)
+            is SignMessage -> TODO()
         }
         _useCases.trySend(useCase)
     }
