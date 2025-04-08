@@ -9,7 +9,7 @@ import com.tangem.domain.walletmanager.model.CryptoCurrencyTransaction
 import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import timber.log.Timber
 
-internal class NetworkStatusFactory {
+class NetworkStatusFactory {
 
     fun createNetworkStatus(
         network: Network,
