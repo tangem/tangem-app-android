@@ -1,8 +1,8 @@
 package com.tangem.domain.walletconnect.model
 
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 
 data class WcSessionApprove(
-    val walletId: UserWalletId,
+    val wallet: UserWallet,
     val network: List<WcNetwork.Supported>,
 )
