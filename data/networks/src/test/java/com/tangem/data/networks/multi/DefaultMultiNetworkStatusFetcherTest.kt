@@ -4,6 +4,7 @@ import arrow.core.left
 import arrow.core.right
 import com.google.common.truth.Truth
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.wallets.models.UserWalletId
@@ -19,8 +20,12 @@ import org.junit.Test
 internal class DefaultMultiNetworkStatusFetcherTest {
 
     private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher = mockk()
+    private val networksStatusesStore: NetworksStatusesStoreV2 = mockk(relaxed = true)
 
-    private val fetcher = DefaultMultiNetworkStatusFetcher(singleNetworkStatusFetcher = singleNetworkStatusFetcher)
+    private val fetcher = DefaultMultiNetworkStatusFetcher(
+        singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+        networksStatusesStore = networksStatusesStore,
+    )
 
     @Test
     fun `fetch networks statuses successfully`() = runTest {
@@ -29,11 +34,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val ethParams = SingleNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
             network = ethereumAndStellar.first(),
+            applyRefresh = false,
         )
 
         val stellarParams = SingleNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
             network = ethereumAndStellar.last(),
+            applyRefresh = false,
         )
 
         coEvery { singleNetworkStatusFetcher(ethParams) } returns Unit.right()
@@ -42,6 +49,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            networksStatusesStore.refresh(userWalletId = userWalletId, networks = ethereumAndStellar)
             singleNetworkStatusFetcher(ethParams)
             singleNetworkStatusFetcher(stellarParams)
         }
@@ -56,11 +64,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val ethParams = SingleNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
             network = ethereumAndStellar.first(),
+            applyRefresh = false,
         )
 
         val stellarParams = SingleNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
             network = ethereumAndStellar.last(),
+            applyRefresh = false,
         )
 
         val ethException = IllegalStateException("eth")
@@ -70,6 +80,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            networksStatusesStore.refresh(userWalletId = userWalletId, networks = ethereumAndStellar)
             singleNetworkStatusFetcher(ethParams)
             singleNetworkStatusFetcher(stellarParams)
         }
@@ -88,11 +99,13 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val ethParams = SingleNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
             network = ethereumAndStellar.first(),
+            applyRefresh = false,
         )
 
         val stellarParams = SingleNetworkStatusFetcher.Params(
             userWalletId = userWalletId,
             network = ethereumAndStellar.last(),
+            applyRefresh = false,
         )
 
         coEvery { singleNetworkStatusFetcher(ethParams) } returns IllegalStateException("eth").left()
@@ -101,6 +114,7 @@ internal class DefaultMultiNetworkStatusFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            networksStatusesStore.refresh(userWalletId = userWalletId, networks = ethereumAndStellar)
             singleNetworkStatusFetcher(ethParams)
             singleNetworkStatusFetcher(stellarParams)
         }

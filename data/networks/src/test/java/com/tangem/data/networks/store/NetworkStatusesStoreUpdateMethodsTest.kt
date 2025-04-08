@@ -32,7 +32,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
     )
 
     @Test
-    fun `refresh if runtime store is empty`() = runTest {
+    fun `refresh the single network if runtime store is empty`() = runTest {
         store.refresh(userWalletId = userWalletId, network = network)
 
         val runtimeExpected = mapOf(
@@ -49,7 +49,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
     }
 
     @Test
-    fun `refresh if runtime store contains status with this network`() = runTest {
+    fun `refresh the single network if runtime store contains status with this network`() = runTest {
         val status = MockNetworkStatusFactory.createVerified().toSimple()
 
         runtimeStore.store(
@@ -61,6 +61,45 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
         val runtimeExpected = mapOf(
             userWalletId.stringValue to setOf(
                 status.copy(value = status.value.copySealed(source = StatusSource.CACHE)),
+            ),
+        )
+
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
+    }
+
+    @Test
+    fun `refresh the multi networks if runtime store is empty`() = runTest {
+        store.refresh(userWalletId = userWalletId, networks = networks)
+
+        val runtimeExpected = mapOf(
+            userWalletId.stringValue to networks.mapTo(hashSetOf()) {
+                SimpleNetworkStatus(
+                    id = SimpleNetworkStatus.Id(it),
+                    value = NetworkStatus.Unreachable(address = null),
+                )
+            },
+        )
+
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
+    }
+
+    @Test
+    fun `refresh the multi networks if runtime store contains status with this network`() = runTest {
+        val firstStatus = MockNetworkStatusFactory.createVerified(network = networks.first()).toSimple()
+        val secondStatus = MockNetworkStatusFactory.createVerified(network = networks.last()).toSimple()
+
+        runtimeStore.store(
+            value = mapOf(userWalletId.stringValue to setOf(firstStatus, secondStatus)),
+        )
+
+        store.refresh(userWalletId = userWalletId, networks = networks)
+
+        val runtimeExpected = mapOf(
+            userWalletId.stringValue to setOf(
+                firstStatus.copy(value = firstStatus.value.copySealed(source = StatusSource.CACHE)),
+                secondStatus.copy(value = secondStatus.value.copySealed(source = StatusSource.CACHE)),
             ),
         )
 
@@ -210,5 +249,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
         val userWalletId = UserWalletId(stringValue = "011")
 
         val network = MockCryptoCurrencyFactory().ethereum.network
+
+        val networks = MockCryptoCurrencyFactory().ethereumAndStellar.mapTo(hashSetOf()) { it.network }
     }
 }

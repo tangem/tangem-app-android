@@ -14,6 +14,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -51,8 +52,10 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
     private val responseCurrenciesFactory = ResponseCryptoCurrenciesFactory(excludedBlockchains)
     private val networkStatusFactory = NetworkStatusFactory()
 
-    override suspend fun invoke(params: SingleNetworkStatusFetcher.Params): Either<Throwable, Unit> = Either.catch {
-        networksStatusesStore.refresh(userWalletId = params.userWalletId, network = params.network)
+    override suspend fun invoke(params: SingleNetworkStatusFetcher.Params) = Either.catchOn(dispatchers.default) {
+        if (params.applyRefresh) {
+            networksStatusesStore.refresh(userWalletId = params.userWalletId, network = params.network)
+        }
 
         val userWallet = userWalletsStore.getSyncStrict(key = params.userWalletId)
         val networkCurrencies = createCurrencies(userWallet = userWallet, network = params.network)
