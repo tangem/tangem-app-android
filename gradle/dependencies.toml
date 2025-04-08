@@ -102,6 +102,7 @@ espresso-intents = "3.5.1"
 junit = "4.13.2"
 junitAndroidExt = "1.1.5"
 mockk = "1.13.4"
+turbine = "1.2.0"
 truth = "1.1.3"
 ultron-android = "2.5.4"
 ultron-compose = "2.5.4"
@@ -199,6 +200,7 @@ test-junit = { module = "junit:junit", version.ref = "junit" }
 test-junit-android = { module = "androidx.test.ext:junit", version.ref = "junitAndroidExt" }
 test-truth = { module = "com.google.truth:truth", version.ref = "truth" }
 test-mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+test-turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 test-ultron-android = { module = "com.atiurin:ultron-android", version.ref = "ultron-android" }
 test-ultron-compose = { module = "com.atiurin:ultron-compose", version.ref = "ultron-compose" }
 test-ultron-allure = { module = "com.atiurin:ultron-allure", version.ref = "ultron-allure" }
