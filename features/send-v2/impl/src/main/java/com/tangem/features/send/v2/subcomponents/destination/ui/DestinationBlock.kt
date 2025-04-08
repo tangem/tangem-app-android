@@ -23,19 +23,13 @@ internal fun DestinationBlock(
     isEditingDisabled: Boolean,
     onClick: () -> Unit,
 ) {
-    val destinationUM = destinationUM as? DestinationUM.Content ?: return
-
-    val backgroundColor = if (isEditingDisabled) {
-        TangemTheme.colors.button.disabled
-    } else {
-        TangemTheme.colors.background.action
-    }
+    if (destinationUM !is DestinationUM.Content) return
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(backgroundColor)
+            .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
