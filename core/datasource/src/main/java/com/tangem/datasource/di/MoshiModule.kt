@@ -51,12 +51,14 @@ class MoshiModule {
                 PolymorphicJsonAdapterFactory.of(NFTCollection.Identifier::class.java, "bc")
                     .withSubtype(NFTCollection.Identifier.EVM::class.java, "evm")
                     .withSubtype(NFTCollection.Identifier.TON::class.java, "ton")
+                    .withSubtype(NFTCollection.Identifier.Solana::class.java, "sol")
                     .withDefaultValue(NFTCollection.Identifier.Unknown),
             )
             .add(
                 PolymorphicJsonAdapterFactory.of(NFTAsset.Identifier::class.java, "bc")
                     .withSubtype(NFTAsset.Identifier.EVM::class.java, "evm")
                     .withSubtype(NFTAsset.Identifier.TON::class.java, "ton")
+                    .withSubtype(NFTAsset.Identifier.Solana::class.java, "sol")
                     .withDefaultValue(NFTAsset.Identifier.Unknown),
             )
             .addLast(KotlinJsonAdapterFactory())
