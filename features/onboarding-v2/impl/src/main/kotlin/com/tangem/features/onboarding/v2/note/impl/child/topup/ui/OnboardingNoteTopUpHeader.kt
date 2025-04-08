@@ -32,54 +32,58 @@ fun OnboardingNoteTopUpHeader(
 ) {
     Box(
         modifier = modifier
-            .heightIn(min = 228.dp)
+            .heightIn(min = 180.dp)
             .widthIn(max = 450.dp),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .padding(vertical = 24.dp)
+                .padding(vertical = 24.dp, horizontal = 16.dp)
                 .fillMaxSize()
                 .background(
                     TangemTheme.colors.button.secondary,
                     shape = TangemTheme.shapes.roundedCornersMedium,
                 ),
-        )
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 32.dp),
+            contentAlignment = Alignment.Center,
         ) {
-            WalletCard(
-                modifier = Modifier.width(120.dp),
-                url = cardArtworkUrl,
-            )
-            SpacerHMax()
-            Text(
-                text = stringResourceSafe(R.string.common_balance_title),
-                style = TangemTheme.typography.body2,
-                color = TangemTheme.colors.text.secondary,
-                textAlign = TextAlign.Center,
-            )
-            SpacerH8()
-            Text(
-                modifier = if (balance.isEmpty()) {
-                    Modifier
-                        .width(120.dp)
-                        .clip(RoundedCornerShape(size = TangemTheme.dimens.radius3))
-                        .shimmer(LocalTangemShimmer.current)
-                } else {
-                    Modifier
-                },
-                style = TangemTheme.typography.h2,
-                color = TangemTheme.colors.text.primary1,
-                text = balance,
-            )
-            SpacerHMax()
-            RefreshButton(
-                isRefreshing = isRefreshing,
-                onRefreshBalanceClick = onRefreshBalanceClick,
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(horizontal = 32.dp),
+            ) {
+                SpacerHMax()
+                Text(
+                    text = stringResourceSafe(R.string.common_balance_title),
+                    style = TangemTheme.typography.body2,
+                    color = TangemTheme.colors.text.secondary,
+                    textAlign = TextAlign.Center,
+                )
+                SpacerH8()
+                Text(
+                    modifier = if (balance.isEmpty()) {
+                        Modifier
+                            .width(120.dp)
+                            .clip(RoundedCornerShape(size = TangemTheme.dimens.radius3))
+                            .shimmer(LocalTangemShimmer.current)
+                    } else {
+                        Modifier
+                    },
+                    style = TangemTheme.typography.h2,
+                    color = TangemTheme.colors.text.primary1,
+                    textAlign = TextAlign.Center,
+                    text = balance,
+                )
+                SpacerHMax()
+            }
         }
+        WalletCard(
+            modifier = Modifier.width(120.dp).align(Alignment.TopCenter),
+            url = cardArtworkUrl,
+        )
+        RefreshButton(
+            modifier = Modifier.align(Alignment.BottomCenter),
+            isRefreshing = isRefreshing,
+            onRefreshBalanceClick = onRefreshBalanceClick,
+        )
     }
 }
 

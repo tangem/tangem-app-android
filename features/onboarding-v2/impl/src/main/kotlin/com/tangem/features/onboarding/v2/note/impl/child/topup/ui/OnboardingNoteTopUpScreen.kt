@@ -14,10 +14,13 @@ import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
+import com.tangem.features.onboarding.v2.note.impl.ALL_STEPS_TOP_CONTAINER_WEIGHT
 import com.tangem.features.onboarding.v2.note.impl.child.topup.ui.state.OnboardingNoteTopUpUM
 
 @Composable
@@ -35,20 +38,19 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
             onRefreshBalanceClick = state.onRefreshBalanceClick,
             isRefreshing = state.isRefreshing,
             modifier = Modifier
-                .padding(horizontal = 34.dp)
-                .padding(top = 16.dp)
-                .height(228.dp)
+                .padding(top = 64.dp)
+                .padding(horizontal = 24.dp)
+                .weight(ALL_STEPS_TOP_CONTAINER_WEIGHT)
                 .fillMaxWidth(),
         )
         Column(
-            modifier = Modifier
+            modifier = Modifier.weight(1 - ALL_STEPS_TOP_CONTAINER_WEIGHT)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 32.dp)
-                .padding(top = 16.dp)
-                .weight(1.0f),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            SpacerHMax()
             Text(
                 text = stringResourceSafe(R.string.onboarding_topup_title),
                 style = TangemTheme.typography.h2,
@@ -65,13 +67,14 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
             } else {
                 stringResourceSafe(R.string.onboarding_top_up_body)
             }
+            SpacerH16()
             Text(
                 text = text,
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(top = 12.dp),
             )
+            SpacerHMax()
         }
 
         BottomButtons(state)
