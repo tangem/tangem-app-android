@@ -25,6 +25,6 @@ class WcDisconnectUseCase(
     }
 
     suspend fun disconnect(session: WcSession) {
-        sessionsManager.removeSession(session.userWalletId, session)
+        sessionsManager.removeSession(session)
     }
 }

@@ -115,11 +115,12 @@ internal class NFTCollectionsModel @Inject constructor(
         // TODO refresh all
     }
 
-    private fun onAssetClick(asset: NFTAsset) {
+    private fun onAssetClick(asset: NFTAsset, collectionName: String) {
         router.push(
             AppRoute.NFTDetails(
                 userWalletId = params.userWalletId,
                 nftAsset = asset,
+                collectionName = collectionName,
             ),
         )
     }
