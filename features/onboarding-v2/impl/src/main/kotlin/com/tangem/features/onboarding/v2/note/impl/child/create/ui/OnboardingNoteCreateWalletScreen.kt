@@ -12,6 +12,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -34,20 +36,20 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
             url2 = null,
             url3 = null,
             modifier = Modifier
-                .padding(horizontal = 34.dp)
-                .padding(top = 56.dp)
+                .padding(top = 64.dp)
+                .padding(horizontal = 24.dp)
                 .weight(ALL_STEPS_TOP_CONTAINER_WEIGHT)
                 .fillMaxWidth(),
             state = WalletArtworksState.Folded,
         )
         Column(
-            Modifier
+            modifier = Modifier.weight(1 - ALL_STEPS_TOP_CONTAINER_WEIGHT)
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(32.dp)
-                .weight(1.0f),
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            SpacerHMax()
             Text(
                 text = stringResource(R.string.onboarding_create_wallet_header),
                 style = TangemTheme.typography.h2,
@@ -55,7 +57,7 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 16.dp),
             )
-
+            SpacerH16()
             Text(
                 text = stringResource(R.string.onboarding_create_wallet_body),
                 style = TangemTheme.typography.body1,
@@ -63,6 +65,7 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 12.dp),
             )
+            SpacerHMax()
         }
 
         PrimaryButtonIconEnd(
