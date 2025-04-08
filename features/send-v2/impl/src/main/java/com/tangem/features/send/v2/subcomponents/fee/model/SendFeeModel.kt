@@ -278,7 +278,7 @@ internal class SendFeeModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).distinctUntilChanged().onEach { (state, _) ->
+        ).onEach { (state, _) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
                     title = resourceReference(R.string.common_fee_selector_title),
