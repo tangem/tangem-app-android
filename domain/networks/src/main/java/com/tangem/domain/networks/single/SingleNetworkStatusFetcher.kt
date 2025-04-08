@@ -11,5 +11,16 @@ import com.tangem.domain.wallets.models.UserWalletId
  */
 interface SingleNetworkStatusFetcher : FlowFetcher<SingleNetworkStatusFetcher.Params> {
 
-    data class Params(val userWalletId: UserWalletId, val network: Network)
+    /**
+     * Params
+     *
+     * @property userWalletId wallet id
+     * @property network      network
+     * @property applyRefresh flag that determines whether to apply refresh (see DefaultMultiNetworkStatusFetcher)
+     */
+    data class Params(
+        val userWalletId: UserWalletId,
+        val network: Network,
+        val applyRefresh: Boolean = true,
+    )
 }
