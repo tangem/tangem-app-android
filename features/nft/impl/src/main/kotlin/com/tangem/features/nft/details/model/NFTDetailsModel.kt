@@ -1,5 +1,6 @@
 package com.tangem.features.nft.details.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -36,7 +37,7 @@ internal class NFTDetailsModel @Inject constructor(
             ),
             onBackClick = ::navigateBack,
             onReadMoreClick = ::onReadMoreClick,
-            onSeeAllClick = ::onSeeAllClick,
+            onSeeAllTraitsClick = ::onSeeAllTraitsClick,
             onExploreClick = ::onExploreClick,
             onSendClick = ::onSendClick,
             bottomSheetConfig = null,
@@ -47,8 +48,12 @@ internal class NFTDetailsModel @Inject constructor(
 // [REDACTED_TODO_COMMENT]
     }
 
-    private fun onSeeAllClick() {
-// [REDACTED_TODO_COMMENT]
+    private fun onSeeAllTraitsClick() {
+        router.push(
+            AppRoute.NFTAssetTraits(
+                nftAsset = params.nftAsset,
+            ),
+        )
     }
 
     private fun onExploreClick() {
