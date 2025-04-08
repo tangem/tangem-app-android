@@ -1,5 +1,6 @@
 package com.tangem.datasource.api.common.response
 
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import okhttp3.Request
 import okio.Timeout
 import retrofit2.Call
@@ -9,6 +10,7 @@ import timber.log.Timber
 
 internal class ApiResponseCallDelegate<T : Any>(
     private val wrappedCall: Call<T>,
+    private val analyticsErrorHandler: AnalyticsErrorHandler,
 ) : Call<ApiResponse<T>> {
 
     override fun enqueue(callback: Callback<ApiResponse<T>>) {
@@ -16,7 +18,7 @@ internal class ApiResponseCallDelegate<T : Any>(
     }
 
     override fun execute(): Response<ApiResponse<T>> = throw NotImplementedError()
-    override fun clone(): Call<ApiResponse<T>> = ApiResponseCallDelegate(wrappedCall.clone())
+    override fun clone(): Call<ApiResponse<T>> = ApiResponseCallDelegate(wrappedCall.clone(), analyticsErrorHandler)
     override fun request(): Request = wrappedCall.request()
     override fun timeout(): Timeout = wrappedCall.timeout()
     override fun isExecuted(): Boolean = wrappedCall.isExecuted
@@ -30,7 +32,7 @@ internal class ApiResponseCallDelegate<T : Any>(
     ) : Callback<T> {
 
         override fun onResponse(call: Call<T>, response: Response<T>) {
-            val safeResponse = response.toSafeApiResponse()
+            val safeResponse = response.toSafeApiResponse(analyticsErrorHandler)
 
             responseCallback.onResponse(this@ApiResponseCallDelegate, Response.success(safeResponse))
         }

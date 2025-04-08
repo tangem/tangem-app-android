@@ -488,7 +488,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
          * This is necessary because the activity is not recreated when the configuration changes, because
          * `android:configChanges="uiMode"` is set in the manifest.
          * */
-        updateAppBackground()
+        if (routingFeatureToggles.isNavigationRefactoringEnabled.not()) {
+            updateAppBackground()
+        }
     }
 
     private fun updateAppBackground() {

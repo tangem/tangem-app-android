@@ -3,6 +3,7 @@ package com.tangem.features.onramp.swap.availablepairs.model
 import arrow.core.getOrElse
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.extensions.capitalize
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -31,7 +32,6 @@ import com.tangem.features.onramp.tokenlist.entity.TokenListUMController
 import com.tangem.features.onramp.tokenlist.entity.TokenListUMTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.SetNothingToFoundStateTransformer
 import com.tangem.features.onramp.tokenlist.entity.transformer.UpdateTokenItemsTransformer
-import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.UpdateSearchBarActiveStateTransformer
 import com.tangem.features.onramp.utils.UpdateSearchBarCallbacksTransformer
 import com.tangem.features.onramp.utils.UpdateSearchQueryTransformer
@@ -63,7 +63,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val availablePairsByNetworkFlow = MutableStateFlow<Map<LeastTokenInfo, AvailablePairsState>>(emptyMap())
 
     init {
-        initializeSearchBardCallbacks()
+        initializeSearchBarCallbacks()
 
         subscribeOnUpdateState()
         subscribeOnAvailablePairsUpdates()
@@ -82,7 +82,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
             .shareIn(scope = modelScope, started = SharingStarted.Eagerly, replay = 1)
     }
 
-    private fun initializeSearchBardCallbacks() {
+    private fun initializeSearchBarCallbacks() {
         tokenListUMController.update(
             transformer = UpdateSearchBarCallbacksTransformer(
                 onQueryChange = ::onSearchQueryChange,

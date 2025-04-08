@@ -134,9 +134,6 @@ dependencyResolutionManagement {
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include(":app")
-include(":common")
-include(":common:ui-charts")
-include(":common:routing")
 
 // region Core modules
 include(":core:analytics")
@@ -151,11 +148,17 @@ include(":core:deep-links")
 include(":core:deep-links:global")
 include(":core:decompose")
 include(":core:pagination")
+include(":core:error")
+include(":core:error:ext")
 // endregion Core modules
 
 // region Common modules
-include(":common:ui")
+include(":common")
 include(":common:google")
+include(":common:routing")
+include(":common:test")
+include(":common:ui")
+include(":common:ui-charts")
 // endregion
 
 // region Libs modules
@@ -194,6 +197,8 @@ include(":features:tokendetails:impl")
 
 include(":features:send:api")
 include(":features:send:impl")
+include(":features:send-v2:api")
+include(":features:send-v2:impl")
 
 include(":features:manage-tokens:api")
 include(":features:manage-tokens:impl")
@@ -233,6 +238,9 @@ include(":features:biometry:impl")
 
 include(":features:nft:api")
 include(":features:nft:impl")
+
+include(":features:walletconnect:api")
+include(":features:walletconnect:impl")
 // endregion Feature modules
 
 // region Domain modules
@@ -268,6 +276,7 @@ include(":domain:qr-scanning:models")
 include(":domain:staking")
 include(":domain:staking:models")
 include(":domain:wallet-connect")
+include(":domain:wallet-connect:models")
 include(":domain:markets")
 include(":domain:markets:models")
 include(":domain:manage-tokens")
@@ -275,8 +284,10 @@ include(":domain:manage-tokens:models")
 include(":domain:onramp")
 include(":domain:onramp:models")
 include(":domain:promo")
+include(":domain:promo:models")
 include(":domain:nft")
 include(":domain:nft:models")
+include(":domain:networks")
 // endregion Domain modules
 
 // region Data modules
@@ -300,7 +311,7 @@ include(":data:staking")
 include(":data:wallet-connect")
 include(":data:markets")
 include(":data:manage-tokens")
+include(":data:networks")
 include(":data:nft")
 include(":data:onramp")
 // endregion Data modules
-include(":domain:promo:models")

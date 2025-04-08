@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.staking.*
 import com.tangem.domain.staking.repositories.*
+import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -208,5 +209,13 @@ internal object StakingDomainModule {
     @Singleton
     fun provideGetStakingIntegrationIdUseCase(stakingRepository: StakingRepository): GetStakingIntegrationIdUseCase {
         return GetStakingIntegrationIdUseCase(stakingRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCheckAccountInitializedUseCase(
+        walletManagersFacade: WalletManagersFacade,
+    ): CheckAccountInitializedUseCase {
+        return CheckAccountInitializedUseCase(walletManagersFacade)
     }
 }

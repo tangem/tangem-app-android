@@ -36,8 +36,9 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.AddressValidation
+import com.tangem.domain.transaction.error.AddressValidationResult
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.error.ValidateAddressError
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
@@ -116,7 +117,7 @@ internal class SendModel @Inject constructor(
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     @DelayedWork private val coroutineScope: CoroutineScope,
     private val innerRouter: InnerSendRouter,
-    private val appRouter: AppRouter,
+    appRouter: AppRouter,
     paramsContainer: ParamsContainer,
     validateTransactionUseCase: ValidateTransactionUseCase,
     getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
@@ -419,7 +420,10 @@ internal class SendModel @Inject constructor(
         return filterNot { it.isLocked }
             .mapNotNull { wallet ->
                 val addresses = if (!wallet.isMultiCurrency) {
-                    getCryptoCurrencyUseCase(wallet.walletId).getOrNull()?.let {
+                    getCryptoCurrencyUseCase(
+                        userWallet = wallet,
+                        cryptoCurrencyId = cryptoCurrency.id.value,
+                    ).getOrNull()?.let {
                         if (it.network.id == cryptoCurrency.network.id) {
                             getNetworkAddressesUseCase.invokeSync(wallet.walletId, it.network)
                         } else {
@@ -704,7 +708,7 @@ internal class SendModel @Inject constructor(
         }.saveIn(memoValidationJobHolder)
     }
 
-    private suspend fun validateAddress(value: String): Either<ValidateAddressError, Unit> = runCatching {
+    private suspend fun validateAddress(value: String): AddressValidationResult = runCatching {
         val maybeValidAddress = validateWalletAddressUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
@@ -713,10 +717,10 @@ internal class SendModel @Inject constructor(
         )
         onEnteredValidAddress(maybeValidAddress.isLeft())
         maybeValidAddress
-    }.getOrElse { ValidateAddressError.DataError(it).left() }
+    }.getOrElse { AddressValidation.Error.DataError(it).left() }
 
     private fun validateMemo(value: String?): Boolean {
-        return value?.let { validateWalletMemoUseCase(cryptoCurrency.network, it).getOrElse { false } } ?: true
+        return value?.let { validateWalletMemoUseCase(cryptoCurrency.network, it).isRight() } != false
     }
 
     private suspend fun checkIfXrpAddressValue(value: String): Boolean {

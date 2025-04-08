@@ -311,6 +311,10 @@ val LocalMainBottomSheetColor = staticCompositionLocalOf<MutableState<Color>> {
 val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
     error("No MainBottomSheetColor provided")
 }
+// [REDACTED_TODO_COMMENT]
+val LocalIsNavigationRefactoringEnabled = staticCompositionLocalOf<Boolean> {
+    false
+}
 
 /**
  * Determines whether the dark theme should be used based on the given [AppThemeMode].

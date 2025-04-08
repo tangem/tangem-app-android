@@ -59,15 +59,27 @@ class CheckForOnboardingChain(
             else -> {
                 Analytics.setContext(previousChainResult)
 
+                val isTwinRefactoringEnabled =
+                    store.inject(DaggerGraphState::onboardingV2FeatureToggles).isTwinRefactoringEnabled
+
                 val wasTwinsOnboardingShown = store.inject(DaggerGraphState::wasTwinsOnboardingShownUseCase)
                     .invokeSync()
 
                 // If twins was twinned previously but twins welcome not shown
                 if (previousChainResult.twinsIsTwinned() && !wasTwinsOnboardingShown) {
-                    store.dispatchOnMain(
-                        TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(previousChainResult)),
-                    )
-                    ScanChainException.OnboardingNeeded(AppRoute.OnboardingTwins).left()
+                    if (isTwinRefactoringEnabled) {
+                        ScanChainException.OnboardingNeeded(
+                            AppRoute.Onboarding(
+                                scanResponse = previousChainResult,
+                                mode = AppRoute.Onboarding.Mode.WelcomeOnlyTwin,
+                            ),
+                        ).left()
+                    } else {
+                        store.dispatchOnMain(
+                            TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(previousChainResult)),
+                        )
+                        ScanChainException.OnboardingNeeded(AppRoute.OnboardingTwins).left()
+                    }
                 } else {
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     previousChainResult.right()

@@ -18,6 +18,7 @@ dependencies {
     implementation(deps.kotlin.serialization)
     implementation(deps.jodatime)
 
+    implementation(projects.domain.legacy)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
 
@@ -26,4 +27,5 @@ dependencies {
     implementation(tangemDeps.blockchain) {
         exclude(module = "joda-time")
     }
+    implementation(projects.libs.crypto)
 }

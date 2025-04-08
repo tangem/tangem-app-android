@@ -16,9 +16,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.SpacerW12
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
@@ -42,7 +43,7 @@ private fun VisaTxDetailsBottomSheetContent(config: VisaTxDetailsBottomSheetConf
         blocksCount = config.requests.size.inc(),
         title = {
             Text(
-                text = "Transaction Details",
+                text = stringResourceSafe(R.string.visa_transaction_details_header),
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
             )
@@ -61,46 +62,42 @@ private fun VisaTxDetailsBottomSheetContent(config: VisaTxDetailsBottomSheetConf
 private fun TransactionBlock(transaction: VisaTxDetailsBottomSheetConfig.Transaction, modifier: Modifier = Modifier) {
     BlockContent(
         modifier = modifier,
-        title = stringReference(value = "Transaction"),
+        title = resourceReference(R.string.visa_transaction_details_title),
         content = {
             BlockItem(
-                title = stringReference(value = "Type"),
+                title = resourceReference(R.string.visa_transaction_details_type),
                 value = transaction.type,
             )
             BlockItem(
-                title = stringReference(value = "Status"),
+                title = resourceReference(R.string.visa_transaction_details_status),
                 value = transaction.status,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Amount"),
+                title = resourceReference(R.string.visa_transaction_details_blockchain_amount),
                 value = transaction.blockchainAmount,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Fee"),
-                value = transaction.blockchainFee,
-            )
-            BlockItem(
-                title = stringReference(value = "Transaction Amount"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_amount),
                 value = transaction.transactionAmount,
             )
             BlockItem(
-                title = stringReference(value = "Currency Code"),
+                title = resourceReference(R.string.visa_transaction_details_currency_code),
                 value = transaction.transactionCurrencyCode,
             )
             BlockItem(
-                title = stringReference(value = "Merchant Name"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_name),
                 value = transaction.merchantName,
             )
             BlockItem(
-                title = stringReference(value = "Merchant City"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_city),
                 value = transaction.merchantCity,
             )
             BlockItem(
-                title = stringReference(value = "Merchant Country Code"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_country_code),
                 value = transaction.merchantCountryCode,
             )
             BlockItem(
-                title = stringReference(value = "Merchant Category Code"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_category_code),
                 value = transaction.merchantCategoryCode,
             )
         },
@@ -112,7 +109,7 @@ private fun TransactionBlock(transaction: VisaTxDetailsBottomSheetConfig.Transac
 private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Request, modifier: Modifier = Modifier) {
     BlockContent(
         modifier = modifier,
-        title = stringReference(value = "Blockchain request"),
+        title = resourceReference(R.string.visa_transaction_details_transaction_request),
         description = {
             if (request.onExploreClick != null) {
                 Row(
@@ -127,7 +124,7 @@ private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Reque
                         tint = TangemTheme.colors.icon.informative,
                     )
                     Text(
-                        text = "Explore",
+                        text = stringResourceSafe(R.string.common_explore),
                         color = TangemTheme.colors.text.tertiary,
                         style = TangemTheme.typography.caption1,
                     )
@@ -137,43 +134,39 @@ private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Reque
         },
         content = {
             BlockItem(
-                title = stringReference(value = "Type"),
+                title = resourceReference(R.string.visa_transaction_details_type),
                 value = request.type,
             )
             BlockItem(
-                title = stringReference(value = "Status"),
+                title = resourceReference(R.string.visa_transaction_details_status),
                 value = request.status,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Amount"),
+                title = resourceReference(R.string.visa_transaction_details_blockchain_amount),
                 value = request.blockchainAmount,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Fee"),
-                value = request.blockchainFee,
-            )
-            BlockItem(
-                title = stringReference(value = "Transaction Amount"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_amount),
                 value = request.transactionAmount,
             )
             BlockItem(
-                title = stringReference(value = "Currency Code"),
+                title = resourceReference(R.string.visa_transaction_details_currency_code),
                 value = request.currencyCode,
             )
             BlockItem(
-                title = stringReference(value = "Error Code"),
+                title = resourceReference(R.string.visa_transaction_details_error_code),
                 value = request.errorCode.toString(),
             )
             BlockItem(
-                title = stringReference(value = "Date"),
+                title = resourceReference(R.string.visa_transaction_details_date),
                 value = request.date,
             )
             BlockItem(
-                title = stringReference(value = "Tx Hash"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_hash),
                 value = request.txHash,
             )
             BlockItem(
-                title = stringReference(value = "Tx Status"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_status),
                 value = request.txStatus,
             )
         },
@@ -235,7 +228,6 @@ private class VisaTxDetailsBottomSheetParameterProvider :
                     type = "payment",
                     status = "authorized",
                     blockchainAmount = "1.0614 USDT",
-                    blockchainFee = "0.12",
                     transactionAmount = "0.99 €",
                     transactionCurrencyCode = "978",
                     merchantName = "SQ *FORMATIVE",
@@ -249,7 +241,6 @@ private class VisaTxDetailsBottomSheetParameterProvider :
                         type = "authorize_payment",
                         status = "accepted",
                         blockchainAmount = "1.0593 USDT",
-                        blockchainFee = "0.10",
                         transactionAmount = "0.99 €",
                         currencyCode = "978",
                         errorCode = 0,
@@ -263,7 +254,6 @@ private class VisaTxDetailsBottomSheetParameterProvider :
                         type = "settlement",
                         status = "accepted",
                         blockchainAmount = "1.0614 USDT",
-                        blockchainFee = "0.12",
                         transactionAmount = "0.99 €",
                         currencyCode = "978",
                         errorCode = 0,

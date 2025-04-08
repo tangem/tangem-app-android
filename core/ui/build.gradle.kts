@@ -6,6 +6,13 @@ plugins {
 
 android {
     namespace = "com.tangem.core.ui"
+
+    packaging {
+        resources {
+            // To build and run composable preview
+            merges += "paymentrequest.proto"
+        }
+    }
 }
 
 dependencies {
@@ -17,6 +24,7 @@ dependencies {
     implementation(projects.core.res)
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
+    implementation(projects.core.error)
 
     /** AndroidX libraries */
     implementation(deps.androidx.fragment.ktx)

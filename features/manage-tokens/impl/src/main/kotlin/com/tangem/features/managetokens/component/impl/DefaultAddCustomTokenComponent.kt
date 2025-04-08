@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -13,6 +14,7 @@ import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.tokens.model.Network
 import com.tangem.features.managetokens.analytics.CustomTokenAnalyticsEvent
 import com.tangem.features.managetokens.component.AddCustomTokenComponent
 import com.tangem.features.managetokens.component.CustomTokenFormComponent
@@ -171,6 +173,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         showForm(derivationPath = derivationPath)
     }
 
+    @OptIn(DelicateDecomposeApi::class)
     private fun showDerivationPathSelector(formValues: CustomTokenFormValues) {
         val currentConfig = contentStack.value.active.configuration
 
@@ -181,6 +184,7 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
         navigation.push(config)
     }
 
+    @OptIn(DelicateDecomposeApi::class)
     private fun showNetworkSelector(formValues: CustomTokenFormValues) {
         val currentConfig = contentStack.value.active.configuration
 
@@ -194,12 +198,33 @@ internal class DefaultAddCustomTokenComponent @AssistedInject constructor(
     private fun showForm(network: SelectedNetwork? = null, derivationPath: SelectedDerivationPath? = null) {
         val currentConfig = contentStack.value.active.configuration
 
+        val selectedNetwork = network ?: currentConfig.selectedNetwork
+        val selectedDerivationPath = derivationPath ?: currentConfig.selectedDerivationPath
+
         val config = currentConfig.copy(
             step = AddCustomTokenConfig.Step.FORM,
-            selectedNetwork = network ?: currentConfig.selectedNetwork,
-            selectedDerivationPath = derivationPath ?: currentConfig.selectedDerivationPath,
+            selectedNetwork = selectedNetwork,
+            selectedDerivationPath = defineSelectedDerivationPath(selectedNetwork, selectedDerivationPath),
         )
+
         navigation.replaceAll(config)
+    }
+
+    private fun defineSelectedDerivationPath(
+        selectedNetwork: SelectedNetwork?,
+        selectedDerivationPath: SelectedDerivationPath?,
+    ): SelectedDerivationPath? {
+        // if default derivation path
+        if (selectedDerivationPath?.value == selectedNetwork?.derivationPath) return null
+
+        // map to custom derivation path
+        return if (selectedDerivationPath != null && selectedDerivationPath.value.value != null) {
+            selectedDerivationPath.copy(
+                value = Network.DerivationPath.Custom(value = requireNotNull(selectedDerivationPath.value.value)),
+            )
+        } else {
+            null
+        }
     }
 
     private fun dismissAndNotify() {

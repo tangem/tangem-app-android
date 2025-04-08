@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.ReserveAmountProvider
 import com.tangem.blockchain.common.UtxoAmountLimitProvider
 import com.tangem.data.tokens.converters.UtxoConverter
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.utils.getTotalStakingBalance
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.CurrencyAmount
@@ -18,6 +19,7 @@ import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.isZero
+import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
@@ -132,8 +134,10 @@ internal class DefaultCurrencyChecksRepository(
     ): CryptoCurrencyWarning.Rent? {
         val rentData = walletManagersFacade.getRentInfo(userWalletId, currencyStatus.currency.network) ?: return null
         val balanceValue = currencyStatus.value as? CryptoCurrencyStatus.Loaded ?: return null
-        val stakingTotalBalance =
-            (balanceValue.yieldBalance as? YieldBalance.Data)?.getTotalStakingBalance() ?: BigDecimal.ZERO
+        val stakingBalance = balanceValue.yieldBalance as? YieldBalance.Data
+        val stakingTotalBalance = stakingBalance?.getTotalStakingBalance(
+            blockchainId = currencyStatus.currency.network.id.value,
+        ).orZero()
         return when {
             balanceValue.amount.isZero() && stakingTotalBalance.isZero() -> null
             balanceValue.amount < rentData.exemptionAmount && stakingTotalBalance.isZero() -> {
