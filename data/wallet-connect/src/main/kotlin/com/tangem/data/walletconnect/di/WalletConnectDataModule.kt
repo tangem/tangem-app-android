@@ -29,6 +29,7 @@ import com.tangem.domain.walletconnect.request.WcRequestService
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -88,6 +89,7 @@ internal object WalletConnectDataModule {
         store: WalletConnectStore,
         dispatchers: CoroutineDispatcherProvider,
         legacyStore: WalletConnectSessionsRepository,
+        getUserWallet: GetUserWalletUseCase,
         getWallets: GetWalletsUseCase,
     ): DefaultWcSessionsManager {
         val scope = CoroutineScope(SupervisorJob() + dispatchers.io)
@@ -96,6 +98,7 @@ internal object WalletConnectDataModule {
             dispatchers = dispatchers,
             legacyStore = legacyStore,
             getWallets = getWallets,
+            getUserWallet = getUserWallet,
             scope = scope,
         )
     }
