@@ -8,29 +8,33 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.EllipticCurve
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.visa.error.VisaActivationError
 
 object VisaWalletPublicKeyUtility {
 
-    fun validateExtendedPublicKey(targetAddress: String, extendedPublicKey: ExtendedPublicKey): Either<Error, Unit> =
-        either {
-            validatePublicKey(
-                targetAddress = targetAddress,
-                publicKey = extendedPublicKey.publicKey,
-            ).bind()
-        }
-
-    fun findKeyWithoutDerivation(targetAddress: String, card: CardDTO): Either<Error, ByteArray> = either {
-        val wallet = findWalletOnSecp256k1(card).bind()
-
+    fun validateExtendedPublicKey(
+        targetAddress: String,
+        extendedPublicKey: ExtendedPublicKey,
+    ): Either<VisaActivationError, Unit> = either {
         validatePublicKey(
             targetAddress = targetAddress,
-            publicKey = wallet.publicKey,
+            publicKey = extendedPublicKey.publicKey,
         ).bind()
-
-        wallet.publicKey
     }
 
-    fun generateAddressOnSecp256k1(walletPublicKey: ByteArray): Either<Error, Address> = either {
+    fun findKeyWithoutDerivation(targetAddress: String, card: CardDTO): Either<VisaActivationError, ByteArray> =
+        either {
+            val wallet = findWalletOnSecp256k1(card).bind()
+
+            validatePublicKey(
+                targetAddress = targetAddress,
+                publicKey = wallet.publicKey,
+            ).bind()
+
+            wallet.publicKey
+        }
+
+    fun generateAddressOnSecp256k1(walletPublicKey: ByteArray): Either<VisaActivationError, Address> = either {
         val addresses = catch(
             block = {
                 VisaUtilities.visaBlockchain.makeAddresses(
@@ -39,27 +43,22 @@ object VisaWalletPublicKeyUtility {
                     curve = EllipticCurve.Secp256k1,
                 )
             },
-            catch = { raise(Error.FailedToCreateAddress) },
+            catch = { raise(VisaActivationError.FailedToCreateAddress) },
         )
 
-        addresses.firstOrNull { it.type == AddressType.Default } ?: raise(Error.FailedToCreateAddress)
+        addresses.firstOrNull { it.type == AddressType.Default } ?: raise(VisaActivationError.FailedToCreateAddress)
     }
 
-    private fun findWalletOnSecp256k1(card: CardDTO): Either<Error, CardDTO.Wallet> = either {
-        card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: raise(Error.MissingWalletOnTargetCurve)
+    private fun findWalletOnSecp256k1(card: CardDTO): Either<VisaActivationError, CardDTO.Wallet> = either {
+        card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: raise(VisaActivationError.MissingWallet)
     }
 
-    private fun validatePublicKey(targetAddress: String, publicKey: ByteArray): Either<Error, Unit> = either {
-        val address = generateAddressOnSecp256k1(publicKey).bind()
+    private fun validatePublicKey(targetAddress: String, publicKey: ByteArray): Either<VisaActivationError, Unit> =
+        either {
+            val address = generateAddressOnSecp256k1(publicKey).bind()
 
-        if (address.value != targetAddress) {
-            raise(Error.AddressNotMatched)
+            if (address.value != targetAddress) {
+                raise(VisaActivationError.AddressNotMatched)
+            }
         }
-    }
-
-    enum class Error(val message: String) {
-        AddressNotMatched("ValidationError: Address not matched"),
-        FailedToCreateAddress("ValidationError: Failed to create address"),
-        MissingWalletOnTargetCurve("ValidationError: Missing wallet on target curve"),
-    }
 }
