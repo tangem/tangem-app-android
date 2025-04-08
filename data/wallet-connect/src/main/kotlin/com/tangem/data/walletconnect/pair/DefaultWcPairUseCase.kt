@@ -15,7 +15,7 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -93,8 +93,8 @@ internal class DefaultWcPairUseCase(
                         ).left()
 
                         is Wallet.Model.SettledSessionResponse.Result -> {
-                            val newSession = settledSession.session.toDomain(sessionForApprove.walletId)
-                            sessionsManager.saveSession(sessionForApprove.walletId, newSession)
+                            val newSession = settledSession.session.toDomain(sessionForApprove.wallet)
+                            sessionsManager.saveSession(newSession)
                             newSession.right()
                         }
                     }
@@ -148,7 +148,7 @@ internal class DefaultWcPairUseCase(
     ): Either<Throwable, Unit> {
         val namespaces = caipNamespaceDelegate.associate(
             sdkSessionProposal,
-            sessionForApprove.walletId,
+            sessionForApprove.wallet,
             sessionForApprove.network.map { it.network },
         )
         val sessionApprove = Wallet.Params.SessionApprove(
@@ -209,8 +209,8 @@ internal class DefaultWcPairUseCase(
         }
     },)
 
-    private fun Wallet.Model.Session.toDomain(walletId: UserWalletId): WcSession = WcSession(
-        userWalletId = walletId,
+    private fun Wallet.Model.Session.toDomain(wallet: UserWallet): WcSession = WcSession(
+        wallet = wallet,
         sdkModel = WcSdkSessionConverter.convert(this),
     )
 
