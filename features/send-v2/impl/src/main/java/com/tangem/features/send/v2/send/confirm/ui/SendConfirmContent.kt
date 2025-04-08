@@ -23,12 +23,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.Keyboard
+import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.components.transactions.TransactionDoneTitle
-import com.tangem.core.ui.extensions.resolveAnnotatedReference
-import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.core.ui.extensions.stringResourceSafe
-import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.extensions.*
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
@@ -83,21 +81,22 @@ internal fun SendConfirmContent(
                 )
             }
         }
-        SendingText(confirmUM = confirmUM)
+        SpacerHMax()
+        SendingText(footerText = confirmUM?.sendingFooter ?: TextReference.EMPTY)
     }
 }
 
 @Composable
-private fun SendingText(confirmUM: ConfirmUM.Content?, modifier: Modifier = Modifier) {
-    var isVisibleProxy by remember { mutableStateOf(confirmUM != null) }
+private fun SendingText(footerText: TextReference, modifier: Modifier = Modifier) {
+    var isVisibleProxy by remember { mutableStateOf(footerText != TextReference.EMPTY) }
     val keyboard by keyboardAsState()
 
     // the text should appear when the keyboard is closed
-    LaunchedEffect(confirmUM != null, keyboard) {
-        if (confirmUM != null && keyboard is Keyboard.Opened) {
+    LaunchedEffect(footerText != TextReference.EMPTY, keyboard) {
+        if (footerText != TextReference.EMPTY && keyboard is Keyboard.Opened) {
             return@LaunchedEffect
         }
-        isVisibleProxy = confirmUM != null
+        isVisibleProxy = footerText != TextReference.EMPTY
     }
 
     AnimatedVisibility(
@@ -107,9 +106,8 @@ private fun SendingText(confirmUM: ConfirmUM.Content?, modifier: Modifier = Modi
         exit = fadeOut(tween(durationMillis = 300)),
         label = "Animate show sending state text",
     ) {
-        val wrappedConfirmUM = remember(this) { requireNotNull(confirmUM?.sendingFooter) }
         Text(
-            text = wrappedConfirmUM.resolveAnnotatedReference(),
+            text = footerText.resolveAnnotatedReference(),
             textAlign = TextAlign.Center,
             style = TangemTheme.typography.caption2,
             color = TangemTheme.colors.text.primary1,
