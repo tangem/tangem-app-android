@@ -5,7 +5,9 @@ import arrow.core.flatten
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -23,6 +25,8 @@ class SaveManagedTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val stakingRepository: StakingRepository,
     private val quotesRepository: QuotesRepository,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -92,11 +96,20 @@ class SaveManagedTokensUseCase(
         val networkToUpdate = currenciesToAdd.map { it.network }
             .subtract(existingCurrencies.map { it.network }.toSet())
 
-        networksRepository.getNetworkStatusesSync(
-            userWalletId = userWalletId,
-            networks = networksToUpdate + networkToUpdate,
-            refresh = true,
-        )
+        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+            multiNetworkStatusFetcher(
+                MultiNetworkStatusFetcher.Params(
+                    userWalletId = userWalletId,
+                    networks = networksToUpdate + networkToUpdate,
+                ),
+            )
+        } else {
+            networksRepository.getNetworkStatusesSync(
+                userWalletId = userWalletId,
+                networks = networksToUpdate + networkToUpdate,
+                refresh = true,
+            )
+        }
     }
 
     private suspend fun refreshUpdatedYieldBalances(
