@@ -159,6 +159,11 @@ sealed class NotificationUM(val config: NotificationConfig) {
             ),
             subtitle = resourceReference(id = R.string.send_notification_invalid_reserve_amount_text),
         )
+
+        data object DestinationMemoRequired : Error(
+            title = resourceReference(id = R.string.send_validation_destination_tag_required_title),
+            subtitle = resourceReference(id = R.string.send_validation_destination_tag_required_description),
+        )
     }
 
     open class Warning(

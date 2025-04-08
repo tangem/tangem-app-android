@@ -1,7 +1,5 @@
 package com.tangem.features.managetokens.utils.list
 
-import androidx.compose.ui.util.fastForEachIndexed
-import androidx.compose.ui.util.fastMap
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
@@ -10,10 +8,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.message.SnackbarMessage
-import com.tangem.domain.managetokens.CheckCurrencyUnsupportedUseCase
-import com.tangem.domain.managetokens.CheckHasLinkedTokensUseCase
-import com.tangem.domain.managetokens.GetManagedTokensUseCase
-import com.tangem.domain.managetokens.RemoveCustomManagedCryptoCurrencyUseCase
+import com.tangem.domain.managetokens.*
 import com.tangem.domain.managetokens.model.*
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
@@ -43,6 +38,7 @@ import javax.inject.Inject
 @ModelScoped
 internal class ManageTokensListManager @Inject constructor(
     private val getManagedTokensUseCase: GetManagedTokensUseCase,
+    private val getDistinctManagedTokensUseCase: GetDistinctManagedCurrenciesUseCase,
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,
     private val removeCustomCurrencyUseCase: RemoveCustomManagedCryptoCurrencyUseCase,
     private val checkCurrencyUnsupportedUseCase: CheckCurrencyUnsupportedUseCase,
@@ -166,47 +162,27 @@ internal class ManageTokensListManager @Inject constructor(
             return
         }
 
-        state.update { state ->
-            val newBatches = distinctCurrencies(batchListState.data)
-            val currentBatches = state.currencyBatches
+        scope.launch {
+            state.update { state ->
+                val newBatches = getDistinctManagedTokensUseCase(batchListState.data)
+                val currentBatches = state.currencyBatches
 
-            // Distinct until changed
-            if (newBatches.size == currentBatches.size &&
-                newBatches.map { it.key } == currentBatches.map { it.key } &&
-                newBatches.flatMap { it.data } == currentBatches.flatMap { it.data }
-            ) {
-                return
-            }
-
-            val canEditItems = userWalletId != null
-            state.copy(
-                userWalletId = userWalletId,
-                currencyBatches = newBatches,
-                uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems),
-                canEditItems = canEditItems,
-            )
-        }
-    }
-
-    // FIXME: Add interception functionality to BatchFlow state and do this on domain
-    //  [REDACTED_JIRA]
-    private fun distinctCurrencies(
-        batches: List<Batch<Int, List<ManagedCryptoCurrency>>>,
-    ): List<Batch<Int, List<ManagedCryptoCurrency>>> {
-        val allCurrenciesIds = mutableListOf<ManagedCryptoCurrency.ID>()
-
-        return batches.fastMap { batch ->
-            val batchCurrencies = batch.data.toMutableList()
-
-            batch.data.fastForEachIndexed { index, currency ->
-                if (currency.id in allCurrenciesIds) {
-                    batchCurrencies.removeAt(index)
-                } else {
-                    allCurrenciesIds.add(currency.id)
+                // Distinct until changed
+                if (newBatches.size == currentBatches.size &&
+                    newBatches.map { it.key } == currentBatches.map { it.key } &&
+                    newBatches.flatMap { it.data } == currentBatches.flatMap { it.data }
+                ) {
+                    return@launch
                 }
-            }
 
-            batch.copy(data = batchCurrencies)
+                val canEditItems = userWalletId != null
+                state.copy(
+                    userWalletId = userWalletId,
+                    currencyBatches = newBatches,
+                    uiBatches = uiManager.createOrUpdateUiBatches(newBatches, canEditItems),
+                    canEditItems = canEditItems,
+                )
+            }
         }
     }
 

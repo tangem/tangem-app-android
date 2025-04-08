@@ -12,6 +12,7 @@ android {
 dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
+    implementation(projects.core.error)
     implementation(projects.common)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
