@@ -30,6 +30,8 @@ internal class SendDestinationValidationResultTransformer(
             }
         }.leftOrNull()
 
+        val shouldDisableMemo = shouldDisableMemo()
+
         return state.copy(
             isValidating = false,
             isPrimaryButtonEnabled = isValidAddress && isValidMemo,
@@ -38,8 +40,9 @@ internal class SendDestinationValidationResultTransformer(
                 isError = state.addressTextField.value.isNotEmpty() && !isValidAddress,
             ),
             memoTextField = state.memoTextField?.copy(
+                value = state.memoTextField.value.takeIf { !shouldDisableMemo }.orEmpty(),
                 isError = state.memoTextField.value.isNotEmpty() && !isValidMemo,
-                isEnabled = !shouldDisableMemo(),
+                isEnabled = !shouldDisableMemo,
             ),
             recent = state.recent.map { recent ->
                 recent.copy(isVisible = !isValidAddress && (recent.isLoading || recent.title != TextReference.EMPTY))
