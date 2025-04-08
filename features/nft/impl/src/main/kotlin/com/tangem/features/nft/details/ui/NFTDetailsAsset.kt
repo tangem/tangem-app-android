@@ -24,7 +24,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun NFTDetailsAsset(
     state: NFTAssetUM,
     onReadMoreClick: () -> Unit,
-    onSeeAllClick: () -> Unit,
+    onSeeAllTraitsClick: () -> Unit,
     onExploreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -72,7 +72,7 @@ internal fun NFTDetailsAsset(
                     NFTBlocksGroupAction(
                         text = resourceReference(R.string.common_see_all),
                         startIcon = { },
-                        onClick = onSeeAllClick,
+                        onClick = onSeeAllTraitsClick,
                     )
                 },
             )
@@ -103,7 +103,7 @@ private fun Preview_NFTDetailsAssetAsset(@PreviewParameter(NFTAssetProvider::cla
         NFTDetailsAsset(
             state = state,
             onReadMoreClick = { },
-            onSeeAllClick = { },
+            onSeeAllTraitsClick = { },
             onExploreClick = { },
         )
     }
