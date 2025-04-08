@@ -68,13 +68,12 @@ class CachedCurrenciesStatusesOperations(
         val prevStatuses = MutableStateFlow(value = emptyList<CryptoCurrencyStatus>())
 
         val isUpdating = MutableStateFlow(value = true)
-        val isFetchingStarted = MutableStateFlow(value = false)
 
         val nonEmptyCurrencies = currenciesFlow.mapNotNull { it.getOrNull() }.firstOrNull()?.toNonEmptyListOrNull()
 
-        if (nonEmptyCurrencies != null) {
+        if (!isFetchingStarted(userWalletId) && nonEmptyCurrencies != null) {
             launch {
-                isFetchingStarted.value = true
+                setFetchStarted(userWalletId)
 
                 val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
                 fetchComponents(userWalletId, networks, currenciesIds, nonEmptyCurrencies)
@@ -132,9 +131,9 @@ class CachedCurrenciesStatusesOperations(
                 )
             }
 
-            if (!isFetchingStarted.value) {
+            if (!isFetchingStarted(userWalletId)) {
                 launch {
-                    isFetchingStarted.value = true
+                    setFetchStarted(userWalletId)
 
                     fetchComponents(userWalletId, networks, currenciesIds, currencies)
                 }
@@ -331,6 +330,7 @@ class CachedCurrenciesStatusesOperations(
     }
 
     // temporary code because token list is built using networks list
+    @OptIn(FlowPreview::class)
     private fun getNetworkStatusesUpdates(
         userWalletId: UserWalletId,
         networks: NonEmptySet<Network>,
@@ -356,11 +356,26 @@ class CachedCurrenciesStatusesOperations(
                 .onEach(::send)
                 .launchIn(scope = this)
         }
+            .debounce(timeoutMillis = 500)
             .map<Set<NetworkStatus>, Either<TokenListError, Set<NetworkStatus>>> { it.right() }
             .distinctUntilChanged()
     }
 
+    private fun isFetchingStarted(userWalletId: UserWalletId): Boolean {
+        return fetchingState.value[userWalletId] ?: false
+    }
+
+    private fun setFetchStarted(userWalletId: UserWalletId) {
+        fetchingState.update {
+            it.toMutableMap().apply {
+                put(key = userWalletId, value = true)
+            }
+        }
+    }
+
     companion object {
         internal const val RETRY_DELAY = 2000L
+
+        private val fetchingState = MutableStateFlow(value = emptyMap<UserWalletId, Boolean>())
     }
 }
