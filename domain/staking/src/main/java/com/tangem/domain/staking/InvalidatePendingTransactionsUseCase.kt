@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.staking.model.stakekit.BalanceItem
 import com.tangem.domain.staking.model.stakekit.BalanceType
 import com.tangem.domain.staking.model.stakekit.StakingError
+import com.tangem.domain.staking.model.stakekit.Token
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.repositories.StakingErrorResolver
@@ -18,11 +19,13 @@ class InvalidatePendingTransactionsUseCase(
     operator fun invoke(
         balanceItems: List<BalanceItem>,
         processingActions: List<StakingAction>,
+        token: Token,
     ): Either<StakingError, List<BalanceItem>> {
         return Either.catch {
             val balancesToDisplay = mergeBalancesAndProcessingActions(
                 realBalances = balanceItems,
                 processingActions = processingActions,
+                token = token,
             )
             balancesToDisplay
         }.mapLeft {
@@ -33,16 +36,17 @@ class InvalidatePendingTransactionsUseCase(
     private fun mergeBalancesAndProcessingActions(
         realBalances: List<BalanceItem>,
         processingActions: List<StakingAction>,
+        token: Token,
     ): List<BalanceItem> {
         val balances = realBalances.toMutableList()
 
         processingActions.forEach { action ->
             when (action.type) {
                 StakingActionType.STAKE, StakingActionType.VOTE -> {
-                    addStubStakedPendingTransaction(balances, action)
+                    addStubStakedPendingTransaction(balances, action, token)
                 }
                 StakingActionType.VOTE_LOCKED -> {
-                    addStubStakedPendingTransaction(balances, action)
+                    addStubStakedPendingTransaction(balances, action, token)
                     removeLockedBalance(balances, action)
                 }
                 StakingActionType.WITHDRAW -> {
@@ -77,17 +81,22 @@ class InvalidatePendingTransactionsUseCase(
         }
     }
 
-    private fun addStubStakedPendingTransaction(balances: MutableList<BalanceItem>, action: StakingAction) {
+    private fun addStubStakedPendingTransaction(
+        balances: MutableList<BalanceItem>,
+        action: StakingAction,
+        token: Token,
+    ) {
         balances.add(
             BalanceItem(
                 groupId = UUID.randomUUID().toString(),
-                token = balances[0].token,
+                token = token,
                 type = BalanceType.STAKED,
                 amount = action.amount,
                 rawCurrencyId = null,
-                validatorAddress = action.validatorAddress ?: action.validatorAddresses?.get(0) ?: "",
+                validatorAddress = action.validatorAddress ?: action.validatorAddresses?.getOrNull(0) ?: "",
                 date = null,
                 pendingActions = emptyList(),
+                pendingActionsConstraints = emptyList(),
                 isPending = true,
             ),
         )
