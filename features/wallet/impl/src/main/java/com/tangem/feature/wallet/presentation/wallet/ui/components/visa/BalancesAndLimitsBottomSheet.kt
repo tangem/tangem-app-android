@@ -14,9 +14,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
@@ -38,7 +39,7 @@ private fun BalancesAndLimitsContent(config: BalancesAndLimitsBottomSheetConfig,
         modifier = modifier,
         title = {
             Text(
-                text = "Balances & Limits",
+                text = stringResourceSafe(R.string.visa_main_balances_and_limits),
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
             )
@@ -56,26 +57,26 @@ private fun BalancesAndLimitsContent(config: BalancesAndLimitsBottomSheetConfig,
 private fun BalancesBlock(balances: BalancesAndLimitsBottomSheetConfig.Balance, modifier: Modifier = Modifier) {
     BlockContent(
         modifier = modifier,
-        title = stringReference("Balance"),
+        title = resourceReference(R.string.common_balance),
         content = {
             BlockItem(
-                title = stringReference("Total"),
+                title = resourceReference(R.string.visa_balance_limits_details_total),
                 value = balances.totalBalance,
             )
             BlockItem(
-                title = stringReference("AML Verified"),
+                title = resourceReference(R.string.visa_balance_limits_details_aml_verified),
                 value = balances.amlVerified,
             )
             BlockItem(
-                title = stringReference("Available"),
+                title = resourceReference(R.string.visa_balance_limits_details_available),
                 value = balances.availableBalance,
             )
             BlockItem(
-                title = stringReference("Blocked"),
+                title = resourceReference(R.string.visa_balance_limits_details_blocked),
                 value = balances.blockedBalance,
             )
             BlockItem(
-                title = stringReference("Debit"),
+                title = resourceReference(R.string.visa_balance_limits_details_debt),
                 value = balances.debit,
             )
         },
@@ -89,24 +90,24 @@ private fun BalancesBlock(balances: BalancesAndLimitsBottomSheetConfig.Balance, 
 private fun LimitsBlock(limits: BalancesAndLimitsBottomSheetConfig.Limit, modifier: Modifier = Modifier) {
     BlockContent(
         modifier = modifier,
-        title = stringReference("Limits"),
+        title = resourceReference(R.string.visa_balance_limits_details_limits),
         content = {
             BlockItem(
-                title = stringReference("Total"),
+                title = resourceReference(R.string.visa_balance_limits_details_total),
                 value = limits.total,
             )
             BlockItem(
-                title = stringReference("Other (no-otp)"),
+                title = resourceReference(R.string.visa_balance_limits_details_no_otp_limit),
                 value = limits.other,
             )
             BlockItem(
-                title = stringReference("Single transaction"),
+                title = resourceReference(R.string.visa_balance_limits_details_single_transaction),
                 value = limits.singleTransaction,
             )
         },
         description = {
             Text(
-                text = "Available till ${limits.availableBy}",
+                text = stringResourceSafe(R.string.visa_main_available_till_date, limits.availableBy),
                 style = TangemTheme.typography.body2,
                 color = TangemTheme.colors.text.tertiary,
             )
