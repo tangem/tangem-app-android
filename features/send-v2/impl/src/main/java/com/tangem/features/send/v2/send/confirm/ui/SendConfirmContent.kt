@@ -31,7 +31,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.utils.DateTimeFormatters
 import com.tangem.core.ui.utils.toTimeFormat
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
