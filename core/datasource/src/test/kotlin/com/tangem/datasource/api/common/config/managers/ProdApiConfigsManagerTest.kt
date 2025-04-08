@@ -6,8 +6,6 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_PG_BUILD_TYPE
-import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
@@ -91,18 +89,17 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is StakeKit -> createStakeKitModel()
                 is TangemVisaAuth -> createVisaAuthModel()
                 is TangemVisa -> createVisaModel()
+                is TangemCardSdk -> createTangemCardSdkModel()
             }
         }
 
         private fun createExpressModel(): Model {
             val environment = when (BuildConfig.BUILD_TYPE) {
                 DEBUG_BUILD_TYPE,
-                DEBUG_PG_BUILD_TYPE,
                 -> ApiEnvironment.DEV
                 INTERNAL_BUILD_TYPE,
                 MOCKED_BUILD_TYPE,
                 -> ApiEnvironment.STAGE
-                EXTERNAL_BUILD_TYPE,
                 RELEASE_BUILD_TYPE,
                 -> ApiEnvironment.PROD
                 else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
@@ -114,12 +111,10 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                     environment = environment,
                     baseUrl = when (BuildConfig.BUILD_TYPE) {
                         DEBUG_BUILD_TYPE,
-                        DEBUG_PG_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
                         INTERNAL_BUILD_TYPE,
                         MOCKED_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
-                        EXTERNAL_BUILD_TYPE,
                         RELEASE_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
                         else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
@@ -152,7 +147,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 id = ApiConfig.ID.TangemTech,
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
-                    baseUrl = "https://api.tangem-tech.com/v1/",
+                    baseUrl = "https://api.tangem.org/v1/",
                     headers = mapOf(
                         "card_id" to ProviderSuspend { APP_CARD_ID },
                         "card_public_key" to ProviderSuspend { APP_CARD_PUBLIC_KEY },
@@ -206,6 +201,16 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "Android" },
                     ),
+                ),
+            )
+        }
+
+        private fun createTangemCardSdkModel(): Model {
+            return Model(
+                id = ApiConfig.ID.TangemCardSdk,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.PROD,
+                    baseUrl = "https://api.tangem-tech.com/",
                 ),
             )
         }
