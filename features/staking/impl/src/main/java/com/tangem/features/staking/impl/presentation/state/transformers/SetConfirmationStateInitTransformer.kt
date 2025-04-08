@@ -43,28 +43,7 @@ internal class SetConfirmationStateInitTransformer(
 
     @Suppress("CyclomaticComplexMethod")
     override fun transform(prevState: StakingUiState): StakingUiState {
-        val actionType = when {
-            isEnter -> StakingActionCommonType.Enter(
-                skipEnterAmount = yieldArgs.enter.isPartialAmountDisabled,
-            )
-            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartiallyUnstakeDisabled(prevState))
-            else -> when (pendingAction?.type) {
-                StakingActionType.STAKE -> StakingActionCommonType.Pending.Stake(
-                    skipEnterAmount = yieldArgs.enter.isPartialAmountDisabled,
-                )
-                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(
-                    partiallyUnstakeDisabled = isPartiallyUnstakeDisabled(prevState),
-                )
-                StakingActionType.CLAIM_REWARDS,
-                StakingActionType.RESTAKE_REWARDS,
-                -> StakingActionCommonType.Pending.Rewards
-                StakingActionType.VOTE_LOCKED,
-                StakingActionType.RESTAKE,
-                -> StakingActionCommonType.Pending.Restake
-                else -> StakingActionCommonType.Pending.Other
-            }
-        }
-
+        val actionType = getActionType(prevState)
         return prevState.copy(
             actionType = actionType,
             balanceState = balanceState,
@@ -84,6 +63,26 @@ internal class SetConfirmationStateInitTransformer(
                 pendingActions = pendingActions.takeIf { isComposePendingActions },
             ),
         )
+    }
+
+    private fun getActionType(prevState: StakingUiState): StakingActionCommonType {
+        val isPartialEnterAmountDisabled = yieldArgs.enter.isPartialAmountDisabled
+        val isPartialExitAmountDisabled = isPartiallyUnstakeDisabled(prevState)
+        return when {
+            isEnter -> StakingActionCommonType.Enter(isPartialEnterAmountDisabled)
+            isImplicitExit || isExplicitExit -> StakingActionCommonType.Exit(isPartialExitAmountDisabled)
+            else -> when (pendingAction?.type) {
+                StakingActionType.STAKE -> StakingActionCommonType.Pending.Stake(isPartialEnterAmountDisabled)
+                StakingActionType.UNSTAKE -> StakingActionCommonType.Exit(isPartialExitAmountDisabled)
+                StakingActionType.CLAIM_REWARDS,
+                StakingActionType.RESTAKE_REWARDS,
+                -> StakingActionCommonType.Pending.Rewards
+                StakingActionType.VOTE_LOCKED,
+                StakingActionType.RESTAKE,
+                -> StakingActionCommonType.Pending.Restake
+                else -> StakingActionCommonType.Pending.Other
+            }
+        }
     }
 
     private fun isPartiallyUnstakeDisabled(state: StakingUiState): Boolean {

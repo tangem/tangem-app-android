@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.domain.walletconnect2.domain.models.Account
+import com.tangem.domain.walletconnect.model.legacy.Account
 
 interface WcBlockchainHelper {
     fun chainIdToNetworkIdOrNull(chainId: String): String?

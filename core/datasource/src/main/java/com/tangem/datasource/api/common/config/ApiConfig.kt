@@ -26,6 +26,7 @@ sealed class ApiConfig {
         StakeKit,
         TangemVisaAuth,
         TangemVisa,
+        TangemCardSdk,
     }
 
     private fun initializeId(): ID {
@@ -35,15 +36,14 @@ sealed class ApiConfig {
             is StakeKit -> ID.StakeKit
             is TangemVisaAuth -> ID.TangemVisaAuth
             is TangemVisa -> ID.TangemVisa
+            is TangemCardSdk -> ID.TangemCardSdk
         }
     }
 
     companion object {
         internal const val DEBUG_BUILD_TYPE = "debug"
-        internal const val DEBUG_PG_BUILD_TYPE = "debugPG"
         internal const val INTERNAL_BUILD_TYPE = "internal"
         internal const val MOCKED_BUILD_TYPE = "mocked"
-        internal const val EXTERNAL_BUILD_TYPE = "external"
         internal const val RELEASE_BUILD_TYPE = "release"
     }
 }
