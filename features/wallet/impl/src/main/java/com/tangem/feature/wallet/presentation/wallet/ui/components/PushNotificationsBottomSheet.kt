@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.showcase.ShowcaseContent
 import com.tangem.core.ui.components.showcase.model.ShowcaseItemModel
