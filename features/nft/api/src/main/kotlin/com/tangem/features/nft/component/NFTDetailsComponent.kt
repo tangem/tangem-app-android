@@ -10,6 +10,7 @@ interface NFTDetailsComponent : ComposableContentComponent {
     data class Params(
         val userWalletId: UserWalletId,
         val nftAsset: NFTAsset,
+        val nftCollectionName: String,
     )
 
     interface Factory : ComponentFactory<Params, NFTDetailsComponent>
