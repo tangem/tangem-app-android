@@ -68,7 +68,7 @@ internal object OnrampTokenItemStateConverterFactory {
             is CryptoCurrencyStatus.NoAccount,
             -> {
                 TokenItemState.Subtitle2State.TextContent(
-                    text = status.getFormattedCryptoAmount(includeStaking = false),
+                    text = status.getFormattedCryptoAmount(),
                     isFlickering = status.value.isFlickering(),
                 )
             }
@@ -92,7 +92,7 @@ internal object OnrampTokenItemStateConverterFactory {
             is CryptoCurrencyStatus.NoAccount,
             -> {
                 TokenItemState.FiatAmountState.TextContent(
-                    text = status.getFormattedFiatAmount(appCurrency = appCurrency, includeStaking = false),
+                    text = status.getFormattedFiatAmount(appCurrency = appCurrency),
                     isAvailable = isAvailable,
                     isFlickering = status.value.isFlickering(),
                 )

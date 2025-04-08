@@ -1,15 +1,25 @@
 package com.tangem.core.analytics.api
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 
 /**
-[REDACTED_AUTHOR]
+ * Sends usual analytics events
  */
 interface AnalyticsEventHandler {
     fun send(event: AnalyticsEvent)
 }
 
+interface AnalyticsErrorHandler {
+    fun sendErrorEvent(event: AnalyticsEvent)
+}
+
+interface AnalyticsExceptionHandler {
+    fun sendException(event: ExceptionAnalyticsEvent)
+}
+
 interface AnalyticsHandler : AnalyticsEventHandler {
+
     fun id(): String
 
     fun send(eventId: String, params: Map<String, String> = emptyMap())
@@ -17,10 +27,6 @@ interface AnalyticsHandler : AnalyticsEventHandler {
     override fun send(event: AnalyticsEvent) {
         send(event.id, event.params)
     }
-}
-
-interface ErrorEventHandler {
-    fun send(error: Throwable, params: Map<String, String> = emptyMap())
 }
 
 interface AnalyticsHandlerHolder {
