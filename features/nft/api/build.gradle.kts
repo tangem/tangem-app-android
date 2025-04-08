@@ -12,6 +12,8 @@ dependencies {
 
     /* Project - Domain */
     implementation(projects.domain.models)
+    implementation(projects.domain.nft.models)
+    implementation(projects.domain.wallets.models)
 
     /* Project - Core */
     implementation(projects.core.decompose)
