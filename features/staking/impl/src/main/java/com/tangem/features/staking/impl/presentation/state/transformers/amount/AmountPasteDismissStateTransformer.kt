@@ -8,7 +8,7 @@ internal class AmountPasteDismissStateTransformer : Transformer<StakingUiState> 
 
     override fun transform(prevState: StakingUiState): StakingUiState {
         return prevState.copy(
-            amountState = AmountPastedTriggerDismissTransformer().transform(prevState.amountState),
+            amountState = AmountPastedTriggerDismissTransformer.transform(prevState.amountState),
         )
     }
 }

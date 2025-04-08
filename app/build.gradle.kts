@@ -1,5 +1,5 @@
-import java.util.Properties
 import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscatingVariants
+import java.util.Properties
 
 plugins {
     alias(deps.plugins.android.application)
@@ -100,6 +100,7 @@ dependencies {
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.staking)
     implementation(projects.domain.walletConnect)
+    implementation(projects.domain.walletConnect.models)
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
     implementation(projects.domain.nft)
@@ -107,6 +108,7 @@ dependencies {
     implementation(projects.domain.onramp)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.networks)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -121,6 +123,7 @@ dependencies {
     implementation(projects.core.utils)
     implementation(projects.core.decompose)
     implementation(projects.core.deepLinks)
+    implementation(projects.core.error.ext)
     implementation(projects.libs.crypto)
     implementation(projects.libs.auth)
     implementation(projects.libs.blockchainSdk)
@@ -148,6 +151,7 @@ dependencies {
     implementation(projects.data.manageTokens)
     implementation(projects.data.nft)
     implementation(projects.data.onramp)
+    implementation(projects.data.networks)
 
     /** Features */
     implementation(projects.features.onboarding)
@@ -169,6 +173,8 @@ dependencies {
     implementation(projects.features.manageTokens.impl)
     implementation(projects.features.send.api)
     implementation(projects.features.send.impl)
+    implementation(projects.features.sendV2.api)
+    implementation(projects.features.sendV2.impl)
     implementation(projects.features.qrScanning.api)
     implementation(projects.features.qrScanning.impl)
     implementation(projects.features.staking.api)
@@ -195,6 +201,8 @@ dependencies {
     implementation(projects.features.biometry.impl)
     implementation(projects.features.nft.api)
     implementation(projects.features.nft.impl)
+    implementation(projects.features.walletconnect.api)
+    implementation(projects.features.walletconnect.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -286,6 +294,7 @@ dependencies {
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Testing libraries */
+    testImplementation(projects.common.test)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
     testImplementation(deps.test.mockk)
@@ -308,9 +317,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
-    debugPGImplementation(deps.chucker)
     mockedImplementation(deps.chuckerStub)
-    externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
 
