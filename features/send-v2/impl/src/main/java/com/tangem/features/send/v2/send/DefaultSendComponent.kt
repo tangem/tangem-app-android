@@ -19,11 +19,11 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.common.ui.SendContent
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.model.SendModel
-import com.tangem.features.send.v2.send.ui.SendContent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
@@ -112,7 +112,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
 
         BackHandler(onBack = ::onChildBack)
         SendContent(
-            state = state,
+            navigationUM = state.navigationUM,
             stackState = stackState,
         )
     }

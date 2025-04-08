@@ -29,7 +29,7 @@ import com.tangem.core.ui.components.buttons.common.TangemButtonsDefaults
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 
 @Composable
 internal fun SendNavigationButtons(navigationUM: NavigationUM, modifier: Modifier = Modifier) {
