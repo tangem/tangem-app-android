@@ -32,17 +32,11 @@ internal fun FeeBlock(feeUM: FeeUM, isClickEnabled: Boolean, onClick: () -> Unit
     val feeSelectorUM = feeUM.feeSelectorUM as? FeeSelectorUM.Content
     val isEditingDisabled = feeSelectorUM?.fees is TransactionFee.Single
 
-    val backgroundColor = if (isEditingDisabled) {
-        TangemTheme.colors.button.disabled
-    } else {
-        TangemTheme.colors.background.action
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(backgroundColor)
+            .background(TangemTheme.colors.background.action)
             .clickable(enabled = isClickEnabled && !isEditingDisabled, onClick = onClick)
             .padding(12.dp),
     ) {
