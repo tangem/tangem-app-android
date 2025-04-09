@@ -26,15 +26,14 @@ class ValidateWalletAddressUseCase(
         address: String,
         currencyAddress: Set<NetworkAddress.Address>?,
     ): AddressValidationResult {
+        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
         val isUtxoConsolidationAvailable =
             walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
-        val isCurrentAddress = currencyAddress?.any { it.value == address } ?: true
+
+        val addressToValidate = decodedXAddress?.address ?: address
+        val isCurrentAddress = currencyAddress?.any { it.value == addressToValidate } ?: true
 
         val isForbidSelfSend = isCurrentAddress && !isUtxoConsolidationAvailable
-
-        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
-        val addressToValidate = decodedXAddress?.address ?: address
-
         val isValidAddress = walletAddressServiceRepository.validateAddress(userWalletId, network, addressToValidate)
 
         return when {
@@ -51,15 +50,14 @@ class ValidateWalletAddressUseCase(
         address: String,
         senderAddresses: List<CryptoCurrencyAddress>,
     ): AddressValidationResult {
+        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
         val isUtxoConsolidationAvailable =
             walletManagersFacade.checkUtxoConsolidationAvailability(userWalletId, network)
-        val isCurrentAddress = senderAddresses.any { it.address == address }
+
+        val addressToValidate = decodedXAddress?.address ?: address
+        val isCurrentAddress = senderAddresses.any { it.address == addressToValidate }
 
         val isForbidSelfSend = isCurrentAddress && !isUtxoConsolidationAvailable
-
-        val decodedXAddress = BlockchainUtils.decodeRippleXAddress(address, network.id.value)
-        val addressToValidate = decodedXAddress?.address ?: address
-
         val isValidAddress = walletAddressServiceRepository.validateAddress(userWalletId, network, addressToValidate)
 
         return when {
