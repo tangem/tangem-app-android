@@ -15,6 +15,9 @@ internal interface NetworksStatusesStoreV2 {
     /** Refresh status of [network] by [userWalletId] */
     suspend fun refresh(userWalletId: UserWalletId, network: Network)
 
+    /** Refresh statuses of [networks] by [userWalletId] */
+    suspend fun refresh(userWalletId: UserWalletId, networks: Set<Network>)
+
     /** Store actual [NetworkStatus] by [userWalletId] */
     suspend fun storeActual(userWalletId: UserWalletId, value: NetworkStatus)
 
