@@ -6,7 +6,7 @@ import com.reown.android.CoreClient
 import com.reown.android.relay.ConnectionType
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
+import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcSdkObserver
@@ -17,13 +17,13 @@ internal class DefaultWcInitializeUseCase(
     private val application: Application,
     private val sessionsManager: DefaultWcSessionsManager,
     private val networkService: DefaultWcRequestService,
-    private val wcPairFlow: DefaultWcPairUseCase,
+    private val pairSdkDelegate: WcPairSdkDelegate,
 ) : WcInitializeUseCase {
 
     private val wcSdkObservers = mutableSetOf<WcSdkObserver>(
         sessionsManager,
         networkService,
-        wcPairFlow,
+        pairSdkDelegate,
     )
 
     override fun init(projectId: String) {
