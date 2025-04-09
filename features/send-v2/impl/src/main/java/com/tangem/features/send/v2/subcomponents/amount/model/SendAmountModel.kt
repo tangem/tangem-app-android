@@ -98,10 +98,7 @@ internal class SendAmountModel @Inject constructor(
                     ),
                 )
             }
-            val params = params as? SendAmountComponentParams.AmountBlockParams
-            if (params?.predefinedAmountValue != null) {
-                onAmountValueChange(params.predefinedAmountValue)
-            }
+            params.predefinedAmountValue?.let(::onAmountValueChange)
         }
     }
 

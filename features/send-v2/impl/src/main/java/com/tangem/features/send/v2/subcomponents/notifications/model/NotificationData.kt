@@ -6,6 +6,7 @@ import java.math.BigDecimal
 
 data class NotificationData(
     val destinationAddress: String,
+    val memo: String?,
     val amountValue: BigDecimal,
     val reduceAmountBy: BigDecimal,
     val isIgnoreReduce: Boolean,
