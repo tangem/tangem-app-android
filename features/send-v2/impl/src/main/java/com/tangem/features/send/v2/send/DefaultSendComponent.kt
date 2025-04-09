@@ -19,6 +19,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
@@ -152,7 +153,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
             cryptoCurrencyStatus = model.cryptoCurrencyStatus,
             callback = model,
             isEditMode = route.isEditMode,
-            predefinedAmountValue = model.predefinedAmountValue,
+            predefinedValues = model.predefinedValues,
         ),
     )
 
@@ -187,14 +188,14 @@ internal class DefaultSendComponent @AssistedInject constructor(
         val predefinedAddress = params.destinationAddress
         val predefinedValues =
             if (predefinedAmount != null && predefinedTxId != null && predefinedAddress != null) {
-                SendConfirmComponent.Params.PredefinedValues.Content(
+                PredefinedValues.Content.Deeplink(
                     amount = predefinedAmount,
                     address = predefinedAddress,
-                    tag = params.tag,
+                    memo = params.tag,
                     transactionId = predefinedTxId,
                 )
             } else {
-                SendConfirmComponent.Params.PredefinedValues.Empty
+                PredefinedValues.Empty
             }
         return SendConfirmComponent(
             appComponentContext = factoryContext,
