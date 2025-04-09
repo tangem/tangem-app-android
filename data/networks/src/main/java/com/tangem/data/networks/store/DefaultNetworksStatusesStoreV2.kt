@@ -58,6 +58,29 @@ internal class DefaultNetworksStatusesStoreV2(
         updateStatusSourceInRuntime(userWalletId = userWalletId, network = network, source = StatusSource.CACHE)
     }
 
+    override suspend fun refresh(userWalletId: UserWalletId, networks: Set<Network>) {
+        val simpleStatusIds = networks.map(SimpleNetworkStatus::Id)
+
+        runtimeStore.update(default = emptyMap()) { stored ->
+            stored.toMutableMap().apply {
+                val storedStatuses = this[userWalletId.stringValue].orEmpty()
+
+                val statuses = simpleStatusIds.mapTo(hashSetOf()) { simpleStatusId ->
+                    val status = storedStatuses.firstOrNull { it.id == simpleStatusId }
+                        ?: createDefaultStatus(id = simpleStatusId)
+
+                    status.copy(
+                        value = status.value.copySealed(source = StatusSource.CACHE),
+                    )
+                }
+
+                val updatedStatuses = storedStatuses.addOrReplace(statuses) { old, new -> old.id == new.id }
+
+                put(key = userWalletId.stringValue, value = updatedStatuses)
+            }
+        }
+    }
+
     override suspend fun storeActual(userWalletId: UserWalletId, value: NetworkStatus) {
         if (value.value.source != StatusSource.ACTUAL) {
             error("Method storeActual can be called only with StatusSource.ACTUAL")
@@ -84,10 +107,7 @@ internal class DefaultNetworksStatusesStoreV2(
             stored.toMutableMap().apply {
                 val status = this[userWalletId.stringValue].orEmpty()
                     .firstOrNull { it.id == simpleStatusId }
-                    ?: SimpleNetworkStatus(
-                        id = simpleStatusId,
-                        value = NetworkStatus.Unreachable(address = null),
-                    )
+                    ?: createDefaultStatus(id = simpleStatusId)
 
                 val updatedStatus = status.copy(
                     value = status.value.copySealed(source = source),
@@ -129,5 +149,9 @@ internal class DefaultNetworksStatusesStoreV2(
                 this[userWalletId.stringValue] = updatedValues
             }
         }
+    }
+
+    private fun createDefaultStatus(id: SimpleNetworkStatus.Id): SimpleNetworkStatus {
+        return SimpleNetworkStatus(id = id, value = NetworkStatus.Unreachable(address = null))
     }
 }
