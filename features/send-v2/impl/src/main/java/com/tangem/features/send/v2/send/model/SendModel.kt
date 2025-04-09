@@ -29,11 +29,12 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
+import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.SendRoute
-import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
@@ -90,7 +91,7 @@ internal class SendModel @Inject constructor(
     var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
-    var predefinedAmountValue: String? = null
+    var predefinedValues: PredefinedValues = PredefinedValues.Empty
 
     private var balanceHidingJobHolder = JobHolder()
 
@@ -227,7 +228,11 @@ internal class SendModel @Inject constructor(
 
     private fun onQrCodeScanned(address: String) {
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
-        predefinedAmountValue = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        predefinedValues = PredefinedValues.Content.QrCode(
+            amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals).orEmpty(),
+            address = parsedQrCode?.address.orEmpty(),
+            memo = parsedQrCode?.memo,
+        )
     }
 
     private fun onFailedTxEmailClick(errorMessage: String? = null) {

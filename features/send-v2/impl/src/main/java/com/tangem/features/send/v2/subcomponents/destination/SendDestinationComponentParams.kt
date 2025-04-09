@@ -2,6 +2,7 @@ package com.tangem.features.send.v2.subcomponents.destination
 
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent.ModelCallback
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
@@ -32,8 +33,6 @@ internal sealed class SendDestinationComponentParams {
         override val userWalletId: UserWalletId,
         override val cryptoCurrency: CryptoCurrency,
         val blockClickEnableFlow: StateFlow<Boolean>,
-        val predefinedAddressValue: String?,
-        val predefinedMemoValue: String?,
-        val isPredefinedValues: Boolean,
+        val predefinedValues: PredefinedValues,
     ) : SendDestinationComponentParams()
 }
