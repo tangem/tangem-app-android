@@ -4,4 +4,4 @@ internal const val GMAIL_MAX_FILE_SIZE = 24_900_000 // ≈ 25 MB
 
 internal const val START2COIN_SUPPORT_EMAIL = "cardsupport@start2coin.com"
 internal const val TANGEM_SUPPORT_EMAIL = "support@tangem.com"
-internal const val TANGEM_VISA_SUPPORT_EMAIL = "visa-support@tangem.com" // [REDACTED_TODO_COMMENT]
+internal const val TANGEM_VISA_SUPPORT_EMAIL = "pay@tangem.com"
