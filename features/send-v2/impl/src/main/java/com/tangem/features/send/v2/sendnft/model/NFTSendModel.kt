@@ -9,6 +9,7 @@ import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -16,8 +17,10 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
@@ -31,7 +34,8 @@ import kotlin.properties.Delegates
 
 internal interface SendNFTComponentCallback :
     SendFeeComponent.ModelCallback,
-    SendDestinationComponent.ModelCallback
+    SendDestinationComponent.ModelCallback,
+    NFTSendConfirmComponent.ModelCallback
 
 @Suppress("LongParameterList")
 @Stable
@@ -42,12 +46,14 @@ internal class NFTSendModel @Inject constructor(
     private val router: Router,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getUserWalletUseCase: GetUserWalletUseCase,
+    private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
 ) : Model(), SendNFTComponentCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
     private val userWalletId = params.userWalletId
+    private val nftAsset = params.nftAsset
 
     private val _uiState = MutableStateFlow(initialState())
     val uiState = _uiState.asStateFlow()
@@ -70,15 +76,16 @@ internal class NFTSendModel @Inject constructor(
         _uiState.update { it.copy(navigationUM = navigationUM) }
     }
 
+    override fun onResult(nftSendUM: NFTSendUM) {
+        _uiState.value = nftSendUM
+    }
+
     override fun onDestinationResult(destinationUM: DestinationUM) {
         _uiState.update { it.copy(destinationUM = destinationUM) }
-
-        // todo
     }
 
     override fun onFeeResult(feeUM: FeeUM) {
         _uiState.update { it.copy(feeUM = feeUM) }
-        router.pop()
     }
 
     private fun initAppCurrency() {
@@ -93,10 +100,10 @@ internal class NFTSendModel @Inject constructor(
                 ifRight = { wallet ->
                     userWallet = wallet
 
-                    // cryptoCurrency = getCryptoCurrenciesUseCase(userWalletId).getOrNull()
-                    //     ?.filterIsInstance<CryptoCurrency.Coin>()
-                    //     ?.firstOrNull { it.network == nftAsset.network }
-                    //     ?: return@launch
+                    cryptoCurrency = getCryptoCurrenciesUseCase(userWalletId).getOrNull()
+                        ?.filterIsInstance<CryptoCurrency.Coin>()
+                        ?.firstOrNull { it.network == nftAsset.network }
+                        ?: return@launch
 
                     getCurrenciesStatusUpdates(
                         isSingleWalletWithToken = wallet.scanResponse.cardTypesResolver.isSingleWalletWithToken(),
@@ -124,7 +131,7 @@ internal class NFTSendModel @Inject constructor(
                         cryptoCurrencyStatus = cryptoStatus,
                     ).getOrNull() ?: cryptoStatus
 
-                    // router.push(NFTSendRoute.Destination(isEditMode = false))
+                    router.replaceAll(CommonSendRoute.Destination(isEditMode = false))
                 },
                 ifLeft = {
                     // sendConfirmAlertFactory.getGenericErrorState {
