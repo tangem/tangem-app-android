@@ -1,35 +1,34 @@
-package com.tangem.features.send.v2.send
+package com.tangem.features.send.v2.common
 
 import com.tangem.core.decompose.navigation.Route
 import kotlinx.serialization.Serializable
 
-@Serializable
-internal sealed class SendRoute : Route {
+internal sealed class CommonSendRoute : Route {
 
     abstract val isEditMode: Boolean
 
     @Serializable
-    data object Empty : SendRoute() {
+    data object Empty : CommonSendRoute() {
         override val isEditMode = false
     }
 
     @Serializable
-    data object Confirm : SendRoute() {
+    data object Confirm : CommonSendRoute() {
         override val isEditMode: Boolean = false
     }
 
     @Serializable
     data class Destination(
         override val isEditMode: Boolean,
-    ) : SendRoute()
+    ) : CommonSendRoute()
 
     @Serializable
     data class Amount(
         override val isEditMode: Boolean,
-    ) : SendRoute()
+    ) : CommonSendRoute()
 
     @Serializable
-    data class Fee(
-        override val isEditMode: Boolean = true,
-    ) : SendRoute()
+    data object Fee : CommonSendRoute() {
+        override val isEditMode: Boolean = true
+    }
 }
