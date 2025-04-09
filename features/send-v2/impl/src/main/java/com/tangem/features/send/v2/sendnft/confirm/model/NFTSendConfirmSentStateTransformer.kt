@@ -1,15 +1,15 @@
-package com.tangem.features.send.v2.send.confirm.model.transformers
+package com.tangem.features.send.v2.sendnft.confirm.model
 
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.send.ui.state.SendUM
+import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.utils.transformer.Transformer
 
-internal class SendConfirmSentStateTransformer(
+internal class NFTSendConfirmSentStateTransformer(
     private val txData: TransactionData.Uncompiled,
     private val txUrl: String,
-) : Transformer<SendUM> {
-    override fun transform(prevState: SendUM): SendUM {
+) : Transformer<NFTSendUM> {
+    override fun transform(prevState: NFTSendUM): NFTSendUM {
         return prevState.copy(
             confirmUM = ConfirmUM.Success(
                 transactionDate = txData.date?.timeInMillis ?: System.currentTimeMillis(),
