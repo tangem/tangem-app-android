@@ -4,6 +4,7 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent.ModelCallback
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +17,7 @@ internal sealed class SendAmountComponentParams {
     abstract val userWallet: UserWallet
     abstract val appCurrency: AppCurrency
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
-    abstract val predefinedAmountValue: String?
+    abstract val predefinedValues: PredefinedValues
 
     data class AmountParams(
         override val state: AmountState,
@@ -24,7 +25,7 @@ internal sealed class SendAmountComponentParams {
         override val userWallet: UserWallet,
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
-        override val predefinedAmountValue: String?,
+        override val predefinedValues: PredefinedValues,
         val isEditMode: Boolean,
         val callback: ModelCallback,
         val currentRoute: Flow<SendRoute.Amount>,
@@ -37,8 +38,7 @@ internal sealed class SendAmountComponentParams {
         override val userWallet: UserWallet,
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
-        override val predefinedAmountValue: String?,
+        override val predefinedValues: PredefinedValues,
         val blockClickEnableFlow: StateFlow<Boolean>,
-        val isPredefinedValues: Boolean,
     ) : SendAmountComponentParams()
 }
