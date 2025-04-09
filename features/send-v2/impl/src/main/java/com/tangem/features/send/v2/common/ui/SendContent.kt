@@ -13,11 +13,14 @@ import com.tangem.core.ui.components.appbar.AppBarWithBackButtonAndIcon
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 
 @Composable
-internal fun SendContent(navigationUM: NavigationUM, stackState: ChildStack<SendRoute, ComposableContentComponent>) {
+internal fun SendContent(
+    navigationUM: NavigationUM,
+    stackState: ChildStack<CommonSendRoute, ComposableContentComponent>,
+) {
     Column(
         modifier = Modifier.Companion
             .background(color = TangemTheme.colors.background.tertiary)
