@@ -50,6 +50,7 @@ dependencies {
     implementation(deps.arrow.core)
 
     /* Tests */
+    testImplementation(projects.common.test)
     testImplementation(deps.test.coroutine)
     testImplementation(deps.test.junit)
     testImplementation(deps.test.mockk)
