@@ -6,8 +6,8 @@ import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.utils.transformer.Transformer
 
 internal class SendConfirmSentStateTransformer(
-    val txData: TransactionData.Uncompiled,
-    val txUrl: String,
+    private val txData: TransactionData.Uncompiled,
+    private val txUrl: String,
 ) : Transformer<SendUM> {
     override fun transform(prevState: SendUM): SendUM {
         return prevState.copy(
