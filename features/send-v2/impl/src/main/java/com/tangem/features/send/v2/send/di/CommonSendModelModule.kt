@@ -12,7 +12,7 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(ModelComponent::class)
-internal interface SendModelModule {
+internal interface CommonSendModelModule {
 
     @Binds
     @IntoMap
