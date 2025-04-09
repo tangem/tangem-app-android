@@ -32,7 +32,7 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
+import com.tangem.features.send.v2.common.ui.state.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
