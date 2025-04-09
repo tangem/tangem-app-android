@@ -11,8 +11,8 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
-import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.v2.send.confirm.ui.SendConfirmContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
@@ -141,7 +141,7 @@ internal class SendConfirmComponent(
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val appCurrency: AppCurrency,
         val callback: ModelCallback,
-        val currentRoute: Flow<SendRoute.Confirm>,
+        val currentRoute: Flow<CommonSendRoute.Confirm>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
     )
