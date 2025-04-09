@@ -79,6 +79,7 @@ internal class NotificationsModel @Inject constructor(
     private val appCurrency = params.appCurrency
 
     private var destinationAddress = params.destinationAddress
+    private var memo = params.memo
     private var amountValue = params.amountValue
     private var reduceAmountBy = params.reduceAmountBy
     private var isIgnoreReduce = params.isIgnoreReduce
@@ -110,6 +111,7 @@ internal class NotificationsModel @Inject constructor(
 
     private suspend fun updateState(data: NotificationData) {
         destinationAddress = data.destinationAddress
+        memo = data.memo
         amountValue = data.amountValue
         reduceAmountBy = data.reduceAmountBy
         isIgnoreReduce = data.isIgnoreReduce
@@ -134,6 +136,7 @@ internal class NotificationsModel @Inject constructor(
             )
             addDomainNotifications(
                 destinationAddress = destinationAddress,
+                memo = memo,
                 amountValue = amountValue,
                 reduceAmountBy = reduceAmountBy,
                 fee = fee,
@@ -160,6 +163,7 @@ internal class NotificationsModel @Inject constructor(
 
     private suspend fun MutableList<NotificationUM>.addDomainNotifications(
         destinationAddress: String,
+        memo: String?,
         amountValue: BigDecimal,
         reduceAmountBy: BigDecimal,
         fee: Fee?,
@@ -199,6 +203,8 @@ internal class NotificationsModel @Inject constructor(
             currencyCheck = currencyCheck,
         )
         addWarningNotifications(
+            destinationAddress = destinationAddress,
+            memo = memo,
             enteredAmount = amountValue,
             fee = fee,
             feeValue = feeValue,
@@ -288,6 +294,8 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private suspend fun MutableList<NotificationUM>.addWarningNotifications(
+        destinationAddress: String,
+        memo: String?,
         enteredAmount: BigDecimal,
         sendingAmount: BigDecimal,
         fee: Fee?,
@@ -297,11 +305,11 @@ internal class NotificationsModel @Inject constructor(
     ) {
         val validationError = validateTransactionUseCase(
             userWalletId = userWalletId,
-            amount = enteredAmount.convertToSdkAmount(currency),
+            amount = amountValue.convertToSdkAmount(cryptoCurrencyStatus.currency),
             fee = fee,
-            memo = null,
-            destination = "",
-            network = currency.network,
+            memo = memo,
+            destination = destinationAddress,
+            network = cryptoCurrencyStatus.currency.network,
         ).leftOrNull()
 
         addRentExemptionNotification(
