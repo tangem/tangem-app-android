@@ -131,6 +131,8 @@ internal class SendConfirmModel @Inject constructor(
         get() = amountState?.isIgnoreReduce == true
     val enteredDestination: String?
         get() = destinationUM?.addressTextField?.value
+    val enteredMemo: String?
+        get() = destinationUM?.memoTextField?.value
     val fee: Fee?
         get() = feeSelectorUM?.selectedFee
     val feeError: GetFeeError?
@@ -459,6 +461,7 @@ internal class SendConfirmModel @Inject constructor(
             notificationsUpdateTrigger.triggerUpdate(
                 data = NotificationData(
                     destinationAddress = enteredDestination.orEmpty(),
+                    memo = enteredMemo,
                     amountValue = enteredAmount.orZero(),
                     reduceAmountBy = reduceAmountBy.orZero(),
                     isIgnoreReduce = isIgnoreReduce,
