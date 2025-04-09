@@ -14,6 +14,7 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -32,12 +33,14 @@ internal class DefaultMultiNetworkStatusProducerTest {
     private val networksStatusesStore = mockk<NetworksStatusesStoreV2>()
     private val userWalletsStore = mockk<UserWalletsStore>()
     private val excludedBlockchains = mockk<ExcludedBlockchains>()
+    private val dispatchers = TestingCoroutineDispatcherProvider()
 
     private val producer = DefaultMultiNetworkStatusProducer(
         params = params,
         networksStatusesStore = networksStatusesStore,
         userWalletsStore = userWalletsStore,
         excludedBlockchains = excludedBlockchains,
+        dispatchers = dispatchers,
     )
 
     @Before
