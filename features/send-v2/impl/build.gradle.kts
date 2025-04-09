@@ -15,6 +15,7 @@ dependencies {
     /** Api */
     implementation(projects.features.sendV2.api)
     implementation(projects.features.txhistory.api)
+    implementation(projects.features.nft.api)
 
     /** Libs */
     implementation(projects.libs.crypto)
@@ -54,6 +55,7 @@ dependencies {
     implementation(projects.domain.txhistory)
     implementation(projects.domain.balanceHiding.models)
     implementation(projects.domain.balanceHiding)
+    implementation(projects.domain.nft.models)
 
     /** Compose libraries */
     implementation(deps.compose.foundation)
