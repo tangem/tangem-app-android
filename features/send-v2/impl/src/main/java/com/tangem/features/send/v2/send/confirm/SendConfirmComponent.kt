@@ -94,6 +94,7 @@ internal class SendConfirmComponent(
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             destinationAddress = model.enteredDestination.orEmpty(),
+            memo = model.enteredMemo,
             amountValue = model.enteredAmount.orZero(),
             reduceAmountBy = model.reduceAmountBy.orZero(),
             isIgnoreReduce = model.isIgnoreReduce,
