@@ -6,13 +6,11 @@ import com.tangem.data.networks.store.NetworksStatusesStoreV2
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEmpty
+import kotlinx.coroutines.flow.*
 import timber.log.Timber
 
 /**
@@ -22,12 +20,14 @@ import timber.log.Timber
  * @property networksStatusesStore networks statuses store
  * @property userWalletsStore      user wallets store
  * @property excludedBlockchains   excluded blockchains
+ * @property dispatchers           dispatchers
  */
 internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
     @Assisted val params: MultiNetworkStatusProducer.Params,
     private val networksStatusesStore: NetworksStatusesStoreV2,
     private val userWalletsStore: UserWalletsStore,
     private val excludedBlockchains: ExcludedBlockchains,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : MultiNetworkStatusProducer {
 
     override val fallback: Set<NetworkStatus>
@@ -57,6 +57,7 @@ internal class DefaultMultiNetworkStatusProducer @AssistedInject constructor(
             }
             .distinctUntilChanged()
             .onEmpty { emit(value = hashSetOf()) }
+            .flowOn(dispatchers.default)
     }
 
     @AssistedFactory
