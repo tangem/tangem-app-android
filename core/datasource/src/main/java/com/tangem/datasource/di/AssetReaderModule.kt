@@ -3,7 +3,6 @@ package com.tangem.datasource.di
 import android.content.Context
 import com.tangem.datasource.asset.reader.AndroidAssetReader
 import com.tangem.datasource.asset.reader.AssetReader
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,10 +16,7 @@ internal object AssetReaderModule {
 
     @Singleton
     @Provides
-    fun providesAsserReader(
-        @ApplicationContext context: Context,
-        dispatchers: CoroutineDispatcherProvider,
-    ): AssetReader {
-        return AndroidAssetReader(context.assets, dispatchers)
+    fun providesAsserReader(@ApplicationContext context: Context): AssetReader {
+        return AndroidAssetReader(context.assets)
     }
 }
