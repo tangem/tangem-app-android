@@ -16,6 +16,7 @@ internal sealed class SendAmountComponentParams {
     abstract val userWallet: UserWallet
     abstract val appCurrency: AppCurrency
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
+    abstract val predefinedAmountValue: String?
 
     data class AmountParams(
         override val state: AmountState,
@@ -23,10 +24,10 @@ internal sealed class SendAmountComponentParams {
         override val userWallet: UserWallet,
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        override val predefinedAmountValue: String?,
         val isEditMode: Boolean,
         val callback: ModelCallback,
         val currentRoute: Flow<SendRoute.Amount>,
-        val predefinedAmountValue: String?,
         val isBalanceHidingFlow: StateFlow<Boolean>,
     ) : SendAmountComponentParams()
 
@@ -36,8 +37,8 @@ internal sealed class SendAmountComponentParams {
         override val userWallet: UserWallet,
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
+        override val predefinedAmountValue: String?,
         val blockClickEnableFlow: StateFlow<Boolean>,
-        val predefinedAmountValue: String?,
         val isPredefinedValues: Boolean,
     ) : SendAmountComponentParams()
 }

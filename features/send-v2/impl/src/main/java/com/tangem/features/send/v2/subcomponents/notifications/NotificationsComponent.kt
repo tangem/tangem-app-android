@@ -46,6 +46,7 @@ internal class NotificationsComponent(
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val appCurrency: AppCurrency,
         val destinationAddress: String,
+        val memo: String?,
         val amountValue: BigDecimal,
         val reduceAmountBy: BigDecimal,
         val isIgnoreReduce: Boolean,
