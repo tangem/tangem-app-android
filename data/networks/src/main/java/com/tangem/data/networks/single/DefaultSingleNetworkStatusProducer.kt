@@ -4,11 +4,13 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.tokens.model.NetworkStatus
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapNotNull
 
 /**
@@ -16,12 +18,14 @@ import kotlinx.coroutines.flow.mapNotNull
  *
  * @property params                     params
  * @property multiNetworkStatusSupplier multi network status supplier
+ * @property dispatchers                dispatchers
  *
 [REDACTED_AUTHOR]
  */
 internal class DefaultSingleNetworkStatusProducer @AssistedInject constructor(
     @Assisted val params: SingleNetworkStatusProducer.Params,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : SingleNetworkStatusProducer {
 
     override val fallback: NetworkStatus
@@ -35,6 +39,7 @@ internal class DefaultSingleNetworkStatusProducer @AssistedInject constructor(
                 statuses.firstOrNull { it.network == params.network }
             }
             .distinctUntilChanged()
+            .flowOn(dispatchers.default)
     }
 
     @AssistedFactory
