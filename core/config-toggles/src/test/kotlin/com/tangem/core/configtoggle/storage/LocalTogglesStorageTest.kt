@@ -8,6 +8,7 @@ import com.squareup.moshi.Types
 import com.tangem.core.configtoggle.feature.impl.FeatureTogglesConstants
 import com.tangem.datasource.asset.loader.AssetLoader
 import com.tangem.datasource.asset.reader.AssetReader
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -24,7 +25,11 @@ internal class LocalTogglesStorageTest {
     private val jsonAdapter = mockk<JsonAdapter<List<ConfigToggle>>>()
 
     // Impossible to mockk AssetLoader because it implement inline functions
-    private val assetLoader = AssetLoader(assetReader = assetReader, moshi = moshi)
+    private val assetLoader = AssetLoader(
+        assetReader = assetReader,
+        moshi = moshi,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     private val storage = LocalTogglesStorage(assetLoader)
 
