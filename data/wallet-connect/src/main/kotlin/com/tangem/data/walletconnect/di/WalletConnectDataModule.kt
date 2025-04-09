@@ -11,6 +11,7 @@ import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
+import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.request.WcMethodHandler
 import com.tangem.data.walletconnect.respond.DefaultWcRespondService
@@ -59,12 +60,12 @@ internal object WalletConnectDataModule {
         application: Application,
         sessionsManager: DefaultWcSessionsManager,
         networkService: DefaultWcRequestService,
-        wcPairFlow: DefaultWcPairUseCase,
+        pairSdkDelegate: WcPairSdkDelegate,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
         application = application,
         sessionsManager = sessionsManager,
         networkService = networkService,
-        wcPairFlow = wcPairFlow,
+        pairSdkDelegate = pairSdkDelegate,
     )
 
     @Provides
@@ -73,15 +74,21 @@ internal object WalletConnectDataModule {
         sessionsManager: WcSessionsManager,
         associateNetworksDelegate: AssociateNetworksDelegate,
         caipNamespaceDelegate: CaipNamespaceDelegate,
+        sdkDelegate: WcPairSdkDelegate,
     ): DefaultWcPairUseCase = DefaultWcPairUseCase(
         sessionsManager = sessionsManager,
         associateNetworksDelegate = associateNetworksDelegate,
         caipNamespaceDelegate = caipNamespaceDelegate,
+        sdkDelegate = sdkDelegate,
     )
 
     @Provides
     @Singleton
     fun wcPairUseCase(default: DefaultWcPairUseCase): WcPairUseCase = default
+
+    @Provides
+    @Singleton
+    fun sdkDelegate(): WcPairSdkDelegate = WcPairSdkDelegate()
 
     @Provides
     @Singleton
