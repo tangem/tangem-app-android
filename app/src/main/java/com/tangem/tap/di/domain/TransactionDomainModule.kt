@@ -2,6 +2,7 @@ package com.tangem.tap.di.domain
 
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.demo.DemoConfig
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -35,12 +36,16 @@ internal object TransactionDomainModule {
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
         walletManagersFacade: WalletManagersFacade,
+        singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): SendTransactionUseCase {
         return SendTransactionUseCase(
             demoConfig = DemoConfig(),
             cardSdkConfigRepository = cardSdkConfigRepository,
             transactionRepository = transactionRepository,
             walletManagersFacade = walletManagersFacade,
+            singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
