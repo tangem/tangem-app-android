@@ -3,6 +3,7 @@ package com.tangem.common.ui.amountScreen.converters
 import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverter
+import com.tangem.common.ui.amountScreen.converters.field.AmountFieldConverterV2
 import com.tangem.common.ui.amountScreen.models.AmountParameters
 import com.tangem.common.ui.amountScreen.models.AmountSegmentedButtonsConfig
 import com.tangem.common.ui.amountScreen.models.AmountState
@@ -30,6 +31,7 @@ import kotlinx.collections.immutable.persistentListOf
  * @property cryptoCurrencyStatusProvider current cryptocurrency status provider
  * @property iconStateConverter currency icon converter
  */
+@Deprecated("Use AmountStateConverterV2")
 class AmountStateConverter(
     private val clickIntents: AmountScreenClickIntents,
     private val appCurrencyProvider: Provider<AppCurrency>,
@@ -65,6 +67,65 @@ class AmountStateConverter(
                     title = stringReference(status.currency.symbol),
                     iconState = iconStateConverter.convertCustom(
                         value = status,
+                        forceGrayscale = noFeeRate,
+                        showCustomTokenBadge = false,
+                    ),
+                    isFiat = false,
+                ),
+                AmountSegmentedButtonsConfig(
+                    title = stringReference(appCurrency.code),
+                    iconUrl = appCurrency.iconSmallUrl,
+                    isFiat = true,
+                ),
+            ),
+            isSegmentedButtonsEnabled = !noFeeRate,
+            selectedButton = 0,
+        )
+    }
+}
+
+/**
+ * Converts initial [String] to [AmountState]
+ *
+ * @property clickIntents amount screen clicks
+ * @property appCurrency selected app currency
+ * @property maxEnterAmount max enter amount data
+ * @property cryptoCurrencyStatus current cryptocurrency status
+ * @property iconStateConverter currency icon converter
+ */
+class AmountStateConverterV2(
+    private val clickIntents: AmountScreenClickIntents,
+    private val appCurrency: AppCurrency,
+    private val cryptoCurrencyStatus: CryptoCurrencyStatus,
+    private val maxEnterAmount: EnterAmountBoundary,
+    private val iconStateConverter: CryptoCurrencyToIconStateConverter,
+) : Converter<AmountParameters, AmountState> {
+
+    private val amountFieldConverter by lazy(LazyThreadSafetyMode.NONE) {
+        AmountFieldConverterV2(
+            clickIntents = clickIntents,
+            cryptoCurrencyStatus = cryptoCurrencyStatus,
+            appCurrency = appCurrency,
+        )
+    }
+
+    override fun convert(value: AmountParameters): AmountState {
+        val fiat = maxEnterAmount.fiatAmount.format { fiat(appCurrency.code, appCurrency.symbol) }
+        val crypto = maxEnterAmount.amount.format { crypto(cryptoCurrencyStatus.currency) }
+        val noFeeRate = cryptoCurrencyStatus.value.fiatRate.isNullOrZero()
+
+        return AmountState.Data(
+            title = value.title,
+            availableBalance = resourceReference(R.string.common_crypto_fiat_format, wrappedList(crypto, fiat)),
+            tokenIconState = iconStateConverter.convert(cryptoCurrencyStatus),
+            amountTextField = amountFieldConverter.convert(value.value),
+            isPrimaryButtonEnabled = false,
+            appCurrencyCode = appCurrency.code,
+            segmentedButtonConfig = persistentListOf(
+                AmountSegmentedButtonsConfig(
+                    title = stringReference(cryptoCurrencyStatus.currency.symbol),
+                    iconState = iconStateConverter.convertCustom(
+                        value = cryptoCurrencyStatus,
                         forceGrayscale = noFeeRate,
                         showCustomTokenBadge = false,
                     ),
