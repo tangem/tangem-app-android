@@ -28,9 +28,9 @@ internal object TokenMarketListConverter : Converter<TokenMarketListResponse, Li
                 imageHost = imageHost,
                 tokenQuotesShort = TokenQuotesShort(
                     currentPrice = token.currentPrice,
-                    h24ChangePercent = token.priceChangePercentage.h24.movePointLeft(2),
-                    weekChangePercent = token.priceChangePercentage.week1.movePointLeft(2),
-                    monthChangePercent = token.priceChangePercentage.day30.movePointLeft(2),
+                    h24ChangePercent = token.priceChangePercentage?.h24?.movePointLeft(2),
+                    weekChangePercent = token.priceChangePercentage?.week1?.movePointLeft(2),
+                    monthChangePercent = token.priceChangePercentage?.day30?.movePointLeft(2),
                 ),
                 tokenCharts = TokenMarket.Charts(h24 = null, week = null, month = null),
             )
