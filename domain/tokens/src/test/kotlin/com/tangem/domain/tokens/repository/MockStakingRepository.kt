@@ -28,7 +28,7 @@ class MockStakingRepository : StakingRepository {
 
     override fun getIntegrationKey(cryptoCurrencyId: CryptoCurrency.ID): String = ""
 
-    override suspend fun fetchEnabledYields(refresh: Boolean) {
+    override suspend fun fetchEnabledYields() {
         /* no-op */
     }
 
