@@ -1,14 +1,20 @@
 package com.tangem.feature.qrscanning.presentation.transformers
 
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.feature.qrscanning.impl.R
-import com.tangem.feature.qrscanning.presentation.QrScanningState
 import com.tangem.feature.qrscanning.model.QrScanningClickIntents
+import com.tangem.feature.qrscanning.presentation.PasteAction
+import com.tangem.feature.qrscanning.presentation.QrScanningState
+
+private const val WC_SCHEME = "wc"
 
 internal class InitializeQrScanningStateTransformer(
     private val clickIntents: QrScanningClickIntents,
+    private val clipboardManager: ClipboardManager,
     private val source: SourceType,
     private val network: String?,
 ) : QrScanningTransformer {
@@ -16,7 +22,7 @@ internal class InitializeQrScanningStateTransformer(
     override fun transform(prevState: QrScanningState): QrScanningState {
         val message = when (source) {
             SourceType.SEND -> network?.let { resourceReference(R.string.send_qrcode_scan_info, wrappedList(it)) }
-            else -> null
+            SourceType.WALLET_CONNECT -> stringReference("Open Web3 app and chose WalletConnect option")
         }
 
         return QrScanningState(
@@ -24,6 +30,20 @@ internal class InitializeQrScanningStateTransformer(
             onBackClick = clickIntents::onBackClick,
             onQrScanned = clickIntents::onQrScanned,
             onGalleryClick = clickIntents::onGalleryClicked,
+            pasteAction = constructPasteAction(),
         )
+    }
+
+    private fun constructPasteAction(): PasteAction {
+        val uri = clipboardManager.getText()
+        return if (source == SourceType.WALLET_CONNECT && uri != null && isWalletConnectUri(uri)) {
+            PasteAction.Perform { clickIntents.onQrScanned(uri) }
+        } else {
+            PasteAction.None
+        }
+    }
+
+    private fun isWalletConnectUri(uri: String): Boolean {
+        return uri.lowercase().startsWith(WC_SCHEME)
     }
 }

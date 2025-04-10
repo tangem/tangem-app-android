@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.ui.components.currency.icon.CurrencyIconState
 import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.PersistentList
+import java.math.BigDecimal
 
 /** Model for amount state */
 @Stable
@@ -21,6 +22,9 @@ sealed class AmountState {
      * @param isSegmentedButtonsEnabled indicates if currency switches is enabled
      * @param amountTextField amount field state
      * @param appCurrencyCode app currency code
+     * @param isEditingDisabled indicated whether amount is editable
+     * @param reduceAmountBy reduces amount to be sent by specified value
+     * @param isIgnoreReduce ignores reduce amount value
      */
     data class Data(
         override val isPrimaryButtonEnabled: Boolean,
@@ -32,6 +36,9 @@ sealed class AmountState {
         val isSegmentedButtonsEnabled: Boolean,
         val amountTextField: AmountFieldModel,
         val appCurrencyCode: String,
+        val isEditingDisabled: Boolean = false,
+        val reduceAmountBy: BigDecimal = BigDecimal.ZERO,
+        val isIgnoreReduce: Boolean = false,
     ) : AmountState()
 
     data class Empty(
