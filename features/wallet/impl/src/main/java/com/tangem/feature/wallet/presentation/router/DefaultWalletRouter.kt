@@ -54,7 +54,7 @@ internal class DefaultWalletRouter @Inject constructor(
                 AppRoute.Onboarding(
                     scanResponse = scanResponse,
                     mode = if (continueBackup) {
-                        AppRoute.Onboarding.Mode.AddBackup
+                        AppRoute.Onboarding.Mode.AddBackupWallet1
                     } else {
                         AppRoute.Onboarding.Mode.Onboarding
                     },
@@ -114,5 +114,9 @@ internal class DefaultWalletRouter @Inject constructor(
 
     override fun openScanFailedDialog(onTryAgain: () -> Unit) {
         reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
+    }
+
+    override fun openNFTCollectionsScreen(userWalletId: UserWalletId) {
+        router.push(AppRoute.NFTCollections(userWalletId))
     }
 }
