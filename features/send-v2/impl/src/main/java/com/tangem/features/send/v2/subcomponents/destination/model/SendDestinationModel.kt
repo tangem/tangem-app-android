@@ -104,7 +104,7 @@ internal class SendDestinationModel @Inject constructor(
                 ),
             )
             val params = params as? SendDestinationComponentParams.DestinationBlockParams
-            if (params?.predefinedAddressValue != null && params.predefinedMemoValue != null) {
+            if (params?.predefinedAddressValue != null) {
                 _uiState.update(
                     SendDestinationPredefinedStateTransformer(
                         address = params.predefinedAddressValue,
