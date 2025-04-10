@@ -28,6 +28,7 @@ dependencies {
     implementation(projects.domain.promo.models)
     implementation(projects.domain.promo)
     implementation(projects.domain.networks)
+    implementation(projects.domain.quotes)
 
     /** Project - Api */
     implementation(projects.features.send.api)
