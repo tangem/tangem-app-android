@@ -10,6 +10,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.domain.demo.IsDemoCardUseCase
@@ -25,7 +26,6 @@ import com.tangem.features.onramp.main.entity.*
 import com.tangem.features.onramp.main.entity.factory.OnrampStateFactory
 import com.tangem.features.onramp.main.entity.factory.amount.OnrampAmountStateFactory
 import com.tangem.features.onramp.providers.entity.SelectProviderResult
-import com.tangem.features.onramp.utils.InputManager
 import com.tangem.features.onramp.utils.sendOnrampErrorEvent
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
