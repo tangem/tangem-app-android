@@ -6,7 +6,7 @@ import com.tangem.domain.tokens.model.Network
 import dev.onenowy.moshipolymorphicadapter.annotations.NameLabel
 import java.math.BigDecimal
 
-internal sealed interface NetworkStatusDM {
+sealed interface NetworkStatusDM {
 
     val networkId: Network.ID
     val derivationPath: DerivationPath
