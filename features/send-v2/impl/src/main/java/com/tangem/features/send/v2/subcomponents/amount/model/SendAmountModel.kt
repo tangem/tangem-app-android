@@ -18,6 +18,7 @@ import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
@@ -98,7 +99,10 @@ internal class SendAmountModel @Inject constructor(
                     ),
                 )
             }
-            params.predefinedAmountValue?.let(::onAmountValueChange)
+            val predefinedValues = params.predefinedValues as? PredefinedValues.Content
+            if (predefinedValues?.amount != null) {
+                onAmountValueChange(predefinedValues.amount)
+            }
         }
     }
 
