@@ -78,13 +78,7 @@ internal class NotificationsModel @Inject constructor(
     private val currency = cryptoCurrencyStatus.currency
     private val appCurrency = params.appCurrency
 
-    private var destinationAddress = params.destinationAddress
-    private var memo = params.memo
-    private var amountValue = params.amountValue
-    private var reduceAmountBy = params.reduceAmountBy
-    private var isIgnoreReduce = params.isIgnoreReduce
-    private var fee = params.fee
-    private var feeError = params.feeError
+    private var notificationData = params.notificationData
 
     private val _uiState = MutableStateFlow<ImmutableList<NotificationUM>>(persistentListOf())
     val uiState = _uiState.asStateFlow()
@@ -110,14 +104,7 @@ internal class NotificationsModel @Inject constructor(
     }
 
     private suspend fun updateState(data: NotificationData) {
-        destinationAddress = data.destinationAddress
-        memo = data.memo
-        amountValue = data.amountValue
-        reduceAmountBy = data.reduceAmountBy
-        isIgnoreReduce = data.isIgnoreReduce
-        fee = data.fee
-        feeError = data.feeError
-
+        notificationData = data
         buildNotifications()
     }
 
@@ -126,7 +113,7 @@ internal class NotificationsModel @Inject constructor(
             addFeeUnreachableNotification(
                 tokenStatus = cryptoCurrencyStatus,
                 coinStatus = feeCryptoCurrencyStatus,
-                feeError = feeError,
+                feeError = notificationData.feeError,
                 onReload = {
                     modelScope.launch {
                         sendFeeReloadTrigger.triggerUpdate()
@@ -134,13 +121,7 @@ internal class NotificationsModel @Inject constructor(
                 },
                 onClick = ::showTokenDetails,
             )
-            addDomainNotifications(
-                destinationAddress = destinationAddress,
-                memo = memo,
-                amountValue = amountValue,
-                reduceAmountBy = reduceAmountBy,
-                fee = fee,
-            )
+            addDomainNotifications()
         }
 
         notificationsUpdateTrigger.callbackHasError(notifications.any { it is NotificationUM.Error })
@@ -161,13 +142,7 @@ internal class NotificationsModel @Inject constructor(
         }
     }
 
-    private suspend fun MutableList<NotificationUM>.addDomainNotifications(
-        destinationAddress: String,
-        memo: String?,
-        amountValue: BigDecimal,
-        reduceAmountBy: BigDecimal,
-        fee: Fee?,
-    ) {
+    private suspend fun MutableList<NotificationUM>.addDomainNotifications() = with(notificationData) {
         val balance = cryptoCurrencyStatus.value.amount ?: return
         val feeValue = fee?.amount?.value ?: return
         val isFeeCoverage = checkFeeCoverage(
@@ -305,7 +280,7 @@ internal class NotificationsModel @Inject constructor(
     ) {
         val validationError = validateTransactionUseCase(
             userWalletId = userWalletId,
-            amount = amountValue.convertToSdkAmount(cryptoCurrencyStatus.currency),
+            amount = enteredAmount.convertToSdkAmount(currency),
             fee = fee,
             memo = memo,
             destination = destinationAddress,
@@ -353,7 +328,7 @@ internal class NotificationsModel @Inject constructor(
         addHighFeeWarningNotification(
             enteredAmountValue = enteredAmount,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
-            ignoreAmountReduce = isIgnoreReduce,
+            ignoreAmountReduce = notificationData.isIgnoreReduce,
             onReduceClick = { reduceBy, reduceByDiff, _ ->
                 modelScope.launch {
                     sendAmountReduceTrigger.triggerReduceBy(
