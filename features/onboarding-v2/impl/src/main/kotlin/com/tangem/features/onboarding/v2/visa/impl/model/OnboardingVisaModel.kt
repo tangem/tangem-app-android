@@ -159,8 +159,11 @@ internal class OnboardingVisaModel @Inject constructor(
                     VisaActivationRemoteState.WaitingForActivationFinishing -> {
                         OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.PinCode)
                     }
-                    is VisaActivationRemoteState.WaitingPinCode -> {
-                        OnboardingVisaRoute.PinCode(activationOrderInfo = remoteState.activationOrderInfo)
+                    is VisaActivationRemoteState.AwaitingPinCode -> {
+                        OnboardingVisaRoute.PinCode(
+                            activationOrderInfo = remoteState.activationOrderInfo,
+                            pinCodeValidationError = false,
+                        )
                     }
                     VisaActivationRemoteState.Activated,
                     VisaActivationRemoteState.BlockedForActivation,
