@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.sign
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.data.walletconnect.respond.WcRespondService
+import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
 import com.tangem.domain.walletconnect.usecase.sign.WcSignState
 import com.tangem.domain.walletconnect.usecase.sign.WcSignUseCase
@@ -17,6 +18,7 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
     abstract val respondService: WcRespondService
 
     abstract val context: WcMethodUseCaseContext
+    override val network: Network get() = context.network
     override val session: WcSession get() = context.session
     override val rawSdkRequest: WcSdkSessionRequest get() = context.rawSdkRequest
 
@@ -55,6 +57,7 @@ internal interface FinalActionCollector<SignModel> {
 internal class WcMethodUseCaseContext(
     val session: WcSession,
     val rawSdkRequest: WcSdkSessionRequest,
+    val network: Network,
 )
 
 internal typealias OnSign<SignModel> =
