@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.text.input.TextFieldValue
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -19,6 +20,9 @@ import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.ONBOARDING_SOURCE
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.sdk.api.visa.VisaCardActivationTaskMode
@@ -30,6 +34,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @Stable
 @ModelScoped
 internal class OnboardingVisaAccessCodeModel @Inject constructor(
@@ -40,6 +45,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val visaAuthRepository: VisaAuthRepository,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params: OnboardingVisaAccessCodeComponent.Config = paramsContainer.require()
@@ -58,6 +64,10 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
     val onBack = MutableSharedFlow<Unit>()
     val onDone = MutableSharedFlow<ActivationReadyEvent>()
+
+    init {
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.SettingAccessCodeStarted)
+    }
 
     fun onBack() {
         if (uiState.value.buttonLoading) return
@@ -99,11 +109,14 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
     private fun onContinue() {
         when (uiState.value.step) {
             OnboardingVisaAccessCodeUM.Step.Enter -> {
+                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.AccessCodeEntered)
                 if (checkAccessCodeMinChars().not()) return
                 _uiState.update { it.copy(step = OnboardingVisaAccessCodeUM.Step.ReEnter) }
+                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.AccessCodeReenterScreen)
             }
             OnboardingVisaAccessCodeUM.Step.ReEnter -> {
                 if (checkAccessCodesMatch().not()) return
+                analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.OnboardingVisa)
                 startActivationProcess(accessCode = uiState.value.accessCodeFirst.text)
             }
         }
@@ -160,6 +173,9 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                 is CompletionResult.Failure -> {
                     loading(false)
                     uiMessageSender.showErrorDialog(result.error.universalError)
+                    analyticsEventsHandler.send(
+                        VisaAnalyticsEvent.Errors(result.error.code.toString(), ONBOARDING_SOURCE),
+                    )
                     return@launch
                 }
                 is CompletionResult.Success -> result.data
