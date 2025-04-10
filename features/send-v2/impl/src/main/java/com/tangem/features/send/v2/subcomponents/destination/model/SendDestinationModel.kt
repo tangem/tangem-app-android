@@ -3,7 +3,6 @@ package com.tangem.features.send.v2.subcomponents.destination.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.common.routing.AppRoute
-import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -25,7 +24,6 @@ import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
@@ -55,7 +53,6 @@ internal class SendDestinationModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
-    private val appRouter: AppRouter,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val validateWalletMemoUseCase: ValidateWalletMemoUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
@@ -272,21 +269,13 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean, isValidMemo: Boolean) {
         val isRecent = type == EnterAddressSource.RecentAddress
-        if (isRecent && isValidAddress && isValidMemo) onNextClick()
+        if (isRecent && isValidAddress && isValidMemo) saveResult()
+        (params as? SendDestinationComponentParams.DestinationParams)?.onNextClick?.invoke()
     }
 
     private fun saveResult() {
         val params = params as? SendDestinationComponentParams.DestinationParams ?: return
         params.callback.onDestinationResult(uiState.value)
-    }
-
-    private fun onNextClick() {
-        saveResult()
-        if ((params as? SendDestinationComponentParams.DestinationParams)?.isEditMode == true) {
-            router.pop()
-        } else {
-            router.push(SendRoute.Amount(isEditMode = false))
-        }
     }
 
     private fun configDestinationNavigation() {
@@ -306,9 +295,7 @@ internal class SendDestinationModel @Inject constructor(
                         R.drawable.ic_close_24
                     },
                     backIconClick = {
-                        if (route.isEditMode) {
-                            router.pop()
-                        } else {
+                        if (!route.isEditMode) {
                             analyticsEventHandler.send(
                                 SendAnalyticEvents.CloseButtonClicked(
                                     source = SendScreenSource.Address,
@@ -316,8 +303,8 @@ internal class SendDestinationModel @Inject constructor(
                                     isValid = state.isPrimaryButtonEnabled,
                                 ),
                             )
-                            appRouter.pop()
                         }
+                        params.onBackClick()
                     },
                     additionalIconRes = R.drawable.ic_qrcode_scan_24,
                     additionalIconClick = ::onQrCodeScanClick,
@@ -328,7 +315,10 @@ internal class SendDestinationModel @Inject constructor(
                             resourceReference(R.string.common_next)
                         },
                         isEnabled = state.isPrimaryButtonEnabled,
-                        onClick = ::onNextClick,
+                        onClick = {
+                            saveResult()
+                            params.onNextClick()
+                        },
                     ),
                     prevButton = null,
                     secondaryPairButtonsUM = null,
