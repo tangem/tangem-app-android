@@ -10,14 +10,16 @@ import com.tangem.core.ui.format.bigdecimal.*
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
-import com.tangem.feature.tokendetails.presentation.tokendetails.state.*
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.BalanceType
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsBalanceBlockState
+import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.txhistory.TokenDetailsTxHistoryTransactionStateConverter
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.utils.getBalance
-import com.tangem.lib.crypto.BlockchainUtils.isIncludeStakingTotalBalance
 import com.tangem.utils.Provider
 import com.tangem.utils.StringsSigns.DASH_SIGN
 import com.tangem.utils.converter.Converter
@@ -84,10 +86,12 @@ internal class TokenDetailsLoadedBalanceConverter(
         currentState: TokenDetailsBalanceBlockState,
         status: CryptoCurrencyStatus,
     ): TokenDetailsBalanceBlockState {
-        val stakingCryptoAmount = (status.value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance()
+        val stakingCryptoAmount =
+            (status.value.yieldBalance as? YieldBalance.Data)?.getTotalWithRewardsStakingBalance(
+                status.currency.network.id.value,
+            )
         val stakingFiatAmount = stakingCryptoAmount?.let { status.value.fiatRate?.multiply(it) }
         val isBalanceSelectorEnabled = !stakingCryptoAmount.isNullOrZero()
-        val includeStakingTotalBalance = isIncludeStakingTotalBalance(status.currency.network.id.value)
         return when (status.value) {
             is CryptoCurrencyStatus.NoQuote,
             is CryptoCurrencyStatus.Loaded,
@@ -102,13 +106,11 @@ internal class TokenDetailsLoadedBalanceConverter(
                     stakingFiatAmount,
                     currentState.selectedBalanceType,
                     appCurrencyProvider(),
-                    includeStakingTotalBalance,
                 ),
                 displayCryptoBalance = formatCryptoAmount(
                     status,
                     stakingCryptoAmount,
                     currentState.selectedBalanceType,
-                    includeStakingTotalBalance,
                 ),
                 balanceSegmentedButtonConfig = currentState.balanceSegmentedButtonConfig,
                 onBalanceSelect = clickIntents::onBalanceSelect,
@@ -192,10 +194,9 @@ internal class TokenDetailsLoadedBalanceConverter(
         stakingFiatAmount: BigDecimal?,
         selectedBalanceType: BalanceType,
         appCurrency: AppCurrency,
-        includeStaking: Boolean,
     ): String {
         val fiatAmount = status.fiatAmount ?: return DASH_SIGN
-        val totalAmount = fiatAmount.getBalance(selectedBalanceType, stakingFiatAmount, includeStaking)
+        val totalAmount = fiatAmount.getBalance(selectedBalanceType, stakingFiatAmount)
 
         return totalAmount.format {
             fiat(
@@ -209,10 +210,9 @@ internal class TokenDetailsLoadedBalanceConverter(
         status: CryptoCurrencyStatus,
         stakingCryptoAmount: BigDecimal?,
         selectedBalanceType: BalanceType,
-        includeStaking: Boolean,
     ): String {
         val amount = status.value.amount ?: return DASH_SIGN
-        val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount, includeStaking)
+        val totalAmount = amount.getBalance(selectedBalanceType, stakingCryptoAmount)
 
         return totalAmount.format { crypto(status.currency) }
     }
