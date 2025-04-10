@@ -26,7 +26,9 @@ import com.tangem.domain.walletmanager.model.UpdateWalletManagerResult
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOn
 import timber.log.Timber
 
 @Suppress("LongParameterList")
@@ -57,19 +59,6 @@ internal class DefaultNetworksRepository(
     override suspend fun fetchNetworkStatuses(userWalletId: UserWalletId, networks: Set<Network>, refresh: Boolean) {
         withContext(dispatchers.io) {
             fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh)
-        }
-    }
-
-    override fun getNetworkStatusesUpdatesLegacy(
-        userWalletId: UserWalletId,
-        networks: Set<Network>,
-    ): Flow<Set<NetworkStatus>> = channelFlow {
-        networksStatusesStore.get(userWalletId)
-            .onEach(::send)
-            .launchIn(scope = this + dispatchers.io)
-
-        withContext(dispatchers.io) {
-            fetchNetworksStatusesIfCacheExpired(userWalletId, networks, refresh = false)
         }
     }
 

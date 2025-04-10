@@ -15,7 +15,6 @@ import com.tangem.feature.wallet.presentation.wallet.domain.MultiWalletTokenList
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletWithFundsChecker
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
-import com.tangem.features.swap.SwapFeatureToggles
 import javax.inject.Inject
 // [REDACTED_TODO_COMMENT]
 @Suppress("LongParameterList")
@@ -32,7 +31,6 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
     private val runPolkadotAccountHealthCheckUseCase: RunPolkadotAccountHealthCheckUseCase,
     private val shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
-    private val swapFeatureToggles: SwapFeatureToggles,
     private val deepLinksRegistry: DeepLinksRegistry,
 ) {
 
@@ -51,7 +49,6 @@ internal class SingleWalletWithTokenContentLoaderFactory @Inject constructor(
             runPolkadotAccountHealthCheckUseCase = runPolkadotAccountHealthCheckUseCase,
             getStoryContentUseCase = getStoryContentUseCase,
             shouldSaveUserWalletsUseCase = shouldSaveUserWalletsUseCase,
-            swapFeatureToggles = swapFeatureToggles,
             deepLinksRegistry = deepLinksRegistry,
         )
     }

@@ -34,6 +34,7 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.models)
     implementation(projects.domain.nft.models)
+    implementation(projects.domain.walletConnect.models)
 
     /** Tangem libraries */
     implementation(tangemDeps.blockchain)
@@ -70,9 +71,7 @@ dependencies {
 
     /** Chucker */
     debugImplementation(deps.chucker)
-    debugPGImplementation(deps.chucker)
     mockedImplementation(deps.chuckerStub)
-    externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
 

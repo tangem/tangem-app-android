@@ -18,7 +18,7 @@ import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.SmallButtonShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.information.InformationBlock
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
 import com.tangem.core.ui.components.buttons.SecondarySmallButton
 import com.tangem.core.ui.components.buttons.SmallButtonConfig
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition

@@ -4,6 +4,8 @@ import com.google.common.truth.Truth
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseMergerTest.Companion.localResponse
 import com.tangem.blockchainsdk.providers.BlockchainProvidersResponseMergerTest.Companion.remoteResponse
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.config.providers.BlockchainProvidersStorage
 import com.tangem.datasource.local.config.providers.models.ProviderModel
@@ -20,10 +22,16 @@ internal class BlockchainProvidersResponseLoaderTest {
 
     private val tangemTechApi = mockk<TangemTechApi>()
     private val blockchainProvidersStorage = mockk<BlockchainProvidersStorage>()
+    private val analyticsExceptionHandler = object : AnalyticsExceptionHandler {
+        override fun sendException(event: ExceptionAnalyticsEvent) {
+            FirebaseCrashlytics.getInstance().recordException(event.exception)
+        }
+    }
 
     private val loader = BlockchainProvidersResponseLoader(
         tangemTechApi = tangemTechApi,
         blockchainProvidersStorage = blockchainProvidersStorage,
+        blockchainProvidersResponseMerger = BlockchainProvidersResponseMerger(analyticsExceptionHandler),
         dispatchers = TestingCoroutineDispatcherProvider(),
     )
 

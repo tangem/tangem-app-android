@@ -2,14 +2,22 @@ package com.tangem.features.onboarding.v2.visa.impl.child.welcome.model
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.error.ext.universalError
+import com.tangem.core.ui.utils.showErrorDialog
+import com.tangem.domain.visa.error.VisaAPIError
 import com.tangem.domain.visa.model.VisaCardId
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.OnboardingVisaWelcomeComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.OnboardingVisaWelcomeComponent.DoneEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.ONBOARDING_SOURCE
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.ui.state.OnboardingVisaWelcomeUM
 import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
 import com.tangem.sdk.api.TangemSdkManager
@@ -28,6 +36,8 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
+    private val uiMessageSender: UiMessageSender,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<Config>()
@@ -36,6 +46,10 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()
     val onDone = MutableSharedFlow<DoneEvent>()
+
+    init {
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ActivationScreenOpened)
+    }
 
     private fun getInitialState(): OnboardingVisaWelcomeUM {
         return OnboardingVisaWelcomeUM(
@@ -49,6 +63,7 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ButtonActivate)
         if (params !is Config.WelcomeBack) {
             modelScope.launch { onDone.emit(DoneEvent.WelcomeDone) }
             return
@@ -68,24 +83,32 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
                 visaActivationRepository.getCardWalletAcceptanceData(params.dataToSignRequest)
             }.getOrElse {
                 loading(false)
-// [REDACTED_TODO_COMMENT]
+                uiMessageSender.showErrorDialog(VisaAPIError)
                 return@launch
             }
 
             val result = tangemSdkManager.activateVisaCard(
                 mode = VisaCardActivationTaskMode.SignOnly(dataToSignByCardWallet = dataToSignByCardWallet),
                 activationInput = params.activationInput,
-            ) as? CompletionResult.Success ?: run {
-                loading(false)
-// [REDACTED_TODO_COMMENT]
-                return@launch
+            )
+
+            val resultData = when (result) {
+                is CompletionResult.Failure -> {
+                    loading(false)
+                    uiMessageSender.showErrorDialog(result.error.universalError)
+                    analyticsEventsHandler.send(
+                        VisaAnalyticsEvent.Errors(result.error.code.toString(), ONBOARDING_SOURCE),
+                    )
+                    return@launch
+                }
+                is CompletionResult.Success -> result.data
             }
 
             runCatching {
-                visaActivationRepository.activateCard(result.data.signedActivationData)
+                visaActivationRepository.activateCard(resultData.signedActivationData)
             }.onFailure {
                 loading(false)
-// [REDACTED_TODO_COMMENT]
+                uiMessageSender.showErrorDialog(VisaAPIError)
                 return@launch
             }
 

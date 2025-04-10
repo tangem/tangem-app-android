@@ -5,7 +5,14 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 
 interface OnboardingDoneComponent : ComposableContentComponent {
 
-    data class Params(val onDone: () -> Unit)
+    data class Params(
+        val mode: Mode,
+        val onDone: () -> Unit,
+    )
+
+    enum class Mode {
+        WalletCreated, GoodToGo
+    }
 
     interface Factory : ComponentFactory<Params, OnboardingDoneComponent>
 }

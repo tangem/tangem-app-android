@@ -1,9 +1,7 @@
 package com.tangem.features.send.impl.presentation.state.confirm
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
-import com.tangem.blockchainsdk.utils.minimalAmount
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -29,13 +27,14 @@ import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.impl.presentation.analytics.SendAnalyticEvents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.SendUiState
 import com.tangem.features.send.impl.presentation.state.SendUiStateType
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.*
-import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.getTezosThreshold
 import com.tangem.lib.crypto.BlockchainUtils.isTezos
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
@@ -74,6 +73,7 @@ internal class SendNotificationFactory(
             val sendState = state.sendState ?: return@map persistentListOf()
             val feeState = state.getFeeState(isEditState) ?: return@map persistentListOf()
             val amountState = state.getAmountState(isEditState) as? AmountState.Data ?: return@map persistentListOf()
+            val recipientState = state.getRecipientState(isEditState)
 
             val amountValue = amountState.amountTextField.cryptoAmount.value.orZero()
             val feeValue = feeState.fee?.amount?.value.orZero()
@@ -118,6 +118,7 @@ internal class SendNotificationFactory(
                 )
                 addWarningNotifications(
                     amountState = amountState,
+                    recipientState = recipientState,
                     feeState = feeState,
                     sendState = sendState,
                     sendingAmount = sendingAmount,
@@ -233,6 +234,7 @@ internal class SendNotificationFactory(
 
     private suspend fun MutableList<NotificationUM>.addWarningNotifications(
         amountState: AmountState.Data,
+        recipientState: SendStates.RecipientState?,
         feeState: SendStates.FeeState,
         sendState: SendStates.SendState,
         sendingAmount: BigDecimal,
@@ -247,8 +249,8 @@ internal class SendNotificationFactory(
                 userWalletId = userWalletId,
                 amount = amountValue.convertToSdkAmount(cryptoCurrencyStatus.currency),
                 fee = feeState.fee,
-                memo = null,
-                destination = "",
+                memo = recipientState?.memoTextField?.value.orEmpty(),
+                destination = recipientState?.addressTextField?.value.orEmpty(),
                 network = cryptoCurrencyStatus.currency.network,
             ).leftOrNull()
         }
@@ -294,7 +296,7 @@ internal class SendNotificationFactory(
         val cryptoCurrencyStatus = cryptoCurrencyStatusProvider()
         val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
         val isTezos = isTezos(cryptoCurrencyStatus.currency.network.id.value)
-        val threshold = Blockchain.Tezos.minimalAmount()
+        val threshold = getTezosThreshold()
         val isTotalBalance = sendAmount >= balance && balance > threshold
         if (!ignoreAmountReduce && isTotalBalance && isTezos) {
             add(
