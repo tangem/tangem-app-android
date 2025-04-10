@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.send.ui
+package com.tangem.features.send.v2.common.ui
 
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
