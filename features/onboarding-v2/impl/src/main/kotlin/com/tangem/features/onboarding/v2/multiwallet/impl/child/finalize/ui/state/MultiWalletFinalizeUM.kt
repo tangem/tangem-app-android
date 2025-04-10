@@ -1,6 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.child.finalize.ui.state
 
-import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.OnboardingDialogUM
+import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 
 internal data class MultiWalletFinalizeUM(
     val step: Step = Step.Primary,

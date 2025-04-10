@@ -40,6 +40,8 @@ internal class ReferralInteractorImpl(
         }
 
         val cryptoCurrency = repository.getCryptoCurrency(userWalletId = userWallet.walletId, tokenData = tokenData)
+            ?: error("Failed to create crypto currency")
+
         derivePublicKeysUseCase(userWallet.walletId, listOfNotNull(cryptoCurrency)).getOrElse {
             Timber.e("Failed to derive public keys: $it")
             throw it.mapToDomainError()
@@ -47,12 +49,12 @@ internal class ReferralInteractorImpl(
 
         addCryptoCurrenciesUseCase(
             userWalletId = userWallet.walletId,
-            currencies = listOfNotNull(cryptoCurrency),
+            currency = cryptoCurrency,
         )
 
         val publicAddress = userWalletManager.getWalletAddress(
             networkId = tokenData.networkId,
-            derivationPath = cryptoCurrency?.network?.derivationPath?.value,
+            derivationPath = cryptoCurrency.network.derivationPath.value,
         )
 
         return repository.startReferral(
