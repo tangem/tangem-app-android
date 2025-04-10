@@ -26,7 +26,7 @@ import com.tangem.common.ui.userwallet.UserWalletItem
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.block.TangemBlockCardColors
 import com.tangem.core.ui.components.block.information.InformationBlock
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.buttons.common.TangemButton
 import com.tangem.core.ui.components.buttons.common.TangemButtonIconPosition
