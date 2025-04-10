@@ -366,7 +366,7 @@ internal class NotificationsModel @Inject constructor(
             },
             onCloseClick = {
                 modelScope.launch {
-                    buildNotifications()
+                    sendAmountReduceTrigger.triggerIgnoreReduce()
                 }
             },
         )
