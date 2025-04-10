@@ -16,6 +16,7 @@ import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconEnd
 import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH12
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -47,8 +48,10 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
 
             Text(
                 text = when (state.mode) {
-                    OnboardingVisaWelcomeUM.Mode.Hello -> "Hello, ${state.userName}!"
-                    OnboardingVisaWelcomeUM.Mode.WelcomeBack -> "Welcome back, ${state.userName}!"
+                    OnboardingVisaWelcomeUM.Mode.Hello ->
+                        stringResourceSafe(R.string.visa_onboarding_welcome_title)
+                    OnboardingVisaWelcomeUM.Mode.WelcomeBack ->
+                        stringResourceSafe(R.string.visa_onboarding_welcome_back_title)
                 },
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
@@ -58,8 +61,10 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
 
             Text(
                 text = when (state.mode) {
-                    OnboardingVisaWelcomeUM.Mode.Hello -> "bla bla bla //TODO"
-                    OnboardingVisaWelcomeUM.Mode.WelcomeBack -> "bla bla bla? //TODO"
+                    OnboardingVisaWelcomeUM.Mode.Hello ->
+                        stringResourceSafe(R.string.visa_onboarding_welcome_description)
+                    OnboardingVisaWelcomeUM.Mode.WelcomeBack ->
+                        stringResourceSafe(R.string.visa_onboarding_welcome_back_description)
                 },
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
@@ -72,7 +77,7 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
                     modifier = Modifier
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                         .fillMaxWidth(),
-                    text = "Start Activation",
+                    text = stringResourceSafe(R.string.visa_onboarding_welcome_button_title),
                     onClick = state.onContinueClick,
                 )
             }
@@ -81,7 +86,7 @@ internal fun OnboardingVisaWelcome(state: OnboardingVisaWelcomeUM, modifier: Mod
                     modifier = Modifier
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                         .fillMaxWidth(),
-                    text = "Continue Activation",
+                    text = stringResourceSafe(R.string.visa_onboarding_welcome_back_button_title),
                     showProgress = state.continueButtonLoading,
                     iconResId = R.drawable.ic_tangem_24,
                     onClick = state.onContinueClick,
