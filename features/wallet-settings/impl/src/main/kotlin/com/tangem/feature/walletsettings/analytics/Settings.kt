@@ -6,8 +6,7 @@ internal sealed class Settings(
     category: String = "Settings",
     event: String,
     params: Map<String, String> = mapOf(),
-    error: Throwable? = null,
-) : AnalyticsEvent(category, event, params, error) {
+) : AnalyticsEvent(category, event, params) {
 
     data object ButtonCreateBackup : Settings(event = "Button - Create Backup")
 
