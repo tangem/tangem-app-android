@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.settings)
     implementation(projects.domain.staking)
     implementation(projects.domain.staking.models)
