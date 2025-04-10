@@ -8,15 +8,24 @@ import javax.inject.Singleton
 
 interface SendFeeReloadTrigger {
 
-    /** Flow triggers fee reload */
-    val reloadTriggerFlow: Flow<Unit>
-
     /** Trigger fee update */
-    suspend fun triggerUpdate()
+    suspend fun triggerUpdate(feeData: SendFeeData)
+}
+
+interface SendFeeReloadListener {
+    /** Flow triggers fee reload */
+    val reloadTriggerFlow: Flow<SendFeeData>
 }
 
 interface SendFeeCheckReloadTrigger {
+    /** Trigger return callback with check result */
+    suspend fun callbackCheckResult(isSuccess: Boolean)
 
+    /** Trigger fee check reload */
+    suspend fun triggerCheckUpdate()
+}
+
+interface SendFeeCheckReloadListener {
     /**
      * Flow triggers fee check reload before transaction.
      * Usually after significant time after fee was updated last time
@@ -25,18 +34,16 @@ interface SendFeeCheckReloadTrigger {
 
     /** Flow return result of fee check update */
     val checkReloadResultFlow: Flow<Boolean>
-
-    /** Trigger return callback with check result */
-    suspend fun callbackCheckResult(isSuccess: Boolean)
-
-    /** Trigger fee check reload */
-    suspend fun triggerCheckUpdate()
 }
 
 @Singleton
-internal class DefaultSendFeeReloadTrigger @Inject constructor() : SendFeeReloadTrigger, SendFeeCheckReloadTrigger {
+internal class DefaultSendFeeReloadTrigger @Inject constructor() :
+    SendFeeReloadTrigger,
+    SendFeeReloadListener,
+    SendFeeCheckReloadTrigger,
+    SendFeeCheckReloadListener {
 
-    private val _reloadTriggerFlow = MutableSharedFlow<Unit>()
+    private val _reloadTriggerFlow = MutableSharedFlow<SendFeeData>()
     override val reloadTriggerFlow = _reloadTriggerFlow.asSharedFlow()
 
     private val _checkReloadTriggerFlow = MutableSharedFlow<Unit>()
@@ -45,8 +52,8 @@ internal class DefaultSendFeeReloadTrigger @Inject constructor() : SendFeeReload
     private val _checkReloadResultFlow = MutableSharedFlow<Boolean>()
     override val checkReloadResultFlow = _checkReloadResultFlow.asSharedFlow()
 
-    override suspend fun triggerUpdate() {
-        _reloadTriggerFlow.emit(Unit)
+    override suspend fun triggerUpdate(feeData: SendFeeData) {
+        _reloadTriggerFlow.emit(feeData)
     }
 
     override suspend fun triggerCheckUpdate() {
