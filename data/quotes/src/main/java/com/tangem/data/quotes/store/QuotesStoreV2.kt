@@ -11,6 +11,9 @@ internal interface QuotesStoreV2 {
     /** Get flow of quotes */
     fun get(): Flow<Set<Quote>>
 
+    /** Get all quotes synchronously or null */
+    suspend fun getAllSyncOrNull(): Set<Quote>?
+
     /** Refresh status of [currenciesIds] */
     suspend fun refresh(currenciesIds: Set<CryptoCurrency.RawID>)
 
