@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import com.google.common.truth.Truth
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.common.CompletionResult
+import com.tangem.common.test.domain.card.MockScanResponseFactory
+import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.common.configs.GenericCardConfig
@@ -37,10 +39,9 @@ internal class DefaultDerivationsRepositoryTest {
     private val defaultUserWallet = UserWallet(
         name = "",
         walletId = defaultUserWalletId,
-        artworkUrl = "",
         cardsInWallet = setOf(),
         isMultiCurrency = false,
-        scanResponse = ScanResponseMockFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap()),
+        scanResponse = MockScanResponseFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap()),
         hasBackupError = false,
     )
 
@@ -77,7 +78,7 @@ internal class DefaultDerivationsRepositoryTest {
     @Test
     fun `success if currencies is empty`() = runTest {
         val userWallet = defaultUserWallet.copy(
-            scanResponse = ScanResponseMockFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
+            scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
         )
         coEvery { userWalletsStore.getSyncOrNull(defaultUserWalletId) } returns userWallet
 
@@ -94,7 +95,7 @@ internal class DefaultDerivationsRepositoryTest {
     @Test
     fun `success if card already has derivations`() = runTest {
         val userWallet = defaultUserWallet.copy(
-            scanResponse = ScanResponseMockFactory.create(
+            scanResponse = MockScanResponseFactory.create(
                 cardConfig = MultiWalletCardConfig,
                 derivedKeys = DerivedKeysMocks.ethereumDerivedKeys,
             ),
@@ -105,7 +106,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = CryptoCurrenciesMocks(userWallet.scanResponse).ethereum,
+                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
             )
         }
             .onSuccess { Truth.assertThat(it) }
@@ -119,7 +120,7 @@ internal class DefaultDerivationsRepositoryTest {
     @Test
     fun `error if tangemSdkManager throws exception`() = runTest {
         val userWallet = defaultUserWallet.copy(
-            scanResponse = ScanResponseMockFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
+            scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
         )
         coEvery { userWalletsStore.getSyncOrNull(defaultUserWalletId) } returns userWallet
         coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } throws ScanCardException.UserCancelled
@@ -127,7 +128,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = CryptoCurrenciesMocks(userWallet.scanResponse).ethereum,
+                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
             )
         }
             .onSuccess { error("Should throws exception") }
@@ -142,7 +143,7 @@ internal class DefaultDerivationsRepositoryTest {
     @Test
     fun `success case`() = runTest {
         val userWallet = defaultUserWallet.copy(
-            scanResponse = ScanResponseMockFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
+            scanResponse = MockScanResponseFactory.create(cardConfig = MultiWalletCardConfig, derivedKeys = emptyMap()),
         )
         coEvery { userWalletsStore.getSyncOrNull(defaultUserWalletId) } returns userWallet
         coEvery { tangemSdkManager.derivePublicKeys(null, any(), any()) } returns CompletionResult.Success(
@@ -153,7 +154,7 @@ internal class DefaultDerivationsRepositoryTest {
         runCatching {
             repository.derivePublicKeys(
                 userWalletId = defaultUserWalletId,
-                currencies = CryptoCurrenciesMocks(userWallet.scanResponse).ethereum,
+                currencies = MockCryptoCurrencyFactory(userWallet.scanResponse).ethereum.let(::listOf),
             )
         }
             .onSuccess { Truth.assertThat(it) }
