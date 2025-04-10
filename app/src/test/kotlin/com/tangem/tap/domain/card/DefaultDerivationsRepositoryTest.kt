@@ -39,7 +39,6 @@ internal class DefaultDerivationsRepositoryTest {
     private val defaultUserWallet = UserWallet(
         name = "",
         walletId = defaultUserWalletId,
-        artworkUrl = "",
         cardsInWallet = setOf(),
         isMultiCurrency = false,
         scanResponse = MockScanResponseFactory.create(cardConfig = GenericCardConfig(2), derivedKeys = emptyMap()),
