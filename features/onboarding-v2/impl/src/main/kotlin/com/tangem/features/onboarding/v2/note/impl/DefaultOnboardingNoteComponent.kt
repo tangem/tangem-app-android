@@ -25,15 +25,16 @@ import com.tangem.features.onboarding.v2.note.api.OnboardingNoteComponent
 import com.tangem.features.onboarding.v2.note.impl.child.create.OnboardingNoteCreateWalletComponent
 import com.tangem.features.onboarding.v2.note.impl.child.topup.OnboardingNoteTopUpComponent
 import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteModel
+import com.tangem.features.onboarding.v2.note.impl.model.OnboardingNoteCommonState
 import com.tangem.features.onboarding.v2.note.impl.route.ONBOARDING_NOTE_STEPS_COUNT
 import com.tangem.features.onboarding.v2.note.impl.route.OnboardingNoteRoute
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
@@ -47,6 +48,7 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
     }
 
     private val childParams = ChildParams(
+        commonState = model.commonUiState,
         onBack = ::onChildBack,
         parentBackEvent = currentChildBackEventHandle,
     )
@@ -70,15 +72,13 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
         override val state: StateFlow<InnerNavigationState> = model.innerNavigationState
 
         override fun pop(onComplete: (Boolean) -> Unit) {
-            // TODO [REDACTED_TASK_KEY]
+            model.onChildBack(
+                currentRoute = childStack.value.active.configuration,
+            )
         }
     }
 
     init {
-        componentScope.launch {
-            model.onDone.collect { params.onDone() }
-        }
-
         // sets title and stepper value
         childStack.subscribe(lifecycle) { stack ->
             val currentRoute = stack.active.configuration
@@ -96,14 +96,17 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
                 appComponentContext = factoryContext,
                 params = OnboardingNoteCreateWalletComponent.Params(
                     childParams = childParams,
-                    onDone = { model.stackNavigation.push(OnboardingNoteRoute.TopUp) },
+                    onWalletCreated = { userWallet ->
+                        model.onWalletCreated(userWallet)
+                        model.stackNavigation.push(OnboardingNoteRoute.TopUp)
+                    },
                 ),
             )
             OnboardingNoteRoute.TopUp -> OnboardingNoteTopUpComponent(
                 appComponentContext = factoryContext,
                 params = OnboardingNoteTopUpComponent.Params(
                     childParams = childParams,
-                    onDone = { model.onDone.tryEmit(Unit) },
+                    onDone = { params.onDone() },
                 ),
             )
         }
@@ -134,6 +137,7 @@ internal class DefaultOnboardingNoteComponent @AssistedInject constructor(
     }
 
     data class ChildParams(
+        val commonState: MutableStateFlow<OnboardingNoteCommonState>,
         val onBack: () -> Unit,
         val parentBackEvent: SharedFlow<Unit>,
     )

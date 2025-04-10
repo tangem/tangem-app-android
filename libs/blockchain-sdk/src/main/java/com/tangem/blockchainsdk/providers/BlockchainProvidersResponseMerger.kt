@@ -1,19 +1,21 @@
 package com.tangem.blockchainsdk.providers
 
 import androidx.core.util.PatternsCompat
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchainsdk.BlockchainProvidersResponse
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
  * Merger of [BlockchainProvidersResponse]
  *
 [REDACTED_AUTHOR]
  */
-internal object BlockchainProvidersResponseMerger {
-
-    private val firebaseCrashlytics by lazy(FirebaseCrashlytics::getInstance)
+internal class BlockchainProvidersResponseMerger @Inject internal constructor(
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
+) {
 
     private val forbiddenSchemes = listOf("wss://")
 
@@ -41,7 +43,7 @@ internal object BlockchainProvidersResponseMerger {
             val missingBlockchains = result.keys - remote.keys
             val blockchainsWithoutProviders = remote.filterValues { it.isEmpty() }.keys
 
-            recordException(missingBlockchains = missingBlockchains + blockchainsWithoutProviders)
+            logException(missingBlockchains = missingBlockchains + blockchainsWithoutProviders)
         }
 
         return result.guaranteeUrlsEndWithSlash()
@@ -74,15 +76,19 @@ internal object BlockchainProvidersResponseMerger {
         return PatternsCompat.WEB_URL.matcher(inputUrl).matches()
     }
 
-    private fun recordException(missingBlockchains: Set<String>) {
+    private fun logException(missingBlockchains: Set<String>) {
         val exception = IllegalStateException(
-            "Remote config does not contain required blockchains or providers information: " +
-                missingBlockchains.joinToString(),
+            "Remote config does not contain some blockchains or providers information",
         )
 
         Timber.e(exception)
 
-        firebaseCrashlytics.recordException(exception)
+        analyticsExceptionHandler.sendException(
+            ExceptionAnalyticsEvent(
+                exception = exception,
+                params = mapOf("Missing blockchains" to missingBlockchains.joinToString()),
+            ),
+        )
     }
 
     /*
