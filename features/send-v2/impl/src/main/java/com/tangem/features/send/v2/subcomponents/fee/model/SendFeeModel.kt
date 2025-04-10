@@ -14,9 +14,10 @@ import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.v2.common.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.analytics.SendFeeAnalyticEvents
 import com.tangem.features.send.v2.subcomponents.fee.analytics.SendFeeAnalyticEvents.GasPriceInserter
 import com.tangem.features.send.v2.subcomponents.fee.model.transformers.*
@@ -29,6 +30,7 @@ import com.tangem.utils.coroutines.saveIn
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.math.BigDecimal
 import java.util.Locale
 import javax.inject.Inject
 
@@ -44,7 +46,8 @@ internal class SendFeeModel @Inject constructor(
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeeAlertFactory: SendFeeAlertFactory,
-    private val feeReloadTrigger: SendFeeReloadTrigger,
+    private val feeReloadListener: SendFeeReloadListener,
+    private val feeCheckReloadListener: SendFeeCheckReloadListener,
     private val feeCheckReloadTrigger: SendFeeCheckReloadTrigger,
 ) : Model(), SendFeeClickIntents {
 
@@ -65,14 +68,19 @@ internal class SendFeeModel @Inject constructor(
         subscribeOnFeeReloadTriggerUpdates()
         subscribeOnFeeCheckReloadTriggerUpdates()
         initialState()
-        loadFee()
+        feeReload()
     }
 
     fun updateState(state: FeeUM) {
         _uiState.value = state
     }
 
-    override fun feeReload() = loadFee()
+    override fun feeReload() {
+        loadFee(
+            amountValue = params.sendAmount,
+            destinationAddress = params.destinationAddress,
+        )
+    }
 
     override fun onFeeSelectorClick(feeType: FeeType) {
         _uiState.update(
@@ -152,13 +160,18 @@ internal class SendFeeModel @Inject constructor(
     }
 
     private fun subscribeOnFeeReloadTriggerUpdates() {
-        feeReloadTrigger.reloadTriggerFlow
-            .onEach { feeReload() }
+        feeReloadListener.reloadTriggerFlow
+            .onEach { (amount, destination) ->
+                loadFee(
+                    amountValue = amount ?: params.sendAmount,
+                    destinationAddress = destination ?: params.destinationAddress,
+                )
+            }
             .launchIn(modelScope)
     }
 
     private fun subscribeOnFeeCheckReloadTriggerUpdates() {
-        feeCheckReloadTrigger.checkReloadTriggerFlow
+        feeCheckReloadListener.checkReloadTriggerFlow
             .onEach { checkLoadFee() }
             .launchIn(modelScope)
     }
@@ -175,13 +188,18 @@ internal class SendFeeModel @Inject constructor(
         params.callback.onFeeResult(uiState.value)
     }
 
-    private fun loadFee() {
+    private fun loadFee(amountValue: BigDecimal, destinationAddress: String) {
         modelScope.launch {
             val isShowLoading = (uiState.value as? FeeUM.Content)?.feeSelectorUM !is FeeSelectorUM.Content
             if (isShowLoading) {
                 _uiState.update(SendFeeLoadingTransformer)
             }
-            callFeeUseCase().fold(
+            getFeeUseCase.invoke(
+                amount = amountValue,
+                destination = destinationAddress,
+                userWallet = params.userWallet,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
+            ).fold(
                 ifRight = {
                     _uiState.update(
                         SendFeeLoadedTransformer(
@@ -206,7 +224,12 @@ internal class SendFeeModel @Inject constructor(
 
     private fun checkLoadFee() {
         modelScope.launch {
-            callFeeUseCase().fold(
+            getFeeUseCase.invoke(
+                amount = params.sendAmount,
+                destination = params.destinationAddress,
+                userWallet = params.userWallet,
+                cryptoCurrency = cryptoCurrencyStatus.currency,
+            ).fold(
                 ifRight = {
                     sendFeeAlertFactory.getFeeUpdatedAlert(
                         newFee = it,
@@ -236,19 +259,12 @@ internal class SendFeeModel @Inject constructor(
                 ifLeft = { feeError ->
                     feeCheckReloadTrigger.callbackCheckResult(false)
                     _uiState.update(SendFeeFailedTransformer(feeError))
-                    sendFeeAlertFactory.getFeeUnreachableErrorState(::loadFee)
+                    sendFeeAlertFactory.getFeeUnreachableErrorState(::feeReload)
                     updateFeeNotifications()
                 },
             )
         }.saveIn(feeJobHolder)
     }
-
-    private suspend fun callFeeUseCase() = getFeeUseCase.invoke(
-        amount = params.sendAmount,
-        destination = params.destinationAddress,
-        userWallet = params.userWallet,
-        cryptoCurrency = cryptoCurrencyStatus.currency,
-    )
 
     private fun isFeeApproximate(amountType: AmountType): Boolean {
         val networkId = feeCryptoCurrencyStatus.currency.network.id
