@@ -51,6 +51,7 @@ import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
@@ -94,6 +95,7 @@ internal class SendConfirmModel @Inject constructor(
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
+    private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
     private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
     private val alertFactory: SendConfirmAlertFactory,
@@ -445,7 +447,7 @@ internal class SendConfirmModel @Inject constructor(
     }
 
     private fun subscribeOnCheckFeeResultUpdates() {
-        sendFeeCheckReloadTrigger.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+        sendFeeCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
             if (isFeeResultSuccess) {
                 sendIdleTimer = SystemClock.elapsedRealtime()
                 _uiState.update(SendConfirmSendingStateTransformer(isSending = true))
