@@ -120,6 +120,13 @@ internal object WalletScreenPreviewData {
             ),
             bottomSheetConfig = null,
             tokensListState = textContentTokensState,
+            nftState = WalletNFTItemUM.Content(
+                previews = persistentListOf(WalletNFTItemUM.Content.CollectionPreview.Image("img1")),
+                collectionsCount = 1,
+                assetsCount = 3,
+                isFlickering = false,
+                onItemClick = { },
+            ),
         )
     }
 
