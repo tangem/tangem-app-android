@@ -24,6 +24,7 @@ internal class VisaTxDetailsBottomSheetConverter(
         return VisaTxDetailsBottomSheetConfig(
             transaction = createTransaction(value),
             requests = value.requests.map(::createRequest).toImmutableList(),
+            onDisputeClick = { clickIntents.onDisputeClick(value) },
         )
     }
 
@@ -33,7 +34,6 @@ internal class VisaTxDetailsBottomSheetConverter(
             type = details.type.capitalize(),
             status = details.status.capitalize(),
             blockchainAmount = formatNetworkAmount(details.blockchainAmount),
-            blockchainFee = formatNetworkAmount(details.blockchainFee),
             transactionAmount = formatFiatAmount(details.transactionAmount, details.fiatCurrency),
             transactionCurrencyCode = details.transactionCurrencyCode.toString(),
             merchantName = details.merchantName?.capitalize() ?: UNKNOWN,
@@ -52,7 +52,6 @@ internal class VisaTxDetailsBottomSheetConverter(
             type = request.requestType.capitalize(),
             status = request.requestStatus.capitalize(),
             blockchainAmount = formatNetworkAmount(request.blockchainAmount),
-            blockchainFee = formatNetworkAmount(request.blockchainFee),
             transactionAmount = formatFiatAmount(request.transactionAmount, request.fiatCurrency),
             currencyCode = request.billingCurrencyCode.toString(),
             errorCode = request.errorCode,

@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,10 +16,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import com.tangem.core.ui.components.SecondaryButtonIconStart
 import com.tangem.core.ui.components.SpacerW12
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.feature.wallet.impl.R
@@ -35,72 +38,87 @@ internal fun VisaTxDetailsBottomSheet(config: TangemBottomSheetConfig) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun VisaTxDetailsBottomSheetContent(config: VisaTxDetailsBottomSheetConfig, modifier: Modifier = Modifier) {
-    ContentContainer(
-        modifier = modifier,
-        blocksCount = config.requests.size.inc(),
-        title = {
+    Column {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = TangemTheme.dimens.size44)
+                .background(TangemTheme.colors.background.secondary),
+            contentAlignment = Alignment.Center,
+        ) {
             Text(
-                text = "Transaction Details",
+                text = stringResourceSafe(R.string.visa_transaction_details_header),
                 style = TangemTheme.typography.subtitle1,
                 color = TangemTheme.colors.text.primary1,
             )
-        },
-        block = { index ->
-            if (index == 0) {
+        }
+
+        LazyColumn(
+            modifier = modifier.background(TangemTheme.colors.background.secondary),
+            contentPadding = PaddingValues(
+                bottom = TangemTheme.dimens.spacing16,
+            ),
+            verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            item {
                 TransactionBlock(config.transaction)
-            } else {
-                BlockchainRequestBlock(config.requests[index - 1])
             }
-        },
-    )
+
+            items(config.requests) { item ->
+                BlockchainRequestBlock(item)
+            }
+
+            item {
+                DisputeButton(config.onDisputeClick)
+            }
+        }
+    }
 }
 
 @Composable
 private fun TransactionBlock(transaction: VisaTxDetailsBottomSheetConfig.Transaction, modifier: Modifier = Modifier) {
     BlockContent(
         modifier = modifier,
-        title = stringReference(value = "Transaction"),
+        title = resourceReference(R.string.visa_transaction_details_title),
         content = {
             BlockItem(
-                title = stringReference(value = "Type"),
+                title = resourceReference(R.string.visa_transaction_details_type),
                 value = transaction.type,
             )
             BlockItem(
-                title = stringReference(value = "Status"),
+                title = resourceReference(R.string.visa_transaction_details_status),
                 value = transaction.status,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Amount"),
+                title = resourceReference(R.string.visa_transaction_details_blockchain_amount),
                 value = transaction.blockchainAmount,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Fee"),
-                value = transaction.blockchainFee,
-            )
-            BlockItem(
-                title = stringReference(value = "Transaction Amount"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_amount),
                 value = transaction.transactionAmount,
             )
             BlockItem(
-                title = stringReference(value = "Currency Code"),
+                title = resourceReference(R.string.visa_transaction_details_currency_code),
                 value = transaction.transactionCurrencyCode,
             )
             BlockItem(
-                title = stringReference(value = "Merchant Name"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_name),
                 value = transaction.merchantName,
             )
             BlockItem(
-                title = stringReference(value = "Merchant City"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_city),
                 value = transaction.merchantCity,
             )
             BlockItem(
-                title = stringReference(value = "Merchant Country Code"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_country_code),
                 value = transaction.merchantCountryCode,
             )
             BlockItem(
-                title = stringReference(value = "Merchant Category Code"),
+                title = resourceReference(R.string.visa_transaction_details_merchant_category_code),
                 value = transaction.merchantCategoryCode,
             )
         },
@@ -112,7 +130,7 @@ private fun TransactionBlock(transaction: VisaTxDetailsBottomSheetConfig.Transac
 private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Request, modifier: Modifier = Modifier) {
     BlockContent(
         modifier = modifier,
-        title = stringReference(value = "Blockchain request"),
+        title = resourceReference(R.string.visa_transaction_details_transaction_request),
         description = {
             if (request.onExploreClick != null) {
                 Row(
@@ -127,7 +145,7 @@ private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Reque
                         tint = TangemTheme.colors.icon.informative,
                     )
                     Text(
-                        text = "Explore",
+                        text = stringResourceSafe(R.string.common_explore),
                         color = TangemTheme.colors.text.tertiary,
                         style = TangemTheme.typography.caption1,
                     )
@@ -137,81 +155,53 @@ private fun BlockchainRequestBlock(request: VisaTxDetailsBottomSheetConfig.Reque
         },
         content = {
             BlockItem(
-                title = stringReference(value = "Type"),
+                title = resourceReference(R.string.visa_transaction_details_type),
                 value = request.type,
             )
             BlockItem(
-                title = stringReference(value = "Status"),
+                title = resourceReference(R.string.visa_transaction_details_status),
                 value = request.status,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Amount"),
+                title = resourceReference(R.string.visa_transaction_details_blockchain_amount),
                 value = request.blockchainAmount,
             )
             BlockItem(
-                title = stringReference(value = "Blockchain Fee"),
-                value = request.blockchainFee,
-            )
-            BlockItem(
-                title = stringReference(value = "Transaction Amount"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_amount),
                 value = request.transactionAmount,
             )
             BlockItem(
-                title = stringReference(value = "Currency Code"),
+                title = resourceReference(R.string.visa_transaction_details_currency_code),
                 value = request.currencyCode,
             )
             BlockItem(
-                title = stringReference(value = "Error Code"),
+                title = resourceReference(R.string.visa_transaction_details_error_code),
                 value = request.errorCode.toString(),
             )
             BlockItem(
-                title = stringReference(value = "Date"),
+                title = resourceReference(R.string.visa_transaction_details_date),
                 value = request.date,
             )
             BlockItem(
-                title = stringReference(value = "Tx Hash"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_hash),
                 value = request.txHash,
             )
             BlockItem(
-                title = stringReference(value = "Tx Status"),
+                title = resourceReference(R.string.visa_transaction_details_transaction_status),
                 value = request.txStatus,
             )
         },
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ContentContainer(
-    blocksCount: Int,
-    title: @Composable BoxScope.() -> Unit,
-    block: @Composable ColumnScope.(Int) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    LazyColumn(
-        modifier = modifier.background(TangemTheme.colors.background.secondary),
-        contentPadding = PaddingValues(
-            bottom = TangemTheme.dimens.spacing16,
-        ),
-        verticalArrangement = Arrangement.spacedBy(space = TangemTheme.dimens.spacing12),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        stickyHeader {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = TangemTheme.dimens.size44)
-                    .background(TangemTheme.colors.background.secondary),
-                contentAlignment = Alignment.Center,
-                content = title,
-            )
-        }
-        items(blocksCount) { index ->
-            Column {
-                block(index)
-            }
-        }
-    }
+private fun DisputeButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    SecondaryButtonIconStart(
+        modifier = modifier.fillMaxWidth(),
+        text = stringResourceSafe(R.string.visa_tx_dispute_button),
+        iconResId = R.drawable.ic_alert_triangle_20,
+        onClick = onClick,
+    )
 }
 
 // region Preview
@@ -235,7 +225,6 @@ private class VisaTxDetailsBottomSheetParameterProvider :
                     type = "payment",
                     status = "authorized",
                     blockchainAmount = "1.0614 USDT",
-                    blockchainFee = "0.12",
                     transactionAmount = "0.99 €",
                     transactionCurrencyCode = "978",
                     merchantName = "SQ *FORMATIVE",
@@ -249,7 +238,6 @@ private class VisaTxDetailsBottomSheetParameterProvider :
                         type = "authorize_payment",
                         status = "accepted",
                         blockchainAmount = "1.0593 USDT",
-                        blockchainFee = "0.10",
                         transactionAmount = "0.99 €",
                         currencyCode = "978",
                         errorCode = 0,
@@ -258,21 +246,8 @@ private class VisaTxDetailsBottomSheetParameterProvider :
                         txStatus = "confirmed",
                         onExploreClick = {},
                     ),
-                    VisaTxDetailsBottomSheetConfig.Request(
-                        id = "524582128501966799",
-                        type = "settlement",
-                        status = "accepted",
-                        blockchainAmount = "1.0614 USDT",
-                        blockchainFee = "0.12",
-                        transactionAmount = "0.99 €",
-                        currencyCode = "978",
-                        errorCode = 0,
-                        date = "2023-12-01 00:01:00.000 +0300",
-                        txHash = "0x635841d5fbdf1087cdd929019c863ee88a7165e4340bc17ddd0b1d04dfb11daa",
-                        txStatus = "confirmed",
-                        onExploreClick = {},
-                    ),
                 ),
+                onDisputeClick = {},
             ),
         ),
     )
