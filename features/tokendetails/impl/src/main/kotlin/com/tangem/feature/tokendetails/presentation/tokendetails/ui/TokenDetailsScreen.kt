@@ -18,10 +18,10 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.expressTransactionsItems
-import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheet
-import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheet
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheet
+import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheet
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
 import com.tangem.core.ui.components.containers.pullToRefresh.TangemPullToRefreshContainer
 import com.tangem.core.ui.components.marketprice.MarketPriceBlock
 import com.tangem.core.ui.components.marketprice.MarketPriceBlockState
