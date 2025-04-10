@@ -49,7 +49,7 @@ internal class DefaultSingleQuoteProducerTest {
 
         verify { quotesStore.get() }
 
-        val values = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values).isEqualTo(listOf(status))
@@ -69,7 +69,7 @@ internal class DefaultSingleQuoteProducerTest {
         val status = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
         storeQuote.emit(value = setOf(status))
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values1.size).isEqualTo(1)
         Truth.assertThat(values1).isEqualTo(listOf(status))
@@ -83,7 +83,7 @@ internal class DefaultSingleQuoteProducerTest {
         )
         storeQuote.emit(value = setOf(updatedStatus))
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values2.size).isEqualTo(2)
         Truth.assertThat(values2).isEqualTo(listOf(status, updatedStatus))
@@ -103,7 +103,7 @@ internal class DefaultSingleQuoteProducerTest {
         val status = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
         storeQuote.emit(value = setOf(status))
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values1.size).isEqualTo(1)
         Truth.assertThat(values1).isEqualTo(listOf(status))
@@ -111,7 +111,7 @@ internal class DefaultSingleQuoteProducerTest {
         // second emit
         storeQuote.emit(value = setOf(status))
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values2.size).isEqualTo(1)
         Truth.assertThat(values2).isEqualTo(listOf(status))
@@ -143,7 +143,7 @@ internal class DefaultSingleQuoteProducerTest {
 
         verify { quotesStore.get() }
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values1.size).isEqualTo(1)
         val fallbackStatus = Quote.Empty(rawCurrencyId = params.rawCurrencyId)
@@ -151,7 +151,7 @@ internal class DefaultSingleQuoteProducerTest {
 
         innerFlow.emit(value = true)
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
         Truth.assertThat(values2.size).isEqualTo(1)
         Truth.assertThat(values2).isEqualTo(listOf(status))
     }
@@ -170,7 +170,7 @@ internal class DefaultSingleQuoteProducerTest {
 
         verify { quotesStore.get() }
 
-        val values = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(0)
     }
