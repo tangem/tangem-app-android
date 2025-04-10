@@ -13,13 +13,13 @@ import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
-import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
+import com.tangem.features.onboarding.v2.common.analytics.OnboardingEvent
+import com.tangem.features.onboarding.v2.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.MultiWalletChildParams
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.GenerateSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.ImportSeedPhraseUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.model.builder.SeedPhraseCheckUiStateBuilder
 import com.tangem.features.onboarding.v2.multiwallet.impl.child.seedphrase.ui.state.MultiWalletSeedPhraseUM
-import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.OnboardingDialogUM
 import com.tangem.features.onboarding.v2.multiwallet.impl.common.ui.resetCardDialog
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
