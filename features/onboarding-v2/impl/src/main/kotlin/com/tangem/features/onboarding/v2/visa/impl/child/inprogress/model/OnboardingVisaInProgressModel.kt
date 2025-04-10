@@ -75,9 +75,10 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     VisaActivationRemoteState.WaitingForActivationFinishing,
                     -> {
                     }
-                    is VisaActivationRemoteState.WaitingPinCode -> {
-                        navigateToPinCode(result.activationOrderInfo)
-                        return@launch
+                    is VisaActivationRemoteState.AwaitingPinCode -> {
+                        navigateToPinCodeIfNeeded(result) {
+                            return@launch
+                        }
                     }
                     VisaActivationRemoteState.Activated -> {
                         finishActivation()
@@ -90,8 +91,37 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         }
     }
 
-    private suspend fun navigateToPinCode(activationOrderInfo: VisaActivationOrderInfo) {
-        onDone.emit(Params.DoneEvent.NavigateTo(OnboardingVisaRoute.PinCode(activationOrderInfo)))
+    private suspend inline fun navigateToPinCodeIfNeeded(
+        remoteState: VisaActivationRemoteState.AwaitingPinCode,
+        returnBlock: () -> Unit,
+    ) {
+        when (remoteState.status) {
+            VisaActivationRemoteState.AwaitingPinCode.Status.WaitingForPinCode -> {
+                onDone.emit(
+                    Params.DoneEvent.NavigateTo(
+                        OnboardingVisaRoute.PinCode(
+                            activationOrderInfo = remoteState.activationOrderInfo,
+                            pinCodeValidationError = false,
+                        ),
+                    ),
+                )
+                returnBlock()
+            }
+            VisaActivationRemoteState.AwaitingPinCode.Status.WasError -> {
+                onDone.emit(
+                    Params.DoneEvent.NavigateTo(
+                        OnboardingVisaRoute.PinCode(
+                            activationOrderInfo = remoteState.activationOrderInfo,
+                            pinCodeValidationError = true,
+                        ),
+                    ),
+                )
+                returnBlock()
+            }
+            VisaActivationRemoteState.AwaitingPinCode.Status.InProgress -> {
+                /** waiting for new state */
+            }
+        }
     }
 
     private suspend fun finishActivation() {
