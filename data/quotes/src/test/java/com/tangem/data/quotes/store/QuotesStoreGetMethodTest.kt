@@ -60,4 +60,33 @@ internal class QuotesStoreGetMethodTest {
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values).isEqualTo(listOf(setOf(btcQuote.toDomain(), ethQuote.toDomain())))
     }
+
+    @Test
+    fun `test getAllSyncOrNull if runtime store is empty`() = runTest {
+        val actual = store.getAllSyncOrNull()
+
+        Truth.assertThat(actual).isEqualTo(null)
+    }
+
+    @Test
+    fun `test getAllSyncOrNull if runtime store contains empty set`() = runTest {
+        runtimeStore.store(value = emptySet())
+
+        val actual = store.getAllSyncOrNull()
+
+        Truth.assertThat(actual).isEqualTo(emptySet<Quote>())
+    }
+
+    @Test
+    fun `test getAllSyncOrNull if runtime store is not empty`() = runTest {
+        val btcQuote = "BTC" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.ZERO)
+        val ethQuote = "ETH" to MockQuoteResponseFactory.createSinglePrice(BigDecimal.ONE)
+
+        runtimeStore.store(value = setOf(btcQuote.toDomain(), ethQuote.toDomain()))
+
+        val actual = store.getAllSyncOrNull()
+
+        val expected = setOf(btcQuote.toDomain(), ethQuote.toDomain())
+        Truth.assertThat(actual).isEqualTo(expected)
+    }
 }
