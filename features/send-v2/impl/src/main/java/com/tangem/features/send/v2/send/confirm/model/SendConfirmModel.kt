@@ -30,11 +30,11 @@ import com.tangem.domain.transaction.usecase.CreateTransactionUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.SendRoute
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
@@ -164,7 +164,7 @@ internal class SendConfirmModel @Inject constructor(
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
             analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
-            router.push(SendRoute.Destination(isEditMode = true))
+            router.push(CommonSendRoute.Destination(isEditMode = true))
         }
     }
 
@@ -176,7 +176,7 @@ internal class SendConfirmModel @Inject constructor(
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
             analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
-            router.push(SendRoute.Amount(isEditMode = true))
+            router.push(CommonSendRoute.Amount(isEditMode = true))
         }
     }
 
@@ -188,7 +188,7 @@ internal class SendConfirmModel @Inject constructor(
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
             analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
-            router.push(SendRoute.Fee())
+            router.push(CommonSendRoute.Fee)
         }
     }
 
