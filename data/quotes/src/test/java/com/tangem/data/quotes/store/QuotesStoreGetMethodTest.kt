@@ -30,7 +30,7 @@ internal class QuotesStoreGetMethodTest {
     fun `test get if runtime store is empty`() = runTest {
         val actual = store.get()
 
-        val values = backgroundScope.getEmittedValues(testScheduler, actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values).isEqualTo(emptyList<Set<Quote>>())
     }
@@ -41,7 +41,7 @@ internal class QuotesStoreGetMethodTest {
 
         val actual = store.get()
 
-        val values = backgroundScope.getEmittedValues(testScheduler, actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values).isEqualTo(listOf(emptySet<Quote>()))
     }
@@ -55,7 +55,7 @@ internal class QuotesStoreGetMethodTest {
 
         val actual = store.get()
 
-        val values = backgroundScope.getEmittedValues(testScheduler, actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values).isEqualTo(listOf(setOf(btcQuote.toDomain(), ethQuote.toDomain())))
