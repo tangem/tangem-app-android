@@ -1,6 +1,8 @@
 package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
@@ -40,13 +42,15 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     private val getUserWalletsUseCase: GetWalletsUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(), VisaWalletIntents {
 
     private val balancesAndLimitsBottomSheetConverter by lazy(mode = LazyThreadSafetyMode.NONE) {
-        BalancesAndLimitsBottomSheetConverter(eventSender)
+        BalancesAndLimitsBottomSheetConverter(eventSender, analyticsEventHandler)
     }
 
     override fun onBalancesAndLimitsClick() {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.LimitsClicked)
         modelScope.launch(dispatchers.main) {
             val userWalletId = stateController.getSelectedWalletId()
             val balancesAndLimits = getVisaCurrencyUseCase(userWalletId)
@@ -87,6 +91,7 @@ internal class VisaWalletIntentsImplementor @Inject constructor(
     }
 
     override fun onExploreClick(exploreUrl: String) {
+        analyticsEventHandler.send(MainScreenAnalyticsEvent.ButtonExplore)
         router.openUrl(exploreUrl)
     }
 
