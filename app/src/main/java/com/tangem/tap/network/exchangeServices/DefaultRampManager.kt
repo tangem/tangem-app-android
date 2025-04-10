@@ -9,9 +9,8 @@ import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.api.express.models.TangemExpressValues.EMPTY_CONTRACT_ADDRESS_VALUE
 import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
-import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.domain.core.lce.Lce
-import com.tangem.domain.exchange.ExchangeableState
+import com.tangem.domain.exchange.ExpressAvailabilityState
 import com.tangem.domain.exchange.RampStateManager
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.GetNetworkCoinStatusUseCase
@@ -27,7 +26,6 @@ import com.tangem.utils.coroutines.runCatching
 import com.tangem.utils.isNullOrZero
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.withContext
 
 @Suppress("LongParameterList")
 internal class DefaultRampManager(
@@ -39,7 +37,6 @@ internal class DefaultRampManager(
     private val getNetworkCoinStatusUseCase: GetNetworkCoinStatusUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     private val onrampFeatureToggles: OnrampFeatureToggles,
-    private val expressAssetsStore: ExpressAssetsStore,
     excludedBlockchains: ExcludedBlockchains,
 ) : RampStateManager {
 
@@ -49,19 +46,12 @@ internal class DefaultRampManager(
         scanResponse: ScanResponse,
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): Boolean {
-        return runCatching {
-            when {
-                onrampFeatureToggles.isFeatureEnabled -> getOnrampAvailable(userWalletId, cryptoCurrency)
-                exchangeService != null -> exchangeService.availableForBuy(
-                    scanResponse = scanResponse,
-                    currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
-                )
-                else -> false
-            }
-        }
-            .getOrNull()
-            ?: false
+    ): ScenarioUnavailabilityReason {
+        val availabilityState = runCatching {
+            getOnrampAvailableState(scanResponse, userWalletId, cryptoCurrency)
+        }.getOrNull() ?: ExpressAvailabilityState.Error
+
+        return availabilityState.toReason(cryptoCurrency.name)
     }
 
     override suspend fun availableForSell(
@@ -103,8 +93,11 @@ internal class DefaultRampManager(
     override suspend fun availableForSwap(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): ExchangeableState {
-        return runCatching { getExchangeableState(userWalletId, cryptoCurrency) }.getOrNull() ?: ExchangeableState.Error
+    ): ScenarioUnavailabilityReason {
+        val availabilityState = runCatching {
+            getExchangeableState(userWalletId, cryptoCurrency)
+        }.getOrNull() ?: ExpressAvailabilityState.Error
+        return availabilityState.toReason(cryptoCurrency.name)
     }
 
     override fun getBuyInitializationStatus(): Flow<ExchangeServiceInitializationStatus> {
@@ -134,33 +127,76 @@ internal class DefaultRampManager(
     private suspend fun getExchangeableState(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): ExchangeableState {
-        return withContext(dispatchers.io) {
-            val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
-                ?: return@withContext ExchangeableState.Loading
-            when (asset) {
-                is Lce.Error -> ExchangeableState.Error
-                is Lce.Loading -> ExchangeableState.Loading
-                is Lce.Content -> {
-                    val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
-                    foundAsset?.exchangeAvailable?.toExchangeableState() ?: ExchangeableState.AssetNotFound
-                }
+    ): ExpressAvailabilityState {
+        val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
+            ?: return ExpressAvailabilityState.Loading
+        return when (asset) {
+            is Lce.Error -> ExpressAvailabilityState.Error
+            is Lce.Loading -> ExpressAvailabilityState.Loading
+            is Lce.Content -> {
+                val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
+                foundAsset?.exchangeAvailable?.toSwapAvailabilityState()
+                    ?: ExpressAvailabilityState.AssetNotFound
             }
         }
     }
 
-    private fun Boolean.toExchangeableState(): ExchangeableState {
-        return if (this) {
-            ExchangeableState.Exchangeable
-        } else {
-            ExchangeableState.NotExchangeable
+    private suspend fun getOnrampAvailableState(
+        scanResponse: ScanResponse,
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): ExpressAvailabilityState {
+        return when {
+            onrampFeatureToggles.isFeatureEnabled -> {
+                val asset = expressServiceLoader.getInitializationStatus(userWalletId).firstOrNull()
+                    ?: return ExpressAvailabilityState.Loading
+                return when (asset) {
+                    is Lce.Error -> ExpressAvailabilityState.Error
+                    is Lce.Loading -> ExpressAvailabilityState.Loading
+                    is Lce.Content -> {
+                        val foundAsset = asset.getOrNull()?.find { cryptoCurrency.findAssetPredicate(it) }
+                        foundAsset?.onrampAvailable?.toOnrampAvailabilityState()
+                            ?: ExpressAvailabilityState.AssetNotFound
+                    }
+                }
+            }
+            exchangeService != null -> {
+                exchangeService.availableForBuy(
+                    scanResponse = scanResponse,
+                    currency = cryptoCurrencyConverter.convertBack(cryptoCurrency),
+                ).toOnrampAvailabilityState()
+            }
+            else -> ExpressAvailabilityState.Error
         }
     }
 
-    private suspend fun getOnrampAvailable(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): Boolean {
-        val asset = expressAssetsStore.getSyncOrNull(userWalletId)?.find { cryptoCurrency.findAssetPredicate(it) }
+    private fun ExpressAvailabilityState.toReason(currencyName: String): ScenarioUnavailabilityReason {
+        return when (this) {
+            ExpressAvailabilityState.Available -> {
+                ScenarioUnavailabilityReason.None
+            }
+            ExpressAvailabilityState.AssetNotFound -> ScenarioUnavailabilityReason.AssetNotFound(currencyName)
+            ExpressAvailabilityState.Error -> ScenarioUnavailabilityReason.ExpressUnreachable(currencyName)
+            ExpressAvailabilityState.Loading -> ScenarioUnavailabilityReason.ExpressLoading(currencyName)
+            ExpressAvailabilityState.NotOnrampable -> ScenarioUnavailabilityReason.BuyUnavailable(currencyName)
+            ExpressAvailabilityState.NotExchangeable -> ScenarioUnavailabilityReason.NotExchangeable(currencyName)
+        }
+    }
 
-        return asset?.onrampAvailable ?: false
+    private fun Boolean.toSwapAvailabilityState(): ExpressAvailabilityState {
+        return if (this) {
+            ExpressAvailabilityState.Available
+        } else {
+            ExpressAvailabilityState.NotExchangeable
+        }
+    }
+
+    private fun Boolean.toOnrampAvailabilityState(): ExpressAvailabilityState {
+        return if (this) {
+            ExpressAvailabilityState.Available
+        } else {
+            ExpressAvailabilityState.NotOnrampable
+        }
     }
 
     private fun CryptoCurrency.findAssetPredicate(asset: Asset): Boolean {
