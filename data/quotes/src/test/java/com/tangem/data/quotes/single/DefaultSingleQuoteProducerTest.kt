@@ -7,6 +7,7 @@ import com.tangem.domain.models.StatusSource
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -29,6 +30,7 @@ internal class DefaultSingleQuoteProducerTest {
     private val producer = DefaultSingleQuoteProducer(
         params = params,
         quotesStore = quotesStore,
+        dispatchers = TestingCoroutineDispatcherProvider(),
     )
 
     @Test
