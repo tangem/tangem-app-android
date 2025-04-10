@@ -4,6 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Runtime shared store
@@ -42,6 +44,7 @@ interface RuntimeSharedStore<T> {
         operator fun <T> invoke(): RuntimeSharedStore<T> = object : RuntimeSharedStore<T> {
 
             private val flow = MutableSharedFlow<T?>(replay = 1)
+            private val updateMutex = Mutex()
 
             init {
                 flow.tryEmit(value = null)
@@ -58,10 +61,13 @@ interface RuntimeSharedStore<T> {
             }
 
             override suspend fun update(default: T, function: (T) -> T) {
-                val storedData = flow.firstOrNull() ?: default
-                val updatedData = function(storedData)
+                // required to synchronize get (firstOrNull) and update (emit) operations
+                updateMutex.withLock {
+                    val storedData = flow.firstOrNull() ?: default
+                    val updatedData = function(storedData)
 
-                flow.emit(value = updatedData)
+                    flow.emit(value = updatedData)
+                }
             }
         }
     }
