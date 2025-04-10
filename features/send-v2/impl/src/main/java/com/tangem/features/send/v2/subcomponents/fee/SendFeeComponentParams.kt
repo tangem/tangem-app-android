@@ -3,7 +3,7 @@ package com.tangem.features.send.v2.subcomponents.fee
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,8 +29,9 @@ internal sealed class SendFeeComponentParams {
         override val appCurrency: AppCurrency,
         override val sendAmount: BigDecimal,
         override val destinationAddress: String,
-        val currentRoute: Flow<SendRoute.Fee>,
+        val currentRoute: Flow<CommonSendRoute.Fee>,
         val callback: SendFeeComponent.ModelCallback,
+        val onNextClick: () -> Unit,
     ) : SendFeeComponentParams()
 
     data class FeeBlockParams(
