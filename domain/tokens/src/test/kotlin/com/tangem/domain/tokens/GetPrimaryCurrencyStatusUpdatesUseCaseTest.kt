@@ -186,6 +186,8 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
             singleNetworkStatusSupplier = mockk(),
             multiNetworkStatusFetcher = mockk(),
             multiNetworkStatusSupplier = mockk(),
+            multiQuoteFetcher = mockk(),
+            singleQuoteSupplier = mockk(),
         ),
         dispatchers = dispatchers,
     )
