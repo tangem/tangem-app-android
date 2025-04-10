@@ -12,12 +12,14 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.network.ResultChecker
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.simple
+import com.tangem.domain.card.models.TwinKey
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
-import com.tangem.domain.card.models.TwinKey
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.transaction.error.SendTransactionError
@@ -30,6 +32,8 @@ class SendTransactionUseCase(
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val transactionRepository: TransactionRepository,
     private val walletManagersFacade: WalletManagersFacade,
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
     suspend operator fun invoke(
         txsData: List<TransactionData>,
@@ -76,10 +80,21 @@ class SendTransactionUseCase(
         }
 
         cardSdkConfigRepository.setLinkedTerminal(linkedTerminal)
-        return sendResult.fold(
-            ifRight = { result -> result.hashes.right() },
-            ifLeft = { it.left() },
-        )
+        return sendResult
+            .onRight {
+                if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+                    singleNetworkStatusFetcher(
+                        params = SingleNetworkStatusFetcher.Params(
+                            userWalletId = userWallet.walletId,
+                            network = network,
+                        ),
+                    )
+                }
+            }
+            .fold(
+                ifRight = { result -> result.hashes.right() },
+                ifLeft = { it.left() },
+            )
     }
 
     suspend operator fun invoke(
