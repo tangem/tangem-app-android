@@ -14,10 +14,10 @@ class FetchStakingTokensUseCase(
     private val stakingRepository: StakingRepository,
     private val stakingErrorResolver: StakingErrorResolver,
 ) {
-    suspend operator fun invoke(isRefresh: Boolean = false): Either<StakingError, Unit> {
+    suspend operator fun invoke(): Either<StakingError, Unit> {
         return either {
             catch(
-                block = { stakingRepository.fetchEnabledYields(isRefresh) },
+                block = { stakingRepository.fetchEnabledYields() },
                 catch = { stakingErrorResolver.resolve(it) },
             )
         }
