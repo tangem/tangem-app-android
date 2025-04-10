@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -31,6 +32,8 @@ class FetchCurrencyStatusUseCase(
     private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     /**
@@ -116,10 +119,17 @@ class FetchCurrencyStatusUseCase(
         network: Network,
         refresh: Boolean,
     ) {
-        catch(
-            block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(network), refresh) },
-        ) {
-            raise(CurrencyStatusError.DataError(it))
+        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+            singleNetworkStatusFetcher(
+                params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = network),
+            )
+                .mapLeft { CurrencyStatusError.DataError(it) }
+        } else {
+            catch(
+                block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(network), refresh) },
+            ) {
+                raise(CurrencyStatusError.DataError(it))
+            }
         }
     }
 
