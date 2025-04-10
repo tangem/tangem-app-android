@@ -4,9 +4,9 @@ import androidx.paging.PagingData
 import arrow.core.Either
 import com.tangem.common.ui.tokens.getUnavailabilityReasonText
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.chooseaddress.ChooseAddressBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.TokenReceiveBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.mapToAddressModels
+import com.tangem.common.ui.bottomsheet.chooseaddress.ChooseAddressBottomSheetConfig
+import com.tangem.common.ui.bottomsheet.receive.TokenReceiveBottomSheetConfig
+import com.tangem.core.ui.components.dropdownmenu.TangemDropdownMenuItem
 import com.tangem.core.ui.components.transactions.state.TransactionState
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
@@ -266,10 +266,12 @@ internal class TokenDetailsStateFactory(
                 isShown = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = TokenReceiveBottomSheetConfig(
-                    name = currency.name,
-                    symbol = currency.symbol,
-                    network = currency.network.name,
-                    addresses = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
+                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                        name = currency.name,
+                        symbol = currency.symbol,
+                    ),
+                    network = currency.network,
+                    networkAddress = networkAddress,
                     showMemoDisclaimer = currency.network.transactionExtrasType != Network.TransactionExtrasType.NONE,
                     onCopyClick = onCopyClick,
                     onShareClick = onShareClick,
@@ -287,7 +289,12 @@ internal class TokenDetailsStateFactory(
                 isShown = true,
                 onDismissRequest = clickIntents::onDismissBottomSheet,
                 content = ChooseAddressBottomSheetConfig(
-                    addressModels = networkAddress.availableAddresses.mapToAddressModels(currency).toImmutableList(),
+                    asset = TokenReceiveBottomSheetConfig.Asset.Currency(
+                        name = currency.name,
+                        symbol = currency.symbol,
+                    ),
+                    network = currency.network,
+                    networkAddress = networkAddress,
                     onClick = clickIntents::onAddressTypeSelected,
                 ),
             ),
@@ -376,13 +383,13 @@ internal class TokenDetailsStateFactory(
         return copy(
             items = buildList {
                 if (isSupported && hasDerivations) {
-                    TokenDetailsAppBarMenuConfig.MenuItem(
+                    TangemDropdownMenuItem(
                         title = resourceReference(R.string.token_details_generate_xpub),
                         textColorProvider = { TangemTheme.colors.text.primary1 },
                         onClick = clickIntents::onGenerateExtendedKey,
                     ).let(::add)
                 }
-                TokenDetailsAppBarMenuConfig.MenuItem(
+                TangemDropdownMenuItem(
                     title = TextReference.Res(id = R.string.token_details_hide_token),
                     textColorProvider = { TangemTheme.colors.text.warning },
                     onClick = clickIntents::onHideClick,

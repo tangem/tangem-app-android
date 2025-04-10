@@ -34,19 +34,19 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier, onClick: () -> Unit = { }) {
+internal fun WalletNFTItem(state: WalletNFTItemUM, modifier: Modifier = Modifier) {
     when (state) {
         is WalletNFTItemUM.Hidden -> Unit
         is WalletNFTItemUM.Empty -> WalletNFTItemEmpty(
             modifier = modifier,
-            onClick = onClick,
+            onClick = state.onItemClick,
         )
         is WalletNFTItemUM.Failed -> WalletNFTItemFailed(modifier = modifier)
         is WalletNFTItemUM.Loading -> WalletNFTItemLoading(modifier = modifier)
 
         is WalletNFTItemUM.Content -> WalletNFTItemContent(
             state = state,
-            onClick = onClick,
+            onClick = state.onItemClick,
             modifier = modifier,
         )
     }
@@ -131,7 +131,20 @@ private fun WalletNFTItemFailed(modifier: Modifier = Modifier) {
     RowContentContainer(
         modifier = modifier,
         icon = {
-            CollectionsPreviewsPlaceholder()
+            Box(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size36)
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                    .background(TangemTheme.colors.field.primary),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size20),
+                    painter = painterResource(R.drawable.ic_error_sync_24),
+                    tint = TangemTheme.colors.icon.informative,
+                    contentDescription = null,
+                )
+            }
         },
         text = {
             Text(
@@ -158,7 +171,12 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
     RowContentContainer(
         modifier = modifier,
         icon = {
-            CollectionsPreviewsPlaceholder()
+            Box(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size36)
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
+                    .background(TangemTheme.colors.field.primary),
+            )
         },
         text = {
             TextShimmer(
@@ -175,16 +193,6 @@ private fun WalletNFTItemLoading(modifier: Modifier = Modifier) {
             )
         },
         enabled = false,
-    )
-}
-
-@Composable
-private fun CollectionsPreviewsPlaceholder(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(TangemTheme.dimens.size36)
-            .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
-            .background(TangemTheme.colors.field.primary),
     )
 }
 
@@ -207,7 +215,7 @@ private fun BoxScope.CollectionsPreviews(previews: ImmutableList<CollectionPrevi
                 is CollectionPreview.Image -> {
                     SubcomposeAsyncImage(
                         modifier = modifier,
-                        model = s,
+                        model = s.url,
                         loading = {
                             RectangleShimmer(radius = 0.dp)
                         },
@@ -386,18 +394,17 @@ private fun RowContentContainer(
 @Preview(widthDp = 360)
 @Preview(widthDp = 360, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-private fun Preview_WalletNFTItem_InLight(@PreviewParameter(WalletNFTItemProvider::class) state: WalletNFTItemUM) {
+private fun Preview_WalletNFTItem(@PreviewParameter(WalletNFTItemProvider::class) state: WalletNFTItemUM) {
     TangemThemePreview {
-        WalletNFTItem(
-            state = state,
-            onClick = {},
-        )
+        WalletNFTItem(state = state)
     }
 }
 
 private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletNFTItemUM>(
     collection = listOf(
-        WalletNFTItemUM.Empty,
+        WalletNFTItemUM.Empty(
+            onItemClick = { },
+        ),
         WalletNFTItemUM.Loading,
         WalletNFTItemUM.Failed,
         WalletNFTItemUM.Content(
@@ -407,6 +414,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = true,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -416,6 +424,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = false,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -426,6 +435,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = false,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -437,6 +447,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = false,
+            onItemClick = { },
         ),
         WalletNFTItemUM.Content(
             previews = persistentListOf(
@@ -448,6 +459,7 @@ private class WalletNFTItemProvider : CollectionPreviewParameterProvider<WalletN
             assetsCount = 125,
             collectionsCount = 11,
             isFlickering = true,
+            onItemClick = { },
         ),
     ),
 )

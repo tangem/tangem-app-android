@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.markets.models)
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.appCurrency.models)
+    implementation(projects.domain.nft.models)
 
     /* Libs - Other */
     api(deps.kotlin.serialization)

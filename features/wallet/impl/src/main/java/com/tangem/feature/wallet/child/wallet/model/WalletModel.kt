@@ -10,9 +10,13 @@ import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
+import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.settings.*
+import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -38,9 +42,9 @@ import com.tangem.features.biometry.AskBiometryComponent
 import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
-import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -73,9 +77,11 @@ internal class WalletModel @Inject constructor(
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
-    private val walletFeatureToggles: WalletFeatureToggles,
     private val biometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val fetchNFTCollectionsUseCase: FetchNFTCollectionsUseCase,
+    private val walletsRepository: WalletsRepository,
+    private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -86,6 +92,7 @@ internal class WalletModel @Inject constructor(
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
     private val expressStatusJobHolder = JobHolder()
+    private val walletsNFTsUpdateJobHolder = JobHolder()
     private var needToRefreshWallet = false
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
@@ -103,6 +110,7 @@ internal class WalletModel @Inject constructor(
         subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
         subscribeOnExpressTransactionsUpdates()
+        subscribeOnNFTUpdates()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
     }
@@ -160,7 +168,10 @@ internal class WalletModel @Inject constructor(
             .conflate()
             .distinctUntilChanged()
             .map {
-                walletsUpdateActionResolver.resolve(wallets = it, currentState = stateHolder.value)
+                walletsUpdateActionResolver.resolve(
+                    wallets = it,
+                    currentState = stateHolder.value,
+                )
             }
             .onEach(::updateWallets)
             .flowOn(dispatchers.main)
@@ -256,6 +267,29 @@ internal class WalletModel @Inject constructor(
         }.saveIn(expressStatusJobHolder)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun subscribeOnNFTUpdates() {
+        getWalletsUseCase()
+            .conflate()
+            .distinctUntilChanged()
+            .flatMapLatest { wallets ->
+                wallets
+                    .map { wallet ->
+                        walletsRepository.nftEnabledStatus(wallet.walletId)
+                            .distinctUntilChanged()
+                            .onEach { nftEnabled ->
+                                if (nftEnabled) {
+                                    fetchNFTCollectionsUseCase.invoke(wallet.walletId)
+                                }
+                            }
+                    }
+                    .merge()
+            }
+            .flowOn(dispatchers.main)
+            .launchIn(modelScope)
+            .saveIn(walletsNFTsUpdateJobHolder)
+    }
+
     private fun needToRefreshTimer() {
         modelScope.launch {
             delay(REFRESH_WALLET_BACKGROUND_TIMER_MILLIS)
@@ -313,7 +347,6 @@ internal class WalletModel @Inject constructor(
                 wallets = action.wallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -322,6 +355,10 @@ internal class WalletModel @Inject constructor(
             clickIntents = clickIntents,
             coroutineScope = modelScope,
         )
+
+        if (action.selectedWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+            fetchCurrencyStatusUseCase(userWalletId = action.selectedWallet.walletId)
+        }
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
@@ -354,7 +391,6 @@ internal class WalletModel @Inject constructor(
                 newUserWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
     }
@@ -371,7 +407,6 @@ internal class WalletModel @Inject constructor(
                 userWallet = action.selectedWallet,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 
@@ -382,7 +417,7 @@ internal class WalletModel @Inject constructor(
         }
     }
 
-    private suspend fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
+    private fun deleteWallet(action: WalletsUpdateActionResolver.Action.DeleteWallet) {
         walletScreenContentLoader.cancel(action.deletedWalletId)
         tokenListStore.remove(action.deletedWalletId)
 
@@ -427,7 +462,6 @@ internal class WalletModel @Inject constructor(
                 unlockedWallets = action.unlockedWallets,
                 clickIntents = clickIntents,
                 walletImageResolver = walletImageResolver,
-                walletFeatureToggles = walletFeatureToggles,
             ),
         )
 

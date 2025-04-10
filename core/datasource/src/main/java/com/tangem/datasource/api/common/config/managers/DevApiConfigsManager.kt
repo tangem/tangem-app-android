@@ -9,6 +9,7 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.*
 
 /**
@@ -28,7 +29,7 @@ internal class DevApiConfigsManager(
 
     private val _apiConfigs = MutableStateFlow(value = apiConfigs.associateWith { it.defaultEnvironment })
 
-    override suspend fun initialize() {
+    override fun initialize() {
         // We can't use appPreferencesStore.getObjectMap as base flow,
         // because we should keep possibility to work with configs synchronous.
         // See [getBaseUrl]
@@ -42,7 +43,7 @@ internal class DevApiConfigsManager(
                     }
                 }
             }
-            .launchIn(CoroutineScope(dispatchers.main))
+            .launchIn(CoroutineScope(SupervisorJob() + dispatchers.main))
     }
 
     override fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig {
