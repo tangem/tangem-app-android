@@ -18,7 +18,7 @@ interface RampStateManager {
         scanResponse: ScanResponse,
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
-    ): Boolean
+    ): ScenarioUnavailabilityReason
 
     /**
      * Check if [CryptoCurrency] is available for sell
@@ -31,7 +31,10 @@ interface RampStateManager {
         status: CryptoCurrencyStatus,
     ): Either<ScenarioUnavailabilityReason, Unit>
 
-    suspend fun availableForSwap(userWalletId: UserWalletId, cryptoCurrency: CryptoCurrency): ExchangeableState
+    suspend fun availableForSwap(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): ScenarioUnavailabilityReason
 
     suspend fun fetchBuyServiceData()
 
