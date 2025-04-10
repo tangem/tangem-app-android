@@ -20,6 +20,7 @@ import com.tangem.domain.onramp.model.OnrampSource
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.tokens.legacy.TradeCryptoAction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.OnrampFeatureToggles
 import com.tangem.features.onramp.impl.R
@@ -79,13 +80,13 @@ internal class OnrampOperationModel @Inject constructor(
 
     fun onHotTokenClick(status: CryptoCurrencyStatus) {
         modelScope.launch {
-            val isAvailable = rampStateManager.availableForBuy(
+            val unavailabilityReason = rampStateManager.availableForBuy(
                 scanResponse = selectedUserWallet.scanResponse,
                 userWalletId = params.userWalletId,
                 cryptoCurrency = status.currency,
             )
 
-            if (isAvailable) {
+            if (unavailabilityReason == ScenarioUnavailabilityReason.None) {
                 analyticsEventHandler.send(
                     event = MainScreenAnalyticsEvent.HotTokenClicked(currencySymbol = status.currency.symbol),
                 )
