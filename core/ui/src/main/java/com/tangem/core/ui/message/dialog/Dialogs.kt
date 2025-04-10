@@ -1,8 +1,10 @@
 package com.tangem.core.ui.message.dialog
 
+import com.tangem.core.error.UniversalError
 import com.tangem.core.ui.R
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 
@@ -34,6 +36,19 @@ object Dialogs {
                 )
             },
             secondActionBuilder = { cancelAction(onClick = onCancelClick) },
+        )
+    }
+
+    /**
+     * Universal error dialog
+     */
+    fun universalErrorDialog(universalError: UniversalError, onOkClick: () -> Unit): DialogMessage {
+        return DialogMessage(
+            message = resourceReference(R.string.universal_error, wrappedList(universalError.errorCode)),
+            firstAction = EventMessageAction(
+                title = resourceReference(R.string.common_ok),
+                onClick = onOkClick,
+            ),
         )
     }
 }

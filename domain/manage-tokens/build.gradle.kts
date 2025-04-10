@@ -11,8 +11,9 @@ android {
 dependencies {
 
     /* Domain */
-    api(projects.domain.manageTokens.models)
     api(projects.domain.core)
+    api(projects.domain.manageTokens.models)
+    api(projects.domain.networks)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.staking)
@@ -22,4 +23,10 @@ dependencies {
 
     /* Core */
     api(projects.core.pagination)
+    testImplementation(projects.core.pagination)
+
+    /* Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
 }

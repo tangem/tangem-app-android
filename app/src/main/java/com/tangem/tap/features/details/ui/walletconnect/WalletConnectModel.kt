@@ -4,7 +4,6 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
@@ -23,7 +22,6 @@ import javax.inject.Inject
 internal class WalletConnectModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
-    private val clipboardManager: ClipboardManager,
 ) : Model() {
 
     init {
@@ -43,9 +41,7 @@ internal class WalletConnectModel @Inject constructor(
             isLoading = state.loading,
             onRemoveSession = { sessionUri -> onRemoveSession(sessionUri, sessions) },
             onAddSession = {
-                store.dispatch(
-                    WalletConnectAction.StartWalletConnect(copiedUri = clipboardManager.getText()),
-                )
+                store.dispatch(WalletConnectAction.StartWalletConnect)
             },
         )
     }

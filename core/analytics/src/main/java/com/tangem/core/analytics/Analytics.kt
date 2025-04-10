@@ -2,6 +2,7 @@ package com.tangem.core.analytics
 
 import com.tangem.core.analytics.api.*
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -16,7 +17,9 @@ interface GlobalAnalyticsEventHandler :
     AnalyticsEventHandler,
     AnalyticsHandlerHolder,
     AnalyticsFilterHolder,
-    ParamsInterceptorHolder
+    ParamsInterceptorHolder,
+    AnalyticsErrorHandler,
+    AnalyticsExceptionHandler
 
 object Analytics : GlobalAnalyticsEventHandler {
 
@@ -68,6 +71,25 @@ object Analytics : GlobalAnalyticsEventHandler {
                             .forEach { handler -> handler.send(event) }
                     }
                 }
+            }
+        }
+    }
+
+    override fun sendErrorEvent(event: AnalyticsEvent) {
+        analyticsScope.launch {
+            event.params = applyParamsInterceptors(event)
+            analyticsMutex.withLock {
+                analyticsHandlers.filterIsInstance<AnalyticsErrorHandler>()
+                    .forEach { handler -> handler.sendErrorEvent(event) }
+            }
+        }
+    }
+
+    override fun sendException(event: ExceptionAnalyticsEvent) {
+        analyticsScope.launch {
+            analyticsMutex.withLock {
+                analyticsHandlers.filterIsInstance<AnalyticsExceptionHandler>()
+                    .forEach { it.sendException(event) }
             }
         }
     }

@@ -50,6 +50,8 @@ internal class TangemCardTypesResolver(
 
     override fun isDevKit(): Boolean = card.batchId == DEV_KIT_CARD_BATCH_ID
 
+    override fun isSingleWallet(): Boolean = !isMultiwalletAllowed() && !isSingleWalletWithToken() && !isVisaWallet()
+
     override fun isSingleWalletWithToken(): Boolean = walletData?.token != null && !isMultiwalletAllowed()
 
     override fun isMultiwalletAllowed(): Boolean {

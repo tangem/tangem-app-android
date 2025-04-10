@@ -4,12 +4,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
-import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
@@ -43,19 +41,15 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     AppComponentContext by context,
     SnackbarHandler {
 
-    private val backCallback = BackCallback(priority = Int.MIN_VALUE, onBack = router::pop)
-
     override val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
         initialStack = { getInitialStackOrInit() },
         serializer = null, // AppRoute.serializer(), // Disabled until Nav refactoring completes
-        handleBackButton = false,
+        handleBackButton = routingFeatureToggles.isNavigationRefactoringEnabled,
         childFactory = ::child,
     )
 
     init {
-        backHandler.register(backCallback)
-
         lifecycle.doOnDestroy {
             childFactory.doOnDestroy()
         }
@@ -77,8 +71,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val stack by this.stack.subscribeAsState()
-
         RootContent(
             modifier = modifier,
             stack = stack,
