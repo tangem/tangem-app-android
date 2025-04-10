@@ -61,6 +61,11 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
             submitButtonEnabled = false,
             onPinCodeChange = ::onPinCodeChange,
             onSubmitClick = ::onSubmitClick,
+            error = if (params.wasValidationError) {
+                resourceReference(R.string.visa_onboarding_pin_not_accepted)
+            } else {
+                null
+            },
         )
     }
 
