@@ -47,6 +47,8 @@ internal class DefaultQuotesStoreV2(
 
     override fun get(): Flow<Set<Quote>> = runtimeStore.get()
 
+    override suspend fun getAllSyncOrNull(): Set<Quote>? = runtimeStore.getSyncOrNull()
+
     override suspend fun refresh(currenciesIds: Set<CryptoCurrency.RawID>) {
         updateStatusSourceInRuntime(currenciesIds = currenciesIds, source = StatusSource.CACHE)
     }
