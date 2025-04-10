@@ -6,6 +6,9 @@ import com.tangem.blockchainsdk.utils.toNetworkId
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletconnect.model.legacy.Account
+import com.tangem.domain.walletconnect.model.legacy.Session
+import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
@@ -368,10 +371,6 @@ class WalletConnectInteractor(
         }
     }
 
-    fun isWalletConnectUri(uri: String): Boolean {
-        return uri.lowercase().startsWith(WC_SCHEME)
-    }
-
     /**
      * Handles Wallet Connect deep links.
      * If wallet connect is able to handle the deeplink, session is started with deeplink.
@@ -436,7 +435,6 @@ class WalletConnectInteractor(
     }
 
     private companion object {
-        const val WC_SCHEME = "wc"
         const val WC_TOPIC_QUERY_NAME = "sessionTopic"
         const val WC_PARAM_REGEX = "([a-zA-Z\\d-]+)=([a-zA-Z\\d]+)"
     }
