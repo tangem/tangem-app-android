@@ -71,6 +71,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
                 route = configuration,
                 childContext = childByContext(factoryContext),
                 onManageTokensDone = model::onManageTokensDone,
+                model = model,
             )
         },
     )
