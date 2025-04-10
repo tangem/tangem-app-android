@@ -6,8 +6,8 @@ import com.tangem.common.UserCodeType
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.data.card.sdk.CardSdkProvider
-import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.card.models.TwinKey
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.models.scan.ProductType
 
 /**
@@ -69,5 +69,9 @@ internal class DefaultCardSdkConfigRepository(
 
     override fun setLinkedTerminal(isLinked: Boolean?) {
         sdk.config.linkedTerminal = isLinked
+    }
+
+    override fun setTangemApiProdEnvFlag(flag: Boolean) {
+        sdk.config.isTangemAttestationProdEnv = flag
     }
 }
