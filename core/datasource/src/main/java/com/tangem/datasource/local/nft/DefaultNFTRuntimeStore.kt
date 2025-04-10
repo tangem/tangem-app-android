@@ -42,7 +42,7 @@ internal class DefaultNFTRuntimeStore(
             )
     }
 
-    override fun getAsset(collectionId: NFTCollection.Identifier, assetId: NFTAsset.Identifier): Flow<NFTAsset> =
+    override fun getAsset(collectionId: NFTCollection.Identifier, assetId: NFTAsset.Identifier): Flow<NFTAsset?> =
         collectionsRuntimeStore
             .get()
             .combine(getSalePrice(assetId)) { collectionsData, price ->
@@ -50,12 +50,16 @@ internal class DefaultNFTRuntimeStore(
                     .getCollection(collectionId)
                     ?.getAsset(assetId)
                     ?.mergeWithPrice(price)
-                    ?: NFTAsset.Error(assetId)
             }
 
     override fun getSalePrice(assetId: NFTAsset.Identifier): Flow<NFTSalePrice> = pricesRuntimeStore
         .get()
         .map { it[assetId] ?: NFTSalePrice.Empty(assetId) }
+
+    override suspend fun getSalePriceSync(assetId: NFTAsset.Identifier): NFTSalePrice = pricesRuntimeStore
+        .getSyncOrNull()
+        ?.let { it[assetId] }
+        ?: NFTSalePrice.Empty(assetId)
 
     override suspend fun saveCollections(collections: NFTCollections) {
         collectionsRuntimeStore.store(collections)
@@ -72,8 +76,13 @@ internal class DefaultNFTRuntimeStore(
             ?.collections
             ?.firstOrNull { it.id == collectionId }
 
-    private fun NFTCollection.getAsset(assetId: NFTAsset.Identifier): NFTAsset? =
-        assets.firstOrNull { it.id == assetId }
+    private fun NFTCollection.getAsset(assetId: NFTAsset.Identifier): NFTAsset? = when (val assets = assets) {
+        is NFTCollection.Assets.Empty,
+        is NFTCollection.Assets.Loading,
+        is NFTCollection.Assets.Failed,
+        -> null
+        is NFTCollection.Assets.Value -> assets.items.firstOrNull { it.id == assetId }
+    }
 
     private fun NFTCollections.mergeWithPrices(prices: Map<NFTAsset.Identifier, NFTSalePrice>): NFTCollections =
         when (val content = this.content) {
@@ -89,18 +98,23 @@ internal class DefaultNFTRuntimeStore(
         copy(
             collections = this.collections?.map { data ->
                 data.copy(
-                    assets = data.assets.map { asset ->
-                        asset.mergeWithPrice(prices[asset.id] ?: NFTSalePrice.Empty(asset.id))
+                    assets = when (val assets = data.assets) {
+                        is NFTCollection.Assets.Empty,
+                        is NFTCollection.Assets.Loading,
+                        is NFTCollection.Assets.Failed,
+                        -> assets
+                        is NFTCollection.Assets.Value -> assets.copy(
+                            items = assets.items.map { asset ->
+                                asset.mergeWithPrice(prices[asset.id] ?: NFTSalePrice.Empty(asset.id))
+                            },
+                        )
                     },
                 )
             },
             source = this.source,
         )
 
-    private fun NFTAsset.mergeWithPrice(price: NFTSalePrice): NFTAsset = when (this) {
-        is NFTAsset.Error -> this
-        is NFTAsset.Value -> copy(
-            salePrice = price,
-        )
-    }
+    private fun NFTAsset.mergeWithPrice(price: NFTSalePrice): NFTAsset = copy(
+        salePrice = price,
+    )
 }
