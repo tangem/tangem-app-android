@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.pincode.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -17,6 +18,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.OnboardingVisaPinCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +39,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
     private val authTokenStorage: VisaAuthTokenStorage,
     private val otpStorage: VisaAuthTokenStorage,
     private val setVisaPinCodeUseCase: SetVisaPinCodeUseCase,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingVisaPinCodeComponent.Config>()
@@ -48,6 +51,10 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()
     val onDone = MutableSharedFlow<Unit>()
+
+    init {
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.PinCodeScreenOpened)
+    }
 
     private fun getInitialState(): OnboardingVisaPinCodeUM {
         return OnboardingVisaPinCodeUM(
@@ -66,6 +73,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
                     pinCode = pin,
                     submitButtonEnabled = PinCodeValidation.validate(pin),
                     error = if (isError) {
+                        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ErrorPinValidation)
                         resourceReference(R.string.visa_onboarding_pin_validation_error_message)
                     } else {
                         null
@@ -76,6 +84,7 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
     }
 
     private fun onSubmitClick() {
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.PinEntered)
         val pinCode = _uiState.value.pinCode
         if (PinCodeValidation.validate(pinCode).not()) return
 
