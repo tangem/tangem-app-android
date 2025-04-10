@@ -11,10 +11,8 @@ import com.tangem.common.routing.utils.popTo
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
-
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
 import com.tangem.domain.wallets.legacy.unlockIfLockable
 import com.tangem.tap.backupService
@@ -119,9 +117,9 @@ internal class WelcomeMiddleware {
         )
 
         scanCardInternal { scanResponse ->
-            val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
-            val userWallet = UserWalletBuilder(scanResponse, walletNameGenerateUseCase).build()
-                ?: return@scanCardInternal
+            val userWalletBuilder = store.inject(DaggerGraphState::userWalletBuilderFactory).create(scanResponse)
+
+            val userWallet = userWalletBuilder.build() ?: return@scanCardInternal
 
             val userWalletsListManager = store.inject(DaggerGraphState::generalUserWalletsListManager)
             userWalletsListManager.save(userWallet, canOverride = true)
