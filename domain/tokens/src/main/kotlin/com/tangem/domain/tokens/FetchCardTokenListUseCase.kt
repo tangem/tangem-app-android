@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -21,6 +22,8 @@ class FetchCardTokenListUseCase(
     private val networksRepository: NetworksRepository,
     private val quotesRepository: QuotesRepository,
     private val stakingRepository: StakingRepository,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(userWalletId: UserWalletId, refresh: Boolean = false): Either<TokenListError, Unit> {
@@ -73,10 +76,17 @@ class FetchCardTokenListUseCase(
         networks: Set<Network>,
         refresh: Boolean,
     ) {
-        catch(
-            block = { networksRepository.getNetworkStatusesSync(userWalletId, networks, refresh) },
-            catch = { raise(TokenListError.DataError(it)) },
-        )
+        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+            multiNetworkStatusFetcher(
+                MultiNetworkStatusFetcher.Params(userWalletId = userWalletId, networks = networks),
+            )
+                .mapLeft { TokenListError.DataError(it) }
+        } else {
+            catch(
+                block = { networksRepository.getNetworkStatusesSync(userWalletId, networks, refresh) },
+                catch = { raise(TokenListError.DataError(it)) },
+            )
+        }
     }
 
     private suspend fun fetchQuotes(currenciesIds: Set<CryptoCurrency.RawID>, refresh: Boolean) {
