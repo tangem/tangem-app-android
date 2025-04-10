@@ -8,6 +8,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.settings.SettingsManager
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.data.card.sdk.CardSdkProvider
 import com.tangem.domain.qrscanning.usecases.EmitQrScannedEventUseCase
 import com.tangem.feature.qrscanning.QrScanningComponent
@@ -34,6 +35,7 @@ internal class QrScanningModel @Inject constructor(
     private val emitQrScannedEventUseCase: EmitQrScannedEventUseCase,
     private val settingsManager: SettingsManager,
     private val appRouter: AppRouter,
+    private val clipboardManager: ClipboardManager,
 ) : Model(), QrScanningClickIntents {
 
     private val params = paramsContainer.require<QrScanningComponent.Params>()
@@ -49,7 +51,14 @@ internal class QrScanningModel @Inject constructor(
         // samsung for some reason disables reader mode, and then it works unstable
         // to prevent this disable ir manually before scan QR
         cardSdkProvider.sdk.forceDisableReaderMode()
-        stateHolder.update(InitializeQrScanningStateTransformer(this, params.source, params.networkName))
+        stateHolder.update(
+            InitializeQrScanningStateTransformer(
+                clickIntents = this,
+                clipboardManager = clipboardManager,
+                source = params.source,
+                network = params.networkName,
+            ),
+        )
     }
 
     fun onCameraDeniedState() {
