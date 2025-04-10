@@ -667,7 +667,7 @@ class DefaultWalletManagersFacade(
         return walletManager.getAssets(address, collectionIdentifier)
     }
 
-    override suspend fun getAsset(
+    override suspend fun getNFTAsset(
         userWalletId: UserWalletId,
         network: Network,
         collectionIdentifier: NFTCollection.Identifier,
@@ -680,6 +680,27 @@ class DefaultWalletManagersFacade(
             derivationPath = network.derivationPath.value,
         ) ?: return null
         return walletManager.getAsset(collectionIdentifier, assetIdentifier)
+    }
+
+    override suspend fun getNFTSalePrice(
+        userWalletId: UserWalletId,
+        network: Network,
+        collectionIdentifier: NFTCollection.Identifier,
+        assetIdentifier: NFTAsset.Identifier,
+    ): NFTAsset.SalePrice? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: return null
+        return walletManager.getSalePrice(collectionIdentifier, assetIdentifier)
+    }
+
+    override suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean {
+        val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
+        val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return true
+        return initializableAccountWalletManger.accountInitializationState == InitializableAccount.State.INITIALIZED
     }
 
     private fun updateWalletManagerTokensIfNeeded(walletManager: WalletManager, tokens: Set<CryptoCurrency.Token>) {
