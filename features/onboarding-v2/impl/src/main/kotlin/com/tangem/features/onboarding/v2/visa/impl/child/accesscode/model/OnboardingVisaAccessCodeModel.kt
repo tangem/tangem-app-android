@@ -92,6 +92,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
         _uiState.update {
             it.copy(
                 accessCodeFirst = textFieldValue,
+                accessCodeSecond = TextFieldValue(),
                 atLeastMinCharsError = false,
             )
         }
