@@ -8,9 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.core.ui.components.BasicDialog
-import com.tangem.core.ui.components.DialogButtonUM
-import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.multiwallet.impl.ui.state.OnboardingMultiWalletUM
 
@@ -23,31 +20,14 @@ internal fun OnboardingMultiWallet(
     modifier: Modifier = Modifier,
     childContent: @Composable (Modifier) -> Unit = {},
 ) {
-    if (state.dialog != null) {
-        BasicDialog(
-            title = state.dialog.title.resolveReference(),
-            message = state.dialog.message.resolveReference(),
-            confirmButton = DialogButtonUM(
-                title = state.dialog.confirmButtonText.resolveReference(),
-                onClick = state.dialog.onConfirmClick,
-            ),
-            dismissButton = DialogButtonUM(
-                title = state.dialog.dismissButtonText.resolveReference(),
-                warning = state.dialog.dismissWarningColor,
-                onClick = state.dialog.onDismissButtonClick,
-            ),
-            onDismissDialog = state.dialog.onDismiss,
-        )
-    }
-
     Column(
         modifier = modifier.fillMaxSize(),
     ) {
         if (isSeedPhraseState.not()) {
             WalletArtworks(
-                url1 = state.artwork1Url,
-                url2 = state.artwork2Url,
-                url3 = state.artwork3Url,
+                artwork1 = state.artwork1,
+                artwork2 = state.artwork2,
+                artwork3 = state.artwork3,
                 modifier = Modifier
                     .padding(horizontal = 34.dp)
                     .padding(top = 20.dp)
@@ -73,7 +53,7 @@ internal fun OnboardingMultiWallet(
 private fun Preview() {
     TangemThemePreview {
         OnboardingMultiWallet(
-            state = OnboardingMultiWalletUM(artwork1Url = null),
+            state = OnboardingMultiWalletUM(artwork1 = null),
             artworksState = WalletArtworksState.Folded,
             isSeedPhraseState = false,
             childContent = { md ->
@@ -93,7 +73,7 @@ private fun Preview() {
 private fun Preview2() {
     TangemThemePreview {
         OnboardingMultiWallet(
-            state = OnboardingMultiWalletUM(artwork1Url = null),
+            state = OnboardingMultiWalletUM(artwork1 = null),
             artworksState = WalletArtworksState.Folded,
             isSeedPhraseState = true,
             childContent = { md ->
