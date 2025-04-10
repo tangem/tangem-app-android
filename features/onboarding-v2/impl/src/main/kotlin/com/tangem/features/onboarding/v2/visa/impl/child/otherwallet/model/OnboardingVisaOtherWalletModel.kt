@@ -54,7 +54,7 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
                     visaActivationRepository.getActivationRemoteStateLongPoll()
                 }.getOrNull()
 
-                if (result is VisaActivationRemoteState.WaitingPinCode) {
+                if (result is VisaActivationRemoteState.AwaitingPinCode) {
                     onDone.emit(result.activationOrderInfo)
                     break
                 }
