@@ -1,7 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.net.Uri
-import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
@@ -12,6 +11,7 @@ import com.tangem.common.routing.AppRouter
 import com.tangem.common.services.Result
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam.ScreensSources
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
@@ -24,7 +24,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_IDS
 import com.tangem.domain.models.scan.CardDTO.Companion.RING_BATCH_PREFIX
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.Artwork
@@ -243,7 +242,9 @@ private suspend fun readCard(): CompletionResult<ScanResponse> {
 }
 
 private suspend fun loadArtworkForCard(cardId: String, cardPublicKey: ByteArray, defaultArtwork: Uri?): Uri {
-    return when (val cardInfo = OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)) {
+    val onlineCardVerifier = store.inject(DaggerGraphState::onlineCardVerifier)
+
+    return when (val cardInfo = onlineCardVerifier.getCardInfo(cardId, cardPublicKey)) {
         is Result.Success -> {
             val artworkId = cardInfo.data.artwork?.id
             if (artworkId.isNullOrEmpty()) {
@@ -453,8 +454,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success(result.data))
                     }
                     is CompletionResult.Failure -> {
-                        val crashlytics = FirebaseCrashlytics.getInstance()
-
                         when (val error = result.error) {
                             is TangemSdkError.CardVerificationFailed -> {
                                 Analytics.send(
@@ -491,7 +490,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                                     GlobalAction.ShowDialog(BackupDialog.AttestationFailed),
                                 )
                             }
-                            else -> crashlytics.recordException(error)
+                            else -> Analytics.sendException(ExceptionAnalyticsEvent(error))
                         }
                     }
                 }
@@ -787,9 +786,10 @@ private suspend fun updateWallet(
 }
 
 private suspend fun createUserWallet(scanResponse: ScanResponse, backupState: BackupState): UserWallet {
-    val walletNameGenerateUseCase = store.inject(DaggerGraphState::generateWalletNameUseCase)
+    val userWalletBuilder = store.inject(DaggerGraphState::userWalletBuilderFactory).create(scanResponse)
+
     return requireNotNull(
-        value = UserWalletBuilder(scanResponse, walletNameGenerateUseCase)
+        value = userWalletBuilder
             .backupCardsIds(backupState.backupCardIds.toSet())
             .hasBackupError(backupState.hasBackupError)
             .build(),
