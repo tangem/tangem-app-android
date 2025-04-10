@@ -109,6 +109,8 @@
   <string name="common_claim_rewards">報酬を受け取る</string>
   <string name="common_close">閉じる</string>
   <string name="common_confirm">確認</string>
+  <string name="common_contact_tangem_support">Tangemサポートへ問い合わせる</string>
+  <string name="common_contact_visa_support">Visaサポートへ問い合わせる</string>
   <string name="common_continue">続ける</string>
   <string name="common_copy">コピー</string>
   <string name="common_copy_address">アドレスをコピー</string>
@@ -515,6 +517,7 @@
   <string name="nft_details_token_standard">トークン標準</string>
   <string name="nft_details_traits">特徴</string>
   <string name="nft_empty_search">結果がありません。別のリクエストをお試しください。</string>
+  <string name="nft_receive_choose_network">ネットワークを選択</string>
   <string name="nft_receive_subtitle">私のウォレットへ</string>
   <string name="nft_receive_title">NFTを受け取る</string>
   <string name="nft_wallet_count">%1$dコレクションの%2$dNFT</string>
@@ -1031,12 +1034,14 @@
   <string name="visa_onboarding_in_progress_description">長くはかかりません。アカウントを設定しています。</string>
   <string name="visa_onboarding_in_progress_issuer_description">長くはかかりません。アクティベーションを完了しています。</string>
   <string name="visa_onboarding_in_progress_title">準備完了です！</string>
+  <string name="visa_onboarding_pin_not_accepted">PINの認証に失敗しました。もう一度お試しいただくか、別のコードを使用してください。</string>
   <string name="visa_onboarding_pin_validation_error_message">無効な暗証番号：連続や繰り返しを避けてください</string>
   <string name="visa_onboarding_wallet_connect_title">ウェブサイトに移動</string>
   <string name="visa_onboarding_welcome_back_description">アカウントの設定を続けましょう。</string>
   <string name="visa_onboarding_welcome_back_title">お帰りなさい！</string>
   <string name="visa_onboarding_welcome_description">手順に従ってアカウントを設定してください。</string>
   <string name="visa_onboarding_welcome_title">ようこそ！</string>
+  <string name="visa_tx_dispute_button">この取引に異議を唱える</string>
   <string name="visa_unlock_notification_button">ロック解除</string>
   <string name="visa_unlock_notification_subtitle">カードをスキャンしてアクセスロックを解除する</string>
   <string name="visa_unlock_notification_title">ロック解除が必要</string>
