@@ -7,6 +7,7 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
@@ -33,7 +34,6 @@ internal object WalletConnectInteractorModule {
     fun provideWalletConnectInteractor(
         wcRepository: LegacyWalletConnectRepository,
         wcSessionsRepository: WalletConnectSessionsRepository,
-        walletConnectFeatureToggles: WalletConnectFeatureToggles,
         currenciesRepository: CurrenciesRepository,
         walletManagersFacade: WalletManagersFacade,
         userWalletsListManager: UserWalletsListManager,
@@ -44,7 +44,7 @@ internal object WalletConnectInteractorModule {
             walletConnectRepository = wcRepository,
             sessionsRepository = wcSessionsRepository,
             sdkHelper = WalletConnectSdkHelper(),
-            blockchainHelper = TangemWcBlockchainHelper(walletConnectFeatureToggles),
+            blockchainHelper = TangemWcBlockchainHelper(),
             currenciesRepository = currenciesRepository,
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
@@ -69,13 +69,11 @@ internal object WalletConnectModule {
         application: Application,
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
-        walletConnectFeatureToggles: WalletConnectFeatureToggles,
     ): LegacyWalletConnectRepository {
         return DefaultLegacyWalletConnectRepository(
             application = application,
             wcRequestDeserializer = wcRequestDeserializer,
             analyticsHandler = analyticsHandler,
-            walletConnectFeatureToggles = walletConnectFeatureToggles,
         )
     }
 
