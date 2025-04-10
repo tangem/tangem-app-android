@@ -1020,6 +1020,7 @@
   <string name="user_wallet_list_rename_popup_title">Переименование кошелька</string>
   <string name="user_wallet_list_unlock_all">Разблокировать все</string>
   <string name="user_wallet_list_unlock_all_with">Разблокировать все с %s</string>
+  <string name="visa_onboarding_pin_not_accepted">ПИН не принят. Попробуйте ещё раз или введите другой код.</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуйте позже.</string>
   <string name="wallet_balance_missing_derivation">Отсканируйте карту или кольцо</string>
   <string name="wallet_been_activated_message">Этот кошелек уже был активирован ранее.\nЕсли это сделали не вы, свяжитесь со службой поддержки.\nTangem никогда не продает кошелек вместе с предустановленным кодом доступа.</string>
