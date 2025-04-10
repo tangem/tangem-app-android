@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
-class WcPairSdkDelegate : WcSdkObserver {
+internal class WcPairSdkDelegate : WcSdkObserver {
 
     private val onSessionProposal = Channel<Wallet.Model.SessionProposal>()
     private val onSessionSettleResponse = Channel<Wallet.Model.SettledSessionResponse>()

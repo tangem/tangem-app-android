@@ -13,7 +13,6 @@ import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +29,6 @@ internal class DefaultWcSessionsManager constructor(
     private val store: WalletConnectStore,
     private val legacyStore: WalletConnectSessionsRepository,
     private val getWallets: GetWalletsUseCase,
-    private val getUserWallet: GetUserWalletUseCase,
     private val dispatchers: CoroutineDispatcherProvider,
     private val scope: CoroutineScope,
 ) : WcSessionsManager, WcSdkObserver {
@@ -84,9 +82,12 @@ internal class DefaultWcSessionsManager constructor(
     }
 
     override suspend fun findSessionByTopic(topic: String): WcSession? = withContext(dispatchers.io) {
-        val storedSessions = store.findSessionByTopic(topic) ?: return@withContext null
+        val storedSessions = sessions.firstOrNull()
+            ?.values?.flatten()
+            ?.firstOrNull { it.sdkModel.topic == topic }
+            ?: return@withContext null
         val sdkSession = WalletKit.getActiveSessionByTopic(topic) ?: return@withContext null
-        val wallet = getUserWallet.invoke(storedSessions.walletId).getOrNull() ?: return@withContext null
+        val wallet = storedSessions.wallet
         WcSession(wallet = wallet, sdkModel = WcSdkSessionConverter.convert(sdkSession))
     }
 
