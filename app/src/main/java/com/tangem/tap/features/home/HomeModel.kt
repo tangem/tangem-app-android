@@ -19,7 +19,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.wallets.builder.UserWalletBuilder
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
 import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.IntroductionProcess
@@ -44,12 +43,12 @@ import javax.inject.Inject
 internal class HomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val scanCardProcessor: ScanCardProcessor,
-    private val generateWalletNameUseCase: GenerateWalletNameUseCase,
     private val saveWalletUseCase: SaveWalletUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
 ) : Model() {
 
     private val tangemErrorHandler = TangemTangemErrorsHandler(store)
@@ -100,10 +99,7 @@ internal class HomeModel @Inject constructor(
     }
 
     private suspend fun proceedWithScanResponse(scanResponse: ScanResponse) {
-        val userWallet = UserWalletBuilder(
-            scanResponse = scanResponse,
-            generateWalletNameUseCase = generateWalletNameUseCase,
-        ).build()
+        val userWallet = userWalletBuilderFactory.create(scanResponse = scanResponse).build()
 
         if (userWallet == null) {
             Timber.e("User wallet not created")

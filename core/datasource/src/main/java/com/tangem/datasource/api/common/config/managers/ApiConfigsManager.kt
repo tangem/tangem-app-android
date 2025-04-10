@@ -11,7 +11,7 @@ import com.tangem.datasource.api.common.config.ApiEnvironmentConfig
 interface ApiConfigsManager {
 
     /** Initialize resources */
-    suspend fun initialize() {}
+    fun initialize() {}
 
     /** Get environment config by [id] */
     fun getEnvironmentConfig(id: ApiConfig.ID): ApiEnvironmentConfig
