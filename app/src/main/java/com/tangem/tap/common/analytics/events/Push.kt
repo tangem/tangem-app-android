@@ -6,7 +6,6 @@ internal sealed class Push(event: String) : AnalyticsEvent(
     category = "Push",
     event = event,
     params = emptyMap(),
-    error = null,
 ) {
 
     data object PushNotificationOpened : Push(event = "Push Notification Opened")
