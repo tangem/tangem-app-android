@@ -27,5 +27,7 @@ interface FeedbackRepository {
 
     fun getLogFile(): File?
 
+    suspend fun getZipLogFile(): File?
+
     fun sendEmail(feedbackEmail: FeedbackEmail)
 }

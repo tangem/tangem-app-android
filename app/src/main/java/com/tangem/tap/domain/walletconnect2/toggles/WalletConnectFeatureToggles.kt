@@ -6,6 +6,6 @@ internal class WalletConnectFeatureToggles(
     private val featureTogglesManager: FeatureTogglesManager,
 ) {
 
-    val isSolanaTxSignEnabled: Boolean
-        get() = featureTogglesManager.isFeatureEnabled(name = "WC_SOLANA_TX_SIGN_ENABLED")
+    val isRedesignedWalletConnectEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled("WALLET_CONNECT_REDESIGN_ENABLED")
 }
