@@ -22,6 +22,7 @@ import com.tangem.domain.transaction.usecase.ValidateWalletMemoUseCase
 import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
@@ -29,6 +30,7 @@ import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.subcomponents.destination.analytics.EnterAddressSource
 import com.tangem.features.send.v2.subcomponents.destination.analytics.SendDestinationAnalyticEvents
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.*
@@ -96,19 +98,20 @@ internal class SendDestinationModel @Inject constructor(
     }
 
     private fun initialState() {
-        if ((uiState.value as? DestinationUM.Content)?.isInitialized == false) {
+        if ((uiState.value as? DestinationUM.Content)?.isInitialized == false || uiState.value is DestinationUM.Empty) {
             _uiState.update(
                 SendDestinationInitialStateTransformer(
                     cryptoCurrency = cryptoCurrency,
                     isInitialized = true,
                 ),
             )
-            val params = params as? SendDestinationComponentParams.DestinationBlockParams
-            if (params?.predefinedAddressValue != null && params.predefinedMemoValue != null) {
+            val params = params as? DestinationBlockParams
+            val predefinedValues = params?.predefinedValues as? PredefinedValues.Content.Deeplink
+            if (predefinedValues?.address != null) {
                 _uiState.update(
                     SendDestinationPredefinedStateTransformer(
-                        address = params.predefinedAddressValue,
-                        memo = params.predefinedMemoValue,
+                        address = predefinedValues.address,
+                        memo = predefinedValues.memo,
                     ),
                 )
             }
