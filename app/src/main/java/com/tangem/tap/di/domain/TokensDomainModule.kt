@@ -37,6 +37,7 @@ internal object TokensDomainModule {
         stakingRepository: StakingRepository,
         quotesRepository: QuotesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): AddCryptoCurrenciesUseCase {
         return AddCryptoCurrenciesUseCase(
@@ -45,6 +46,7 @@ internal object TokensDomainModule {
             stakingRepository = stakingRepository,
             quotesRepository = quotesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -366,10 +368,14 @@ internal object TokensDomainModule {
     fun provideRefreshMultiCurrencyWalletQuotesUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
+        multiQuoteFetcher: MultiQuoteFetcher,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): RefreshMultiCurrencyWalletQuotesUseCase {
         return RefreshMultiCurrencyWalletQuotesUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
+            multiQuoteFetcher = multiQuoteFetcher,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
