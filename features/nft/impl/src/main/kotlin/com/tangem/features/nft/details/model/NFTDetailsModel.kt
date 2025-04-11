@@ -61,14 +61,13 @@ internal class NFTDetailsModel @Inject constructor(
     }
 
     private fun onSendClick() {
-        // TODO implement
-        // router.push(
-        //     AppRoute.NFTSend(
-        //         userWalletId = params.userWalletId,
-        //         nftAsset = params.nftAsset,
-        //         nftCollectionName = params.nftCollectionName,
-        //     ),
-        // )
+        router.push(
+            AppRoute.NFTSend(
+                userWalletId = params.userWalletId,
+                nftAsset = params.nftAsset,
+                nftCollectionName = params.nftCollectionName,
+            ),
+        )
     }
 
     private fun navigateBack() {
