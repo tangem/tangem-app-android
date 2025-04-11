@@ -427,4 +427,10 @@ internal object TokensDomainModule {
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideGetCryptoCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
+        return GetCryptoCurrenciesUseCase(currenciesRepository)
+    }
 }
