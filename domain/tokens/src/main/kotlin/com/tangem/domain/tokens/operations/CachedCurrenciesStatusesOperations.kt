@@ -53,6 +53,7 @@ class CachedCurrenciesStatusesOperations(
         stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+        singleQuoteSupplier = singleQuoteSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
 
