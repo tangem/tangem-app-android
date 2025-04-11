@@ -15,8 +15,10 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
+import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.*
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -62,6 +64,8 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val quotesRepository: QuotesRepository,
+    private val quotesRepositoryV2: QuotesRepositoryV2,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     private val swapTransactionRepository: SwapTransactionRepository,
     private val currencyChecksRepository: CurrencyChecksRepository,
     private val appCurrencyRepository: AppCurrencyRepository,
@@ -2166,7 +2170,11 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
     private suspend fun Set<CryptoCurrency.RawID>.getQuotesOrEmpty(refresh: Boolean): Set<Quote> {
         return try {
-            quotesRepository.getQuotesSync(this, refresh)
+            if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+                quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = this).orEmpty()
+            } else {
+                quotesRepository.getQuotesSync(this, refresh)
+            }
         } catch (t: Throwable) {
             emptySet()
         }

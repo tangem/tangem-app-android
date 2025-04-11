@@ -14,6 +14,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
@@ -37,6 +38,7 @@ import kotlinx.coroutines.flow.*
 class CachedCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
+    quotesRepositoryV2: QuotesRepositoryV2,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -49,6 +51,7 @@ class CachedCurrenciesStatusesOperations(
     BaseCurrencyStatusOperations(
         currenciesRepository = currenciesRepository,
         quotesRepository = quotesRepository,
+        quotesRepositoryV2 = quotesRepositoryV2,
         networksRepository = networksRepository,
         stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,

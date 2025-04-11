@@ -7,6 +7,7 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -59,6 +60,7 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): FetchTokenListUseCase {
         return FetchTokenListUseCase(
@@ -67,6 +69,7 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -172,6 +175,7 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): FetchCurrencyStatusUseCase {
         return FetchCurrencyStatusUseCase(
@@ -180,6 +184,7 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -192,6 +197,7 @@ internal object TokensDomainModule {
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): FetchCardTokenListUseCase {
         return FetchCardTokenListUseCase(
@@ -200,6 +206,7 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -394,6 +401,7 @@ internal object TokensDomainModule {
         tokensFeatureToggles: TokensFeatureToggles,
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
+        quotesRepositoryV2: QuotesRepositoryV2,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -405,6 +413,7 @@ internal object TokensDomainModule {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
+            quotesRepositoryV2 = quotesRepositoryV2,
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
@@ -422,6 +431,7 @@ internal object TokensDomainModule {
         tokensFeatureToggles: TokensFeatureToggles,
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
+        quotesRepositoryV2: QuotesRepositoryV2,
         networksRepository: NetworksRepository,
         stakingRepository: StakingRepository,
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
@@ -433,6 +443,7 @@ internal object TokensDomainModule {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
+            quotesRepositoryV2 = quotesRepositoryV2,
             networksRepository = networksRepository,
             stakingRepository = stakingRepository,
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
