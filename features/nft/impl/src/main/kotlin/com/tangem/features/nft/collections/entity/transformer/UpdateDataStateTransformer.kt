@@ -61,7 +61,25 @@ internal class UpdateDataStateTransformer(
         state: NFTCollectionsStateUM,
         query: String,
     ): ImmutableList<NFTCollectionUM> = mapNotNull {
-        if (query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true) {
+        val assetsFulfillQuery = if (query.isEmpty()) {
+            true
+        } else {
+            when (val assets = it.assets) {
+                is NFTCollection.Assets.Empty,
+                is NFTCollection.Assets.Failed,
+                is NFTCollection.Assets.Loading,
+                -> true
+                is NFTCollection.Assets.Value -> {
+                    assets.items.any { asset ->
+                        asset.name?.lowercase()?.contains(query.lowercase()) == true
+                    }
+                }
+            }
+        }
+
+        val collectionFulfillQuery = query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true
+
+        if (collectionFulfillQuery || assetsFulfillQuery) {
             NFTCollectionUM(
                 id = it.id.toString(),
                 networkIconId = getActiveIconRes(it.network.id.value),
