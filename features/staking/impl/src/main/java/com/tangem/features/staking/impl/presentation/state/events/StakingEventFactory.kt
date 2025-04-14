@@ -46,4 +46,20 @@ internal class StakingEventFactory(
         val alert = StakingEvent.ShowAlert(alert = StakingAlertUM.ValidatorsUnavailable)
         stateController.updateEvent(alert)
     }
+
+    fun createInitializeAccountAlert() {
+        val alert = StakingEvent.ShowAlert(alert = StakingAlertUM.InitializeAccount)
+        stateController.updateEvent(alert)
+    }
+
+    fun createStakingRewardsMinimumRequirementsErrorAlert(cryptoCurrencyName: String, cryptoAmountValue: String) {
+        stateController.updateEvent(
+            StakingEvent.ShowAlert(
+                alert = StakingAlertUM.RewardsMinimumRequirementsError(
+                    cryptoCurrencyName = cryptoCurrencyName,
+                    cryptoAmountValue = cryptoAmountValue,
+                ),
+            ),
+        )
+    }
 }
