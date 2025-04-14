@@ -32,7 +32,7 @@ internal class SetAmountDataTransformer(
             stringReference(userWalletProvider().name)
         }
         val cryptoBalanceValue = cryptoCurrencyStatusProvider().value
-        val (amount, fiatAmount) = if (prevState.actionType != StakingActionCommonType.Enter) {
+        val (amount, fiatAmount) = if (prevState.actionType !is StakingActionCommonType.Enter) {
             prevState.balanceState?.cryptoAmount to prevState.balanceState?.fiatAmount
         } else {
             cryptoBalanceValue.amount to cryptoBalanceValue.fiatAmount
