@@ -10,17 +10,30 @@ import com.tangem.common.authentication.AuthenticationManager
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.Config
 import com.tangem.common.services.secure.SecureStorage
-import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.AnalyticsExceptionHandler
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.crypto.bip39.Wordlist
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.data.card.sdk.CardSdkProvider
+import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
+import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
+import com.tangem.datasource.local.preferences.utils.getObjectMap
 import com.tangem.sdk.DefaultSessionViewDelegate
+import com.tangem.sdk.api.featuretoggles.CardSdkFeatureToggles
 import com.tangem.sdk.extensions.*
 import com.tangem.sdk.nfc.AndroidNfcAvailabilityProvider
 import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,8 +45,11 @@ import javax.inject.Singleton
  */
 @Singleton
 internal class DefaultCardSdkProvider @Inject constructor(
-    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val analyticsExceptionHandler: AnalyticsExceptionHandler,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val cardSdkFeatureToggles: CardSdkFeatureToggles,
+    private val apiConfigsManager: ApiConfigsManager,
+    appPreferencesStore: AppPreferencesStore,
 ) : CardSdkProvider, CardSdkOwner {
 
     private val observer = Observer()
@@ -43,10 +59,26 @@ internal class DefaultCardSdkProvider @Inject constructor(
     override val sdk: TangemSdk
         get() = holder?.sdk ?: tryToRegisterWithForegroundActivity()
 
+    init {
+        appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+            .map { it[ApiConfig.ID.TangemCardSdk.name] == ApiEnvironment.PROD }
+            .onEach { isProd ->
+                holder?.let {
+                    it.sdk.config.isTangemAttestationProdEnv = isProd
+                }
+            }
+            .launchIn(CoroutineScope(SupervisorJob() + dispatchers.main))
+    }
+
     override fun register(activity: FragmentActivity) = runBlocking(dispatchers.mainImmediate) {
         if (activity.isDestroyed || activity.isFinishing || activity.isChangingConfigurations) {
             val message = "Tangem SDK owner registration skipped: activity is destroyed or finishing"
-            analyticsEventHandler.send(TangemSdkWarningEvent(message))
+            analyticsExceptionHandler.sendException(
+                ExceptionAnalyticsEvent(
+                    exception = IllegalStateException(message),
+                    params = errorParams,
+                ),
+            )
             Log.info { message }
             return@runBlocking
         }
@@ -64,14 +96,24 @@ internal class DefaultCardSdkProvider @Inject constructor(
 
     private fun tryToRegisterWithForegroundActivity(): TangemSdk = runBlocking(dispatchers.mainImmediate) {
         val warning = "Tangem SDK holder is null, trying to recreate it with foreground activity"
-        analyticsEventHandler.send(TangemSdkWarningEvent(warning))
+        analyticsExceptionHandler.sendException(
+            ExceptionAnalyticsEvent(
+                exception = IllegalStateException(warning),
+                params = errorParams,
+            ),
+        )
         Log.warning { warning }
 
         val activity = foregroundActivityObserver.foregroundActivity
 
         if (activity == null) {
             val error = "Tangem SDK holder is null and foreground activity is null"
-            analyticsEventHandler.send(TangemSdkWarningEvent(error))
+            analyticsExceptionHandler.sendException(
+                ExceptionAnalyticsEvent(
+                    exception = IllegalStateException(error),
+                    params = errorParams,
+                ),
+            )
             Log.error { error }
             error(error)
         }
@@ -82,7 +124,12 @@ internal class DefaultCardSdkProvider @Inject constructor(
 
         if (sdk == null) {
             val error = "Tangem SDK is null after re-registering with foreground activity"
-            analyticsEventHandler.send(TangemSdkWarningEvent(error))
+            analyticsExceptionHandler.sendException(
+                ExceptionAnalyticsEvent(
+                    exception = IllegalStateException(error),
+                    params = errorParams,
+                ),
+            )
             Log.error { error }
             error(error)
         }
@@ -108,7 +155,12 @@ internal class DefaultCardSdkProvider @Inject constructor(
             authenticationManager = authenticationManager,
             keystoreManager = keystoreManager,
             wordlist = Wordlist.getWordlist(activity),
-            config = config,
+            config = config.apply {
+                isNewOnlineAttestationEnabled = cardSdkFeatureToggles.isNewAttestationEnabled
+
+                val apiConfig = apiConfigsManager.getEnvironmentConfig(id = ApiConfig.ID.TangemCardSdk)
+                isTangemAttestationProdEnv = apiConfig.environment == ApiEnvironment.PROD
+            },
         )
 
         holder = Holder(
@@ -161,7 +213,6 @@ internal class DefaultCardSdkProvider @Inject constructor(
 
         val config = Config(
             linkedTerminal = true,
-            allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.entries.toList(),
                 maxFirmwareVersion = FirmwareVersion(major = 6, minor = 33),
@@ -169,6 +220,11 @@ internal class DefaultCardSdkProvider @Inject constructor(
                     items = setOf("0027", "0030", "0031", "0035"),
                 ),
             ),
+        )
+
+        val errorParams = mapOf(
+            "Category" to "Tangem SDK",
+            "Event" to "Warning",
         )
     }
 }
