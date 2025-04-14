@@ -7,7 +7,7 @@ import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 
 internal class CaipNamespaceDelegate constructor(
     private val namespaceConverters: Map<NamespaceKey, WcNamespaceConverter>,
@@ -16,7 +16,7 @@ internal class CaipNamespaceDelegate constructor(
 
     suspend fun associate(
         sessionProposal: Wallet.Model.SessionProposal,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         networks: List<Network>,
     ): Map<String, Wallet.Model.Namespace.Session> {
         val converters = namespaceConverters.values
@@ -25,7 +25,7 @@ internal class CaipNamespaceDelegate constructor(
 
         networks.map { network ->
             val blockchain = Blockchain.fromId(network.id.value)
-            val address = walletManagersFacade.getDefaultAddress(userWalletId, network)
+            val address = walletManagersFacade.getDefaultAddress(userWallet.walletId, network)
             val chainId = converters.firstOrNull { it.toCAIP2(blockchain) != null }?.toCAIP2(blockchain)
             requireNotNull(chainId)
             requireNotNull(address)
