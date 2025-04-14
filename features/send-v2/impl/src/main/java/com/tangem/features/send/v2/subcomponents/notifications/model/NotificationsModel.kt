@@ -32,6 +32,7 @@ import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.transaction.usecase.ValidateTransactionUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceTrigger
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.model.checkAndCalculateSubtractedAmount
 import com.tangem.features.send.v2.subcomponents.fee.model.checkFeeCoverage
@@ -52,7 +53,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @Stable
 @ModelScoped
 internal class NotificationsModel @Inject constructor(
@@ -116,7 +117,12 @@ internal class NotificationsModel @Inject constructor(
                 feeError = notificationData.feeError,
                 onReload = {
                     modelScope.launch {
-                        sendFeeReloadTrigger.triggerUpdate()
+                        sendFeeReloadTrigger.triggerUpdate(
+                            feeData = SendFeeData(
+                                amount = notificationData.amountValue,
+                                destinationAddress = notificationData.destinationAddress,
+                            ),
+                        )
                     }
                 },
                 onClick = ::showTokenDetails,
@@ -341,7 +347,7 @@ internal class NotificationsModel @Inject constructor(
             },
             onCloseClick = {
                 modelScope.launch {
-                    buildNotifications()
+                    sendAmountReduceTrigger.triggerIgnoreReduce()
                 }
             },
         )
