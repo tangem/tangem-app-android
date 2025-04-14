@@ -53,6 +53,7 @@
   <string name="common_create">創造</string>
   <string name="common_delete">刪除</string>
   <string name="common_disabled">禁用</string>
+  <string name="common_disconnect">斷開連接</string>
   <string name="common_done">完成</string>
   <string name="common_enable">允許</string>
   <string name="common_enabled">啟用</string>
@@ -205,6 +206,7 @@
   <string name="onboarding_top_up_body_no_account_error">要開始，只需為錢包充值超過 %1$s %2$s</string>
   <string name="onboarding_top_up_button_but_crypto">購買加密貨幣</string>
   <string name="onboarding_top_up_button_show_wallet_address">顯示錢包地址</string>
+  <string name="onboarding_top_up_min_create_account_amount">要開始，只需為錢包充值超過 %1$s</string>
   <string name="onboarding_topup_title">啟動錢包</string>
   <string name="onboarding_twin_exit_warning">結對過程已部分完成。你現在不能退出</string>
   <string name="onboarding_twins_interrupt_warning">如果創建錢包的過程以任何方式中斷，您將得重新開始</string>
