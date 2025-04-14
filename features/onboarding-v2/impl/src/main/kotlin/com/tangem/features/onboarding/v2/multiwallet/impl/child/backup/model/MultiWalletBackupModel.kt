@@ -7,13 +7,14 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.OnboardingAnalyticsEvent
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.toWrappedList
 import com.tangem.core.ui.message.dialog.Dialogs
+import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
@@ -38,7 +39,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
-@ComponentScoped
+@ModelScoped
 @Suppress("LongParameterList")
 class MultiWalletBackupModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -49,6 +50,7 @@ class MultiWalletBackupModel @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val cardRepository: CardRepository,
 ) : Model() {
 
     @Suppress("UnusedPrivateMember")
@@ -275,6 +277,8 @@ class MultiWalletBackupModel @Inject constructor(
                 cardId = cardId,
                 allowsRequestAccessCodeFromRepository = false,
             )
+
+            cardRepository.finishCardActivation(cardId)
         }
     }
 }
