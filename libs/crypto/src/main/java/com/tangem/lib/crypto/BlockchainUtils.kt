@@ -72,6 +72,11 @@ object BlockchainUtils {
         return blockchain == Blockchain.Tron || blockchain == Blockchain.TronTestnet
     }
 
+    fun isTon(blockchainId: String): Boolean {
+        val blockchain = Blockchain.fromId(blockchainId)
+        return blockchain == Blockchain.TON || blockchain == Blockchain.TONTestnet
+    }
+
     fun isSupportedNetworkId(blockchainId: String, excludedBlockchains: ExcludedBlockchains): Boolean {
         val blockchain = Blockchain.fromNetworkId(blockchainId)
 
