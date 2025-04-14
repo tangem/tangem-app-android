@@ -6,7 +6,7 @@ import com.tangem.feature.wallet.presentation.wallet.domain.WalletImageResolver
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletScreenState
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletLoadingStateFactory
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import com.tangem.features.wallet.featuretoggles.WalletFeatureToggles
 import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
@@ -50,8 +50,9 @@ internal class UnlockWalletTransformer(
             is WalletState.MultiCurrency.Content,
             is WalletState.SingleCurrency.Content,
             is WalletState.Visa.Content,
+            is WalletState.Visa.AccessTokenLocked,
             -> {
-                Timber.e("Impossible to unlock wallet with content state")
+                Timber.e("Impossible to unlock wallet with not locked state")
                 prevState
             }
         }
