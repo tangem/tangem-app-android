@@ -20,9 +20,12 @@ internal class DefaultUserWalletsPublicInformationRepository(
     moshi: Moshi,
     private val secureStorage: SecureStorage,
 ) : UserWalletsPublicInformationRepository {
-    private val publicInformationAdapter: JsonAdapter<List<UserWalletPublicInformation>> = moshi.adapter(
-        Types.newParameterizedType(List::class.java, UserWalletPublicInformation::class.java),
-    )
+
+    private val publicInformationAdapter: JsonAdapter<List<UserWalletPublicInformation>> by lazy {
+        moshi.adapter(
+            Types.newParameterizedType(List::class.java, UserWalletPublicInformation::class.java),
+        )
+    }
 
     override suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {

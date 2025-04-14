@@ -3,6 +3,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.approve.model
 import androidx.compose.runtime.Stable
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -15,6 +16,9 @@ import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.OnboardingVisaApproveComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.ui.state.OnboardingVisaApproveUM
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.ONBOARDING_SOURCE
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -32,6 +36,7 @@ internal class OnboardingVisaApproveModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val tangemSdkManager: TangemSdkManager,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingVisaApproveComponent.Config>()
@@ -47,6 +52,10 @@ internal class OnboardingVisaApproveModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
     val onDone = MutableSharedFlow<Unit>()
 
+    init {
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.WalletPrepare)
+    }
+
     private fun getInitialState(): OnboardingVisaApproveUM {
         return OnboardingVisaApproveUM(
             onApproveClick = ::onApproveClick,
@@ -55,6 +64,8 @@ internal class OnboardingVisaApproveModel @Inject constructor(
 
     private fun onApproveClick() {
         loading(true)
+
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ButtonApprove)
 
         modelScope.launch {
             val dataToSign = runCatching {
@@ -77,6 +88,9 @@ internal class OnboardingVisaApproveModel @Inject constructor(
                 is CompletionResult.Failure -> {
                     loading(false)
                     uiMessageSender.showErrorDialog(result.error.universalError)
+                    analyticsEventHandler.send(
+                        VisaAnalyticsEvent.Errors(result.error.code.toString(), ONBOARDING_SOURCE),
+                    )
                     return@launch
                 }
                 is CompletionResult.Success -> result.data

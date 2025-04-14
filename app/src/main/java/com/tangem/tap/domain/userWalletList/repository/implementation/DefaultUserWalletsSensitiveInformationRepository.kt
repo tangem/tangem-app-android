@@ -24,12 +24,15 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     private val secureStorage: SecureStorage,
 ) : UserWalletsSensitiveInformationRepository {
 
-    private val sensitiveInformationAdapter: JsonAdapter<UserWalletSensitiveInformation> = moshi.adapter(
-        UserWalletSensitiveInformation::class.java,
-    )
-    private val encryptedSensitiveInformationMapAdapter: JsonAdapter<Map<String, ByteArray>> = moshi.adapter(
-        Types.newParameterizedType(Map::class.java, String::class.java, ByteArray::class.java),
-    )
+    private val sensitiveInformationAdapter: JsonAdapter<UserWalletSensitiveInformation> by lazy {
+        moshi.adapter(UserWalletSensitiveInformation::class.java)
+    }
+
+    private val encryptedSensitiveInformationMapAdapter: JsonAdapter<Map<String, ByteArray>> by lazy {
+        moshi.adapter(
+            Types.newParameterizedType(Map::class.java, String::class.java, ByteArray::class.java),
+        )
+    }
 
     override suspend fun save(userWallet: UserWallet, encryptionKey: ByteArray?): CompletionResult<Unit> {
         if (encryptionKey == null) {
