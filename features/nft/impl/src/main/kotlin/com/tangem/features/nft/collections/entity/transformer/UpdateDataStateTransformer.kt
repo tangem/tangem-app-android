@@ -20,7 +20,7 @@ internal class UpdateDataStateTransformer(
     private val onRetryClick: () -> Unit,
     private val onExpandCollectionClick: (NFTCollection) -> Unit,
     private val onRetryAssetsClick: (NFTCollection) -> Unit,
-    private val onAssetClick: (NFTAsset) -> Unit,
+    private val onAssetClick: (NFTAsset, String) -> Unit,
     private val initialSearchBarFactory: () -> SearchBarUM,
 ) : Transformer<NFTCollectionsStateUM> {
 
@@ -105,12 +105,12 @@ internal class UpdateDataStateTransformer(
         is NFTCollection.Assets.Value -> NFTCollectionAssetsListUM.Content(
             items = assets
                 .items
-                .map { it.transform() }
+                .map { it.transform(name.orEmpty()) }
                 .toPersistentList(),
         )
     }
 
-    private fun NFTAsset.transform(): NFTCollectionAssetUM = NFTCollectionAssetUM(
+    private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM = NFTCollectionAssetUM(
         id = id.toString(),
         name = name.orEmpty(),
         imageUrl = media?.url,
@@ -121,7 +121,7 @@ internal class UpdateDataStateTransformer(
             is NFTSalePrice.Value -> NFTSalePriceUM.Content(salePrice.value.toString())
         },
         onItemClick = {
-            onAssetClick(this)
+            onAssetClick(this, collectionName)
         },
     )
 
