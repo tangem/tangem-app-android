@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.core.datasource)
     implementation(projects.core.configToggles)
     implementation(projects.core.utils)
+    implementation(projects.core.analytics)
     // endregion
 
     // region AndroidX libraries

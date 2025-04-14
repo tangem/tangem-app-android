@@ -91,8 +91,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     context = context,
                 )
             }
-            is WalletConnectDialog.ClipboardOrScanQr ->
-                ClipboardOrScanQrDialog.create(state.dialog.clipboardUri, context)
             is WalletConnectDialog.RequestTransaction -> TransactionDialog.create(state.dialog.data, context)
             is WalletConnectDialog.PersonalSign -> PersonalSignDialog.create(state.dialog.data, context)
             is WalletConnectDialog.BnbTransactionDialog ->
