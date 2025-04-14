@@ -2,7 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.pincode.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.extensions.toHexString
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @Stable
-@ComponentScoped
+@ModelScoped
 @Suppress("LongParameterList")
 internal class OnboardingVisaPinCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,

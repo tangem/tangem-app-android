@@ -1,22 +1,22 @@
 package com.tangem.tap.common.redux.legacy
 
+import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.features.details.redux.AppSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import org.rekotlin.Middleware
 
 internal object LegacyMiddleware {
@@ -42,10 +42,13 @@ internal object LegacyMiddleware {
                         userWalletsListManager.selectedUserWallet
                             .distinctUntilChanged()
                             .onEach { selectedUserWallet ->
+                                val initializedAppSettingsStateContent = initializeAppSettingsState(
+                                    shouldSaveUserWallets = walletsRepository.shouldSaveUserWalletsSync(),
+                                )
                                 store.dispatchWithMain(
                                     DetailsAction.PrepareScreen(
                                         scanResponse = selectedUserWallet.scanResponse,
-                                        shouldSaveUserWallets = walletsRepository.shouldSaveUserWalletsSync(),
+                                        initializedAppSettingsState = initializedAppSettingsStateContent,
                                     ),
                                 )
                             }
@@ -57,5 +60,23 @@ internal object LegacyMiddleware {
                 next(action)
             }
         }
+    }
+
+    /**
+     * LEGACY: We need to initialize [AppSettingsState] async to avoid drawing blocking
+     * previously it was initialized in runBlocking and blocked details screen
+     */
+    private suspend fun initializeAppSettingsState(shouldSaveUserWallets: Boolean): AppSettingsState {
+        return AppSettingsState(
+            isBiometricsAvailable = tangemSdkManager.checkCanUseBiometry(),
+            saveWallets = shouldSaveUserWallets,
+            saveAccessCodes = store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes(),
+            selectedAppCurrency = store.state.globalState.appCurrency,
+            selectedThemeMode = store.inject(DaggerGraphState::appThemeModeRepository).getAppThemeMode().firstOrNull()
+                ?: AppThemeMode.DEFAULT,
+            isHidingEnabled = store.inject(DaggerGraphState::balanceHidingRepository)
+                .getBalanceHidingSettings().isHidingEnabledInSettings,
+            needEnrollBiometrics = runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() ?: false,
+        )
     }
 }

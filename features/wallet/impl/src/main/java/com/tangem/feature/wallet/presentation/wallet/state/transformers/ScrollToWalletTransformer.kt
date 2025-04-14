@@ -10,6 +10,7 @@ internal class ScrollToWalletTransformer(
     private val prevIndex: Int,
     private val newIndex: Int,
     private val currentStateProvider: Provider<WalletScreenState>,
+    private val withScrollAnimation: Boolean = true,
     private val stateUpdater: (WalletScreenState) -> Unit,
     private val onConsume: () -> Unit = {},
 ) : WalletScreenStateTransformer {
@@ -17,7 +18,11 @@ internal class ScrollToWalletTransformer(
     override fun transform(prevState: WalletScreenState): WalletScreenState {
         return prevState.copy(
             event = triggeredEvent(
-                data = WalletEvent.ChangeWallet(prevIndex = prevIndex, newIndex = newIndex),
+                data = if (withScrollAnimation) {
+                    WalletEvent.ChangeWallet(prevIndex = prevIndex, newIndex = newIndex)
+                } else {
+                    WalletEvent.ChangeWalletWithoutScroll(newIndex = newIndex)
+                },
                 onConsume = {
                     stateUpdater(
                         currentStateProvider().copy(event = consumedEvent()),

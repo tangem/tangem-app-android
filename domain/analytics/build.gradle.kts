@@ -1,6 +1,7 @@
 plugins {
     alias(deps.plugins.kotlin.jvm)
     alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -11,5 +12,7 @@ dependencies {
     implementation(projects.domain.core)
     implementation(projects.domain.wallets.models)
     implementation(deps.moshi.kotlin)
-    kapt(deps.moshi.kotlin.codegen)
+    implementation(deps.arrow.core)
+    implementation(deps.arrow.fx)
+    ksp(deps.moshi.kotlin.codegen)
 }

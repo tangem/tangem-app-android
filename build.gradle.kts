@@ -12,6 +12,8 @@ plugins {
     alias(deps.plugins.firebase.crashlytics) apply false
     alias(deps.plugins.firebase.perf) apply false
     alias(deps.plugins.room) apply false
+    alias(deps.plugins.kotlin.compose.compiler) apply false
+    alias(deps.plugins.ksp) apply false
 }
 
 val clean by tasks.registering {

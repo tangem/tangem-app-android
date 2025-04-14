@@ -81,7 +81,7 @@ class WalletConnectInteractor(
         }
     }
 
-    private suspend fun initWithWallet(userWallet: UserWallet) {
+    private fun initWithWallet(userWallet: UserWallet) {
         if (userWallet.isMultiCurrency) {
             Timber.i("WalletConnect: initialize and setup networks for ${userWallet.walletId}")
             startListeningWc(userWallet.walletId.stringValue, getCardId(userWallet))
@@ -109,7 +109,7 @@ class WalletConnectInteractor(
         handleDeeplinkStack(accounts)
     }
 
-    private suspend fun startListeningWc(userWalletId: String, cardId: String?) {
+    private fun startListeningWc(userWalletId: String, cardId: String?) {
         this.userWalletId = userWalletId
         this.cardId = cardId
         listenerScope.coroutineContext.cancelChildren()
@@ -135,7 +135,9 @@ class WalletConnectInteractor(
             isWalletConnectReadyForDeepLinks = true
             if (deeplinkStack.empty()) return
             val lastDeeplink = deeplinkStack.pop()
-            store.dispatchOnMain(WalletConnectAction.OpenSession(lastDeeplink))
+            val action = WalletConnectAction
+                .OpenSession(lastDeeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            store.dispatchOnMain(action)
         }.onFailure {
             Timber.e("WC deeplink handling failed. $it")
         }
@@ -392,7 +394,8 @@ class WalletConnectInteractor(
         }
 
         if (isWalletConnectReadyForDeepLinks) {
-            store.dispatchOnMain(WalletConnectAction.OpenSession(deeplink))
+            val action = WalletConnectAction.OpenSession(deeplink, WalletConnectAction.OpenSession.SourceType.DEEPLINK)
+            store.dispatchOnMain(action)
         } else {
             deeplinkStack.push(deeplink)
         }

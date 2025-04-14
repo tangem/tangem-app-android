@@ -5,6 +5,7 @@ plugins {
     alias(deps.plugins.kotlin.android)
     alias(deps.plugins.kotlin.kapt)
     alias(deps.plugins.hilt.android)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -42,7 +43,7 @@ dependencies {
     implementation(deps.moshi.kotlin)
     implementation(deps.timber)
     implementation(tangemDeps.blockchain)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
     // endregion
 }

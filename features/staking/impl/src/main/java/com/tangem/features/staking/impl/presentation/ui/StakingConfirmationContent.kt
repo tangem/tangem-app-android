@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -72,6 +73,7 @@ internal fun StakingConfirmationContent(
         )
         StakingFeeBlock(feeState = state.feeState, isTransactionSent = isTransactionSent)
         NotificationsBlock(notifications = state.notifications)
+        Spacer(Modifier)
     }
 }
 

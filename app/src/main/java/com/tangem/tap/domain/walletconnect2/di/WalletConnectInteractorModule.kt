@@ -14,9 +14,7 @@ import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
 import com.tangem.tap.domain.walletconnect2.app.WalletConnectEventsHandlerImpl
 import com.tangem.tap.domain.walletconnect2.data.DefaultLegacyWalletConnectRepository
 import com.tangem.tap.domain.walletconnect2.data.DefaultWalletConnectSessionsRepository
-import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectInteractor
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
+import com.tangem.tap.domain.walletconnect2.domain.*
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -71,11 +69,13 @@ internal object WalletConnectModule {
         application: Application,
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
+        walletConnectFeatureToggles: WalletConnectFeatureToggles,
     ): LegacyWalletConnectRepository {
         return DefaultLegacyWalletConnectRepository(
             application = application,
             wcRequestDeserializer = wcRequestDeserializer,
             analyticsHandler = analyticsHandler,
+            walletConnectFeatureToggles = walletConnectFeatureToggles,
         )
     }
 

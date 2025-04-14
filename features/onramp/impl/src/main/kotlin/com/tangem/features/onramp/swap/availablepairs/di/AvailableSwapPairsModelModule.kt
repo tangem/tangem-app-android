@@ -1,6 +1,6 @@
 package com.tangem.features.onramp.swap.availablepairs.di
 
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.onramp.swap.availablepairs.model.AvailableSwapPairsModel
 import dagger.Binds
@@ -10,7 +10,7 @@ import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface AvailableSwapPairsModelModule {
 
     @Binds

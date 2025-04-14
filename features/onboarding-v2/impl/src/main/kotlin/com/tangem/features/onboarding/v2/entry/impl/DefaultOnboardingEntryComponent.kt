@@ -4,19 +4,23 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.stack.*
+import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.decompose.value.subscribe
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerNavigationHolder
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onboarding.v2.entry.impl.model.OnboardingEntryModel
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingChildFactory
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 import com.tangem.features.onboarding.v2.entry.impl.ui.OnboardingEntry
+import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.stepper.api.OnboardingStepperComponent
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -49,7 +53,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
             popBack = {
                 popInternal { success ->
                     if (success.not()) {
-                        model.stackNavigation.pop()
+                        model.onBack()
                     }
                 }
             },
@@ -87,7 +91,10 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
     @Suppress("MagicNumber")
     private fun linkToInnerNavigation() {
         // stepper linking
-        innerStack.observe { stack ->
+        innerStack.subscribe(
+            lifecycle = lifecycle,
+            mode = ObserveLifecycleMode.CREATE_DESTROY,
+        ) { stack ->
             val activeChild = stack.active.instance
             if (activeChild is InnerNavigationHolder) {
                 componentScope.launch {
@@ -105,9 +112,19 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
             } else {
                 stepperComponent.state.update {
                     it.copy(
-                        currentStep = if (stack.active.configuration is OnboardingRoute.ManageTokens) 7 else 8,
-                        steps = 8,
-                        title = model.titleProvider.currentTitle.value,
+                        currentStep = when (stack.active.configuration) {
+                            is OnboardingRoute.ManageTokens -> 7
+                            is OnboardingRoute.AskBiometry -> 8
+                            is OnboardingRoute.Done -> 9
+                            else -> error("Unsupported route")
+                        },
+                        steps = 9,
+                        title = when (stack.active.configuration) {
+                            is OnboardingRoute.ManageTokens -> resourceReference(R.string.main_manage_tokens)
+                            is OnboardingRoute.AskBiometry -> resourceReference(R.string.onboarding_navbar_save_wallet)
+                            is OnboardingRoute.Done -> resourceReference(R.string.onboarding_done_header)
+                            else -> error("Unsupported route")
+                        },
                         showProgress = true,
                     )
                 }
@@ -127,8 +144,7 @@ internal class DefaultOnboardingEntryComponent @AssistedInject constructor(
     override fun Content(modifier: Modifier) {
         val innerStackState by innerStack.subscribeAsState()
 
-        // prevent back navigation
-        BackHandler { }
+        BackHandler { model.onBack() }
 
         OnboardingEntry(
             modifier = modifier,

@@ -586,7 +586,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
         is BackupAction.DiscardSavedBackup -> {
             mainScope.launch {
-                backupService.primaryCardId?.let {
+                backupService.primaryCardId?.let { // always null for onboarding v2
                     Analytics.send(Onboarding.Finished())
                     store.state.globalState.onboardingState.onboardingManager?.finishActivation(it)
                 }
@@ -597,7 +597,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
                 if (isOnboardingV2Enabled) {
                     val onboardingRepository = store.inject(DaggerGraphState::onboardingRepository)
+                    val cardRepository = store.inject(DaggerGraphState::cardRepository)
+                    val unfinishedBackup = onboardingRepository.getUnfinishedFinalizeOnboarding() ?: return@launch
+
+                    cardRepository.finishCardActivation(unfinishedBackup.card.cardId)
                     onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                    Analytics.send(Onboarding.Finished())
                 }
             }
         }
@@ -622,7 +627,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     push(
                         AppRoute.Onboarding(
                             scanResponse = action.unfinishedBackupScanResponse,
-                            startFromBackup = false,
+                            mode = AppRoute.Onboarding.Mode.ContinueFinalize,
                         ),
                     )
                 }

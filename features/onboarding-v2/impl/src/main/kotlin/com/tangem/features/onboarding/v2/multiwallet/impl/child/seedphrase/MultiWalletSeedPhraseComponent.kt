@@ -39,7 +39,7 @@ internal class MultiWalletSeedPhraseComponent(
                 params.innerNavigation.update { st ->
                     st.copy(
                         stackSize = 3 + it.order,
-                        stackMaxSize = 10,
+                        stackMaxSize = 11,
                     )
                 }
 
