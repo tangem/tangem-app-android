@@ -4,6 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
+import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.NetworksRepository
@@ -20,6 +21,8 @@ import kotlinx.coroutines.delay
 
 class UpdateDelayedNetworkStatusUseCase(
     private val networksRepository: NetworksRepository,
+    private val singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     /**
@@ -47,10 +50,17 @@ class UpdateDelayedNetworkStatusUseCase(
         network: Network,
         refresh: Boolean,
     ) {
-        catch(
-            block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(network), refresh) },
-        ) {
-            raise(CurrencyStatusError.DataError(it))
+        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+            singleNetworkStatusFetcher(
+                params = SingleNetworkStatusFetcher.Params(userWalletId = userWalletId, network = network),
+            )
+                .mapLeft { CurrencyStatusError.DataError(it) }
+        } else {
+            catch(
+                block = { networksRepository.getNetworkStatusesSync(userWalletId, setOf(network), refresh) },
+            ) {
+                raise(CurrencyStatusError.DataError(it))
+            }
         }
     }
 }

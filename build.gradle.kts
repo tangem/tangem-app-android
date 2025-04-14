@@ -59,41 +59,9 @@ val assembleInternalQA by tasks.registering {
     }
 }
 
-val assembleExternalQA by tasks.registering {
-    group = "build"
-    description = "Builds external APK to 'build/outputs' directory"
-
-    val appOutputApkDir = "$projectDir/app/build/outputs/apk/external"
-    val rootOutputApkDir = "$buildDir/outputs"
-    val injected = objects.newInstance<Injected>()
-
-    dependsOn(":app:assembleExternal")
-
-    doFirst {
-        injected.fs.delete {
-            delete(appOutputApkDir)
-            delete("$rootOutputApkDir/app-external.apk")
-        }
-    }
-    doLast {
-        injected.fs.copy {
-            from("$appOutputApkDir/app-external.apk")
-            into(rootOutputApkDir)
-        }
-    }
-}
-
-val assembleQA by tasks.registering {
-    group = "build"
-    description = "Builds internal and external APKs to 'build/outputs' directory"
-
-    dependsOn(assembleInternalQA)
-    dependsOn(assembleExternalQA)
-}
-
 val generateComposeMetrics by tasks.registering {
     group = "other"
-    description = "Build external APK and generates compose metrics to 'build/compose-metrics' directory"
+    description = "Build internal APK and generates compose metrics to 'build/compose-metrics' directory"
 
     subprojects {
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -118,5 +86,5 @@ val generateComposeMetrics by tasks.registering {
         }
     }
 
-    finalizedBy(assembleExternalQA)
+    finalizedBy(assembleInternalQA)
 }
