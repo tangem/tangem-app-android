@@ -4,19 +4,12 @@ import com.tangem.core.configtoggle.feature.FeatureTogglesManager
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.nft.DefaultNFTFeatureToggles
 import com.tangem.features.nft.NFTFeatureToggles
-import com.tangem.features.nft.collections.DefaultNFTCollectionsComponent
 import com.tangem.features.nft.collections.model.NFTCollectionsModel
-import com.tangem.features.nft.component.NFTCollectionsComponent
-import com.tangem.features.nft.component.NFTDetailsBlockComponent
-import com.tangem.features.nft.component.NFTDetailsComponent
-import com.tangem.features.nft.component.NFTReceiveComponent
-import com.tangem.features.nft.component.NFTAssetTraitsComponent
-import com.tangem.features.nft.details.DefaultNFTDetailsComponent
+import com.tangem.features.nft.common.DefaultNFTComponent
+import com.tangem.features.nft.component.*
 import com.tangem.features.nft.details.block.DefaultNFTDetailsBlockComponent
 import com.tangem.features.nft.details.model.NFTDetailsModel
-import com.tangem.features.nft.receive.DefaultNFTReceiveComponent
 import com.tangem.features.nft.receive.model.NFTReceiveModel
-import com.tangem.features.nft.traits.DefaultNFTAssetTraitsComponent
 import com.tangem.features.nft.traits.model.NFTAssetTraitsModel
 import dagger.Binds
 import dagger.Module
@@ -43,9 +36,7 @@ internal object NFTFeatureModule {
 internal interface NFTFeatureModuleBinds {
     @Binds
     @Singleton
-    fun bindNFTCollectionsComponentFactory(
-        impl: DefaultNFTCollectionsComponent.Factory,
-    ): NFTCollectionsComponent.Factory
+    fun bindNFTComponentFactory(impl: DefaultNFTComponent.Factory): NFTComponent.Factory
 
     @Binds
     @IntoMap
@@ -53,17 +44,9 @@ internal interface NFTFeatureModuleBinds {
     fun bindNFTCollectionsModel(model: NFTCollectionsModel): Model
 
     @Binds
-    @Singleton
-    fun bindNFTReceiveComponentFactory(impl: DefaultNFTReceiveComponent.Factory): NFTReceiveComponent.Factory
-
-    @Binds
     @IntoMap
     @ClassKey(NFTReceiveModel::class)
     fun bindNFTReceiveModel(model: NFTReceiveModel): Model
-
-    @Binds
-    @Singleton
-    fun bindNFTDetailsComponentFactory(impl: DefaultNFTDetailsComponent.Factory): NFTDetailsComponent.Factory
 
     @Binds
     @IntoMap
@@ -75,10 +58,6 @@ internal interface NFTFeatureModuleBinds {
     fun bindNFTDetailsBlockComponentFactory(
         impl: DefaultNFTDetailsBlockComponent.Factory,
     ): NFTDetailsBlockComponent.Factory
-
-    @Binds
-    @Singleton
-    fun bindNFTTraitsComponentFactory(impl: DefaultNFTAssetTraitsComponent.Factory): NFTAssetTraitsComponent.Factory
 
     @Binds
     @IntoMap
