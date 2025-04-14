@@ -15,7 +15,7 @@ import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.checkExceedBalance
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.lib.crypto.BlockchainUtils.isUseBitcoinFeeConverter
 import com.tangem.utils.Provider
 import kotlinx.collections.immutable.ImmutableList

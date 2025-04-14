@@ -12,8 +12,10 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.feature.wallet.presentation.organizetokens.model.DraggableItem
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getGroupHeaderId
 import com.tangem.feature.wallet.presentation.organizetokens.utils.common.getTokenItemId
+import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
 internal class CryptoCurrencyToDraggableItemConverter(
@@ -63,7 +65,11 @@ internal class CryptoCurrencyToDraggableItemConverter(
     private fun getFormattedFiatAmount(currency: CryptoCurrencyStatus, appCurrency: AppCurrency): String {
         val yieldBalance = currency.value.yieldBalance as? YieldBalance.Data
         val fiatRate = currency.value.fiatRate ?: BigDecimal.ZERO
-        val fiatYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance()?.multiply(fiatRate) ?: BigDecimal.ZERO
+        val fiatYieldBalance = if (BlockchainUtils.isIncludeStakingTotalBalance(currency.currency.network.id.value)) {
+            yieldBalance?.getTotalWithRewardsStakingBalance()?.multiply(fiatRate).orZero()
+        } else {
+            BigDecimal.ZERO
+        }
 
         val fiatAmount = currency.value.fiatAmount ?: return BigDecimalFormatConstants.EMPTY_BALANCE_SIGN
         return (fiatAmount + fiatYieldBalance).format { fiat(appCurrency.code, appCurrency.symbol) }
