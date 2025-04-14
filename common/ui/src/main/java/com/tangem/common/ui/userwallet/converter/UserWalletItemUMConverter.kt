@@ -2,6 +2,7 @@ package com.tangem.common.ui.userwallet.converter
 
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.extensions.wrappedList
@@ -9,6 +10,7 @@ import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.getCardsCount
+import com.tangem.domain.models.ArtworkModel
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.TotalFiatBalance
 import com.tangem.domain.wallets.models.UserWallet
@@ -31,6 +33,7 @@ class UserWalletItemUMConverter(
     private val balance: TotalFiatBalance? = null,
     private val isBalanceHidden: Boolean = false,
     private val endIcon: UserWalletItemUM.EndIcon = UserWalletItemUM.EndIcon.None,
+    private val artwork: ArtworkModel? = null,
 ) : Converter<UserWallet, UserWalletItemUM> {
 
     override fun convert(value: UserWallet): UserWalletItemUM {
@@ -40,10 +43,12 @@ class UserWalletItemUMConverter(
                 name = stringReference(name),
                 information = getInfo(userWallet = this),
                 balance = getBalanceInfo(userWallet = this),
-                imageUrl = artworkUrl,
                 isEnabled = !isLocked,
                 endIcon = endIcon,
                 onClick = { onClick(value.walletId) },
+                imageState = artwork?.let {
+                    UserWalletItemUM.ImageState.Image(ArtworkUM(it.verifiedArtwork, it.defaultUrl))
+                } ?: UserWalletItemUM.ImageState.Loading,
             )
         }
     }
