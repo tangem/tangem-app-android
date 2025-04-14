@@ -7,7 +7,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,7 +108,7 @@ private fun CollapsedSearchView(
                 .padding(TangemTheme.dimens.spacing16)
                 .size(TangemTheme.dimens.size24)
                 .clickable { onBackClick() },
-            tint = MaterialTheme.colors.onPrimary,
+            tint = TangemTheme.colors.icon.primary1,
         )
         Column(
             verticalArrangement = Arrangement.Center,
@@ -216,7 +219,8 @@ private fun ExpandedSearchView(
                 onDone = { focusManager.clearFocus() },
             ),
             colors = TangemTextFieldsDefault.defaultTextFieldColors.copy(
-                placeholderColor = TangemTheme.colors.text.disabled,
+                focusedPlaceholderColor = TangemTheme.colors.text.disabled,
+                unfocusedPlaceholderColor = TangemTheme.colors.text.disabled,
                 cursorColor = TangemTheme.colors.text.tertiary,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
