@@ -1,6 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.model
 
-import com.tangem.core.ui.components.bottomsheets.tokenreceive.AddressModel
+import com.tangem.common.ui.bottomsheet.receive.AddressModel
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.ScenarioUnavailabilityReason
