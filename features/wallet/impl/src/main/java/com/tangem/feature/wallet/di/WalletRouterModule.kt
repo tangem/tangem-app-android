@@ -1,18 +1,18 @@
 package com.tangem.feature.wallet.di
 
+import com.tangem.core.decompose.di.ModelComponent
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.feature.wallet.presentation.router.DefaultWalletRouter
-import com.tangem.features.wallet.navigation.WalletRouter
+import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ActivityComponent
-import dagger.hilt.android.scopes.ActivityScoped
 
 @Module
-@InstallIn(ActivityComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface WalletRouterModule {
 
     @Binds
-    @ActivityScoped
-    fun bindsWalletRouter(defaultWalletRouter: DefaultWalletRouter): WalletRouter
+    @ModelScoped
+    fun bindsWalletRouter(defaultWalletRouter: DefaultWalletRouter): InnerWalletRouter
 }
