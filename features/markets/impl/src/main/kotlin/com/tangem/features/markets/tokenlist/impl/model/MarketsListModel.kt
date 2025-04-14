@@ -3,7 +3,7 @@ package com.tangem.features.markets.tokenlist.impl.model
 import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
@@ -29,7 +29,7 @@ private const val UPDATE_QUOTES_TIMER_MILLIS = 60000L
 private const val SEARCH_QUERY_DEBOUNCE_MILLIS = 800L
 
 @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
-@ComponentScoped
+@ModelScoped
 @Stable
 internal class MarketsListModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
