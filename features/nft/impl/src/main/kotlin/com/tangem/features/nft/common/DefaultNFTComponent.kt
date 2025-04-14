@@ -18,6 +18,7 @@ import com.tangem.features.nft.collections.NFTCollectionsComponent
 import com.tangem.features.nft.common.ui.NFTContent
 import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.nft.details.NFTDetailsComponent
+import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
 import com.tangem.features.nft.receive.NFTReceiveComponent
 import com.tangem.features.nft.traits.NFTAssetTraitsComponent
 import dagger.assisted.Assisted
@@ -29,6 +30,7 @@ import kotlinx.coroutines.launch
 internal class DefaultNFTComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: NFTComponent.Params,
+    private val nftDetailsInfoComponentFactory: NFTDetailsInfoComponent.Factory,
 ) : NFTComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<NFTRoute>()
@@ -142,6 +144,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
                 )
             },
         ),
+        nftDetailsInfoComponentFactory = nftDetailsInfoComponentFactory,
     )
 
     private fun getAssetTraitsComponent(
