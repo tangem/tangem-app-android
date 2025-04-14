@@ -27,6 +27,7 @@ import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendCon
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmationNotificationsTransformer
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
@@ -50,6 +51,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val neverShowTapHelpUseCase: NeverShowTapHelpUseCase,
     private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
+    private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
@@ -219,7 +221,7 @@ internal class NFTSendConfirmModel @Inject constructor(
     // }
 
     private fun subscribeOnCheckFeeResultUpdates() {
-        sendFeeCheckReloadTrigger.checkReloadResultFlow.onEach { isFeeResultSuccess ->
+        sendFeeCheckReloadListener.checkReloadResultFlow.onEach { isFeeResultSuccess ->
             if (isFeeResultSuccess) {
                 sendIdleTimer = SystemClock.elapsedRealtime()
                 _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = true))
