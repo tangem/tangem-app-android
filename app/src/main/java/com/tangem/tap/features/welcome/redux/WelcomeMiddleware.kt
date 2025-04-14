@@ -23,6 +23,7 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
+import com.tangem.tap.mainScope
 import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -46,7 +47,7 @@ internal class WelcomeMiddleware {
     }
 
     private fun handleAction(action: WelcomeAction, state: WelcomeState) {
-        state.scope?.launch {
+        mainScope.launch {
             when (action) {
                 is WelcomeAction.ProceedWithIntent -> proceedWithIntent(action.intent, scope = this)
                 is WelcomeAction.ProceedWithBiometrics -> proceedWithBiometrics(

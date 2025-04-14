@@ -1,6 +1,6 @@
 package com.tangem.features.managetokens.di
 
-import com.tangem.core.decompose.di.DecomposeComponent
+import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
 import com.tangem.features.managetokens.model.CustomTokenFormModel
 import com.tangem.features.managetokens.model.CustomTokenSelectorModel
@@ -13,7 +13,7 @@ import dagger.multibindings.ClassKey
 import dagger.multibindings.IntoMap
 
 @Module
-@InstallIn(DecomposeComponent::class)
+@InstallIn(ModelComponent::class)
 internal interface ModelModule {
 
     @Binds
