@@ -6,12 +6,14 @@ import com.tangem.domain.txhistory.models.TxHistoryItem
 import com.tangem.features.txhistory.converter.TxHistoryItemToTransactionStateConverter
 import com.tangem.features.txhistory.entity.TxHistoryUM
 import com.tangem.pagination.Batch
+import com.tangem.pagination.PaginationStatus
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.mapLatest
 import java.util.UUID
 
@@ -23,6 +25,8 @@ internal class TxHistoryUiManager(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val items: Flow<ImmutableList<TxHistoryUM.TxHistoryItemUM>> = state
+        // filter initial states, since we dont emit loading items as UI items
+        .filter { it.status !is PaginationStatus.None && it.status !is PaginationStatus.InitialLoading }
         .mapLatest { state ->
             state.uiBatches.asSequence()
                 .flatMap { it.data }
