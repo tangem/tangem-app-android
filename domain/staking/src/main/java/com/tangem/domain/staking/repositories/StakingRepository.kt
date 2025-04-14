@@ -27,7 +27,7 @@ interface StakingRepository {
 
     fun getSupportedIntegrationId(cryptoCurrencyId: CryptoCurrency.ID): String?
 
-    suspend fun fetchEnabledYields(refresh: Boolean)
+    suspend fun fetchEnabledYields()
 
     suspend fun getEntryInfo(cryptoCurrencyId: CryptoCurrency.ID, symbol: String): StakingEntryInfo
 

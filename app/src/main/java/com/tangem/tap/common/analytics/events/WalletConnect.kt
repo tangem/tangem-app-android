@@ -9,8 +9,7 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.O
 internal sealed class WalletConnect(
     event: String,
     params: Map<String, String> = mapOf(),
-    error: Throwable? = null,
-) : AnalyticsEvent("Wallet Connect", event, params, error) {
+) : AnalyticsEvent("Wallet Connect", event, params) {
 
     class ScreenOpened : WalletConnect(event = "WC Screen Opened")
     class NewSessionInitiated(source: SourceType) : WalletConnect(

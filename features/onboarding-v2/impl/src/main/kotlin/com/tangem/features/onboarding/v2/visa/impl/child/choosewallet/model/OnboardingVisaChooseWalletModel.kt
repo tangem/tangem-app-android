@@ -3,7 +3,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.model
 import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.OnboardingVisaChooseWalletComponent.Params.Event
 import com.tangem.features.onboarding.v2.visa.impl.child.choosewallet.ui.state.OnboardingVisaChooseWalletUM
@@ -32,7 +32,7 @@ internal class OnboardingVisaChooseWalletModel @Inject constructor(
         val selectedOption = SelectableChainRowUM(
             event = Event.TangemWallet,
             icon = R.drawable.ic_tangem_24,
-            text = TextReference.Str("Tangem Wallet"),
+            text = resourceReference(R.string.common_tangem_wallet),
         )
 
         return OnboardingVisaChooseWalletUM(
@@ -41,7 +41,7 @@ internal class OnboardingVisaChooseWalletModel @Inject constructor(
                 SelectableChainRowUM(
                     event = Event.OtherWallet,
                     icon = R.drawable.ic_wallet_filled_24,
-                    text = TextReference.Str("Other Wallet"),
+                    text = resourceReference(R.string.visa_onboarding_other_wallet),
                 ),
             ),
             selectedOption = selectedOption,

@@ -10,8 +10,7 @@ sealed class Token(
     category: String,
     event: String,
     params: Map<String, String> = mapOf(),
-    error: Throwable? = null,
-) : AnalyticsEvent(category, event, params, error) {
+) : AnalyticsEvent(category, event, params) {
 
     sealed class Receive(
         event: String,
