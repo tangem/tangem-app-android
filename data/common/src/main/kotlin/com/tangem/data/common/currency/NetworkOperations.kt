@@ -301,6 +301,7 @@ private fun Blockchain.getSupportedTransactionExtras(): Network.TransactionExtra
         Blockchain.ApeChain, Blockchain.ApeChainTestnet,
         Blockchain.Scroll, Blockchain.ScrollTestnet,
         Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet,
+        Blockchain.Pepecoin, Blockchain.PepecoinTestnet,
         -> Network.TransactionExtrasType.NONE
         // endregion
     }
