@@ -9,7 +9,7 @@ import com.tangem.features.send.impl.presentation.state.StateRouter
 import com.tangem.features.send.impl.presentation.state.fee.custom.BitcoinCustomFeeConverter
 import com.tangem.features.send.impl.presentation.state.fee.custom.EthereumCustomFeeConverter
 import com.tangem.features.send.impl.presentation.state.fee.custom.KaspaCustomFeeConverter
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
