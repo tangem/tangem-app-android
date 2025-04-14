@@ -23,12 +23,13 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import arrow.core.getOrElse
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.arkivanov.decompose.value.observe
+import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.asEssentyLifecycle
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import com.google.android.material.snackbar.Snackbar
@@ -46,6 +47,7 @@ import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.data.balancehiding.DefaultDeviceFlipDetector
 import com.tangem.data.card.sdk.CardSdkOwner
 import com.tangem.domain.apptheme.model.AppThemeMode
 import com.tangem.domain.card.ScanCardUseCase
@@ -59,14 +61,9 @@ import com.tangem.domain.staking.SendUnsubmittedHashesUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.feature.qrscanning.QrScanningRouter
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
-import com.tangem.features.pushnotifications.api.navigation.PushNotificationsRouter
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
-import com.tangem.features.send.api.navigation.SendRouter
-import com.tangem.features.tokendetails.navigation.TokenDetailsRouter
-import com.tangem.features.wallet.navigation.WalletRouter
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
@@ -111,11 +108,11 @@ internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
 var notificationsHandler: NotificationsHandler? = null
 
 private val coroutineContext: CoroutineContext
-    get() = Job() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
+    get() = SupervisorJob() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
 val scope = CoroutineScope(coroutineContext)
 
 private val mainCoroutineContext: CoroutineContext
-    get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
+    get() = SupervisorJob() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
 
 @Suppress("LargeClass")
@@ -139,19 +136,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     lateinit var scanCardUseCase: ScanCardUseCase
 
     @Inject
-    lateinit var walletRouter: WalletRouter
-
-    @Inject
-    lateinit var tokenDetailsRouter: TokenDetailsRouter
-
-    @Inject
     lateinit var walletConnectInteractor: WalletConnectInteractor
-
-    @Inject
-    lateinit var sendRouter: SendRouter
-
-    @Inject
-    lateinit var qrScanningRouter: QrScanningRouter
 
     @Inject
     lateinit var deepLinksRegistry: DeepLinksRegistry
@@ -188,9 +173,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     internal lateinit var routingComponentFactory: RoutingComponent.Factory
 
     @Inject
-    lateinit var pushNotificationsRouter: PushNotificationsRouter
-
-    @Inject
     lateinit var cardRepository: CardRepository
 
     @Inject
@@ -216,6 +198,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     internal lateinit var uiDependencies: UiDependencies
+
+    @Inject
+    internal lateinit var defaultDeviceFlipDetector: DefaultDeviceFlipDetector
 
     internal val viewModel: MainViewModel by viewModels()
 
@@ -283,6 +268,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         lifecycle.addObserver(WindowObscurationObserver)
+        lifecycle.addObserver(defaultDeviceFlipDetector)
     }
 
     private fun installEventMessageEffect() {
@@ -336,14 +322,27 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         appRouterConfig.componentRouter = routingComponent.router
         appRouterConfig.snackbarHandler = this
 
-        routingComponent.stack.observe(lifecycle.asEssentyLifecycle()) { childStack ->
+        routingComponent.stack.subscribe(lifecycle.asEssentyLifecycle()) { childStack ->
             val stack = childStack.backStack
                 .plus(childStack.active)
                 .map { it.configuration }
 
-            if (stack == appRouterConfig.stack) return@observe
+            if (stack == appRouterConfig.stack) return@subscribe
 
             appRouterConfig.stack = stack
+
+            if (stack.size == 1) {
+                supportFragmentManager.run {
+                    val activeChildName = stack.first().path
+
+                    (0 until backStackEntryCount)
+                        .mapNotNull { getBackStackEntryAt(it).name }
+                        .filter { it != activeChildName }
+                        .forEach {
+                            popBackStackImmediate(it, POP_BACK_STACK_INCLUSIVE)
+                        }
+                }
+            }
 
             when (val child = childStack.active.instance) {
                 is RoutingComponent.Child.Initial -> Unit
@@ -370,7 +369,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         }
 
         lockUserWalletsTimer = LockUserWalletsTimer(
-            owner = this,
+            context = this,
             settingsRepository = settingsRepository,
             userWalletsListManager = userWalletsListManager,
             coroutineScope = mainScope,
