@@ -25,6 +25,8 @@ import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParam
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
 import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents
 import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents.SelectedCurrencyType
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
+import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.isNullOrZero
@@ -41,6 +43,7 @@ internal class SendAmountModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val sendAmountReduceListener: SendAmountReduceListener,
+    private val feeReloadTrigger: SendFeeReloadTrigger,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), AmountScreenClickIntents {
 
@@ -170,6 +173,11 @@ internal class SendAmountModel @Inject constructor(
                         value = reduceTo,
                     ),
                 )
+                feeReloadTrigger.triggerUpdate(
+                    feeData = SendFeeData(
+                        amount = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value,
+                    ),
+                )
             }
             .launchIn(modelScope)
     }
@@ -182,6 +190,11 @@ internal class SendAmountModel @Inject constructor(
                         cryptoCurrencyStatus = cryptoCurrencyStatus,
                         minimumTransactionAmount = minAmountBoundary,
                         value = reduceByData,
+                    ),
+                )
+                feeReloadTrigger.triggerUpdate(
+                    feeData = SendFeeData(
+                        amount = (uiState.value as? AmountState.Data)?.amountTextField?.cryptoAmount?.value,
                     ),
                 )
             }

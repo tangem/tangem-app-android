@@ -1,27 +1,29 @@
 package com.tangem.features.send.v2.subcomponents.fee.di
 
-import com.tangem.features.send.v2.subcomponents.fee.DefaultSendFeeReloadTrigger
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadTrigger
-import com.tangem.features.send.v2.subcomponents.fee.SendFeeReloadTrigger
+import com.tangem.features.send.v2.subcomponents.fee.*
+import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @InstallIn(SingletonComponent::class)
 @Module
-internal object SendFeeModule {
+internal interface SendFeeModule {
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideSendFeeReloadTrigger(): SendFeeReloadTrigger {
-        return DefaultSendFeeReloadTrigger()
-    }
+    fun provideSendFeeReloadTrigger(impl: DefaultSendFeeReloadTrigger): SendFeeReloadTrigger
 
-    @Provides
+    @Binds
     @Singleton
-    fun provideSendFeeCheckReloadTrigger(): SendFeeCheckReloadTrigger {
-        return DefaultSendFeeReloadTrigger()
-    }
+    fun provideSendFeeReloadListener(impl: DefaultSendFeeReloadTrigger): SendFeeReloadListener
+
+    @Binds
+    @Singleton
+    fun provideSendFeeCheckReloadTrigger(impl: DefaultSendFeeReloadTrigger): SendFeeCheckReloadTrigger
+
+    @Binds
+    @Singleton
+    fun provideSendFeeCheckReloadListener(impl: DefaultSendFeeReloadTrigger): SendFeeCheckReloadListener
 }
