@@ -32,8 +32,6 @@ internal class OrganizeTokensComponent(
     override fun Content(modifier: Modifier) {
         val uiState by model.uiState.collectAsStateWithLifecycle()
 
-        OrganizeTokensScreen(
-            state = uiState,
-        )
+        OrganizeTokensScreen(state = uiState)
     }
 }
