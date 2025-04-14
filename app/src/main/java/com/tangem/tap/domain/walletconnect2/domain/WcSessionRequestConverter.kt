@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
