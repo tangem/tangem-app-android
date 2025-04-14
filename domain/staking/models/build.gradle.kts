@@ -3,7 +3,7 @@ import com.tangem.plugin.configuration.configurations.extension.kaptForObfuscati
 plugins {
     alias(deps.plugins.kotlin.jvm)
     alias(deps.plugins.kotlin.serialization)
-    alias(deps.plugins.kotlin.kapt)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -15,5 +15,5 @@ dependencies {
     implementation(deps.jodatime)
 
     implementation(deps.moshi)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
 }

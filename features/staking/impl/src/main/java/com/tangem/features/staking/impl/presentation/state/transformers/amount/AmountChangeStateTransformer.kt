@@ -40,6 +40,7 @@ internal class AmountChangeStateTransformer(
         return prevState.copy(
             amountState = AmountRequirementStateTransformer(
                 cryptoCurrencyStatus = cryptoCurrencyStatus,
+                maxAmount = maxEnterAmount,
                 yield = yield,
                 actionType = prevState.actionType,
             ).transform(updatedAmountState),
