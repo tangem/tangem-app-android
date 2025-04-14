@@ -709,6 +709,11 @@ class DefaultWalletManagersFacade(
         return walletManager.getSalePrice(collectionIdentifier, assetIdentifier)
     }
 
+    override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        return blockchain.getNFTExploreUrl(assetIdentifier)
+    }
+
     override suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean {
         val walletManager = getOrCreateWalletManager(userWalletId = userWalletId, network = network)
         val initializableAccountWalletManger = walletManager as? InitializableAccount ?: return true
