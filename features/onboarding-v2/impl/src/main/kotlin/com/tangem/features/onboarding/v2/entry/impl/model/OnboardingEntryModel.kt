@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.domain.models.scan.ProductType
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,7 +13,6 @@ import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
@@ -29,6 +29,7 @@ import com.tangem.features.onboarding.v2.entry.impl.analytics.OnboardingEntryEve
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.NonCancellable
@@ -150,10 +151,16 @@ internal class OnboardingEntryModel @Inject constructor(
         if (askBiometryFeatureToggles.isAskForBiometryEnabled) {
             modelScope.launch {
                 if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+                    doIfVisa {
+                        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened)
+                    }
                     stackNavigation.replaceAll(
                         OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks(doneMode)),
                     )
                 } else {
+                    doIfVisa {
+                        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+                    }
                     stackNavigation.replaceAll(
                         OnboardingRoute.Done(
                             mode = doneMode,
@@ -163,6 +170,9 @@ internal class OnboardingEntryModel @Inject constructor(
                 }
             }
         } else {
+            doIfVisa {
+                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+            }
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
                     mode = doneMode,
@@ -177,6 +187,9 @@ internal class OnboardingEntryModel @Inject constructor(
     ) : AskBiometryComponent.ModelCallbacks {
         override fun onAllowed() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.On))
+            doIfVisa {
+                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+            }
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
                     mode = doneMode,
@@ -187,6 +200,9 @@ internal class OnboardingEntryModel @Inject constructor(
 
         override fun onDenied() {
             analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.Off))
+            doIfVisa {
+                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+            }
             stackNavigation.replaceAll(
                 OnboardingRoute.Done(
                     mode = doneMode,
@@ -229,6 +245,12 @@ internal class OnboardingEntryModel @Inject constructor(
             } else {
                 router.replaceAll(AppRoute.Home)
             }
+        }
+    }
+
+    private inline fun doIfVisa(function: () -> Unit) {
+        if (params.scanResponse.productType == ProductType.Visa) {
+            function()
         }
     }
 
