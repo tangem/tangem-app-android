@@ -29,17 +29,11 @@ internal fun RecipientBlock(
     isEditingDisabled: Boolean,
     onClick: () -> Unit,
 ) {
-    val backgroundColor = if (isEditingDisabled) {
-        TangemTheme.colors.button.disabled
-    } else {
-        TangemTheme.colors.background.action
-    }
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(backgroundColor)
+            .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing12),
     ) {
