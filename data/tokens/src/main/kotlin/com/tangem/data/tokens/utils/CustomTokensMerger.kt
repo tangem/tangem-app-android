@@ -1,5 +1,6 @@
 package com.tangem.data.tokens.utils
 
+import arrow.atomic.AtomicBoolean
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
@@ -31,31 +32,44 @@ internal class CustomTokensMerger(
      * @return A potentially updated UserTokensResponse, with custom tokens merged if necessary.
      */
     suspend fun mergeIfPresented(userWalletId: UserWalletId, response: UserTokensResponse): UserTokensResponse {
+        // use flag to check: we can't compare two token list after merge because Token equals don't include some fields
+        val wasMerged = AtomicBoolean(false)
+
         val mergedTokens = withContext(dispatchers.default) {
             response.tokens
                 .map { token ->
-                    async { mergeIfPresented(token) }
+                    async { mergeIfPresented(token, wasMerged) }
                 }
                 .awaitAll()
         }
         val updatedResponse = response.copy(tokens = mergedTokens)
 
-        if (response.tokens != updatedResponse.tokens) {
+        // previously here was used compare response.tokens, but it's not working correctly
+        // because Token.equals() skip some fields
+        if (wasMerged.value) {
             pushTokens(userWalletId, updatedResponse)
         }
 
         return updatedResponse
     }
 
-    private suspend fun mergeIfPresented(token: UserTokensResponse.Token): UserTokensResponse.Token {
+    private suspend fun mergeIfPresented(
+        token: UserTokensResponse.Token,
+        wasMerged: AtomicBoolean,
+    ): UserTokensResponse.Token {
         if (isCoinOrNonCustomToken(token)) return token
 
-        return merge(token)
+        return merge(token, wasMerged)
     }
 
-    private suspend fun merge(customToken: UserTokensResponse.Token): UserTokensResponse.Token {
+    private suspend fun merge(
+        customToken: UserTokensResponse.Token,
+        wasMerged: AtomicBoolean,
+    ): UserTokensResponse.Token {
         val foundToken = fetchToken(customToken)
-
+        if (foundToken != null) {
+            wasMerged.set(true)
+        }
         return foundToken ?: customToken
     }
 
