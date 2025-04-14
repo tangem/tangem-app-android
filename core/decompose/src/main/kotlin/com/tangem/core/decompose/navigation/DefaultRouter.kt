@@ -24,7 +24,7 @@ internal class DefaultRouter(
 
         navigation.navigate(
             transformer = { newRoutes },
-            onComplete = { newStack, _ -> onComplete(newStack.size == newRoutes.size) },
+            onComplete = { newStack, _ -> newStack == newRoutes },
         )
     }
 
