@@ -2,7 +2,6 @@ package com.tangem.features.nft.collections.ui
 
 import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Icon
@@ -11,25 +10,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
-import coil.compose.SubcomposeAsyncImage
-import coil.request.ImageRequest
-import com.tangem.core.ui.components.RectangleShimmer
-import com.tangem.core.ui.components.currency.icon.CurrencyIconTopBadge
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.collections.entity.NFTCollectionAssetsListUM
 import com.tangem.features.nft.collections.entity.NFTCollectionUM
+import com.tangem.features.nft.common.ui.NFTLogo
 import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
 
@@ -52,7 +45,11 @@ internal fun NFTCollection(state: NFTCollectionUM, modifier: Modifier = Modifier
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Logo(state)
+            NFTLogo(
+                imageUrl = state.logoUrl,
+                networkIconId = state.networkIconId,
+                background = TangemTheme.colors.background.primary,
+            )
 
             Text(state)
 
@@ -78,46 +75,6 @@ internal fun NFTCollection(state: NFTCollectionUM, modifier: Modifier = Modifier
                 contentDescription = null,
             )
         }
-    }
-}
-
-@Composable
-private fun Logo(state: NFTCollectionUM) {
-    val networkBadgeOffset = TangemTheme.dimens.spacing6
-
-    Box(
-        modifier = Modifier,
-    ) {
-        SubcomposeAsyncImage(
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .size(TangemTheme.dimens.size36)
-                .clip(TangemTheme.shapes.roundedCorners8),
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(state.logoUrl)
-                .crossfade(true)
-                .build(),
-            loading = {
-                RectangleShimmer(radius = TangemTheme.dimens.radius8)
-            },
-            error = {
-                Box(
-                    modifier = Modifier
-                        .clip(shape = TangemTheme.shapes.roundedCorners8)
-                        .background(TangemTheme.colors.field.primary),
-                )
-            },
-            contentScale = ContentScale.Crop,
-            contentDescription = null,
-        )
-        CurrencyIconTopBadge(
-            modifier = Modifier
-                .offset(x = networkBadgeOffset, y = -networkBadgeOffset)
-                .align(Alignment.TopEnd),
-            iconResId = state.networkIconId,
-            alpha = 1f,
-            colorFilter = null,
-        )
     }
 }
 
