@@ -20,6 +20,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.builder.UserWalletIdBuilder
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
+import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -55,6 +56,7 @@ internal class CardSettingsModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
+    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
     private val params = paramsContainer.require<CardSettingsComponent.Params>()
@@ -198,13 +200,24 @@ internal class CardSettingsModel @Inject constructor(
         }
 
         if (scanResponse.cardTypesResolver.isTangemTwins()) {
-            // needs to prepare twin state if it's twin cards (depends on onboarding refactoring)
-            store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
-            store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet(scanResponse)))
+            if (onboardingV2FeatureToggles.isTwinRefactoringEnabled) {
+                store.dispatchNavigationAction {
+                    push(
+                        AppRoute.Onboarding(
+                            scanResponse = scanResponse,
+                            mode = AppRoute.Onboarding.Mode.RecreateWalletTwin,
+                        ),
+                    )
+                }
+            } else {
+                // needs to prepare twin state if it's twin cards (depends on onboarding refactoring)
+                store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
+                store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet(scanResponse)))
 
-            cardSettingsInteractor.clear()
+                cardSettingsInteractor.clear()
 
-            store.dispatchNavigationAction { push(AppRoute.OnboardingTwins) }
+                store.dispatchNavigationAction { push(AppRoute.OnboardingTwins) }
+            }
         } else {
             val card = scanResponse.card
 
