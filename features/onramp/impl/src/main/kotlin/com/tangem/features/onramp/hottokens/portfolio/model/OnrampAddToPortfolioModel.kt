@@ -1,7 +1,7 @@
 package com.tangem.features.onramp.hottokens.portfolio.model
 
 import arrow.core.getOrElse
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.card.DerivePublicKeysUseCase
@@ -29,7 +29,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
-@ComponentScoped
+@ModelScoped
 internal class OnrampAddToPortfolioModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
