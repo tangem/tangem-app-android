@@ -146,4 +146,10 @@ sealed class Lce<out E : Any, out C : Any> {
         ifContent = { predicate(it) },
         ifError = { false },
     )
+
+    fun onError(action: (error: E) -> Unit): Lce<E, C> {
+        if (this is Error) action(this.error)
+
+        return this
+    }
 }
