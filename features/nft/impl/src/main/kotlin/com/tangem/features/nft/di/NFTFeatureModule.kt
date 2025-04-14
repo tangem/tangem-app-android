@@ -8,6 +8,8 @@ import com.tangem.features.nft.collections.model.NFTCollectionsModel
 import com.tangem.features.nft.common.DefaultNFTComponent
 import com.tangem.features.nft.component.*
 import com.tangem.features.nft.details.block.DefaultNFTDetailsBlockComponent
+import com.tangem.features.nft.details.info.DefaultNFTDetailsInfoComponent
+import com.tangem.features.nft.details.info.NFTDetailsInfoComponent
 import com.tangem.features.nft.details.model.NFTDetailsModel
 import com.tangem.features.nft.receive.model.NFTReceiveModel
 import com.tangem.features.nft.traits.model.NFTAssetTraitsModel
@@ -34,6 +36,12 @@ internal object NFTFeatureModule {
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface NFTFeatureModuleBinds {
+    @Binds
+    @Singleton
+    fun bindNFTDetailsInfoComponentFactory(
+        factory: DefaultNFTDetailsInfoComponent.Factory,
+    ): NFTDetailsInfoComponent.Factory
+
     @Binds
     @Singleton
     fun bindNFTComponentFactory(impl: DefaultNFTComponent.Factory): NFTComponent.Factory
