@@ -2,7 +2,6 @@ package com.tangem.tap.di
 
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.datasource.exchangeservice.swap.ExpressServiceLoader
-import com.tangem.datasource.local.token.ExpressAssetsStore
 import com.tangem.domain.card.ScanCardUseCase
 import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.exchange.RampStateManager
@@ -55,7 +54,6 @@ internal object ActivityModule {
         excludedBlockchains: ExcludedBlockchains,
         dispatchers: CoroutineDispatcherProvider,
         onrampFeatureToggles: OnrampFeatureToggles,
-        expressAssetsStore: ExpressAssetsStore,
     ): RampStateManager {
         return DefaultRampManager(
             exchangeService = appStateHolder.exchangeService,
@@ -67,7 +65,6 @@ internal object ActivityModule {
             excludedBlockchains = excludedBlockchains,
             dispatchers = dispatchers,
             onrampFeatureToggles = onrampFeatureToggles,
-            expressAssetsStore = expressAssetsStore,
         )
     }
 
