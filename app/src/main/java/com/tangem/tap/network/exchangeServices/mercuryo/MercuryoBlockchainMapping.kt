@@ -153,6 +153,8 @@ internal val Blockchain.mercuryoNetwork: String?
             Blockchain.Bitrock, Blockchain.BitrockTestnet -> null
             Blockchain.Sonic, Blockchain.SonicTestnet -> null
             Blockchain.ApeChain, Blockchain.ApeChainTestnet -> null
+            Blockchain.Scroll, Blockchain.ScrollTestnet -> null
+            Blockchain.ZkLinkNova, Blockchain.ZkLinkNovaTestnet -> null
             Blockchain.KaspaTestnet -> null
         }
     }
