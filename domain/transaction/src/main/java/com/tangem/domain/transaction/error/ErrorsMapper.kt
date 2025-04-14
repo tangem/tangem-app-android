@@ -16,6 +16,9 @@ fun Result.Failure.mapToFeeError(): GetFeeError {
         is BlockchainSdkError.Kaspa.ZeroUtxoError -> {
             GetFeeError.BlockchainErrors.KaspaZeroUtxo
         }
+        is BlockchainSdkError.Sui.OneSuiRequired -> {
+            GetFeeError.BlockchainErrors.SuiOneCoinRequired
+        }
         else -> GetFeeError.DataError(this.error)
     }
 }

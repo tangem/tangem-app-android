@@ -62,7 +62,6 @@ internal class BalanceItemConverter(
                 pendingActions = value.pendingActions.toPersistentList(),
                 isClickable = value.type.isClickable() && !value.isPending,
                 isPending = value.isPending,
-                date = value.date ?: DateTime.now(),
             )
         }
     }
