@@ -312,6 +312,11 @@ val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
     error("No MainBottomSheetColor provided")
 }
 
+// TODO remove this after migration to new navigation
+val LocalIsNavigationRefactoringEnabled = staticCompositionLocalOf<Boolean> {
+    false
+}
+
 /**
  * Determines whether the dark theme should be used based on the given [AppThemeMode].
  *
