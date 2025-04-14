@@ -11,12 +11,9 @@ import androidx.compose.ui.Modifier
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.appbar.TangemTopAppBar
 import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.nft.details.entity.NFTDetailsUM
-import com.tangem.features.nft.details.entity.NFTInfoBottomSheetConfig
-import com.tangem.features.nft.details.ui.bottomsheet.NFTInfoBottomSheet
 import com.tangem.features.nft.impl.R
 
 @Composable
@@ -45,7 +42,6 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     .padding(innerPadding),
             )
-            ShowBottomSheet(state.bottomSheetConfig)
         },
         floatingActionButtonPosition = FabPosition.Center,
         floatingActionButton = {
@@ -58,12 +54,4 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
             )
         },
     )
-}
-
-@Composable
-fun ShowBottomSheet(bottomSheetConfig: TangemBottomSheetConfig?) {
-    if (bottomSheetConfig == null) return
-    when (bottomSheetConfig.content) {
-        is NFTInfoBottomSheetConfig -> NFTInfoBottomSheet(bottomSheetConfig)
-    }
 }
