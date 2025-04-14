@@ -1,5 +1,6 @@
 package com.tangem.datasource.api.visa
 
+import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.visa.models.response.GenerateNonceResponse
 import com.tangem.datasource.api.visa.models.response.JWTResponse
 import retrofit2.http.Field
@@ -27,5 +28,5 @@ interface TangemVisaAuthApi {
     ): JWTResponse
 
     @POST("auth/refresh_token")
-    suspend fun refreshAccessToken(@Field("refresh_token") refreshToken: String): JWTResponse
+    suspend fun refreshAccessToken(@Field("refresh_token") refreshToken: String): ApiResponse<JWTResponse>
 }

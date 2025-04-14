@@ -8,5 +8,5 @@ interface HiltComponentBuilderOwner {
     /**
      * Provides access to the Hilt component builder instance.
      */
-    val hiltComponentBuilder: DecomposeComponent.Builder
+    val hiltComponentBuilder: ModelComponent.Builder
 }

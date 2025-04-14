@@ -2,7 +2,6 @@ package com.tangem.feature.wallet.presentation.wallet.ui.components.common
 
 import android.content.res.Configuration
 import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -14,9 +13,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -30,6 +26,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -48,13 +45,14 @@ import com.tangem.core.ui.components.text.applyBladeBrush
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.orMaskWithStars
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemDimens
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.feature.wallet.impl.R
 import com.tangem.feature.wallet.presentation.common.WalletPreviewData
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletCardState
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDropDownItems
+import com.tangem.feature.wallet.presentation.wallet.ui.components.fastForEach
+import kotlinx.collections.immutable.ImmutableList
 
 private const val HALF_OF_ITEM_WIDTH = 0.5
 
@@ -71,8 +69,7 @@ private const val HALF_OF_ITEM_WIDTH = 0.5
 internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifier: Modifier = Modifier) {
     @Suppress("DestructuringDeclarationWithTooManyEntries")
     CardContainer(
-        onDeleteClick = { state.onDeleteClick(state.id) },
-        onRenameClick = { state.onRenameClick(state.id) },
+        dropDownItems = state.dropDownItems,
         isLockedState = state is WalletCardState.LockedContent,
         modifier = modifier,
     ) { itemSize ->
@@ -148,8 +145,7 @@ internal fun WalletCard(state: WalletCardState, isBalanceHidden: Boolean, modifi
 
 @Composable
 private fun CardContainer(
-    onDeleteClick: () -> Unit,
-    onRenameClick: () -> Unit,
+    dropDownItems: ImmutableList<WalletDropDownItems>,
     isLockedState: Boolean,
     modifier: Modifier = Modifier,
     content: @Composable (ConstraintLayoutScope.(IntSize) -> Unit),
@@ -167,7 +163,7 @@ private fun CardContainer(
             .defaultMinSize(minHeight = TangemTheme.dimens.size108)
             .onSizeChanged { itemSize = it }
             .then(
-                if (isLockedState) {
+                if (isLockedState || dropDownItems.isEmpty()) {
                     Modifier
                 } else {
                     Modifier
@@ -210,8 +206,7 @@ private fun CardContainer(
         pressOffset = pressOffset,
         itemHeight = itemHeight,
         onDismissRequest = { isMenuVisible = false },
-        onShowRenameWalletDialogClick = onRenameClick,
-        onDeleteClick = onDeleteClick,
+        dropDownItems = dropDownItems,
     )
 }
 
@@ -222,8 +217,7 @@ private fun ManageWalletContextMenu(
     pressOffset: DpOffset,
     itemHeight: Dp,
     onDismissRequest: () -> Unit,
-    onShowRenameWalletDialogClick: () -> Unit,
-    onDeleteClick: () -> Unit,
+    dropDownItems: ImmutableList<WalletDropDownItems>,
 ) {
     DropdownMenu(
         expanded = isMenuVisible,
@@ -231,29 +225,23 @@ private fun ManageWalletContextMenu(
         modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
         offset = pressOffset.copy(y = pressOffset.y - itemHeight),
     ) {
-        MenuItem(
-            textResId = R.string.common_rename,
-            imageVector = Icons.Outlined.Edit,
-            onClick = {
-                onDismissRequest()
-                onShowRenameWalletDialogClick()
-            },
-        )
-        MenuItem(
-            textResId = R.string.common_delete,
-            imageVector = Icons.Outlined.Delete,
-            onClick = {
-                onDismissRequest()
-                onDeleteClick()
-            },
-        )
+        dropDownItems.fastForEach { item ->
+            MenuItem(
+                text = item.text,
+                imageVector = ImageVector.vectorResource(id = item.icon),
+                onClick = {
+                    onDismissRequest()
+                    item.onClick()
+                },
+            )
+        }
     }
 }
 
 @Composable
-private fun MenuItem(@StringRes textResId: Int, imageVector: ImageVector, onClick: () -> Unit) {
+private fun MenuItem(text: TextReference, imageVector: ImageVector, onClick: () -> Unit) {
     DropdownMenuItem(
-        text = { Text(text = stringResourceSafe(id = textResId), style = TangemTheme.typography.subtitle2) },
+        text = { Text(text = text.resolveReference(), style = TangemTheme.typography.subtitle2) },
         modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
         trailingIcon = { Icon(imageVector = imageVector, contentDescription = null) },
         onClick = onClick,
