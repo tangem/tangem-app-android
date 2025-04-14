@@ -1,13 +1,6 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.domain.apptheme.model.AppThemeMode
-import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.proxy.redux.DaggerGraphState
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.runBlocking
 import org.rekotlin.Action
 
 object DetailsReducer {
@@ -36,27 +29,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen): DetailsState {
     return DetailsState(
         scanResponse = action.scanResponse,
-        appSettingsState = AppSettingsState(
-            isBiometricsAvailable = runBlocking {
-                tangemSdkManager.checkCanUseBiometry()
-            },
-            saveWallets = action.shouldSaveUserWallets,
-            saveAccessCodes = runBlocking {
-                store.inject(DaggerGraphState::settingsRepository).shouldSaveAccessCodes()
-            },
-            selectedAppCurrency = store.state.globalState.appCurrency,
-            selectedThemeMode = runBlocking {
-                store.inject(DaggerGraphState::appThemeModeRepository).getAppThemeMode().firstOrNull()
-                    ?: AppThemeMode.DEFAULT
-            },
-            isHidingEnabled = runBlocking {
-                store.inject(DaggerGraphState::balanceHidingRepository)
-                    .getBalanceHidingSettings().isHidingEnabledInSettings
-            },
-            needEnrollBiometrics = runBlocking {
-                runCatching(tangemSdkManager::needEnrollBiometrics).getOrNull() ?: false
-            },
-        ),
+        appSettingsState = action.initializedAppSettingsState,
     )
 }
 
