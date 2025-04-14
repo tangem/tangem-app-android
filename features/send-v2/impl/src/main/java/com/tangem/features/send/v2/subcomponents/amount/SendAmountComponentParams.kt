@@ -4,7 +4,8 @@ import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent.ModelCallback
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +17,7 @@ internal sealed class SendAmountComponentParams {
     abstract val userWallet: UserWallet
     abstract val appCurrency: AppCurrency
     abstract val cryptoCurrencyStatus: CryptoCurrencyStatus
-    abstract val predefinedAmountValue: String?
+    abstract val predefinedValues: PredefinedValues
 
     data class AmountParams(
         override val state: AmountState,
@@ -24,11 +25,12 @@ internal sealed class SendAmountComponentParams {
         override val userWallet: UserWallet,
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
-        override val predefinedAmountValue: String?,
-        val isEditMode: Boolean,
+        override val predefinedValues: PredefinedValues,
         val callback: ModelCallback,
-        val currentRoute: Flow<SendRoute.Amount>,
+        val currentRoute: Flow<CommonSendRoute.Amount>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
+        val onBackClick: () -> Unit,
+        val onNextClick: () -> Unit,
     ) : SendAmountComponentParams()
 
     data class AmountBlockParams(
@@ -37,8 +39,7 @@ internal sealed class SendAmountComponentParams {
         override val userWallet: UserWallet,
         override val appCurrency: AppCurrency,
         override val cryptoCurrencyStatus: CryptoCurrencyStatus,
-        override val predefinedAmountValue: String?,
+        override val predefinedValues: PredefinedValues,
         val blockClickEnableFlow: StateFlow<Boolean>,
-        val isPredefinedValues: Boolean,
     ) : SendAmountComponentParams()
 }
