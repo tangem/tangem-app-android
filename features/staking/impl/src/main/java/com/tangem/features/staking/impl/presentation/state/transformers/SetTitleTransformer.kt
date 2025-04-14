@@ -31,7 +31,7 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
 
             StakingStep.Confirmation -> {
                 when (actionType) {
-                    StakingActionCommonType.Enter -> resourceReference(
+                    is StakingActionCommonType.Enter -> resourceReference(
                         R.string.staking_title_stake,
                         wrappedList(prevState.cryptoCurrencyName),
                     )
@@ -53,7 +53,7 @@ internal object SetTitleTransformer : Transformer<StakingUiState> {
             }
         }
 
-        val subtitle = if (currentStep == StakingStep.Confirmation && actionType == StakingActionCommonType.Enter) {
+        val subtitle = if (currentStep == StakingStep.Confirmation && actionType is StakingActionCommonType.Enter) {
             stringReference(prevState.walletName)
         } else {
             null
