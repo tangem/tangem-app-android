@@ -6,12 +6,11 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
-import com.tangem.features.send.v2.common.NavigationUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeCheckReloadListener
@@ -40,7 +39,6 @@ import javax.inject.Inject
 internal class SendFeeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val router: Router,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     private val getFeeUseCase: GetFeeUseCase,
     private val urlOpener: UrlOpener,
@@ -140,10 +138,10 @@ internal class SendFeeModel @Inject constructor(
                     ),
                 )
 
-                navigate()
+                saveResult()
             }
         } else {
-            navigate()
+            saveResult()
         }
     }
 
@@ -283,11 +281,6 @@ internal class SendFeeModel @Inject constructor(
         )
     }
 
-    private fun navigate() {
-        saveResult()
-        router.pop()
-    }
-
     private fun configFeeNavigation() {
         val params = params as? SendFeeComponentParams.FeeParams ?: return
         combine(
@@ -300,11 +293,14 @@ internal class SendFeeModel @Inject constructor(
                     title = resourceReference(R.string.common_fee_selector_title),
                     subtitle = null,
                     backIconRes = R.drawable.ic_back_24,
-                    backIconClick = router::pop,
+                    backIconClick = params.onNextClick,
                     primaryButton = ButtonsUM.PrimaryButtonUM(
                         text = resourceReference(R.string.common_continue),
                         isEnabled = state.isPrimaryButtonEnabled,
-                        onClick = ::onNextClick,
+                        onClick = {
+                            onNextClick()
+                            params.onNextClick()
+                        },
                     ),
                     prevButton = null,
                     secondaryPairButtonsUM = null,

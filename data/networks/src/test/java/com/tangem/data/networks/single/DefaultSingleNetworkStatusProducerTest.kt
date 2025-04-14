@@ -53,7 +53,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
-        val values = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values).isEqualTo(listOf(status))
@@ -74,7 +74,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val status = MockNetworkStatusFactory.createMissedDerivation(params.network)
         expected.emit(value = setOf(status))
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values1.size).isEqualTo(1)
         Truth.assertThat(values1).isEqualTo(listOf(status))
@@ -83,7 +83,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val updatedStatus = status.copy(value = NetworkStatus.Unreachable(null))
         expected.emit(value = setOf(updatedStatus))
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values2.size).isEqualTo(2)
         Truth.assertThat(values2).isEqualTo(listOf(status, updatedStatus))
@@ -104,7 +104,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
         val status = MockNetworkStatusFactory.createMissedDerivation(params.network)
         expected.emit(value = setOf(status))
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values1.size).isEqualTo(1)
         Truth.assertThat(values1).isEqualTo(listOf(status))
@@ -112,7 +112,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
         // second emit
         expected.emit(value = setOf(status))
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values2.size).isEqualTo(1)
         Truth.assertThat(values2).isEqualTo(listOf(status))
@@ -140,7 +140,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         Truth.assertThat(values1.size).isEqualTo(1)
         val fallbackStatus = MockNetworkStatusFactory.createUnreachable(params.network)
@@ -148,7 +148,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
 
         innerFlow.emit(value = true)
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
         Truth.assertThat(values2.size).isEqualTo(1)
         Truth.assertThat(values2).isEqualTo(listOf(status))
     }
@@ -166,7 +166,7 @@ internal class DefaultSingleNetworkStatusProducerTest {
 
         verify { multiNetworkStatusSupplier(multiParams) }
 
-        val values = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(0)
     }

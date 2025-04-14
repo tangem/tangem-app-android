@@ -20,6 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.zIndex
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.common.ui.WalletCard
@@ -57,9 +58,9 @@ sealed class WalletArtworksState {
 
 @Composable
 fun WalletArtworks(
-    url1: String?,
-    url2: String?,
-    url3: String?,
+    artwork1: ArtworkUM?,
+    artwork2: ArtworkUM?,
+    artwork3: ArtworkUM?,
     state: WalletArtworksState,
     modifier: Modifier = Modifier,
 ) {
@@ -120,9 +121,9 @@ fun WalletArtworks(
         }
 
         AnimatedWalletCards(
-            url1 = url1,
-            url2 = url2,
-            url3 = url3,
+            artwork1 = artwork1,
+            artwork2 = artwork2,
+            artwork3 = artwork3,
             modifier = Modifier
                 .widthIn(max = 450.dp)
                 .matchParentSize(),
@@ -152,9 +153,9 @@ private data class WalletCardTransitionState(
 @Suppress("LongParameterList")
 @Composable
 private fun AnimatedWalletCards(
-    url1: String?,
-    url2: String?,
-    url3: String?,
+    artwork1: ArtworkUM?,
+    artwork2: ArtworkUM?,
+    artwork3: ArtworkUM?,
     transition1: Transition<WalletCardTransitionState>,
     transition2: Transition<WalletCardTransitionState>,
     transition3: Transition<WalletCardTransitionState>,
@@ -199,7 +200,7 @@ private fun AnimatedWalletCards(
                     scaleY = scaleY3
                     rotationZ = rotation3
                 },
-            url = url3,
+            artwork = artwork3,
         )
 
         WalletCard(
@@ -217,7 +218,7 @@ private fun AnimatedWalletCards(
                     scaleX = scaleX2
                     scaleY = scaleY2
                 },
-            url = url2,
+            artwork = artwork2,
         )
 
         WalletCard(
@@ -234,7 +235,7 @@ private fun AnimatedWalletCards(
                     translationY = translationY1
                     rotationZ = rotation1
                 },
-            url = url1,
+            artwork = artwork1,
         )
     }
 }
@@ -447,9 +448,9 @@ private fun Preview() {
             var state: WalletArtworksState by remember { mutableStateOf(WalletArtworksState.Folded) }
 
             WalletArtworks(
-                url1 = null,
-                url2 = null,
-                url3 = null,
+                artwork1 = null,
+                artwork2 = null,
+                artwork3 = null,
                 state = state,
                 modifier = Modifier.fillMaxWidth(),
             )

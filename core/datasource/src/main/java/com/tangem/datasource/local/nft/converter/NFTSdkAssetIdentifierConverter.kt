@@ -13,6 +13,10 @@ object NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, 
         is SdkNFTAsset.Identifier.TON -> NFTAsset.Identifier.TON(
             tokenAddress = value.tokenAddress,
         )
+        is SdkNFTAsset.Identifier.Solana -> NFTAsset.Identifier.Solana(
+            tokenAddress = value.tokenAddress,
+            cnft = value.cnft,
+        )
         is SdkNFTAsset.Identifier.Unknown -> NFTAsset.Identifier.Unknown
     }
 
@@ -23,6 +27,10 @@ object NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, 
         )
         is NFTAsset.Identifier.TON -> SdkNFTAsset.Identifier.TON(
             tokenAddress = value.tokenAddress,
+        )
+        is NFTAsset.Identifier.Solana -> SdkNFTAsset.Identifier.Solana(
+            tokenAddress = value.tokenAddress,
+            cnft = value.cnft,
         )
         is NFTAsset.Identifier.Unknown -> SdkNFTAsset.Identifier.Unknown
     }
