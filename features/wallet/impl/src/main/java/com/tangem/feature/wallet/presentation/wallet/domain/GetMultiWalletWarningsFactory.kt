@@ -1,5 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.core.lce.Lce
@@ -16,8 +17,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
-import com.tangem.feature.wallet.presentation.wallet.viewmodels.intents.WalletClickIntents
-import dagger.hilt.android.scopes.ViewModelScoped
+import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -26,7 +26,7 @@ import javax.inject.Inject
 import kotlin.collections.count
 
 @Suppress("LongParameterList")
-@ViewModelScoped
+@ModelScoped
 internal class GetMultiWalletWarningsFactory @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val isDemoCardUseCase: IsDemoCardUseCase,
