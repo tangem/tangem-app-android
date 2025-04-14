@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.onEach
 
 internal class OnboardingVisaInProgressComponent(
     appComponentContext: AppComponentContext,
-    config: Config,
+    private val config: Config,
     private val params: Params,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
@@ -35,12 +35,18 @@ internal class OnboardingVisaInProgressComponent(
 
         OnboardingVisaInProgress(
             modifier = modifier,
+            type = config.type,
         )
     }
 
     data class Config(
         val scanResponse: ScanResponse,
-    )
+        val type: Type,
+    ) {
+        enum class Type {
+            AfterApprove, AfterPinCode
+        }
+    }
 
     data class Params(
         val childParams: DefaultOnboardingVisaComponent.ChildParams,
