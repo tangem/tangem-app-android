@@ -75,14 +75,14 @@ object OnboardingHelper {
             scanResponse.productType == ProductType.Ring ||
             scanResponse.productType == ProductType.Wallet ||
             scanResponse.productType == ProductType.Visa // AppRoute.OnboardingOther is also supported
-        if (store.inject(DaggerGraphState::onboardingV2FeatureToggles).isOnboardingV2Enabled &&
+        val featureToggles = store.inject(DaggerGraphState::onboardingV2FeatureToggles)
+        if (featureToggles.isOnboardingV2Enabled &&
             newOnboardingSupportTypes
         ) {
             val backupState = store.state.onboardingWalletState.backupState
 
             return AppRoute.Onboarding(
                 scanResponse = scanResponse,
-                startFromBackup = false,
                 mode = when (backupState.startedSource) {
                     BackupStartedSource.Onboarding -> AppRoute.Onboarding.Mode.Onboarding
                     BackupStartedSource.CreateBackup -> AppRoute.Onboarding.Mode.AddBackup
@@ -91,7 +91,11 @@ object OnboardingHelper {
         }
 
         return when (val type = scanResponse.productType) {
-            ProductType.Note -> AppRoute.OnboardingNote
+            ProductType.Note -> if (featureToggles.isNoteRefactoringEnabled) {
+                AppRoute.Onboarding(scanResponse = scanResponse)
+            } else {
+                AppRoute.OnboardingNote
+            }
             ProductType.Wallet,
             ProductType.Wallet2,
             ProductType.Ring,

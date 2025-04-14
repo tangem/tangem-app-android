@@ -27,7 +27,7 @@ class Wallet1ChooseOptionComponent(
         params.innerNavigation.update {
             it.copy(
                 stackSize = 3,
-                stackMaxSize = 8,
+                stackMaxSize = 9,
             )
         }
 

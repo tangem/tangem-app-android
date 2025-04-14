@@ -126,6 +126,7 @@
   </plurals>
   <string name="common_delete">Entfernen</string>
   <string name="common_disabled">Deaktiviert</string>
+  <string name="common_disconnect">Trennen</string>
   <string name="common_done">Erledigt</string>
   <string name="common_enable">Aktivieren</string>
   <string name="common_enabled">Aktiviert</string>
@@ -139,6 +140,7 @@
   <string name="common_fee_selector_option_market">Markt</string>
   <string name="common_fee_selector_option_slow">Langsam</string>
   <string name="common_fee_selector_title">Gebühren</string>
+  <string name="common_finish">Beenden</string>
   <string name="common_generate_addresses">Adressen synchronisieren</string>
   <string name="common_go_to_provider">Zum Anbieter gehen</string>
   <string name="common_go_to_token">Zum Token</string>
@@ -158,6 +160,7 @@
   <string name="common_no_address">Keine Adresse</string>
   <string name="common_now">Jetzt</string>
   <string name="common_ok">OK</string>
+  <string name="common_open_in_browser">Im Browser öffnen</string>
   <string name="common_origin_card">Hauptkarte oder Ring</string>
   <string name="common_origin_ring">Primärring</string>
   <string name="common_passphrase">Passphrase</string>
@@ -181,6 +184,7 @@
   <string name="common_send">Senden</string>
   <string name="common_server_unavailable">Der Server ist nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="common_share">Teilen</string>
+  <string name="common_share_link">Link teilen</string>
   <string name="common_sign">Signieren</string>
   <string name="common_sign_and_send">Signieren und senden</string>
   <string name="common_stake">Staken</string>
@@ -495,6 +499,14 @@
   <string name="markets_tooltip_message">Rufe dies auf oder tippe auf die Suchleiste, um Token direkt vom Markt hinzuzufügen</string>
   <string name="markets_tooltip_title">Token hinzufügen</string>
   <string name="nfc_error_unavailable">NFC ist auf deinem Gerät nicht verfügbar</string>
+  <plurals name="nft_collections_count">
+    <item quantity="one">%d Stück</item>
+    <item quantity="other">%d Stücke</item>
+  </plurals>
+  <string name="nft_wallet_count">%1$d NFTs in der %2$d Sammlung</string>
+  <string name="nft_wallet_receive_nft">Tippe hier, um das erste NFT zu erhalten</string>
+  <string name="nft_wallet_title">NFT-Sammlungen</string>
+  <string name="nft_wallet_unable_to_load">Die Daten konnten nicht geladen werden</string>
   <string name="onboarding_access_code_feature_1_description">Du musst einen einzigen Zugangscode einrichten, um alle deine Geräte zu schützen</string>
   <string name="onboarding_access_code_feature_1_title">Schützen</string>
   <string name="onboarding_access_code_feature_2_description">Du kannst später auf jeder Karte oder Ring einen individuellen Zugangscode einrichten</string>
@@ -580,6 +592,7 @@
   <string name="onboarding_top_up_body_no_account_error">Um zu beginnen, lade die Wallet einfach mit mehr als %1$s %2$s auf.</string>
   <string name="onboarding_top_up_button_but_crypto">Krypto kaufen</string>
   <string name="onboarding_top_up_button_show_wallet_address">Adresse der Wallet anzeigen</string>
+  <string name="onboarding_top_up_min_create_account_amount">Um zu beginnen, lade die Wallet einfach mit mehr als %1$s auf.</string>
   <string name="onboarding_topup_title">Aktivieren einer Wallet</string>
   <string name="onboarding_twin_exit_warning">Der Twinning-Prozess ist teilweise abgeschlossen. Du kannst ihn jetzt nicht mehr beenden.</string>
   <string name="onboarding_twins_interrupt_warning">Wenn der Prozess der Erstellung der Brieftasche in irgendeiner Weise unterbrochen wird, musst du diesen von vorne beginnen</string>
@@ -760,6 +773,8 @@
   <string name="send_summary_transaction_description_suffix_including">inklusive einer Netzgebühr von %1$s</string>
   <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
   <string name="send_tron_account_activation_error">%1$s ist ein Vermögenswert im Tron-Netzwerk. Um die Gebühr zu berechnen und eine Transaktion durchzuführen, musst du etwas Tron (TRX) auf deinem Konto einzahlen.</string>
+  <string name="send_validation_destination_tag_required_description">Um diese Transaktion für die angegebene Adresse abzuschließen, ist ein Ziel-Tag (Memo) erforderlich.</string>
+  <string name="send_validation_destination_tag_required_title">Ziel-Tag erforderlich</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
   <string name="settings_card_settings_footer">Bereite das Scannen der Karte oder Ring vor, die du einrichten möchtest.</string>
   <string name="settings_forget_wallet">Entferne diese Wallet</string>
@@ -857,6 +872,7 @@
   <string name="staking_rewards">Belohnungen</string>
   <string name="staking_stake_locked">Stake gesperrt</string>
   <string name="staking_stake_more">Mehr staken</string>
+  <string name="staking_stake_more_button_unavailability_reason">Beim Staking %1$s wird Dein gesamtes %2$s -Guthaben eingesetzt. Alle weiteren %2$s due Du in Deine Tangem-Wallet einzahlst, werden ebenfalls automatisch eingesetzt.</string>
   <string name="staking_staked_amount">Gestakeder Betrag</string>
   <string name="staking_summary_description_text">Du setzt %1$s ein und ethältst Deine Belohnung %2$s</string>
   <string name="staking_tap_to_unlock">Zum Entsperren antippen</string>
@@ -931,7 +947,7 @@
   <string name="token_button_unavailability_reason_custom_token">Die Aktion ist für benutzerdefinierte Token nicht verfügbar.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">Du hast kein Guthaben um dies zu Verkaufen. Lade dein Konto auf, um Geld von dort zu verkaufen.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">Du hast kein Guthaben zum Versenden. Lade dein Konto auf, um Geld von dort aus senden zu können.</string>
-  <string name="token_button_unavailability_reason_loading">Die Daten wurden noch nicht geladen. Dies kann einige Sekunden dauern. Bitte versuche es später erneut.</string>
+  <string name="token_button_unavailability_reason_loading">Die Daten werden gerade geladen. Dies kann einige Sekunden dauern. Bitte versuche es später noch einmal.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Das Tauschen von %s wird von aktuellen Anbietern nicht unterstützt, aber wir arbeiten daran, weitere Optionen hinzuzufügen.</string>
   <string name="token_button_unavailability_reason_out_of_date_balance">Der angezeigte Kontostand kann aufgrund der Zwischenspeicherung veraltet sein.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Der Verkauf von Geldmitteln ist möglich, sobald die ausstehende(n) Transaktion(en) im %s -Netzwerk abgeschlossen ist/sind.</string>
@@ -995,6 +1011,25 @@
   <string name="user_wallet_list_rename_popup_title">Wallet umbenennen</string>
   <string name="user_wallet_list_unlock_all">Alle freischalten</string>
   <string name="user_wallet_list_unlock_all_with">Alle mit %s freischalten</string>
+  <plurals name="visa_limits_available_for_days_title">
+    <item quantity="one">Verfügbar für %d Tag</item>
+    <item quantity="other">Verfügbar für %d Tage</item>
+  </plurals>
+  <string name="visa_main_balances_and_limits">Guthaben und Limits</string>
+  <string name="visa_onboarding_access_code_navigation_title">Zugangscode</string>
+  <string name="visa_onboarding_approve_wallet_selector_notification_message">Bitte wähle die Wallet aus, mit der Du den Registrierungsprozess gestartet hast, um die Transaktion zur Erstellung Deines Kontos auf der Blockchain zu signieren</string>
+  <string name="visa_onboarding_close_alert_message">Möchtest Du den Vorgang wirklich beenden? Du kannst später dort fortfahren, wo Du aufgehört hast.</string>
+  <string name="visa_onboarding_in_progress_description">Das wird nicht lange dauern. Wir richten gerade Dein Konto ein.</string>
+  <string name="visa_onboarding_in_progress_issuer_description">Das wird nicht lange dauern. Wir schließen die Aktivierung ab.</string>
+  <string name="visa_onboarding_in_progress_title">Alles wird vorbereitet!</string>
+  <string name="visa_onboarding_pin_validation_error_message">Ungültige PIN: Sequenzen oder Wiederholungen vermeiden</string>
+  <string name="visa_onboarding_success_screen_description">Schon kann es losgehen!</string>
+  <string name="visa_onboarding_wallet_connect_description">Du kannst Deine Verbindung \n auf der Website des Drittanbieters \n herstellen und zurück zur Tangem-App gelangen</string>
+  <string name="visa_onboarding_wallet_connect_title">Zur Website gehen</string>
+  <string name="visa_onboarding_welcome_back_description">Fahren wir mit der Einrichtung Deines Kontos fort.</string>
+  <string name="visa_onboarding_welcome_back_title">Willkommen zurück!</string>
+  <string name="visa_onboarding_welcome_description">Folge den Schritten, um Dein Konto einzurichten.</string>
+  <string name="visa_onboarding_welcome_title">Willkommen!</string>
   <string name="visa_unlock_notification_button">Freischalten</string>
   <string name="visa_unlock_notification_subtitle">Scanne Deine Karte, um den Zugriff freizuschalten</string>
   <string name="visa_unlock_notification_title">Benötigte Freischaltung</string>
@@ -1128,6 +1163,12 @@
   <string name="warning_testnet_card_message">Dies ist eine Testnet-Karte. Sie kann keine Transaktionen verarbeiten und sollte nur zu Test- und Entwicklungszwecken verwendet werden.</string>
   <string name="warning_testnet_card_title">Nur für Testzwecke</string>
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
+  <string name="wc_connections">Verbindungen</string>
+  <string name="wc_disconnect_all">Alle trennen</string>
+  <string name="wc_disconnect_all_alert_title">Alle dApps trennen</string>
+  <string name="wc_new_connection">Neue Verbindung</string>
+  <string name="wc_no_sessions_desc">Verbinde Deine Wallet mit einer anderen dApp</string>
+  <string name="wc_no_sessions_title">Keine Sitzungen</string>
   <string name="welcome_interrupted_backup_alert_discard">Verwerfen</string>
   <string name="welcome_interrupted_backup_alert_message">Du hast eine unterbrochene Sicherung. Möchtest du diese fortsetzen?</string>
   <string name="welcome_interrupted_backup_alert_resume">Ja, fortsetzen</string>
