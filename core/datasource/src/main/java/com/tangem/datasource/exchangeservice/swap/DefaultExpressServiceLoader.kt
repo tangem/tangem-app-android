@@ -12,7 +12,9 @@ import com.tangem.domain.core.utils.lceError
 import com.tangem.domain.core.utils.lceLoading
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -41,8 +43,6 @@ internal class DefaultExpressServiceLoader @Inject constructor(
         withContext(dispatchers.io) {
             val initializationStatus = getInitializationStatusInternal(userWalletId)
 
-            initializationStatus.update { lceLoading() }
-
             try {
                 if (userTokens.isNotEmpty()) {
                     val response = tangemExpressApi.getAssets(
@@ -54,22 +54,24 @@ internal class DefaultExpressServiceLoader @Inject constructor(
                     initializationStatus.update { response.lceContent() }
                 }
             } catch (e: Throwable) {
-                initializationStatus.update { e.lceError() }
+                if (expressAssetsStore.getSyncOrNull(userWalletId) == null) {
+                    initializationStatus.update { e.lceError() }
+                }
                 Timber.e(e, "Unable to fetch assets for: ${userWalletId.stringValue}")
             }
         }
     }
 
-    override fun getInitializationStatus(userWalletId: UserWalletId): InitializationStatusFlow {
-        return getInitializationStatusInternal(userWalletId)
+    override fun getInitializationStatus(userWalletId: UserWalletId): Flow<Lce<Throwable, List<Asset>>> {
+        return flow { getInitializationStatusInternal(userWalletId).collect { emit(it) } }
     }
 
-    private fun getInitializationStatusInternal(userWalletId: UserWalletId): InitializationStatusFlow {
+    private suspend fun getInitializationStatusInternal(userWalletId: UserWalletId): InitializationStatusFlow {
         val initializationStatus = initializationStatuses.value.get(key = userWalletId)
-
         if (initializationStatus != null) return initializationStatus
 
-        val default: InitializationStatusFlow = MutableStateFlow(value = lceLoading())
+        val cached = expressAssetsStore.getSyncOrNull(userWalletId)
+        val default: InitializationStatusFlow = MutableStateFlow(value = cached?.lceContent() ?: lceLoading())
 
         initializationStatuses.update {
             it.toMutableMap().apply {

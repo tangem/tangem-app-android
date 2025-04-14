@@ -12,7 +12,7 @@ internal class StateRouter(
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val isEditingDisabled: Boolean,
 ) {
-    private var mutableCurrentState: MutableStateFlow<SendUiCurrentScreen> = MutableStateFlow(getInitState())
+    private val mutableCurrentState: MutableStateFlow<SendUiCurrentScreen> = MutableStateFlow(getInitState())
 
     val currentState: StateFlow<SendUiCurrentScreen>
         get() = mutableCurrentState
