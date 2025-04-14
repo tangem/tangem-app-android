@@ -13,6 +13,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerHMax
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.LocalTangemShimmer
 import com.tangem.core.ui.res.TangemTheme
@@ -21,11 +22,12 @@ import com.tangem.features.onboarding.v2.common.ui.RefreshButton
 import com.tangem.features.onboarding.v2.common.ui.WalletCard
 import com.tangem.features.onboarding.v2.impl.R
 import com.valentinilk.shimmer.shimmer
+import kotlinx.collections.immutable.ImmutableList
 
 @Composable
 fun OnboardingNoteTopUpHeader(
     balance: String,
-    cardArtworkUrl: String?,
+    cardArtwork: ArtworkUM?,
     isRefreshing: Boolean,
     onRefreshBalanceClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -77,7 +79,7 @@ fun OnboardingNoteTopUpHeader(
         }
         WalletCard(
             modifier = Modifier.width(120.dp).align(Alignment.TopCenter),
-            url = cardArtworkUrl,
+            artwork = cardArtwork,
         )
         RefreshButton(
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -93,7 +95,7 @@ private fun OnboardinNoteTopUpHeaderPreview() {
     TangemThemePreview {
         OnboardingNoteTopUpHeader(
             balance = "0.00000001 BTC",
-            cardArtworkUrl = "",
+            cardArtwork = ArtworkUM(null as ImmutableList<Byte>?, ""),
             onRefreshBalanceClick = {},
             isRefreshing = false,
         )
