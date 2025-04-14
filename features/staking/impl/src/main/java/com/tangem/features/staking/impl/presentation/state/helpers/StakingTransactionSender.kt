@@ -248,7 +248,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 val txUrl = getExplorerTransactionUrlUseCase(
                     txHash = transactionHashes.last(),
                     networkId = cryptoCurrencyStatus.currency.network.id,
-                ).getOrElse { "" }
+                ).getOrNull() ?: ""
 
                 balanceUpdater.fullUpdate()
                 onSendSuccess(txUrl)
@@ -280,7 +280,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private fun getAmount(amountState: AmountState.Data, fee: Fee, reduceAmountBy: BigDecimal?): BigDecimal {
         val amountValue = amountState.amountTextField.cryptoAmount.value ?: error("No amount value")
         val feeValue = fee.amount.value ?: error("No fee value")
-        val isEnterAction = stateController.value.actionType == StakingActionCommonType.Enter
+        val isEnterAction = stateController.value.actionType is StakingActionCommonType.Enter
 
         return checkAndCalculateSubtractedAmount(
             isAmountSubtractAvailable = isAmountSubtractAvailable && isEnterAction,

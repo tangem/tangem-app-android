@@ -13,4 +13,7 @@ internal sealed interface WalletDialogConfig {
 
     @Serializable
     data class RenameWallet(val userWalletId: UserWalletId, val currentName: String) : WalletDialogConfig
+
+    @Serializable
+    data object AskForBiometry : WalletDialogConfig
 }

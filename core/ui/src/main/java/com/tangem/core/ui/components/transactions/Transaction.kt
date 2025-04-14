@@ -445,5 +445,6 @@ private class TransactionItemStateProvider : CollectionPreviewParameterProvider<
             onClick = {},
         ),
         TransactionState.Loading(txHash = UUID.randomUUID().toString()),
+        TransactionState.Locked(txHash = UUID.randomUUID().toString()),
     ),
 )
