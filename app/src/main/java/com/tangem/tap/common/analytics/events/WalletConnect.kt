@@ -1,6 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
 import com.tangem.core.analytics.models.AnalyticsEvent
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.OpenSession.SourceType
 
 /**
 [REDACTED_AUTHOR]
@@ -12,8 +13,42 @@ internal sealed class WalletConnect(
 ) : AnalyticsEvent("Wallet Connect", event, params, error) {
 
     class ScreenOpened : WalletConnect(event = "WC Screen Opened")
-    class NewSessionEstablished(dAppName: String, dAppUrl: String, blockchainNames: List<String>) : WalletConnect(
-        event = "New Session Established",
+    class NewSessionInitiated(source: SourceType) : WalletConnect(
+        event = "Session Initiated",
+        params = mapOf(
+            AnalyticsParam.SOURCE to when (source) {
+                SourceType.QR -> "QR"
+                SourceType.DEEPLINK -> "DeepLink"
+                SourceType.CLIPBOARD -> "Clipboard"
+                SourceType.ETC -> "etc"
+            },
+        ),
+    )
+
+    data object SessionFailed : WalletConnect(
+        event = "Session Failed",
+    )
+
+    class DAppConnectionRequested(
+        blockchainNames: List<String>,
+    ) : WalletConnect(
+        event = "dApp Connection Requested",
+        params = mapOf(
+            AnalyticsParam.NETWORKS to blockchainNames.joinToString(","),
+        ),
+    )
+
+    class DAppConnected(dAppName: String, dAppUrl: String, blockchainNames: List<String>) : WalletConnect(
+        event = "dApp Connected",
+        params = mapOf(
+            AnalyticsParam.DAPP_NAME to dAppName,
+            AnalyticsParam.DAPP_URL to dAppUrl,
+            AnalyticsParam.BLOCKCHAIN to blockchainNames.joinToString(","),
+        ),
+    )
+
+    class DAppConnectionFailed(dAppName: String, dAppUrl: String, blockchainNames: List<String>) : WalletConnect(
+        event = "dApp Connection Failed",
         params = mapOf(
             AnalyticsParam.DAPP_NAME to dAppName,
             AnalyticsParam.DAPP_URL to dAppUrl,
@@ -22,17 +57,31 @@ internal sealed class WalletConnect(
     )
 
     class SessionDisconnected(dAppName: String, dAppUrl: String) : WalletConnect(
-        event = "Session Disconnected",
+        event = "dApp Disconnected",
         params = mapOf(
             AnalyticsParam.DAPP_NAME to dAppName,
             AnalyticsParam.DAPP_URL to dAppUrl,
         ),
     )
 
-    class RequestHandled(
+    class SignatureRequestHandled(
         params: RequestHandledParams,
     ) : WalletConnect(
-        event = "Request Handled",
+        event = "Signature Request Handled",
+        params = params.toParamsMap(),
+    )
+
+    class SignatureRequestReceived(
+        params: RequestHandledParams,
+    ) : WalletConnect(
+        event = "Signature Request Received",
+        params = params.toParamsMap(),
+    )
+
+    class SignatureRequestFailed(
+        params: RequestHandledParams,
+    ) : WalletConnect(
+        event = "Signature Request Failed",
         params = params.toParamsMap(),
     )
 

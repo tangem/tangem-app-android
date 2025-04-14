@@ -2,7 +2,7 @@ package com.tangem.features.details.model
 
 import arrow.core.getOrElse
 import com.tangem.core.analytics.AppInstanceIdProvider
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
@@ -23,16 +23,16 @@ import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.version.AppVersionProvider
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import timber.log.Timber
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 @Suppress("LongParameterList")
 internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,
@@ -52,42 +52,45 @@ internal class DetailsModel @Inject constructor(
 
     private val params: DetailsComponent.Params = paramsContainer.require()
 
-    private val items: MutableStateFlow<ImmutableList<DetailsItemUM>> = MutableStateFlow(value = persistentListOf())
+    private val items: MutableStateFlow<ImmutableList<DetailsItemUM>>
 
-    val state: MutableStateFlow<DetailsUM> = MutableStateFlow(
-        value = DetailsUM(
-            items = items.value,
-            footer = DetailsFooterUM(
-                socials = socialsBuilder.buildAll(),
-                appVersion = getAppVersion(),
-            ),
-            popBack = router::pop,
-        ),
-    )
+    val state: MutableStateFlow<DetailsUM>
 
     init {
         // Use to save compatibility with screens that using Redux states
         bootstrapScreenState()
 
+        val isWalletConnectAvailable = runBlocking {
+            // danger region, this works immediately, but will be refactored later with WC
+            checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse {
+                Timber.w("Unable to check WalletConnect availability: $it")
+
+                false
+            }
+        }
+
+        items = MutableStateFlow(
+            itemsBuilder.buildAll(
+                isWalletConnectAvailable = isWalletConnectAvailable,
+                onSupportClick = ::sendFeedback,
+                onBuyClick = ::onBuyClick,
+            ),
+        )
+
+        state = MutableStateFlow(
+            value = DetailsUM(
+                items = items.value,
+                footer = DetailsFooterUM(
+                    socials = socialsBuilder.buildAll(),
+                    appVersion = getAppVersion(),
+                ),
+                popBack = router::pop,
+            ),
+        )
+
         items
             .onEach(::updateState)
             .launchIn(modelScope)
-
-        checkWalletConnectAvailability()
-    }
-
-    private fun checkWalletConnectAvailability() = modelScope.launch {
-        val isWalletConnectAvailable = checkIsWalletConnectAvailableUseCase(params.userWalletId).getOrElse {
-            Timber.w("Unable to check WalletConnect availability: $it")
-
-            false
-        }
-
-        items.value = itemsBuilder.buildAll(
-            isWalletConnectAvailable = isWalletConnectAvailable,
-            onSupportClick = ::sendFeedback,
-            onBuyClick = ::onBuyClick,
-        )
     }
 
     private fun bootstrapScreenState() {
