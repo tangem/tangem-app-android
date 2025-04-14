@@ -23,6 +23,7 @@ import com.tangem.core.ui.components.SpacerH
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemAnimations
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -43,7 +44,7 @@ internal fun OnboardingVisaAccessCode(state: OnboardingVisaAccessCodeUM, modifie
                 .weight(1f),
             targetState = state.step,
             transitionSpec = TangemAnimations.AnimatedContent
-                .slide { initial, target -> initial.ordinal > target.ordinal },
+                .slide { initial, target -> target.ordinal > initial.ordinal },
         ) { step ->
             Content(
                 state = state,
@@ -87,9 +88,9 @@ private fun Content(
             modifier = Modifier
                 .padding(horizontal = 32.dp),
             text = if (reEnterAccessCodeState) {
-                "Re-enter your access code" // TODO
+                stringResourceSafe(R.string.onboarding_access_code_repeat_code_title)
             } else {
-                "Create access code" // TODO
+                stringResourceSafe(R.string.onboarding_access_code_intro_title)
             },
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
@@ -98,11 +99,10 @@ private fun Content(
 
         SpacerH16()
 
-        // TODO
         Text(
             modifier = Modifier
                 .padding(horizontal = 32.dp),
-            text = "The access code will be used manage your payment account and protect it from unauthorized access",
+            text = stringResourceSafe(R.string.visa_onboarding_access_code_description),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
