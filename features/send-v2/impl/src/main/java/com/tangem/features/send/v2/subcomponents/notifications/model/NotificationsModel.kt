@@ -119,8 +119,8 @@ internal class NotificationsModel @Inject constructor(
                     modelScope.launch {
                         sendFeeReloadTrigger.triggerUpdate(
                             feeData = SendFeeData(
-                                amount = amountValue,
-                                destinationAddress = destinationAddress,
+                                amount = notificationData.amountValue,
+                                destinationAddress = notificationData.destinationAddress,
                             ),
                         )
                     }
