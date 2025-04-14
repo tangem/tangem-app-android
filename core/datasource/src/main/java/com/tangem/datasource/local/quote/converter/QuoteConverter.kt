@@ -10,12 +10,23 @@ import com.tangem.utils.extensions.orZero
 /**
  * Converter from [QuotesResponse.Quote] to [Quote.Value]
  *
- * @property isCached flag that determines whether the quote is a cache
+ * @property source status source
  *
 [REDACTED_AUTHOR]
  */
-internal class QuoteConverter(private val isCached: Boolean) :
+class QuoteConverter(
+    private val source: StatusSource,
+) :
     Converter<Map.Entry<String, QuotesResponse.Quote>, Quote.Value> {
+
+    /**
+     * Secondary constructor
+     *
+     * @param isCached flag that determines whether the quote is a cache
+     */
+    constructor(isCached: Boolean) : this(
+        source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
+    )
 
     override fun convert(value: Map.Entry<String, QuotesResponse.Quote>): Quote.Value {
         val (currencyId, quote) = value
@@ -24,7 +35,7 @@ internal class QuoteConverter(private val isCached: Boolean) :
             rawCurrencyId = CryptoCurrency.RawID(currencyId),
             fiatRate = quote.price.orZero(),
             priceChange = quote.priceChange24h.orZero().movePointLeft(2),
-            source = if (isCached) StatusSource.CACHE else StatusSource.ACTUAL,
+            source = source,
         )
     }
 }
