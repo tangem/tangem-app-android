@@ -7,6 +7,7 @@ import com.tangem.domain.staking.model.stakekit.PendingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.lib.crypto.BlockchainUtils.isBSC
+import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import kotlinx.collections.immutable.ImmutableList
@@ -28,7 +29,7 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
     StakingActionType.REVOTE -> resourceReference(R.string.staking_revote)
     StakingActionType.REBOND -> resourceReference(R.string.staking_rebond)
     StakingActionType.MIGRATE -> resourceReference(R.string.staking_migrate)
-    StakingActionType.STAKE -> resourceReference(R.string.common_stake)
+    StakingActionType.STAKE -> resourceReference(R.string.staking_restake)
     StakingActionType.UNSTAKE -> resourceReference(R.string.common_unstake)
     StakingActionType.UNKNOWN -> TextReference.EMPTY
     null -> TextReference.EMPTY
@@ -37,14 +38,12 @@ internal fun StakingActionType?.getPendingActionTitle(): TextReference = when (t
 internal fun isSingleAction(networkId: String, activeStake: BalanceState): Boolean {
     val isSingleAction = activeStake.pendingActions.size <= 1 // Either single or none pending actions
     val isCompositePendingActions = isCompositePendingActions(networkId, activeStake.pendingActions)
-    val isBscRestake = isBSC(networkId) && activeStake.pendingActions.any {
-        it.type == StakingActionType.RESTAKE
-    }
+    val isRestake = activeStake.pendingActions.any { it.type.isRestake }
 
-    return isSingleAction && !isBscRestake || isCompositePendingActions
+    return isSingleAction && !isRestake || isCompositePendingActions
 }
 
-internal fun withStubUnstakeAction(networkId: String, activeStake: BalanceState) = if (isBSC(networkId)) {
+internal fun withStubUnstakeAction(networkId: String, activeStake: BalanceState) = if (isStubUnstakeAction(networkId)) {
     activeStake.pendingActions.plus(
         PendingAction(
             type = StakingActionType.UNSTAKE,
@@ -65,4 +64,8 @@ internal fun isCompositePendingActions(networkId: String, pendingActions: Immuta
         isSolana(networkId) -> pendingActions?.any { it.type == StakingActionType.WITHDRAW } == true
         else -> false
     }
+}
+
+private fun isStubUnstakeAction(networkId: String): Boolean {
+    return isBSC(networkId) || isCardano(networkId)
 }
