@@ -6,17 +6,17 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.nft.component.NFTAssetTraitsComponent
-import com.tangem.features.nft.traits.ui.NFTAssetTraits
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.features.nft.traits.model.NFTAssetTraitsModel
+import com.tangem.features.nft.traits.ui.NFTAssetTraits
 import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class DefaultNFTAssetTraitsComponent @AssistedInject constructor(
+internal class NFTAssetTraitsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted private val params: NFTAssetTraitsComponent.Params,
-) : NFTAssetTraitsComponent, AppComponentContext by context {
+    @Assisted private val params: Params,
+) : ComposableContentComponent, AppComponentContext by context {
 
     private val model: NFTAssetTraitsModel = getOrCreateModel(params)
 
@@ -27,11 +27,8 @@ internal class DefaultNFTAssetTraitsComponent @AssistedInject constructor(
         NFTAssetTraits(state)
     }
 
-    @AssistedFactory
-    interface Factory : NFTAssetTraitsComponent.Factory {
-        override fun create(
-            context: AppComponentContext,
-            params: NFTAssetTraitsComponent.Params,
-        ): DefaultNFTAssetTraitsComponent
-    }
+    data class Params(
+        val nftAsset: NFTAsset,
+        val onBackClick: () -> Unit,
+    )
 }

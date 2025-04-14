@@ -6,17 +6,18 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.model.getOrCreateModel
-import com.tangem.features.nft.component.NFTDetailsComponent
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.domain.nft.models.NFTAsset
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.nft.details.model.NFTDetailsModel
 import com.tangem.features.nft.details.ui.NFTDetails
 import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 
-internal class DefaultNFTDetailsComponent @AssistedInject constructor(
+internal class NFTDetailsComponent @AssistedInject constructor(
     @Assisted context: AppComponentContext,
-    @Assisted private val params: NFTDetailsComponent.Params,
-) : NFTDetailsComponent, AppComponentContext by context {
+    @Assisted private val params: Params,
+) : ComposableContentComponent, AppComponentContext by context {
 
     private val model: NFTDetailsModel = getOrCreateModel(params)
 
@@ -27,11 +28,11 @@ internal class DefaultNFTDetailsComponent @AssistedInject constructor(
         NFTDetails(state, modifier)
     }
 
-    @AssistedFactory
-    interface Factory : NFTDetailsComponent.Factory {
-        override fun create(
-            context: AppComponentContext,
-            params: NFTDetailsComponent.Params,
-        ): DefaultNFTDetailsComponent
-    }
+    data class Params(
+        val userWalletId: UserWalletId,
+        val nftAsset: NFTAsset,
+        val nftCollectionName: String,
+        val onBackClick: () -> Unit,
+        val onAllTraitsClick: () -> Unit,
+    )
 }
