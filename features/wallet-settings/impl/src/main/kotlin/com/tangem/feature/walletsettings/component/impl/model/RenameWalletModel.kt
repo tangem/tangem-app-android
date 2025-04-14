@@ -1,7 +1,7 @@
 package com.tangem.feature.walletsettings.component.impl.model
 
 import androidx.compose.ui.text.input.TextFieldValue
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -36,7 +36,7 @@ import javax.inject.Inject
  *
 [REDACTED_AUTHOR]
  */
-@ComponentScoped
+@ModelScoped
 internal class RenameWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getWalletNamesUseCase: GetWalletNamesUseCase,

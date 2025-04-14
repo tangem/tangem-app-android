@@ -132,6 +132,7 @@
   </plurals>
   <string name="common_delete">Удалить</string>
   <string name="common_disabled">Отключено</string>
+  <string name="common_disconnect">Отключить</string>
   <string name="common_done">Готово</string>
   <string name="common_enable">Включить</string>
   <string name="common_enabled">Включено</string>
@@ -145,6 +146,7 @@
   <string name="common_fee_selector_option_market">По рынку</string>
   <string name="common_fee_selector_option_slow">Медленно</string>
   <string name="common_fee_selector_title">Скорость и комиссия</string>
+  <string name="common_finish">Завершить</string>
   <string name="common_generate_addresses">Синхронизировать адреса</string>
   <string name="common_go_to_provider">К провайдеру</string>
   <string name="common_go_to_token">Перейти в токен</string>
@@ -164,6 +166,7 @@
   <string name="common_no_address">Нет адреса</string>
   <string name="common_now">Сейчас</string>
   <string name="common_ok">OK</string>
+  <string name="common_open_in_browser">Открыть в браузере</string>
   <string name="common_origin_card">Основная карта</string>
   <string name="common_origin_ring">Основное кольцо</string>
   <string name="common_passphrase">Парольная фраза</string>
@@ -187,6 +190,7 @@
   <string name="common_send">Отправить</string>
   <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
   <string name="common_share">Поделиться</string>
+  <string name="common_share_link">Поделиться ссылкой</string>
   <string name="common_sign">Подписать</string>
   <string name="common_sign_and_send">Подписать и отправить</string>
   <string name="common_stake">Застейкать</string>
@@ -278,6 +282,7 @@
   <string name="express_exchange_by">Обмен через %s</string>
   <string name="express_exchange_notification_failed_text">Чтобы вернуть ваши деньги, посетите сайт провайдера</string>
   <string name="express_exchange_notification_failed_title">Операция не выполнена провайдером</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмен занимает больше времени, чем ожидалось. Пожалуйста, обратитесь в службу поддержки провайдера для уточнения.</string>
   <string name="express_exchange_notification_refund_text">Отправленные средства были возвращены в %1$s на ваш кошелек в соответствии с правилами OKX или моста обмена. %2$s</string>
   <string name="express_exchange_notification_refund_title">Сумма была возвращена в %1$s (%2$s сети)</string>
   <string name="express_exchange_notification_verification_text">Посетите сайт провайдера для проверки</string>
@@ -594,6 +599,7 @@
   <string name="onboarding_top_up_body_no_account_error">Пополните кошелек более чем на %1$s %2$s, чтобы начать пользоваться картой</string>
   <string name="onboarding_top_up_button_but_crypto">Купить криптовалюту</string>
   <string name="onboarding_top_up_button_show_wallet_address">Показать адрес кошелька</string>
+  <string name="onboarding_top_up_min_create_account_amount">Пополните кошелек более чем на %1$s, чтобы начать пользоваться картой</string>
   <string name="onboarding_topup_title">Активация кошелька</string>
   <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
   <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала</string>
@@ -778,6 +784,7 @@
   <string name="send_summary_transaction_description_suffix_including">включая комиссию сети в размере %1$s</string>
   <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс будет обновлен через некоторое время</string>
   <string name="send_tron_account_activation_error">%1$s — это монета в сети Tron. Чтобы рассчитать комиссию и совершить транзакцию, вам необходимо внести немного Tron (TRX) на свой адрес.</string>
+  <string name="send_validation_destination_tag_required_description">Для завершения транзакции на указанный адрес необходим тег назначения (мемо).</string>
   <string name="sent_transaction_sent_title">Транзакция отправлена</string>
   <string name="settings_card_settings_footer">Подготовьтесь к сканированию кольца или карты, которую вы хотите настроить.</string>
   <string name="settings_forget_wallet">Забыть кошелек</string>
@@ -836,6 +843,10 @@
   <string name="staking_notification_low_staked_balance_title">Низкий баланс стейкинга</string>
   <string name="staking_notification_minimum_balance_error_text">Для рестейкинга необходимо %1$s%2$s. Пожалуйста, пополните баланс.</string>
   <string name="staking_notification_minimum_balance_error_title">Недостаточно %s</string>
+  <string name="staking_notification_minimum_balance_title">Недостаточный баланс для стейкинга</string>
+  <string name="staking_notification_minimum_restake_ada_text">Для рестейкинга необходимо 3 ADA. Пожалуйста, пополните баланс.</string>
+  <string name="staking_notification_minimum_restake_ada_title">Недостаточно ADA</string>
+  <string name="staking_notification_minimum_stake_ada_text">Минимальная сумма для стейкинга должна быть больше, чем 5 ADA. Пожалуйста, пополните баланс, чтобы приступить к стейкингу.</string>
   <string name="staking_notification_network_error_text">Стейкинг временно недоступен из-за проблем в сети. Пожалуйста, попробуйте позже.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкинг в сети %1$s с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_notification_restake_rewards_text">Реинвестируйте свои заработанные награды в вашу застейканную сумму, увеличивая потенциальный доход</string>
@@ -849,6 +860,7 @@
   <string name="staking_notifications_revote_tron_text">Стейкинг в сети Tron с новым валидатором автоматически переведет ваши текущие застейканные средства на него.</string>
   <string name="staking_preparing">Подготовка</string>
   <string name="staking_ready_to_withdraw">Доступно для вывода</string>
+  <string name="staking_rebond">Повторно застейкать</string>
   <string name="staking_restake">Сменить валидатора</string>
   <string name="staking_restake_rewards">Застейкать вознаграждения</string>
   <string name="staking_revoke">Отозвать</string>
@@ -869,6 +881,7 @@
   <string name="staking_rewards">Вознаграждения</string>
   <string name="staking_stake_locked">Стейкинг закрыт</string>
   <string name="staking_stake_more">Застейкать еще</string>
+  <string name="staking_stake_more_button_unavailability_reason">При стейкинге %1$s используется весь ваш баланс в %2$s. Любой дополнительный %2$s депозит будет автоматически застейкан.</string>
   <string name="staking_staked_amount">Застейканная сумма</string>
   <string name="staking_summary_description_text">Вы стейкаете %1$s и будете получать награду %2$s</string>
   <string name="staking_tap_to_unlock">Нажмите для разблокировки</string>
@@ -940,10 +953,12 @@
   <string name="toast_undo">Отменить</string>
   <string name="token_button_unavailability_generic_description">Выбранная операция в данный момент недоступна. Попробуйте позже.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">Покупка %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
+  <string name="token_button_unavailability_reason_custom_token">Действие недоступно для кастомных токенов.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">У вас нет средств для продажи. Пополните счет, чтобы иметь возможность продать с него средства.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">У вас нет средств для отправки. Пополните счет, чтобы иметь возможность отправить с него средства.</string>
   <string name="token_button_unavailability_reason_loading">Данные в процессе загрузки. Это может занять несколько секунд. Пожалуйста, попробуйте позже.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Обмен %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
+  <string name="token_button_unavailability_reason_out_of_date_balance">Отображаемый баланс мог устареть из-за кеширования.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Продажа средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Отправка средств станет доступной после завершения транзакции(-ий) в сети %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Продажа %s в данный момент не поддерживается ни одним провайдером. Мы работаем над добавлением новых возможностей. Следите за нашими новостями.</string>
@@ -1136,6 +1151,7 @@
   <string name="warning_some_token_balances_not_updated">Некоторые балансы токенов не удалось обновить</string>
   <string name="warning_testnet_card_message">Это Testnet карта. Он не может обрабатывать транзакции и используется только в целях тестирования и разработки.</string>
   <string name="warning_testnet_card_title">Только для целей тестирования</string>
+  <string name="warning_token_balance_not_updated">Возможно, баланс устарел. Обновите страницу.</string>
   <string name="welcome_interrupted_backup_alert_discard">Отказаться</string>
   <string name="welcome_interrupted_backup_alert_message">Вы не закончили резервное копирование. Хотите продолжить?</string>
   <string name="welcome_interrupted_backup_alert_resume">Да, возобновить</string>
