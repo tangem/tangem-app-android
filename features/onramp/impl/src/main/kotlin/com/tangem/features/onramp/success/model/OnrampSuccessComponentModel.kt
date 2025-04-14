@@ -19,6 +19,7 @@ import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.onramp.component.OnrampSuccessComponent
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.success.entity.OnrampSuccessClickIntents
@@ -42,6 +43,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private val getOnrampStatusUseCase: GetOnrampStatusUseCase,
     private val getCryptoCurrencyUseCase: GetCryptoCurrencyUseCase,
     private val onrampRemoveTransactionUseCase: OnrampRemoveTransactionUseCase,
+    private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val messageSender: UiMessageSender,
     private val router: Router,
@@ -79,17 +81,21 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     }
 
     private suspend fun loadTransactionStatus(transaction: OnrampTransaction) {
-        val multiCryptoCurrency = getCryptoCurrencyUseCase(
-            transaction.userWalletId,
-            transaction.toCurrencyId,
-        ).getOrNull()
-
-        val cryptoCurrency = multiCryptoCurrency
-            ?: getCryptoCurrencyUseCase.invoke(transaction.userWalletId).getOrElse {
-                Timber.e("Crypto currency not found")
-                showErrorAlert(OnrampError.DomainError(null))
-                return
-            }
+        val userWallet = getUserWalletUseCase(transaction.userWalletId).getOrNull()
+        if (userWallet == null) {
+            Timber.e("UserWallet found")
+            // this case should never happened
+            showErrorAlert(OnrampError.DomainError("UserWallet not found"))
+            return
+        }
+        val cryptoCurrency = getCryptoCurrencyUseCase(
+            userWallet = userWallet,
+            cryptoCurrencyId = transaction.toCurrencyId,
+        ).getOrElse {
+            Timber.e("Crypto currency not found")
+            showErrorAlert(OnrampError.DomainError(null))
+            return
+        }
 
         getOnrampStatusUseCase(txId = transaction.txId)
             .fold(
