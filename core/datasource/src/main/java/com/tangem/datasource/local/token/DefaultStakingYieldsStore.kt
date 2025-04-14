@@ -1,32 +1,25 @@
 package com.tangem.datasource.local.token
 
+import androidx.datastore.core.DataStore
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
-import com.tangem.datasource.local.datastore.core.StringKeyDataStore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.firstOrNull
 
 internal class DefaultStakingYieldsStore(
-    private val dataStore: StringKeyDataStore<List<YieldDTO>>,
+    private val dataStore: DataStore<List<YieldDTO>>,
 ) : StakingYieldsStore {
 
-    private val mutex = Mutex()
-
     override fun get(): Flow<List<YieldDTO>> {
-        return dataStore.get(KEY)
+        return dataStore.data
     }
 
     override suspend fun getSync(): List<YieldDTO> {
-        return dataStore.getSyncOrNull(KEY) ?: emptyList()
+        return dataStore.data.firstOrNull().orEmpty()
     }
 
     override suspend fun store(items: List<YieldDTO>) {
-        mutex.withLock {
-            dataStore.store(KEY, items)
+        dataStore.updateData { _ ->
+            items
         }
-    }
-
-    companion object {
-        private const val KEY = "DefaultStakingYieldsStore"
     }
 }
