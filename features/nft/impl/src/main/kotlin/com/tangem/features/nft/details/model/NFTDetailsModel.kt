@@ -5,7 +5,7 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.features.nft.component.NFTDetailsComponent
+import com.tangem.features.nft.details.NFTDetailsComponent
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -35,9 +35,9 @@ internal class NFTDetailsModel @Inject constructor(
                 traits = persistentListOf(),
                 baseInfoItems = persistentListOf(),
             ),
-            onBackClick = ::navigateBack,
+            onBackClick = params.onBackClick,
             onReadMoreClick = ::onReadMoreClick,
-            onSeeAllTraitsClick = ::onSeeAllTraitsClick,
+            onSeeAllTraitsClick = params.onAllTraitsClick,
             onExploreClick = ::onExploreClick,
             onSendClick = ::onSendClick,
             bottomSheetConfig = null,
@@ -46,14 +46,6 @@ internal class NFTDetailsModel @Inject constructor(
 
     private fun onReadMoreClick() {
         // TODO implement
-    }
-
-    private fun onSeeAllTraitsClick() {
-        router.push(
-            AppRoute.NFTAssetTraits(
-                nftAsset = params.nftAsset,
-            ),
-        )
     }
 
     private fun onExploreClick() {
@@ -68,9 +60,5 @@ internal class NFTDetailsModel @Inject constructor(
                 nftCollectionName = params.nftCollectionName,
             ),
         )
-    }
-
-    private fun navigateBack() {
-        router.pop()
     }
 }
