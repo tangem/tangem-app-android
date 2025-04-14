@@ -1,20 +1,27 @@
 package com.tangem.features.onboarding.v2.entry.impl.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.navigate
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.common.routing.AppRoute
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ProductType
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.features.biometry.AskBiometryComponent
+import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.onboarding.v2.TitleProvider
+import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
+import com.tangem.features.onboarding.v2.entry.impl.analytics.OnboardingEntryEvent
 import com.tangem.features.onboarding.v2.entry.impl.routing.OnboardingRoute
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.sdk.api.TangemSdkManager
@@ -25,13 +32,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ComponentScoped
+@Suppress("LongParameterList")
+@ModelScoped
 internal class OnboardingEntryModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val tangemSdkManager: TangemSdkManager,
     private val settingsRepository: SettingsRepository,
+    private val askBiometryFeatureToggles: BiometryFeatureToggles,
+    private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingEntryComponent.Params>()
@@ -46,10 +57,22 @@ internal class OnboardingEntryModel @Inject constructor(
 
     val startRoute = routeByProductType(params.scanResponse)
 
+    fun onManageTokensDone() {
+        navigateToFinalScreenFlow()
+    }
+
+    fun onBack() {
+        uiMessageSender.send(CantLeaveBackupDialog)
+    }
+
     private fun routeByProductType(scanResponse: ScanResponse): OnboardingRoute {
         val multiWalletNavigationMode = when (params.multiWalletMode) {
-            OnboardingEntryComponent.MultiWalletMode.Onboarding -> OnboardingMultiWalletComponent.Mode.Onboarding
-            OnboardingEntryComponent.MultiWalletMode.AddBackup -> OnboardingMultiWalletComponent.Mode.AddBackup
+            OnboardingEntryComponent.MultiWalletMode.Onboarding ->
+                OnboardingMultiWalletComponent.Mode.Onboarding
+            OnboardingEntryComponent.MultiWalletMode.AddBackup ->
+                OnboardingMultiWalletComponent.Mode.AddBackup
+            OnboardingEntryComponent.MultiWalletMode.ContinueFinalize ->
+                OnboardingMultiWalletComponent.Mode.ContinueFinalize
         }
 
         return when (scanResponse.productType) {
@@ -74,34 +97,71 @@ internal class OnboardingEntryModel @Inject constructor(
                 titleProvider = titleProvider,
                 onDone = ::onVisaOnboardingDone,
             )
+            ProductType.Note -> OnboardingRoute.Note(
+                scanResponse = scanResponse,
+                titleProvider = titleProvider,
+                onDone = ::navigateToFinalScreenFlow,
+            )
             else -> error("Unsupported")
         }
     }
 
     private fun onMultiWalletOnboardingDone(userWallet: UserWallet) {
-        stackNavigation.navigate {
-            listOf(OnboardingRoute.ManageTokens(userWallet))
-        }
-    }
-
-    fun onManageTokensDone() {
-        stackNavigation.navigate {
-            listOf(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+        when {
+            params.multiWalletMode == OnboardingEntryComponent.MultiWalletMode.AddBackup -> {
+                stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+            }
+            userWallet.scanResponse.cardTypesResolver.isMultiwalletAllowed() -> {
+                stackNavigation.replaceAll(OnboardingRoute.ManageTokens(userWallet))
+            }
+            else -> {
+                navigateToFinalScreenFlow()
+            }
         }
     }
 
     private fun onVisaOnboardingDone() {
-        stackNavigation.navigate {
-            listOf(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+        navigateToFinalScreenFlow()
+    }
+
+    private fun navigateToFinalScreenFlow() {
+        if (askBiometryFeatureToggles.isAskForBiometryEnabled) {
+            modelScope.launch {
+                if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+                    stackNavigation.replaceAll(
+                        OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks()),
+                    )
+                } else {
+                    stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+                }
+            }
+        } else {
+            stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+        }
+    }
+
+    inner class AskBiometryModelCallbacks : AskBiometryComponent.ModelCallbacks {
+        override fun onAllowed() {
+            analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.On))
+            stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
+        }
+
+        override fun onDenied() {
+            analyticsEventHandler.send(OnboardingEntryEvent.Biometric(OnboardingEntryEvent.Biometric.State.Off))
+            stackNavigation.replaceAll(OnboardingRoute.Done(onDone = ::navigateToWalletScreen))
         }
     }
 
     private fun navigateToWalletScreen() {
-        modelScope.launch(NonCancellable) {
+        if (askBiometryFeatureToggles.isAskForBiometryEnabled) {
             router.replaceAll(AppRoute.Wallet)
-            if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
-                delay(timeMillis = 1_800)
-                router.push(AppRoute.SaveWallet)
+        } else {
+            modelScope.launch(NonCancellable) {
+                router.replaceAll(AppRoute.Wallet)
+                if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+                    delay(timeMillis = 1_800)
+                    router.push(AppRoute.SaveWallet)
+                }
             }
         }
     }

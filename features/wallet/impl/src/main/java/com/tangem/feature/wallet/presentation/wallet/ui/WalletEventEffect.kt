@@ -36,6 +36,10 @@ internal fun WalletEventEffect(
                     onAutoScrollSet()
                     walletsListState.animateScrollByIndex(prevIndex = value.prevIndex, newIndex = value.newIndex)
                 }
+                is WalletEvent.ChangeWalletWithoutScroll -> {
+                    onAutoScrollSet()
+                    walletsListState.scrollToItem(value.newIndex)
+                }
                 is WalletEvent.ShowError -> {
                     snackbarHostState.showSnackbar(message = value.text.resolveReference(resources))
                 }

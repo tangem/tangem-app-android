@@ -6,7 +6,7 @@ import com.tangem.common.ui.alerts.models.AlertDemoModeUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@ComponentScoped
+@ModelScoped
 internal class OnrampOperationModel @Inject constructor(
     paramsContainer: ParamsContainer,
     getWalletsUseCase: GetWalletsUseCase,
