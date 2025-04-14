@@ -6,6 +6,7 @@ import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiEnvironment
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.config.managers.MutableApiConfigsManager
+import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.feature.tester.impl.BuildConfig
 import com.tangem.feature.tester.impl.R
 import com.tangem.feature.tester.presentation.environments.state.EnvironmentTogglesScreenUM
@@ -28,6 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 internal class EnvironmentsTogglesViewModel @Inject constructor(
     apiConfigsManager: ApiConfigsManager,
+    private val cardSdkConfigRepository: CardSdkConfigRepository,
 ) : ViewModel() {
 
     /** Current ui state */
@@ -92,7 +94,24 @@ internal class EnvironmentsTogglesViewModel @Inject constructor(
 
     private fun onToggleValueChange(id: String, name: String) {
         viewModelScope.launch {
-            mutableApiConfigsManager.changeEnvironment(id = id, environment = ApiEnvironment.valueOf(name))
+            val environment = ApiEnvironment.valueOf(name)
+
+            handleIfTangemCardSdkConfig(id = id, environment = environment)
+
+            mutableApiConfigsManager.changeEnvironment(id = id, environment = environment)
+        }
+    }
+
+    /** Special logic for [ApiConfig.ID.TangemCardSdk] */
+    private fun handleIfTangemCardSdkConfig(id: String, environment: ApiEnvironment) {
+        if (id == ApiConfig.ID.TangemCardSdk.name) {
+            cardSdkConfigRepository.setTangemApiProdEnvFlag(
+                flag = when (environment) {
+                    ApiEnvironment.PROD -> true
+                    ApiEnvironment.DEV -> false
+                    else -> false
+                },
+            )
         }
     }
 }

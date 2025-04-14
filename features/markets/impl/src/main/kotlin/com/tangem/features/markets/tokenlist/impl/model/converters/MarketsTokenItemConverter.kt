@@ -134,7 +134,7 @@ internal class MarketsTokenItemConverter(
             TrendInterval.D7 -> tokenQuotesShort.weekChangePercent
             TrendInterval.M1 -> tokenQuotesShort.monthChangePercent
         }
-        val scaled = percent.setScale(4, RoundingMode.HALF_UP)
+        val scaled = percent?.setScale(4, RoundingMode.HALF_UP)
         return when {
             scaled == null -> PriceChangeType.NEUTRAL
             scaled > BigDecimal.ZERO -> PriceChangeType.UP
