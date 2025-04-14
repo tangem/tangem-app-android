@@ -1,13 +1,13 @@
 package com.tangem.data.walletconnect.request
 
 import com.reown.walletkit.client.Wallet
+import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.data.walletconnect.utils.WcSdkSessionRequestConverter
 import com.tangem.domain.walletconnect.model.WcMethod
 import com.tangem.domain.walletconnect.model.WcRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.request.WcRequestService
-import com.tangem.domain.walletconnect.respond.WcRespondService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
