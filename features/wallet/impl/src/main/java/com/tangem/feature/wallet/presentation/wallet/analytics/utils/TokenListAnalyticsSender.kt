@@ -8,8 +8,10 @@ import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.common.extensions.isZero
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.analytics.CheckIsWalletToppedUpUseCase
 import com.tangem.domain.analytics.model.WalletBalanceState
+import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.domain.tokens.model.TotalFiatBalance
@@ -19,13 +21,12 @@ import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnaly
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent.MainScreen
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletState
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 internal class TokenListAnalyticsSender @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val checkIsWalletToppedUpUseCase: CheckIsWalletToppedUpUseCase,
@@ -74,7 +75,8 @@ internal class TokenListAnalyticsSender @Inject constructor(
                 when (totalFiatBalance) {
                     is TotalFiatBalance.Loaded -> putAttribute(HAS_ERROR, "No")
                     is TotalFiatBalance.Failed -> putAttribute(HAS_ERROR, "Yes")
-                    else -> { /* Intentionally do nothing */ }
+                    else -> { /* Intentionally do nothing */
+                    }
                 }
                 stop()
                 loadingTraces.remove(userWalletId)
@@ -83,7 +85,9 @@ internal class TokenListAnalyticsSender @Inject constructor(
     }
 
     private fun isTerminalState(balance: TotalFiatBalance): Boolean {
-        return balance is TotalFiatBalance.Failed || balance is TotalFiatBalance.Loaded
+        val isLoaded = balance is TotalFiatBalance.Loaded &&
+            (balance.source == StatusSource.ACTUAL || balance.source == StatusSource.ONLY_CACHE)
+        return balance is TotalFiatBalance.Failed || isLoaded
     }
 
     private fun sendBalanceLoadedEventIfNeeded(
