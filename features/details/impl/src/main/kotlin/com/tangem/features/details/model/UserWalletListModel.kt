@@ -1,7 +1,7 @@
 package com.tangem.features.details.model
 
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class UserWalletListModel @Inject constructor(
     userWalletsFetcher: UserWalletsFetcher,
     shouldSaveUserWalletsUseCase: ShouldSaveUserWalletsUseCase,

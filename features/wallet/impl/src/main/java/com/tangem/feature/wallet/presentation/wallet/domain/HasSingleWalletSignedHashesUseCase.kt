@@ -1,17 +1,17 @@
 package com.tangem.feature.wallet.presentation.wallet.domain
 
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
-import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
-@ViewModelScoped
+@ModelScoped
 class HasSingleWalletSignedHashesUseCase @Inject constructor(
     private val cardRepository: CardRepository,
     private val walletManagersFacade: WalletManagersFacade,

@@ -1,13 +1,13 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.datasource.local.preferences.AppPreferencesStore
-import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.domain.models.scan.CardDTO
+import com.tangem.domain.models.scan.ProductType
+import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import com.tangem.features.onboarding.v2.multiwallet.api.OnboardingMultiWalletComponent
 import com.tangem.features.onboarding.v2.multiwallet.impl.analytics.OnboardingEvent
@@ -22,14 +22,14 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-@ComponentScoped
+@ModelScoped
 internal class OnboardingMultiWalletModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
     private val analyticsHandler: AnalyticsEventHandler,
     private val backupServiceHolder: BackupServiceHolder,
-    private val appPreferencesStore: AppPreferencesStore,
+    private val onboardingRepository: OnboardingRepository,
 ) : Model() {
     private val params = paramsContainer.require<OnboardingMultiWalletComponent.Params>()
     private val getCardImageUseCase = GetCardImageUseCase()
@@ -40,7 +40,7 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             currentStep = getInitialStep(),
             currentScanResponse = params.scanResponse,
             accessCode = null,
-            isThreeCards = true,
+            isThreeCards = isThreeCardsInit(),
             resultUserWallet = null,
             startFromFinalize = getInitialStartFromFinalize(),
         ),
@@ -60,22 +60,14 @@ internal class OnboardingMultiWalletModel @Inject constructor(
             st.copy(
                 dialog = interruptBackupDialog(
                     onConfirm = {
-                        removeFinalizeScanResponseState()
-                        router.pop()
+                        modelScope.launch {
+                            onboardingRepository.clearUnfinishedFinalizeOnboarding()
+                            router.pop()
+                        }
                     },
                     dismiss = { _uiState.update { it.copy(dialog = null) } },
                 ),
             )
-        }
-    }
-
-    private fun removeFinalizeScanResponseState() {
-        // discarding onboarding means we have to remove scan response from preferences
-        // to prevent showing finalize screen dialog on next app start
-        modelScope.launch {
-            appPreferencesStore.editData { mutablePreferences ->
-                mutablePreferences.remove(PreferencesKeys.ONBOARDING_FINALIZE_SCAN_RESPONSE_KEY)
-            }
         }
     }
 
@@ -105,19 +97,22 @@ internal class OnboardingMultiWalletModel @Inject constructor(
     private fun getInitialStep(): OnboardingMultiWalletState.Step {
         val scanResponse = params.scanResponse
         val card = scanResponse.card
-        val backupService = backupServiceHolder.backupService.get()!!
 
         return when {
-            // interrupted backup
-            backupService.hasIncompletedBackup -> OnboardingMultiWalletState.Step.Finalize
-
+            params.mode == OnboardingMultiWalletComponent.Mode.ContinueFinalize ->
+                OnboardingMultiWalletState.Step.Finalize
             // Add backup button
             // Wallet1 without backup and userwallet's scanResponse doesn't contain primary card.
             card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup &&
                 scanResponse.primaryCard == null -> OnboardingMultiWalletState.Step.ScanPrimary
 
-            card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup ->
-                OnboardingMultiWalletState.Step.AddBackupDevice
+            card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup -> {
+                if (scanResponse.productType == ProductType.Wallet) {
+                    OnboardingMultiWalletState.Step.ChooseBackupOption
+                } else {
+                    OnboardingMultiWalletState.Step.AddBackupDevice
+                }
+            }
             card.wallets.isNotEmpty() && card.backupStatus?.isActive == true ->
                 OnboardingMultiWalletState.Step.Finalize
             else ->
@@ -135,6 +130,18 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                 FinalizeStage.ScanBackupSecondCard
             }
             else -> null
+        }
+    }
+
+    private fun isThreeCardsInit(): Boolean {
+        val backupService = backupServiceHolder.backupService.get() ?: return true
+        return when (backupService.currentState) {
+            BackupService.State.FinalizingPrimaryCard,
+            is BackupService.State.FinalizingBackupCard,
+            -> {
+                backupService.addedBackupCardsCount > 1
+            }
+            else -> true
         }
     }
 

@@ -4,7 +4,7 @@ import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.util.fastMap
 import arrow.core.getOrElse
 import com.tangem.core.analytics.api.AnalyticsEventHandler
-import com.tangem.core.decompose.di.ComponentScoped
+import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
@@ -40,7 +40,7 @@ import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
-@ComponentScoped
+@ModelScoped
 internal class ManageTokensListManager @Inject constructor(
     private val getManagedTokensUseCase: GetManagedTokensUseCase,
     private val checkHasLinkedTokensUseCase: CheckHasLinkedTokensUseCase,

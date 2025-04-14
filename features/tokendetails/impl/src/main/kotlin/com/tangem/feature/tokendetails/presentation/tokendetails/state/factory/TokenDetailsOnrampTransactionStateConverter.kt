@@ -26,7 +26,7 @@ import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.viewmodels.TokenDetailsClickIntents
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter

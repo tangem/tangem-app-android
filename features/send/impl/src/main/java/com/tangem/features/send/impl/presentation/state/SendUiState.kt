@@ -10,7 +10,7 @@ import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
 import com.tangem.features.send.impl.presentation.state.fee.FeeSelectorState
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
 import java.math.BigDecimal
 
