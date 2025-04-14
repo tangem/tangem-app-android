@@ -132,6 +132,7 @@
   </plurals>
   <string name="common_delete">Видалити</string>
   <string name="common_disabled">Вимкнуто</string>
+  <string name="common_disconnect">Від\'єднати</string>
   <string name="common_done">Готово</string>
   <string name="common_enable">Увімкнути</string>
   <string name="common_enabled">Увімкнено</string>
@@ -145,6 +146,7 @@
   <string name="common_fee_selector_option_market">За ринком</string>
   <string name="common_fee_selector_option_slow">Повільно</string>
   <string name="common_fee_selector_title">Швидкість та комісія</string>
+  <string name="common_finish">Завершити</string>
   <string name="common_generate_addresses">Синхронізувати адреси</string>
   <string name="common_go_to_provider">Перейти до провайдера</string>
   <string name="common_go_to_token">Перейти до токену</string>
@@ -164,6 +166,7 @@
   <string name="common_no_address">Немає адреси</string>
   <string name="common_now">Зараз</string>
   <string name="common_ok">ОК</string>
+  <string name="common_open_in_browser">Відкрити в браузері</string>
   <string name="common_origin_card">Основна картка</string>
   <string name="common_origin_ring">Основне кільце</string>
   <string name="common_passphrase">Парольна фраза</string>
@@ -187,6 +190,7 @@
   <string name="common_send">Надіслати</string>
   <string name="common_server_unavailable">Сервер недоступний, спробуйте пізніше</string>
   <string name="common_share">Поширити</string>
+  <string name="common_share_link">Поділитися посиланням</string>
   <string name="common_sign">Підписати</string>
   <string name="common_sign_and_send">Підписати та надіслати</string>
   <string name="common_stake">Застейкати</string>
@@ -278,6 +282,8 @@
   <string name="express_exchange_by">Обмін через %s</string>
   <string name="express_exchange_notification_failed_text">Щоб повернути ваші кошти, відвідайте сайт провайдера</string>
   <string name="express_exchange_notification_failed_title">Операція не виконана провайдером</string>
+  <string name="express_exchange_notification_long_transaction_time_text">Ваш обмін триває довше, ніж очікувалося. Будь ласка, зверніться до служби підтримки постачальника послуг, для уточнення.</string>
+  <string name="express_exchange_notification_long_transaction_time_title">Тривалий час транзакції</string>
   <string name="express_exchange_notification_refund_text">Сума транзакції була повернута в %1$s на ваш гаманець відповідно до правил OKX або мосту обміну. %2$s</string>
   <string name="express_exchange_notification_refund_title">Сума була повернута в %1$s (%2$s мережі)</string>
   <string name="express_exchange_notification_verification_text">Відвідайте сайт провайдера для перевірки</string>
@@ -594,6 +600,7 @@
   <string name="onboarding_top_up_body_no_account_error">Щоб почати, просто поповніть гаманець більше, ніж на %1$s %2$s</string>
   <string name="onboarding_top_up_button_but_crypto">Купити криптовалюту</string>
   <string name="onboarding_top_up_button_show_wallet_address">Показати адресу гаманця</string>
+  <string name="onboarding_top_up_min_create_account_amount">Щоб почати, просто поповніть гаманець більше, ніж на %1$s</string>
   <string name="onboarding_topup_title">Активація гаманця</string>
   <string name="onboarding_twin_exit_warning">Процес поєднання карток частково завершено. Ви не можете вийти з нього зараз.</string>
   <string name="onboarding_twins_interrupt_warning">Якщо процес створення гаманця буде перервано будь-яким чином, вам доведеться почати все спочатку</string>
@@ -778,6 +785,8 @@
   <string name="send_summary_transaction_description_suffix_including">включно з комісією мережі %1$s</string>
   <string name="send_transaction_success">Транзакція успішно підписана і відправлена до блокчейну. Баланс гаманця буде оновлено через деякий час</string>
   <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron (TRX) на свій рахунок.</string>
+  <string name="send_validation_destination_tag_required_description">Тег призначення (memo) потрібен для завершення цієї транзакції для вказаної адреси.</string>
+  <string name="send_validation_destination_tag_required_title">Тег призначення обов\'язковий</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
   <string name="settings_card_settings_footer">Підготуйтеся до сканування кільця або картки, яку ви хочете налаштувати.</string>
   <string name="settings_forget_wallet">Забути гаманець</string>
@@ -799,6 +808,7 @@
   <string name="staking_details_estimated_profit">~ прибуток за %s</string>
   <string name="staking_details_market_rating">Рейтинг ринку</string>
   <string name="staking_details_metrics_block_header">Метрики</string>
+  <string name="staking_details_min_rewards_notification">Згідно з %1$s правила мережі, отримання можливі з %2$s. Суми нижче будуть зараховані на ваш рахунок після скасування стейкінгу.</string>
   <string name="staking_details_minimum_requirement">Мінімальні вимоги</string>
   <string name="staking_details_no_rewards_to_claim">Немає винагород, до отримання</string>
   <string name="staking_details_reward_claiming">Отримати винагороду</string>
@@ -836,11 +846,16 @@
   <string name="staking_notification_low_staked_balance_title">Низький баланс стейкінгу</string>
   <string name="staking_notification_minimum_balance_error_text">Мінімум %1$s %2$s потрібно для рестейкінгу. Будь ласка, поповніть баланс.</string>
   <string name="staking_notification_minimum_balance_error_title">Недостатньо %s</string>
+  <string name="staking_notification_minimum_balance_title">Недостатній баланс для стейкінгу</string>
+  <string name="staking_notification_minimum_restake_ada_text">Мінімум 3 ADA необхідно для рестейкінгу. Будь ласка поповніть свій баланс.</string>
+  <string name="staking_notification_minimum_restake_ada_title">Недостатньо ADA</string>
+  <string name="staking_notification_minimum_stake_ada_text">Мінімальна сума, необхідна для стекінгу, має перевищувати 5 ADA. Будь ласка, поповніть свій баланс, щоб почати cтейкінг.</string>
   <string name="staking_notification_network_error_text">Стейкінг тимчасово недоступний через проблеми в мережі. Будь ласка, спробуйте пізніше.</string>
   <string name="staking_notification_new_validator_funds_transfer">Стейкінг в мережі %1$s з новим валідатором автоматично переведе всі раніше застейкані кошти до цього валідатора</string>
   <string name="staking_notification_restake_rewards_text">Реінвестуйте зароблені винагороди у суму стейкінгу, щоб збільшити потенційний прибуток.</string>
   <string name="staking_notification_restake_text">Рестейк дозволяє вам перемістити ваші кошти від одного валідатора до іншого без необхідності виводити кошти зі стейкінгу</string>
   <string name="staking_notification_stake_entire_balance_text">Ви збираєтеся застейкати весь свій баланс. Ми рекомендуємо залишити невелику суму, щоб покрити комісію мережі за зняття коштів або отримання винагороди.</string>
+  <string name="staking_notification_ton_activate_account">Щоб почати стейкінг в TON, спочатку здійсніть вихідну транзакцію на будь-яку суму — це активує ваш гаманець.</string>
   <string name="staking_notification_unlock_text">Розблокуйте свої кошти, щоб вивести їх зі стейкінгу. Розблокування займе %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Ваші кошти будуть доступні для використання після закінчення 21-денного періоду розблокування. Винагорода буде отримана разом з вашими незастейканими коштами.</string>
   <string name="staking_notification_unstake_text">Ваші кошти будуть доступні після %s періоду розблокування.</string>
@@ -869,6 +884,7 @@
   <string name="staking_rewards">Винагороди</string>
   <string name="staking_stake_locked">Стейкінг закрито</string>
   <string name="staking_stake_more">Застейкати більше</string>
+  <string name="staking_stake_more_button_unavailability_reason">При стейкінгу %1$s, весь ваш %2$s Баланс застейкний. Будь-які додаткові %2$s поповнены на Ваш гаманець Tangem буде також автоматично застейкано.</string>
   <string name="staking_staked_amount">Застейканий залишок</string>
   <string name="staking_summary_description_text">Ви стейкаєте %1$s і будете отримуватиме винагороду %2$s</string>
   <string name="staking_tap_to_unlock">Натисніть, щоб розблокувати</string>
@@ -903,6 +919,8 @@
   <string name="story_meet_title">Зустрічайте Tangem</string>
   <string name="story_web3_description">Обмінюйте, купуйте NFT, отримуйте позики та робіть депозити у понад 100 різних децентралізованих сервісах</string>
   <string name="story_web3_title">Web 3.0 сумісність</string>
+  <string name="sui_not_enough_coin_for_fee_description">Для відправки потрібна вхідна транзакція на суму не менше %1$s</string>
+  <string name="sui_not_enough_coin_for_fee_title">Недостатньо коштів</string>
   <string name="swap_give_permission_fee_footer">Мережа стягує комісію за схвалення токену за підтвердження, що саме ви дозволяєте використовувати ваш токен для обміну.</string>
   <string name="swap_promo_text">Обмінюйте більше токенів за вигіднішим курсом прямо у своєму гаманці.</string>
   <string name="swap_promo_title">З\'явився новий провайдер обмінів!</string>
@@ -938,10 +956,12 @@
   <string name="toast_undo">Скасувати</string>
   <string name="token_button_unavailability_generic_description">Обрана операція наразі недоступна. Спробуйте пізніше.</string>
   <string name="token_button_unavailability_reason_buy_unavailable">Наразі купівля монети %s недоступна. Слідкуйте за нашими оновленнями.</string>
+  <string name="token_button_unavailability_reason_custom_token">Дія недоступна для спеціальних токенів.</string>
   <string name="token_button_unavailability_reason_empty_balance_sell">У вас немає коштів для продажу. Поповніть рахунок, щоб мати змогу продати з нього кошти.</string>
   <string name="token_button_unavailability_reason_empty_balance_send">У вас немає коштів для відправлення. Поповніть рахунок, щоб мати змогу надіслати з нього кошти.</string>
   <string name="token_button_unavailability_reason_loading">Дані ще не завантажені. Це може зайняти кілька секунд. Будь ласка, спробуйте пізніше.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Наразі обмін монети %s недоступний. Слідкуйте за нашими оновленнями.</string>
+  <string name="token_button_unavailability_reason_out_of_date_balance">Відображуваний баланс може бути застарілим через кешування.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">Продаж коштів стане доступним після завершення транзакції(-ій) в мережі %s</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">Надсилання коштів стане доступним після завершення транзакції(-ій) в мережі %s</string>
   <string name="token_button_unavailability_reason_sell_unavailable">Наразі продаж %s недоступний. Слідкуйте за нашими оновленнями.</string>
@@ -988,6 +1008,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Ця дія є незворотною. Ви не матимете доступу до старого гаманця.</string>
   <string name="twins_scan_twin_with_number">Прикладіть twin-картку з номером %s та не прибирайте її до завершення операції</string>
+  <string name="universal_error">Виникла помилка. Код помилки: %s. Спробуйте, будь ласка, знову. Якщо проблема знову виникає — зверніться до нашої служби підтримки.</string>
   <string name="unlock_wallet_description_full">Використовуйте %s або відскануйте картку/кільце, щоб отримати доступ до свого гаманця</string>
   <string name="unsupported_wc_version">Не вдалося встановити з\'єднання: Цей dApp використовує Wallet Connect версії 1.0, яка не підтримується. Будь ласка, переконайтеся, що dApp підтримує Wallet Connect версії 2.0 для успішного підключення.</string>
   <string name="user_push_notification_agreement_argument_one">Будьте в курсі останніх функцій та новин</string>
@@ -1133,6 +1154,7 @@
   <string name="warning_some_token_balances_not_updated">Деякі баланси токенів не вдалося оновити</string>
   <string name="warning_testnet_card_message">Це картка Testnet. Вона не може обробляти транзакції і повинна використовуватися лише для тестування та розробки.</string>
   <string name="warning_testnet_card_title">Лише для цілей тестування</string>
+  <string name="warning_token_balance_not_updated">Баланс може бути застарілим. Оновіть сторінку.</string>
   <string name="welcome_interrupted_backup_alert_discard">Відмовитися</string>
   <string name="welcome_interrupted_backup_alert_message">Ви не завершили резервне копіювання. Бажаєте продовжити?</string>
   <string name="welcome_interrupted_backup_alert_resume">Так, поновити</string>

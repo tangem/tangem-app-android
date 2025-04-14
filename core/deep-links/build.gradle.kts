@@ -10,6 +10,8 @@ android {
 }
 
 dependencies {
+    /* Core */
+    implementation(projects.core.decompose)
 
     /* Libs - AndroidX */
     implementation(deps.lifecycle.runtime.ktx)

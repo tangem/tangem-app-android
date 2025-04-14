@@ -10,6 +10,7 @@ plugins {
     alias(deps.plugins.hilt.android)
     alias(deps.plugins.firebase.crashlytics)
     alias(deps.plugins.firebase.perf)
+    alias(deps.plugins.ksp)
     id("configuration")
 }
 
@@ -22,9 +23,15 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
-        resources.excludes.add("META-INF/DEPENDENCIES")
         resources.excludes.add("META-INF/LICENSE.md")
         resources.excludes.add("META-INF/NOTICE.md")
+        resources.excludes.add("META-INF/DISCLAIMER")
+        resources.excludes.add("META-INF/DEPENDENCIES")
+        resources.excludes.add("META-INF/FastDoubleParser-NOTICE")
+        resources.excludes.add("META-INF/FastDoubleParser-LICENSE")
+        resources.excludes.add("META-INF/io.netty.versions.properties")
+        resources.excludes.add("META-INF/INDEX.LIST")
+        resources.excludes.add("META-INF/versions/9/OSGI-INF/MANIFEST.MF")
     }
     androidResources {
         generateLocaleConfig = true
@@ -95,6 +102,8 @@ dependencies {
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.markets)
     implementation(projects.domain.manageTokens)
+    implementation(projects.domain.nft)
+    implementation(projects.domain.nft.models)
     implementation(projects.domain.onramp)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
@@ -137,11 +146,12 @@ dependencies {
     implementation(projects.data.walletConnect)
     implementation(projects.data.markets)
     implementation(projects.data.manageTokens)
+    implementation(projects.data.nft)
     implementation(projects.data.onramp)
 
     /** Features */
     implementation(projects.features.onboarding)
-    implementation(projects.features.referral.presentation)
+    implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)
     implementation(projects.features.swap.api)
@@ -179,6 +189,12 @@ dependencies {
     implementation(projects.features.onboardingV2.impl)
     implementation(projects.features.stories.api)
     implementation(projects.features.stories.impl)
+    implementation(projects.features.txhistory.api)
+    implementation(projects.features.txhistory.impl)
+    implementation(projects.features.biometry.api)
+    implementation(projects.features.biometry.impl)
+    implementation(projects.features.nft.api)
+    implementation(projects.features.nft.impl)
 
     /** AndroidX libraries */
     implementation(deps.androidx.core.ktx)
@@ -192,10 +208,12 @@ dependencies {
     implementation(deps.androidx.paging.runtime)
     implementation(deps.androidx.swipeRefreshLayout)
     implementation(deps.androidx.fragment.compose)
+    implementation(deps.androidx.workmanager)
     implementation(deps.lifecycle.runtime.ktx)
     implementation(deps.lifecycle.common.java8)
     implementation(deps.lifecycle.viewModel.ktx)
     implementation(deps.lifecycle.compose)
+    implementation(deps.hilt.work)
 
     /** Compose libraries */
     implementation(deps.compose.constraintLayout)
@@ -234,6 +252,7 @@ dependencies {
     implementation(deps.hilt.android)
 
     kapt(deps.hilt.kapt)
+    kapt(deps.hilt.compilerx)
 
     /** Other libraries */
     implementation(deps.kotlin.immutable.collections)
@@ -263,7 +282,7 @@ dependencies {
     implementation(deps.moshi.adapters)
 
     implementation(deps.moshi.kotlin)
-    kaptForObfuscatingVariants(deps.moshi.kotlin.codegen)
+    ksp(deps.moshi.kotlin.codegen)
     kaptForObfuscatingVariants(deps.retrofit.response.type.keeper)
 
     /** Testing libraries */
