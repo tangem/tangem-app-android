@@ -28,11 +28,11 @@ import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.send.impl.R
 import com.tangem.features.send.impl.presentation.analytics.EnterAddressSource
 import com.tangem.features.send.impl.presentation.domain.SendRecipientListContent
+import com.tangem.features.send.impl.presentation.model.SendClickIntents
 import com.tangem.features.send.impl.presentation.state.SendStates
 import com.tangem.features.send.impl.presentation.state.fields.SendTextField
 import com.tangem.features.send.impl.presentation.state.previewdata.RecipientStatePreviewData
 import com.tangem.features.send.impl.presentation.state.previewdata.SendClickIntentsStub
-import com.tangem.features.send.impl.presentation.viewmodel.SendClickIntents
 import kotlinx.collections.immutable.ImmutableList
 
 private const val ADDRESS_FIELD_KEY = "ADDRESS_FIELD_KEY"
@@ -81,6 +81,7 @@ internal fun SendRecipientContent(
             clickIntents = clickIntents,
             isLast = recipients.any { !it.isVisible },
             isBalanceHidden = isBalanceHidden,
+            type = EnterAddressSource.MyWallet,
         )
         listHeaderItem(
             titleRes = R.string.send_recent_transactions,
@@ -92,6 +93,7 @@ internal fun SendRecipientContent(
             clickIntents = clickIntents,
             isLast = true,
             isBalanceHidden = isBalanceHidden,
+            type = EnterAddressSource.RecentAddress,
         )
     }
 }
@@ -192,6 +194,7 @@ private fun LazyListScope.listItem(
     clickIntents: SendClickIntents,
     isLast: Boolean,
     isBalanceHidden: Boolean,
+    type: EnterAddressSource,
 ) {
     items(
         count = list.size,
@@ -208,10 +211,7 @@ private fun LazyListScope.listItem(
                 subtitleEndOffset = item.subtitleEndOffset,
                 subtitleIconRes = item.subtitleIconRes,
                 onClick = {
-                    clickIntents.onRecipientAddressValueChange(
-                        title,
-                        EnterAddressSource.RecentAddress,
-                    )
+                    clickIntents.onRecipientAddressValueChange(title, type)
                 },
                 isLoading = item.isLoading,
                 modifier = Modifier
