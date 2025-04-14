@@ -10,7 +10,10 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletNamesMigrationRepository
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.*
+import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
+import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -18,6 +21,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+@Suppress("TooManyFunctions")
 @Module
 @InstallIn(SingletonComponent::class)
 internal object WalletsDomainModule {
@@ -164,5 +168,23 @@ internal object WalletsDomainModule {
     @Singleton
     fun providesSeedPhraseNotificationUseCase(walletsRepository: WalletsRepository): SeedPhraseNotificationUseCase {
         return SeedPhraseNotificationUseCase(walletsRepository = walletsRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetCardImageUseCase(onlineCardVerifier: OnlineCardVerifier): GetCardImageUseCase {
+        return GetCardImageUseCase(verifier = onlineCardVerifier)
+    }
+
+    @Provides
+    @Singleton
+    fun providesIsWalletNFTEnabledSyncUseCase(
+        walletsRepository: WalletsRepository,
+        nftFeatureToggles: NFTFeatureToggles,
+    ): IsWalletNFTEnabledSyncUseCase {
+        return IsWalletNFTEnabledSyncUseCase(
+            walletsRepository = walletsRepository,
+            nftFeatureToggles = nftFeatureToggles,
+        )
     }
 }
