@@ -1,7 +1,7 @@
 package com.tangem.features.onramp.hottokens.portfolio.ui
 
 import androidx.compose.runtime.Composable
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.res.TangemTheme

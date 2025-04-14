@@ -8,6 +8,8 @@ import com.tangem.data.onramp.DefaultOnrampErrorResolver
 import com.tangem.data.onramp.DefaultOnrampRepository
 import com.tangem.data.onramp.DefaultOnrampTransactionRepository
 import com.tangem.data.onramp.converters.error.OnrampErrorConverter
+import com.tangem.domain.onramp.repositories.LegacyTopUpRepository
+import com.tangem.data.onramp.legacy.MercuryoTopUpRepository
 import com.tangem.datasource.api.express.TangemExpressApi
 import com.tangem.datasource.api.express.models.response.ExpressErrorResponse
 import com.tangem.datasource.api.onramp.OnrampApi
@@ -15,6 +17,7 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.crypto.DataSignatureVerifier
 import com.tangem.datasource.di.NetworkMoshi
 import com.tangem.datasource.exchangeservice.hotcrypto.HotCryptoResponseStore
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.onramp.countries.OnrampCountriesStore
 import com.tangem.datasource.local.onramp.currencies.OnrampCurrenciesStore
 import com.tangem.datasource.local.onramp.pairs.OnrampPairsStore
@@ -110,6 +113,18 @@ internal object OnrampDataModule {
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
             analyticsEventHandler = analyticsEventHandler,
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideMercuryoRepository(
+        environmentConfigStorage: EnvironmentConfigStorage,
+        dispatchersProvider: CoroutineDispatcherProvider,
+    ): LegacyTopUpRepository {
+        return MercuryoTopUpRepository(
+            environmentConfigStorage = environmentConfigStorage,
+            dispatchersProvider = dispatchersProvider,
         )
     }
 }

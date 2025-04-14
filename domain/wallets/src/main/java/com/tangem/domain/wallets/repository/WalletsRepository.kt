@@ -32,6 +32,8 @@ interface WalletsRepository {
 
     fun nftEnabledStatus(userWalletId: UserWalletId): Flow<Boolean>
 
+    fun nftEnabledStatuses(): Flow<Map<UserWalletId, Boolean>>
+
     suspend fun enableNFT(userWalletId: UserWalletId)
 
     suspend fun disableNFT(userWalletId: UserWalletId)
