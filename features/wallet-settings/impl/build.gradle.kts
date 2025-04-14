@@ -16,6 +16,8 @@ dependencies {
     /* Project - API */
     implementation(projects.features.walletSettings.api)
     implementation(projects.features.manageTokens.api)
+    implementation(projects.features.nft.api)
+    implementation(projects.features.onboardingV2.api)
 
     /* Project - Core */
     implementation(projects.core.decompose)
