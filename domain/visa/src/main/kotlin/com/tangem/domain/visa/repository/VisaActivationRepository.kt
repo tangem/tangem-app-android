@@ -20,6 +20,8 @@ interface VisaActivationRepository {
 
     suspend fun sendPinCode(pinCode: VisaEncryptedPinCode)
 
+    suspend fun getPinCodeRsaEncryptionPublicKey(): String
+
     interface Factory {
         fun create(cardId: VisaCardId): VisaActivationRepository
     }
