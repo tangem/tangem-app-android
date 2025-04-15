@@ -7,6 +7,8 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
 import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
@@ -35,6 +37,7 @@ internal object TokensDomainModule {
         stakingRepository: StakingRepository,
         quotesRepository: QuotesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): AddCryptoCurrenciesUseCase {
         return AddCryptoCurrenciesUseCase(
@@ -43,6 +46,7 @@ internal object TokensDomainModule {
             stakingRepository = stakingRepository,
             quotesRepository = quotesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -364,10 +368,14 @@ internal object TokensDomainModule {
     fun provideRefreshMultiCurrencyWalletQuotesUseCase(
         currenciesRepository: CurrenciesRepository,
         quotesRepository: QuotesRepository,
+        multiQuoteFetcher: MultiQuoteFetcher,
+        tokensFeatureToggles: TokensFeatureToggles,
     ): RefreshMultiCurrencyWalletQuotesUseCase {
         return RefreshMultiCurrencyWalletQuotesUseCase(
             currenciesRepository = currenciesRepository,
             quotesRepository = quotesRepository,
+            multiQuoteFetcher = multiQuoteFetcher,
+            tokensFeatureToggles = tokensFeatureToggles,
         )
     }
 
@@ -391,6 +399,8 @@ internal object TokensDomainModule {
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
         multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
+        singleQuoteSupplier: SingleQuoteSupplier,
     ): BaseCurrenciesStatusesOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -400,6 +410,8 @@ internal object TokensDomainModule {
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
+            singleQuoteSupplier = singleQuoteSupplier,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -415,6 +427,8 @@ internal object TokensDomainModule {
         singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
         multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
+        singleQuoteSupplier: SingleQuoteSupplier,
     ): BaseCurrencyStatusOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -424,7 +438,15 @@ internal object TokensDomainModule {
             singleNetworkStatusSupplier = singleNetworkStatusSupplier,
             multiNetworkStatusSupplier = multiNetworkStatusSupplier,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
+            singleQuoteSupplier = singleQuoteSupplier,
             tokensFeatureToggles = tokensFeatureToggles,
         )
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetCryptoCurrenciesUseCase(currenciesRepository: CurrenciesRepository): GetCryptoCurrenciesUseCase {
+        return GetCryptoCurrenciesUseCase(currenciesRepository)
     }
 }
