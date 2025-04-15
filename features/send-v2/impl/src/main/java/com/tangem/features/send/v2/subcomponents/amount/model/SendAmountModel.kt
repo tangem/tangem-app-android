@@ -1,6 +1,7 @@
 package com.tangem.features.send.v2.subcomponents.amount.model
 
 import androidx.compose.runtime.Stable
+import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.*
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
@@ -21,6 +22,8 @@ import com.tangem.domain.tokens.GetMinimumTransactionAmountSyncUseCase
 import com.tangem.features.send.v2.common.NavigationUM
 import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
+import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
@@ -43,6 +46,7 @@ internal class SendAmountModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val appRouter: AppRouter,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val sendAmountReduceListener: SendAmountReduceListener,
     private val feeReloadTrigger: SendFeeReloadTrigger,
@@ -227,12 +231,24 @@ internal class SendAmountModel @Inject constructor(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
                     subtitle = null,
-                    backIconRes = R.drawable.ic_back_24,
+                    backIconRes = if (route.isEditMode) {
+                        R.drawable.ic_back_24
+                    } else {
+                        R.drawable.ic_close_24
+                    },
                     backIconClick = {
-                        if (!route.isEditMode) {
-                            saveResult()
+                        if (route.isEditMode) {
+                            router.pop()
+                        } else {
+                            analyticsEventHandler.send(
+                                SendAnalyticEvents.CloseButtonClicked(
+                                    source = SendScreenSource.Amount,
+                                    isFromSummary = false,
+                                    isValid = state.isPrimaryButtonEnabled,
+                                ),
+                            )
+                            appRouter.pop()
                         }
-                        router.pop()
                     },
                     primaryButton = ButtonsUM.PrimaryButtonUM(
                         text = if (route.isEditMode) {
