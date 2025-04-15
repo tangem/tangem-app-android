@@ -995,10 +995,10 @@ internal class SendModel @Inject constructor(
         }
     }
 
-    private suspend fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
+    private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
         val txUrl = getExplorerTransactionUrlUseCase(
-            userWalletId = userWalletId,
-            network = cryptoCurrency.network,
+            txHash = txData.hash.orEmpty(),
+            networkId = cryptoCurrency.network.id,
         ).getOrElse { "" }
         uiState.value = stateFactory.getTransactionSendState(txData, txUrl)
     }
