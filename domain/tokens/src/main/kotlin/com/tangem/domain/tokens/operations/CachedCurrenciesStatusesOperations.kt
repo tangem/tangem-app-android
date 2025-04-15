@@ -73,8 +73,6 @@ class CachedCurrenciesStatusesOperations(
     ): LceFlow<TokenListError, List<CryptoCurrencyStatus>> = lceFlow {
         val prevStatuses = MutableStateFlow(value = emptyList<CryptoCurrencyStatus>())
 
-        val isUpdating = MutableStateFlow(value = true)
-
         val nonEmptyCurrencies = currenciesFlow.mapNotNull { it.getOrNull() }.firstOrNull()?.toNonEmptyListOrNull()
 
         if (!isFetchingStarted(userWalletId) && nonEmptyCurrencies != null) {
@@ -84,7 +82,7 @@ class CachedCurrenciesStatusesOperations(
                 val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
                 fetchComponents(userWalletId, networks, currenciesIds, nonEmptyCurrencies)
             }
-                .invokeOnCompletion { isUpdating.value = false }
+                .invokeOnCompletion { setFetchFinished(userWalletId) }
         }
 
         currenciesFlow.flatMapLatest { maybeCurrencies ->
@@ -143,14 +141,18 @@ class CachedCurrenciesStatusesOperations(
 
                     fetchComponents(userWalletId, networks, currenciesIds, currencies)
                 }
-                    .invokeOnCompletion { isUpdating.value = false }
+                    .invokeOnCompletion { setFetchFinished(userWalletId) }
             }
 
             combine(
                 flow = getQuotes(currenciesIds),
                 flow2 = getNetworksStatuses(userWalletId, networks),
                 flow3 = getYieldBalances(userWalletId, currencies),
-                flow4 = isUpdating,
+                flow4 = fetchingState.map {
+                    val state = it[userWalletId] ?: return@map false
+
+                    !state.isFinished()
+                },
                 transform = ::createCurrenciesStatuses,
             )
                 .distinctUntilChanged()
@@ -419,20 +421,35 @@ class CachedCurrenciesStatusesOperations(
     }
 
     private fun isFetchingStarted(userWalletId: UserWalletId): Boolean {
-        return fetchingState.value[userWalletId] ?: false
+        return fetchingState.value[userWalletId]?.let { it.isStarted() || it.isFinished() } ?: false
     }
 
     private fun setFetchStarted(userWalletId: UserWalletId) {
         fetchingState.update {
             it.toMutableMap().apply {
-                put(key = userWalletId, value = true)
+                put(key = userWalletId, value = FetchingState.STARTED)
             }
         }
+    }
+
+    private fun setFetchFinished(userWalletId: UserWalletId) {
+        fetchingState.update {
+            it.toMutableMap().apply {
+                put(key = userWalletId, value = FetchingState.FINISHED)
+            }
+        }
+    }
+
+    enum class FetchingState {
+        STARTED, FINISHED;
+
+        fun isStarted() = this == STARTED
+        fun isFinished() = this == FINISHED
     }
 
     companion object {
         internal const val RETRY_DELAY = 2000L
 
-        private val fetchingState = MutableStateFlow(value = emptyMap<UserWalletId, Boolean>())
+        private val fetchingState = MutableStateFlow(value = emptyMap<UserWalletId, FetchingState>())
     }
 }
