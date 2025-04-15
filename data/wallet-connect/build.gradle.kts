@@ -14,9 +14,9 @@ dependencies {
     /* Project - Domain */
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.walletConnect.models)
+    implementation(projects.domain.transaction)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
-    implementation(projects.domain.card)
     implementation(projects.domain.tokens)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.models)
