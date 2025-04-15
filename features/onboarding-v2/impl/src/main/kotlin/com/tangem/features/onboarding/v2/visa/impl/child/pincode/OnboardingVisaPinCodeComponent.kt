@@ -48,6 +48,7 @@ internal class OnboardingVisaPinCodeComponent(
     data class Config(
         val scanResponse: ScanResponse,
         val activationOrderInfo: VisaActivationOrderInfo,
+        val wasValidationError: Boolean,
     )
 
     data class Params(
