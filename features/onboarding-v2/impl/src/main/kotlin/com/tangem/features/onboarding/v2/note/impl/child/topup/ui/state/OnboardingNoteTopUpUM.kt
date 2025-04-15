@@ -1,9 +1,10 @@
 package com.tangem.features.onboarding.v2.note.impl.child.topup.ui.state
 
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 
 data class OnboardingNoteTopUpUM(
-    val cardArtworkUrl: String? = null,
+    val cardArtwork: ArtworkUM? = null,
     val availableForBuy: Boolean = false,
     val availableForBuyLoading: Boolean = true,
     val balance: String = "",
