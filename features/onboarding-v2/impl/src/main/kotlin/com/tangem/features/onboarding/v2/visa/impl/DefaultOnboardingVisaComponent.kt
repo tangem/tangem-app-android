@@ -167,7 +167,9 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 params = OnboardingVisaOtherWalletComponent.Params(
                     childParams = childParams,
                     onDone = {
-                        model.stackNavigation.pushNew(OnboardingVisaRoute.PinCode(activationOrderInfo = it))
+                        model.stackNavigation.pushNew(
+                            OnboardingVisaRoute.PinCode(activationOrderInfo = it, pinCodeValidationError = false),
+                        )
                     },
                 ),
             )
@@ -176,6 +178,7 @@ internal class DefaultOnboardingVisaComponent @AssistedInject constructor(
                 config = OnboardingVisaPinCodeComponent.Config(
                     scanResponse = model.currentScanResponse.value,
                     activationOrderInfo = route.activationOrderInfo,
+                    wasValidationError = route.pinCodeValidationError,
                 ),
                 params = OnboardingVisaPinCodeComponent.Params(
                     childParams = childParams,
