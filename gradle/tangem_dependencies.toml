@@ -1,9 +1,15 @@
 [versions]
-tangemBlockchainSdk = "releases-5.22-1016"
+# Blockchain SDK, Card SDK and Vico artifacts are built in a private namespace and then published to a
+# public Maven repository, so anyone can build the app from source
+# https://github.com/tangem/blockchain-sdk-kotlin/packages/
+# https://github.com/tangem/tangem-sdk-android/
+# https://github.com/tangem/vico
+
+tangemBlockchainSdk = "releases-5.23-1026"
 #tangemBlockchainSdk = "0.0.1" # Keep it! - used for local builds
-tangemCardSdk = "release-app_5.22-440"
+tangemCardSdk = "releases-5.23-456"
 #tangemCardSdk = "0.0.1" # Keep it! - used for local builds ^
-tangemVico = "2.0.0-alpha.25-tangem-developments8"
+tangemVico = "2.0.0-alpha.25-tangem12"
 #tangemVico = "0.0.1" # Keep it! - used for local builds ^
 
 
