@@ -12,7 +12,7 @@ import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionDTO
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.CoroutineScope
@@ -36,20 +36,22 @@ internal class DefaultWcSessionsManager constructor(
     private val onSessionDelete = Channel<Wallet.Model.SessionDelete>(capacity = Channel.BUFFERED)
     private val oneTimeMigration = MutableStateFlow(true)
 
-    override val sessions: Flow<Map<UserWalletId, List<WcSession>>>
-        get() = store.sessions
-            .transform { inStore ->
+    override val sessions: Flow<Map<UserWallet, List<WcSession>>>
+        get() = combine(getWallets(), store.sessions) { wallets, inStore -> wallets to inStore }
+            .transform { pair ->
+                val (wallets, inStore) = pair
+                val inSdk: List<Wallet.Model.Session> = WalletKit.getListOfActiveSessions()
                 if (oneTimeMigration.value) {
                     oneTimeMigration.value = false
-                    val someMigrated = migrateLegacyStore(inStore)
+                    val someMigrated = migrateLegacyStore(inStore, inSdk, wallets)
                     if (someMigrated) return@transform // ignore emit, wait next one
                 }
-                val inSdk: List<Wallet.Model.Session> = WalletKit.getListOfActiveSessions()
-                val associatedSessions: List<WcSession> = associateWithSdk(inSdk, inStore)
+                val associatedSessions: List<WcSession> = associate(inSdk, inStore, wallets)
                 val someRemove = removeUnknownSessions(inStore, associatedSessions)
                 if (someRemove) return@transform // ignore emit, wait next one
-                emit(associatedSessions.groupBy { it.userWalletId })
+                emit(associatedSessions.groupBy { it.wallet })
             }
+            .distinctUntilChanged()
             .flowOn(dispatchers.io)
 
     override fun onWcSdkInit() {
@@ -57,11 +59,11 @@ internal class DefaultWcSessionsManager constructor(
         listenOnSessionDelete()
     }
 
-    override suspend fun saveSession(userWalletId: UserWalletId, session: WcSession) {
-        store.saveSession(WcSessionDTO(session.sdkModel.topic, session.userWalletId))
+    override suspend fun saveSession(session: WcSession) {
+        store.saveSession(WcSessionDTO(session.sdkModel.topic, session.wallet.walletId))
     }
 
-    override suspend fun removeSession(userWalletId: UserWalletId, session: WcSession): Either<Throwable, Unit> {
+    override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
         val topic = session.sdkModel.topic
         val sdkCall = sdkDisconnectSession(topic)
         sdkCall.onLeft { return it.left() }
@@ -80,9 +82,13 @@ internal class DefaultWcSessionsManager constructor(
     }
 
     override suspend fun findSessionByTopic(topic: String): WcSession? = withContext(dispatchers.io) {
-        val storedSessions = store.findSessionByTopic(topic) ?: return@withContext null
+        val storedSessions = sessions.firstOrNull()
+            ?.values?.flatten()
+            ?.firstOrNull { it.sdkModel.topic == topic }
+            ?: return@withContext null
         val sdkSession = WalletKit.getActiveSessionByTopic(topic) ?: return@withContext null
-        WcSession(userWalletId = storedSessions.walletId, sdkModel = WcSdkSessionConverter.convert(sdkSession))
+        val wallet = storedSessions.wallet
+        WcSession(wallet = wallet, sdkModel = WcSdkSessionConverter.convert(sdkSession))
     }
 
     override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
@@ -90,28 +96,35 @@ internal class DefaultWcSessionsManager constructor(
         onSessionDelete.trySend(sessionDelete)
     }
 
-    private suspend fun migrateLegacyStore(inNewStoreSessions: Set<WcSessionDTO>): Boolean {
-        val walletIds = getWallets.invokeSync().mapTo(mutableSetOf()) { it.walletId }
-        val inLegacyStoreSessions = walletIds
+    private suspend fun migrateLegacyStore(
+        inNewStore: Set<WcSessionDTO>,
+        inSdk: List<Wallet.Model.Session>,
+        wallets: List<UserWallet>,
+    ): Boolean {
+        val walletIds = wallets.map { wallet -> wallet.walletId }
+        val inLegacyStore = walletIds
             .map { walletId ->
                 flow { emit(legacyStore.loadSessions(walletId.stringValue).map { WcSessionDTO(it.topic, walletId) }) }
             }
             .merge()
             .reduce { accumulator, value -> accumulator.plus(value) }
+            // migrate only active legacySessions
+            .filter { legacySession -> inSdk.any { inSdkSession -> inSdkSession.topic == legacySession.topic } }
 
-        val mustSaveInNewStore = inLegacyStoreSessions.subtract(inNewStoreSessions)
+        val mustSaveInNewStore = inLegacyStore.subtract(inNewStore)
         if (mustSaveInNewStore.isNotEmpty()) store.saveSessions(mustSaveInNewStore)
         return mustSaveInNewStore.isNotEmpty()
     }
 
-    private fun associateWithSdk(
-        sdkSessions: List<Wallet.Model.Session>,
-        storeSessions: Set<WcSessionDTO>,
+    private fun associate(
+        inSdk: List<Wallet.Model.Session>,
+        inStore: Set<WcSessionDTO>,
+        wallets: List<UserWallet>,
     ): List<WcSession> {
-        val wcSessions = sdkSessions.mapNotNull { sdkSession ->
-            val storedSessions = storeSessions.find { it.topic == sdkSession.topic }
-                ?: return@mapNotNull null
-            WcSession(userWalletId = storedSessions.walletId, sdkModel = WcSdkSessionConverter.convert(sdkSession))
+        val wcSessions = inStore.mapNotNull { session ->
+            val wallet = wallets.find { it.walletId == session.walletId } ?: return@mapNotNull null
+            val sdkSession = inSdk.find { it.topic == session.topic } ?: return@mapNotNull null
+            WcSession(wallet = wallet, sdkModel = WcSdkSessionConverter.convert(sdkSession))
         }
         return wcSessions
     }
@@ -122,9 +135,6 @@ internal class DefaultWcSessionsManager constructor(
         val haveSomeUnknown = unknownStoredSessions.isNotEmpty()
 
         if (haveSomeUnknown) {
-            unknownStoredSessions.forEach { unknown ->
-                legacyStore.removeSession(unknown.walletId.stringValue, unknown.topic)
-            }
             store.removeSessions(unknownStoredSessions.toSet())
         }
         return haveSomeUnknown
