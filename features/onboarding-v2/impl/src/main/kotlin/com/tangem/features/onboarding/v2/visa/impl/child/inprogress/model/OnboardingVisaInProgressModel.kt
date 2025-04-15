@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.inprogress.model
 
 import androidx.compose.runtime.Stable
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -20,6 +21,7 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Params
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
@@ -41,6 +43,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     private val userWalletBuilderFactory: UserWalletBuilder.Factory,
     private val userWalletsListManager: UserWalletsListManager,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<Config>()
@@ -53,6 +56,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
     val onDone = MutableSharedFlow<Params.DoneEvent>()
 
     init {
+        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ActivationInProgressScreen)
         modelScope.launch {
             while (true) {
                 val result = runCatching {
@@ -71,9 +75,10 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     VisaActivationRemoteState.WaitingForActivationFinishing,
                     -> {
                     }
-                    is VisaActivationRemoteState.WaitingPinCode -> {
-                        navigateToPinCode(result.activationOrderInfo)
-                        return@launch
+                    is VisaActivationRemoteState.AwaitingPinCode -> {
+                        navigateToPinCodeIfNeeded(result) {
+                            return@launch
+                        }
                     }
                     VisaActivationRemoteState.Activated -> {
                         finishActivation()
@@ -86,8 +91,37 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
         }
     }
 
-    private suspend fun navigateToPinCode(activationOrderInfo: VisaActivationOrderInfo) {
-        onDone.emit(Params.DoneEvent.NavigateTo(OnboardingVisaRoute.PinCode(activationOrderInfo)))
+    private suspend inline fun navigateToPinCodeIfNeeded(
+        remoteState: VisaActivationRemoteState.AwaitingPinCode,
+        returnBlock: () -> Unit,
+    ) {
+        when (remoteState.status) {
+            VisaActivationRemoteState.AwaitingPinCode.Status.WaitingForPinCode -> {
+                onDone.emit(
+                    Params.DoneEvent.NavigateTo(
+                        OnboardingVisaRoute.PinCode(
+                            activationOrderInfo = remoteState.activationOrderInfo,
+                            pinCodeValidationError = false,
+                        ),
+                    ),
+                )
+                returnBlock()
+            }
+            VisaActivationRemoteState.AwaitingPinCode.Status.WasError -> {
+                onDone.emit(
+                    Params.DoneEvent.NavigateTo(
+                        OnboardingVisaRoute.PinCode(
+                            activationOrderInfo = remoteState.activationOrderInfo,
+                            pinCodeValidationError = true,
+                        ),
+                    ),
+                )
+                returnBlock()
+            }
+            VisaActivationRemoteState.AwaitingPinCode.Status.InProgress -> {
+                /** waiting for new state */
+            }
+        }
     }
 
     private suspend fun finishActivation() {

@@ -14,6 +14,8 @@ import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSy
 import com.tangem.feature.wallet.presentation.wallet.domain.WalletNameMigrationUseCase
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.features.nft.NFTFeatureToggles
+import com.tangem.operations.attestation.CardArtworksProvider
+import com.tangem.sdk.api.featuretoggles.CardSdkFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -172,8 +174,16 @@ internal object WalletsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetCardImageUseCase(onlineCardVerifier: OnlineCardVerifier): GetCardImageUseCase {
-        return GetCardImageUseCase(verifier = onlineCardVerifier)
+    fun provideGetCardImageUseCase(
+        onlineCardVerifier: OnlineCardVerifier,
+        cardArtworksProvider: CardArtworksProvider,
+        cardSdkFeatureToggles: CardSdkFeatureToggles,
+    ): GetCardImageUseCase {
+        return GetCardImageUseCase(
+            verifier = onlineCardVerifier,
+            cardArtworksProvider = cardArtworksProvider,
+            cardSdkFeatureToggles = cardSdkFeatureToggles,
+        )
     }
 
     @Provides
