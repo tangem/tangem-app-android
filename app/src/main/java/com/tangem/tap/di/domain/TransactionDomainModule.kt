@@ -147,4 +147,22 @@ internal object TransactionDomainModule {
     fun provideGetAllowanceUseCase(transactionRepository: TransactionRepository): GetAllowanceUseCase {
         return GetAllowanceUseCase(transactionRepository)
     }
+
+    @Provides
+    @Singleton
+    fun providePrepareForSendUseCase(
+        transactionRepository: TransactionRepository,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): PrepareForSendUseCase {
+        return PrepareForSendUseCase(transactionRepository, cardSdkConfigRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSignUseCase(
+        walletManagersFacade: WalletManagersFacade,
+        cardSdkConfigRepository: CardSdkConfigRepository,
+    ): SignUseCase {
+        return SignUseCase(cardSdkConfigRepository, walletManagersFacade)
+    }
 }

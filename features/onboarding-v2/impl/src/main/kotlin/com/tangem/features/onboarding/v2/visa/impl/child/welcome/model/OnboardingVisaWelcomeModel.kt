@@ -2,6 +2,7 @@ package com.tangem.features.onboarding.v2.visa.impl.child.welcome.model
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -14,6 +15,9 @@ import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.OnboardingVisaWelcomeComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.OnboardingVisaWelcomeComponent.DoneEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.ONBOARDING_SOURCE
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.ui.state.OnboardingVisaWelcomeUM
 import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
 import com.tangem.sdk.api.TangemSdkManager
@@ -33,6 +37,7 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     private val tangemSdkManager: TangemSdkManager,
     private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
     private val uiMessageSender: UiMessageSender,
+    private val analyticsEventsHandler: AnalyticsEventHandler,
 ) : Model() {
 
     private val params = paramsContainer.require<Config>()
@@ -41,6 +46,10 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
 
     val uiState = _uiState.asStateFlow()
     val onDone = MutableSharedFlow<DoneEvent>()
+
+    init {
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ActivationScreenOpened)
+    }
 
     private fun getInitialState(): OnboardingVisaWelcomeUM {
         return OnboardingVisaWelcomeUM(
@@ -54,6 +63,7 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
     }
 
     private fun onContinueClick() {
+        analyticsEventsHandler.send(OnboardingVisaAnalyticsEvent.ButtonActivate)
         if (params !is Config.WelcomeBack) {
             modelScope.launch { onDone.emit(DoneEvent.WelcomeDone) }
             return
@@ -86,6 +96,9 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
                 is CompletionResult.Failure -> {
                     loading(false)
                     uiMessageSender.showErrorDialog(result.error.universalError)
+                    analyticsEventsHandler.send(
+                        VisaAnalyticsEvent.Errors(result.error.code.toString(), ONBOARDING_SOURCE),
+                    )
                     return@launch
                 }
                 is CompletionResult.Success -> result.data
