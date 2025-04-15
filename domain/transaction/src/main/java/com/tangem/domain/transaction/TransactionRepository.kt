@@ -78,4 +78,11 @@ interface TransactionRepository {
         cryptoCurrency: CryptoCurrency.Token,
         spenderAddress: String,
     ): BigDecimal
+
+    suspend fun prepareForSend(
+        transactionData: TransactionData,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<ByteArray>
 }
