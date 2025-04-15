@@ -1,10 +1,7 @@
 package com.tangem.domain.staking
 
 import arrow.core.Either
-import com.tangem.domain.staking.model.stakekit.BalanceItem
-import com.tangem.domain.staking.model.stakekit.BalanceType
-import com.tangem.domain.staking.model.stakekit.StakingError
-import com.tangem.domain.staking.model.stakekit.Token
+import com.tangem.domain.staking.model.stakekit.*
 import com.tangem.domain.staking.model.stakekit.action.StakingAction
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.staking.repositories.StakingErrorResolver
@@ -51,6 +48,9 @@ class InvalidatePendingTransactionsUseCase(
                 }
                 StakingActionType.WITHDRAW -> {
                     modifyBalancesByStatus(balances, action, BalanceType.UNSTAKED)
+                    if (token.network == NetworkType.TON) {
+                        modifyBalancesByStatus(balances, action, BalanceType.PREPARING)
+                    }
                 }
                 StakingActionType.UNLOCK_LOCKED -> {
                     modifyBalancesByStatus(balances, action, BalanceType.LOCKED)

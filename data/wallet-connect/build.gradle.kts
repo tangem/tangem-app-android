@@ -14,6 +14,7 @@ dependencies {
     /* Project - Domain */
     implementation(projects.domain.walletConnect)
     implementation(projects.domain.walletConnect.models)
+    implementation(projects.domain.transaction)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.tokens)
@@ -35,6 +36,7 @@ dependencies {
 
     /* Tangem libraries */
     implementation(tangemDeps.blockchain)
+    implementation(tangemDeps.card.core)
 
     /* Reown - WalletConnect */
     implementation(deps.reownCore) {
@@ -47,4 +49,11 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+
+    /* Tests */
+    testImplementation(projects.common.test)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.turbine)
 }
