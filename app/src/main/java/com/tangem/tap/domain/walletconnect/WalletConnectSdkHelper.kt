@@ -4,7 +4,6 @@ import com.tangem.Message
 import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.*
@@ -16,6 +15,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.Basic
 import com.tangem.core.analytics.models.Basic.TransactionSent.MemoType
+import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.extensions.inject
 import com.tangem.tap.common.extensions.safeUpdate
@@ -357,36 +357,9 @@ class WalletConnectSdkHelper {
         )
     }
 
-    private fun createMessageData(message: WcSignMessage): ByteArray {
-        val messageData = try {
-            message.data.removePrefix(HEX_PREFIX).hexToBytes()
-        } catch (exception: Exception) {
-            message.data.asciiToHex()?.hexToBytes() ?: byteArrayOf()
-        }
+    private fun createMessageData(message: WcSignMessage): ByteArray = LegacySdkHelper.createMessageData(message.data)
 
-        val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
-        return (prefixData + messageData).toKeccak()
-    }
-
-    private fun String.hexToAscii(): String? {
-        return try {
-            removePrefix(HEX_PREFIX).hexToBytes()
-                .map {
-                    val char = it.toInt().toChar()
-                    if (char.isAscii()) char else return null
-                }
-                .joinToString("")
-        } catch (exception: Exception) {
-            return null
-        }
-    }
-
-    private fun String.asciiToHex(): String? {
-        return map {
-            if (!it.isAscii()) return null
-            Integer.toHexString(it.code)
-        }.joinToString("")
-    }
+    private fun String.hexToAscii(): String? = LegacySdkHelper.hexToAscii(hex = this)
 
     suspend fun signPersonalMessage(
         hashToSign: ByteArray,
@@ -535,7 +508,6 @@ class WalletConnectSdkHelper {
         "{\"signature\":\"$signature\",\"publicKey\":\"$publicKey\"}"
 
     private companion object {
-        const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
         const val HEX_PREFIX = "0x"
         const val DEFAULT_MAX_GASLIMIT = 350000
         // TODO remove after [REDACTED_JIRA]
