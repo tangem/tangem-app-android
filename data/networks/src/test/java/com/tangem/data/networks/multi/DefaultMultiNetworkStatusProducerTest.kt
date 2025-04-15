@@ -65,7 +65,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         // check after producer.produce()
         verify { networksStatusesStore.get(params.userWalletId) }
 
-        val values = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
@@ -95,7 +95,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         networksStatusesFlow.emit(statuses.map(NetworkStatus::toSimple).toSet())
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
@@ -112,7 +112,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         networksStatusesFlow.emit(updatedStatuses.map(NetworkStatus::toSimple).toSet())
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
@@ -143,7 +143,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         networksStatusesFlow.emit(statuses.map(NetworkStatus::toSimple).toSet())
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
@@ -155,7 +155,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         // second emit
         networksStatusesFlow.emit(statuses.map(NetworkStatus::toSimple).toSet())
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
@@ -191,7 +191,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         // check after producer.produce()
         verify { networksStatusesStore.get(params.userWalletId) }
 
-        val values1 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values1 = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
@@ -202,7 +202,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
 
         innerFlow.emit(value = true)
 
-        val values2 = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values2 = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
@@ -222,7 +222,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         // check after producer.produce()
         verify { networksStatusesStore.get(params.userWalletId) }
 
-        val values = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values = getEmittedValues(flow = actual)
 
         verify(inverse = true) { userWalletsStore.getSyncOrNull(params.userWalletId) }
 
@@ -248,7 +248,7 @@ internal class DefaultMultiNetworkStatusProducerTest {
         // check after producer.produce()
         verify { networksStatusesStore.get(params.userWalletId) }
 
-        val values = backgroundScope.getEmittedValues(testScheduler = testScheduler, actual = actual)
+        val values = getEmittedValues(flow = actual)
 
         // Check after flow was observed by subscriber (getEmittedValues).
         // Otherwise, userWalletsStore.getSyncOrNull is not called.
