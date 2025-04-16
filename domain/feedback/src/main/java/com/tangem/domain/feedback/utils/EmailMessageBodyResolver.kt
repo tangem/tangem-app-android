@@ -4,6 +4,7 @@ import com.tangem.domain.feedback.FeedbackDataBuilder
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.repository.FeedbackRepository
+import com.tangem.domain.visa.model.VisaTxDetails
 
 /**
  * Email message body resolver
@@ -29,9 +30,18 @@ internal class EmailMessageBodyResolver(
             is FeedbackEmailType.ScanningProblem,
             is FeedbackEmailType.CardAttestationFailed,
             -> addPhoneInfoBody()
+            is FeedbackEmailType.Visa.Activation -> addUserRequestBody(type.cardInfo)
+            is FeedbackEmailType.Visa.DirectUserRequest -> addUserRequestBody(type.cardInfo)
+            is FeedbackEmailType.Visa.Dispute -> addVisaRequestBody(type.cardInfo, type.visaTxDetails)
         }
 
         return build()
+    }
+
+    private suspend fun FeedbackDataBuilder.addVisaRequestBody(cardInfo: CardInfo, visaTxDetails: VisaTxDetails) {
+        addUserRequestBody(cardInfo)
+        addDelimiter()
+        addVisaTxInfo(visaTxDetails)
     }
 
     private suspend fun FeedbackDataBuilder.addUserRequestBody(cardInfo: CardInfo) {
