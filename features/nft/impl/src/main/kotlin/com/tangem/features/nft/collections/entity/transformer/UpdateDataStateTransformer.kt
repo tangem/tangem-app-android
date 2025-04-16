@@ -68,7 +68,7 @@ internal class UpdateDataStateTransformer(
                 is NFTCollection.Assets.Empty,
                 is NFTCollection.Assets.Failed,
                 is NFTCollection.Assets.Loading,
-                -> true
+                -> false
                 is NFTCollection.Assets.Value -> {
                     assets.items.any { asset ->
                         asset.name?.lowercase()?.contains(query.lowercase()) == true
