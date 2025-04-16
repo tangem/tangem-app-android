@@ -7,17 +7,22 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.domain.common.TapWorkarounds.isVisa
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.walletconnect.CheckIsWalletConnectAvailableUseCase
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.details.component.DetailsComponent
 import com.tangem.features.details.entity.DetailsFooterUM
 import com.tangem.features.details.entity.DetailsItemUM
 import com.tangem.features.details.entity.DetailsUM
+import com.tangem.features.details.entity.SelectEmailFeedbackTypeBS
 import com.tangem.features.details.utils.ItemsBuilder
 import com.tangem.features.details.utils.SocialsBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -47,6 +52,7 @@ internal class DetailsModel @Inject constructor(
     private val appStateHolder: ReduxStateHolder,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -84,6 +90,7 @@ internal class DetailsModel @Inject constructor(
                     socials = socialsBuilder.buildAll(),
                     appVersion = getAppVersion(),
                 ),
+                selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig.Empty,
                 popBack = router::pop,
             ),
         )
@@ -99,12 +106,88 @@ internal class DetailsModel @Inject constructor(
 
     private fun sendFeedback() {
         modelScope.launch {
+            val userWallets = getWalletsUseCase.invokeSync()
+
             val scanResponse = getSelectedWalletSyncUseCase().getOrNull()?.scanResponse
                 ?: error("Selected wallet is null")
 
             val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
 
-            sendFeedbackEmailUseCase(type = FeedbackEmailType.DirectUserRequest(cardInfo = cardInfo))
+            val feedbackType = when {
+                userWallets.all { it.scanResponse.card.isVisa } -> FeedbackEmailType.Visa.DirectUserRequest(cardInfo)
+                userWallets.all { it.scanResponse.card.isVisa.not() } -> FeedbackEmailType.DirectUserRequest(cardInfo)
+                else -> {
+                    showFeedbackEmailTypeOptionBS(cardInfo)
+                    return@launch
+                }
+            }
+
+            sendFeedbackEmailUseCase(feedbackType)
+        }
+    }
+
+    private fun showFeedbackEmailTypeOptionBS(selectedCardInfo: CardInfo) {
+        state.update {
+            it.copy(
+                selectFeedbackEmailTypeBSConfig = TangemBottomSheetConfig(
+                    isShown = true,
+                    onDismissRequest = {
+                        state.update {
+                            it.copy(
+                                selectFeedbackEmailTypeBSConfig =
+                                it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
+                            )
+                        }
+                    },
+                    content = SelectEmailFeedbackTypeBS(
+                        onOptionClick = { option ->
+                            onEmailFeedbackTypeOptionSelected(
+                                selectedCardInfo = selectedCardInfo,
+                                option = option,
+                            )
+
+                            state.update {
+                                it.copy(
+                                    selectFeedbackEmailTypeBSConfig =
+                                    it.selectFeedbackEmailTypeBSConfig.copy(isShown = false),
+                                )
+                            }
+                        },
+                    ),
+                ),
+            )
+        }
+    }
+
+    private fun onEmailFeedbackTypeOptionSelected(
+        selectedCardInfo: CardInfo,
+        option: SelectEmailFeedbackTypeBS.Option,
+    ) {
+        modelScope.launch {
+            val feedbackType = when (option) {
+                SelectEmailFeedbackTypeBS.Option.General -> {
+                    if (selectedCardInfo.isVisa.not()) {
+                        FeedbackEmailType.DirectUserRequest(selectedCardInfo)
+                    } else {
+                        val scanResponse = getWalletsUseCase.invokeSync()
+                            .firstOrNull { it.scanResponse.card.isVisa.not() }?.scanResponse ?: return@launch
+                        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
+                        FeedbackEmailType.DirectUserRequest(cardInfo)
+                    }
+                }
+                SelectEmailFeedbackTypeBS.Option.Visa -> {
+                    if (selectedCardInfo.isVisa) {
+                        FeedbackEmailType.Visa.DirectUserRequest(selectedCardInfo)
+                    } else {
+                        val scanResponse = getWalletsUseCase.invokeSync()
+                            .firstOrNull { it.scanResponse.card.isVisa }?.scanResponse ?: return@launch
+                        val cardInfo = getCardInfoUseCase(scanResponse).getOrNull() ?: return@launch
+                        FeedbackEmailType.Visa.DirectUserRequest(cardInfo)
+                    }
+                }
+            }
+
+            sendFeedbackEmailUseCase(feedbackType)
         }
     }
 
