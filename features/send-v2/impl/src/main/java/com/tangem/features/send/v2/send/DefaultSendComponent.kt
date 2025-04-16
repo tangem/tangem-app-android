@@ -24,6 +24,7 @@ import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
+import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
@@ -161,7 +162,20 @@ internal class DefaultSendComponent @AssistedInject constructor(
             cryptoCurrencyStatus = model.cryptoCurrencyStatus,
             callback = model,
             predefinedValues = model.predefinedValues,
-            onBackClick = ::onChildBack,
+            onBackClick = {
+                if (route.isEditMode) {
+                    onChildBack()
+                } else {
+                    analyticsEventHandler.send(
+                        SendAnalyticEvents.CloseButtonClicked(
+                            source = SendScreenSource.Amount,
+                            isFromSummary = false,
+                            isValid = model.uiState.value.amountUM.isPrimaryButtonEnabled,
+                        ),
+                    )
+                    router.pop()
+                }
+            },
             onNextClick = {
                 if (route.isEditMode) {
                     onChildBack()
