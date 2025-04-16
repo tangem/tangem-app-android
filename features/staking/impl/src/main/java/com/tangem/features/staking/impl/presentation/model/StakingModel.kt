@@ -302,12 +302,13 @@ internal class StakingModel @Inject constructor(
         )
         modelScope.launch {
             feeLoader.getFee(
-                onStakingFee = { gasEstimate ->
+                onStakingFee = { gasEstimate, isFeeApproximate ->
                     stateController.update(
                         SetConfirmationStateAssentTransformer(
                             appCurrencyProvider = Provider { appCurrency },
                             feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                             fee = gasEstimate,
+                            isFeeApproximate = isFeeApproximate,
                             cryptoCurrencyStatus = cryptoCurrencyStatus,
                         ),
                     )
@@ -363,13 +364,14 @@ internal class StakingModel @Inject constructor(
                         stakingEventFactory.createSendTransactionErrorAlert(error)
                         stateController.update(SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus))
                     },
-                    onFeeIncreased = { increasedFee ->
+                    onFeeIncreased = { increasedFee, isFeeApproximate ->
                         stateController.updateAll(
                             SetConfirmationStateResetAssentTransformer(cryptoCurrencyStatus),
                             SetConfirmationStateAssentTransformer(
                                 appCurrencyProvider = Provider { appCurrency },
                                 feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                                 fee = increasedFee,
+                                isFeeApproximate = isFeeApproximate,
                                 cryptoCurrencyStatus = cryptoCurrencyStatus,
                             ),
                         )
