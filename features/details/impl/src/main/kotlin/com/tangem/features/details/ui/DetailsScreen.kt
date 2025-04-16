@@ -59,6 +59,8 @@ internal fun DetailsScreen(
             userWalletListBlockContent = userWalletListBlockContent,
         )
     }
+
+    SelectFeedbackEmailTypeBottomSheet(state.selectFeedbackEmailTypeBSConfig)
 }
 
 @Composable
