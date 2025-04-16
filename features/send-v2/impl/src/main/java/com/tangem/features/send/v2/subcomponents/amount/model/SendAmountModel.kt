@@ -1,7 +1,6 @@
 package com.tangem.features.send.v2.subcomponents.amount.model
 
 import androidx.compose.runtime.Stable
-import com.tangem.common.routing.AppRouter
 import com.tangem.common.ui.amountScreen.AmountScreenClickIntents
 import com.tangem.common.ui.amountScreen.converters.*
 import com.tangem.common.ui.amountScreen.converters.field.AmountFieldChangeTransformer
