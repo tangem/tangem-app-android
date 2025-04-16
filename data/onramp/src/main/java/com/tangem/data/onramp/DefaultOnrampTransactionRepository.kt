@@ -63,11 +63,17 @@ internal class DefaultOnrampTransactionRepository(
             }.map(transactionConverter::convert)
         }
 
-    override suspend fun updateTransactionStatus(externalTxId: String, status: OnrampStatus.Status) =
-        withContext(dispatchers.io) {
-            val updatedTx = getTransactionById(externalTxId)?.copy(status = status) ?: return@withContext
-            storeTransaction(updatedTx)
-        }
+    override suspend fun updateTransactionStatus(
+        externalTxId: String,
+        externalTxUrl: String,
+        status: OnrampStatus.Status,
+    ) = withContext(dispatchers.io) {
+        val updatedTx = getTransactionById(externalTxId)?.copy(
+            externalTxUrl = externalTxUrl,
+            status = status,
+        ) ?: return@withContext
+        storeTransaction(updatedTx)
+    }
 
     override suspend fun removeTransaction(externalTxId: String) {
         withContext(dispatchers.io) {
