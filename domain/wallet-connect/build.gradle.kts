@@ -6,6 +6,7 @@ plugins {
 dependencies {
     /* Project - Domain */
     implementation(projects.domain.core)
+    implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.walletConnect.models)
 

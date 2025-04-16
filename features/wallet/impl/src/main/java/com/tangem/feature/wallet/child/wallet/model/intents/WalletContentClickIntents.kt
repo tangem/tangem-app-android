@@ -240,6 +240,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onNFTClick(userWalletId: UserWalletId) {
-        router.openNFTCollectionsScreen(userWalletId)
+        router.openNFT(userWalletId)
     }
 }
