@@ -3,7 +3,6 @@ package com.tangem.features.nft.receive.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
-import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.fields.InputManager
@@ -14,8 +13,8 @@ import com.tangem.domain.nft.GetNFTAvailableNetworksUseCase
 import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
-import com.tangem.features.nft.component.NFTReceiveComponent
 import com.tangem.features.nft.impl.R
+import com.tangem.features.nft.receive.NFTReceiveComponent
 import com.tangem.features.nft.receive.entity.NFTReceiveUM
 import com.tangem.features.nft.receive.entity.transformer.ShowReceiveBottomSheetTransformer
 import com.tangem.features.nft.receive.entity.transformer.ToggleSearchBarTransformer
@@ -31,7 +30,6 @@ import javax.inject.Inject
 @ModelScoped
 internal class NFTReceiveModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
-    private val router: Router,
     private val searchManager: InputManager,
     private val getNFTAvailableNetworksUseCase: GetNFTAvailableNetworksUseCase,
     private val filterNFTAvailableNetworksUseCase: FilterNFTAvailableNetworksUseCase,
@@ -41,18 +39,18 @@ internal class NFTReceiveModel @Inject constructor(
     paramsContainer: ParamsContainer,
 ) : Model() {
 
-    val state: StateFlow<NFTReceiveUM> get() = _state
+    private val params: NFTReceiveComponent.Params = paramsContainer.require()
 
     private val _state = MutableStateFlow(
         value = NFTReceiveUM(
-            onBackClick = ::navigateBack,
+            onBackClick = params.onBackClick,
             search = getInitialSearchBar(),
             networks = NFTReceiveUM.Networks.Content(persistentListOf()),
             bottomSheetConfig = null,
         ),
     )
 
-    private val params: NFTReceiveComponent.Params = paramsContainer.require()
+    val state: StateFlow<NFTReceiveUM> get() = _state
 
     init {
         subscribeToNFTAvailableNetworks()
@@ -139,9 +137,5 @@ internal class NFTReceiveModel @Inject constructor(
 
     private fun onShareClick(text: String) {
         shareManager.shareText(text = text)
-    }
-
-    private fun navigateBack() {
-        router.pop()
     }
 }
