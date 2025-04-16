@@ -1,5 +1,5 @@
 package com.tangem.domain.walletconnect.model
 
-interface WcMethod {
+sealed interface WcMethod {
     data object Unsupported : WcMethod
 }

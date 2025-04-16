@@ -1,15 +1,17 @@
 package com.tangem.features.nft.details.model
 
+import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.features.nft.component.NFTDetailsComponent
+import com.tangem.features.nft.details.NFTDetailsComponent
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsUM
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 
 @ModelScoped
@@ -33,9 +35,9 @@ internal class NFTDetailsModel @Inject constructor(
                 traits = persistentListOf(),
                 baseInfoItems = persistentListOf(),
             ),
-            onBackClick = ::navigateBack,
+            onBackClick = params.onBackClick,
             onReadMoreClick = ::onReadMoreClick,
-            onSeeAllClick = ::onSeeAllClick,
+            onSeeAllTraitsClick = params.onAllTraitsClick,
             onExploreClick = ::onExploreClick,
             onSendClick = ::onSendClick,
             bottomSheetConfig = null,
@@ -46,19 +48,17 @@ internal class NFTDetailsModel @Inject constructor(
         // TODO implement
     }
 
-    private fun onSeeAllClick() {
-        // TODO implement
-    }
-
     private fun onExploreClick() {
         // TODO implement
     }
 
     private fun onSendClick() {
-        // TODO implement
-    }
-
-    private fun navigateBack() {
-        router.pop()
+        router.push(
+            AppRoute.NFTSend(
+                userWalletId = params.userWalletId,
+                nftAsset = params.nftAsset,
+                nftCollectionName = params.nftCollectionName,
+            ),
+        )
     }
 }
