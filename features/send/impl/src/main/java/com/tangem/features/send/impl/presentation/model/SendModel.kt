@@ -515,13 +515,13 @@ internal class SendModel @Inject constructor(
         when (currentState.type) {
             SendUiStateType.Fee,
             SendUiStateType.EditFee,
-            -> if (uiState.value.feeState?.isPrimaryButtonEnabled == false) return
+            -> if (uiState.value.getFeeState(isFromEdit)?.isPrimaryButtonEnabled == false) return
             SendUiStateType.Amount,
             SendUiStateType.EditAmount,
-            -> if (!uiState.value.amountState.isPrimaryButtonEnabled) return
+            -> if (!uiState.value.getAmountState(isFromEdit).isPrimaryButtonEnabled) return
             SendUiStateType.Recipient,
             SendUiStateType.EditRecipient,
-            -> if (uiState.value.recipientState?.isPrimaryButtonEnabled == false) return
+            -> if (uiState.value.getRecipientState(isFromEdit)?.isPrimaryButtonEnabled == false) return
             SendUiStateType.Send -> if (uiState.value.sendState?.isPrimaryButtonEnabled == false) return
             SendUiStateType.None -> return
         }
@@ -995,10 +995,10 @@ internal class SendModel @Inject constructor(
         }
     }
 
-    private suspend fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
+    private fun updateTransactionStatus(txData: TransactionData.Uncompiled) {
         val txUrl = getExplorerTransactionUrlUseCase(
-            userWalletId = userWalletId,
-            network = cryptoCurrency.network,
+            txHash = txData.hash.orEmpty(),
+            networkId = cryptoCurrency.network.id,
         ).getOrElse { "" }
         uiState.value = stateFactory.getTransactionSendState(txData, txUrl)
     }
