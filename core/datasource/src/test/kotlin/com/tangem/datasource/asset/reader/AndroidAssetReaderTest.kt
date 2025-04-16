@@ -2,7 +2,6 @@ package com.tangem.datasource.asset.reader
 
 import android.content.res.AssetManager
 import com.google.common.truth.Truth
-import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
@@ -15,7 +14,7 @@ import java.io.IOException
 internal class AndroidAssetReaderTest {
 
     private val assetManager = mockk<AssetManager>()
-    private val assetReader = AndroidAssetReader(assetManager, TestingCoroutineDispatcherProvider())
+    private val assetReader = AndroidAssetReader(assetManager)
 
     @Test
     fun read_content() = runTest {
