@@ -31,7 +31,7 @@ internal class NetworksStatusesStoreInitializationTest {
 
         DefaultNetworksStatusesStoreV2(
             runtimeStore = runtimeStore,
-            persistenceDataStore = persistenceStore, // local mock
+            persistenceDataStore = persistenceStore,
             dispatchers = TestingCoroutineDispatcherProvider(),
         )
 
