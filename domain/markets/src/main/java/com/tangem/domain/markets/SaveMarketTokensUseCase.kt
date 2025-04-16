@@ -4,6 +4,7 @@ import arrow.core.Either
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -31,6 +32,7 @@ class SaveMarketTokensUseCase(
     private val stakingRepository: StakingRepository,
     private val quotesRepository: QuotesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val multiQuoteFetcher: MultiQuoteFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -106,9 +108,18 @@ class SaveMarketTokensUseCase(
     }
 
     private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
-        quotesRepository.fetchQuotes(
-            currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
-            refresh = true,
-        )
+        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+            multiQuoteFetcher(
+                params = MultiQuoteFetcher.Params(
+                    currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
+                    appCurrencyId = null,
+                ),
+            )
+        } else {
+            quotesRepository.fetchQuotes(
+                currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
+                refresh = true,
+            )
+        }
     }
 }
