@@ -223,13 +223,12 @@ internal class SendAmountModel @Inject constructor(
                 NavigationUM.Content(
                     title = resourceReference(R.string.send_amount_label),
                     subtitle = null,
-                    backIconRes = R.drawable.ic_back_24,
-                    backIconClick = {
-                        if (!route.isEditMode) {
-                            saveResult()
-                        }
-                        params.onBackClick()
+                    backIconRes = if (route.isEditMode) {
+                        R.drawable.ic_back_24
+                    } else {
+                        R.drawable.ic_close_24
                     },
+                    backIconClick = { params.onBackClick() },
                     primaryButton = ButtonsUM.PrimaryButtonUM(
                         text = if (route.isEditMode) {
                             resourceReference(R.string.common_continue)
