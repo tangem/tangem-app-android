@@ -32,9 +32,9 @@ internal fun OnboardingNoteCreateWallet(state: OnboardingNoteCreateWalletUM, mod
         verticalArrangement = Arrangement.Bottom,
     ) {
         WalletArtworks(
-            url1 = state.artworkUrl,
-            url2 = null,
-            url3 = null,
+            artwork1 = state.artwork,
+            artwork2 = null,
+            artwork3 = null,
             modifier = Modifier
                 .padding(top = 64.dp)
                 .padding(horizontal = 24.dp)
@@ -86,7 +86,7 @@ private fun OnboardingNoteCreatePreview() {
     TangemThemePreview {
         OnboardingNoteCreateWallet(
             state = OnboardingNoteCreateWalletUM(
-                artworkUrl = null,
+                artwork = null,
                 createWalletInProgress = false,
                 onCreateClick = {},
             ),

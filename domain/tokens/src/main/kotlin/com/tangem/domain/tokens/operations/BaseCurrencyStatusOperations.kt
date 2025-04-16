@@ -10,6 +10,9 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusProducer
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.quotes.QuotesRepositoryV2
+import com.tangem.domain.quotes.single.SingleQuoteProducer
+import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
@@ -37,10 +40,12 @@ import kotlinx.coroutines.flow.*
 abstract class BaseCurrencyStatusOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
+    private val quotesRepositoryV2: QuotesRepositoryV2,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
+    private val singleQuoteSupplier: SingleQuoteSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -171,7 +176,16 @@ abstract class BaseCurrencyStatusOperations(
                     } else {
                         currenciesRepository.getMultiCurrencyWalletCurrency(userWalletId, cryptoCurrencyId)
                     }
-                    val quote = cryptoCurrencyId.rawCurrencyId?.let { quotesRepository.getQuoteSync(it) }?.right()
+
+                    val quote = cryptoCurrencyId.rawCurrencyId?.let { rawId ->
+                        if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+                            singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = rawId))
+                                .firstOrNull()
+                        } else {
+                            quotesRepository.getQuoteSync(rawId)
+                        }
+                    }
+                        ?.right()
                         ?: Error.EmptyQuotes.left()
 
                     val networkStatuses = if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
@@ -237,7 +251,12 @@ abstract class BaseCurrencyStatusOperations(
                             ?: return emptyList<CryptoCurrencyStatus>().right()
                     val (networks, currenciesIds) = getIds(nonEmptyCurrencies)
                     val rawIds = currenciesIds.mapNotNull { it.rawCurrencyId }.toSet()
-                    val quotes = quotesRepository.getQuotesSync(rawIds, false).right()
+
+                    val quotes = if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+                        quotesRepositoryV2.getMultiQuoteSyncOrNull(currenciesIds = rawIds)?.right()
+                    } else {
+                        quotesRepository.getQuotesSync(rawIds, false).right()
+                    }
 
                     val networkStatuses = if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
                         multiNetworkStatusSupplier(
@@ -268,13 +287,23 @@ abstract class BaseCurrencyStatusOperations(
             block = { currenciesRepository.getSingleCurrencyWalletPrimaryCurrency(userWalletId) },
             catch = { raise(Error.DataError(it)) },
         )
-        val quotes = catch(
-            block = {
-                currency.id.rawCurrencyId?.let { quotesRepository.getQuoteSync(it) }
-                    ?.right() ?: Error.EmptyQuotes.left()
-            },
-            catch = { Error.DataError(it).left() },
-        )
+
+        val quotes = if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+            currency.id.rawCurrencyId?.let {
+                singleQuoteSupplier(params = SingleQuoteProducer.Params(rawCurrencyId = it))
+                    .firstOrNull()
+            }
+                ?.right()
+                ?: Error.EmptyQuotes.left()
+        } else {
+            catch(
+                block = {
+                    currency.id.rawCurrencyId?.let { quotesRepository.getQuoteSync(it) }
+                        ?.right() ?: Error.EmptyQuotes.left()
+                },
+                catch = { Error.DataError(it).left() },
+            )
+        }
 
         val networkStatus = if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
             singleNetworkStatusSupplier(
