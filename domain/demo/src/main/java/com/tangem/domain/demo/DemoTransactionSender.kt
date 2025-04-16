@@ -7,6 +7,8 @@ import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.random.Random
 
 class DemoTransactionSender(private val walletManager: WalletManager) : TransactionSender {
@@ -15,9 +17,9 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         val blockchain = walletManager.wallet.blockchain
         return Result.Success(
             TransactionFee.Choosable(
-                minimum = Fee.Common(Amount(minimumFee, blockchain)),
-                normal = Fee.Common(Amount(normalFee, blockchain)),
-                priority = Fee.Common(Amount(priorityFee, blockchain)),
+                minimum = blockchain.getStubFee(minimumFee),
+                normal = blockchain.getStubFee(normalFee),
+                priority = blockchain.getStubFee(priorityFee),
             ),
         )
     }
@@ -44,7 +46,16 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
         transactionDataList: List<TransactionData>,
         signer: TransactionSigner,
         sendMode: TransactionSender.MultipleTransactionSendMode,
-    ): Result<TransactionsSendResult> = Result.Failure(Exception(ID).toBlockchainSdkError())
+    ): Result<TransactionsSendResult> {
+        val signerResponse = signer.sign(
+            hash = getDataToSign(),
+            publicKey = walletManager.wallet.publicKey,
+        )
+        return when (signerResponse) {
+            is CompletionResult.Success -> Result.Failure(Exception(ID).toBlockchainSdkError())
+            is CompletionResult.Failure -> Result.fromTangemSdkError(signerResponse.error)
+        }
+    }
 
     private fun getDataToSign(): ByteArray {
         val charPool: List<Char> = ('a'..'z') + ('A'..'Z') + ('0'..'9')
@@ -53,6 +64,23 @@ class DemoTransactionSender(private val walletManager: WalletManager) : Transact
             .map(charPool::get)
             .joinToString(separator = "")
             .toByteArray()
+    }
+
+    private fun Blockchain.getStubFee(fee: BigDecimal) = when (this) {
+        Blockchain.Ethereum -> Fee.Ethereum.EIP1559(
+            amount = Amount(fee, this),
+            gasLimit = BigInteger.ONE,
+            maxFeePerGas = BigInteger.ONE,
+            priorityFee = BigInteger.ONE,
+        )
+        Blockchain.Dogecoin,
+        Blockchain.Bitcoin,
+        -> Fee.Bitcoin(
+            amount = Amount(fee, this),
+            satoshiPerByte = BigDecimal.ONE,
+            txSize = BigDecimal.ONE,
+        )
+        else -> Fee.Common(Amount(normalFee, this))
     }
 
     companion object {
