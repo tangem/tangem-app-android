@@ -11,18 +11,20 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.v2.send.confirm.ui.SendConfirmContent
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationBlockComponent
-import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams
+import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeBlockComponent
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeComponentParams
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComponent
+import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 
@@ -38,15 +40,13 @@ internal class SendConfirmComponent(
     private val destinationBlockComponent =
         SendDestinationBlockComponent(
             appComponentContext = child("sendConfirmDestinationBlock"),
-            params = SendDestinationComponentParams.DestinationBlockParams(
+            params = DestinationBlockParams(
                 state = model.uiState.value.destinationUM,
                 analyticsCategoryName = params.analyticsCategoryName,
                 userWalletId = params.userWallet.walletId,
                 cryptoCurrency = params.cryptoCurrencyStatus.currency,
                 blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
-                isPredefinedValues = params.predefinedValues is Params.PredefinedValues.Content,
-                predefinedAddressValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.address,
-                predefinedMemoValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.tag,
+                predefinedValues = params.predefinedValues,
             ),
             onResult = model::onDestinationResult,
             onClick = model::showEditDestination,
@@ -61,8 +61,7 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
-            isPredefinedValues = params.predefinedValues is Params.PredefinedValues.Content,
-            predefinedAmountValue = (params.predefinedValues as? Params.PredefinedValues.Content)?.amount,
+            predefinedValues = params.predefinedValues,
         ),
         onResult = model::onAmountResult,
         onClick = model::showEditAmount,
@@ -77,8 +76,8 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
-            sendAmount = model.enteredAmount.orZero(),
-            destinationAddress = model.enteredDestination.orEmpty(),
+            sendAmount = model.confirmData.enteredAmount.orZero(),
+            destinationAddress = model.confirmData.enteredDestination.orEmpty(),
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
         ),
         onResult = model::onFeeResult,
@@ -93,13 +92,15 @@ internal class SendConfirmComponent(
             cryptoCurrencyStatus = params.cryptoCurrencyStatus,
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
-            destinationAddress = model.enteredDestination.orEmpty(),
-            memo = model.enteredMemo,
-            amountValue = model.enteredAmount.orZero(),
-            reduceAmountBy = model.reduceAmountBy.orZero(),
-            isIgnoreReduce = model.isIgnoreReduce,
-            fee = model.fee,
-            feeError = model.feeError,
+            notificationData = NotificationData(
+                destinationAddress = model.confirmData.enteredDestination.orEmpty(),
+                memo = model.confirmData.enteredMemo,
+                amountValue = model.confirmData.enteredAmount.orZero(),
+                reduceAmountBy = model.confirmData.reduceAmountBy.orZero(),
+                isIgnoreReduce = model.confirmData.isIgnoreReduce,
+                fee = model.confirmData.fee,
+                feeError = model.confirmData.feeError,
+            ),
         ),
     )
 
@@ -140,20 +141,10 @@ internal class SendConfirmComponent(
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val appCurrency: AppCurrency,
         val callback: ModelCallback,
-        val currentRoute: Flow<SendRoute.Confirm>,
+        val currentRoute: Flow<CommonSendRoute.Confirm>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
-    ) {
-        sealed class PredefinedValues {
-            data object Empty : PredefinedValues()
-            data class Content(
-                val transactionId: String,
-                val amount: String,
-                val address: String,
-                val tag: String?,
-            ) : PredefinedValues()
-        }
-    }
+    )
 
     interface ModelCallback {
         fun onResult(sendUM: SendUM)
