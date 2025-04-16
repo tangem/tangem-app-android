@@ -13,6 +13,7 @@ dependencies {
     implementation(projects.core.utils)
 
     implementation(projects.data.common)
+    implementation(projects.data.staking)
 
     implementation(projects.domain.legacy)
     implementation(projects.domain.models)
@@ -23,6 +24,7 @@ dependencies {
     implementation(projects.libs.blockchainSdk)
 
     implementation(deps.androidx.datastore)
+    implementation(deps.jodatime)
     implementation(deps.test.coroutine)
 
     implementation(tangemDeps.blockchain)
