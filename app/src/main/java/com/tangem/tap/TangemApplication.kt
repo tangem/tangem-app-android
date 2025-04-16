@@ -1,6 +1,9 @@
 package com.tangem.tap
 
 import android.app.Application
+import android.os.StrictMode
+import android.os.StrictMode.ThreadPolicy
+import android.os.StrictMode.VmPolicy
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
@@ -71,9 +74,7 @@ import com.tangem.tap.proxy.redux.DaggerGraphState
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.wallet.BuildConfig
 import dagger.hilt.EntryPoints
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import org.rekotlin.Store
 import kotlin.collections.set
 import com.tangem.tap.domain.walletconnect2.domain.LegacyWalletConnectRepository as WalletConnect2Repository
@@ -228,12 +229,32 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
 
     // endregion
 
+    private val appScope = MainScope()
+
     override fun onCreate() {
+        enableStrictModeInDebug()
         super.onCreate()
-
         init()
+    }
 
-        updateLogFiles()
+    private fun enableStrictModeInDebug() {
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(
+                ThreadPolicy.Builder()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .detectAll()
+                    .penaltyLog()
+                    .build(),
+            )
+            StrictMode.setVmPolicy(
+                VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .build(),
+            )
+        }
     }
 
     private fun updateLogFiles() {
@@ -260,18 +281,31 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
-        // TODO: Try to performance and user experience.
-        //  [REDACTED_JIRA]
+        // We need to initialize the toggles and excludedBlockchainsManager before the MainActivity starts using them.
         runBlocking {
             awaitAll(
-                async { featureTogglesManager.init() },
-                async { excludedBlockchainsManager.init() },
-                async { initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize()) },
+                async {
+                    featureTogglesManager.init()
+                },
+                async {
+                    excludedBlockchainsManager.init()
+                },
             )
         }
 
-        loadNativeLibraries()
+        appScope.launch {
+            initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
+            launch(Dispatchers.IO) {
+                loadNativeLibraries()
+                walletConnect2Repository.init(
+                    projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId,
+                )
+                updateLogFiles()
+            }
+        }
+
         ExceptionHandler.append(blockchainExceptionHandler)
+
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
                 createNetworkLoggingInterceptor(),
@@ -287,9 +321,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
             appPreferencesStore = appPreferencesStore,
             dispatchers = dispatchers,
         )
-        appStateHolder.mainStore = store
 
-        walletConnect2Repository.init(projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId)
+        appStateHolder.mainStore = store
     }
 
     private fun createReduxStore(): Store<AppState> {
