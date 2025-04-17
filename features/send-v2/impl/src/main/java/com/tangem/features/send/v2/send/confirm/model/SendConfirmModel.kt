@@ -490,7 +490,7 @@ internal class SendConfirmModel @Inject constructor(
             flow = uiState,
             flow2 = params.currentRoute,
             transform = { state, route -> state to route },
-        ).onEach { (state, _) ->
+        ).filter { it.second is SendRoute.Confirm }.onEach { (state, _) ->
             val amountUM = state.amountUM as? AmountState.Data
             val confirmUM = state.confirmUM
             params.callback.onResult(
