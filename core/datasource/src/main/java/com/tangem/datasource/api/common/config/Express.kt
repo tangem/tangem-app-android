@@ -73,6 +73,7 @@ internal class Express(
                 INTERNAL_BUILD_TYPE,
                 MOCKED_BUILD_TYPE,
                 -> ApiEnvironment.STAGE
+                EXTERNAL_BUILD_TYPE,
                 RELEASE_BUILD_TYPE,
                 -> ApiEnvironment.PROD
                 else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
