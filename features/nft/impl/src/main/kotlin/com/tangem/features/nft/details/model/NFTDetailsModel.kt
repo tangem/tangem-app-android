@@ -1,10 +1,12 @@
 package com.tangem.features.nft.details.model
 
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.features.nft.details.NFTDetailsComponent
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsUM
@@ -18,6 +20,7 @@ import javax.inject.Inject
 internal class NFTDetailsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val router: Router,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -37,22 +40,30 @@ internal class NFTDetailsModel @Inject constructor(
             ),
             onBackClick = params.onBackClick,
             onReadMoreClick = ::onReadMoreClick,
-            onSeeAllTraitsClick = params.onAllTraitsClick,
+            onSeeAllTraitsClick = {
+                analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSeeAll)
+                params.onAllTraitsClick()
+            },
             onExploreClick = ::onExploreClick,
             onSendClick = ::onSendClick,
             bottomSheetConfig = null,
         ),
     )
 
+    init {
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ScreenOpened(params.nftAsset.network.name))
+    }
+
     private fun onReadMoreClick() {
-        // TODO implement
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonReadMore)
     }
 
     private fun onExploreClick() {
-        // TODO implement
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonExplore)
     }
 
     private fun onSendClick() {
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonSend)
         router.push(
             AppRoute.NFTSend(
                 userWalletId = params.userWalletId,
