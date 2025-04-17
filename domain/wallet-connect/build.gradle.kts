@@ -1,6 +1,11 @@
 plugins {
-    alias(deps.plugins.kotlin.jvm)
+    alias(deps.plugins.android.library)
+    alias(deps.plugins.kotlin.android)
     id("configuration")
+}
+
+android {
+    namespace = "com.tangem.domain.walletconnect"
 }
 
 dependencies {
@@ -12,4 +17,7 @@ dependencies {
 
     /* Other */
     implementation(deps.moshi.adapters)
+
+    /* Tangem libraries */
+    implementation(tangemDeps.blockchain)
 }
