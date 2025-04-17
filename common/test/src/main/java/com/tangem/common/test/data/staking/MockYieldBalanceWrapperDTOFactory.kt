@@ -48,4 +48,12 @@ object MockYieldBalanceWrapperDTOFactory {
             integrationId = stakingId.integrationId,
         )
     }
+
+    fun createWithEmptyBalance(stakingId: StakingID = defaultStakingId): YieldBalanceWrapperDTO {
+        return YieldBalanceWrapperDTO(
+            addresses = Address(address = stakingId.address),
+            balances = emptyList(),
+            integrationId = stakingId.integrationId,
+        )
+    }
 }
