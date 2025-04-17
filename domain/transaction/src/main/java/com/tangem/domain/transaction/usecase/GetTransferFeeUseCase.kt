@@ -2,9 +2,8 @@ package com.tangem.domain.transaction.usecase
 
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.extensions.Result
 import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.demo.DemoTransactionSender
@@ -16,12 +15,12 @@ import com.tangem.domain.wallets.models.UserWallet
 import java.math.BigDecimal
 
 /**
- * Use case to get transaction fee
+ * Use case to get transfer transaction fee
  *
- * !!!IMPORTANT!!!
- * Use when transaction data is already compiled by external service or provider
+ * !!!IMPORTANT
+ * Use when transaction data is compiled by us using BlockchainSDK methods
  */
-class GetFeeUseCase(
+class GetTransferFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
     private val demoConfig: DemoConfig,
 ) {
@@ -41,11 +40,24 @@ class GetFeeUseCase(
                         destination = destination,
                     )
                 } else {
-                    walletManagersFacade.getFee(
-                        amount = amountData,
-                        destination = destination,
+                    val walletManager = walletManagersFacade.getOrCreateWalletManager(
                         userWalletId = userWallet.walletId,
                         network = cryptoCurrency.network,
+                    )
+                    val smartContractCallData = if (amountData.type is AmountType.Token) {
+                        SmartContractCallDataProviderFactory.getTokenTransferCallData(
+                            amount = amountData,
+                            destinationAddress = destination,
+                            blockchain = Blockchain.fromId(cryptoCurrency.network.id.value),
+                        )
+                    } else {
+                        null
+                    }
+
+                    (walletManager as? TransactionSender)?.getFee(
+                        amount = amountData,
+                        destination = destination,
+                        callData = smartContractCallData,
                     ) ?: error("Fee is null")
                 }
 
