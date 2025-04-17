@@ -2,7 +2,9 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -75,6 +77,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
     private val walletEventSender: WalletEventSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -240,6 +243,19 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     }
 
     override fun onNFTClick(userWalletId: UserWalletId) {
+        val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
+        val analyticsState = when (val nftState = selectedWallet.nftState) {
+            is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(nftState.assetsCount)
+            is WalletNFTItemUM.Empty -> NFTAnalyticsEvent.NFTListScreenOpened.State.Empty
+            is WalletNFTItemUM.Failed,
+            is WalletNFTItemUM.Hidden,
+            is WalletNFTItemUM.Loading,
+            -> null
+        }
+        analyticsState?.let {
+            analyticsEventHandler.send(NFTAnalyticsEvent.NFTListScreenOpened(analyticsState))
+        }
+
         router.openNFT(userWalletId)
     }
 }
