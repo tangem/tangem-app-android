@@ -2,10 +2,9 @@ package com.tangem.domain.walletconnect.usecase.ethereum
 
 import com.tangem.domain.walletconnect.usecase.sign.WcSignUseCase
 
-interface WcPersonalEthSignUseCase :
+interface WcEthMessageSignUseCase :
     WcSignUseCase,
-    WcSignUseCase.FinalAction,
-    WcSignUseCase.SimpleRun<WcPersonalEthSignUseCase.SignModel> {
+    WcSignUseCase.SimpleRun<WcEthMessageSignUseCase.SignModel> {
 
     data class SignModel(
         val humanMsg: String,
