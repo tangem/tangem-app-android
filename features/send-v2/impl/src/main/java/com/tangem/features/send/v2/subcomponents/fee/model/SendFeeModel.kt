@@ -8,7 +8,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.transaction.usecase.GetTransferFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
@@ -40,7 +40,7 @@ internal class SendFeeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
-    private val getFeeUseCase: GetFeeUseCase,
+    private val getTransferFeeUseCase: GetTransferFeeUseCase,
     private val urlOpener: UrlOpener,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val sendFeeAlertFactory: SendFeeAlertFactory,
@@ -192,7 +192,7 @@ internal class SendFeeModel @Inject constructor(
             if (isShowLoading) {
                 _uiState.update(SendFeeLoadingTransformer)
             }
-            getFeeUseCase.invoke(
+            getTransferFeeUseCase.invoke(
                 amount = amountValue,
                 destination = destinationAddress,
                 userWallet = params.userWallet,
@@ -222,7 +222,7 @@ internal class SendFeeModel @Inject constructor(
 
     private fun checkLoadFee() {
         modelScope.launch {
-            getFeeUseCase.invoke(
+            getTransferFeeUseCase.invoke(
                 amount = params.sendAmount,
                 destination = params.destinationAddress,
                 userWallet = params.userWallet,

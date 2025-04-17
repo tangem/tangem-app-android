@@ -1,12 +1,12 @@
 package com.tangem.domain.transaction
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
-import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.wallets.models.UserWalletId
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -22,7 +22,16 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
         txExtras: TransactionExtras?,
-        hash: String?,
+    ): TransactionData.Uncompiled
+
+    @Suppress("LongParameterList")
+    suspend fun createTransferTransaction(
+        amount: Amount,
+        fee: Fee,
+        memo: String?,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
     ): TransactionData.Uncompiled
 
     @Suppress("LongParameterList")
@@ -34,7 +43,6 @@ interface TransactionRepository {
         spenderAddress: String,
         userWalletId: UserWalletId,
         network: Network,
-        hash: String?,
     ): TransactionData.Uncompiled
 
     @Suppress("LongParameterList")
@@ -45,9 +53,6 @@ interface TransactionRepository {
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-        isSwap: Boolean = false,
-        txExtras: TransactionExtras?,
-        hash: String? = null,
     ): Result<Unit>
 
     suspend fun sendTransaction(
@@ -66,9 +71,8 @@ interface TransactionRepository {
     ): com.tangem.blockchain.extensions.Result<TransactionsSendResult>
 
     fun createTransactionDataExtras(
-        data: String,
+        callData: SmartContractCallData,
         network: Network,
-        transactionType: TransactionType,
         nonce: BigInteger?,
         gasLimit: BigInteger?,
     ): TransactionExtras

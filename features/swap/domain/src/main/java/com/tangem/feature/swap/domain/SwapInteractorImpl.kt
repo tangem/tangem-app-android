@@ -7,10 +7,14 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Blockchain.*
 import com.tangem.blockchain.common.TransactionExtras
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
+import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchainsdk.utils.fromNetworkId
-import com.tangem.core.ui.utils.BigDecimalFormatter
+import com.tangem.common.extensions.hexToBytes
+import com.tangem.core.ui.format.bigdecimal.fiat
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
@@ -25,7 +29,6 @@ import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.tokens.repository.CurrencyChecksRepository
 import com.tangem.domain.tokens.repository.QuotesRepository
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.models.TransactionType
 import com.tangem.domain.transaction.usecase.*
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
@@ -61,7 +64,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val createTransactionExtrasUseCase: CreateTransactionDataExtrasUseCase,
+    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val quotesRepository: QuotesRepository,
     private val quotesRepositoryV2: QuotesRepositoryV2,
@@ -202,32 +207,20 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         networkId: String,
         permissionOptions: PermissionOptions,
     ): SwapTransactionState {
-        val derivationPath = permissionOptions.fromToken.network.derivationPath.value
-        val dataToSign = if (permissionOptions.approveType == SwapApproveType.UNLIMITED) {
-            getApproveData(
-                networkId = networkId,
-                derivationPath = derivationPath,
-                fromToken = permissionOptions.fromToken,
-                spenderAddress = permissionOptions.spenderAddress,
-            )
-        } else {
-            permissionOptions.approveData.approveData
+        val amount = permissionOptions.approveData.fromTokenAmount.takeIf {
+            permissionOptions.approveType == SwapApproveType.LIMITED
         }
-        val approveTransaction = createTransactionUseCase(
-            amount = BigDecimal.ZERO.convertToSdkAmount(permissionOptions.fromToken),
+
+        val approveTransaction = createApprovalTransactionUseCase(
             fee = getFeeForTransaction(
                 fee = permissionOptions.txFee,
                 blockchain = Blockchain.fromId(permissionOptions.fromToken.network.id.value),
             ),
-            memo = null,
-            destination = getTokenAddress(permissionOptions.fromToken),
-            network = permissionOptions.fromToken.network,
             userWalletId = userWalletId,
-            txExtras = createDexTxExtras(
-                dataToSign,
-                permissionOptions.fromToken.network,
-                permissionOptions.txFee.gasLimit,
-            ),
+            cryptoCurrency = permissionOptions.fromToken as CryptoCurrency.Token,
+            amount = amount?.value,
+            contractAddress = permissionOptions.forTokenContractAddress,
+            spenderAddress = permissionOptions.spenderAddress,
         ).getOrElse {
             Timber.e(it, "Failed to create approveTransaction")
             return SwapTransactionState.Error.UnknownError
@@ -613,7 +606,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             userWalletId = userWalletId,
             network = currencyToSendStatus.currency.network,
             txExtras = createDexTxExtras(dataToSign, currencyToSendStatus.currency.network, fee.gasLimit),
-            hash = dataToSign,
         ).getOrElse {
             Timber.e(it, "Failed to create swap dex tx data")
             return SwapTransactionState.Error.UnknownError
@@ -669,7 +661,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return createTransactionExtrasUseCase(
             data = data,
             network = network,
-            transactionType = TransactionType.APPROVE,
             gasLimit = gasLimit?.toBigInteger(),
         ).getOrNull() ?: error("failed to create extras")
     }
@@ -705,7 +696,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
 
         if (isDemoCardUseCase(cardId)) return SwapTransactionState.Error.UnknownError
 
-        val txData = createTransactionUseCase(
+        val txData = createTransferTransactionUseCase(
             amount = amount.value.convertToSdkAmount(currencyToSend.currency),
             fee = getFeeForTransaction(
                 fee = txFee,
@@ -1087,11 +1078,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private suspend fun createEmptyAmountState(): SwapState {
         val appCurrency = getSelectedAppCurrencyUseCase.unwrap()
         return SwapState.EmptyAmountState(
-            zeroAmountEquivalent = BigDecimalFormatter.formatFiatAmount(
-                fiatAmount = BigDecimal.ZERO,
-                fiatCurrencyCode = appCurrency.code,
-                fiatCurrencySymbol = appCurrency.symbol,
-            ),
+            zeroAmountEquivalent = BigDecimal.ZERO.format {
+                fiat(
+                    fiatCurrencyCode = appCurrency.code,
+                    fiatCurrencySymbol = appCurrency.symbol,
+                )
+            },
         )
     }
 
@@ -1373,11 +1365,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val rates = getQuotes(feeCurrencyId)
         return rates[feeCurrencyId]?.fiatRate?.let { rate ->
             fees.map { fee ->
-                BigDecimalFormatter.formatFiatAmount(
-                    fiatAmount = rate.multiply(fee),
-                    fiatCurrencyCode = appCurrency.code,
-                    fiatCurrencySymbol = appCurrency.symbol,
-                )
+                rate.multiply(fee).format {
+                    fiat(
+                        fiatCurrencyCode = appCurrency.code,
+                        fiatCurrencySymbol = appCurrency.symbol,
+                    )
+                }
             }
         }.orEmpty()
     }
@@ -1513,7 +1506,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 currencyToSend = swapCurrencyConverter.convert(fromToken),
                 destinationAddress = transaction.txTo,
                 increaseBy = INCREASE_GAS_LIMIT_BY,
-                data = transaction.txData,
+                callData = CompiledSmartContractCallData(transaction.txData.hexToBytes()),
                 derivationPath = fromToken.network.derivationPath.value,
             )
         } catch (e: IllegalStateException) {
@@ -1617,12 +1610,10 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
         val derivationPath = fromToken.network.derivationPath.value
         // setting up amount for approve with given amount for swap [SwapApproveType.Limited]
-        val transactionData = getApproveData(
-            networkId = networkId,
-            derivationPath = derivationPath,
-            fromToken = fromToken,
-            swapAmount = swapAmount,
+        val callData = SmartContractCallDataProviderFactory.getApprovalCallData(
             spenderAddress = requireNotNull(spenderAddress) { "Spender address is null" },
+            amount = swapAmount.value.convertToSdkAmount(fromToken),
+            blockchain = Blockchain.fromId(fromToken.network.id.value),
         )
         val cardId = userWallet.scanResponse.card.cardId
         val feeData = if (isDemoCardUseCase(cardId)) {
@@ -1635,7 +1626,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                     currencyToSend = swapCurrencyConverter.convert(repository.getNativeTokenForNetwork(networkId)),
                     destinationAddress = fromToken.getContractAddress(),
                     increaseBy = INCREASE_GAS_LIMIT_BY,
-                    data = transactionData,
+                    callData = callData,
                     derivationPath = derivationPath,
                 )
             } catch (e: Exception) {
@@ -1672,7 +1663,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 spenderAddress = getTokenAddress(fromToken),
                 requestApproveData = RequestApproveStateData(
                     fee = feeState,
-                    approveData = transactionData,
                     fromTokenAmount = swapAmount,
                     spenderAddress = spenderAddress,
                 ),
@@ -2138,23 +2128,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         val toTokenFiatValue = toTokenAmount.multiply(toRate.toBigDecimal())
         val value = (BigDecimal.ONE - toTokenFiatValue.divide(fromTokenFiatValue, 2, RoundingMode.HALF_UP)).toFloat()
         return PriceImpact.Value(value)
-    }
-
-    private suspend fun getApproveData(
-        networkId: String,
-        derivationPath: String?,
-        fromToken: CryptoCurrency,
-        swapAmount: SwapAmount? = null,
-        spenderAddress: String,
-    ): String {
-        return repository.getApproveData(
-            userWalletId = userWalletId,
-            networkId = networkId,
-            derivationPath = derivationPath,
-            currency = fromToken,
-            amount = swapAmount?.value,
-            spenderAddress = spenderAddress,
-        )
     }
 
     private suspend fun getQuotes(vararg ids: CryptoCurrency.ID): Map<CryptoCurrency.ID, Quote.Value> {
