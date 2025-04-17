@@ -92,9 +92,9 @@ internal class SendModel @Inject constructor(
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
-    private val getFeeUseCase: GetFeeUseCase,
+    private val getTransferFeeUseCase: GetTransferFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
-    private val createTransactionUseCase: CreateTransactionUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -826,7 +826,7 @@ internal class SendModel @Inject constructor(
         val recipientState = uiState.value.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
 
-        return getFeeUseCase.invoke(
+        return getTransferFeeUseCase.invoke(
             amount = amount,
             destination = recipientState.addressTextField.value,
             userWallet = userWallet,
@@ -929,7 +929,7 @@ internal class SendModel @Inject constructor(
         )
 
         modelScope.launch {
-            createTransactionUseCase(
+            createTransferTransactionUseCase(
                 amount = receivingAmount.convertToSdkAmount(cryptoCurrency),
                 fee = fee,
                 memo = memo,
