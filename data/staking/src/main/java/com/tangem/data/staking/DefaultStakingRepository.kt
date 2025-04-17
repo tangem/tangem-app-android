@@ -24,6 +24,7 @@ import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
+import com.tangem.data.staking.utils.StakingIdFactory.Companion.integrationIdMap
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -729,45 +730,13 @@ internal class DefaultStakingRepository(
     }
 
     @Suppress("unused")
-    private companion object {
-        const val YIELDS_STORE_KEY = "yields"
+    companion object {
+        private const val YIELDS_STORE_KEY = "yields"
 
-        const val TON_INTEGRATION_ID = "ton-ton-chorus-one-pools-staking"
-        const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
-        const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
-        const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
-        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
-        const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
-        const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
-        const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
-        const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
-        const val NEAR_INTEGRATION_ID = "near-near-native-staking"
-        const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
-        const val CARDANO_INTEGRATION_ID = "cardano-ada-native-staking"
+        private const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
 
-        const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
+        internal val YIELDS_WATITING_TIMEOUT = 15.seconds
 
-        val YIELDS_WATITING_TIMEOUT = 15.seconds
-
-        val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
-
-        // uncomment items as implementation is ready
-        val integrationIdMap = mapOf(
-            Blockchain.TON.run { id + toCoinId() } to TON_INTEGRATION_ID,
-            Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
-            Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
-            Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
-            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
-            // Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
-            Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
-            // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
-            // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
-            // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
-            // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
-            // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
-            // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,
-            Blockchain.Cardano.run { id + toCoinId() } to CARDANO_INTEGRATION_ID,
-        )
+        private val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
     }
 }
