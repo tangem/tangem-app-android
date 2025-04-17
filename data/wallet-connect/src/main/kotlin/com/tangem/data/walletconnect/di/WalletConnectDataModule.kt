@@ -131,10 +131,12 @@ internal object WalletConnectDataModule {
         @SdkMoshi moshi: Moshi,
         excludedBlockchains: ExcludedBlockchains,
         sessionsManager: WcSessionsManager,
+        factories: WcEthNetwork.Factories,
     ): WcEthNetwork = WcEthNetwork(
         moshi = moshi,
         excludedBlockchains = excludedBlockchains,
         sessionsManager = sessionsManager,
+        factories = factories,
     )
 
     @Provides
