@@ -201,7 +201,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
             params = SendConfirmComponent.Params(
                 state = model.uiState.value,
                 userWallet = model.userWallet,
-                currentRoute = currentRoute.filterIsInstance<SendRoute.Confirm>(),
+                currentRoute = currentRoute,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
                 analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
                 cryptoCurrencyStatus = model.cryptoCurrencyStatus,
