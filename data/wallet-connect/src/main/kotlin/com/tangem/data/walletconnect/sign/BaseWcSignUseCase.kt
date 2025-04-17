@@ -1,17 +1,18 @@
 package com.tangem.data.walletconnect.sign
 
-import com.tangem.domain.walletconnect.model.WcSession
-import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.walletconnect.model.WcSession
+import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
 import com.tangem.domain.walletconnect.usecase.sign.WcSignState
 import com.tangem.domain.walletconnect.usecase.sign.WcSignUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.FlowCollector
 
 internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
     WcMethodUseCase,
-    WcSignUseCase.FinalAction,
+    WcSignUseCase,
     FinalActionCollector<SignModel>,
     MiddleActionCollector<MiddleAction, SignModel> {
 
@@ -21,6 +22,7 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
     override val network: Network get() = context.network
     override val session: WcSession get() = context.session
     override val rawSdkRequest: WcSdkSessionRequest get() = context.rawSdkRequest
+    val wallet: UserWallet get() = session.wallet
 
     protected val delegate by lazy {
         WcSignUseCaseDelegate(
