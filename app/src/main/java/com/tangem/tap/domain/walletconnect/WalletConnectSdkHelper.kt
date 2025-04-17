@@ -5,6 +5,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.*
 import com.tangem.blockchainsdk.utils.fromNetworkId
@@ -101,7 +102,7 @@ class WalletConnectSdkHelper {
             sourceAddress = transaction.from,
             destinationAddress = destinationAddress,
             extras = EthereumTransactionExtras(
-                data = transaction.data.removePrefix(HEX_PREFIX).hexToBytes(),
+                callData = CompiledSmartContractCallData(transaction.data.removePrefix(HEX_PREFIX).hexToBytes()),
                 gasLimit = gasLimit.toBigInteger(),
                 nonce = transaction.nonce?.hexToBigDecimal()?.toBigInteger(),
             ),
@@ -191,7 +192,7 @@ class WalletConnectSdkHelper {
         val gasLimitResult = (walletManager as? EthereumGasLoader)?.getGasLimit(
             amount = Amount(value, walletManager.wallet.blockchain),
             destination = transaction.to ?: "",
-            data = transaction.data,
+            callData = CompiledSmartContractCallData(transaction.data.hexToBytes()),
         )
         return when (gasLimitResult) {
             is Result.Success -> gasLimitResult.data.toBigDecimal().multiply(BigDecimal("1.2"))
