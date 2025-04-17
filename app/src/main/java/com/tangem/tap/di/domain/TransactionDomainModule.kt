@@ -32,6 +32,15 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideTransferGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetTransferFeeUseCase {
+        return GetTransferFeeUseCase(
+            walletManagersFacade = walletManagersFacade,
+            demoConfig = DemoConfig(),
+        )
+    }
+
+    @Provides
+    @Singleton
     fun provideSendTransactionUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
@@ -146,6 +155,14 @@ internal object TransactionDomainModule {
     @Singleton
     fun provideGetAllowanceUseCase(transactionRepository: TransactionRepository): GetAllowanceUseCase {
         return GetAllowanceUseCase(transactionRepository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCreateTransferTransactionUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateTransferTransactionUseCase {
+        return CreateTransferTransactionUseCase(transactionRepository)
     }
 
     @Provides
