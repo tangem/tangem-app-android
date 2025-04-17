@@ -72,7 +72,7 @@ internal class TokenMarketInfoConverter(
                     TokenMarketInfo.Network(
                         networkId = network.networkId,
                         exchangeable = network.exchangeable,
-                        contractAddress = network.contractAddress,
+                        contractAddress = blockchain.reformatContractAddress(network.contractAddress),
                         decimalCount = network.decimalCount,
                     )
                 }
