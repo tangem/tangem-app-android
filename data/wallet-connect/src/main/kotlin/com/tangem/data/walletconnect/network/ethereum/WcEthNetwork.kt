@@ -7,18 +7,22 @@ import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter.Companion.fromJson
+import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcEthMethod
+import com.tangem.domain.walletconnect.model.WcEthTransactionParams
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import jakarta.inject.Inject
 
 internal class WcEthNetwork constructor(
     private val moshi: Moshi,
     private val excludedBlockchains: ExcludedBlockchains,
     private val sessionsManager: WcSessionsManager,
+    private val factories: Factories,
 ) : WcRequestToUseCaseConverter, WcNamespaceConverter {
 
     override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
@@ -29,8 +33,12 @@ internal class WcEthNetwork constructor(
         val method: WcEthMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
         val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
+        val context = WcMethodUseCaseContext(session = session, rawSdkRequest = request, network = network)
+
         return when (method) {
-            is WcEthMethod.PersonalEthSign -> TODO()
+            is WcEthMethod.MessageSign -> factories.messageSign.create(context, method)
+            is WcEthMethod.SendTransaction -> factories.sendTransaction.create(context, method)
+            is WcEthMethod.SignTransaction -> factories.signTransaction.create(context, method)
         }
     }
 
@@ -44,12 +52,21 @@ internal class WcEthNetwork constructor(
                 val messageIndex = if (this == Name.EthSign) 1 else 0
                 val account = list.getOrNull(accountIndex) ?: return@let null
                 val message = list.getOrNull(messageIndex) ?: return@let null
-                WcEthMethod.PersonalEthSign(account = account, message = message)
+                WcEthMethod.MessageSign(account = account, message = message)
             }
             Name.SignTypeData -> TODO()
             Name.SignTypeDataV4 -> TODO()
-            Name.SignTransaction -> TODO()
-            Name.SendTransaction -> TODO()
+            Name.SignTransaction,
+            Name.SendTransaction,
+            -> moshi.fromJson<List<WcEthTransactionParams>>(rawParams)
+                ?.firstOrNull()
+                ?.let {
+                    if (this == Name.SignTransaction) {
+                        WcEthMethod.SignTransaction(transaction = it)
+                    } else {
+                        WcEthMethod.SendTransaction(transaction = it)
+                    }
+                }
         }
     }
 
@@ -81,4 +98,10 @@ internal class WcEthNetwork constructor(
             reference = chainId.toString(),
         )
     }
+
+    internal class Factories @Inject constructor(
+        val messageSign: DefaultWcEthMessageSignUseCase.Factory,
+        val sendTransaction: DefaultWcEthSendTransactionUseCase.Factory,
+        val signTransaction: DefaultWcEthSignTransactionUseCase.Factory,
+    )
 }
