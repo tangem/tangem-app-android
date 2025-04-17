@@ -1,5 +1,6 @@
 package com.tangem.features.nft.receive.model
 
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -11,6 +12,7 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.nft.FilterNFTAvailableNetworksUseCase
 import com.tangem.domain.nft.GetNFTAvailableNetworksUseCase
 import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
+import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.features.nft.impl.R
@@ -36,6 +38,7 @@ internal class NFTReceiveModel @Inject constructor(
     private val getNFTNetworkStatusUseCase: GetNFTNetworkStatusUseCase,
     private val clipboardManager: ClipboardManager,
     private val shareManager: ShareManager,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -53,6 +56,7 @@ internal class NFTReceiveModel @Inject constructor(
     val state: StateFlow<NFTReceiveUM> get() = _state
 
     init {
+        analyticsEventHandler.send(NFTAnalyticsEvent.Receive.ScreenOpened)
         subscribeToNFTAvailableNetworks()
     }
 
@@ -106,6 +110,8 @@ internal class NFTReceiveModel @Inject constructor(
 
     private fun onNetworkClick(network: Network) {
         modelScope.launch {
+            analyticsEventHandler.send(NFTAnalyticsEvent.Receive.BlockchainChosen(network.name))
+
             val networkStatus = getNFTNetworkStatusUseCase.invoke(
                 userWalletId = params.userWalletId,
                 network = network,
@@ -118,8 +124,8 @@ internal class NFTReceiveModel @Inject constructor(
                             network = network,
                             networkAddress = value.address,
                             onDismissBottomSheet = ::onReceiveBottomSheetDismiss,
-                            onCopyClick = ::onCopyClick,
-                            onShareClick = ::onShareClick,
+                            onCopyClick = { text -> onCopyClick(text, network) },
+                            onShareClick = { text -> onShareClick(text, network) },
                         ).transform(it)
                     }
                 }
@@ -131,11 +137,13 @@ internal class NFTReceiveModel @Inject constructor(
         }
     }
 
-    private fun onCopyClick(text: String) {
+    private fun onCopyClick(text: String, network: Network) {
+        analyticsEventHandler.send(NFTAnalyticsEvent.Receive.CopyAddress(network.name))
         clipboardManager.setText(text = text, isSensitive = true)
     }
 
-    private fun onShareClick(text: String) {
+    private fun onShareClick(text: String, network: Network) {
+        analyticsEventHandler.send(NFTAnalyticsEvent.Receive.ShareAddress(network.name))
         shareManager.shareText(text = text)
     }
 }
