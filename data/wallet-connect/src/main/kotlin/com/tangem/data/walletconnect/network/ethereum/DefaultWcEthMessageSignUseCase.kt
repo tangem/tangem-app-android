@@ -14,23 +14,26 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.usecase.ethereum.WcPersonalEthSignUseCase
+import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMessageSignUseCase
 import com.tangem.domain.walletconnect.usecase.sign.WcSignState
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
-internal class DefaultWcPersonalEthSignUseCase(
+internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
-    override val context: WcMethodUseCaseContext,
-    private val method: WcEthMethod.PersonalEthSign,
+    @Assisted override val context: WcMethodUseCaseContext,
+    @Assisted private val method: WcEthMethod.MessageSign,
     private val walletManagersFacade: WalletManagersFacade,
     private val signUseCase: SignUseCase,
-) : BaseWcSignUseCase<Nothing, WcPersonalEthSignUseCase.SignModel>(),
-    WcPersonalEthSignUseCase {
+) : BaseWcSignUseCase<Nothing, WcEthMessageSignUseCase.SignModel>(),
+    WcEthMessageSignUseCase {
 
-    override val onSign: OnSign<WcPersonalEthSignUseCase.SignModel> = collector@{ state ->
+    override val onSign: OnSign<WcEthMessageSignUseCase.SignModel> = collector@{ state ->
         val hashToSign = LegacySdkHelper.createMessageData(state.signModel.rawMsg)
         val userWallet = session.wallet
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
@@ -50,13 +53,18 @@ internal class DefaultWcPersonalEthSignUseCase(
         emit(state.toResult(wcRespondResult))
     }
 
-    override fun invoke(): Flow<WcSignState<WcPersonalEthSignUseCase.SignModel>> = flow {
-        val model = WcPersonalEthSignUseCase.SignModel(
+    override fun invoke(): Flow<WcSignState<WcEthMessageSignUseCase.SignModel>> = flow {
+        val model = WcEthMessageSignUseCase.SignModel(
             rawMsg = method.message,
             account = method.account,
             humanMsg = LegacySdkHelper.hexToAscii(method.message).orEmpty(),
         )
         emitAll(delegate(model))
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.MessageSign): DefaultWcEthMessageSignUseCase
     }
 }
 
