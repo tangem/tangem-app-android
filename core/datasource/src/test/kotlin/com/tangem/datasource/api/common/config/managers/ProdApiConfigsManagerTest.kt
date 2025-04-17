@@ -6,6 +6,7 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
+import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
@@ -100,6 +101,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 INTERNAL_BUILD_TYPE,
                 MOCKED_BUILD_TYPE,
                 -> ApiEnvironment.STAGE
+                EXTERNAL_BUILD_TYPE,
                 RELEASE_BUILD_TYPE,
                 -> ApiEnvironment.PROD
                 else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
@@ -115,6 +117,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         INTERNAL_BUILD_TYPE,
                         MOCKED_BUILD_TYPE,
                         -> "https://express-stage.tangem.com/v1/"
+                        EXTERNAL_BUILD_TYPE,
                         RELEASE_BUILD_TYPE,
                         -> "https://express.tangem.com/v1/"
                         else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
