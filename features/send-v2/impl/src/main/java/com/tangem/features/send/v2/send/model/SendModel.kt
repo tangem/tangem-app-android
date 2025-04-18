@@ -30,7 +30,10 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.NavigationUM
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
@@ -92,7 +95,7 @@ internal class SendModel @Inject constructor(
     var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
     var appCurrency: AppCurrency = AppCurrency.Default
-    var predefinedAmountValue: String? = null
+    var predefinedValues: PredefinedValues = PredefinedValues.Empty
 
     private var balanceHidingJobHolder = JobHolder()
 
@@ -218,7 +221,7 @@ internal class SendModel @Inject constructor(
         feeCryptoCurrencyStatus = feeCurrencyStatus
 
         if (params.amount != null) {
-            router.replaceAll(SendRoute.Confirm)
+            router.replaceAll(CommonSendRoute.Confirm)
         }
     }
 
@@ -233,10 +236,15 @@ internal class SendModel @Inject constructor(
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
         // Decompose component can be active or inactive depending on its state and navigation stack
         // If it is in inactive state use parameter to pass value to amount component
-        predefinedAmountValue = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        val amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals).orEmpty()
+        predefinedValues = PredefinedValues.Content.QrCode(
+            amount = amount,
+            address = parsedQrCode?.address.orEmpty(),
+            memo = parsedQrCode?.memo,
+        )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {
-            predefinedAmountValue?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
+            amount?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
         }
     }
 
