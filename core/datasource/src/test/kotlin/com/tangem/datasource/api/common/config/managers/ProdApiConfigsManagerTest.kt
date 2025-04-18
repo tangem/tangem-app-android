@@ -6,6 +6,7 @@ import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.AuthProvider
 import com.tangem.datasource.api.common.config.*
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.DEBUG_BUILD_TYPE
+import com.tangem.datasource.api.common.config.ApiConfig.Companion.EXTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.INTERNAL_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.MOCKED_BUILD_TYPE
 import com.tangem.datasource.api.common.config.ApiConfig.Companion.RELEASE_BUILD_TYPE
@@ -90,6 +91,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is TangemVisaAuth -> createVisaAuthModel()
                 is TangemVisa -> createVisaModel()
                 is TangemCardSdk -> createTangemCardSdkModel()
+                is BlockAid -> createBlockAidSdkModel()
             }
         }
 
@@ -100,6 +102,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 INTERNAL_BUILD_TYPE,
                 MOCKED_BUILD_TYPE,
                 -> ApiEnvironment.STAGE
+                EXTERNAL_BUILD_TYPE,
                 RELEASE_BUILD_TYPE,
                 -> ApiEnvironment.PROD
                 else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
@@ -115,6 +118,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                         INTERNAL_BUILD_TYPE,
                         MOCKED_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
+                        EXTERNAL_BUILD_TYPE,
                         RELEASE_BUILD_TYPE,
                         -> "[REDACTED_ENV_URL]"
                         else -> error("Unknown build type [${BuildConfig.BUILD_TYPE}]")
@@ -211,6 +215,16 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://api.tangem-tech.com/",
+                ),
+            )
+        }
+
+        private fun createBlockAidSdkModel(): Model {
+            return Model(
+                id = ApiConfig.ID.BlockAid,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.PROD,
+                    baseUrl = "https://api.blockaid.io/v0/",
                 ),
             )
         }
