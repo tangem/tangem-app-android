@@ -21,8 +21,6 @@ class ValidateTransactionUseCase(
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
-        isSwap: Boolean = false,
-        hash: String? = null,
     ): Either<Throwable, Unit> {
         return transactionRepository.validateTransaction(
             amount = amount,
@@ -31,10 +29,6 @@ class ValidateTransactionUseCase(
             destination = destination,
             userWalletId = userWalletId,
             network = network,
-            isSwap = isSwap,
-            txExtras = null,
-            hash = hash,
-        )
-            .fold(onSuccess = { Unit.right() }, onFailure = { it.left() })
+        ).fold(onSuccess = { Unit.right() }, onFailure = { it.left() })
     }
 }

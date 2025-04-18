@@ -42,17 +42,6 @@ interface SwapRepository {
     ): BigDecimal
 
     @Suppress("LongParameterList")
-    @Throws(IllegalStateException::class)
-    suspend fun getApproveData(
-        userWalletId: UserWalletId,
-        networkId: String,
-        derivationPath: String?,
-        currency: CryptoCurrency,
-        amount: BigDecimal?,
-        spenderAddress: String,
-    ): String
-
-    @Suppress("LongParameterList")
     suspend fun getExchangeData(
         fromContractAddress: String,
         fromNetwork: String,

@@ -24,6 +24,7 @@ internal class VisaTxDetailsBottomSheetConverter(
         return VisaTxDetailsBottomSheetConfig(
             transaction = createTransaction(value),
             requests = value.requests.map(::createRequest).toImmutableList(),
+            onDisputeClick = { clickIntents.onDisputeClick(value) },
         )
     }
 
