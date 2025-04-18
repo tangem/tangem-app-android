@@ -11,6 +11,7 @@ import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
@@ -117,7 +118,7 @@ internal class DefaultNFTRepository @Inject constructor(
                 assets.forEach {
                     val assetId = NFTSdkAssetIdentifierConverter.convert(it.identifier)
                     val price = getNFTRuntimeStore(userWalletId, network).getSalePriceSync(assetId)
-                    if (price is NFTSalePrice.Error) {
+                    if (price is NFTSalePrice.Empty || price is NFTSalePrice.Error) {
                         refreshSalePrice(userWalletId, network, sdkCollectionId, it.identifier)
                     }
                 }
@@ -154,6 +155,12 @@ internal class DefaultNFTRepository @Inject constructor(
     }
 
     override suspend fun isNFTSupported(network: Network): Boolean = network.canHandleNFTs()
+
+    override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? =
+        walletManagersFacade.getNFTExploreUrl(
+            network = network,
+            assetIdentifier = NFTSdkAssetIdentifierConverter.convertBack(assetIdentifier),
+        )
 
     private suspend fun refreshSalePrice(
         userWalletId: UserWalletId,
