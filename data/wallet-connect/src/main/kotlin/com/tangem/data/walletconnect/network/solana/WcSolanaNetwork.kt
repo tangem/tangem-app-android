@@ -1,11 +1,17 @@
 package com.tangem.data.walletconnect.network.solana
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
+import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.wallets.models.UserWallet
 
-internal class WcSolanaNetwork : WcNamespaceConverter {
+internal class WcSolanaNetwork constructor(
+    private val excludedBlockchains: ExcludedBlockchains,
+) : WcNamespaceConverter {
+
     override val namespaceKey: NamespaceKey = NamespaceKey("solana")
 
     override fun toBlockchain(chainId: CAIP2): Blockchain? {
@@ -17,7 +23,12 @@ internal class WcSolanaNetwork : WcNamespaceConverter {
         }
     }
 
-    override fun toCAIP2(blockchain: Blockchain): CAIP2? {
+    override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
+        return toNetwork(chainId, wallet, excludedBlockchains)
+    }
+
+    override fun toCAIP2(network: Network): CAIP2? {
+        val blockchain = Blockchain.fromId(network.id.value)
         val chainId = when (blockchain) {
             Blockchain.Solana -> MAINNET_CHAIN_ID
             Blockchain.SolanaTestnet -> TESTNET_CHAIN_ID
