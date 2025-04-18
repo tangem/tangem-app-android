@@ -29,14 +29,12 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.common.NavigationUM
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
@@ -115,7 +113,7 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onAmountResult(amountUM: AmountState) {
-        predefinedAmountValue = null // reset predefined amount
+        resetPredefinedAmount()
         _uiState.update { it.copy(amountUM = amountUM) }
     }
 
@@ -124,8 +122,18 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onResult(sendUM: SendUM) {
-        predefinedAmountValue = null // reset predefined amount
+        resetPredefinedAmount()
         _uiState.update { sendUM }
+    }
+
+    private fun resetPredefinedAmount() {
+        // reset predefined amount
+        val internalPredefinedValues = predefinedValues
+        predefinedValues = when (internalPredefinedValues) {
+            is PredefinedValues.Content.Deeplink -> internalPredefinedValues.copy(amount = "")
+            is PredefinedValues.Content.QrCode -> internalPredefinedValues.copy(amount = "")
+            PredefinedValues.Empty -> internalPredefinedValues
+        }
     }
 
     private fun initAppCurrency() {
@@ -236,9 +244,9 @@ internal class SendModel @Inject constructor(
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
         // Decompose component can be active or inactive depending on its state and navigation stack
         // If it is in inactive state use parameter to pass value to amount component
-        val amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals).orEmpty()
+        val amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
         predefinedValues = PredefinedValues.Content.QrCode(
-            amount = amount,
+            amount = amount.orEmpty(),
             address = parsedQrCode?.address.orEmpty(),
             memo = parsedQrCode?.memo,
         )
