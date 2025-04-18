@@ -22,6 +22,7 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency.SourceNetwork
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import timber.log.Timber
 
 internal class ManagedCryptoCurrencyFactory(
     private val excludedBlockchains: ExcludedBlockchains,
@@ -187,11 +188,18 @@ internal class ManagedCryptoCurrencyFactory(
                 decimals = blockchain.decimals(),
                 isL2Network = l2BlockchainsList.contains(blockchain),
             )
-            network.canHandleTokens -> SourceNetwork.Default(
-                network = network,
-                decimals = decimals ?: return null,
-                contractAddress = contractAddress,
-            )
+            network.canHandleTokens -> {
+                val formattedContractAddress = blockchain.reformatContractAddress(contractAddress)
+                if (formattedContractAddress == null) {
+                    Timber.w("Couldn't reformat $contractAddress")
+                    return null
+                }
+                SourceNetwork.Default(
+                    network = network,
+                    decimals = decimals ?: return null,
+                    contractAddress = formattedContractAddress,
+                )
+            }
             else -> null
         }
     }
