@@ -5,7 +5,10 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.ui.amountScreen.models.AmountState
-import com.tangem.domain.staking.*
+import com.tangem.domain.staking.GetConstructedStakingTransactionUseCase
+import com.tangem.domain.staking.GetStakingTransactionsUseCase
+import com.tangem.domain.staking.SaveUnsubmittedHashUseCase
+import com.tangem.domain.staking.SubmitHashUseCase
 import com.tangem.domain.staking.model.SubmitHashData
 import com.tangem.domain.staking.model.stakekit.NetworkType
 import com.tangem.domain.staking.model.stakekit.PendingAction
@@ -19,6 +22,7 @@ import com.tangem.domain.staking.model.stakekit.transaction.StakingTransactionTy
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.staking.getCurrentToken
 import com.tangem.domain.transaction.error.SendTransactionError
+import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
@@ -49,6 +53,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val submitHashUseCase: SubmitHashUseCase,
     private val saveUnsubmittedHashUseCase: SaveUnsubmittedHashUseCase,
+    private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val yield: Yield,
@@ -63,7 +68,7 @@ internal class StakingTransactionSender @AssistedInject constructor(
         onConstructError: (StakingError) -> Unit,
         onSendSuccess: (String) -> Unit,
         onSendError: (SendTransactionError?) -> Unit,
-        onFeeIncreased: (Fee) -> Unit,
+        onFeeIncreased: (Fee, Boolean) -> Unit,
     ) {
         val state = stateController.value
 
@@ -101,10 +106,10 @@ internal class StakingTransactionSender @AssistedInject constructor(
                 onSendError = onSendError,
             )
         } else {
+            val amount = fee.amount.copy(value = totalFee)
             onFeeIncreased(
-                Fee.Common(
-                    fee.amount.copy(value = totalFee),
-                ),
+                Fee.Common(amount),
+                isFeeApproximateUseCase(networkId = cryptoCurrencyStatus.currency.network.id, amountType = amount.type),
             )
         }
     }

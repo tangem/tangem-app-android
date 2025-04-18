@@ -8,6 +8,6 @@ import kotlinx.serialization.Serializable
 @JsonClass(generateAdapter = true)
 data class VisaActivationOrderInfo(
     @Json(name = "orderId") val orderId: String,
-    @Json(name = "customer_id") val customerId: String,
-    @Json(name = "customer_wallet_address") val customerWalletAddress: String,
+    @Json(name = "customerId") val customerId: String,
+    @Json(name = "customerWalletAddress") val customerWalletAddress: String,
 )
