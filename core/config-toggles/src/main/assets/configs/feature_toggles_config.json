@@ -45,7 +45,7 @@
     },
     {
         "name": "NEW_ATTESTATION_ENABLED",
-        "version": "5.23.0"
+        "version": "undefined"
     },
     {
         "name": "TWIN_REFACTORING_ENABLED",
