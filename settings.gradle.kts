@@ -289,6 +289,8 @@ include(":domain:nft")
 include(":domain:nft:models")
 include(":domain:networks")
 include(":domain:quotes")
+include(":domain:blockaid")
+include(":domain:blockaid:models")
 // endregion Domain modules
 
 // region Data modules
@@ -316,4 +318,5 @@ include(":data:networks")
 include(":data:nft")
 include(":data:onramp")
 include(":data:quotes")
+include(":data:blockaid")
 // endregion Data modules
