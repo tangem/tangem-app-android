@@ -141,7 +141,7 @@ internal class SendConfirmComponent(
         val feeCryptoCurrencyStatus: CryptoCurrencyStatus,
         val appCurrency: AppCurrency,
         val callback: ModelCallback,
-        val currentRoute: Flow<CommonSendRoute.Confirm>,
+        val currentRoute: Flow<CommonSendRoute>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
     )
