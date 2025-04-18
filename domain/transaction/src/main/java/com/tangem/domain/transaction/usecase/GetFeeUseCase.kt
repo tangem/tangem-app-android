@@ -17,6 +17,9 @@ import java.math.BigDecimal
 
 /**
  * Use case to get transaction fee
+ *
+ * !!!IMPORTANT!!!
+ * Use when transaction data is already compiled by external service or provider
  */
 class GetFeeUseCase(
     private val walletManagersFacade: WalletManagersFacade,
