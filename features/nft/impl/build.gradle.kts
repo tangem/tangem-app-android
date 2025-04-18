@@ -27,6 +27,7 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Domain modules */
+    implementation(projects.domain.appCurrency.models)
     implementation(projects.domain.models)
     implementation(projects.domain.nft)
     implementation(projects.domain.nft.models)
