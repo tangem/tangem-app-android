@@ -116,7 +116,7 @@ internal class DefaultWalletRouter @Inject constructor(
         reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
     }
 
-    override fun openNFTCollectionsScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.NFTCollections(userWalletId))
+    override fun openNFT(userWalletId: UserWalletId) {
+        router.push(AppRoute.NFT(userWalletId))
     }
 }
