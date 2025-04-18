@@ -37,11 +37,11 @@ internal class NFTDetailsUMFactory(
             )
         } ?: NFTAssetUM.Media.Empty,
         topInfo = when {
-            salePrice is NFTSalePrice.Empty && description.isNullOrEmpty() && rarity == null -> {
+            !hasSalePrice() && description.isNullOrEmpty() && rarity == null -> {
                 NFTAssetUM.TopInfo.Empty
             }
             else -> {
-                val hasSalePrice = salePrice !is NFTSalePrice.Empty
+                val hasSalePrice = hasSalePrice()
                 val hasDescription = !description.isNullOrEmpty()
                 val rarity = rarity
                 NFTAssetUM.TopInfo.Content(
@@ -72,6 +72,8 @@ internal class NFTDetailsUMFactory(
         }.toImmutableList(),
         baseInfoItems = buildBaseInfoItems(),
     )
+
+    private fun NFTAsset.hasSalePrice() = salePrice !is NFTSalePrice.Empty && salePrice !is NFTSalePrice.Error
 
     private fun NFTAsset.buildBaseInfoItems() = when (val id = id) {
         is NFTAsset.Identifier.EVM -> persistentListOf(
