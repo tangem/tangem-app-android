@@ -23,6 +23,7 @@ import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountReduceListener
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRListener
 import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents
 import com.tangem.features.send.v2.subcomponents.amount.analytics.SendAmountAnalyticEvents.SelectedCurrencyType
 import com.tangem.features.send.v2.subcomponents.fee.SendFeeData
@@ -44,6 +45,7 @@ internal class SendAmountModel @Inject constructor(
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
     private val sendAmountReduceListener: SendAmountReduceListener,
     private val feeReloadTrigger: SendFeeReloadTrigger,
+    private val sendAmountUpdateQRListener: SendAmountUpdateQRListener,
     private val analyticsEventHandler: AnalyticsEventHandler,
 ) : Model(), AmountScreenClickIntents {
 
@@ -65,6 +67,7 @@ internal class SendAmountModel @Inject constructor(
         subscribeOnAmountReduceByTriggerUpdates()
         subscribeOnAmountReduceToTriggerUpdates()
         subscribeOnAmountIgnoreReduceTriggerUpdates()
+        subscribeOnAmountUpdateQRTriggerUpdates()
     }
 
     private fun initMinBoundary() {
@@ -99,10 +102,10 @@ internal class SendAmountModel @Inject constructor(
                     ),
                 )
             }
-            val predefinedValues = params.predefinedValues as? PredefinedValues.Content
-            if (predefinedValues?.amount != null) {
-                onAmountValueChange(predefinedValues.amount)
-            }
+        }
+        val predefinedValues = params.predefinedValues as? PredefinedValues.Content
+        if (predefinedValues?.amount != null) {
+            onAmountValueChange(predefinedValues.amount)
         }
     }
 
@@ -205,6 +208,14 @@ internal class SendAmountModel @Inject constructor(
         sendAmountReduceListener.ignoreReduceTriggerFlow
             .onEach { _uiState.update(AmountIgnoreReduceTransformer::transform) }
             .launchIn(modelScope)
+    }
+
+    private fun subscribeOnAmountUpdateQRTriggerUpdates() {
+        sendAmountUpdateQRListener.updateAmountTriggerFlow
+            .onEach { amount ->
+                onAmountValueChange(amount)
+                saveResult()
+            }.launchIn(modelScope)
     }
 
     private fun saveResult() {
