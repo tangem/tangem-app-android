@@ -91,6 +91,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is TangemVisaAuth -> createVisaAuthModel()
                 is TangemVisa -> createVisaModel()
                 is TangemCardSdk -> createTangemCardSdkModel()
+                is BlockAid -> createBlockAidSdkModel()
             }
         }
 
@@ -214,6 +215,16 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
                     baseUrl = "https://api.tangem-tech.com/",
+                ),
+            )
+        }
+
+        private fun createBlockAidSdkModel(): Model {
+            return Model(
+                id = ApiConfig.ID.BlockAid,
+                expected = ApiEnvironmentConfig(
+                    environment = ApiEnvironment.PROD,
+                    baseUrl = "https://api.blockaid.io/v0/",
                 ),
             )
         }
