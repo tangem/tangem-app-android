@@ -31,11 +31,12 @@ import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.NavigationUM
 import com.tangem.features.send.v2.send.SendRoute
-import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
+import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
+import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
 import com.tangem.features.send.v2.subcomponents.destination.model.transformers.SendDestinationInitialStateTransformer
 import com.tangem.features.send.v2.subcomponents.destination.ui.state.DestinationUM
@@ -74,6 +75,7 @@ internal class SendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
 ) : Model(), SendComponentCallback {
 
     private val params: SendComponent.Params = paramsContainer.require()
@@ -110,6 +112,7 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onAmountResult(amountUM: AmountState) {
+        predefinedAmountValue = null // reset predefined amount
         _uiState.update { it.copy(amountUM = amountUM) }
     }
 
@@ -118,6 +121,7 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onResult(sendUM: SendUM) {
+        predefinedAmountValue = null // reset predefined amount
         _uiState.update { sendUM }
     }
 
@@ -227,7 +231,13 @@ internal class SendModel @Inject constructor(
 
     private fun onQrCodeScanned(address: String) {
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
+        // Decompose component can be active or inactive depending on its state and navigation stack
+        // If it is in inactive state use parameter to pass value to amount component
         predefinedAmountValue = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        // If it is in active state use flow to update value in amount component
+        modelScope.launch {
+            predefinedAmountValue?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
+        }
     }
 
     private fun onFailedTxEmailClick(errorMessage: String? = null) {
