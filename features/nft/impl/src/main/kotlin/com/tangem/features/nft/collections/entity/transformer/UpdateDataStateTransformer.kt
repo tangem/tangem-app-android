@@ -83,7 +83,7 @@ internal class UpdateDataStateTransformer(
             NFTCollectionUM(
                 id = it.id.toString(),
                 networkIconId = getActiveIconRes(it.network.id.value),
-                name = it.name.orEmpty(),
+                name = it.name,
                 description = TextReference.PluralRes(
                     R.plurals.nft_collections_count,
                     it.count,
