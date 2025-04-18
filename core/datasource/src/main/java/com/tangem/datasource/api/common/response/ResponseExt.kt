@@ -23,9 +23,10 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: Anal
             if (code == null) {
                 ApiResponseError.UnknownException(IllegalArgumentException("Unknown error status code: ${code()}"))
             } else {
-                sendHttpError(code, analyticsErrorHandler)
+                val errorBody = errorBody()?.string().orEmpty() // !!!Beware!!! string() closes stream after invocation
+                sendHttpError(code, analyticsErrorHandler, errorBody)
 
-                ApiResponseError.HttpException(code, message(), errorBody()?.string())
+                ApiResponseError.HttpException(code, message(), errorBody)
             }
         } catch (e: Exception) {
             Timber.e(e, "UnknownException occured")
@@ -39,6 +40,7 @@ internal fun <T : Any> Response<T>.toSafeApiResponse(analyticsErrorHandler: Anal
 private fun <T : Any> Response<T>.sendHttpError(
     code: ApiResponseError.HttpException.Code,
     analyticsErrorHandler: AnalyticsErrorHandler,
+    errorBody: String,
 ) {
     val fullRequestUrl = raw().request.url.toUrl()
     val shortUrl = fullRequestUrl.authority + fullRequestUrl.path
@@ -46,7 +48,7 @@ private fun <T : Any> Response<T>.sendHttpError(
         ApiErrorEvent(
             endpoint = shortUrl,
             code = code.numericCode,
-            message = errorBody()?.string().orEmpty(),
+            message = errorBody,
         ),
     )
 }
