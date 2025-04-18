@@ -66,4 +66,11 @@ internal object NFTDomainModule {
         GetNFTNetworkStatusUseCase(
             networksRepository = networksRepository,
         )
+
+    @Provides
+    @Singleton
+    fun providesGetNFTExploreUrlUseCase(nftRepository: NFTRepository): GetNFTExploreUrlUseCase =
+        GetNFTExploreUrlUseCase(
+            nftRepository = nftRepository,
+        )
 }

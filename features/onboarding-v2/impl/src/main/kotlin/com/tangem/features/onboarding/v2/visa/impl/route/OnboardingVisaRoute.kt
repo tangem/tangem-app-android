@@ -48,5 +48,8 @@ internal sealed class OnboardingVisaRoute {
     }
 
     @Serializable
-    data class PinCode(val activationOrderInfo: VisaActivationOrderInfo) : OnboardingVisaRoute()
+    data class PinCode(
+        val activationOrderInfo: VisaActivationOrderInfo,
+        val pinCodeValidationError: Boolean,
+    ) : OnboardingVisaRoute()
 }

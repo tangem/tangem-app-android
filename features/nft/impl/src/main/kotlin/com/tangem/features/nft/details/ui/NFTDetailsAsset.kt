@@ -16,15 +16,17 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 @Composable
 internal fun NFTDetailsAsset(
     state: NFTAssetUM,
     onReadMoreClick: () -> Unit,
-    onSeeAllClick: () -> Unit,
+    onSeeAllTraitsClick: () -> Unit,
     onExploreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -72,7 +74,7 @@ internal fun NFTDetailsAsset(
                     NFTBlocksGroupAction(
                         text = resourceReference(R.string.common_see_all),
                         startIcon = { },
-                        onClick = onSeeAllClick,
+                        onClick = onSeeAllTraitsClick,
                     )
                 },
             )
@@ -103,7 +105,7 @@ private fun Preview_NFTDetailsAssetAsset(@PreviewParameter(NFTAssetProvider::cla
         NFTDetailsAsset(
             state = state,
             onReadMoreClick = { },
-            onSeeAllClick = { },
+            onSeeAllTraitsClick = { },
             onExploreClick = { },
         )
     }
@@ -120,7 +122,13 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
             ),
             topInfo = NFTAssetUM.TopInfo.Content(
                 title = resourceReference(R.string.nft_details_last_sale_price),
-                salePrice = NFTAssetUM.SalePrice.Content(value = "0,012 ETH", fiatValue = "32.34$"),
+                salePrice = NFTAssetUM.SalePrice.Content(
+                    value = BigDecimal("18.75"),
+                    symbol = "ETH",
+                    decimals = 18,
+                    rate = BigDecimal("1"),
+                    appCurrency = AppCurrency.Default,
+                ),
                 description = "Base edition by Piux. An illustration of Crypto Robot #7804".repeat(3),
                 rarity = NFTAssetUM.Rarity.Content(
                     rank = "Top 1% rarity",

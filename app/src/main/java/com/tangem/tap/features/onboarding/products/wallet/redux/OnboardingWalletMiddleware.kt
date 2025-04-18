@@ -31,7 +31,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.onboarding.data.model.CreateWalletResponse
 import com.tangem.feature.onboarding.presentation.wallet2.analytics.SeedPhraseSource
 import com.tangem.feature.wallet.presentation.wallet.domain.BackupValidator
-import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.CreateProductWalletTaskResponse
 import com.tangem.sdk.extensions.localizedDescriptionRes
@@ -250,7 +250,7 @@ private suspend fun loadArtworkForCard(cardId: String, cardPublicKey: ByteArray,
             if (artworkId.isNullOrEmpty()) {
                 defaultArtwork ?: Uri.EMPTY
             } else {
-                Uri.parse(OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId))
+                Uri.parse(CardArtworksProvider.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId))
             }
         }
         is Result.Failure -> defaultArtwork ?: Uri.EMPTY
