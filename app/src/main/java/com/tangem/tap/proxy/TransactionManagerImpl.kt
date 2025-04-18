@@ -3,6 +3,7 @@ package com.tangem.tap.proxy
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.blockchains.optimism.EthereumOptimisticRollupWalletManager
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.extensions.Result
@@ -43,7 +44,7 @@ class TransactionManagerImpl(
         currencyToSend: Currency,
         destinationAddress: String,
         increaseBy: Int?,
-        data: String?,
+        callData: SmartContractCallData?,
         derivationPath: String?,
     ): ProxyFees {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
@@ -54,7 +55,7 @@ class TransactionManagerImpl(
                     walletManager = walletManager,
                     amount = amountToSend,
                     destinationAddress = destinationAddress,
-                    data = data,
+                    callData = callData,
                 )
             }
             return getFeeForEthereumBlockchain(
@@ -62,7 +63,7 @@ class TransactionManagerImpl(
                 blockchain = blockchain,
                 amountToSend = amountToSend,
                 destinationAddress = destinationAddress,
-                data = data,
+                callData = callData,
                 increaseBy = increaseBy,
             )
         } else {
@@ -160,14 +161,14 @@ class TransactionManagerImpl(
         blockchain: Blockchain,
         amountToSend: Amount,
         destinationAddress: String,
-        data: String?,
+        callData: SmartContractCallData?,
         increaseBy: Int?,
     ): ProxyFees {
         val gasLimit = getGasLimit(
             evmWalletManager = walletManager,
             amount = amountToSend,
             destinationAddress = destinationAddress,
-            data = data,
+            callData = callData,
         ).increaseBigIntegerByPercents(increaseBy)
         return when (val gasPrice = walletManager.getGasPrice()) {
             is Result.Success -> {
@@ -183,16 +184,16 @@ class TransactionManagerImpl(
         walletManager: EthereumOptimisticRollupWalletManager,
         amount: Amount,
         destinationAddress: String,
-        data: String?,
+        callData: SmartContractCallData?,
     ): ProxyFees {
-        val fee = if (data.isNullOrEmpty()) {
+        val fee = if (callData == null) {
             walletManager.getFee(amount, destinationAddress)
         } else {
-            walletManager.getFee(amount, destinationAddress, data)
+            walletManager.getFee(amount, destinationAddress, callData)
         }
         return when (fee) {
             is Result.Success -> {
-                val choosableFee = fee.data
+                val choosableFee = fee.data as? TransactionFee.Choosable ?: error("Incorrect fee type")
 
                 val minProxyFee = ProxyFee.Common(
                     gasLimit = (choosableFee.minimum as Fee.Ethereum).gasLimit,
@@ -223,9 +224,9 @@ class TransactionManagerImpl(
         evmWalletManager: EthereumWalletManager,
         amount: Amount,
         destinationAddress: String,
-        data: String?,
+        callData: SmartContractCallData?,
     ): BigInteger {
-        val result = if (data.isNullOrEmpty()) {
+        val result = if (callData == null) {
             evmWalletManager.getGasLimit(
                 amount = amount,
                 destination = destinationAddress,
@@ -234,7 +235,7 @@ class TransactionManagerImpl(
             evmWalletManager.getGasLimit(
                 amount = amount,
                 destination = destinationAddress,
-                data = data,
+                callData = callData,
             )
         }
         when (result) {
