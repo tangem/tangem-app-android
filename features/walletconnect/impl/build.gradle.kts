@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain models */
     implementation(projects.domain.qrScanning.models)
