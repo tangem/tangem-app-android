@@ -335,6 +335,7 @@ internal class OnrampMainComponentModel @Inject constructor(
             (it as? OnrampMainComponentUM.Content)?.copy(
                 errorNotification = null,
                 providerBlockState = OnrampProviderBlockUM.Loading,
+                amountBlockState = it.amountBlockState.copy(secondaryFieldModel = OnrampAmountSecondaryFieldUM.Loading),
             ) ?: it
         }
         startLoadingQuotes()
