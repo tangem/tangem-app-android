@@ -140,6 +140,7 @@
   <string name="common_fee_selector_option_market">Marché</string>
   <string name="common_fee_selector_option_slow">Lent</string>
   <string name="common_fee_selector_title">Vitesse et frais</string>
+  <string name="common_finish">Terminer</string>
   <string name="common_generate_addresses">Synchroniser les adresses</string>
   <string name="common_go_to_provider">Aller au fournisseur</string>
   <string name="common_go_to_token">Aller au jeton</string>
@@ -159,6 +160,7 @@
   <string name="common_no_address">Aucune adresse</string>
   <string name="common_now">Maintenant</string>
   <string name="common_ok">OK</string>
+  <string name="common_open_in_browser">Ouvrir dans le navigateur</string>
   <string name="common_origin_card">Carte principale</string>
   <string name="common_origin_ring">Bague principale</string>
   <string name="common_passphrase">Passphrase</string>
@@ -182,6 +184,7 @@
   <string name="common_send">Envoyer</string>
   <string name="common_server_unavailable">Le serveur n\'est pas disponible, veuillez réessayer plus tard</string>
   <string name="common_share">Partager</string>
+  <string name="common_share_link">Partager le lien</string>
   <string name="common_sign">Signez</string>
   <string name="common_sign_and_send">Signez et envoyez</string>
   <string name="common_stake">Stake</string>
@@ -496,6 +499,16 @@
   <string name="markets_tooltip_message">Tirez vers le haut ou appuyez sur la barre de recherche pour ajouter des jetons directement depuis le marché</string>
   <string name="markets_tooltip_title">Ajouter des jetons</string>
   <string name="nfc_error_unavailable">NFC n\'est pas disponible sur votre appareil</string>
+  <string name="nft_collections_empty_description">Les NFT envoyés à l\'adresse de votre portefeuille s\'afficheront ici.</string>
+  <string name="nft_collections_empty_title">Aucune collection pour le moment</string>
+  <string name="nft_collections_receive">Recevoir des NFT</string>
+  <string name="nft_collections_title">Collections NFT</string>
+  <string name="nft_collections_warning_subtitle">Certaines données peuvent ne pas se charger</string>
+  <string name="nft_collections_warning_title">Problèmes de chargement temporaires</string>
+  <string name="nft_wallet_count">%1$d NFT dans la collection %2$d</string>
+  <string name="nft_wallet_receive_nft">Appuyez ici pour recevoir le premier NFT</string>
+  <string name="nft_wallet_title">Collections NFT</string>
+  <string name="nft_wallet_unable_to_load">Impossible de charger les données</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger tous vos appareils.</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -762,6 +775,8 @@
   <string name="send_summary_transaction_description_suffix_including">y compris des frais de réseau de %1$s</string>
   <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
   <string name="send_tron_account_activation_error">%1$s est un actif du réseau Tron. Pour calculer les frais et effectuer une transaction, déposez du Tron (TRX) sur votre compte.</string>
+  <string name="send_validation_destination_tag_required_description">Une balise de destination (mémo) est requise pour terminer cette transaction pour l\'adresse spécifiée.</string>
+  <string name="send_validation_destination_tag_required_title">Étiquette de destination requise</string>
   <string name="sent_transaction_sent_title">Transaction envoyée</string>
   <string name="settings_card_settings_footer">Scannez la carte/ bague que vous souhaitez configurer.</string>
   <string name="settings_forget_wallet">Oublier le portefeuille</string>
@@ -783,6 +798,7 @@
   <string name="staking_details_estimated_profit">%s profit estimatif</string>
   <string name="staking_details_market_rating">Cote du marché</string>
   <string name="staking_details_metrics_block_header">Métriques</string>
+  <string name="staking_details_min_rewards_notification">Selon les règles du réseau %1$s, les réclamations sont possibles à partir de %2$s. Les montants ci-dessous seront crédités sur votre compte lors du déblocage.</string>
   <string name="staking_details_minimum_requirement">Minimum requis</string>
   <string name="staking_details_no_rewards_to_claim">Aucune récompense à réclamer</string>
   <string name="staking_details_reward_claiming">Réclamation de récompense</string>
@@ -820,11 +836,16 @@
   <string name="staking_notification_low_staked_balance_title">Solde de staking faible</string>
   <string name="staking_notification_minimum_balance_error_text">Un minimum de %1$s %2$s est requis pour le re-staking. Veuillez recharger votre solde.</string>
   <string name="staking_notification_minimum_balance_error_title">Pas assez de %s</string>
+  <string name="staking_notification_minimum_balance_title">Solde insuffisant pour le staking</string>
+  <string name="staking_notification_minimum_restake_ada_text">Un minimum de 3 ADA est requis pour le re-staking. Veuillez recharger votre solde.</string>
+  <string name="staking_notification_minimum_restake_ada_title">ADA insuffisants</string>
+  <string name="staking_notification_minimum_stake_ada_text">Le montant minimum requis pour le staking doit être supérieur à 5 ADA. Veuillez recharger votre solde pour commencer à staking.</string>
   <string name="staking_notification_network_error_text">L\'option de staking n\'est actuellement pas disponible en raison des conditions du réseau. Veuillez réessayer plus tard.</string>
   <string name="staking_notification_new_validator_funds_transfer">Le staking dans le réseau %1$s avec un nouveau validateur transférera automatiquement tous les fonds précédemment stakés vers ce validateur</string>
   <string name="staking_notification_restake_rewards_text">Réinvestissez vos récompenses gagnées dans le montant que vous avez staké, augmentant ainsi vos gains potentiels.</string>
   <string name="staking_notification_restake_text">L\'option de restaker vous permet de déplacer vos fonds d\'un validateur à un autre sans avoir besoin de les déstaker.</string>
   <string name="staking_notification_stake_entire_balance_text">Vous êtes sur le point de staker l\'intégralité de votre solde. Nous vous recommandons de laisser un petit montant pour couvrir les frais de réseau pour unstaking ou la réclamation des récompenses.</string>
+  <string name="staking_notification_ton_activate_account">Pour commencer à staker TON, effectuez d\'abord une transaction sortante de n\'importe quel montant — cela activera votre portefeuille.</string>
   <string name="staking_notification_unlock_text">Débloquez votre argent pour le retirer du processus de staking. Le déverrouillage prend %s.</string>
   <string name="staking_notification_unstake_cosmos_text">Vos fonds seront disponibles à l\'utilisation après la période de déblocage de 21 jours. La récompense sera retirée en même temps que vos fonds de déblocage.</string>
   <string name="staking_notification_unstake_text">Vos fonds seront disponibles pour utilisation après la période de désengagement %s.</string>
@@ -853,6 +874,7 @@
   <string name="staking_rewards">Récompenses</string>
   <string name="staking_stake_locked">Stake verrouillé</string>
   <string name="staking_stake_more">Staker plus</string>
+  <string name="staking_stake_more_button_unavailability_reason">Lorsque vous stakez %1$s, la totalité de votre solde %2$s est stakeée. Tout dépôt supplémentaire de %2$s sur votre portefeuille Tangem sera également staké automatiquement.</string>
   <string name="staking_staked_amount">Montant staké</string>
   <string name="staking_summary_description_text">Vous stakez %1$s et recevrez %2$s</string>
   <string name="staking_tap_to_unlock">Appuyez pour déverrouiller</string>
@@ -887,6 +909,8 @@
   <string name="story_meet_title">Découvrez Tangem</string>
   <string name="story_web3_description">Échangez, achetez des NFT, faites des prêts et des dépôts dans plus de 100 services décentralisés différents</string>
   <string name="story_web3_title">Compatible avec Web 3.0</string>
+  <string name="sui_not_enough_coin_for_fee_description">Une transaction entrante d\'au moins de %1$s est requise pour continuer</string>
+  <string name="sui_not_enough_coin_for_fee_title">Fonds insuffisants</string>
   <string name="swap_give_permission_fee_footer">Le réseau facturera des frais d\'approbation de jeton pour vérifier que vous autorisez l\'utilisation de votre jeton pour l\'échange.</string>
   <string name="swap_promo_text">Échangez plus de jetons à de meilleurs taux directement dans votre portefeuille.</string>
   <string name="swap_promo_title">Nouveau fournisseur d\'échange disponible !</string>
@@ -926,6 +950,7 @@
   <string name="token_button_unavailability_reason_empty_balance_send">Vous n\'avez pas de fonds à envoyer. Renflouez votre compte pour pouvoir envoyer des fonds à partir de celui-ci.</string>
   <string name="token_button_unavailability_reason_loading">Die Daten wurden noch nicht geladen. Dies kann einige Sekunden dauern. Bitte versuchen Sie es später noch einmal.</string>
   <string name="token_button_unavailability_reason_not_exchangeable">Le service d\'échange %s n\'est pas pris en charge par les fournisseurs actuels mais nous travaillons à ajouter plus d\'options.</string>
+  <string name="token_button_unavailability_reason_out_of_date_balance">Le solde affiché peut être obsolète en raison de la mise en cache.</string>
   <string name="token_button_unavailability_reason_pending_transaction_sell">La vente de fonds sera disponible une fois que la ou les transactions en attente dans le réseau %s seront terminées</string>
   <string name="token_button_unavailability_reason_pending_transaction_send">L\'envoi de fonds sera disponible une fois la ou les transactions en attente dans le réseau %s terminées.</string>
   <string name="token_button_unavailability_reason_sell_unavailable">L\'achat de %s n\'est pas pris en charge par les fournisseurs actuels mais nous travaillons à ajouter plus d\'options.</string>
@@ -972,6 +997,7 @@
   <string name="twins_recreate_toolbar">Tangem Twin</string>
   <string name="twins_recreate_warning">Cette action est irréversible. Vous n\'aurez plus accès à l\'ancien portefeuille.</string>
   <string name="twins_scan_twin_with_number">Appuyez sur la carte jumelle avec le numéro %s et ne la retirez pas jusqu\'à la fin de l\'opération</string>
+  <string name="universal_error">Nous avons rencontré une erreur. Code d\'erreur : %s. Veuillez contacter notre équipe de support.</string>
   <string name="unlock_wallet_description_full">Utilisez %s ou scannez une carte/bague pour avoir accès à votre portefeuille</string>
   <string name="unsupported_wc_version">Échec de la connexion : Cette dApp utilise Wallet Connect version1.0, qui n\'est pas prise en charge. Veuillez vous assurer que la dApp prend en charge Wallet Connect version2.0 pour réussir la connexion.</string>
   <string name="user_push_notification_agreement_argument_one">Restez à jour avec les dernières fonctionnalités et actualités</string>
@@ -986,6 +1012,24 @@
   <string name="user_wallet_list_rename_popup_title">Renommer le portefeuille</string>
   <string name="user_wallet_list_unlock_all">Tout déverrouiller</string>
   <string name="user_wallet_list_unlock_all_with">Tout déverrouiller avec %s</string>
+  <plurals name="visa_limits_available_for_days_title">
+    <item quantity="one">disponible pour %d jour</item>
+    <item quantity="other">disponible pour %d jours</item>
+  </plurals>
+  <string name="visa_main_balances_and_limits">Soldes et Limites</string>
+  <string name="visa_onboarding_close_alert_message">Êtes-vous sûr de vouloir quitter ? Vous pourrez reprendre plus tard là où vous vous étiez arrêté.</string>
+  <string name="visa_onboarding_in_progress_description">Cela ne prendra pas longtemps. Nous configurons votre compte.</string>
+  <string name="visa_onboarding_in_progress_issuer_description">Cela ne prendra pas longtemps. Nous terminons l\'activation.</string>
+  <string name="visa_onboarding_in_progress_title">Tout est en cours de préparation !</string>
+  <string name="visa_onboarding_pin_validation_error_message">Code PIN invalide : évitez les séquences ou les répétitions</string>
+  <string name="visa_onboarding_wallet_connect_title">Accéder le site Web</string>
+  <string name="visa_onboarding_welcome_back_description">Continuons la configuration de votre compte.</string>
+  <string name="visa_onboarding_welcome_back_title">Content de vous revoir !</string>
+  <string name="visa_onboarding_welcome_description">Suivez les étapes pour configurer votre compte.</string>
+  <string name="visa_onboarding_welcome_title">Bienvenue !</string>
+  <string name="visa_unlock_notification_button">Déverrouiller</string>
+  <string name="visa_unlock_notification_subtitle">Scannez votre carte pour déverrouiller l\'accès</string>
+  <string name="visa_unlock_notification_title">Déverrouillage nécessaire</string>
   <string name="wallet_balance_blockchain_unreachable_try_later">La blockchain n\'est pas accessible. Réessayez plus tard</string>
   <string name="wallet_balance_missing_derivation">Scanner la carte ou la bague</string>
   <string name="wallet_been_activated_message">Ce portefeuille a déjà été activé auparavant.\nSi cela n\'a pas été fait par vous, veuillez contacter le support.\nTangem ne vend jamais de portefeuilles avec le code d\'accès pré-généré.</string>
@@ -1116,6 +1160,13 @@
   <string name="warning_testnet_card_message">Il s\'agit d\'une carte Testnet. Elle ne peut pas traiter les transactions et ne doit être utilisée qu\'à des fins de test et de développement.</string>
   <string name="warning_testnet_card_title">À des fins de test uniquement</string>
   <string name="warning_token_balance_not_updated">Le solde peut être obsolète. Rafraîchissez la page.</string>
+  <string name="wc_connections">Connexions</string>
+  <string name="wc_disconnect_all">Déconnecter tout</string>
+  <string name="wc_disconnect_all_alert_desc">Texte sur la déconnexion de toutes les dApps</string>
+  <string name="wc_disconnect_all_alert_title">Déconnecter toutes les dApps</string>
+  <string name="wc_new_connection">Nouvelle connexion</string>
+  <string name="wc_no_sessions_desc">Connectez votre portefeuille à différentes dApps</string>
+  <string name="wc_no_sessions_title">Aucune séance</string>
   <string name="welcome_interrupted_backup_alert_discard">Ignorer</string>
   <string name="welcome_interrupted_backup_alert_message">Vous avez une sauvegarde interrompue. Voulez-vous la reprendre ?</string>
   <string name="welcome_interrupted_backup_alert_resume">Oui, reprendre</string>
