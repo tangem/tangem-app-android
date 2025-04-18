@@ -27,6 +27,7 @@ sealed class ApiConfig {
         TangemVisaAuth,
         TangemVisa,
         TangemCardSdk,
+        BlockAid,
     }
 
     private fun initializeId(): ID {
@@ -37,6 +38,7 @@ sealed class ApiConfig {
             is TangemVisaAuth -> ID.TangemVisaAuth
             is TangemVisa -> ID.TangemVisa
             is TangemCardSdk -> ID.TangemCardSdk
+            is BlockAid -> ID.BlockAid
         }
     }
 
