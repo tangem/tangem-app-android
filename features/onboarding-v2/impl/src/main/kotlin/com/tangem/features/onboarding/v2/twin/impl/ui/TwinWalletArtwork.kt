@@ -23,6 +23,7 @@ import androidx.compose.ui.util.fastForEach
 import androidx.compose.ui.zIndex
 import com.tangem.core.ui.components.SpacerH8
 import com.tangem.core.ui.components.SpacerHMax
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
@@ -212,7 +213,7 @@ private fun AnimatedTwinCards(
                     scaleX = scaleX2
                     scaleY = scaleY2
                 },
-            url = Artwork.TWIN_CARD_2_URL,
+            artwork = ArtworkUM(defaultUrl = Artwork.TWIN_CARD_2_URL),
         )
 
         WalletCard(
@@ -229,7 +230,7 @@ private fun AnimatedTwinCards(
                     translationY = translationY1
                     rotationZ = rotation1
                 },
-            url = Artwork.TWIN_CARD_1_URL,
+            artwork = ArtworkUM(defaultUrl = Artwork.TWIN_CARD_1_URL),
         )
     }
 }

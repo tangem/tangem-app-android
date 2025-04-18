@@ -344,47 +344,6 @@ internal class DefaultSwapRepository(
         )
     }
 
-    override suspend fun getApproveData(
-        userWalletId: UserWalletId,
-        networkId: String,
-        derivationPath: String?,
-        currency: CryptoCurrency,
-        amount: BigDecimal?,
-        spenderAddress: String,
-    ): String {
-        val blockchain =
-            requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-
-        return (walletManager as? Approver)?.getApproveData(
-            spenderAddress,
-            amount?.let { convertToAmount(it, currency) },
-        ) ?: error("Cannot cast to Approver")
-    }
-
-    private fun convertToAmount(amount: BigDecimal, currency: CryptoCurrency): Amount {
-        return Amount(
-            currencySymbol = currency.symbol,
-            value = amount,
-            decimals = currency.decimals,
-            type = if (currency is CryptoCurrency.Token) {
-                AmountType.Token(
-                    Token(
-                        symbol = currency.symbol,
-                        contractAddress = currency.contractAddress,
-                        decimals = currency.decimals,
-                    ),
-                )
-            } else {
-                AmountType.Coin
-            },
-        )
-    }
-
     override fun getNativeTokenForNetwork(networkId: String): CryptoCurrency {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
 
