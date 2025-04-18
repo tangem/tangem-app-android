@@ -4,6 +4,7 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
@@ -280,6 +281,29 @@ internal object NetworkModule {
             .client(client)
             .build()
             .create(T::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlockAidApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
+        apiConfigsManager: ApiConfigsManager,
+        appLogsStore: AppLogsStore,
+    ): BlockAidApi {
+        return createApi<BlockAidApi>(
+            id = ApiConfig.ID.BlockAid,
+            moshi = moshi,
+            context = context,
+            apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
+            clientBuilder = {
+                addInterceptor(
+                    NetworkLogsSaveInterceptor(appLogsStore),
+                ).applyTimeoutAnnotations()
+            },
+        )
     }
 
     private inline fun <reified T> createApi(
