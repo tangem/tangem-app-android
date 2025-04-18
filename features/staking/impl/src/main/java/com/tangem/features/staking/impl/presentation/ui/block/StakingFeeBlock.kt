@@ -89,6 +89,7 @@ internal fun StakingFeeBlock(feeState: FeeState) {
                         iconRes = R.drawable.ic_bird_24,
                         isSelected = true,
                         paddingValues = PaddingValues(),
+                        showDivider = false,
                     )
                     FeeError(feeState)
                 }
