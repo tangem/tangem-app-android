@@ -20,9 +20,14 @@ sealed class VisaActivationRemoteState {
     data object PaymentAccountDeploying : VisaActivationRemoteState()
 
     @Serializable
-    data class WaitingPinCode(
+    data class AwaitingPinCode(
         val activationOrderInfo: VisaActivationOrderInfo,
-    ) : VisaActivationRemoteState()
+        val status: Status,
+    ) : VisaActivationRemoteState() {
+        enum class Status {
+            WaitingForPinCode, InProgress, WasError
+        }
+    }
 
     @Serializable
     data object WaitingForActivationFinishing : VisaActivationRemoteState()
@@ -43,6 +48,7 @@ class VisaActivationRemoteState_Json(
     @Json(name = "type") val type: VisaActivationRemoteState_Type,
     @Json(name = "requestCardWallet") val requestCardWallet: VisaCardWalletDataToSignRequest? = null,
     @Json(name = "activationOrderInfo") val activationOrderInfo: VisaActivationOrderInfo? = null,
+    @Json(name = "awaiting_pin_code_status") val awaitingPinCodeStatus: AwaitingPinCodeStatus_Type? = null,
 )
 
 @Suppress("ClassNaming")
@@ -59,6 +65,12 @@ enum class VisaActivationRemoteState_Type {
 }
 
 @Suppress("ClassNaming")
+@JsonClass(generateAdapter = false)
+enum class AwaitingPinCodeStatus_Type {
+    WaitingForPinCode, InProgress, WasError
+}
+
+@Suppress("ClassNaming")
 class VisaActivationRemoteState_JsonAdapter {
 
     @FromJson
@@ -70,7 +82,17 @@ class VisaActivationRemoteState_JsonAdapter {
                 VisaActivationRemoteState.CustomerWalletSignatureRequired(value.activationOrderInfo!!)
             VisaActivationRemoteState_Type.PaymentAccountDeploying -> VisaActivationRemoteState.PaymentAccountDeploying
             VisaActivationRemoteState_Type.WaitingPinCode ->
-                VisaActivationRemoteState.WaitingPinCode(value.activationOrderInfo!!)
+                VisaActivationRemoteState.AwaitingPinCode(
+                    activationOrderInfo = value.activationOrderInfo!!,
+                    status = when (value.awaitingPinCodeStatus!!) {
+                        AwaitingPinCodeStatus_Type.WaitingForPinCode ->
+                            VisaActivationRemoteState.AwaitingPinCode.Status.WaitingForPinCode
+                        AwaitingPinCodeStatus_Type.InProgress ->
+                            VisaActivationRemoteState.AwaitingPinCode.Status.InProgress
+                        AwaitingPinCodeStatus_Type.WasError ->
+                            VisaActivationRemoteState.AwaitingPinCode.Status.WasError
+                    },
+                )
             VisaActivationRemoteState_Type.WaitingForActivationFinishing ->
                 VisaActivationRemoteState.WaitingForActivationFinishing
             VisaActivationRemoteState_Type.Activated -> VisaActivationRemoteState.Activated
@@ -93,10 +115,18 @@ class VisaActivationRemoteState_JsonAdapter {
                 )
             is VisaActivationRemoteState.PaymentAccountDeploying ->
                 VisaActivationRemoteState_Json(VisaActivationRemoteState_Type.PaymentAccountDeploying)
-            is VisaActivationRemoteState.WaitingPinCode ->
+            is VisaActivationRemoteState.AwaitingPinCode ->
                 VisaActivationRemoteState_Json(
                     VisaActivationRemoteState_Type.WaitingPinCode,
                     activationOrderInfo = value.activationOrderInfo,
+                    awaitingPinCodeStatus = when (value.status) {
+                        VisaActivationRemoteState.AwaitingPinCode.Status.WaitingForPinCode ->
+                            AwaitingPinCodeStatus_Type.WaitingForPinCode
+                        VisaActivationRemoteState.AwaitingPinCode.Status.InProgress ->
+                            AwaitingPinCodeStatus_Type.InProgress
+                        VisaActivationRemoteState.AwaitingPinCode.Status.WasError ->
+                            AwaitingPinCodeStatus_Type.WasError
+                    },
                 )
             is VisaActivationRemoteState.WaitingForActivationFinishing ->
                 VisaActivationRemoteState_Json(VisaActivationRemoteState_Type.WaitingForActivationFinishing)
