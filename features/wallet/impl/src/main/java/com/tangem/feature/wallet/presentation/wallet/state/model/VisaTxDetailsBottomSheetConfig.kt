@@ -6,6 +6,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class VisaTxDetailsBottomSheetConfig(
     val transaction: Transaction,
     val requests: ImmutableList<Request>,
+    val onDisputeClick: () -> Unit,
 ) : TangemBottomSheetConfigContent {
 
     data class Transaction(
