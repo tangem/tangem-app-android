@@ -27,6 +27,7 @@ sealed class ApiConfig {
         TangemVisaAuth,
         TangemVisa,
         TangemCardSdk,
+        BlockAid,
     }
 
     private fun initializeId(): ID {
@@ -37,6 +38,7 @@ sealed class ApiConfig {
             is TangemVisaAuth -> ID.TangemVisaAuth
             is TangemVisa -> ID.TangemVisa
             is TangemCardSdk -> ID.TangemCardSdk
+            is BlockAid -> ID.BlockAid
         }
     }
 
@@ -44,6 +46,7 @@ sealed class ApiConfig {
         internal const val DEBUG_BUILD_TYPE = "debug"
         internal const val INTERNAL_BUILD_TYPE = "internal"
         internal const val MOCKED_BUILD_TYPE = "mocked"
+        internal const val EXTERNAL_BUILD_TYPE = "external"
         internal const val RELEASE_BUILD_TYPE = "release"
     }
 }
