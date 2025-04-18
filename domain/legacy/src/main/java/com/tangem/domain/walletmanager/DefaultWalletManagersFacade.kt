@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.address.Address
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.common.address.EstimationFeeAddressFactory
 import com.tangem.blockchain.common.pagination.Page
+import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.blockchain.common.trustlines.AssetRequirementsManager
@@ -488,9 +489,20 @@ class DefaultWalletManagersFacade(
 
         val destination = estimationFeeAddressFactory.makeAddress(blockchain)
 
+        val callData = if (amount.type is AmountType.Token) {
+            SmartContractCallDataProviderFactory.getTokenTransferCallData(
+                destinationAddress = destination,
+                amount = amount,
+                blockchain = blockchain,
+            )
+        } else {
+            null
+        }
+
         (walletManager as? TransactionSender)?.estimateFee(
             amount = amount,
             destination = destination,
+            callData = callData,
         )
     }
 
@@ -695,6 +707,11 @@ class DefaultWalletManagersFacade(
             derivationPath = network.derivationPath.value,
         ) ?: return null
         return walletManager.getSalePrice(collectionIdentifier, assetIdentifier)
+    }
+
+    override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? {
+        val blockchain = Blockchain.fromId(network.id.value)
+        return blockchain.getNFTExploreUrl(assetIdentifier)
     }
 
     override suspend fun isAccountInitialized(userWalletId: UserWalletId, network: Network): Boolean {

@@ -9,21 +9,32 @@ sealed class YieldBalance {
 
     abstract val integrationId: String?
     abstract val address: String?
+    abstract val source: StatusSource
+
+    fun copySealed(source: StatusSource): YieldBalance {
+        return when (this) {
+            is Data -> copy(source = source)
+            is Empty -> copy(source = source)
+            is Error -> this
+        }
+    }
 
     data class Data(
         override val integrationId: String?,
         override val address: String,
+        override val source: StatusSource,
         val balance: YieldBalanceItem,
-        val source: StatusSource,
     ) : YieldBalance()
 
     data class Empty(
         override val integrationId: String?,
         override val address: String,
-        val source: StatusSource,
+        override val source: StatusSource,
     ) : YieldBalance()
 
-    data class Error(override val integrationId: String?, override val address: String?) : YieldBalance()
+    data class Error(override val integrationId: String?, override val address: String?) : YieldBalance() {
+        override val source: StatusSource = StatusSource.ACTUAL
+    }
 }
 
 data class YieldBalanceItem(
