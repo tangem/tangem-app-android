@@ -180,7 +180,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.OnrampSuccess -> {
                 createComponentChild(
                     context = context,
-                    params = OnrampSuccessComponent.Params(route.externalTxId),
+                    params = OnrampSuccessComponent.Params(route.txId),
                     componentFactory = onrampSuccessComponentFactory,
                 )
             }
@@ -700,7 +700,7 @@ internal class ChildFactory @Inject constructor(
             is AppRoute.OnrampSuccess -> {
                 route.asComponentChild(
                     contextProvider = contextProvider(route, contextFactory),
-                    params = OnrampSuccessComponent.Params(route.externalTxId),
+                    params = OnrampSuccessComponent.Params(route.txId),
                     componentFactory = onrampSuccessComponentFactory,
                 )
             }
