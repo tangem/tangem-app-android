@@ -1,7 +1,7 @@
 package com.tangem.data.staking.single
 
-import com.tangem.data.staking.store.YieldsBalancesStore.StakingID
 import com.tangem.data.staking.utils.StakingIdFactory
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier

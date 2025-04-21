@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
 import com.tangem.common.test.utils.getEmittedValues
-import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.toDomain
 import com.tangem.data.staking.utils.StakingIdFactory
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.multi.MultiYieldBalanceProducer
 import com.tangem.domain.staking.multi.MultiYieldBalanceSupplier
@@ -229,7 +229,7 @@ internal class DefaultSingleYieldBalanceProducerTest {
         val ton = mocks.createCoin(Blockchain.TON)
 
         val tonId = MockYieldBalanceWrapperDTOFactory.defaultStakingId
-        val solanaId = YieldsBalancesStore.StakingID(
+        val solanaId = StakingID(
             integrationId = "solana-sol-native-multivalidator-staking",
             address = "0x1",
         )

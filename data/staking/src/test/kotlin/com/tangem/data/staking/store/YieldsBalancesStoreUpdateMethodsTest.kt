@@ -7,6 +7,7 @@ import com.tangem.data.staking.toDomain
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
@@ -179,7 +180,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
 
         val stakingIds = setOf(
             stakingId,
-            YieldsBalancesStore.StakingID(
+            StakingID(
                 integrationId = "solana-sol-native-multivalidator-staking",
                 address = "0x1",
             ),
