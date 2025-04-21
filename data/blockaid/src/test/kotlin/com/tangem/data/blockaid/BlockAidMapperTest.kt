@@ -4,8 +4,8 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.domain.blockaid.models.transaction.SimulationResult
 import com.domain.blockaid.models.transaction.ValidationResult
 import com.domain.blockaid.models.transaction.simultation.SimulationData
+import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.blockaid.models.response.*
-import org.junit.Assert.*
 import org.junit.Test
 import java.math.BigDecimal
 
@@ -14,28 +14,28 @@ class BlockAidMapperTest {
     private val mapper = BlockAidMapper()
 
     @Test
-    fun whenStatusHitAndIsMaliciousFalseThenMapToDomainReturnsSafe() {
+    fun `when status hit and is malicious false then map to domain returns safe`() {
         val response = DomainScanResponse(status = "hit", isMalicious = false)
         val result = mapper.mapToDomain(response)
-        assertEquals(CheckDAppResult.SAFE, result)
+        Truth.assertThat(result).isEqualTo(CheckDAppResult.SAFE)
     }
 
     @Test
-    fun whenStatusHitAndIsMaliciousTrueThenMapToDomainReturnsUnsafe() {
+    fun `when status hit and is malicious true then map to domain returns unsafe`() {
         val response = DomainScanResponse(status = "hit", isMalicious = true)
         val result = mapper.mapToDomain(response)
-        assertEquals(CheckDAppResult.UNSAFE, result)
+        Truth.assertThat(result).isEqualTo(CheckDAppResult.UNSAFE)
     }
 
     @Test
-    fun whenStatusNotHitThenMapToDomainReturnsFailedToVerify() {
+    fun `when status not hit then map to domain returns failed to verify`() {
         val response = DomainScanResponse(status = "miss", isMalicious = false)
         val result = mapper.mapToDomain(response)
-        assertEquals(CheckDAppResult.FAILED_TO_VERIFY, result)
+        Truth.assertThat(result).isEqualTo(CheckDAppResult.FAILED_TO_VERIFY)
     }
 
     @Test
-    fun whenResponseBenignValidationThenReturnsSafeValidation() {
+    fun `when response benign validation then returns safe validation`() {
         val spenderDetails = SpenderDetails(
             isApprovedForAll = true,
             exposure = listOf(ExposureDetail(value = "1000.0", rawValue = "0x123")),
@@ -53,20 +53,20 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(response)
-        assertEquals(ValidationResult.SAFE, result.validation)
+        Truth.assertThat(result.validation).isEqualTo(ValidationResult.SAFE)
 
         val simulation = result.simulation as? SimulationResult.Success
-        assertNotNull(simulation)
+        Truth.assertThat(simulation).isNotNull()
 
         val approve = simulation?.data as? SimulationData.Approve
-        assertNotNull(approve)
-        assertEquals(1, approve?.approvedAmounts?.size)
-        assertEquals(BigDecimal("1000.0"), approve?.approvedAmounts?.first()?.approvedAmount)
-        assertTrue(approve?.approvedAmounts?.first()?.isUnlimited == true)
+        Truth.assertThat(approve).isNotNull()
+        Truth.assertThat(approve?.approvedAmounts?.size).isEqualTo(1)
+        Truth.assertThat(approve?.approvedAmounts?.first()?.approvedAmount).isEqualTo(BigDecimal("1000.0"))
+        Truth.assertThat(approve?.approvedAmounts?.first()?.isUnlimited).isTrue()
     }
 
     @Test
-    fun whenResponseBenignValidationAndSuccessSimulationThenReturnsSendReceiveResult() {
+    fun `when response benign validation and success simulation then returns send receive result`() {
         val assetDiff = AssetDiff(
             assetType = "ERC20",
             asset = Asset(chainId = 1, logoUrl = "logo", symbol = "ETH"),
@@ -82,19 +82,19 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(response)
-        assertEquals(ValidationResult.SAFE, result.validation)
+        Truth.assertThat(result.validation).isEqualTo(ValidationResult.SAFE)
 
         val simulation = result.simulation as? SimulationResult.Success
-        assertNotNull(simulation)
+        Truth.assertThat(simulation).isNotNull()
 
         val data = simulation?.data as? SimulationData.SendAndReceive
-        assertNotNull(data)
-        assertEquals(BigDecimal("1.5"), data?.send?.first()?.amount)
-        assertEquals(BigDecimal("2.0"), data?.receive?.first()?.amount)
+        Truth.assertThat(data).isNotNull()
+        Truth.assertThat(data?.send?.first()?.amount).isEqualTo(BigDecimal("1.5"))
+        Truth.assertThat(data?.receive?.first()?.amount).isEqualTo(BigDecimal("2.0"))
     }
 
     @Test
-    fun whenResponseErrorValidationThenReturnsFailedToValidate() {
+    fun `when response error validation rhen returns failed to validate`() {
         val response = TransactionScanResponse(
             validation = ValidationResponse(status = "Error", resultType = "Benign"),
             simulation = SimulationResponse(
@@ -104,12 +104,12 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(response)
-        assertEquals(ValidationResult.FAILED_TO_VALIDATE, result.validation)
-        assertTrue(result.simulation is SimulationResult.FailedToSimulate)
+        Truth.assertThat(result.validation).isEqualTo(ValidationResult.FAILED_TO_VALIDATE)
+        Truth.assertThat(result.simulation is SimulationResult.FailedToSimulate).isTrue()
     }
 
     @Test
-    fun whenResponseNotBenignThenReturnsValidationUnsafe() {
+    fun `when response not benign then returns validation unsafe`() {
         val response = TransactionScanResponse(
             validation = ValidationResponse(status = "Success", resultType = "Phishing"),
             simulation = SimulationResponse(
@@ -119,11 +119,11 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(response)
-        assertEquals(ValidationResult.UNSAFE, result.validation)
+        Truth.assertThat(result.validation).isEqualTo(ValidationResult.UNSAFE)
     }
 
     @Test
-    fun whenResponseSimulationNotSuccessThenReturnsSimulationFailedToSimulate() {
+    fun `when response simulation not success then returns simulation failed ro simulate`() {
         val response = TransactionScanResponse(
             validation = ValidationResponse(status = "Success", resultType = "Benign"),
             simulation = SimulationResponse(
@@ -133,11 +133,11 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(response)
-        assertTrue(result.simulation is SimulationResult.FailedToSimulate)
+        Truth.assertThat(result.simulation is SimulationResult.FailedToSimulate).isTrue()
     }
 
     @Test
-    fun whenResponseSimulationIsEmptyThenReturnsFailedToSimulate() {
+    fun `when response simulation is empty then returns failed to simulate`() {
         val txResponse = TransactionScanResponse(
             validation = ValidationResponse(status = "Success", resultType = "Benign"),
             simulation = SimulationResponse(
@@ -150,6 +150,6 @@ class BlockAidMapperTest {
         )
 
         val result = mapper.mapToDomain(txResponse)
-        assertTrue(result.simulation is SimulationResult.FailedToSimulate)
+        Truth.assertThat(result.simulation is SimulationResult.FailedToSimulate).isTrue()
     }
 }

@@ -10,13 +10,12 @@ import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionSc
 import com.tangem.datasource.api.common.blockaid.models.request.RpcData
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.response.*
-import javax.inject.Inject
 
 private const val SUCCESS_STATUS = "Success"
 private const val DOMAIN_CHECKED_STATUS = "hit"
 private const val VALIDATION_SAFE_STATUS = "Benign"
 
-internal class BlockAidMapper @Inject constructor() {
+internal class BlockAidMapper {
 
     fun mapToDomain(from: DomainScanResponse): CheckDAppResult {
         return when {

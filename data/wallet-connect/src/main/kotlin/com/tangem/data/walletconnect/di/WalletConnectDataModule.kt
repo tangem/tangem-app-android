@@ -20,6 +20,7 @@ import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
+import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
@@ -71,11 +72,13 @@ internal object WalletConnectDataModule {
         associateNetworksDelegate: AssociateNetworksDelegate,
         caipNamespaceDelegate: CaipNamespaceDelegate,
         sdkDelegate: WcPairSdkDelegate,
+        blockAidVerifier: BlockAidVerifier,
     ): DefaultWcPairUseCase = DefaultWcPairUseCase(
         sessionsManager = sessionsManager,
         associateNetworksDelegate = associateNetworksDelegate,
         caipNamespaceDelegate = caipNamespaceDelegate,
         sdkDelegate = sdkDelegate,
+        blockAidVerifier = blockAidVerifier,
     )
 
     @Provides
