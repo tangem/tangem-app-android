@@ -201,6 +201,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
                     appCurrency = model.appCurrency,
+                    onLoadFee = model::loadFee,
                     sendAmount = sendAmount,
                     destinationAddress = destinationAddress,
                     callback = model,
@@ -240,6 +241,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 appCurrency = model.appCurrency,
                 callback = model,
                 predefinedValues = predefinedValues,
+                onLoadFee = model::loadFee,
             ),
         )
     }
