@@ -233,8 +233,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class OnrampSuccess(
-        val externalTxId: String,
-    ) : AppRoute(path = "/onramp/success/$externalTxId"), RouteBundleParams {
+        val txId: String,
+    ) : AppRoute(path = "/onramp/success/$txId"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
 
