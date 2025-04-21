@@ -47,13 +47,13 @@ internal class DefaultTokenDetailsRouter @Inject constructor(
         )
     }
 
-    override fun openOnrampSuccess(externalTxId: String) {
+    override fun openOnrampSuccess(txId: String) {
         // finish current onramp flow and show onramp success screen
         val replaceOnrampScreens = router.stack
             .filterNot { it is AppRoute.Onramp }
             .toMutableList()
 
-        replaceOnrampScreens.add(AppRoute.OnrampSuccess(externalTxId))
+        replaceOnrampScreens.add(AppRoute.OnrampSuccess(txId))
 
         router.replaceAll(*replaceOnrampScreens.toTypedArray())
     }
