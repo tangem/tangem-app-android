@@ -50,6 +50,8 @@ dependencies {
     /* Other */
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
+    implementation(projects.domain.blockaid)
+    implementation(projects.domain.blockaid.models)
 
     /* Tests */
     testImplementation(projects.common.test)
