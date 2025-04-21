@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.sessions
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.data.walletconnect.utils.WcSdkObserver
@@ -25,7 +26,7 @@ import timber.log.Timber
 import kotlin.coroutines.resume
 import kotlin.time.Duration.Companion.seconds
 
-internal class DefaultWcSessionsManager constructor(
+internal class DefaultWcSessionsManager(
     private val store: WalletConnectStore,
     private val legacyStore: WalletConnectSessionsRepository,
     private val getWallets: GetWalletsUseCase,
@@ -60,7 +61,7 @@ internal class DefaultWcSessionsManager constructor(
     }
 
     override suspend fun saveSession(session: WcSession) {
-        store.saveSession(WcSessionDTO(session.sdkModel.topic, session.wallet.walletId))
+        store.saveSession(WcSessionDTO(session.sdkModel.topic, session.wallet.walletId, session.securityStatus))
     }
 
     override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
@@ -82,13 +83,17 @@ internal class DefaultWcSessionsManager constructor(
     }
 
     override suspend fun findSessionByTopic(topic: String): WcSession? = withContext(dispatchers.io) {
-        val storedSessions = sessions.firstOrNull()
+        val storedSession = sessions.firstOrNull()
             ?.values?.flatten()
             ?.firstOrNull { it.sdkModel.topic == topic }
             ?: return@withContext null
         val sdkSession = WalletKit.getActiveSessionByTopic(topic) ?: return@withContext null
-        val wallet = storedSessions.wallet
-        WcSession(wallet = wallet, sdkModel = WcSdkSessionConverter.convert(sdkSession))
+        val wallet = storedSession.wallet
+        WcSession(
+            wallet = wallet,
+            sdkModel = WcSdkSessionConverter.convert(sdkSession),
+            securityStatus = storedSession.securityStatus,
+        )
     }
 
     override fun onSessionDelete(sessionDelete: Wallet.Model.SessionDelete) {
@@ -104,7 +109,13 @@ internal class DefaultWcSessionsManager constructor(
         val walletIds = wallets.map { wallet -> wallet.walletId }
         val inLegacyStore = walletIds
             .map { walletId ->
-                flow { emit(legacyStore.loadSessions(walletId.stringValue).map { WcSessionDTO(it.topic, walletId) }) }
+                flow {
+                    emit(
+                        legacyStore.loadSessions(walletId.stringValue).map {
+                            WcSessionDTO(it.topic, walletId, CheckDAppResult.FAILED_TO_VERIFY)
+                        },
+                    )
+                }
             }
             .merge()
             .reduce { accumulator, value -> accumulator.plus(value) }
@@ -124,7 +135,7 @@ internal class DefaultWcSessionsManager constructor(
         val wcSessions = inStore.mapNotNull { session ->
             val wallet = wallets.find { it.walletId == session.walletId } ?: return@mapNotNull null
             val sdkSession = inSdk.find { it.topic == session.topic } ?: return@mapNotNull null
-            WcSession(wallet = wallet, sdkModel = WcSdkSessionConverter.convert(sdkSession))
+            WcSession(wallet = wallet, sdkModel = WcSdkSessionConverter.convert(sdkSession), session.securityStatus)
         }
         return wcSessions
     }
