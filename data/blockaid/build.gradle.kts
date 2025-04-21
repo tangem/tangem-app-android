@@ -38,4 +38,5 @@ dependencies {
     testImplementation(deps.test.junit)
     testImplementation(deps.test.mockk)
     testImplementation(deps.test.turbine)
+    testImplementation(deps.test.truth)
 }
