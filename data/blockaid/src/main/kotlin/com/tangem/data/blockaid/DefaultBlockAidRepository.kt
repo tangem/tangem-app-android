@@ -9,9 +9,8 @@ import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.blockaid.models.request.DomainScanRequest
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
-internal class DefaultBlockAidRepository @Inject constructor(
+internal class DefaultBlockAidRepository(
     private val api: BlockAidApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
     private val mapper: BlockAidMapper,
