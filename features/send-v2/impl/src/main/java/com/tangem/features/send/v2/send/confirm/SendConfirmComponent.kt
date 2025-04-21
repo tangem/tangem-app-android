@@ -4,18 +4,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import arrow.core.Either
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.confirm.model.SendConfirmModel
 import com.tangem.features.send.v2.send.confirm.ui.SendConfirmContent
-import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountBlockComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponentParams
@@ -79,6 +82,7 @@ internal class SendConfirmComponent(
             sendAmount = model.confirmData.enteredAmount.orZero(),
             destinationAddress = model.confirmData.enteredDestination.orEmpty(),
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
+            onLoadFee = params.onLoadFee,
         ),
         onResult = model::onFeeResult,
         onClick = model::showEditFee,
@@ -144,6 +148,7 @@ internal class SendConfirmComponent(
         val currentRoute: Flow<CommonSendRoute>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val predefinedValues: PredefinedValues,
+        val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
     )
 
     interface ModelCallback {
