@@ -67,13 +67,13 @@ internal class DefaultWalletRouter @Inject constructor(
         }
     }
 
-    override fun openOnrampSuccessScreen(externalTxId: String) {
+    override fun openOnrampSuccessScreen(txId: String) {
         // finish current onramp flow and show onramp success screen
         val replaceOnrampScreens = router.stack
             .filterNot { it is AppRoute.Onramp }
             .toMutableList()
 
-        replaceOnrampScreens.add(AppRoute.OnrampSuccess(externalTxId))
+        replaceOnrampScreens.add(AppRoute.OnrampSuccess(txId))
 
         router.replaceAll(*replaceOnrampScreens.toTypedArray())
     }
