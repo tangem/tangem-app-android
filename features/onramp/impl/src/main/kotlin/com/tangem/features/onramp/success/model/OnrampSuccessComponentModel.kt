@@ -67,7 +67,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     private fun loadData() {
         modelScope.launch {
-            getOnrampTransactionUseCase(externalTxId = params.externalTxId)
+            getOnrampTransactionUseCase(txId = params.txId)
                 .fold(
                     ifLeft = { error ->
                         Timber.e(error.toString())
