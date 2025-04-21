@@ -3,7 +3,7 @@ package com.tangem.data.staking.utils
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchainsdk.utils.toCoinId
 import com.tangem.blockchainsdk.utils.toMigratedCoinId
-import com.tangem.data.staking.store.YieldsBalancesStore.StakingID
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -31,12 +31,25 @@ internal class StakingIdFactory @Inject constructor(
         }
     }
 
+    suspend fun createForDefault(
+        userWalletId: UserWalletId,
+        currencyId: CryptoCurrency.ID,
+        network: Network,
+    ): StakingID? {
+        val address = walletManagersFacade.getDefaultAddress(userWalletId = userWalletId, network = network)
+        val integrationId = createIntegrationId(currencyId)
+
+        if (address == null || integrationId == null) return null
+
+        return StakingID(integrationId = integrationId, address = address)
+    }
+
     fun createIntegrationId(currencyId: CryptoCurrency.ID): String? {
         val integrationKey = with(currencyId) { rawNetworkId.plus(rawCurrencyId) }
         return integrationIdMap[integrationKey]
     }
 
-    @Suppress("UnusedPrivateMember")
+    @Suppress("UnusedPrivateMember", "unused")
     companion object {
 
         private const val TON_INTEGRATION_ID = "ton-ton-chorus-one-pools-staking"
