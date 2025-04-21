@@ -1,10 +1,14 @@
 package com.tangem.data.walletconnect.pair
 
 import arrow.core.Either
+import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
+import com.domain.blockaid.models.dapp.CheckDAppResult
+import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
+import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.walletconnect.model.WcPairError
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
@@ -28,6 +32,7 @@ internal class DefaultWcPairUseCase(
     private val associateNetworksDelegate: AssociateNetworksDelegate,
     private val caipNamespaceDelegate: CaipNamespaceDelegate,
     private val sdkDelegate: WcPairSdkDelegate,
+    private val blockAidVerifier: BlockAidVerifier,
 ) : WcPairUseCase {
 
     private val onCallTerminalAction = Channel<TerminalAction>()
@@ -71,7 +76,10 @@ internal class DefaultWcPairUseCase(
                 sessionForApprove = sessionForApprove,
                 sdkSessionProposal = sdkSessionProposal,
             ).map { settledSession ->
-                val newSession = settledSession.session.toDomain(sessionForApprove.wallet)
+                val newSession = settledSession.session.toDomain(
+                    wallet = sessionForApprove.wallet,
+                    securityStatus = proposalState.dAppSession.securityStatus,
+                )
                 sessionsManager.saveSession(newSession)
                 newSession
             }
@@ -107,6 +115,10 @@ internal class DefaultWcPairUseCase(
         sessionProposal: Wallet.Model.SessionProposal,
     ): Either<WcPairError, WcPairState.Proposal> = runCatching {
         val proposalNetwork = associateNetworksDelegate.associate(sessionProposal)
+        val verificationInfo = blockAidVerifier.verifyDApp(DAppData(sessionProposal.url)).getOrElse {
+            Timber.e("Failed to verify DApp: ${it.localizedMessage}")
+            CheckDAppResult.FAILED_TO_VERIFY
+        }
         val appMetaData = WcAppMetaData(
             name = sessionProposal.name,
             description = sessionProposal.description,
@@ -117,7 +129,7 @@ internal class DefaultWcPairUseCase(
         val dAppSession = WcSessionProposal(
             dAppMetaData = appMetaData,
             proposalNetwork = proposalNetwork,
-            securityStatus = Any(),
+            securityStatus = verificationInfo,
         )
         WcPairState.Proposal(dAppSession)
     }.fold(onSuccess = { it.right() }, onFailure = {
@@ -127,10 +139,13 @@ internal class DefaultWcPairUseCase(
         }
     },)
 
-    private fun Wallet.Model.Session.toDomain(wallet: UserWallet): WcSession = WcSession(
-        wallet = wallet,
-        sdkModel = WcSdkSessionConverter.convert(this),
-    )
+    private fun Wallet.Model.Session.toDomain(wallet: UserWallet, securityStatus: CheckDAppResult): WcSession {
+        return WcSession(
+            wallet = wallet,
+            sdkModel = WcSdkSessionConverter.convert(this),
+            securityStatus = securityStatus,
+        )
+    }
 
     private sealed interface TerminalAction {
         data class Approve(val sessionForApprove: WcSessionApprove) : TerminalAction
