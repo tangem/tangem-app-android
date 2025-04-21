@@ -1,7 +1,9 @@
 package com.tangem.features.send.v2.sendnft.model
 
 import androidx.compose.runtime.Stable
+import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -14,12 +16,13 @@ import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
-import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.ui.state.NFTSendUM
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
@@ -88,6 +91,23 @@ internal class NFTSendModel @Inject constructor(
         _uiState.update { it.copy(feeUM = feeUM) }
     }
 
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        TODO()
+        // val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
+        // val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+        //     ?: error("Invalid owner address")
+        // val enteredDestinationAddress = destinationUM.addressTextField.value
+        // val nftAsset = null // NFTSdkAssetConverter.convertBack(params.nftAsset).second
+
+        // getNFTTransferFeeUseCase(
+        //     ownerAddress = ownerAddress,
+        //     destinationAddress = enteredDestinationAddress,
+        //     nftAsset = nftAsset,
+        //     userWallet = userWallet,
+        //     cryptoCurrency = cryptoCurrency,
+        // )
+    }
+
     private fun initAppCurrency() {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
@@ -131,7 +151,9 @@ internal class NFTSendModel @Inject constructor(
                         cryptoCurrencyStatus = cryptoStatus,
                     ).getOrNull() ?: cryptoStatus
 
-                    router.replaceAll(CommonSendRoute.Destination(isEditMode = false))
+                    if (uiState.value.destinationUM is DestinationUM.Empty) {
+                        router.replaceAll(CommonSendRoute.Destination(isEditMode = false))
+                    }
                 },
                 ifLeft = {
                     // sendConfirmAlertFactory.getGenericErrorState {
