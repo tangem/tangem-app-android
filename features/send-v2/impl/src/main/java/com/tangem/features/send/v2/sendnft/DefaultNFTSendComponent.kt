@@ -151,6 +151,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                     feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
                     appCurrency = model.appCurrency,
                     sendAmount = BigDecimal.ZERO,
+                    onLoadFee = model::loadFee,
                     destinationAddress = destinationAddress,
                     callback = model,
                     onNextClick = ::onChildBack,
@@ -176,6 +177,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             callback = model,
             currentRoute = currentRouteFlow.filterIsInstance<CommonSendRoute.Confirm>(),
             isBalanceHidingFlow = model.isBalanceHiddenFlow,
+            onLoadFee = model::loadFee,
         ),
     )
 
