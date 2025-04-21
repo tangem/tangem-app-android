@@ -14,6 +14,7 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
     implementation(projects.domain.walletConnect.models)
+    implementation(projects.domain.blockaid.models)
 
     /* Other */
     implementation(deps.moshi.adapters)
