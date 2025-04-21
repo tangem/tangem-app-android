@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import arrow.core.Either
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.child
 import com.tangem.core.decompose.model.getOrCreateModel
@@ -11,6 +13,7 @@ import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -63,6 +66,7 @@ internal class NFTSendConfirmComponent(
             feeCryptoCurrencyStatus = params.feeCryptoCurrencyStatus,
             appCurrency = params.appCurrency,
             sendAmount = BigDecimal.ZERO,
+            onLoadFee = params.onLoadFee,
             destinationAddress = model.confirmData.enteredDestination.orEmpty(),
             blockClickEnableFlow = blockClickEnableFlow.asStateFlow(),
         ),
@@ -139,6 +143,7 @@ internal class NFTSendConfirmComponent(
         val callback: ModelCallback,
         val currentRoute: Flow<CommonSendRoute.Confirm>,
         val isBalanceHidingFlow: StateFlow<Boolean>,
+        val onLoadFee: suspend () -> Either<GetFeeError, TransactionFee>,
     )
 
     interface ModelCallback {
