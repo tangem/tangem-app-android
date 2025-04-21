@@ -25,6 +25,6 @@ interface YieldsBalancesStore {
     /** Store actual [values] by [userWalletId] */
     suspend fun storeActual(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>)
 
-    /** Store error by [userWalletId] and [stakingId] */
-    suspend fun storeError(userWalletId: UserWalletId, stakingId: StakingID)
+    /** Store error by [userWalletId] and [stakingIds] */
+    suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>)
 }
