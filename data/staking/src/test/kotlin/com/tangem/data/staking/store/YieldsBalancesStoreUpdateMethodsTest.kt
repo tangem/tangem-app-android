@@ -137,7 +137,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
 
     @Test
     fun `store error if runtime store is empty`() = runTest {
-        store.storeError(userWalletId = userWalletId, stakingId = stakingId)
+        store.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
         val runtimeExpected = mapOf(
             userWalletId to setOf(
@@ -162,7 +162,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
             ),
         )
 
-        store.storeError(userWalletId = userWalletId, stakingId = stakingId)
+        store.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
         val runtimeExpected = mapOf(
             userWalletId to setOf(wrapper.toDomain(source = StatusSource.ONLY_CACHE)),
