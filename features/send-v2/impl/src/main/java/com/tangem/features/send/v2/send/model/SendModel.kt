@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.send.model
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -26,6 +27,8 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.GetTransferFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
@@ -76,6 +79,7 @@ internal class SendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val getTransferFeeUseCase: GetTransferFeeUseCase,
     private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
 ) : Model(), SendComponentCallback {
 
@@ -124,6 +128,20 @@ internal class SendModel @Inject constructor(
     override fun onResult(sendUM: SendUM) {
         resetPredefinedAmount()
         _uiState.update { sendUM }
+    }
+
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
+        val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
+        val enteredDestinationAddress = destinationUM.addressTextField.value
+        val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
+
+        return getTransferFeeUseCase(
+            destination = enteredDestinationAddress,
+            amount = enteredAmount,
+            userWallet = userWallet,
+            cryptoCurrency = params.currency,
+        )
     }
 
     private fun resetPredefinedAmount() {
