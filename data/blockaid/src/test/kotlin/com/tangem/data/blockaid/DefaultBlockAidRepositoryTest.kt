@@ -5,24 +5,20 @@ import com.domain.blockaid.models.dapp.DAppData
 import com.domain.blockaid.models.transaction.CheckTransactionResult
 import com.domain.blockaid.models.transaction.TransactionData
 import com.domain.blockaid.models.transaction.TransactionParams
+import com.google.common.truth.Truth
 import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.blockaid.models.request.DomainScanRequest
 import com.tangem.datasource.api.common.blockaid.models.request.EvmTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.request.SolanaTransactionScanRequest
 import com.tangem.datasource.api.common.blockaid.models.response.DomainScanResponse
 import com.tangem.datasource.api.common.blockaid.models.response.TransactionScanResponse
-import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
-import org.junit.After
-import org.junit.Assert.assertEquals
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class DefaultBlockAidRepositoryTest {
 
     @MockK
@@ -31,28 +27,18 @@ class DefaultBlockAidRepositoryTest {
     @MockK
     private lateinit var mapper: BlockAidMapper
 
-    @MockK
-    private lateinit var dispatcherProvider: CoroutineDispatcherProvider
-
     private lateinit var repository: DefaultBlockAidRepository
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcherProvider = TestingCoroutineDispatcherProvider()
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        Dispatchers.setMain(testDispatcher)
-        every { dispatcherProvider.io } returns testDispatcher
-        repository = DefaultBlockAidRepository(api, dispatcherProvider, mapper)
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
+        repository = DefaultBlockAidRepository(api, testDispatcherProvider, mapper)
     }
 
     @Test
-    fun whenVerifyAppDomainThenCallsApiAndMapsResult() = runTest {
+    fun `when verify app domain then calls api and maps result`() = runTest {
         val url = "https://example.com"
         val domainData = DAppData(url)
         val domainResponse = DomainScanResponse(status = "hit", isMalicious = false)
@@ -63,13 +49,13 @@ class DefaultBlockAidRepositoryTest {
 
         val result = repository.verifyDAppDomain(domainData)
 
-        assertEquals(expectedResult, result)
+        Truth.assertThat(result).isEqualTo(expectedResult)
         coVerify { api.scanDomain(DomainScanRequest(url)) }
         verify { mapper.mapToDomain(domainResponse) }
     }
 
     @Test
-    fun whenVerifyEvmTransactionThenCallsScanJsonRpcAndMaps() = runTest {
+    fun `when verify evm transaction then calls scan json rpc and maps result`() = runTest {
         val data = TransactionData(
             chain = "ethereum",
             accountAddress = "0xabc",
@@ -88,14 +74,14 @@ class DefaultBlockAidRepositoryTest {
 
         val result = repository.verifyTransaction(data)
 
-        assertEquals(expectedResult, result)
+        Truth.assertThat(result).isEqualTo(expectedResult)
         coVerify { api.scanJsonRpc(request) }
         verify { mapper.mapToEvmRequest(data) }
         verify { mapper.mapToDomain(response) }
     }
 
     @Test
-    fun whenVerifySolanaTransactionThenCallsScanSolanaMessageAndMapsResult() = runTest {
+    fun `when verify solana transaction then calls scan solana message and maps result`() = runTest {
         val data = TransactionData(
             chain = "mainnet",
             accountAddress = "/Rd2TLl...",
@@ -114,7 +100,7 @@ class DefaultBlockAidRepositoryTest {
 
         val result = repository.verifyTransaction(data)
 
-        assertEquals(expectedResult, result)
+        Truth.assertThat(result).isEqualTo(expectedResult)
         coVerify { api.scanSolanaMessage(request) }
         verify { mapper.mapToSolanaRequest(data) }
         verify { mapper.mapToDomain(response) }
