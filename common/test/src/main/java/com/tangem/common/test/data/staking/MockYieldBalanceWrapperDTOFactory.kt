@@ -1,11 +1,11 @@
 package com.tangem.common.test.data.staking
 
-import com.tangem.data.staking.store.YieldsBalancesStore.StakingID
 import com.tangem.datasource.api.stakekit.models.request.Address
 import com.tangem.datasource.api.stakekit.models.response.model.BalanceDTO
 import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.domain.staking.model.StakingID
 import java.math.BigDecimal
 
 /**
