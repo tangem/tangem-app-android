@@ -1,6 +1,7 @@
 package com.tangem.data.staking.store
 
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
@@ -26,6 +27,4 @@ interface YieldsBalancesStore {
 
     /** Store error by [userWalletId] and [stakingId] */
     suspend fun storeError(userWalletId: UserWalletId, stakingId: StakingID)
-
-    data class StakingID(val integrationId: String, val address: String)
 }
