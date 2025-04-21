@@ -859,7 +859,7 @@ internal class StateBuilder(
                         add(
                             resourceReference(
                                 id = R.string.swapping_alert_dex_description_with_slippage,
-                                formatArgs = wrappedList(token, slippage),
+                                formatArgs = wrappedList(slippage),
                             ),
                         )
                     } else {
