@@ -1,11 +1,11 @@
 package com.tangem.data.staking.store
 
 import androidx.datastore.core.DataStore
-import com.tangem.data.staking.store.YieldsBalancesStore.StakingID
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.datastore.RuntimeSharedStore
 import com.tangem.datasource.local.token.converter.YieldBalanceConverter
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
