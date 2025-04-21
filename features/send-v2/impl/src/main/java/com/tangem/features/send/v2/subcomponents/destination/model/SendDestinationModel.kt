@@ -269,8 +269,10 @@ internal class SendDestinationModel @Inject constructor(
 
     private fun autoNextFromRecipient(type: EnterAddressSource?, isValidAddress: Boolean, isValidMemo: Boolean) {
         val isRecent = type == EnterAddressSource.RecentAddress
-        if (isRecent && isValidAddress && isValidMemo) saveResult()
-        (params as? SendDestinationComponentParams.DestinationParams)?.onNextClick?.invoke()
+        if (isRecent && isValidAddress && isValidMemo) {
+            saveResult()
+            (params as? SendDestinationComponentParams.DestinationParams)?.onNextClick?.invoke()
+        }
     }
 
     private fun saveResult() {
