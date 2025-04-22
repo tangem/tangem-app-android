@@ -5,7 +5,7 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class WalletResponse(
-    @Json(name = "notifyStatus") val notifyStatus: String? = null,
-    @Json(name = "name") val name: String? = null,
+    @Json(name = "notifyStatus") val notifyStatus: Boolean,
     @Json(name = "id") val id: String,
+    @Json(name = "name") val name: String? = null,
 )
