@@ -12,8 +12,15 @@ data class VisaAuthTokens(
 ) {
 
     @Serializable
-    @JvmInline
-    value class RefreshToken(val value: String)
+    @JsonClass(generateAdapter = true)
+    data class RefreshToken(
+        @Json(name = "value") val value: String,
+        @Json(name = "authType") val authType: Type,
+    ) {
+        enum class Type {
+            CardId, CardWallet,
+        }
+    }
 }
 
 fun VisaAuthTokens.getAuthHeader(): String {
