@@ -3,6 +3,7 @@ package com.tangem.features.nft.receive.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,6 +17,7 @@ internal fun NFTReceiveNetworksEmpty(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxSize()
+            .padding(TangemTheme.dimens.spacing16)
             .background(TangemTheme.colors.background.secondary),
     ) {
         Text(
