@@ -5,13 +5,12 @@ import arrow.core.left
 import arrow.core.right
 import com.tangem.data.walletconnect.sign.FinalActionCollector
 import com.tangem.data.walletconnect.sign.MiddleActionCollector
+import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
 import com.tangem.data.walletconnect.sign.WcSignUseCaseDelegate
 import com.tangem.domain.walletconnect.usecase.sign.WcSignState
 import com.tangem.domain.walletconnect.usecase.sign.WcSignStep
-import io.mockk.every
-import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
@@ -21,12 +20,10 @@ import org.junit.Test
 
 internal class WcSignUseCaseDelegateTest {
 
-    private val middleActionCollector = mockk<MiddleActionCollector<TestMiddleAction, TestSignModel>>()
-    private val finalActionCollector = mockk<FinalActionCollector<TestSignModel>>()
-    private val useCase = WcSignUseCaseDelegate(
-        finalActionCollector = finalActionCollector,
-        middleActionCollector = middleActionCollector,
-    )
+    private var middleActionCollector: MiddleActionCollector<TestMiddleAction, TestSignModel> =
+        object : MiddleActionCollector<TestMiddleAction, TestSignModel> {}
+    private var finalActionCollector: FinalActionCollector<TestSignModel> =
+        object : FinalActionCollector<TestSignModel> {}
     private val initSignModel = TestSignModel()
 
     private val initState = WcSignState(initSignModel, WcSignStep.PreSign)
@@ -51,14 +48,21 @@ internal class WcSignUseCaseDelegateTest {
 
     @Before
     fun setup() {
-        every { middleActionCollector.onMiddleAction } returns { _, _ -> }
-        every { finalActionCollector.onSign } returns { }
-        every { finalActionCollector.onCancel } returns { }
+        middleActionCollector = object : MiddleActionCollector<TestMiddleAction, TestSignModel> {}
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {}
     }
 
     @Test
     fun `invoke and keep flow running`() = runTest {
-        every { finalActionCollector.onSign } returns successSign
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                successSign(state)
+            }
+        }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initSignModel).test {
             assertEquals(initState, awaitItem())
@@ -68,7 +72,15 @@ internal class WcSignUseCaseDelegateTest {
 
     @Test
     fun `success sign, keep flow running`() = runTest {
-        every { finalActionCollector.onSign } returns successSign
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                successSign(state)
+            }
+        }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initModel = initSignModel).test {
             assertEquals(initState, awaitItem())
@@ -82,7 +94,15 @@ internal class WcSignUseCaseDelegateTest {
     @Test
     fun `failed sign, keep flow running`() = runTest {
         val failedResult = signing.toResult(testException.left())
-        every { finalActionCollector.onSign } returns failedSign
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                failedSign(state)
+            }
+        }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initSignModel).test {
             assertEquals(initState, awaitItem())
@@ -97,10 +117,16 @@ internal class WcSignUseCaseDelegateTest {
     fun `failed sign and catch unknown exception`() = runTest {
         val exception = RuntimeException("asd")
         val expectedErrorState = signing.toResult(exception.left())
-        every { finalActionCollector.onSign } returns {
-            delay(2)
-            throw exception
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                delay(2)
+                throw exception
+            }
         }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initSignModel).test {
             assertEquals(initState, awaitItem())
@@ -113,10 +139,16 @@ internal class WcSignUseCaseDelegateTest {
 
     @Test
     fun `interrupt signing and complete flow on cancel call`() = runTest {
-        every { finalActionCollector.onSign } returns {
-            delay(5)
-            emit(result)
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                delay(5)
+                emit(result)
+            }
         }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initSignModel).test {
             assertEquals(initState, awaitItem())
@@ -135,13 +167,19 @@ internal class WcSignUseCaseDelegateTest {
         val startLoading2 = WcSignState(TestSignModel("startLoading 2"), WcSignStep.Signing)
         val expectedSignResult = result
 
-        every { finalActionCollector.onSign } returns {
-            // should emit single time in this test
-            emit(if (count % 2 == 0) startLoading else startLoading2)
-            count = count.inc()
-            delay(10)
-            emit(expectedSignResult)
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                // should emit single time in this test
+                emit(if (count % 2 == 0) startLoading else startLoading2)
+                count = count.inc()
+                delay(10)
+                emit(expectedSignResult)
+            }
         }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initSignModel).test {
             useCase.sign()
@@ -177,14 +215,24 @@ internal class WcSignUseCaseDelegateTest {
             domainStep = WcSignStep.PreSign,
         )
 
-        every { finalActionCollector.onSign } returns {
-            delay(6)
-            emit(failedSign)
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                delay(6)
+                emit(failedSign)
+            }
         }
-
-        every { middleActionCollector.onMiddleAction } returns { currentState, middleAction ->
-            emit(currentState.signModel.copy(testStr = middleAction.newTestStr))
+        middleActionCollector = object : MiddleActionCollector<TestMiddleAction, TestSignModel> {
+            override suspend fun FlowCollector<TestSignModel>.onMiddleAction(
+                signModel: TestSignModel,
+                middleAction: TestMiddleAction,
+            ) {
+                emit(signModel.copy(testStr = middleAction.newTestStr))
+            }
         }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initSignModel).test {
             delay(2)
@@ -214,11 +262,24 @@ internal class WcSignUseCaseDelegateTest {
         val expectedFirst = initState.copy(signModel = firstTextMode)
         val expectedSecond = initState.copy(signModel = TestSignModel(TestMiddleAction.Two().newTestStr))
 
-        every { finalActionCollector.onSign } returns successSign
-        every { middleActionCollector.onMiddleAction } returns { currentState, middleAction ->
-            emit(currentState.signModel.copy(testStr = middleAction.newTestStr))
-            delay(4)
+        finalActionCollector = object : FinalActionCollector<TestSignModel> {
+            override suspend fun SignCollector<TestSignModel>.onSign(state: WcSignState<TestSignModel>) {
+                successSign(state)
+            }
         }
+        middleActionCollector = object : MiddleActionCollector<TestMiddleAction, TestSignModel> {
+            override suspend fun FlowCollector<TestSignModel>.onMiddleAction(
+                signModel: TestSignModel,
+                middleAction: TestMiddleAction,
+            ) {
+                emit(signModel.copy(testStr = middleAction.newTestStr))
+                delay(4)
+            }
+        }
+        val useCase = WcSignUseCaseDelegate(
+            finalActionCollector = finalActionCollector,
+            middleActionCollector = middleActionCollector,
+        )
 
         useCase.invoke(initSignModel).test {
             assertEquals(initState, awaitItem())
