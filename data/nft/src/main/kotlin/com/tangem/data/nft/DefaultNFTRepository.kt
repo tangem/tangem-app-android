@@ -2,7 +2,9 @@ package com.tangem.data.nft
 
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.nft.NFTPersistenceStore
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStore
@@ -10,6 +12,7 @@ import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
@@ -37,6 +40,8 @@ internal class DefaultNFTRepository @Inject constructor(
     private val nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val excludedBlockchains: ExcludedBlockchains,
+    private val userWalletsStore: UserWalletsStore,
 ) : NFTRepository {
 
     private val networkJobs = ConcurrentHashMap<Network, JobHolder>()
@@ -128,6 +133,24 @@ internal class DefaultNFTRepository @Inject constructor(
     }
 
     override suspend fun isNFTSupported(network: Network): Boolean = network.canHandleNFTs()
+
+    override suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network> {
+        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
+            "User wallet [$userWalletId] not found"
+        }
+        return Blockchain
+            .entries
+            .filter { it.canHandleNFTs() }
+            .filter { !it.isTestnet() }
+            .mapNotNull {
+                getNetwork(
+                    blockchain = it,
+                    extraDerivationPath = null,
+                    scanResponse = userWallet.scanResponse,
+                    excludedBlockchains = excludedBlockchains,
+                )
+            }
+    }
 
     override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? =
         walletManagersFacade.getNFTExploreUrl(
