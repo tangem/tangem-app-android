@@ -148,6 +148,10 @@ internal class SetOnrampSuccessContentConverter(
             this == OnrampStatus.Status.Paid -> {
                 resourceReference(R.string.express_status_buying_active, wrappedList(cryptoCurrency.name))
             }
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_failed)
+            }
             else -> {
                 resourceReference(R.string.express_status_bought, wrappedList(cryptoCurrency.name))
             }
@@ -165,6 +169,12 @@ internal class SetOnrampSuccessContentConverter(
                     R.string.express_exchange_status_sending_active,
                     wrappedList(cryptoCurrency.name),
                 )
+            }
+            this == OnrampStatus.Status.RefundInProgress -> {
+                resourceReference(R.string.express_exchange_status_refunding)
+            }
+            this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_refunded)
             }
             else -> {
                 resourceReference(R.string.express_exchange_status_sent, wrappedList(cryptoCurrency.name))
