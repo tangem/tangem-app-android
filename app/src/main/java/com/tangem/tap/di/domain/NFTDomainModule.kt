@@ -57,7 +57,7 @@ internal object NFTDomainModule {
     fun providesGetNFTAvailableNetworksUseCase(
         nftRepository: NFTRepository,
         currenciesRepository: CurrenciesRepository,
-    ): GetNFTAvailableNetworksUseCase = GetNFTAvailableNetworksUseCase(
+    ): GetNFTNetworksUseCase = GetNFTNetworksUseCase(
         currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
     )
