@@ -4,9 +4,8 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
-data class SetPinCodeRequest(
-    @Json(name = "order_id") val orderId: String,
+data class GetAccessTokenByCardWalletRequest(
+    @Json(name = "auth_type") val authType: String = "card_wallet",
     @Json(name = "session_id") val sessionId: String,
-    @Json(name = "iv") val iv: String,
-    @Json(name = "pin") val pin: String,
+    @Json(name = "signature") val signature: String,
 )
