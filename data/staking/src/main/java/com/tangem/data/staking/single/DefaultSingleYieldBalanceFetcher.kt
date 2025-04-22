@@ -11,6 +11,7 @@ import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import javax.inject.Inject
 
 /**
  * Default implementation of [MultiYieldBalanceFetcher]
@@ -23,7 +24,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
  *
 * [REDACTED_AUTHOR]
  */
-internal class DefaultSingleYieldBalanceFetcher(
+internal class DefaultSingleYieldBalanceFetcher @Inject constructor(
     private val stakingYieldsStore: StakingYieldsStore,
     private val yieldsBalancesStore: YieldsBalancesStore,
     private val stakingIdFactory: StakingIdFactory,

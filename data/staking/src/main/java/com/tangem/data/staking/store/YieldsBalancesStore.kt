@@ -16,6 +16,12 @@ interface YieldsBalancesStore {
     /** Get flow of [YieldBalance]'s set by [userWalletId] */
     fun get(userWalletId: UserWalletId): Flow<Set<YieldBalance>>
 
+    /** Get [YieldBalance] by [userWalletId] and [stakingId] synchronously or null */
+    suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): YieldBalance?
+
+    /**  Get all [YieldBalance] by [userWalletId] synchronously or null */
+    suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>?
+
     /** Refresh balance of [stakingId] by [userWalletId] */
     suspend fun refresh(userWalletId: UserWalletId, stakingId: StakingID)
 

@@ -33,14 +33,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
     fun `refresh the single id if runtime store is empty`() = runTest {
         store.refresh(userWalletId = userWalletId, stakingId = stakingId)
 
-        val runtimeExpected = mapOf(
-            userWalletId to setOf(
-                YieldBalance.Error(
-                    integrationId = stakingId.integrationId,
-                    address = stakingId.address,
-                ),
-            ),
-        )
+        val runtimeExpected = mapOf(userWalletId to emptySet<YieldBalance>())
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<YieldBalanceWrapperDTO>>())
@@ -70,11 +63,7 @@ internal class YieldsBalancesStoreUpdateMethodsTest {
     fun `refresh the multi ids if runtime store is empty`() = runTest {
         store.refresh(userWalletId = userWalletId, stakingIds = stakingIds)
 
-        val runtimeExpected = mapOf(
-            userWalletId to stakingIds.mapTo(hashSetOf()) {
-                YieldBalance.Error(integrationId = it.integrationId, address = it.address)
-            },
-        )
+        val runtimeExpected = mapOf(userWalletId to emptySet<YieldBalance>())
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<YieldBalanceWrapperDTO>>())

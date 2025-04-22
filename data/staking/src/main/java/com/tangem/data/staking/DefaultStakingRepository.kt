@@ -24,6 +24,8 @@ import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
+import com.tangem.data.staking.store.YieldsBalancesStore
+import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.data.staking.utils.StakingIdFactory.Companion.integrationIdMap
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
@@ -65,7 +67,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
@@ -76,11 +77,13 @@ internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingBalanceStore: StakingBalanceStore,
+    private val stakingBalanceStoreV2: YieldsBalancesStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val stakingFeatureToggles: StakingFeatureToggles,
+    private val stakingIdFactory: StakingIdFactory,
     moshi: Moshi,
 ) : StakingRepository {
 
@@ -429,7 +432,7 @@ internal class DefaultStakingRepository(
         }
     }.cancellable()
 
-    override suspend fun getSingleYieldBalanceSync(
+    override suspend fun getSingleYieldBalanceSyncLegacy(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): YieldBalance = withContext(dispatchers.io) {
@@ -445,6 +448,20 @@ internal class DefaultStakingRepository(
             stakingID = StakingBalanceStore.StakingID(integrationId = integrationId, address = address),
         )
             ?: YieldBalance.Error(integrationId, address)
+    }
+
+    override suspend fun getSingleYieldBalanceSync(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): YieldBalance {
+        val stakingId = stakingIdFactory.createForDefault(
+            userWalletId = userWalletId,
+            currencyId = cryptoCurrency.id,
+            network = cryptoCurrency.network,
+        ) ?: error("Could not create stakingId")
+
+        return stakingBalanceStoreV2.getSyncOrNull(userWalletId = userWalletId, stakingId = stakingId)
+            ?: YieldBalance.Error(integrationId = stakingId.integrationId, address = stakingId.address)
     }
 
     @Suppress("LongMethod")
@@ -559,26 +576,7 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override fun getMultiYieldBalanceUpdatesLegacy(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList> = channelFlow {
-        stakingBalanceStore.get(
-            userWalletId = userWalletId,
-            stakingIds = cryptoCurrencies.mapStakingId(userWalletId),
-        )
-            .onEach {
-                val balances = YieldBalanceListConverter.convert(it)
-                send(balances)
-            }
-            .launchIn(scope = this + dispatchers.io)
-
-        withContext(dispatchers.io) {
-            fetchMultiYieldBalance(userWalletId, cryptoCurrencies, refresh = false)
-        }
-    }
-
-    override suspend fun getMultiYieldBalanceSync(
+    override suspend fun getMultiYieldBalanceSyncLegacy(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList = withContext(dispatchers.io) {
@@ -586,6 +584,20 @@ internal class DefaultStakingRepository(
 
         stakingBalanceStore.getSyncOrNull(userWalletId, cryptoCurrencies.mapStakingId(userWalletId))
             ?.let(YieldBalanceListConverter::convert)
+            ?: YieldBalanceList.Error
+    }
+
+    override suspend fun getMultiYieldBalanceSync(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): YieldBalanceList {
+        val stakingIds = cryptoCurrencies.flatMap {
+            stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
+        }
+
+        return stakingBalanceStoreV2.getAllSyncOrNull(userWalletId)
+            ?.filter { it.getStakingId() in stakingIds }
+            ?.let { YieldBalanceListConverter.convert(value = it.toSet()) }
             ?: YieldBalanceList.Error
     }
 
