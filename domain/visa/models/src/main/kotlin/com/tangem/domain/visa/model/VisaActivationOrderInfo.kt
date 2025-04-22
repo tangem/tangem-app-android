@@ -10,4 +10,5 @@ data class VisaActivationOrderInfo(
     @Json(name = "orderId") val orderId: String,
     @Json(name = "customerId") val customerId: String,
     @Json(name = "customerWalletAddress") val customerWalletAddress: String,
+    @Json(name = "cardWalletAddress") val cardWalletAddress: String?,
 )
