@@ -291,6 +291,8 @@ include(":domain:networks")
 include(":domain:quotes")
 include(":domain:blockaid")
 include(":domain:blockaid:models")
+include(":domain:notifications")
+include(":domain:notifications:models")
 // endregion Domain modules
 
 // region Data modules
@@ -318,5 +320,6 @@ include(":data:networks")
 include(":data:nft")
 include(":data:onramp")
 include(":data:quotes")
+include(":data:notifications")
 include(":data:blockaid")
 // endregion Data modules
