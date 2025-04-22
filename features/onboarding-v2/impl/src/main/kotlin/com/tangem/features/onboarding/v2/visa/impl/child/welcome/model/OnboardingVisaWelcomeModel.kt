@@ -15,7 +15,6 @@ import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.OnboardingVisaWelcomeComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.OnboardingVisaWelcomeComponent.DoneEvent
-import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.ONBOARDING_SOURCE
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.ui.state.OnboardingVisaWelcomeUM
@@ -96,9 +95,7 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
                 is CompletionResult.Failure -> {
                     loading(false)
                     uiMessageSender.showErrorDialog(result.error.universalError)
-                    analyticsEventsHandler.send(
-                        VisaAnalyticsEvent.Errors(result.error.code.toString(), ONBOARDING_SOURCE),
-                    )
+                    analyticsEventsHandler.send(VisaAnalyticsEvent.ErrorOnboarding(result.error.universalError))
                     return@launch
                 }
                 is CompletionResult.Success -> result.data
@@ -112,15 +109,17 @@ internal class OnboardingVisaWelcomeModel @Inject constructor(
                 return@launch
             }
 
-            val targetAddress = result.data.signedActivationData.dataToSign.request.customerWalletAddress
+            val request = result.data.signedActivationData.dataToSign.request
+            val targetAddress = request.activationOrderInfo.customerWalletAddress
 
             modelScope.launch {
                 onDone.emit(
                     DoneEvent.WelcomeBackDone(
                         ActivationReadyEvent(
                             customerWalletDataToSignRequest = VisaCustomerWalletDataToSignRequest(
-                                orderId = result.data.signedActivationData.dataToSign.request.orderId,
-                                cardWalletAddress = result.data.signedActivationData.cardWalletAddress,
+                                orderId = request.activationOrderInfo.orderId,
+                                cardWalletAddress = request.cardWalletAddress,
+                                customerWalletAddress = targetAddress,
                             ),
                             newScanResponse = params.scanResponse.copy(
                                 card = result.data.newCardDTO,
