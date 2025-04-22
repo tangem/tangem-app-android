@@ -1,8 +1,7 @@
 package com.tangem.features.nft.collections.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -150,7 +149,11 @@ private fun LazyListScope.assetsListLoading(
         item(
             key = "loading_${collectionId}_$rowIndex",
         ) {
-            AnimatedVisibility(visible = expanded) {
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
                 val paddingValues = PaddingValues(
                     start = TangemTheme.dimens.spacing6,
                     top = TangemTheme.dimens.spacing6,
@@ -160,8 +163,7 @@ private fun LazyListScope.assetsListLoading(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(TangemTheme.dimens.spacing6)
-                        .animateContentSize(),
+                        .padding(TangemTheme.dimens.spacing6),
                 ) {
                     NFTCollectionAssetLoading(
                         modifier = Modifier
@@ -195,12 +197,15 @@ private fun LazyListScope.assetsListFailed(
     item(
         key = "failed_$collectionId",
     ) {
-        AnimatedVisibility(visible = expanded) {
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically(),
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(TangemTheme.dimens.size142)
-                    .animateContentSize(),
+                    .height(TangemTheme.dimens.size142),
                 contentAlignment = Alignment.Center,
             ) {
                 UnableToLoadData(
@@ -225,7 +230,11 @@ private fun LazyListScope.assetsListContent(
         item(
             key = "content_${collectionId}_${item1.id}_${item2?.id}",
         ) {
-            AnimatedVisibility(visible = expanded) {
+            AnimatedVisibility(
+                visible = expanded,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically(),
+            ) {
                 val paddingValues = PaddingValues(
                     start = TangemTheme.dimens.spacing6,
                     top = TangemTheme.dimens.spacing6,
@@ -235,8 +244,7 @@ private fun LazyListScope.assetsListContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(TangemTheme.dimens.spacing6)
-                        .animateContentSize(),
+                        .padding(TangemTheme.dimens.spacing6),
                 ) {
                     NFTCollectionAsset(
                         modifier = Modifier
