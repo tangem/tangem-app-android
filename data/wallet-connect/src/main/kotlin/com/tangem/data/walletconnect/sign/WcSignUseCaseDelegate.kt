@@ -42,7 +42,7 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
 
         fun listenMiddle() = middleActionsChannel.receiveAsFlow()
             .buffer()
-            .transform { middleActions -> this.onMiddleAction(state.value, middleActions) }
+            .transform { middleActions -> this.onMiddleAction(state.value.signModel, middleActions) }
             .onEach { updatedModel -> state.update { it.toPreSign(updatedModel) } }
             .launchIn(this)
 
@@ -61,7 +61,7 @@ internal class WcSignUseCaseDelegate<MiddleAction, SignModel>(
             .transformLatest<Action, Unit> { finalAction ->
                 when (finalAction) {
                     Action.Cancel -> {
-                        onCancel.invoke(state.value)
+                        onCancel(state.value)
                         channel.close()
                     }
                     Action.Sign -> {
