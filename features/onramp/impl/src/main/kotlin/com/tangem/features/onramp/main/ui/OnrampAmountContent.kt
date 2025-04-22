@@ -42,16 +42,13 @@ internal fun OnrampAmountContent(state: OnrampAmountBlockUM, modifier: Modifier 
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         OnrampCurrencyIcon(currencyUM = state.currencyUM)
-        OnrampAmountField(
-            amountField = state.amountFieldModel,
-            isLoading = state.secondaryFieldModel is OnrampAmountSecondaryFieldUM.Loading,
-        )
+        OnrampAmountField(amountField = state.amountFieldModel)
         OnrampAmountSecondary(state = state.secondaryFieldModel)
     }
 }
 
 @Composable
-private fun OnrampAmountField(amountField: AmountFieldModel, isLoading: Boolean) {
+private fun OnrampAmountField(amountField: AmountFieldModel) {
     val decimalFormat = rememberDecimalFormat()
     val requester = remember { FocusRequester() }
     AmountTextField(
@@ -70,7 +67,7 @@ private fun OnrampAmountField(amountField: AmountFieldModel, isLoading: Boolean)
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         ),
-        isEnabled = !amountField.isError && !isLoading,
+        isEnabled = !amountField.isError,
         isAutoResize = true,
         isValuePasted = amountField.isValuePasted,
         onValuePastedTriggerDismiss = amountField.onValuePastedTriggerDismiss,
