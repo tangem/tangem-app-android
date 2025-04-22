@@ -4,14 +4,16 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.nft.FilterNFTAvailableNetworksUseCase
-import com.tangem.domain.nft.GetNFTAvailableNetworksUseCase
+import com.tangem.domain.nft.GetNFTNetworksUseCase
 import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
 import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.tokens.model.Network
@@ -34,12 +36,13 @@ import javax.inject.Inject
 internal class NFTReceiveModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val searchManager: InputManager,
-    private val getNFTAvailableNetworksUseCase: GetNFTAvailableNetworksUseCase,
+    private val getNFTNetworksUseCase: GetNFTNetworksUseCase,
     private val filterNFTAvailableNetworksUseCase: FilterNFTAvailableNetworksUseCase,
     private val getNFTNetworkStatusUseCase: GetNFTNetworkStatusUseCase,
     private val clipboardManager: ClipboardManager,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val messageSender: UiMessageSender,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -53,7 +56,10 @@ internal class NFTReceiveModel @Inject constructor(
                 formatArgs = wrappedList(params.walletName),
             ),
             search = getInitialSearchBar(),
-            networks = NFTReceiveUM.Networks.Content(persistentListOf()),
+            networks = NFTReceiveUM.Networks.Content(
+                availableItems = persistentListOf(),
+                notAvailableItems = persistentListOf(),
+            ),
             bottomSheetConfig = null,
         ),
     )
@@ -67,7 +73,7 @@ internal class NFTReceiveModel @Inject constructor(
 
     private fun subscribeToNFTAvailableNetworks() {
         combine(
-            flow = getNFTAvailableNetworksUseCase(params.userWalletId),
+            flow = getNFTNetworksUseCase(params.userWalletId),
             flow2 = searchManager.query.distinctUntilChanged(),
         ) { networks, query ->
             filterNFTAvailableNetworksUseCase(networks, query)
@@ -113,31 +119,40 @@ internal class NFTReceiveModel @Inject constructor(
         }
     }
 
-    private fun onNetworkClick(network: Network) {
-        modelScope.launch {
-            analyticsEventHandler.send(NFTAnalyticsEvent.Receive.BlockchainChosen(network.name))
+    private fun onNetworkClick(network: Network, enabled: Boolean) {
+        if (!enabled) {
+            val message = DialogMessage(
+                title = resourceReference(R.string.nft_receive_unavailable_asset_warning_title),
+                message = resourceReference(R.string.nft_receive_unavailable_asset_warning_message),
+            )
 
-            val networkStatus = getNFTNetworkStatusUseCase.invoke(
-                userWalletId = params.userWalletId,
-                network = network,
-            ) ?: return@launch
+            messageSender.send(message)
+        } else {
+            modelScope.launch {
+                analyticsEventHandler.send(NFTAnalyticsEvent.Receive.BlockchainChosen(network.name))
 
-            when (val value = networkStatus.value) {
-                is NetworkStatus.Verified -> {
-                    _state.update {
-                        ShowReceiveBottomSheetTransformer(
-                            network = network,
-                            networkAddress = value.address,
-                            onDismissBottomSheet = ::onReceiveBottomSheetDismiss,
-                            onCopyClick = { text -> onCopyClick(text, network) },
-                            onShareClick = { text -> onShareClick(text, network) },
-                        ).transform(it)
+                val networkStatus = getNFTNetworkStatusUseCase.invoke(
+                    userWalletId = params.userWalletId,
+                    network = network,
+                ) ?: return@launch
+
+                when (val value = networkStatus.value) {
+                    is NetworkStatus.Verified -> {
+                        _state.update {
+                            ShowReceiveBottomSheetTransformer(
+                                network = network,
+                                networkAddress = value.address,
+                                onDismissBottomSheet = ::onReceiveBottomSheetDismiss,
+                                onCopyClick = { text -> onCopyClick(text, network) },
+                                onShareClick = { text -> onShareClick(text, network) },
+                            ).transform(it)
+                        }
                     }
+                    is NetworkStatus.MissedDerivation,
+                    is NetworkStatus.NoAccount,
+                    is NetworkStatus.Unreachable,
+                    -> Unit
                 }
-                is NetworkStatus.MissedDerivation,
-                is NetworkStatus.NoAccount,
-                is NetworkStatus.Unreachable,
-                -> Unit
             }
         }
     }
