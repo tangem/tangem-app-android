@@ -11,6 +11,7 @@ import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
@@ -409,6 +410,7 @@ internal object TokensDomainModule {
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
         singleQuoteSupplier: SingleQuoteSupplier,
+        singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     ): BaseCurrenciesStatusesOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -421,6 +423,7 @@ internal object TokensDomainModule {
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
             singleQuoteSupplier = singleQuoteSupplier,
+            singleYieldBalanceSupplier = singleYieldBalanceSupplier,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -439,6 +442,7 @@ internal object TokensDomainModule {
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
         singleQuoteSupplier: SingleQuoteSupplier,
+        singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     ): BaseCurrencyStatusOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -451,6 +455,7 @@ internal object TokensDomainModule {
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
             singleQuoteSupplier = singleQuoteSupplier,
+            singleYieldBalanceSupplier = singleYieldBalanceSupplier,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
