@@ -15,7 +15,7 @@ internal class TangemVisa(
 
     private fun createProdEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.PROD,
-        baseUrl = "https://bff.tangem.com/",
+        baseUrl = "[REDACTED_ENV_URL]",
         headers = createHeaders(),
     )
 
