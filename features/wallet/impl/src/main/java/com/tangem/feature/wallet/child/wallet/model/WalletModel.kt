@@ -402,6 +402,13 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
+        if (action.selectedWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+            modelScope.launch {
+                fetchCurrencyStatusUseCase(userWalletId = action.selectedWallet.walletId)
+                    .onLeft { Timber.e(it.toString()) }
+            }
+        }
+
         stateHolder.update(
             AddWalletTransformer(
                 userWallet = action.selectedWallet,
