@@ -18,5 +18,7 @@ interface NFTRepository {
 
     suspend fun isNFTSupported(network: Network): Boolean
 
+    suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network>
+
     suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
 }
