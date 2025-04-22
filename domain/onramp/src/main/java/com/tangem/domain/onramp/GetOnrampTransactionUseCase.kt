@@ -11,10 +11,10 @@ class GetOnrampTransactionUseCase(
     private val errorResolver: OnrampErrorResolver,
 ) {
 
-    suspend operator fun invoke(externalTxId: String): Either<OnrampError, OnrampTransaction> {
+    suspend operator fun invoke(txId: String): Either<OnrampError, OnrampTransaction> {
         return Either.catch {
             requireNotNull(
-                onrampTransactionRepository.getTransactionById(externalTxId),
+                onrampTransactionRepository.getTransactionById(txId),
             )
         }.mapLeft(errorResolver::resolve)
     }
