@@ -1,7 +1,6 @@
 package com.tangem.features.nft.receive.ui
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -51,18 +50,9 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
                     colors = TangemSearchBarDefaults.secondaryTextFieldColors,
                 )
 
-                val contentModifier = Modifier
-                    .padding(TangemTheme.dimens.spacing16)
-
-                AnimatedContent(
-                    targetState = state.networks,
-                    contentKey = { it::class },
-                    label = "NFT Receive",
-                ) {
-                    when (val networks = it) {
-                        is NFTReceiveUM.Networks.Content -> NFTReceiveNetworksContent(networks, contentModifier)
-                        is NFTReceiveUM.Networks.Empty -> NFTReceiveNetworksEmpty(contentModifier)
-                    }
+                when (val networks = state.networks) {
+                    is NFTReceiveUM.Networks.Content -> NFTReceiveNetworksContent(networks)
+                    is NFTReceiveUM.Networks.Empty -> NFTReceiveNetworksEmpty()
                 }
             }
         },
