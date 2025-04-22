@@ -5,10 +5,10 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class NotificationApplicationCreateBody(
-    @Json(name = "pushToken") val pushToken: String,
-    @Json(name = "platform") val platform: String,
-    @Json(name = "device") val device: String,
-    @Json(name = "systemVersion") val systemVersion: String,
-    @Json(name = "language") val language: String,
-    @Json(name = "timezone") val timezone: String,
+    @Json(name = "pushToken") val pushToken: String? = null,
+    @Json(name = "platform") val platform: String? = null,
+    @Json(name = "device") val device: String? = null,
+    @Json(name = "systemVersion") val systemVersion: String? = null,
+    @Json(name = "language") val language: String? = null,
+    @Json(name = "timezone") val timezone: String? = null,
 )
