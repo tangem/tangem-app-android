@@ -21,6 +21,8 @@ import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.single.SingleYieldBalanceProducer
+import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.*
@@ -46,6 +48,7 @@ class CachedCurrenciesStatusesOperations(
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
     private val singleQuoteSupplier: SingleQuoteSupplier,
+    private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
@@ -57,6 +60,7 @@ class CachedCurrenciesStatusesOperations(
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
         singleQuoteSupplier = singleQuoteSupplier,
+        singleYieldBalanceSupplier = singleYieldBalanceSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
 
@@ -353,15 +357,19 @@ class CachedCurrenciesStatusesOperations(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): EitherFlow<TokenListError, YieldBalanceList> {
-        return stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
-            .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
-            .retryWhen { cause, _ ->
-                emit(TokenListError.DataError(cause).left())
-                // adding delay before retry to avoid spam when flow restarted
-                delay(RETRY_DELAY)
-                true
-            }
-            .distinctUntilChanged()
+        return if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
+            getYieldsBalancesUpdates(userWalletId, cryptoCurrencies)
+        } else {
+            stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
+                .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
+                .retryWhen { cause, _ ->
+                    emit(TokenListError.DataError(cause).left())
+                    // adding delay before retry to avoid spam when flow restarted
+                    delay(RETRY_DELAY)
+                    true
+                }
+                .distinctUntilChanged()
+        }
     }
 
     // temporary code because token list is built using networks list
@@ -420,6 +428,50 @@ class CachedCurrenciesStatusesOperations(
                 .launchIn(scope = this)
         }
             .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
+            .distinctUntilChanged()
+    }
+
+    // temporary code because token list is built using networks list
+    private fun getYieldsBalancesUpdates(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): EitherFlow<TokenListError, YieldBalanceList> {
+        return channelFlow {
+            val state = MutableStateFlow(emptyList<YieldBalance>())
+
+            cryptoCurrencies.onEach {
+                launch {
+                    singleYieldBalanceSupplier(
+                        params = SingleYieldBalanceProducer.Params(
+                            userWalletId = userWalletId,
+                            currencyId = it.id,
+                            network = it.network,
+                        ),
+                    )
+                        .onEach { balance ->
+                            state.update { loadedBalances ->
+                                loadedBalances.addOrReplace(balance) {
+                                    it.integrationId == balance.integrationId && it.address == balance.address
+                                }
+                            }
+                        }
+                        .launchIn(scope = this)
+                }
+            }
+
+            state
+                .onEach(::send)
+                .launchIn(scope = this)
+        }
+            .map<List<YieldBalance>, Either<TokenListError, YieldBalanceList>> { balances ->
+                val yieldBalanceList = if (balances.isEmpty()) {
+                    YieldBalanceList.Empty
+                } else {
+                    YieldBalanceList.Data(balances)
+                }
+
+                yieldBalanceList.right()
+            }
             .distinctUntilChanged()
     }
 
