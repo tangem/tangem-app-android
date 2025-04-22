@@ -9,10 +9,10 @@ import com.tangem.domain.staking.model.StakingID
  *
 [REDACTED_AUTHOR]
  */
-internal interface YieldBalanceFetcherImplementor<out Params : YieldBalanceFetcherParams> {
+internal interface YieldBalanceFetcherImplementor<in Params : YieldBalanceFetcherParams> {
 
     /** Create set of [StakingID] */
-    suspend fun createStakingIds(params: @UnsafeVariance Params): Set<StakingID>
+    suspend fun createStakingIds(params: Params): Set<StakingID>
 
     /**
      * Fetch yield balances
@@ -21,9 +21,5 @@ internal interface YieldBalanceFetcherImplementor<out Params : YieldBalanceFetch
      * @param stakingIds set of [StakingID]
      * @param requests   requests
      */
-    suspend fun fetch(
-        params: @UnsafeVariance Params,
-        stakingIds: Set<StakingID>,
-        requests: List<YieldBalanceRequestBody>,
-    )
+    suspend fun fetch(params: Params, stakingIds: Set<StakingID>, requests: List<YieldBalanceRequestBody>)
 }
