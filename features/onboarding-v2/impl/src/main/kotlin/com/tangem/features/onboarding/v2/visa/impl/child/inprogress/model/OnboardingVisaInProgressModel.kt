@@ -22,6 +22,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Config
 import com.tangem.features.onboarding.v2.visa.impl.child.inprogress.OnboardingVisaInProgressComponent.Params
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
+import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.route.OnboardingVisaRoute
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.delay
@@ -57,10 +58,14 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
 
     init {
         analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.ActivationInProgressScreen)
+        runShortPolling()
+    }
+
+    private fun runShortPolling() {
         modelScope.launch {
             while (true) {
                 val result = runCatching {
-                    visaActivationRepository.getActivationRemoteStateLongPoll()
+                    visaActivationRepository.getActivationRemoteState()
                 }.getOrNull() ?: continue
 
                 when (result) {
@@ -68,6 +73,16 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     VisaActivationRemoteState.BlockedForActivation,
                     -> {
                         uiMessageSender.showErrorDialog(VisaActivationError.InconsistentRemoteState)
+                        analyticsEventHandler.send(
+                            VisaAnalyticsEvent.ErrorOnboarding(VisaActivationError.InconsistentRemoteState),
+                        )
+                        return@launch
+                    }
+                    VisaActivationRemoteState.Failed -> {
+                        uiMessageSender.showErrorDialog(VisaActivationError.FailedRemoteState)
+                        analyticsEventHandler.send(
+                            VisaAnalyticsEvent.ErrorOnboarding(VisaActivationError.FailedRemoteState),
+                        )
                         return@launch
                     }
                     is VisaActivationRemoteState.CustomerWalletSignatureRequired,
@@ -86,14 +101,14 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     }
                 }
 
-                delay(timeMillis = 1000)
+                delay(timeMillis = 2000)
             }
         }
     }
 
     private suspend inline fun navigateToPinCodeIfNeeded(
         remoteState: VisaActivationRemoteState.AwaitingPinCode,
-        returnBlock: () -> Unit,
+        complete: () -> Unit,
     ) {
         when (remoteState.status) {
             VisaActivationRemoteState.AwaitingPinCode.Status.WaitingForPinCode -> {
@@ -105,7 +120,7 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                         ),
                     ),
                 )
-                returnBlock()
+                complete()
             }
             VisaActivationRemoteState.AwaitingPinCode.Status.WasError -> {
                 onDone.emit(
@@ -116,10 +131,10 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                         ),
                     ),
                 )
-                returnBlock()
+                complete()
             }
             VisaActivationRemoteState.AwaitingPinCode.Status.InProgress -> {
-                /** waiting for new state */
+                /** waiting for the new state */
             }
         }
     }

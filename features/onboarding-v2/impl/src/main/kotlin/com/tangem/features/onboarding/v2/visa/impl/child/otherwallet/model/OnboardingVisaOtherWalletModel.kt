@@ -51,7 +51,7 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
         modelScope.launch {
             while (true) {
                 val result = runCatching {
-                    visaActivationRepository.getActivationRemoteStateLongPoll()
+                    visaActivationRepository.getActivationRemoteState()
                 }.getOrNull()
 
                 if (result is VisaActivationRemoteState.AwaitingPinCode) {
@@ -59,7 +59,7 @@ internal class OnboardingVisaOtherWalletModel @Inject constructor(
                     break
                 }
 
-                delay(timeMillis = 1000)
+                delay(timeMillis = 2000)
             }
         }
     }
