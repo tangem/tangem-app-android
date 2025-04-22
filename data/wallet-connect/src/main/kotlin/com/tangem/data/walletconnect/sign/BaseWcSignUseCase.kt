@@ -31,7 +31,7 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
         )
     }
 
-    override val onCancel: suspend (currentState: WcSignState<SignModel>) -> Unit = {
+    override suspend fun onCancel(currentState: WcSignState<SignModel>) {
         defaultReject()
     }
 
@@ -46,14 +46,14 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
 
 internal interface MiddleActionCollector<MiddleAction, SignModel> {
 
-    val onMiddleAction: OnMiddle<MiddleAction, SignModel> get() = { _, _ -> }
+    suspend fun FlowCollector<SignModel>.onMiddleAction(signModel: SignModel, middleAction: MiddleAction) {}
 }
 
 internal interface FinalActionCollector<SignModel> {
 
-    val onSign: OnSign<SignModel> get() = {}
+    suspend fun SignCollector<SignModel>.onSign(state: WcSignState<SignModel>) {}
 
-    val onCancel: OnCancel<SignModel> get() = {}
+    suspend fun onCancel(state: WcSignState<SignModel>) {}
 }
 
 internal class WcMethodUseCaseContext(
@@ -62,9 +62,4 @@ internal class WcMethodUseCaseContext(
     val network: Network,
 )
 
-internal typealias OnSign<SignModel> =
-    suspend FlowCollector<WcSignState<SignModel>>.(state: WcSignState<SignModel>) -> Unit
-internal typealias OnCancel<SignModel> =
-    suspend (currentState: WcSignState<SignModel>) -> Unit
-internal typealias OnMiddle<MiddleAction, SignModel> =
-    suspend FlowCollector<SignModel>.(currentState: WcSignState<SignModel>, middleAction: MiddleAction) -> Unit
+internal typealias SignCollector<SignModel> = FlowCollector<WcSignState<SignModel>>

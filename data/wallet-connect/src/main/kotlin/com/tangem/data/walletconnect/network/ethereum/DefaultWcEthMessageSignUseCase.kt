@@ -9,7 +9,7 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
-import com.tangem.data.walletconnect.sign.OnSign
+import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.domain.transaction.usecase.SignUseCase
@@ -33,15 +33,17 @@ internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
 ) : BaseWcSignUseCase<Nothing, WcEthMessageSignUseCase.SignModel>(),
     WcEthMessageSignUseCase {
 
-    override val onSign: OnSign<WcEthMessageSignUseCase.SignModel> = collector@{ state ->
+    override suspend fun SignCollector<WcEthMessageSignUseCase.SignModel>.onSign(
+        state: WcSignState<WcEthMessageSignUseCase.SignModel>,
+    ) {
         val hashToSign = LegacySdkHelper.createMessageData(state.signModel.rawMsg)
         val userWallet = session.wallet
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
-            ?: return@collector
+            ?: return
 
         val signedHash = signUseCase(hashToSign, userWallet, network)
             .onLeft { emit(state.toResult(it.left())) }
-            .getOrNull() ?: return@collector
+            .getOrNull() ?: return
 
         val respond = EthereumUtils.prepareSignedMessageData(
             signedHash = signedHash,
