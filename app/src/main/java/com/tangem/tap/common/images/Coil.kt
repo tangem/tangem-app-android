@@ -1,8 +1,11 @@
 package com.tangem.tap.common.images
 
 import android.content.Context
+import android.os.Build
 import android.util.Log
 import coil.ImageLoader
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
 import coil.memory.MemoryCache
 import coil.request.CachePolicy
 import coil.util.Logger
@@ -23,6 +26,15 @@ fun createCoilImageLoader(context: Context, logEnabled: Boolean = false): ImageL
                 OkHttpClient.Builder()
                     .addNetworkInterceptor(createNetworkLoggingInterceptor())
                     .build()
+            }
+        }
+        .components {
+            // According to Coil ImageDecoder API is faster and supports animated WebP and HEIF
+            // https://coil-kt.github.io/coil/gifs/
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                add(ImageDecoderDecoder.Factory())
+            } else {
+                add(GifDecoder.Factory())
             }
         }
         .memoryCachePolicy(CachePolicy.ENABLED)
