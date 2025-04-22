@@ -16,7 +16,6 @@ import com.tangem.domain.visa.model.VisaDataForApprove
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.OnboardingVisaApproveComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.approve.ui.state.OnboardingVisaApproveUM
-import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.ONBOARDING_SOURCE
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.sdk.api.TangemSdkManager
@@ -88,9 +87,7 @@ internal class OnboardingVisaApproveModel @Inject constructor(
                 is CompletionResult.Failure -> {
                     loading(false)
                     uiMessageSender.showErrorDialog(result.error.universalError)
-                    analyticsEventHandler.send(
-                        VisaAnalyticsEvent.Errors(result.error.code.toString(), ONBOARDING_SOURCE),
-                    )
+                    analyticsEventHandler.send(VisaAnalyticsEvent.ErrorOnboarding(result.error.universalError))
                     return@launch
                 }
                 is CompletionResult.Success -> result.data

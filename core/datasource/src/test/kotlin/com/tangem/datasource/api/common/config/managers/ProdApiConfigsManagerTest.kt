@@ -186,7 +186,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 id = ApiConfig.ID.TangemVisaAuth,
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.STAGE,
-                    baseUrl = "https://api-s.tangem.org/",
+                    baseUrl = "https://api.dev.paera.com/bff/",
                     headers = mapOf(
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "Android" },
@@ -200,7 +200,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 id = ApiConfig.ID.TangemVisa,
                 expected = ApiEnvironmentConfig(
                     environment = ApiEnvironment.PROD,
-                    baseUrl = "https://bff.tangem.com/",
+                    baseUrl = "https://api.dev.paera.com/bff/",
                     headers = mapOf(
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "Android" },
