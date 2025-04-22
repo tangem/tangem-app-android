@@ -58,14 +58,22 @@ internal class DefaultYieldsBalancesStore(
         return runtimeStore.get().mapNotNull { it[userWalletId] }
     }
 
+    override suspend fun getSyncOrNull(userWalletId: UserWalletId, stakingId: StakingID): YieldBalance? {
+        return runtimeStore.getSyncOrNull()
+            ?.get(userWalletId)
+            ?.firstOrNull { stakingId == it.getStakingId() }
+    }
+
+    override suspend fun getAllSyncOrNull(userWalletId: UserWalletId): Set<YieldBalance>? {
+        return runtimeStore.getSyncOrNull()?.get(userWalletId)
+    }
+
     override suspend fun refresh(userWalletId: UserWalletId, stakingId: StakingID) {
-        updateBalancesInRuntime(userWalletId = userWalletId, stakingIds = setOf(stakingId)) {
-            it.copySealed(source = StatusSource.CACHE)
-        }
+        refresh(userWalletId = userWalletId, stakingIds = setOf(stakingId))
     }
 
     override suspend fun refresh(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
-        updateBalancesInRuntime(userWalletId = userWalletId, stakingIds = stakingIds) {
+        updateInRuntime(userWalletId = userWalletId, stakingIds = stakingIds) {
             it.copySealed(source = StatusSource.CACHE)
         }
     }
@@ -78,9 +86,12 @@ internal class DefaultYieldsBalancesStore(
     }
 
     override suspend fun storeError(userWalletId: UserWalletId, stakingIds: Set<StakingID>) {
-        updateBalancesInRuntime(userWalletId = userWalletId, stakingIds = stakingIds) {
-            it.copySealed(source = StatusSource.ONLY_CACHE)
-        }
+        updateInRuntime(
+            userWalletId = userWalletId,
+            stakingIds = stakingIds,
+            ifNotFound = ::createErrorYieldBalance,
+            update = { it.copySealed(source = StatusSource.ONLY_CACHE) },
+        )
     }
 
     private suspend fun storeInRuntime(userWalletId: UserWalletId, values: Set<YieldBalanceWrapperDTO>) {
@@ -89,9 +100,7 @@ internal class DefaultYieldsBalancesStore(
         runtimeStore.update(default = emptyMap()) { saved ->
             saved.toMutableMap().apply {
                 this[userWalletId] = saved[userWalletId]
-                    ?.addOrReplace(newBalances) { old, new ->
-                        old.integrationId == new.integrationId && old.address == new.address
-                    }
+                    ?.addOrReplace(newBalances) { old, new -> old.getStakingId() == new.getStakingId() }
                     ?: newBalances
             }
         }
@@ -101,33 +110,33 @@ internal class DefaultYieldsBalancesStore(
         persistenceStore.updateData { current ->
             current.toMutableMap().apply {
                 this[userWalletId.stringValue] = current[userWalletId.stringValue]
-                    ?.addOrReplace(items = values) { old, new ->
-                        old.integrationId == new.integrationId && old.addresses.address == new.addresses.address
-                    }
+                    ?.addOrReplace(items = values) { old, new -> old.getStakingId() == new.getStakingId() }
                     ?: values
             }
         }
     }
 
-    private suspend fun updateBalancesInRuntime(
+    private suspend fun updateInRuntime(
         userWalletId: UserWalletId,
         stakingIds: Set<StakingID>,
+        ifNotFound: (StakingID) -> YieldBalance? = { null },
         update: (YieldBalance) -> YieldBalance,
     ) {
         runtimeStore.update(default = emptyMap()) { stored ->
             stored.toMutableMap().apply {
                 val portfolioBalances = stored[userWalletId].orEmpty()
 
-                val balances = stakingIds.mapTo(hashSetOf()) { stakingId ->
-                    val balance = portfolioBalances.firstOrNull {
-                        it.integrationId == stakingId.integrationId && it.address == stakingId.address
-                    }
+                val balances = stakingIds.mapNotNullTo(hashSetOf()) { stakingId ->
+                    val balance = portfolioBalances
+                        .firstOrNull { stakingId == it.getStakingId() }
+                        ?: ifNotFound(stakingId)
+                        ?: return@mapNotNullTo null
 
-                    if (balance != null) update(balance) else createDefaultBalance(id = stakingId)
+                    update(balance)
                 }
 
                 val updatedBalances = portfolioBalances.addOrReplace(items = balances) { old, new ->
-                    old.integrationId == new.integrationId && old.address == new.address
+                    old.getStakingId() == new.getStakingId()
                 }
 
                 put(key = userWalletId, value = updatedBalances)
@@ -135,7 +144,16 @@ internal class DefaultYieldsBalancesStore(
         }
     }
 
-    private fun createDefaultBalance(id: StakingID): YieldBalance {
+    private fun createErrorYieldBalance(id: StakingID): YieldBalance {
         return YieldBalance.Error(integrationId = id.integrationId, address = id.address)
+    }
+
+    private fun YieldBalanceWrapperDTO.getStakingId(): StakingID? {
+        val integrationId = integrationId
+        val address = addresses.address
+
+        if (integrationId == null || address.isBlank()) return null
+
+        return StakingID(integrationId = integrationId, address = address)
     }
 }
