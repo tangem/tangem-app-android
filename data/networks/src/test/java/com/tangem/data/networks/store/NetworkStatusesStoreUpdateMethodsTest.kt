@@ -35,14 +35,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
     fun `refresh the single network if runtime store is empty`() = runTest {
         store.refresh(userWalletId = userWalletId, network = network)
 
-        val runtimeExpected = mapOf(
-            userWalletId.stringValue to setOf(
-                SimpleNetworkStatus(
-                    id = SimpleNetworkStatus.Id(network),
-                    value = NetworkStatus.Unreachable(address = null),
-                ),
-            ),
-        )
+        val runtimeExpected = mapOf(userWalletId.stringValue to emptySet<NetworkStatus>())
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
@@ -72,14 +65,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
     fun `refresh the multi networks if runtime store is empty`() = runTest {
         store.refresh(userWalletId = userWalletId, networks = networks)
 
-        val runtimeExpected = mapOf(
-            userWalletId.stringValue to networks.mapTo(hashSetOf()) {
-                SimpleNetworkStatus(
-                    id = SimpleNetworkStatus.Id(it),
-                    value = NetworkStatus.Unreachable(address = null),
-                )
-            },
-        )
+        val runtimeExpected = mapOf(userWalletId.stringValue to emptySet<NetworkStatus>())
 
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
