@@ -122,7 +122,7 @@ internal class UserWalletSaver @Inject constructor(
             scanCardProcessor.scan(
                 analyticsSource = AnalyticsParam.ScreensSources.Settings,
                 onWalletNotCreated = {
-                    /* no-op */
+                    continuation.resume(Either.Right(null))
                 },
                 disclaimerWillShow = {
                     continuation.resume(Either.Right(null))
