@@ -20,7 +20,6 @@ import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.OnboardingVisaAccessCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.accesscode.ui.state.OnboardingVisaAccessCodeUM
-import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.ONBOARDING_SOURCE
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.VisaAnalyticsEvent
 import com.tangem.features.onboarding.v2.visa.impl.common.ActivationReadyEvent
@@ -55,9 +54,12 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
             cardPublicKey = params.scanResponse.card.cardPublicKey.toHexString(),
         ),
     )
-    private val activationStatus =
-        params.scanResponse.visaCardActivationStatus as? VisaCardActivationStatus.NotStartedActivation
-            ?: error("Visa activation status is not set or incorrect for this step")
+
+    private val activationInput = when (val status = params.scanResponse.visaCardActivationStatus) {
+        is VisaCardActivationStatus.NotStartedActivation -> status.activationInput
+        is VisaCardActivationStatus.ActivationStarted -> status.activationInput
+        else -> error("Visa activation status is not set or incorrect for this step")
+    }
 
     private val _uiState = MutableStateFlow(getInitialState())
 
@@ -153,8 +155,8 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
         modelScope.launch {
             val challengeToSign = runCatching {
                 visaAuthRepository.getCardAuthChallenge(
-                    cardId = activationStatus.activationInput.cardId,
-                    cardPublicKey = activationStatus.activationInput.cardPublicKey,
+                    cardId = activationInput.cardId,
+                    cardPublicKey = activationInput.cardPublicKey,
                 )
             }.getOrElse {
                 loading(false)
@@ -167,7 +169,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                     accessCode = accessCode,
                     authorizationChallenge = challengeToSign,
                 ),
-                activationInput = activationStatus.activationInput,
+                activationInput = activationInput,
             )
 
             val resultData = when (result) {
@@ -175,7 +177,7 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                     loading(false)
                     uiMessageSender.showErrorDialog(result.error.universalError)
                     analyticsEventsHandler.send(
-                        VisaAnalyticsEvent.Errors(result.error.code.toString(), ONBOARDING_SOURCE),
+                        VisaAnalyticsEvent.ErrorOnboarding(result.error.universalError),
                     )
                     return@launch
                 }
@@ -190,14 +192,16 @@ internal class OnboardingVisaAccessCodeModel @Inject constructor(
                 return@launch
             }
 
-            val targetAddress = result.data.signedActivationData.dataToSign.request.customerWalletAddress
+            val targetAddress =
+                result.data.signedActivationData.dataToSign.request.activationOrderInfo.customerWalletAddress
 
             modelScope.launch {
                 onDone.emit(
                     ActivationReadyEvent(
                         customerWalletDataToSignRequest = VisaCustomerWalletDataToSignRequest(
-                            orderId = result.data.signedActivationData.dataToSign.request.orderId,
-                            cardWalletAddress = result.data.signedActivationData.cardWalletAddress,
+                            orderId = result.data.signedActivationData.dataToSign.request.activationOrderInfo.orderId,
+                            cardWalletAddress = result.data.signedActivationData.dataToSign.request.cardWalletAddress,
+                            customerWalletAddress = targetAddress,
                         ),
                         newScanResponse = params.scanResponse.copy(
                             card = result.data.newCardDTO,
