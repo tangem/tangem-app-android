@@ -6,15 +6,12 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.datasource.local.visa.VisaAuthTokenStorage
-import com.tangem.domain.models.scan.ScanResponse
+import com.tangem.core.ui.utils.showErrorDialog
 import com.tangem.domain.visa.SetVisaPinCodeUseCase
-import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.error.VisaAuthorizationAPIError
 import com.tangem.domain.visa.model.VisaCardId
-import com.tangem.domain.wallets.builder.UserWalletBuilder
-import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.onboarding.v2.impl.R
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.OnboardingVisaPinCodeComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.pincode.ui.state.OnboardingVisaPinCodeUM
@@ -25,7 +22,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @Stable
@@ -34,12 +30,9 @@ import javax.inject.Inject
 internal class OnboardingVisaPinCodeModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val userWalletBuilderFactory: UserWalletBuilder.Factory,
-    private val userWalletsListManager: UserWalletsListManager,
-    private val authTokenStorage: VisaAuthTokenStorage,
-    private val otpStorage: VisaAuthTokenStorage,
     private val setVisaPinCodeUseCase: SetVisaPinCodeUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val uiMessageSender: UiMessageSender,
 ) : Model() {
 
     private val params = paramsContainer.require<OnboardingVisaPinCodeComponent.Config>()
@@ -102,38 +95,16 @@ internal class OnboardingVisaPinCodeModel @Inject constructor(
                 activationOrderId = params.activationOrderInfo.orderId,
             ).onLeft {
                 loading(false)
+                uiMessageSender.showErrorDialog(VisaAuthorizationAPIError)
                 return@launch
             }
 
-            saveWallet()
-
+            onDone.emit(Unit)
             loading(false)
         }
     }
 
     private fun loading(state: Boolean) {
         _uiState.update { it.copy(submitButtonLoading = state) }
-    }
-
-    private suspend fun saveWallet() {
-        val userWallet = createUserWallet(params.scanResponse)
-        userWalletsListManager.save(userWallet)
-        authTokenStorage.remove(params.scanResponse.card.cardId)
-        otpStorage.remove(params.scanResponse.card.cardId)
-        onDone.emit(Unit)
-    }
-
-    private suspend fun createUserWallet(scanResponse: ScanResponse): UserWallet = withContext(dispatchers.io) {
-        val newActivationStatus = VisaCardActivationStatus.Activated(
-            visaAuthTokens = authTokenStorage.get(scanResponse.card.cardId)
-                ?: error("Impossible state. Wrong feature implementation"),
-        )
-
-        requireNotNull(
-            value = userWalletBuilderFactory.create(
-                scanResponse = scanResponse.copy(visaCardActivationStatus = newActivationStatus),
-            ).build(),
-            lazyMessage = { "User wallet not created" },
-        )
     }
 }
