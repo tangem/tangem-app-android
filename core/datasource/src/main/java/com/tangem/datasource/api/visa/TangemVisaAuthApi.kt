@@ -1,32 +1,29 @@
 package com.tangem.datasource.api.visa
 
 import com.tangem.datasource.api.common.response.ApiResponse
+import com.tangem.datasource.api.visa.models.request.*
 import com.tangem.datasource.api.visa.models.response.GenerateNonceResponse
 import com.tangem.datasource.api.visa.models.response.JWTResponse
-import retrofit2.http.Field
+import retrofit2.http.Body
 import retrofit2.http.POST
-import retrofit2.http.Query
 
 interface TangemVisaAuthApi {
 
-    @POST("auth/card_wallet")
-    suspend fun generateNonceByWalletAddress(
-        @Query("card_wallet_address") cardWalletAddress: String,
-    ): GenerateNonceResponse
+    @POST("v1/auth/challenge")
+    suspend fun generateNonceByCardId(@Body request: GenerateNoneByCardIdRequest): GenerateNonceResponse
 
-    @POST("auth/card_id")
-    suspend fun generateNonceByCard(
-        @Query("card_id") cardId: String,
-        @Query("card_public_key") cardPublicKey: String,
-    ): GenerateNonceResponse
+    @POST("v1/auth/challenge")
+    suspend fun generateNonceByCardWallet(@Body request: GenerateNoneByCardWalletRequest): GenerateNonceResponse
 
-    @POST("auth/get_token")
-    suspend fun getAccessToken(
-        @Query("session_id") sessionId: String,
-        @Query("signature") signature: String,
-        @Query("salt") salt: String?,
-    ): JWTResponse
+    @POST("v1/auth/token")
+    suspend fun getAccessTokenByCardId(@Body request: GetAccessTokenByCardIdRequest): JWTResponse
 
-    @POST("auth/refresh_token")
-    suspend fun refreshAccessToken(@Field("refresh_token") refreshToken: String): ApiResponse<JWTResponse>
+    @POST("v1/auth/token")
+    suspend fun getAccessTokenByCardWallet(@Body request: GetAccessTokenByCardWalletRequest): JWTResponse
+
+    @POST("v1/auth/token/refresh")
+    suspend fun refreshCardIdAccessToken(@Body request: RefreshTokenByCardIdRequest): ApiResponse<JWTResponse>
+
+    @POST("v1/auth/token/refresh")
+    suspend fun refreshCardWalletAccessToken(@Body request: RefreshTokenByCardWalletRequest): ApiResponse<JWTResponse>
 }
