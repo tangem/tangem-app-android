@@ -94,10 +94,12 @@ internal class OnrampStatusFactory @Inject constructor(
             PaymentProcessing,
             Paid,
             Sending,
+            RefundInProgress,
             -> ExpressAnalyticsStatus.InProgress
             Verifying -> ExpressAnalyticsStatus.KYC
             Failed -> ExpressAnalyticsStatus.Fail
             Finished -> ExpressAnalyticsStatus.Done
+            Refunded -> ExpressAnalyticsStatus.Refunded
             null -> null
         }
     }
