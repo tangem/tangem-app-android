@@ -527,7 +527,6 @@
   <string name="nft_details_traits">Traits</string>
   <string name="nft_empty_search">No results. Please try another request.</string>
   <string name="nft_receive_choose_network">Choose network</string>
-  <string name="nft_receive_subtitle">To My wallet</string>
   <string name="nft_receive_title">Receive NFT</string>
   <string name="nft_traits_title">Traits</string>
   <string name="nft_wallet_count">%1$d NFTs in %2$d collection</string>
