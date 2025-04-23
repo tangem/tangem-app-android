@@ -58,7 +58,7 @@ internal class NFTReceiveModel @Inject constructor(
             search = getInitialSearchBar(),
             networks = NFTReceiveUM.Networks.Content(
                 availableItems = persistentListOf(),
-                notAvailableItems = persistentListOf(),
+                unavailableItems = persistentListOf(),
             ),
             bottomSheetConfig = null,
         ),
