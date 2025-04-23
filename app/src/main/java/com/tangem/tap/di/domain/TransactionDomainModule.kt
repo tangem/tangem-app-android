@@ -32,6 +32,12 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
+    fun provideGetEthSpecificFeeUseCase(walletManagersFacade: WalletManagersFacade): GetEthSpecificFeeUseCase {
+        return GetEthSpecificFeeUseCase(walletManagersFacade = walletManagersFacade)
+    }
+
+    @Provides
+    @Singleton
     fun provideTransferGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetTransferFeeUseCase {
         return GetTransferFeeUseCase(
             walletManagersFacade = walletManagersFacade,
