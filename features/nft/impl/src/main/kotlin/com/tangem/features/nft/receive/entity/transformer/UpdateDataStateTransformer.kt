@@ -17,13 +17,13 @@ internal class UpdateDataStateTransformer(
 
     override fun transform(prevState: NFTReceiveUM): NFTReceiveUM = prevState.copy(
         networks = when {
-            networks.availableNetworks.isEmpty() && networks.notAvailableNetworks.isEmpty()
+            networks.availableNetworks.isEmpty() && networks.unavailableNetworks.isEmpty()
             -> NFTReceiveUM.Networks.Empty
             else -> NFTReceiveUM.Networks.Content(
                 availableItems = networks.availableNetworks
                     .map { it.transform(true) }
                     .toPersistentList(),
-                notAvailableItems = networks.notAvailableNetworks
+                unavailableItems = networks.unavailableNetworks
                     .map { it.transform(false) }
                     .toPersistentList(),
             )
