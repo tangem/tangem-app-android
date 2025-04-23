@@ -18,8 +18,10 @@ import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteProducer
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.staking.single.SingleYieldBalanceProducer
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
@@ -49,6 +51,7 @@ class CachedCurrenciesStatusesOperations(
     private val multiQuoteFetcher: MultiQuoteFetcher,
     private val singleQuoteSupplier: SingleQuoteSupplier,
     private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
@@ -200,7 +203,18 @@ class CachedCurrenciesStatusesOperations(
                         quotesRepository.fetchQuotes(rawCurrenciesIds)
                     }
                 },
-                async { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies) },
+                async {
+                    if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
+                        multiYieldBalanceFetcher(
+                            params = YieldBalanceFetcherParams.Multi(
+                                userWalletId = userWalletId,
+                                currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
+                            ),
+                        )
+                    } else {
+                        stakingRepository.fetchMultiYieldBalance(userWalletId, currencies)
+                    }
+                },
             )
         }
             .map { }
