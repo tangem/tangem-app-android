@@ -190,6 +190,7 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
             singleQuoteSupplier = mockk(),
             quotesRepositoryV2 = mockk(),
             singleYieldBalanceSupplier = mockk(),
+            multiYieldBalanceFetcher = mockk(),
         ),
         dispatchers = dispatchers,
     )
