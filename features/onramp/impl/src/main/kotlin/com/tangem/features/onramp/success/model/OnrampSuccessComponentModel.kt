@@ -97,7 +97,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
             return
         }
 
-        getOnrampStatusUseCase(txId = transaction.txId)
+        getOnrampStatusUseCase(userWallet = userWallet, txId = transaction.txId)
             .fold(
                 ifLeft = { error ->
                     analyticsEventHandler.sendOnrampErrorEvent(
