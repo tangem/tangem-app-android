@@ -52,7 +52,7 @@ internal class DefaultSingleNetworkStatusFetcherTest {
             networksStatusesStore.refresh(userWalletId = userWalletId, network = network)
             userWalletsStore.getSyncStrict(key = userWalletId)
             walletManagersFacade.update(userWalletId, network, emptySet())
-            networksStatusesStore.storeActual(
+            networksStatusesStore.storeSuccess(
                 userWalletId = userWalletId,
                 value = NetworkStatus(network, NetworkStatus.MissedDerivation),
             )
@@ -82,7 +82,7 @@ internal class DefaultSingleNetworkStatusFetcherTest {
 
         coVerify(inverse = true) {
             walletManagersFacade.update(userWalletId = any(), network = any(), extraTokens = any())
-            networksStatusesStore.storeActual(userWalletId = any(), value = any())
+            networksStatusesStore.storeSuccess(userWalletId = any(), value = any())
         }
 
         Truth.assertThat(actual.isLeft()).isTrue()
@@ -105,7 +105,7 @@ internal class DefaultSingleNetworkStatusFetcherTest {
         coVerifyOrder {
             userWalletsStore.getSyncStrict(key = userWalletId)
             walletManagersFacade.update(userWalletId, network, emptySet())
-            networksStatusesStore.storeActual(
+            networksStatusesStore.storeSuccess(
                 userWalletId = userWalletId,
                 value = NetworkStatus(network, NetworkStatus.MissedDerivation),
             )
