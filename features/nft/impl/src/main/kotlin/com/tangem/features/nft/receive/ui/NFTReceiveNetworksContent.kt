@@ -54,13 +54,13 @@ internal fun NFTReceiveNetworksContent(state: NFTReceiveUM.Networks.Content, mod
             }
             networks(state.availableItems)
         }
-        if (state.notAvailableItems.isNotEmpty()) {
+        if (state.unavailableItems.isNotEmpty()) {
             item(
                 key = "not_available_title",
             ) {
                 Title(resourceReference(R.string.nft_receive_unavailable_section_title))
             }
-            networks(state.notAvailableItems)
+            networks(state.unavailableItems)
         }
     }
 }
@@ -207,7 +207,7 @@ private fun Preview_NFTReceiveNetworksUM() {
                         onItemClick = { },
                     ),
                 ),
-                notAvailableItems = persistentListOf(),
+                unavailableItems = persistentListOf(),
             ),
         )
     }
