@@ -20,7 +20,7 @@ internal data class NFTReceiveUM(
 
         data class Content(
             val availableItems: ImmutableList<NFTNetworkUM>,
-            val notAvailableItems: ImmutableList<NFTNetworkUM>,
+            val unavailableItems: ImmutableList<NFTNetworkUM>,
         ) : Networks()
     }
 }
