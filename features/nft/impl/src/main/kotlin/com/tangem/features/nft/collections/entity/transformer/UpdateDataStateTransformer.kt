@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.nft.models.*
 import com.tangem.features.nft.collections.entity.*
@@ -24,8 +25,8 @@ internal class UpdateDataStateTransformer(
     private val initialSearchBarFactory: () -> SearchBarUM,
 ) : Transformer<NFTCollectionsStateUM> {
 
-    override fun transform(prevState: NFTCollectionsStateUM): NFTCollectionsStateUM = prevState.copy(
-        content = when {
+    override fun transform(prevState: NFTCollectionsStateUM): NFTCollectionsStateUM {
+        val content = when {
             nftCollections.allCollectionsFailed() ->
                 NFTCollectionsUM.Failed(onRetryClick, onReceiveClick)
             nftCollections.anyCollectionFailed() && nftCollections.allLoadedCollectionsEmpty() ->
@@ -33,7 +34,16 @@ internal class UpdateDataStateTransformer(
             nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
                 NFTCollectionsUM.Empty(onReceiveClick)
             !nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
-                NFTCollectionsUM.Loading(onReceiveClick)
+                NFTCollectionsUM.Loading(
+                    onReceiveClick = onReceiveClick,
+                    search = SearchBarUM(
+                        placeholderText = resourceReference(R.string.common_search),
+                        query = "",
+                        isActive = false,
+                        onQueryChange = { },
+                        onActiveChange = { },
+                    ),
+                )
             else -> {
                 NFTCollectionsUM.Content(
                     search = if (prevState.content is NFTCollectionsUM.Content) {
@@ -54,8 +64,17 @@ internal class UpdateDataStateTransformer(
                     onReceiveClick = onReceiveClick,
                 )
             }
-        },
-    )
+        }
+        return prevState.copy(
+            content = content,
+            pullToRefreshConfig = when (content) {
+                is NFTCollectionsUM.Loading -> prevState.pullToRefreshConfig.copy(
+                    isRefreshing = false,
+                )
+                else -> prevState.pullToRefreshConfig
+            },
+        )
+    }
 
     private fun List<NFTCollection>.transform(
         state: NFTCollectionsStateUM,
