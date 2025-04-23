@@ -70,9 +70,19 @@ internal class DefaultNetworksStatusesStoreV2(
         }
     }
 
-    override suspend fun storeActual(userWalletId: UserWalletId, value: NetworkStatus) {
+    override suspend fun storeSuccess(userWalletId: UserWalletId, value: NetworkStatus) {
+        if (value.value is NetworkStatus.Unreachable) {
+            val message = "Use storeError method to save unreachable status"
+            Timber.d(message)
+
+            error(message)
+        }
+
         if (value.value.source != StatusSource.ACTUAL) {
-            error("Method storeActual can be called only with StatusSource.ACTUAL")
+            val message = "Method storeActual can be called only with StatusSource.ACTUAL"
+            Timber.d(message)
+
+            error(message)
         }
 
         coroutineScope {
@@ -81,11 +91,14 @@ internal class DefaultNetworksStatusesStoreV2(
         }
     }
 
-    override suspend fun storeError(userWalletId: UserWalletId, network: Network) {
+    override suspend fun storeError(userWalletId: UserWalletId, network: Network, value: NetworkStatus.Unreachable?) {
         updateInRuntime(
             userWalletId = userWalletId,
             networks = setOf(network),
-            ifNotFound = ::createUnreachableStatus,
+            ifNotFound = { id ->
+                value?.let { SimpleNetworkStatus(id = id, value = value) }
+                    ?: createUnreachableStatus(id = id)
+            },
             update = { status ->
                 status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE))
             },
