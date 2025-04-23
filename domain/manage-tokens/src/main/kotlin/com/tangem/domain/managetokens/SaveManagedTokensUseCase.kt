@@ -7,6 +7,8 @@ import com.tangem.domain.managetokens.model.ManagedCryptoCurrency
 import com.tangem.domain.managetokens.repository.CustomTokensRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
+import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -28,6 +30,7 @@ class SaveManagedTokensUseCase(
     private val quotesRepository: QuotesRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -118,11 +121,20 @@ class SaveManagedTokensUseCase(
         userWalletId: UserWalletId,
         existingCurrencies: List<CryptoCurrency>,
     ) {
-        stakingRepository.fetchMultiYieldBalance(
-            userWalletId = userWalletId,
-            cryptoCurrencies = existingCurrencies,
-            refresh = true,
-        )
+        if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
+            multiYieldBalanceFetcher(
+                params = YieldBalanceFetcherParams.Multi(
+                    userWalletId = userWalletId,
+                    currencyIdWithNetworkMap = existingCurrencies.associateTo(hashMapOf()) { it.id to it.network },
+                ),
+            )
+        } else {
+            stakingRepository.fetchMultiYieldBalance(
+                userWalletId = userWalletId,
+                cryptoCurrencies = existingCurrencies,
+                refresh = true,
+            )
+        }
     }
 
     private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
