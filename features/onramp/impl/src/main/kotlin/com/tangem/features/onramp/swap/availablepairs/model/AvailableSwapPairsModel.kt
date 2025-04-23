@@ -19,6 +19,7 @@ import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenList
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.swap.domain.GetAvailablePairsUseCase
 import com.tangem.feature.swap.domain.models.domain.LeastTokenInfo
 import com.tangem.feature.swap.domain.models.domain.SwapPairLeast
@@ -52,11 +53,13 @@ internal class AvailableSwapPairsModel @Inject constructor(
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getAvailablePairsUseCase: GetAvailablePairsUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
 ) : Model() {
 
     val state: StateFlow<TokenListUM> = tokenListUMController.state
 
     private var params: AvailableSwapPairsComponent.Params = paramsContainer.require()
+    private val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
 
     private val tokenListFlow = getTokenListUseCaseFlow()
 
@@ -212,6 +215,7 @@ internal class AvailableSwapPairsModel @Inject constructor(
             availablePairsByNetworkFlow.update(networkInfo = networkInfo, state = lceLoading())
 
             getAvailablePairsUseCase(
+                userWallet = userWallet,
                 initialCurrency = networkInfo,
                 currencies = statuses.map(CryptoCurrencyStatus::currency),
             )
