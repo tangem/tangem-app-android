@@ -277,10 +277,7 @@ class DefaultWalletManagersFacade(
         }
     }
 
-    private suspend fun getUserWallet(userWalletId: UserWalletId) =
-        requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "Unable to find a user wallet with provided ID: $userWalletId"
-        }
+    private fun getUserWallet(userWalletId: UserWalletId) = userWalletsStore.getSyncStrict(userWalletId)
 
     private suspend fun getAndUpdateWalletManager(
         userWallet: UserWallet,
