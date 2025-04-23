@@ -1,6 +1,7 @@
 package com.tangem.domain.staking.model.stakekit
 
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import org.joda.time.DateTime
 import java.math.BigDecimal
@@ -17,6 +18,15 @@ sealed class YieldBalance {
             is Empty -> copy(source = source)
             is Error -> this
         }
+    }
+
+    fun getStakingId(): StakingID? {
+        val integrationId = integrationId
+        val address = address
+
+        if (integrationId == null || address == null) return null
+
+        return StakingID(integrationId = integrationId, address = address)
     }
 
     data class Data(
