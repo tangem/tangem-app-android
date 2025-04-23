@@ -19,14 +19,14 @@ class GetNFTNetworksUseCase(
                 .filter { nftRepository.isNFTSupported(it) }
                 .sortedBy { it.name }
 
-            val notAvailableNetworks = nftRepository
+            val unavailableNetworks = nftRepository
                 .getNFTSupportedNetworks(userWalletId)
                 .filter { supportedNetwork -> availableNetworks.none { it.id == supportedNetwork.id } }
                 .sortedBy { it.name }
 
             NFTNetworks(
                 availableNetworks = availableNetworks,
-                notAvailableNetworks = notAvailableNetworks,
+                unavailableNetworks = unavailableNetworks,
             )
         }
 }
