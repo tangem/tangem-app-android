@@ -8,6 +8,8 @@ import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
+import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -38,6 +40,7 @@ class FetchTokenListUseCase(
     private val stakingRepository: StakingRepository,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
     private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
@@ -152,10 +155,19 @@ class FetchTokenListUseCase(
         currencies: List<CryptoCurrency>,
         refresh: Boolean,
     ) {
-        catch(
-            block = { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies, refresh) },
-            catch = { /* Ignore error */ },
-        )
+        if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
+            multiYieldBalanceFetcher(
+                params = YieldBalanceFetcherParams.Multi(
+                    userWalletId = userWalletId,
+                    currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
+                ),
+            )
+        } else {
+            catch(
+                block = { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies, refresh) },
+                catch = { /* Ignore error */ },
+            )
+        }
     }
 
     /**

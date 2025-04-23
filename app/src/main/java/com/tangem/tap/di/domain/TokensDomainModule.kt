@@ -10,7 +10,9 @@ import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.quotes.multi.MultiQuoteFetcher
 import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.single.SingleYieldBalanceFetcher
 import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.operations.BaseCurrenciesStatusesOperations
@@ -40,6 +42,7 @@ internal object TokensDomainModule {
         quotesRepository: QuotesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
+        singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): AddCryptoCurrenciesUseCase {
         return AddCryptoCurrenciesUseCase(
@@ -49,6 +52,7 @@ internal object TokensDomainModule {
             quotesRepository = quotesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
+            singleYieldBalanceFetcher = singleYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -62,6 +66,7 @@ internal object TokensDomainModule {
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
+        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): FetchTokenListUseCase {
         return FetchTokenListUseCase(
@@ -71,6 +76,7 @@ internal object TokensDomainModule {
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
+            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -177,6 +183,7 @@ internal object TokensDomainModule {
         stakingRepository: StakingRepository,
         singleNetworkStatusFetcher: SingleNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
+        singleYieldBalanceFetcher: SingleYieldBalanceFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): FetchCurrencyStatusUseCase {
         return FetchCurrencyStatusUseCase(
@@ -186,6 +193,7 @@ internal object TokensDomainModule {
             stakingRepository = stakingRepository,
             singleNetworkStatusFetcher = singleNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
+            singleYieldBalanceFetcher = singleYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -199,6 +207,7 @@ internal object TokensDomainModule {
         stakingRepository: StakingRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
         multiQuoteFetcher: MultiQuoteFetcher,
+        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): FetchCardTokenListUseCase {
         return FetchCardTokenListUseCase(
@@ -208,6 +217,7 @@ internal object TokensDomainModule {
             stakingRepository = stakingRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
             multiQuoteFetcher = multiQuoteFetcher,
+            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -411,6 +421,7 @@ internal object TokensDomainModule {
         multiQuoteFetcher: MultiQuoteFetcher,
         singleQuoteSupplier: SingleQuoteSupplier,
         singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     ): BaseCurrenciesStatusesOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -424,6 +435,7 @@ internal object TokensDomainModule {
             multiQuoteFetcher = multiQuoteFetcher,
             singleQuoteSupplier = singleQuoteSupplier,
             singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
@@ -443,6 +455,7 @@ internal object TokensDomainModule {
         multiQuoteFetcher: MultiQuoteFetcher,
         singleQuoteSupplier: SingleQuoteSupplier,
         singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+        multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     ): BaseCurrencyStatusOperations {
         return CachedCurrenciesStatusesOperations(
             currenciesRepository = currenciesRepository,
@@ -456,6 +469,7 @@ internal object TokensDomainModule {
             multiQuoteFetcher = multiQuoteFetcher,
             singleQuoteSupplier = singleQuoteSupplier,
             singleYieldBalanceSupplier = singleYieldBalanceSupplier,
+            multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }
