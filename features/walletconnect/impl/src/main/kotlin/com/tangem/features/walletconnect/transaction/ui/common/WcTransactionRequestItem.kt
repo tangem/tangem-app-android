@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.transaction.ui.common
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -14,11 +15,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
 
 @Composable
-internal fun WcTransactionRequestItem(modifier: Modifier = Modifier) {
+internal fun WcTransactionRequestItem(@DrawableRes iconRes: Int, modifier: Modifier = Modifier) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size24),
-            painter = painterResource(R.drawable.ic_connect_new_24),
+            painter = painterResource(iconRes),
             contentDescription = null,
             tint = TangemTheme.colors.icon.accent,
         )

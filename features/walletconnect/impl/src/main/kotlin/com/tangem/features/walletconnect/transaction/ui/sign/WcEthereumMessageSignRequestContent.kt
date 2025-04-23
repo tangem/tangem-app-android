@@ -1,7 +1,11 @@
 package com.tangem.features.walletconnect.transaction.ui.sign
 
 import android.content.res.Configuration
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -43,12 +47,18 @@ internal fun WcEthereumMessageSignRequestModalBottomSheet(config: TangemBottomSh
             )
         },
         content = { state ->
-            when (state.state) {
-                WcEthereumMessageSignRequestUM.State.TRANSACTION -> {
-                    WcEthereumMessageSignRequestModalBottomSheetContent(state)
-                }
-                WcEthereumMessageSignRequestUM.State.TRANSACTION_REQUEST_INFO -> {
-                    TransactionRequestInfoContent(state)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .animateContentSize(),
+            ) {
+                when (state.state) {
+                    WcEthereumMessageSignRequestUM.State.TRANSACTION -> {
+                        WcEthereumMessageSignRequestModalBottomSheetContent(state)
+                    }
+                    WcEthereumMessageSignRequestUM.State.TRANSACTION_REQUEST_INFO -> {
+                        TransactionRequestInfoContent(state)
+                    }
                 }
             }
         },
@@ -77,6 +87,7 @@ private class WcEthereumMessageSignStateProvider : CollectionPreviewParameterPro
         WcEthereumMessageSignRequestUM(
             startIconRes = R.drawable.ic_back_24,
             endIconRes = R.drawable.ic_close_24,
+            transactionIconRes = R.drawable.ic_doc_new_24,
             state = WcEthereumMessageSignRequestUM.State.TRANSACTION,
             transaction = WcTransactionUM(
                 appName = "React App",
@@ -109,6 +120,7 @@ private class WcEthereumMessageSignStateProvider : CollectionPreviewParameterPro
         WcEthereumMessageSignRequestUM(
             startIconRes = R.drawable.ic_back_24,
             endIconRes = R.drawable.ic_close_24,
+            transactionIconRes = R.drawable.ic_doc_new_24,
             state = WcEthereumMessageSignRequestUM.State.TRANSACTION_REQUEST_INFO,
             transaction = WcTransactionUM(
                 appName = "React App",
