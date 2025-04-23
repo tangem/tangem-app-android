@@ -1,7 +1,9 @@
 package com.tangem.domain.transaction.usecase
 
-import arrow.core.Either
+import arrow.core.raise.catch
+import arrow.core.raise.either
 import com.tangem.blockchain.common.smartcontract.CompiledSmartContractCallData
+import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
@@ -12,14 +14,38 @@ class CreateTransactionDataExtrasUseCase(
 ) {
 
     operator fun invoke(data: String, network: Network, gasLimit: BigInteger? = null, nonce: BigInteger? = null) =
-        Either.catch {
-            requireNotNull(
+        either {
+            catch(
+                {
+                    transactionRepository.createTransactionDataExtras(
+                        callData = CompiledSmartContractCallData(data.hexToBytes()),
+                        network = network,
+                        nonce = nonce,
+                        gasLimit = gasLimit,
+                    )
+                },
+            ) {
+                raise(it)
+            }
+        }
+
+    operator fun invoke(
+        callData: SmartContractCallData,
+        network: Network,
+        gasLimit: BigInteger? = null,
+        nonce: BigInteger? = null,
+    ) = either {
+        catch(
+            {
                 transactionRepository.createTransactionDataExtras(
-                    callData = CompiledSmartContractCallData(data.hexToBytes()),
+                    callData = callData,
                     network = network,
                     nonce = nonce,
                     gasLimit = gasLimit,
-                ),
-            ) { "Failed to create transaction" }
+                )
+            },
+        ) {
+            raise(it)
         }
+    }
 }
