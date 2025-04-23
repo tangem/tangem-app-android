@@ -3,15 +3,18 @@ package com.tangem.features.nft.collections.model
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.containers.pullToRefresh.PullToRefreshConfig
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.nft.FetchNFTCollectionAssetsUseCase
 import com.tangem.domain.nft.GetNFTCollectionsUseCase
+import com.tangem.domain.nft.RefreshAllNFTUseCase
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.features.nft.collections.NFTCollectionsComponent
 import com.tangem.features.nft.collections.entity.NFTCollectionsStateUM
 import com.tangem.features.nft.collections.entity.NFTCollectionsUM
+import com.tangem.features.nft.collections.entity.transformer.*
 import com.tangem.features.nft.collections.entity.transformer.ChangeCollectionExpandedStateTransformer
 import com.tangem.features.nft.collections.entity.transformer.ToggleSearchBarTransformer
 import com.tangem.features.nft.collections.entity.transformer.UpdateDataStateTransformer
@@ -29,6 +32,7 @@ internal class NFTCollectionsModel @Inject constructor(
     private val searchManager: InputManager,
     private val getNFTCollectionsUseCase: GetNFTCollectionsUseCase,
     private val fetchNFTCollectionAssetsUseCase: FetchNFTCollectionAssetsUseCase,
+    private val refreshAllNFTUseCase: RefreshAllNFTUseCase,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -37,7 +41,20 @@ internal class NFTCollectionsModel @Inject constructor(
     private val _state = MutableStateFlow(
         value = NFTCollectionsStateUM(
             onBackClick = params.onBackClick,
-            content = NFTCollectionsUM.Loading(params.onBackClick),
+            content = NFTCollectionsUM.Loading(
+                search = SearchBarUM(
+                    placeholderText = resourceReference(R.string.common_search),
+                    query = "",
+                    isActive = false,
+                    onQueryChange = { },
+                    onActiveChange = { },
+                ),
+                onReceiveClick = params.onReceiveClick,
+            ),
+            pullToRefreshConfig = PullToRefreshConfig(
+                isRefreshing = false,
+                onRefresh = { onRefresh() },
+            ),
         ),
     )
 
@@ -59,7 +76,7 @@ internal class NFTCollectionsModel @Inject constructor(
                     onReceiveClick = {
                         params.onReceiveClick()
                     },
-                    onRetryClick = ::onRetryClick,
+                    onRetryClick = ::onRefresh,
                     onExpandCollectionClick = ::onExpandCollectionClick,
                     onRetryAssetsClick = ::onRetryAssetsClick,
                     onAssetClick = { asset, collectionName ->
@@ -69,7 +86,19 @@ internal class NFTCollectionsModel @Inject constructor(
                 ).transform(it)
             }
         }
+            .onStart { onRefresh() }
             .launchIn(modelScope)
+    }
+
+    private fun onRefresh() {
+        modelScope.launch {
+            _state.update { ChangeRefreshingStateTransformer(true).transform(it) }
+            try {
+                refreshAllNFTUseCase(params.userWalletId)
+            } finally {
+                _state.update { ChangeRefreshingStateTransformer(false).transform(it) }
+            }
+        }
     }
 
     private fun onSearchQueryChange(newQuery: String) {
@@ -109,10 +138,6 @@ internal class NFTCollectionsModel @Inject constructor(
 
     private fun onRetryAssetsClick(collection: NFTCollection) {
         loadCollectionAssets(collection)
-    }
-
-    private fun onRetryClick() {
-        // TODO refresh all
     }
 
     private fun loadCollectionAssets(collection: NFTCollection) {
