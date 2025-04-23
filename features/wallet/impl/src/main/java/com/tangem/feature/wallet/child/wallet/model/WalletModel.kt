@@ -15,6 +15,7 @@ import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
@@ -107,9 +108,7 @@ internal class WalletModel @Inject constructor(
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
-        subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
-        subscribeOnExpressTransactionsUpdates()
         subscribeOnNFTUpdates()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
@@ -223,6 +222,8 @@ internal class WalletModel @Inject constructor(
                     }
 
                     walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
+                    subscribeOnExpressTransactionsUpdates(selectedWallet)
+                    subscribeToScreenBackgroundState(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -231,7 +232,7 @@ internal class WalletModel @Inject constructor(
 
     // We need to update the current wallet quotes if the application was in the background for more than 10 seconds
     // and then returned to the foreground
-    private fun subscribeToScreenBackgroundState() {
+    private fun subscribeToScreenBackgroundState(userWallet: UserWallet) {
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
                 expressTxStatusTaskScheduler.cancelTask()
@@ -241,30 +242,31 @@ internal class WalletModel @Inject constructor(
                     isBackground -> needToRefreshTimer()
                     needToRefreshWallet && !isBackground -> {
                         triggerRefreshWalletQuotes()
-                        subscribeOnExpressTransactionsUpdates()
+                        subscribeOnExpressTransactionsUpdates(userWallet)
                     }
-                    !isBackground -> subscribeOnExpressTransactionsUpdates()
+                    !isBackground -> subscribeOnExpressTransactionsUpdates(userWallet)
                 }
             }
             .launchIn(modelScope)
+            .saveIn(expressStatusJobHolder)
     }
 
-    private fun subscribeOnExpressTransactionsUpdates() {
-        modelScope.launch(dispatchers.main) {
-            expressTxStatusTaskScheduler.cancelTask()
-            expressTxStatusTaskScheduler.scheduleTask(
-                modelScope,
-                PeriodicTask(
-                    isDelayFirst = false,
-                    delay = EXPRESS_STATUS_UPDATE_DELAY,
-                    task = {
-                        runCatching { onrampStatusFactory.updateOnrmapTransactionStatuses() }
-                    },
-                    onSuccess = { /* no-op */ },
-                    onError = { /* no-op */ },
-                ),
-            )
-        }.saveIn(expressStatusJobHolder)
+    private fun subscribeOnExpressTransactionsUpdates(userWallet: UserWallet) {
+        expressTxStatusTaskScheduler.cancelTask()
+        expressTxStatusTaskScheduler.scheduleTask(
+            modelScope,
+            PeriodicTask(
+                isDelayFirst = false,
+                delay = EXPRESS_STATUS_UPDATE_DELAY,
+                task = {
+                    runCatching {
+                        onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
+                    }
+                },
+                onSuccess = { /* no-op */ },
+                onError = { /* no-op */ },
+            ),
+        )
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
