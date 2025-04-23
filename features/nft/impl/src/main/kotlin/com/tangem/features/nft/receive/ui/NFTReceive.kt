@@ -13,6 +13,7 @@ import com.tangem.core.ui.components.appbar.models.TopAppBarButtonUM
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.fields.SearchBar
 import com.tangem.core.ui.components.fields.TangemSearchBarDefaults
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.nft.impl.R
@@ -33,7 +34,7 @@ internal fun NFTReceive(state: NFTReceiveUM, modifier: Modifier = Modifier) {
                     onIconClicked = state.onBackClick,
                 ),
                 title = stringResourceSafe(id = R.string.nft_receive_title),
-                subtitle = stringResourceSafe(id = R.string.nft_receive_subtitle),
+                subtitle = state.appBarSubtitle.resolveReference(),
             )
         },
         content = { innerPadding ->

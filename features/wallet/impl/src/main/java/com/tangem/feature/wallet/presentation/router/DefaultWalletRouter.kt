@@ -10,6 +10,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -116,7 +117,12 @@ internal class DefaultWalletRouter @Inject constructor(
         reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
     }
 
-    override fun openNFT(userWalletId: UserWalletId) {
-        router.push(AppRoute.NFT(userWalletId))
+    override fun openNFT(userWallet: UserWallet) {
+        router.push(
+            AppRoute.NFT(
+                userWalletId = userWallet.walletId,
+                walletName = userWallet.name,
+            ),
+        )
     }
 }

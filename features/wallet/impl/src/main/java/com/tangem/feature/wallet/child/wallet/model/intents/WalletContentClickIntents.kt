@@ -14,7 +14,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
@@ -59,7 +58,7 @@ internal interface WalletContentClickIntents {
 
     fun onDisposeExpressStatus()
 
-    fun onNFTClick(userWalletId: UserWalletId)
+    fun onNFTClick(userWallet: UserWallet)
 }
 
 @Suppress("LongParameterList")
@@ -242,7 +241,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         stateHolder.update(CloseBottomSheetTransformer(userWalletId))
     }
 
-    override fun onNFTClick(userWalletId: UserWalletId) {
+    override fun onNFTClick(userWallet: UserWallet) {
         val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
         val analyticsState = when (val nftState = selectedWallet.nftState) {
             is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(nftState.assetsCount)
@@ -256,6 +255,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
             analyticsEventHandler.send(NFTAnalyticsEvent.NFTListScreenOpened(analyticsState))
         }
 
-        router.openNFT(userWalletId)
+        router.openNFT(userWallet)
     }
 }
