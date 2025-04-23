@@ -518,7 +518,6 @@
   <string name="nft_details_traits">特徴</string>
   <string name="nft_empty_search">結果がありません。別のリクエストをお試しください。</string>
   <string name="nft_receive_choose_network">ネットワークを選択</string>
-  <string name="nft_receive_subtitle">私のウォレットへ</string>
   <string name="nft_receive_title">NFTを受け取る</string>
   <string name="nft_wallet_count">%1$dコレクションの%2$dNFT</string>
   <string name="nft_wallet_receive_nft">ここをタップして最初のNFTを受け取ります</string>
