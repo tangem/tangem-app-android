@@ -20,7 +20,7 @@ class CreateApprovalTransactionUseCase(
         cryptoCurrency: CryptoCurrency.Token,
         userWalletId: UserWalletId,
         amount: BigDecimal?,
-        fee: Fee,
+        fee: Fee?,
         contractAddress: String,
         spenderAddress: String,
     ) = Either.catch {
