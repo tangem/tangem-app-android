@@ -38,7 +38,7 @@ internal class DefaultTransactionRepository(
 
     override suspend fun createTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
@@ -52,13 +52,25 @@ internal class DefaultTransactionRepository(
             derivationPath = network.derivationPath.value,
         ) ?: error("Wallet manager not found")
 
-        return@withContext walletManager.createTransaction(
-            amount = amount,
-            fee = fee,
-            destination = destination,
-        ).copy(
-            extras = txExtras ?: getMemoExtras(networkId = network.id.value, memo),
-        )
+        val extras = txExtras ?: getMemoExtras(networkId = network.id.value, memo)
+
+        return@withContext if (fee != null) {
+            walletManager.createTransaction(
+                amount = amount,
+                fee = fee,
+                destination = destination,
+            ).copy(
+                extras = extras,
+            )
+        } else {
+            TransactionData.Uncompiled(
+                amount = amount,
+                sourceAddress = walletManager.wallet.address,
+                destinationAddress = destination,
+                extras = extras,
+                fee = null,
+            )
+        }
     }
 
     override suspend fun createTransferTransaction(
@@ -102,7 +114,7 @@ internal class DefaultTransactionRepository(
     override suspend fun createApprovalTransaction(
         amount: Amount,
         approvalAmount: Amount?,
-        fee: Fee,
+        fee: Fee?,
         contractAddress: String,
         spenderAddress: String,
         userWalletId: UserWalletId,
