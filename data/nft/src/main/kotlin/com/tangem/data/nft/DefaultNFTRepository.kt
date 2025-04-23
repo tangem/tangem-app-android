@@ -135,13 +135,10 @@ internal class DefaultNFTRepository @Inject constructor(
     override suspend fun isNFTSupported(network: Network): Boolean = network.canHandleNFTs()
 
     override suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network> {
-        val userWallet = requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
-            "User wallet [$userWalletId] not found"
-        }
+        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
         return Blockchain
             .entries
-            .filter { it.canHandleNFTs() }
-            .filter { !it.isTestnet() }
+            .filter { it.canHandleNFTs() && !it.isTestnet() }
             .mapNotNull {
                 getNetwork(
                     blockchain = it,
