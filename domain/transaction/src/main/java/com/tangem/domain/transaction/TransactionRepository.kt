@@ -89,4 +89,11 @@ interface TransactionRepository {
         userWalletId: UserWalletId,
         network: Network,
     ): Result<ByteArray>
+
+    suspend fun prepareForSendMultiple(
+        transactionData: List<TransactionData>,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<List<ByteArray>>
 }
