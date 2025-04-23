@@ -43,7 +43,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
 
     @Test
     fun `refresh the single network if runtime store contains status with this network`() = runTest {
-        val status = MockNetworkStatusFactory.createVerified().toSimple()
+        val status = MockNetworkStatusFactory.createVerified(network).toSimple()
 
         runtimeStore.store(
             value = mapOf(userWalletId.stringValue to setOf(status)),
@@ -98,41 +98,50 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
         val expectedErrorMessage = "Method storeActual can be called only with StatusSource.ACTUAL"
 
         // #1: StatusSource.ACTUAL
-        val status = MockNetworkStatusFactory.createVerified().copy(
-            value = MockNetworkStatusFactory.createVerified().value.copySealed(source = StatusSource.ACTUAL),
+        val status = MockNetworkStatusFactory.createVerified(network).copy(
+            value = MockNetworkStatusFactory.createVerified(network).value.copySealed(source = StatusSource.ACTUAL),
         )
 
-        val actual = runCatching { store.storeActual(userWalletId, status) }
+        val actual = runCatching { store.storeSuccess(userWalletId, status) }
+
+        val runtimeExpected = mapOf(userWalletId.stringValue to setOf(status.toSimple()))
+        val persistenceExpected = mapOf(userWalletId.stringValue to setOf(status.toDataModel()!!))
 
         Truth.assertThat(actual.isSuccess).isTrue()
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(persistenceExpected)
 
         // #2: StatusSource.CACHE
-        val cacheStatus = MockNetworkStatusFactory.createVerified().copy(
-            value = MockNetworkStatusFactory.createVerified().value.copySealed(source = StatusSource.CACHE),
+        val cacheStatus = MockNetworkStatusFactory.createVerified(network).copy(
+            value = MockNetworkStatusFactory.createVerified(network).value.copySealed(source = StatusSource.CACHE),
         )
 
-        val cacheActual = runCatching { store.storeActual(userWalletId, cacheStatus) }
+        val cacheActual = runCatching { store.storeSuccess(userWalletId, cacheStatus) }
 
         Truth.assertThat(cacheActual.isFailure).isTrue()
         Truth.assertThat(cacheActual.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
         Truth.assertThat(cacheActual.exceptionOrNull()).hasMessageThat().isEqualTo(expectedErrorMessage)
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(persistenceExpected)
 
         // #3: StatusSource.ONLY_CACHE
-        val onlyCacheStatus = MockNetworkStatusFactory.createVerified().copy(
-            value = MockNetworkStatusFactory.createVerified().value.copySealed(source = StatusSource.ONLY_CACHE),
+        val onlyCacheStatus = MockNetworkStatusFactory.createVerified(network).copy(
+            value = MockNetworkStatusFactory.createVerified(network).value.copySealed(source = StatusSource.ONLY_CACHE),
         )
 
-        val onlyCacheActual = runCatching { store.storeActual(userWalletId, onlyCacheStatus) }
+        val onlyCacheActual = runCatching { store.storeSuccess(userWalletId, onlyCacheStatus) }
 
         Truth.assertThat(onlyCacheActual.isFailure).isTrue()
         Truth.assertThat(onlyCacheActual.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
         Truth.assertThat(onlyCacheActual.exceptionOrNull()).hasMessageThat().isEqualTo(expectedErrorMessage)
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(persistenceExpected)
     }
 
     @Test
     fun `store actual if runtime and cache stores contain status with this network`() = runTest {
-        val prevStatus = MockNetworkStatusFactory.createVerified().copy(
-            value = MockNetworkStatusFactory.createVerified().value.copySealed(source = StatusSource.ONLY_CACHE),
+        val prevStatus = MockNetworkStatusFactory.createVerified(network).copy(
+            value = MockNetworkStatusFactory.createVerified(network).value.copySealed(source = StatusSource.ONLY_CACHE),
         )
 
         runtimeStore.store(
@@ -145,11 +154,11 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
             }
         }
 
-        val newStatus = MockNetworkStatusFactory.createVerified().copy(
-            value = MockNetworkStatusFactory.createVerified().value.copySealed(source = StatusSource.ACTUAL),
+        val newStatus = MockNetworkStatusFactory.createVerified(network).copy(
+            value = MockNetworkStatusFactory.createVerified(network).value.copySealed(source = StatusSource.ACTUAL),
         )
 
-        store.storeActual(userWalletId, newStatus)
+        store.storeSuccess(userWalletId, newStatus)
 
         val runtimeExpected = mapOf(
             userWalletId.stringValue to setOf(newStatus.toSimple()),
@@ -165,7 +174,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
 
     @Test
     fun `store actual unreachable status if cache store contains verified status`() = runTest {
-        val prevStatus = MockNetworkStatusFactory.createVerified()
+        val prevStatus = MockNetworkStatusFactory.createVerified(network)
 
         runtimeStore.store(
             value = mapOf(userWalletId.stringValue to setOf(prevStatus.toSimple())),
@@ -177,18 +186,17 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
             }
         }
 
-        val newStatus = MockNetworkStatusFactory.createUnreachable()
+        val newStatus = MockNetworkStatusFactory.createUnreachable(network)
 
-        store.storeActual(userWalletId, newStatus)
+        val actual = runCatching { store.storeSuccess(userWalletId, newStatus) }
 
-        val runtimeExpected = mapOf(
-            userWalletId.stringValue to setOf(newStatus.toSimple()),
-        )
+        val expectedErrorMessage = "Use storeError method to save unreachable status"
+        val runtimeExpected = mapOf(userWalletId.stringValue to setOf(prevStatus.toSimple()))
+        val persistenceExpected = mapOf(userWalletId.stringValue to setOf(prevStatus.toDataModel()!!))
 
-        val persistenceExpected = mapOf(
-            userWalletId.stringValue to setOf(prevStatus.toDataModel()!!),
-        )
-
+        Truth.assertThat(actual.isFailure).isTrue()
+        Truth.assertThat(actual.exceptionOrNull()).isInstanceOf(IllegalStateException::class.java)
+        Truth.assertThat(actual.exceptionOrNull()).hasMessageThat().isEqualTo(expectedErrorMessage)
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(persistenceExpected)
     }
@@ -212,7 +220,7 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
 
     @Test
     fun `store error if runtime store contains status with this network`() = runTest {
-        val status = MockNetworkStatusFactory.createVerified().toSimple()
+        val status = MockNetworkStatusFactory.createVerified(network).toSimple()
 
         runtimeStore.store(
             value = mapOf(userWalletId.stringValue to setOf(status)),
@@ -223,6 +231,48 @@ internal class NetworkStatusesStoreUpdateMethodsTest {
         val runtimeExpected = mapOf(
             userWalletId.stringValue to setOf(
                 status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE)),
+            ),
+        )
+
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
+    }
+
+    @Test
+    fun `store error if runtime store is empty and unreachable status was passed`() = runTest {
+        val status = MockNetworkStatusFactory.createUnreachable(network)
+
+        store.storeError(
+            userWalletId = userWalletId,
+            network = network,
+            value = status.value as NetworkStatus.Unreachable,
+        )
+
+        val runtimeExpected = mapOf(
+            userWalletId.stringValue to setOf(status.toSimple()),
+        )
+
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<NetworkStatusDM>>())
+    }
+
+    @Test
+    fun `store error if runtime store contains status with this network and unreachable status was passed`() = runTest {
+        val status = MockNetworkStatusFactory.createVerified(network)
+
+        runtimeStore.store(
+            value = mapOf(userWalletId.stringValue to setOf(status.toSimple())),
+        )
+
+        store.storeError(
+            userWalletId = userWalletId,
+            network = network,
+            value = MockNetworkStatusFactory.createUnreachable(network).value as NetworkStatus.Unreachable,
+        )
+
+        val runtimeExpected = mapOf(
+            userWalletId.stringValue to setOf(
+                status.copy(value = status.value.copySealed(source = StatusSource.ONLY_CACHE)).toSimple(),
             ),
         )
 
