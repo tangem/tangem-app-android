@@ -50,9 +50,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
     @Before
     fun setup() {
         every { appVersionProvider.versionName } returns VERSION_NAME
-        every { expressAuthProvider.getUserId() } returns EXPRESS_USER_ID
         every { expressAuthProvider.getSessionId() } returns EXPRESS_SESSION_ID
-        every { expressAuthProvider.getRefCode() } returns EXPRESS_REF_CODE
         every { stakeKitAuthProvider.getApiKey() } returns STAKE_KIT_API_KEY
         every { appAuthProvider.getCardId() } returns APP_CARD_ID
         every { appAuthProvider.getCardPublicKey() } returns APP_CARD_PUBLIC_KEY
@@ -131,9 +129,7 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                                 MockEnvironmentConfigStorage.EXPRESS_DEV_API_KEY
                             }
                         },
-                        "user-id" to ProviderSuspend { EXPRESS_USER_ID },
                         "session-id" to ProviderSuspend { EXPRESS_SESSION_ID },
-                        "refcode" to ProviderSuspend { EXPRESS_REF_CODE },
                         "version" to ProviderSuspend { VERSION_NAME },
                         "platform" to ProviderSuspend { "android" },
                         "language" to ProviderSuspend { Locale.getDefault().language.checkHeaderValueOrEmpty() },
