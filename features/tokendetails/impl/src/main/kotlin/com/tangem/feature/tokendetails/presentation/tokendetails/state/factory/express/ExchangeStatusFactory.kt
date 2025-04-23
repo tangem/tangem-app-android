@@ -12,8 +12,7 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Quote
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.repository.QuotesRepository
-import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.SwapTransactionRepository
 import com.tangem.feature.swap.domain.api.SwapRepository
 import com.tangem.feature.swap.domain.models.domain.*
@@ -29,7 +28,6 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.conflate
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 
 @Suppress("LongParameterList")
@@ -39,14 +37,13 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     private val quotesRepository: QuotesRepository,
     private val quotesRepositoryV2: QuotesRepositoryV2,
     private val tokensFeatureToggles: TokensFeatureToggles,
-    private val getSelectedWalletSyncUseCase: GetSelectedWalletSyncUseCase,
     private val addCryptoCurrenciesUseCase: AddCryptoCurrenciesUseCase,
     private val swapTransactionStatusStore: SwapTransactionStatusStore,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     @Assisted private val clickIntents: TokenDetailsClickIntents,
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
     @Assisted private val currentStateProvider: Provider<TokenDetailsState>,
-    @Assisted private val userWalletId: UserWalletId,
+    @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrency: CryptoCurrency,
 ) {
 
@@ -60,14 +57,9 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     }
 
     suspend operator fun invoke(): Flow<PersistentList<ExchangeUM>> {
-        val selectedWallet = getSelectedWalletSyncUseCase().fold(
-            ifLeft = { return emptyFlow() },
-            ifRight = { it },
-        )
         return swapTransactionRepository.getTransactions(
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoCurrencyId = cryptoCurrency.id,
-            scanResponse = selectedWallet.scanResponse,
         ).conflate()
             .map { savedTransactions ->
                 val quotes = savedTransactions
@@ -91,7 +83,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         val shouldDispose = selectedTx.activeStatus?.isAutoDisposable == true || isForceDispose
         if (shouldDispose) {
             swapTransactionRepository.removeTransaction(
-                userWalletId = userWalletId,
+                userWalletId = userWallet.walletId,
                 fromCryptoCurrency = selectedTx.fromCryptoCurrency,
                 toCryptoCurrency = selectedTx.toCryptoCurrency,
                 txId = selectedTx.info.txId,
@@ -117,7 +109,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
     }
 
     private suspend fun getExchangeStatus(txId: String, provider: SwapProvider): ExchangeStatusModel? {
-        return swapRepository.getExchangeStatus(txId)
+        return swapRepository.getExchangeStatus(userWallet = userWallet, txId = txId)
             .fold(
                 ifLeft = { null },
                 ifRight = { statusModel ->
@@ -157,7 +149,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
         val refundContractAddress = status.refundContractAddress
         if (refundNetwork != null && refundContractAddress != null) {
             return addCryptoCurrenciesUseCase(
-                userWalletId = userWalletId,
+                userWalletId = userWallet.walletId,
                 contractAddress = refundContractAddress,
                 networkId = refundNetwork,
             ).getOrNull()
@@ -219,7 +211,7 @@ internal class ExchangeStatusFactory @AssistedInject constructor(
             clickIntents: TokenDetailsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
             currentStateProvider: Provider<TokenDetailsState>,
-            userWalletId: UserWalletId,
+            userWallet: UserWallet,
             cryptoCurrency: CryptoCurrency,
         ): ExchangeStatusFactory
     }
