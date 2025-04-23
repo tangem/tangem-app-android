@@ -277,20 +277,39 @@ internal class DefaultTransactionRepository(
         userWalletId: UserWalletId,
         network: Network,
     ): Result<ByteArray> = withContext(coroutineDispatcherProvider.io) {
+        val preparer = getPreparer(network, userWalletId)
+
+        when (val prepareForSend = preparer.prepareForSend(transactionData, signer)) {
+            is com.tangem.blockchain.extensions.Result.Failure -> Result.failure(prepareForSend.error)
+            is com.tangem.blockchain.extensions.Result.Success -> Result.success(prepareForSend.data)
+        }
+    }
+
+    override suspend fun prepareForSendMultiple(
+        transactionData: List<TransactionData>,
+        signer: TransactionSigner,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): Result<List<ByteArray>> = withContext(coroutineDispatcherProvider.io) {
+        val preparer = getPreparer(network, userWalletId)
+
+        when (val prepareForSend = preparer.prepareForSendMultiple(transactionData, signer)) {
+            is com.tangem.blockchain.extensions.Result.Failure -> Result.failure(prepareForSend.error)
+            is com.tangem.blockchain.extensions.Result.Success -> Result.success(prepareForSend.data)
+        }
+    }
+
+    private suspend fun getPreparer(network: Network, userWalletId: UserWalletId): TransactionPreparer {
         val blockchain = Blockchain.fromId(network.id.value)
         val walletManager = walletManagersFacade.getOrCreateWalletManager(
             userWalletId = userWalletId,
             blockchain = blockchain,
             derivationPath = network.derivationPath.value,
         )
-        val preparer = walletManager as? TransactionPreparer ?: kotlin.run {
+        val preparer = walletManager as? TransactionPreparer ?: run {
             Timber.e("${walletManager?.wallet?.blockchain} does not support TransactionBuilder")
             error("Wallet manager does not support TransactionPreparer")
         }
-
-        when (val prepareForSend = preparer.prepareForSend(transactionData, signer)) {
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.failure(prepareForSend.error)
-            is com.tangem.blockchain.extensions.Result.Success -> Result.success(prepareForSend.data)
-        }
+        return preparer
     }
 }
