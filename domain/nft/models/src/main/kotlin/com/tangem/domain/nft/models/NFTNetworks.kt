@@ -4,5 +4,5 @@ import com.tangem.domain.tokens.model.Network
 
 data class NFTNetworks(
     val availableNetworks: List<Network>,
-    val notAvailableNetworks: List<Network>,
+    val unavailableNetworks: List<Network>,
 )
