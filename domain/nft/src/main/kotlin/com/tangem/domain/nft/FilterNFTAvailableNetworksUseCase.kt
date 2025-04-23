@@ -12,7 +12,7 @@ class FilterNFTAvailableNetworksUseCase(
         withContext(dispatchers.default) {
             NFTNetworks(
                 availableNetworks = networks.availableNetworks.filter(searchQuery),
-                notAvailableNetworks = networks.notAvailableNetworks.filter(searchQuery),
+                unavailableNetworks = networks.unavailableNetworks.filter(searchQuery),
             )
         }
 
