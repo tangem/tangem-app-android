@@ -114,6 +114,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
         val pairsLeast = getPairs(
+            userWallet = userWallet,
             initialCurrency = LeastTokenInfo(
                 contractAddress = (currency as? CryptoCurrency.Token)?.contractAddress ?: "0",
                 network = currency.network.backendId,
@@ -197,10 +198,15 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     }
 
     private suspend fun getPairs(
+        userWallet: UserWallet,
         initialCurrency: LeastTokenInfo,
         currenciesList: List<CryptoCurrency>,
     ): PairsWithProviders {
-        return repository.getPairs(initialCurrency, currenciesList)
+        return repository.getPairs(
+            userWallet = userWallet,
+            initialCurrency = initialCurrency,
+            currencyList = currenciesList,
+        )
     }
 
     override suspend fun givePermissionToSwap(
@@ -308,7 +314,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         isBalanceWithoutFeeEnough: Boolean,
     ): Pair<SwapProvider, SwapState> {
         val maybeQuotes = repository.findBestQuote(
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
             fromNetwork = fromToken.currency.network.backendId,
             toContractAddress = toToken.currency.getContractAddress(),
@@ -619,6 +625,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         return result.fold(
             ifRight = { txHash ->
                 repository.exchangeSent(
+                    userWallet = userWallet,
                     txId = swapData.transaction.txId,
                     fromNetwork = currencyToSendStatus.currency.network.backendId,
                     fromAddress = currencyToSendStatus.value.networkAddress?.defaultAddress?.value.orEmpty(),
@@ -674,6 +681,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         swapProvider: SwapProvider,
     ): SwapTransactionState {
         val exchangeData = repository.getExchangeData(
+            userWallet = userWallet,
             fromContractAddress = currencyToSend.currency.getContractAddress(),
             fromNetwork = currencyToSend.currency.network.backendId,
             toContractAddress = currencyToGet.currency.getContractAddress(),
@@ -726,6 +734,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             ifLeft = { SwapTransactionState.Error.TransactionError(it) },
             ifRight = { txHash ->
                 repository.exchangeSent(
+                    userWallet = userWallet,
                     txId = exchangeDataCex.txId,
                     fromNetwork = currencyToSend.currency.network.backendId,
                     fromAddress = currencyToSend.value.networkAddress?.defaultAddress?.value.orEmpty(),
@@ -1132,7 +1141,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
             }
 
             val quotes = repository.findBestQuote(
-                userWalletId = userWalletId,
+                userWallet = userWallet,
                 fromContractAddress = fromToken.getContractAddress(),
                 fromNetwork = fromToken.network.backendId,
                 toContractAddress = toToken.getContractAddress(),
@@ -1388,6 +1397,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         selectedFee: FeeType,
     ): SwapState {
         return repository.getExchangeData(
+            userWallet = userWallet,
             fromContractAddress = fromToken.currency.getContractAddress(),
             fromNetwork = fromToken.currency.network.backendId,
             toContractAddress = toToken.currency.getContractAddress(),
