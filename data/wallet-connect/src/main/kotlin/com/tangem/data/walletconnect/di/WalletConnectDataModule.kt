@@ -144,7 +144,15 @@ internal object WalletConnectDataModule {
 
     @Provides
     @Singleton
-    fun wcSolanaNetwork(excludedBlockchains: ExcludedBlockchains): WcSolanaNetwork = WcSolanaNetwork(
+    fun wcSolanaNetwork(
+        @SdkMoshi moshi: Moshi,
+        excludedBlockchains: ExcludedBlockchains,
+        sessionsManager: WcSessionsManager,
+        factories: WcSolanaNetwork.Factories,
+    ): WcSolanaNetwork = WcSolanaNetwork(
+        moshi = moshi,
+        sessionsManager = sessionsManager,
+        factories = factories,
         excludedBlockchains = excludedBlockchains,
     )
 
@@ -175,6 +183,7 @@ internal object WalletConnectDataModule {
     fun diHelperBox(ethNetwork: WcEthNetwork, solanaNetwork: WcSolanaNetwork) = DiHelperBox(
         handlers = setOf(
             ethNetwork,
+            solanaNetwork,
         ),
         converters = setOf(
             ethNetwork,
