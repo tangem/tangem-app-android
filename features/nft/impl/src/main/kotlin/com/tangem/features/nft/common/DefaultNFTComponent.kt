@@ -122,6 +122,7 @@ internal class DefaultNFTComponent @AssistedInject constructor(
         context = factoryContext,
         params = NFTReceiveComponent.Params(
             userWalletId = route.userWalletId,
+            walletName = params.walletName,
             onBackClick = ::onChildBack,
         ),
     )
