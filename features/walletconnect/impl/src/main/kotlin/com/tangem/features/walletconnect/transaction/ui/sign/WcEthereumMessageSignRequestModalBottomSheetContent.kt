@@ -42,38 +42,48 @@ internal fun WcEthereumMessageSignRequestModalBottomSheetContent(state: WcEthere
                 color = TangemTheme.colors.stroke.primary,
             )
             WcTransactionRequestItem(
+                iconRes = state.transactionIconRes,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { state.actions.transactionRequestOnClick() }
                     .padding(TangemTheme.dimens.spacing12),
             )
+        }
+        Column(modifier = Modifier.padding(top = TangemTheme.dimens.spacing16)) {
+            Column(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+                    .background(color = TangemTheme.colors.background.action)
+                    .fillMaxWidth()
+                    .animateContentSize(),
+            ) {
+                val itemsModifier = Modifier
+                    .fillMaxWidth()
+                    .padding(TangemTheme.dimens.spacing12)
 
-            val itemsModifier = Modifier
-                .fillMaxWidth()
-                .padding(TangemTheme.dimens.spacing12)
-
-            HorizontalDivider(
-                thickness = TangemTheme.dimens.size1,
-                color = TangemTheme.colors.stroke.primary,
-            )
-            WcWalletItem(
-                modifier = itemsModifier,
-                walletName = state.transaction.walletName,
-            )
-            HorizontalDivider(
-                thickness = TangemTheme.dimens.size1,
-                color = TangemTheme.colors.stroke.primary,
-            )
-            WcNetworkItem(
-                modifier = itemsModifier,
-                networkInfo = state.transaction.networkInfo,
+                HorizontalDivider(
+                    thickness = TangemTheme.dimens.size1,
+                    color = TangemTheme.colors.stroke.primary,
+                )
+                WcWalletItem(
+                    modifier = itemsModifier,
+                    walletName = state.transaction.walletName,
+                )
+                HorizontalDivider(
+                    thickness = TangemTheme.dimens.size1,
+                    color = TangemTheme.colors.stroke.primary,
+                )
+                WcNetworkItem(
+                    modifier = itemsModifier,
+                    networkInfo = state.transaction.networkInfo,
+                )
+            }
+            WcTransactionRequestButtons(
+                modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
+                onDismiss = state.actions.onDismiss,
+                onSign = state.actions.onSign,
+                isLoading = state.transaction.isLoading,
             )
         }
-        WcTransactionRequestButtons(
-            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
-            onDismiss = state.actions.onDismiss,
-            onSign = state.actions.onSign,
-            isLoading = state.transaction.isLoading,
-        )
     }
 }

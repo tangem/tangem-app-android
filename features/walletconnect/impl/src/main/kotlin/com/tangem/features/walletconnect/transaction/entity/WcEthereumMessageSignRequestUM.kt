@@ -10,6 +10,7 @@ import kotlinx.collections.immutable.ImmutableList
 internal data class WcEthereumMessageSignRequestUM(
     @DrawableRes val startIconRes: Int,
     @DrawableRes val endIconRes: Int,
+    @DrawableRes val transactionIconRes: Int,
     val actions: WcTransactionActionsUM,
     val state: State = State.TRANSACTION,
     val transaction: WcTransactionUM,

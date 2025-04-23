@@ -71,6 +71,7 @@ internal class WcEthereumMessageSignRequestModel @Inject constructor(
         return WcEthereumMessageSignRequestUM(
             startIconRes = R.drawable.ic_back_24,
             endIconRes = R.drawable.ic_close_24,
+            transactionIconRes = R.drawable.ic_doc_new_24,
             state = State.TRANSACTION,
             actions = WcTransactionActionsUM(
                 onDismiss = { cancel(useCase) },
