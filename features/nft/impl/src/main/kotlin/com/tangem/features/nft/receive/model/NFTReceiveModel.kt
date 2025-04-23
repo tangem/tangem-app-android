@@ -9,6 +9,7 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.components.fields.InputManager
 import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.nft.FilterNFTAvailableNetworksUseCase
 import com.tangem.domain.nft.GetNFTAvailableNetworksUseCase
 import com.tangem.domain.nft.GetNFTNetworkStatusUseCase
@@ -47,6 +48,10 @@ internal class NFTReceiveModel @Inject constructor(
     private val _state = MutableStateFlow(
         value = NFTReceiveUM(
             onBackClick = params.onBackClick,
+            appBarSubtitle = resourceReference(
+                R.string.hot_crypto_add_token_subtitle,
+                formatArgs = wrappedList(params.walletName),
+            ),
             search = getInitialSearchBar(),
             networks = NFTReceiveUM.Networks.Content(persistentListOf()),
             bottomSheetConfig = null,
