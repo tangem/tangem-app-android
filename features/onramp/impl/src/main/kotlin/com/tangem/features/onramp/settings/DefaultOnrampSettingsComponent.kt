@@ -52,7 +52,8 @@ internal class DefaultOnrampSettingsComponent @AssistedInject constructor(
         OnrampSettingsConfig.SelectCountry -> selectCountryComponentFactory.create(
             context = childByContext(componentContext),
             params = SelectCountryComponent.Params(
-                params.cryptoCurrency,
+                userWalletId = params.userWalletId,
+                cryptoCurrency = params.cryptoCurrency,
                 onDismiss = { model.bottomSheetNavigation.dismiss() },
             ),
         )
