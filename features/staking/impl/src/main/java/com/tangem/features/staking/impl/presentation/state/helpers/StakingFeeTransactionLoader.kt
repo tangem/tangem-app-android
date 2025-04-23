@@ -14,9 +14,11 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.transaction.ActionParams
 import com.tangem.domain.staking.model.stakekit.transaction.StakingGasEstimate
+import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.staking.getCurrentToken
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.CreateApprovalTransactionUseCase
 import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.transaction.usecase.IsFeeApproximateUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -40,6 +42,7 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
     private val getFeeUseCase: GetFeeUseCase,
     private val estimateGasUseCase: EstimateGasUseCase,
     private val isFeeApproximateUseCase: IsFeeApproximateUseCase,
+    private val createApprovalTransactionUseCase: CreateApprovalTransactionUseCase,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val yield: Yield,
@@ -183,11 +186,22 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
         onApprovalFee: (TransactionFee) -> Unit,
         onApprovalFeeError: (GetFeeError) -> Unit,
     ) {
-        getFeeUseCase(
+        val tokenCurrency = cryptoCurrencyStatus.currency as? CryptoCurrency.Token
+            ?: return onApprovalFeeError(GetFeeError.UnknownError)
+        val approvalTransactionData = createApprovalTransactionUseCase(
+            cryptoCurrency = tokenCurrency,
+            userWalletId = userWallet.walletId,
             amount = amount,
-            destination = validatorAddress,
+            fee = null,
+            contractAddress = tokenCurrency.contractAddress,
+            spenderAddress = validatorAddress,
+        ).getOrElse {
+            return onApprovalFeeError(GetFeeError.DataError(it))
+        }
+        getFeeUseCase(
             userWallet = userWallet,
-            cryptoCurrency = cryptoCurrencyStatus.currency,
+            network = tokenCurrency.network,
+            transactionData = approvalTransactionData,
         ).fold(
             ifRight = { fee ->
                 onApprovalFee(fee)
