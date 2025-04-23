@@ -21,6 +21,8 @@
   <string name="add_custom_token_title">Додати токен</string>
   <string name="add_tokens_title">Токени</string>
   <string name="address_qr_code_message_format">Надсилайте тільки %1$s (%2$s) в мережі %3$s на цю адресу. Використання іншої мережі може призвести до втрати коштів.</string>
+  <string name="address_type_default">За замовчуванням</string>
+  <string name="address_type_legacy">Застарілий</string>
   <string name="alert_button_how_to_scan">Як сканувати</string>
   <string name="alert_button_request_support">Звернутися в підтримку</string>
   <string name="alert_button_try_again">Спробуйте ще раз</string>
@@ -85,6 +87,7 @@
   <string name="cardano_coin_will_be_send_with_token_title">Вимоги до транзакції Cardano</string>
   <string name="cardano_insufficient_balance_to_send_token_description">Щоб здійснити транзакцію %1$s, внесіть певну суму ADA для покриття мережевої комісії та мінімальне значення ADA (рекомендовано 5 ADA)</string>
   <string name="cardano_insufficient_balance_to_send_token_title">Недостатньо ADA для транзакції</string>
+  <string name="cardano_low_ada">Сума і решта, що відправляються, не можуть бути меншими за 1 ADA</string>
   <string name="cardano_max_amount_has_token_description">Ви повинні утримувати деяку кількість ADA, оскільки у вас на балансі є токени в мережі Cardano</string>
   <string name="cardano_max_amount_has_token_title">Недостатньо ADA</string>
   <string name="common_accept">Прийняти</string>
@@ -102,6 +105,7 @@
   <string name="common_balance_title">Баланс</string>
   <string name="common_biometric_authentication">біометричну автентифікацію</string>
   <string name="common_biometrics">біометрії</string>
+  <string name="common_build_tx_error">Не вдалося створити транзакцію</string>
   <string name="common_buy">Купити</string>
   <string name="common_buy_currency">Перейдіть до %1$s</string>
   <string name="common_camera_denied_alert_message">Ви не надали доступ до камери, будь ласка, змініть налаштування конфіденційності</string>
@@ -141,6 +145,7 @@
   <string name="common_explore">Оглядач</string>
   <string name="common_explore_transaction_history">Переглянути історію транзакцій</string>
   <string name="common_explorer">Оглядач</string>
+  <string name="common_fee_error">Не вдалося отримати комісію</string>
   <string name="common_fee_selector_footer">Мережеві комісії – це збори, які користувачі сплачують за обробку та підтвердження транзакцій. На розмір комісії може впливати перевантаження мережі, розмір транзакції та пріоритет виконання. %s</string>
   <string name="common_fee_selector_option_fast">Швидко</string>
   <string name="common_fee_selector_option_market">За ринком</string>
@@ -188,6 +193,7 @@
   <string name="common_select_action">Оберіть дію</string>
   <string name="common_sell">Продати</string>
   <string name="common_send">Надіслати</string>
+  <string name="common_send_tx_error">Не вдалося надіслати транзакцію</string>
   <string name="common_server_unavailable">Сервер недоступний, спробуйте пізніше</string>
   <string name="common_share">Поширити</string>
   <string name="common_share_link">Поділитися посиланням</string>
@@ -211,6 +217,7 @@
   <string name="common_unknown_error">Виникла помилка. Будь ласка, спробуйте ще раз.</string>
   <string name="common_unreachable">Недоступно</string>
   <string name="common_unstake">Скасувати стейкінг</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">Через обмеження %1$s в одну транзакцію може поміститися тільки %2$d UTXO. Це означає, що ви можете відправити тільки %3$s або менше. Вам потрібно зменшити суму.</string>
   <string name="common_week">тиждень</string>
   <string name="common_with">з</string>
   <string name="common_yes">Так</string>
@@ -267,6 +274,7 @@
   <string name="disclaimer_error_loading">Перевірте підключення до інтернету або змініть мережу</string>
   <string name="disclaimer_title">Умови використання</string>
   <string name="error_wrong_wallet_tapped">Ви використали картку або кільце від іншого гаманця. Прикладіть картку або кільце, пов\'язану з цим гаманцем.</string>
+  <string name="eth_gas_required_exceeds_allowance">Недостатньо коштів для здійснення транзакції. Будь ласка, поповніть свій акаунт.</string>
   <string name="exchange_tokens_available_tokens_header">Мої токени</string>
   <string name="exchange_tokens_empty_tokens">У вас немає доданих токенів. Додайте токени для обміну</string>
   <string name="exchange_tokens_unavailable_tokens_header">Недоступний для обміну з %s</string>
@@ -346,6 +354,9 @@
   <string name="feedback_subject_support_tangem">Звернення в підтримку Tangem</string>
   <string name="feedback_subject_tx_failed">Не вдається відправити транзакцію</string>
   <string name="feedback_token_description_error">Помилка в описі монети</string>
+  <string name="generic_error">Виникла помилка</string>
+  <string name="generic_error_code">Виникла помилка. Код: %s.</string>
+  <string name="generic_requires_memo_error">Вимагається memo</string>
   <string name="give_permission_current_transaction">Транзакція</string>
   <string name="give_permission_policy_type_footer">Вкажіть ліміт доступу для обраного токена</string>
   <string name="give_permission_rows_amount">Кількість %s</string>
@@ -511,6 +522,10 @@
   <string name="markets_tooltip_message">Потягніть вгору або торкніться панелі пошуку, щоб додати токени безпосередньо з маркету</string>
   <string name="markets_tooltip_title">Додати токени</string>
   <string name="nfc_error_unavailable">Функція NFC недоступна на вашому пристрої</string>
+  <string name="no_account_generic">Щоб користуватися мережею %1$s, ви маєте оплатити резерв акаунта (%2$s %3$s), який блокується і не використовується у вашому балансі</string>
+  <string name="no_account_polkadot">Обліковий запис одержувача не активовано. Надішліть %s або більше, щоб активувати обліковий запис.</string>
+  <string name="no_account_send_to_create">Для створення акаунту надішліть кошти на цю адресу</string>
+  <string name="no_trustline_xlm_asset">Акаунт одержувача не містить трастлайну для активу, що надсилається.</string>
   <string name="onboarding_access_code_feature_1_description">Налаштуйте єдиний код доступу для захисту всіх ваших карток або кілець</string>
   <string name="onboarding_access_code_feature_1_title">Захист</string>
   <string name="onboarding_access_code_feature_2_description">Встановіть індивідуальний код доступу для кожної картки або кільця пізніше.</string>
@@ -728,6 +743,12 @@
   <string name="send_destination_tag_field">Тег призначення</string>
   <string name="send_enter_address_field">Введіть адресу</string>
   <string name="send_error_address_same_as_wallet">Адреса збігається з адресою гаманця</string>
+  <string name="send_error_dust_amount_format">Мінімальна сума: %s</string>
+  <string name="send_error_dust_change_format">Мінімальна решта: %s</string>
+  <string name="send_error_invalid_fee_value">Невірна комісія</string>
+  <string name="send_error_minimum_balance_format">Мінімальний баланс: %s</string>
+  <string name="send_error_no_target_account">Обліковий запис одержувача не створено. Сума для переказу повинна бути %s + комісія або більше</string>
+  <string name="send_error_unknown">Невідома помилка</string>
   <string name="send_extras_error_invalid_memo">Недопустимий Memo. Він не буде доданий до транзакції.</string>
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Перевірте підключення до мережі</string>
@@ -785,8 +806,12 @@
   <string name="send_summary_transaction_description_suffix_including">включно з комісією мережі %1$s</string>
   <string name="send_transaction_success">Транзакція успішно підписана і відправлена до блокчейну. Баланс гаманця буде оновлено через деякий час</string>
   <string name="send_tron_account_activation_error">%1$s — це монета у мережі Tron. Щоб розрахувати комісію та здійснити транзакцію, вам необхідно внести певну кількість Tron (TRX) на свій рахунок.</string>
+  <string name="send_validation_amount_exceeds_balance">Сума перевищує залишок</string>
   <string name="send_validation_destination_tag_required_description">Тег призначення (memo) потрібен для завершення цієї транзакції для вказаної адреси.</string>
   <string name="send_validation_destination_tag_required_title">Тег призначення обов\'язковий</string>
+  <string name="send_validation_invalid_amount">Недопустима сума</string>
+  <string name="send_validation_invalid_fee">Комісія перевищує залишок</string>
+  <string name="send_validation_invalid_total">Сума, що відправляється, перевищує залишок</string>
   <string name="sent_transaction_sent_title">Трансакцію надіслано</string>
   <string name="settings_card_settings_footer">Підготуйтеся до сканування кільця або картки, яку ви хочете налаштувати.</string>
   <string name="settings_forget_wallet">Забути гаманець</string>
@@ -1166,4 +1191,7 @@
   <string name="welcome_unlock_card">Сканувати картку або кільце</string>
   <string name="welcome_unlock_description">Використовуйте %s або відскануйте картку або кільце для входу у додаток</string>
   <string name="welcome_unlock_title">З поверненням!</string>
+  <string name="xtz_withdrawal_message_ignore">Ні, відправити все</string>
+  <string name="xtz_withdrawal_message_reduce">Зменшити на %s XTZ</string>
+  <string name="xtz_withdrawal_message_warning">Щоб не платити підвищену комісію при наступному поповненні гаманця, зменште суму на %s XTZ</string>
 </resources>
