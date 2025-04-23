@@ -18,9 +18,13 @@ internal interface NetworksStatusesStoreV2 {
     /** Refresh statuses of [networks] by [userWalletId] */
     suspend fun refresh(userWalletId: UserWalletId, networks: Set<Network>)
 
-    /** Store actual [NetworkStatus] by [userWalletId] */
-    suspend fun storeActual(userWalletId: UserWalletId, value: NetworkStatus)
+    /** Store success [value] by [userWalletId]. If status's value is unreachable, throws exception */
+    @Throws
+    suspend fun storeSuccess(userWalletId: UserWalletId, value: NetworkStatus)
 
-    /** Store error by [userWalletId] and [network]  */
-    suspend fun storeError(userWalletId: UserWalletId, network: Network)
+    /**
+     * Store error [value] by [userWalletId] and [network].
+     * If [value] is null, default unreachable status will be stored.
+     */
+    suspend fun storeError(userWalletId: UserWalletId, network: Network, value: NetworkStatus.Unreachable? = null)
 }
