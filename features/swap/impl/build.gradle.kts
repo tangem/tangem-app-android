@@ -40,6 +40,8 @@ dependencies {
     implementation(projects.domain.feedback)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.txhistory)
+    implementation(projects.domain.txhistory.models)
 
     /** Feature modules */
     implementation(projects.features.swap.domain)
