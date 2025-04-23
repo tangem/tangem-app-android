@@ -29,6 +29,7 @@ internal class NFTReceiveComponent @AssistedInject constructor(
 
     data class Params(
         val userWalletId: UserWalletId,
+        val walletName: String,
         val onBackClick: () -> Unit,
     )
 }
