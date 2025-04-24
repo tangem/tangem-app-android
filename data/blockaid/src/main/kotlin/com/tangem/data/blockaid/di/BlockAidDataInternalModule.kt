@@ -17,11 +17,11 @@ internal object BlockAidDataInternalModule {
 
     @Provides
     @Singleton
-    fun provideRepository(api: BlockAidApi, dispatcherProvider: CoroutineDispatcherProvider): BlockAidRepository {
+    fun provideRepository(api: BlockAidApi, dispatchers: CoroutineDispatcherProvider): BlockAidRepository {
         return DefaultBlockAidRepository(
             api = api,
-            dispatcherProvider = dispatcherProvider,
-            mapper = BlockAidMapper(),
+            dispatchers = dispatchers,
+            mapper = BlockAidMapper,
         )
     }
 }
