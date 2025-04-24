@@ -123,6 +123,10 @@ object PreferencesKeys {
 
     val WALLETS_NFT_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "walletsNftEnabledStates") }
 
+    // region Notifications
+    val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
+    // endregion
+
     fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")
 
     // region Permission
