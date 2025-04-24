@@ -27,7 +27,6 @@ internal class PreviewAddToPortfolioBSContentProvider : PreviewParameterProvider
         name = stringReference("Wallet 1"),
         information = stringReference("3 cards"),
         balance = UserWalletItemUM.Balance.Loading,
-        imageUrl = "",
         isEnabled = true,
         endIcon = UserWalletItemUM.EndIcon.Arrow,
         onClick = {},
