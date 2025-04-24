@@ -37,6 +37,16 @@ internal object NFTDomainModule {
 
     @Provides
     @Singleton
+    fun providesRefreshAllUseCase(
+        currenciesRepository: CurrenciesRepository,
+        nftRepository: NFTRepository,
+    ): RefreshAllNFTUseCase = RefreshAllNFTUseCase(
+        currenciesRepository = currenciesRepository,
+        nftRepository = nftRepository,
+    )
+
+    @Provides
+    @Singleton
     fun providesFetchNFTCollectionAssetsUseCase(nftRepository: NFTRepository): FetchNFTCollectionAssetsUseCase =
         FetchNFTCollectionAssetsUseCase(
             nftRepository = nftRepository,
@@ -47,7 +57,7 @@ internal object NFTDomainModule {
     fun providesGetNFTAvailableNetworksUseCase(
         nftRepository: NFTRepository,
         currenciesRepository: CurrenciesRepository,
-    ): GetNFTAvailableNetworksUseCase = GetNFTAvailableNetworksUseCase(
+    ): GetNFTNetworksUseCase = GetNFTNetworksUseCase(
         currenciesRepository = currenciesRepository,
         nftRepository = nftRepository,
     )
@@ -65,5 +75,12 @@ internal object NFTDomainModule {
     fun providesGetNFTNetworkStatusUseCase(networksRepository: NetworksRepository): GetNFTNetworkStatusUseCase =
         GetNFTNetworkStatusUseCase(
             networksRepository = networksRepository,
+        )
+
+    @Provides
+    @Singleton
+    fun providesGetNFTExploreUrlUseCase(nftRepository: NFTRepository): GetNFTExploreUrlUseCase =
+        GetNFTExploreUrlUseCase(
+            nftRepository = nftRepository,
         )
 }
