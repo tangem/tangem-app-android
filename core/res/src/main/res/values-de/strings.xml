@@ -21,6 +21,8 @@
   <string name="add_custom_token_title">Token anlegen</string>
   <string name="add_tokens_title">Token verwalten</string>
   <string name="address_qr_code_message_format">Sende nur %1$s ( %2$s ) vom %3$s -Netzwerk an diese Adresse. Die Verwendung anderer Token und Netzwerke kann zum Verlust von Geldern führen.</string>
+  <string name="address_type_default">Standard</string>
+  <string name="address_type_legacy">Altbestand</string>
   <string name="alert_button_how_to_scan">So scannt man</string>
   <string name="alert_button_request_support">Hilfe anfordern</string>
   <string name="alert_button_try_again">Erneut versuchen</string>
@@ -83,6 +85,7 @@
   <string name="cardano_coin_will_be_send_with_token_title">Cardano-Transaktionsanforderungen</string>
   <string name="cardano_insufficient_balance_to_send_token_description">Um eine %1$s Transaktion durchzuführen, musst du einen gewissen ADA-Betrag einzahlen, um die Netzwerkgebühr und den ADA-Mindestwert zu decken (5 ADA werden empfohlen).</string>
   <string name="cardano_insufficient_balance_to_send_token_title">Nicht genügend ADA für die Tokenübertrag</string>
+  <string name="cardano_low_ada">Betrag absenden, die Änderung darf nicht unter 1 ADA liegen</string>
   <string name="cardano_max_amount_has_token_description">Du musst einige ADA verwalten, weil du einige Token auf der Cardano-Blockchain besitzt</string>
   <string name="cardano_max_amount_has_token_title">Nicht genug ADA</string>
   <string name="common_accept">Akzeptieren</string>
@@ -100,6 +103,7 @@
   <string name="common_balance_title">Saldo</string>
   <string name="common_biometric_authentication">biometrische Authentifizierung</string>
   <string name="common_biometrics">biometrische Daten</string>
+  <string name="common_build_tx_error">Transaktion fehlgeschlagen</string>
   <string name="common_buy">Kaufen</string>
   <string name="common_buy_currency">Gehe zu %1$s</string>
   <string name="common_camera_denied_alert_message">D hast keinen Zugang zur Kamera erteilt, bitte passe deine Datenschutzeinstellungen an</string>
@@ -110,6 +114,8 @@
   <string name="common_claim_rewards">Stakingbelohnungen beanspruchen</string>
   <string name="common_close">Schließen</string>
   <string name="common_confirm">Bestätigen</string>
+  <string name="common_contact_tangem_support">Kontakt zum Tangem-Support</string>
+  <string name="common_contact_visa_support">Kontakt zum Visa-Support</string>
   <string name="common_continue">Weiter</string>
   <string name="common_copy">Kopieren</string>
   <string name="common_copy_address">Adresse kopieren</string>
@@ -135,6 +141,7 @@
   <string name="common_explore">Erkunden</string>
   <string name="common_explore_transaction_history">Transaktionsverlauf einsehen</string>
   <string name="common_explorer">Explorer</string>
+  <string name="common_fee_error">Erhalt der Gebühr fehlgeschlagen</string>
   <string name="common_fee_selector_footer">Netzwerkgebühren sind Gebühren, die Nutzer für die Verarbeitung und Bestätigung von Transaktionen zahlen. Die Höhe der Gebühren kann von der Überlastung des Netzes, der Größe der Transaktion und der Ausführungspriorität abhängen. %s</string>
   <string name="common_fee_selector_option_fast">Schnell</string>
   <string name="common_fee_selector_option_market">Markt</string>
@@ -156,6 +163,7 @@
   <string name="common_network_fee_title">Netzgebühr</string>
   <string name="common_network_fee_warning_content">Der überwiesene Betrag wird um %1$s (%2$s) gekürzt, um die gewählte Gebührenhöhe zu decken.</string>
   <string name="common_next">Weiter</string>
+  <string name="common_nft">NFT</string>
   <string name="common_no">Nein</string>
   <string name="common_no_address">Keine Adresse</string>
   <string name="common_now">Jetzt</string>
@@ -178,10 +186,12 @@
   <string name="common_search">Suchen</string>
   <string name="common_search_tokens">Token suchen</string>
   <string name="common_second_no_param">sek.</string>
+  <string name="common_see_all">Alles einblenden</string>
   <string name="common_seed_phrase">Seed phrase</string>
   <string name="common_select_action">Aktion auswählen</string>
   <string name="common_sell">Verkaufen</string>
   <string name="common_send">Senden</string>
+  <string name="common_send_tx_error">Absenden der Transaktion fehlgeschlagen</string>
   <string name="common_server_unavailable">Der Server ist nicht verfügbar. Bitte versuche es später erneut.</string>
   <string name="common_share">Teilen</string>
   <string name="common_share_link">Link teilen</string>
@@ -205,6 +215,7 @@
   <string name="common_unknown_error">Es ist ein Fehler aufgetreten. Bitte versuche es erneut.</string>
   <string name="common_unreachable">Nicht erreichbar</string>
   <string name="common_unstake">Staking beenden</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">Aufgrund der Beschränkungen von %1$s können nur %2$d UTXOs in eine einzige Transaktion passen. Das bedeutet, dass du nur %3$s oder weniger senden kannst. Du musst den Betrag reduzieren.</string>
   <string name="common_week">woche</string>
   <string name="common_with">mit</string>
   <string name="common_yes">Ja</string>
@@ -261,6 +272,7 @@
   <string name="disclaimer_error_loading">Überprüfe deine Internetverbindung oder wechseln zu einem anderen Netzwerk</string>
   <string name="disclaimer_title">Nutzungsbedingungen</string>
   <string name="error_wrong_wallet_tapped">Du hast eine Karte oder Ring aus einer anderen Wallet verwendet. Tippe auf die Karte oder Ring, die dieser Wallet zugeordnet ist.</string>
+  <string name="eth_gas_required_exceeds_allowance">Nicht genug Geld für die Transaktion. Bitte lade dein  Konto auf.</string>
   <string name="exchange_tokens_available_tokens_header">Meine Token</string>
   <string name="exchange_tokens_empty_tokens">Du hast noch keine Token hinzugefügt. Füge Token über den Markt zum Tausch hinzu</string>
   <string name="exchange_tokens_unavailable_tokens_header">Kann nicht gegen %s ausgetauscht werden</string>
@@ -340,6 +352,9 @@
   <string name="feedback_subject_support_tangem">Feedback zu Tangem</string>
   <string name="feedback_subject_tx_failed">Eine Transaktion kann nicht gesendet werden</string>
   <string name="feedback_token_description_error">Fehler in der Coinbeschreibung</string>
+  <string name="generic_error">Es ist ein Fehler aufgetreten</string>
+  <string name="generic_error_code">Es ist ein Fehler aufgetreten. Code: %s.</string>
+  <string name="generic_requires_memo_error">Memo erforderlich</string>
   <string name="give_permission_current_transaction">Nur diese</string>
   <string name="give_permission_policy_type_footer">Gib das Genehmigungslimit für das ausgewählte Token an</string>
   <string name="give_permission_rows_amount">Betrag %s</string>
@@ -503,10 +518,34 @@
     <item quantity="one">%d Stück</item>
     <item quantity="other">%d Stücke</item>
   </plurals>
+  <string name="nft_collections_empty_description">NFTs, die an Deine Wallet-Adresse gesendet werden, werden hier angezeigt.</string>
+  <string name="nft_collections_empty_title">Noch keine Kollektionen</string>
+  <string name="nft_collections_receive">NFT erhalten</string>
+  <string name="nft_collections_title">NFT-Kollektionen</string>
+  <string name="nft_collections_warning_subtitle">Einige Daten werden möglicherweise nicht geladen</string>
+  <string name="nft_collections_warning_title">Vorübergehende Ladeprobleme</string>
+  <string name="nft_details_base_information">Basisinformationen</string>
+  <string name="nft_details_chain">Netzwerk</string>
+  <string name="nft_details_contract_address">Vertragsadresse</string>
+  <string name="nft_details_last_sale_price">Letzter Verkaufspreis</string>
+  <string name="nft_details_rarity_label">Raritätsetikett</string>
+  <string name="nft_details_rarity_rank">Seltenheitsgrad</string>
+  <string name="nft_details_token_address">Token-Adresse</string>
+  <string name="nft_details_token_id">Token-ID</string>
+  <string name="nft_details_token_standard">Token-Standard</string>
+  <string name="nft_details_traits">Eigenschaften</string>
+  <string name="nft_empty_search">Keine Ergebnisse. Bitte versuche eine andere Anfrage.</string>
+  <string name="nft_receive_choose_network">Netzwerk auswählen</string>
+  <string name="nft_receive_title">NFT erhalten</string>
+  <string name="nft_traits_title">Eigenschaften</string>
   <string name="nft_wallet_count">%1$d NFTs in der %2$d Sammlung</string>
   <string name="nft_wallet_receive_nft">Tippe hier, um das erste NFT zu erhalten</string>
   <string name="nft_wallet_title">NFT-Sammlungen</string>
   <string name="nft_wallet_unable_to_load">Die Daten konnten nicht geladen werden</string>
+  <string name="no_account_generic">Um das %1$s -Netzwerk nutzen zu können, must du die Kontoreserve ( %2$s %3$s ) bezahlen, die diesen Betrag auf unbestimmte Zeit sperrt und verbirgt</string>
+  <string name="no_account_polkadot">Das Zielkonto ist nicht aktiv. Sende %s oder mehr, um das Konto zu aktivieren.</string>
+  <string name="no_account_send_to_create">Senden Sie Geld an diese Andresse um ein Konto zu erstellen</string>
+  <string name="no_trustline_xlm_asset">Das Zielkonto verfügt nicht über eine Vertrauensstellung für das gesendete Asset.</string>
   <string name="onboarding_access_code_feature_1_description">Du musst einen einzigen Zugangscode einrichten, um alle deine Geräte zu schützen</string>
   <string name="onboarding_access_code_feature_1_title">Schützen</string>
   <string name="onboarding_access_code_feature_2_description">Du kannst später auf jeder Karte oder Ring einen individuellen Zugangscode einrichten</string>
@@ -522,7 +561,7 @@
   <string name="onboarding_activation_error_message">Bitte wiederhole den Vorgang. Die Karte oder Ring wird auf Werkseinstellungen zurückgesetzt.</string>
   <string name="onboarding_activation_error_title">Aktivierungsfehler</string>
   <string name="onboarding_add_tokens">Token hinzufügen</string>
-  <string name="onboarding_alert_message_not_max_backup_cards_added">Du hast einee Backup-Karte oder einen Backup-Ring hinzugefügt. Wenn der Backup-Prozess abgeschlossen ist, kannst Du keine weiteren Backup-Geräte hinzufügen. Wenn Du noch eine Karte oder einen Ring hast, fügen diese(n) zum Backup hinzu. Möchtest Du den Backup-Prozess fortsetzen?</string>
+  <string name="onboarding_alert_message_not_max_backup_cards_added">Du hast eine Backup-Karte oder einen Backup-Ring hinzugefügt. Nach Abschluss des Backup-Vorgangs kannst Du keine weiteren Backup-Geräte hinzufügen. Wenn Du eine weitere Karte oder einen weiteren Ring hast, fügen diesen dem Backup jetzt hinzu. Möchtest Du den Backup-Vorgang fortsetzen?</string>
   <string name="onboarding_backup_exit_warning">Der Sicherungsvorgang ist teilweise abgeschlossen. Du kannst ihn jetzt nicht beenden.</string>
   <string name="onboarding_bottom_sheet_passphrase_description">Die Passphrase ist eine fortschrittliche Sicherheitsfunktion, die von Krypto-Wallets verwendet wird. Sie fügt ein zusätzliches Wort oder eine Phrase deiner Wahl zu der bereits bestehenden Wiederherstellungsphrase hinzu, um einen brandneuen Satz von Adressen zu erzeugen.</string>
   <string name="onboarding_button_add_backup_card">Hinzufügen einer Sicherungskarte oder Ring</string>
@@ -638,6 +677,7 @@
   <string name="qr_scanner_camera_denied_title">Kamerazugriff verweigert</string>
   <string name="receive_bottom_sheet_no_memo_required_message">Kein Memo erforderlich</string>
   <string name="receive_bottom_sheet_warning_message">%1$s ( %2$s ) im %3$s Netzwerk</string>
+  <string name="receive_bottom_sheet_warning_message_compact">%1$s im %2$s Netzwerk</string>
   <string name="receive_bottom_sheet_warning_message_description">Das Senden einer anderen Währung führt zu deren irreversiblem Verlust.</string>
   <string name="receive_bottom_sheet_warning_message_full">Sende nur %s an diese Adresse. Der Versand einer anderen Währung führt zu ihrem unwiderruflichen Verlust.</string>
   <string name="receive_bottom_sheet_warning_title">Senden nur %1$s im Netzwerk %2$s</string>
@@ -716,6 +756,12 @@
   <string name="send_destination_tag_field">Ziel-Tag</string>
   <string name="send_enter_address_field">Adresse eingeben</string>
   <string name="send_error_address_same_as_wallet">Die Adresse stimmt mit der Adresse Ihrer Brieftasche überein</string>
+  <string name="send_error_dust_amount_format">Minimaler Betrag ist %s</string>
+  <string name="send_error_dust_change_format">Minimaler Wechselgeld ist %s</string>
+  <string name="send_error_invalid_fee_value">Falsche Gebühr</string>
+  <string name="send_error_minimum_balance_format">Mindestguthaben ist %s</string>
+  <string name="send_error_no_target_account">Das Zielkonto ist nicht erstellt. Der abzusendende Betrag soll %s + Gebühr oder mehr sein</string>
+  <string name="send_error_unknown">Unbekannter Fehler</string>
   <string name="send_extras_error_invalid_memo">Ungültiges Memo. Sie wird der Transaktion nicht hinzugefügt.</string>
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_fee_unreachable_error_text">Überprüfe deine Netzwerkverbindung</string>
@@ -773,8 +819,12 @@
   <string name="send_summary_transaction_description_suffix_including">inklusive einer Netzgebühr von %1$s</string>
   <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
   <string name="send_tron_account_activation_error">%1$s ist ein Vermögenswert im Tron-Netzwerk. Um die Gebühr zu berechnen und eine Transaktion durchzuführen, musst du etwas Tron (TRX) auf deinem Konto einzahlen.</string>
+  <string name="send_validation_amount_exceeds_balance">Der Betrag geht über die Bilanz hinaus</string>
   <string name="send_validation_destination_tag_required_description">Um diese Transaktion für die angegebene Adresse abzuschließen, ist ein Ziel-Tag (Memo) erforderlich.</string>
   <string name="send_validation_destination_tag_required_title">Ziel-Tag erforderlich</string>
+  <string name="send_validation_invalid_amount">Ungültiger Betrag</string>
+  <string name="send_validation_invalid_fee">Die Gebühr geht über die Bilanz hinaus</string>
+  <string name="send_validation_invalid_total">Der Gesamtbetrag geht über die Bilanz hinaus</string>
   <string name="sent_transaction_sent_title">Transaktion gesendet</string>
   <string name="settings_card_settings_footer">Bereite das Scannen der Karte oder Ring vor, die du einrichten möchtest.</string>
   <string name="settings_forget_wallet">Entferne diese Wallet</string>
@@ -1022,6 +1072,7 @@
   <string name="visa_onboarding_in_progress_description">Das wird nicht lange dauern. Wir richten gerade Dein Konto ein.</string>
   <string name="visa_onboarding_in_progress_issuer_description">Das wird nicht lange dauern. Wir schließen die Aktivierung ab.</string>
   <string name="visa_onboarding_in_progress_title">Alles wird vorbereitet!</string>
+  <string name="visa_onboarding_pin_not_accepted">PIN wurde nicht akzeptiert. Versuche es erneut oder verwende einen anderen Code.</string>
   <string name="visa_onboarding_pin_validation_error_message">Ungültige PIN: Sequenzen oder Wiederholungen vermeiden</string>
   <string name="visa_onboarding_success_screen_description">Schon kann es losgehen!</string>
   <string name="visa_onboarding_wallet_connect_description">Du kannst Deine Verbindung \n auf der Website des Drittanbieters \n herstellen und zurück zur Tangem-App gelangen</string>
@@ -1030,6 +1081,7 @@
   <string name="visa_onboarding_welcome_back_title">Willkommen zurück!</string>
   <string name="visa_onboarding_welcome_description">Folge den Schritten, um Dein Konto einzurichten.</string>
   <string name="visa_onboarding_welcome_title">Willkommen!</string>
+  <string name="visa_tx_dispute_button">Diese Transaktion anfechten</string>
   <string name="visa_unlock_notification_button">Freischalten</string>
   <string name="visa_unlock_notification_subtitle">Scanne Deine Karte, um den Zugriff freizuschalten</string>
   <string name="visa_unlock_notification_title">Benötigte Freischaltung</string>
@@ -1165,6 +1217,7 @@
   <string name="warning_token_balance_not_updated">Der Kontostand ist möglicherweise veraltet. Aktualisiere bittre die Seite.</string>
   <string name="wc_connections">Verbindungen</string>
   <string name="wc_disconnect_all">Alle trennen</string>
+  <string name="wc_disconnect_all_alert_desc">Text über die Trennung aller dApps</string>
   <string name="wc_disconnect_all_alert_title">Alle dApps trennen</string>
   <string name="wc_new_connection">Neue Verbindung</string>
   <string name="wc_no_sessions_desc">Verbinde Deine Wallet mit einer anderen dApp</string>
@@ -1180,4 +1233,7 @@
   <string name="welcome_unlock_card">Karte oder Ring scannen</string>
   <string name="welcome_unlock_description">Verwenden %s oder scanne eine Karte oder Ring, um auf die App zuzugreifen</string>
   <string name="welcome_unlock_title">Willkommen zurück!</string>
+  <string name="xtz_withdrawal_message_ignore">Nein, alles senden</string>
+  <string name="xtz_withdrawal_message_reduce">Um %s XTZ reduziert</string>
+  <string name="xtz_withdrawal_message_warning">Damit Sie beim nächsten Aufladen Ihrer Brieftasche keine erhöhte Provision zahlen, soll der Betrag um %s XTZ reduziert werden</string>
 </resources>
