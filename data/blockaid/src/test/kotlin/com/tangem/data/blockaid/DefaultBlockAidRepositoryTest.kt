@@ -29,12 +29,12 @@ class DefaultBlockAidRepositoryTest {
 
     private lateinit var repository: DefaultBlockAidRepository
 
-    private val testDispatcherProvider = TestingCoroutineDispatcherProvider()
+    private val dispatchers = TestingCoroutineDispatcherProvider()
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        repository = DefaultBlockAidRepository(api, testDispatcherProvider, mapper)
+        repository = DefaultBlockAidRepository(api, dispatchers, mapper)
     }
 
     @Test
