@@ -5,7 +5,7 @@ import com.tangem.data.visa.model.AccessCodeData
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.visa.TangemVisaAuthApi
+import com.tangem.datasource.api.visa.TangemVisaApi
 import com.tangem.datasource.api.visa.models.request.RefreshTokenByCardWalletRequest
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.common.util.cardTypesResolver
@@ -24,7 +24,7 @@ typealias VisaAuthorizationHeader = String
 
 internal class VisaApiRequestMaker @Inject constructor(
     private val userWalletsStore: UserWalletsStore,
-    private val visaAuthApi: TangemVisaAuthApi,
+    private val visaAuthApi: TangemVisaApi,
     private val accessCodeDataConverter: AccessCodeDataConverter,
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) {
