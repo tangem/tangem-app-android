@@ -39,11 +39,6 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideTangemAuthVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig =
-        TangemVisaAuth(appVersionProvider)
-
-    @Provides
-    @IntoSet
     fun provideTangemVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemVisa(appVersionProvider)
 
     @Provides
