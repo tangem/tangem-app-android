@@ -30,8 +30,11 @@ internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
     @Assisted private val method: WcEthMethod.MessageSign,
     private val walletManagersFacade: WalletManagersFacade,
     private val signUseCase: SignUseCase,
+    blockAidDelegate: BlockAidEthereumVerificationDelegate,
 ) : BaseWcSignUseCase<Nothing, WcEthMessageSignUseCase.SignModel>(),
     WcEthMessageSignUseCase {
+
+    override val securityStatus = blockAidDelegate.getSecurityStatus(network, method, rawSdkRequest, session)
 
     override suspend fun SignCollector<WcEthMessageSignUseCase.SignModel>.onSign(
         state: WcSignState<WcEthMessageSignUseCase.SignModel>,
