@@ -1,7 +1,7 @@
 package com.tangem.data.notifications.di
 
 import com.tangem.data.notifications.DefaultNotificationsRepository
-import com.tangem.domain.notifications.NotificationsRepository
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
