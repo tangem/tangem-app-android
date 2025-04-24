@@ -7,7 +7,6 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
 import com.tangem.tap.common.redux.DebugErrorAction
 import com.tangem.tap.common.redux.ErrorAction
-import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import org.rekotlin.Action
@@ -15,7 +14,6 @@ import org.rekotlin.Action
 sealed class GlobalAction : Action {
 
     // notifications
-    data class ShowNotification(override val messageResource: Int) : GlobalAction(), NotificationAction
     data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
     data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
 
