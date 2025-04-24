@@ -69,11 +69,13 @@ internal object WalletConnectModule {
         application: Application,
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
+        walletConnectFeatureToggles: WalletConnectFeatureToggles,
     ): LegacyWalletConnectRepository {
         return DefaultLegacyWalletConnectRepository(
             application = application,
             wcRequestDeserializer = wcRequestDeserializer,
             analyticsHandler = analyticsHandler,
+            walletConnectFeatureToggles = walletConnectFeatureToggles,
         )
     }
 
