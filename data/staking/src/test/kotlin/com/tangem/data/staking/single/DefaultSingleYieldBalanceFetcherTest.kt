@@ -1,10 +1,12 @@
 package com.tangem.data.staking.single
 
+import arrow.core.toOption
 import com.google.common.truth.Truth
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.test.data.staking.MockYieldBalanceWrapperDTOFactory
 import com.tangem.common.test.data.staking.MockYieldDTOFactory
 import com.tangem.common.test.domain.token.MockCryptoCurrencyFactory
+import com.tangem.common.test.domain.wallet.MockUserWalletFactory
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.utils.StakingIdFactory
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
@@ -17,6 +19,7 @@ import com.tangem.datasource.api.stakekit.models.response.model.NetworkTypeDTO
 import com.tangem.datasource.api.stakekit.models.response.model.TokenDTO
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.domain.wallets.models.UserWalletId
@@ -31,12 +34,14 @@ import java.math.BigDecimal
  */
 internal class DefaultSingleYieldBalanceFetcherTest {
 
+    private val userWalletsStore: UserWalletsStore = mockk()
     private val stakingYieldsStore: StakingYieldsStore = mockk()
     private val yieldsBalancesStore: YieldsBalancesStore = mockk()
     private val stakingIdFactory: StakingIdFactory = mockk()
     private val stakeKitApi: StakeKitApi = mockk()
 
     private val fetcher = DefaultSingleYieldBalanceFetcher(
+        userWalletsStore = userWalletsStore,
         stakingYieldsStore = stakingYieldsStore,
         yieldsBalancesStore = yieldsBalancesStore,
         stakingIdFactory = stakingIdFactory,
@@ -52,6 +57,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             network = ton.network,
         )
 
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network) } returns tonId
         coEvery {
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
@@ -70,6 +76,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
             stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
             stakingYieldsStore.getSyncWithTimeout()
@@ -83,6 +90,67 @@ internal class DefaultSingleYieldBalanceFetcherTest {
     }
 
     @Test
+    fun `fetch yields balances failure if user wallet is not supported`() = runTest {
+        val params = YieldBalanceFetcherParams.Single(
+            userWalletId = userWalletId,
+            currencyId = ton.id,
+            network = ton.network,
+        )
+
+        val userWallet = MockUserWalletFactory.create().copy(isMultiCurrency = false)
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+
+        val actual = fetcher(params)
+
+        coVerify { userWalletsStore.getSyncOrNull(params.userWalletId) }
+
+        coVerify(inverse = true) {
+            stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
+            yieldsBalancesStore.refresh(userWalletId = any(), stakingIds = any())
+            stakingYieldsStore.getSyncWithTimeout()
+            stakeKitApi.getSingleYieldBalance(integrationId = any(), body = any())
+            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
+            yieldsBalancesStore.storeError(userWalletId = any(), stakingIds = any())
+        }
+
+        val expected = IllegalStateException("Wallet ${params.userWalletId} is not supported: ${userWallet.toOption()}")
+
+        Truth.assertThat(actual.isLeft()).isTrue()
+        Truth.assertThat(actual.leftOrNull()).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.leftOrNull()).hasMessageThat().isEqualTo(expected.message)
+    }
+
+    @Test
+    fun `fetch yields balances failure if userWalletsStore returns null`() = runTest {
+        val params = YieldBalanceFetcherParams.Single(
+            userWalletId = userWalletId,
+            currencyId = ton.id,
+            network = ton.network,
+        )
+
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns null
+
+        val actual = fetcher(params)
+
+        coVerify { userWalletsStore.getSyncOrNull(params.userWalletId) }
+
+        coVerify(inverse = true) {
+            stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
+            yieldsBalancesStore.refresh(userWalletId = any(), stakingIds = any())
+            stakingYieldsStore.getSyncWithTimeout()
+            stakeKitApi.getSingleYieldBalance(integrationId = any(), body = any())
+            yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
+            yieldsBalancesStore.storeError(userWalletId = any(), stakingIds = any())
+        }
+
+        val expected = IllegalStateException("Wallet ${params.userWalletId} is not supported: ${null.toOption()}")
+
+        Truth.assertThat(actual.isLeft()).isTrue()
+        Truth.assertThat(actual.leftOrNull()).isInstanceOf(expected::class.java)
+        Truth.assertThat(actual.leftOrNull()).hasMessageThat().isEqualTo(expected.message)
+    }
+
+    @Test
     fun `fetch yields balances failure if stakingIdFactory createForDefault returns null`() = runTest {
         val params = YieldBalanceFetcherParams.Single(
             userWalletId = userWalletId,
@@ -90,11 +158,13 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             network = ton.network,
         )
 
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network) } returns null
 
         val actual = fetcher(params)
 
         coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
             stakingIdFactory.createForDefault(userWalletId = userWalletId, currencyId = ton.id, network = ton.network)
         }
 
@@ -121,6 +191,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             network = ton.network,
         )
 
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network) } returns tonId
         coEvery {
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
@@ -132,6 +203,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
             stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
             stakingYieldsStore.getSyncWithTimeout()
@@ -158,6 +230,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             network = ton.network,
         )
 
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network) } returns tonId
         coEvery {
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
@@ -169,6 +242,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
             stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
             stakingYieldsStore.getSyncWithTimeout()
@@ -195,6 +269,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             network = ton.network,
         )
 
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network) } returns tonId
         coEvery {
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
@@ -207,6 +282,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
             stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
             stakingYieldsStore.getSyncWithTimeout()
@@ -239,6 +315,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             network = ton.network,
         )
 
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network) } returns tonId
         coEvery {
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
@@ -251,6 +328,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
             stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
             stakingYieldsStore.getSyncWithTimeout()
@@ -283,6 +361,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             network = ton.network,
         )
 
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
         coEvery { stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network) } returns tonId
         coEvery {
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
@@ -302,6 +381,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
         val actual = fetcher(params)
 
         coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
             stakingIdFactory.createForDefault(params.userWalletId, ton.id, ton.network)
             yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = setOf(tonId))
             stakingYieldsStore.getSyncWithTimeout()
@@ -353,6 +433,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
 
     private companion object {
         val userWalletId = UserWalletId("011")
+        val userWallet = MockUserWalletFactory.create()
 
         val mocks = MockCryptoCurrencyFactory()
 
