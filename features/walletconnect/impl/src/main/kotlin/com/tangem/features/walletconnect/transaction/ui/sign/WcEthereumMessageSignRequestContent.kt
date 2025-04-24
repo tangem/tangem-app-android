@@ -89,11 +89,11 @@ private class WcEthereumMessageSignStateProvider : CollectionPreviewParameterPro
             transactionRequestInfo = WcTransactionRequestInfoUM(
                 persistentListOf(
                     WcTransactionRequestInfoItemUM(
-                        title = "Signature type",
+                        title = resourceReference(R.string.wc_signature_type),
                         description = "personal_sign",
                     ),
                     WcTransactionRequestInfoItemUM(
-                        title = "Contents",
+                        title = resourceReference(R.string.wc_contents),
                         description = "Hello! My name is John Dow. test@tange.com",
                     ),
                 ),
@@ -121,11 +121,11 @@ private class WcEthereumMessageSignStateProvider : CollectionPreviewParameterPro
             transactionRequestInfo = WcTransactionRequestInfoUM(
                 persistentListOf(
                     WcTransactionRequestInfoItemUM(
-                        title = "Signature type",
+                        title = resourceReference(R.string.wc_signature_type),
                         description = "personal_sign",
                     ),
                     WcTransactionRequestInfoItemUM(
-                        title = "Contents",
+                        title = resourceReference(R.string.wc_contents),
                         description = "Hello! My name is John Dow. test@tange.com",
                     ),
                 ),

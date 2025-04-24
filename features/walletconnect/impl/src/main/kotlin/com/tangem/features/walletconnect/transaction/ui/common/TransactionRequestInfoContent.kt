@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.SecondaryButtonIconEnd
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
@@ -36,7 +37,7 @@ internal fun TransactionRequestInfoContent(state: WcEthereumMessageSignRequestUM
         ) {
             state.transactionRequestInfo.info.forEach { item ->
                 Text(
-                    text = item.title,
+                    text = item.title.resolveReference(),
                     modifier = Modifier.padding(top = TangemTheme.dimens.spacing20),
                     style = TangemTheme.typography.subtitle2,
                     color = TangemTheme.colors.text.tertiary,

@@ -22,11 +22,13 @@ dependencies {
     implementation(projects.core.ui)
     implementation(projects.common.routing)
     implementation(projects.common.ui)
+    implementation(projects.core.res)
 
     /** Domain models */
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.domain.blockaid.models)
 
     /** Domain */
     implementation(projects.domain.qrScanning)

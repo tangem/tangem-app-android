@@ -3,6 +3,7 @@ package com.tangem.features.walletconnect.transaction.entity
 import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Immutable
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
+import com.tangem.core.ui.extensions.TextReference
 import kotlinx.collections.immutable.ImmutableList
 
 @Immutable
@@ -37,7 +38,7 @@ internal data class WcTransactionRequestInfoUM(
 
 @Immutable
 internal data class WcTransactionRequestInfoItemUM(
-    val title: String,
+    val title: TextReference,
     val description: String,
 )
 
