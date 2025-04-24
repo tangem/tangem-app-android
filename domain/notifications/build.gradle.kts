@@ -5,8 +5,12 @@ plugins {
 }
 
 dependencies {
-    implementation(deps.arrow.core)
-    implementation(deps.kotlin.coroutines)
-
+    implementation(projects.domain.core)
     implementation(projects.domain.notifications.models)
+
+    /* Tests */
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.truth)
+    testImplementation(deps.test.mockk)
 }

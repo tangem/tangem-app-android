@@ -110,6 +110,7 @@ dependencies {
     implementation(projects.domain.promo.models)
     implementation(projects.domain.networks)
     implementation(projects.domain.quotes)
+    implementation(projects.domain.notifications)
 
     implementation(projects.common)
     implementation(projects.common.routing)
