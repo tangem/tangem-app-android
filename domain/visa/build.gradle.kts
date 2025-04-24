@@ -20,6 +20,9 @@ dependencies {
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.appCurrency.models)
 
+    /** Security */
+    implementation(deps.spongecastle.core)
+
     /** Libs - Other */
     implementation(deps.jodatime)
     implementation(deps.androidx.paging.runtime)
