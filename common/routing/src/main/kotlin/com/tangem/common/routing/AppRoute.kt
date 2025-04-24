@@ -233,8 +233,8 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data class OnrampSuccess(
-        val externalTxId: String,
-    ) : AppRoute(path = "/onramp/success/$externalTxId"), RouteBundleParams {
+        val txId: String,
+    ) : AppRoute(path = "/onramp/success/$txId"), RouteBundleParams {
         override fun getBundle(): Bundle = bundle(serializer())
     }
 
@@ -281,18 +281,15 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/stories$storyId")
 
     @Serializable
-    data class NFTCollections(
+    data class NFT(
         val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/nft_collections/${userWalletId.stringValue}")
+        val walletName: String,
+    ) : AppRoute(path = "/nft/${userWalletId.stringValue}")
 
     @Serializable
-    data class NFTReceive(
-        val userWalletId: UserWalletId,
-    ) : AppRoute(path = "/nft_receive/${userWalletId.stringValue}")
-
-    @Serializable
-    data class NFTDetails(
+    data class NFTSend(
         val userWalletId: UserWalletId,
         val nftAsset: NFTAsset,
-    ) : AppRoute(path = "/nft_details/${userWalletId.stringValue}/${nftAsset.collectionId}/${nftAsset.id.stringValue}")
+        val nftCollectionName: String,
+    ) : AppRoute(path = "/send/nft/${userWalletId.stringValue}/$nftCollectionName/${nftAsset.id}")
 }
