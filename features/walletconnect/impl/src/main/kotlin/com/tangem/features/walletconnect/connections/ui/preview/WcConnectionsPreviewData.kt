@@ -10,7 +10,6 @@ import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppB
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsUM
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toImmutableList
 import timber.log.Timber
 
 internal object WcConnectionsPreviewData {
@@ -111,31 +110,14 @@ internal object WcConnectionsPreviewData {
                 onIconClicked = {},
                 enabled = true,
             ),
-            endActions = persistentListOf(
-                TangemDropdownMenuItem(
-                    title = resourceReference(R.string.wc_disconnect_all),
-                    textColorProvider = { TangemTheme.colors.text.warning },
-                    onClick = { },
-                ),
+            disconnectAllItem = TangemDropdownMenuItem(
+                title = resourceReference(R.string.wc_disconnect_all),
+                textColorProvider = { TangemTheme.colors.text.warning },
+                onClick = { },
             ),
         ),
         connections = persistentListOf(),
         onNewConnectionClick = {},
     )
     val fullState = stateWithEmptyConnections.copy(connections = connections)
-    fun stateForModel(
-        onBackClicked: () -> Unit,
-        openQrScanScreen: () -> Unit,
-        disconnectAll: () -> Unit,
-    ): WcConnectionsState {
-        return fullState.copy(
-            topAppBarConfig = fullState.topAppBarConfig.copy(
-                startButtonUM = fullState.topAppBarConfig.startButtonUM.copy(onIconClicked = onBackClicked),
-                endActions = fullState.topAppBarConfig.endActions
-                    .map { it.copy(onClick = disconnectAll) }
-                    .toImmutableList(),
-            ),
-            onNewConnectionClick = openQrScanScreen,
-        )
-    }
 }

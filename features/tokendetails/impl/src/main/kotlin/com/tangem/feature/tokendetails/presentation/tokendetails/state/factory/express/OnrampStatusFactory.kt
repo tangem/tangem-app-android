@@ -14,8 +14,8 @@ import com.tangem.domain.onramp.model.OnrampStatus.Status.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.factory.TokenDetailsOnrampTransactionStateConverter
 import com.tangem.utils.Provider
@@ -39,7 +39,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
     @Assisted private val appCurrencyProvider: Provider<AppCurrency>,
     @Assisted private val clickIntents: TokenDetailsClickIntents,
     @Assisted private val cryptoCurrency: CryptoCurrency,
-    @Assisted private val userWalletId: UserWalletId,
+    @Assisted private val userWallet: UserWallet,
 ) {
 
     private val onrampTransactionStateConverter by lazy(LazyThreadSafetyMode.NONE) {
@@ -54,7 +54,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
 
     operator fun invoke(): Flow<List<ExpressTransactionStateUM.OnrampUM>> {
         return getOnrampTransactionsUseCase(
-            userWalletId = userWalletId,
+            userWalletId = userWallet.walletId,
             cryptoCurrencyId = cryptoCurrency.id,
         ).map { maybeTransaction ->
             maybeTransaction.fold(
@@ -82,7 +82,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         return if (onrampTx.activeStatus.isTerminal) {
             onrampTx
         } else {
-            getOnrampStatusUseCase(onrampTx.info.txId).fold(
+            getOnrampStatusUseCase(userWallet = userWallet, onrampTx.info.txId).fold(
                 ifLeft = {
                     Timber.e("Couldn't update onramp status. $it")
                     onrampTx
@@ -134,10 +134,12 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             PaymentProcessing,
             Paid,
             Sending,
+            RefundInProgress,
             -> ExpressAnalyticsStatus.InProgress
             Verifying -> ExpressAnalyticsStatus.KYC
             Failed -> ExpressAnalyticsStatus.Fail
             Finished -> ExpressAnalyticsStatus.Done
+            Refunded -> ExpressAnalyticsStatus.Refunded
             null -> null
         }
     }
@@ -150,7 +152,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
             appCurrencyProvider: Provider<AppCurrency>,
             clickIntents: TokenDetailsClickIntents,
             cryptoCurrency: CryptoCurrency,
-            userWalletId: UserWalletId,
+            userWallet: UserWallet,
         ): OnrampStatusFactory
     }
 }
