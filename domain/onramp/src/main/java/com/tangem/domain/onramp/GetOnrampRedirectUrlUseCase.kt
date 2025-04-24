@@ -7,7 +7,7 @@ import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
 import com.tangem.domain.onramp.repositories.OnrampTransactionRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 
 class GetOnrampRedirectUrlUseCase(
     private val repository: OnrampRepository,
@@ -16,14 +16,14 @@ class GetOnrampRedirectUrlUseCase(
 ) {
 
     suspend operator fun invoke(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         quote: OnrampProviderWithQuote.Data,
         cryptoCurrency: CryptoCurrency,
         isDarkTheme: Boolean,
     ): Either<OnrampError, String> {
         return Either.catch {
             val transaction = repository.getOnrampData(
-                userWalletId = userWalletId,
+                userWallet = userWallet,
                 cryptoCurrency = cryptoCurrency,
                 quote = quote,
                 isDarkTheme = isDarkTheme,
