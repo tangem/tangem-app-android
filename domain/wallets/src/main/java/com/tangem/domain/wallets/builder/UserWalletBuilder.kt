@@ -5,7 +5,6 @@ import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
-import com.tangem.domain.wallets.usecase.GetCardImageUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -13,7 +12,6 @@ import dagger.assisted.AssistedInject
 class UserWalletBuilder @AssistedInject constructor(
     @Assisted private val scanResponse: ScanResponse,
     private val generateWalletNameUseCase: GenerateWalletNameUseCase,
-    private val getCardImageUseCase: GetCardImageUseCase,
 ) {
     private var backupCardsIds: Set<String> = emptySet()
     private var hasBackupError: Boolean = false
@@ -38,7 +36,7 @@ class UserWalletBuilder @AssistedInject constructor(
         this.hasBackupError = hasBackupError
     }
 
-    suspend fun build(): UserWallet? {
+    fun build(): UserWallet? {
         return with(scanResponse) {
             UserWalletIdBuilder.scanResponse(scanResponse)
                 .build()
@@ -50,7 +48,6 @@ class UserWalletBuilder @AssistedInject constructor(
                             isBackupNotAllowed = card.isBackupNotAllowed,
                             isStartToCoin = cardTypesResolver.isStart2Coin(),
                         ),
-                        artworkUrl = getCardImageUseCase.invoke(card.cardId, card.cardPublicKey),
                         cardsInWallet = backupCardsIds.plus(card.cardId),
                         scanResponse = this,
                         isMultiCurrency = cardTypesResolver.isMultiwalletAllowed(),
