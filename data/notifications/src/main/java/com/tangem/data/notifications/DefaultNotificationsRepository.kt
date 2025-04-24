@@ -10,7 +10,7 @@ import com.tangem.utils.info.AppInfoProvider
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.*
-import com.tangem.domain.notifications.NotificationsRepository
+import com.tangem.domain.notifications.repository.NotificationsRepository
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
