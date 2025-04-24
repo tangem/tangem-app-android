@@ -18,7 +18,7 @@ import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import jakarta.inject.Inject
 
-internal class WcEthNetwork constructor(
+internal class WcEthNetwork(
     private val moshi: Moshi,
     private val excludedBlockchains: ExcludedBlockchains,
     private val sessionsManager: WcSessionsManager,
@@ -34,7 +34,6 @@ internal class WcEthNetwork constructor(
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
         val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
         val context = WcMethodUseCaseContext(session = session, rawSdkRequest = request, network = network)
-
         return when (method) {
             is WcEthMethod.MessageSign -> factories.messageSign.create(context, method)
             is WcEthMethod.SendTransaction -> factories.sendTransaction.create(context, method)
