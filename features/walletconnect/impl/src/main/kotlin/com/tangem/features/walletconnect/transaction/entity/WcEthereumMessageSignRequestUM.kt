@@ -29,6 +29,7 @@ internal data class WcTransactionUM(
     val appSubtitle: String,
     val walletName: String,
     val networkInfo: WcNetworkInfoUM,
+    val isLoading: Boolean = false,
 )
 
 @Immutable

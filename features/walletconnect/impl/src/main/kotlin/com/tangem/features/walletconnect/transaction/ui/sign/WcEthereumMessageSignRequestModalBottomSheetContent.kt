@@ -73,6 +73,7 @@ internal fun WcEthereumMessageSignRequestModalBottomSheetContent(state: WcEthere
             modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
             onDismiss = state.actions.onDismiss,
             onSign = state.actions.onSign,
+            isLoading = state.transaction.isLoading,
         )
     }
 }

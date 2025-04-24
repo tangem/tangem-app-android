@@ -12,7 +12,12 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
 
 @Composable
-internal fun WcTransactionRequestButtons(onDismiss: () -> Unit, onSign: () -> Unit, modifier: Modifier = Modifier) {
+internal fun WcTransactionRequestButtons(
+    isLoading: Boolean,
+    onDismiss: () -> Unit,
+    onSign: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
         SecondaryButton(
             modifier = Modifier
@@ -28,6 +33,7 @@ internal fun WcTransactionRequestButtons(onDismiss: () -> Unit, onSign: () -> Un
             text = stringResourceSafe(R.string.wc_sign_message_button_text),
             onClick = onSign,
             iconResId = R.drawable.ic_tangem_24,
+            showProgress = isLoading,
         )
     }
 }
