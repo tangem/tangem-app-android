@@ -10,6 +10,7 @@ import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcSdkObserver
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import timber.log.Timber
 
@@ -18,6 +19,7 @@ internal class DefaultWcInitializeUseCase(
     private val sessionsManager: DefaultWcSessionsManager,
     private val networkService: DefaultWcRequestService,
     private val pairSdkDelegate: WcPairSdkDelegate,
+    private val environmentConfigStorage: EnvironmentConfigStorage,
 ) : WcInitializeUseCase {
 
     private val wcSdkObservers = mutableSetOf<WcSdkObserver>(
@@ -26,7 +28,8 @@ internal class DefaultWcInitializeUseCase(
         pairSdkDelegate,
     )
 
-    override fun init(projectId: String) {
+    override fun init() {
+        val projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId
         val relayUrl = "relay.walletconnect.com"
         val serverUrl = "wss://$relayUrl?projectId=$projectId"
         val connectionType = ConnectionType.AUTOMATIC
