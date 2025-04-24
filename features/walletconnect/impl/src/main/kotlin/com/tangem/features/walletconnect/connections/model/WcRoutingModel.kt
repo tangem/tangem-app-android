@@ -11,10 +11,12 @@ import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
+import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.features.walletconnect.connections.routes.WcInnerRoute
-import com.tangem.features.walletconnect.connections.routes.WcInnerRoute.*
+import com.tangem.features.walletconnect.connections.routes.WcInnerRoute.SignMessage
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
@@ -23,6 +25,7 @@ internal class WcRoutingModel @Inject constructor(
     private val requestService: WcRequestService,
     private val pairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
+    private val featureToggles: WalletConnectFeatureToggles,
 ) : Model() {
 
     val navigation: SlotNavigation<WcInnerRoute> = SlotNavigation()
@@ -31,8 +34,19 @@ internal class WcRoutingModel @Inject constructor(
     private val permittedAppRoute = MutableStateFlow(false)
 
     init {
-        wcUseCase.init()
+        modelScope.launch {
+            awaitReady()
+            if (!featureToggles.isRedesignedWalletConnectEnabled) return@launch
+            wcUseCase.init()
+            setupQueue()
+        }
+    }
 
+    fun onSlotEmpty() {
+        isSlotEmpty.update { true }
+    }
+
+    private fun setupQueue() {
         val requestFlow = requestService.wcRequest
             .map { (methodName, rawRequest) ->
                 when (methodName) {
@@ -62,10 +76,6 @@ internal class WcRoutingModel @Inject constructor(
             .launchIn(modelScope)
     }
 
-    fun onSlotEmpty() {
-        isSlotEmpty.update { true }
-    }
-
     private suspend fun awaitReady() = combine(
         isSlotEmpty,
         permittedAppRoute,
@@ -76,6 +86,7 @@ internal class WcRoutingModel @Inject constructor(
         permittedAppRoute.value = when (appRoute) {
             AppRoute.Initial,
             is AppRoute.Welcome,
+            is AppRoute.Disclaimer,
             is AppRoute.Stories,
             -> false
             else -> true

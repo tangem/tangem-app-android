@@ -60,12 +60,14 @@ internal object WalletConnectDataModule {
         networkService: DefaultWcRequestService,
         pairSdkDelegate: WcPairSdkDelegate,
         environmentConfigStorage: EnvironmentConfigStorage,
+        dispatchers: CoroutineDispatcherProvider,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
         application = application,
         sessionsManager = sessionsManager,
         networkService = networkService,
         pairSdkDelegate = pairSdkDelegate,
         environmentConfigStorage = environmentConfigStorage,
+        dispatchers = dispatchers,
     )
 
     @Provides
