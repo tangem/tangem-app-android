@@ -6,11 +6,13 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.usecase.WcMutableFee
+import com.tangem.domain.walletconnect.usecase.blockaid.WcBlockAidEligibleTransactionUseCase
 import com.tangem.domain.walletconnect.usecase.sign.WcSignUseCase
 
 interface WcEthSendTransactionUseCase :
     WcSignUseCase,
     WcSignUseCase.SimpleRun<WcEthTransaction>,
+    WcBlockAidEligibleTransactionUseCase,
     WcMutableFee {
 
     override val session: WcSession
@@ -25,6 +27,7 @@ interface WcEthSendTransactionUseCase :
 interface WcEthSignTransactionUseCase :
     WcSignUseCase,
     WcSignUseCase.SimpleRun<WcEthTransaction>,
+    WcBlockAidEligibleTransactionUseCase,
     WcMutableFee {
 
     override val session: WcSession
