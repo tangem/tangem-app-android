@@ -2,7 +2,9 @@ package com.tangem.data.nft
 
 import arrow.core.Either
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
 import com.tangem.blockchainsdk.utils.fromNetworkId
+import com.tangem.data.common.currency.getNetwork
 import com.tangem.datasource.local.nft.NFTPersistenceStore
 import com.tangem.datasource.local.nft.NFTPersistenceStoreFactory
 import com.tangem.datasource.local.nft.NFTRuntimeStore
@@ -10,7 +12,9 @@ import com.tangem.datasource.local.nft.NFTRuntimeStoreFactory
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetIdentifierConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionConverter
 import com.tangem.datasource.local.nft.converter.NFTSdkCollectionIdentifierConverter
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.models.StatusSource
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.nft.models.NFTSalePrice
@@ -36,6 +40,8 @@ internal class DefaultNFTRepository @Inject constructor(
     private val nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
     private val walletManagersFacade: WalletManagersFacade,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val excludedBlockchains: ExcludedBlockchains,
+    private val userWalletsStore: UserWalletsStore,
 ) : NFTRepository {
 
     private val networkJobs = ConcurrentHashMap<Network, JobHolder>()
@@ -63,38 +69,11 @@ internal class DefaultNFTRepository @Inject constructor(
         flowOf(NFTCollections.empty(network))
     }
 
-    override suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>) = coroutineScope {
-        networks.mapNotNull { network ->
-            if (network.canHandleNFTs()) {
-                launch(dispatchers.io) {
-                    Either.catch {
-                        expireCollections(userWalletId, network)
+    override suspend fun refreshCollections(userWalletId: UserWalletId, networks: List<Network>) =
+        refreshCollectionsInternal(userWalletId, networks, refreshAssets = false)
 
-                        val collections = walletManagersFacade.getNFTCollections(userWalletId, network)
-                        val mergedCollections = collections.mergeWithStoredAssets(userWalletId, network)
-
-                        saveCollectionsInRuntime(
-                            userWalletId = userWalletId,
-                            network = network,
-                            collections = mergedCollections,
-                        )
-                        saveCollectionsInPersistence(
-                            userWalletId = userWalletId,
-                            network = network,
-                            collections = mergedCollections,
-                        )
-                    }.onLeft {
-                        saveFailedStateInRuntime(
-                            userWalletId = userWalletId,
-                            network = network,
-                            error = it,
-                        )
-                    }
-                }.saveIn(getNetworkJobHolder(network))
-            } else {
-                null
-            }
-        }.joinAll()
+    override suspend fun refreshAll(userWalletId: UserWalletId, networks: List<Network>) {
+        refreshCollectionsInternal(userWalletId, networks, refreshAssets = true)
     }
 
     override suspend fun refreshAssets(
@@ -117,7 +96,7 @@ internal class DefaultNFTRepository @Inject constructor(
                 assets.forEach {
                     val assetId = NFTSdkAssetIdentifierConverter.convert(it.identifier)
                     val price = getNFTRuntimeStore(userWalletId, network).getSalePriceSync(assetId)
-                    if (price is NFTSalePrice.Error) {
+                    if (price is NFTSalePrice.Empty || price is NFTSalePrice.Error) {
                         refreshSalePrice(userWalletId, network, sdkCollectionId, it.identifier)
                     }
                 }
@@ -154,6 +133,75 @@ internal class DefaultNFTRepository @Inject constructor(
     }
 
     override suspend fun isNFTSupported(network: Network): Boolean = network.canHandleNFTs()
+
+    override suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network> {
+        val userWallet = userWalletsStore.getSyncStrict(userWalletId)
+        return Blockchain
+            .entries
+            .filter { it.canHandleNFTs() && !it.isTestnet() }
+            .mapNotNull {
+                getNetwork(
+                    blockchain = it,
+                    extraDerivationPath = null,
+                    scanResponse = userWallet.scanResponse,
+                    excludedBlockchains = excludedBlockchains,
+                )
+            }
+    }
+
+    override suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String? =
+        walletManagersFacade.getNFTExploreUrl(
+            network = network,
+            assetIdentifier = NFTSdkAssetIdentifierConverter.convertBack(assetIdentifier),
+        )
+
+    private suspend fun refreshCollectionsInternal(
+        userWalletId: UserWalletId,
+        networks: List<Network>,
+        refreshAssets: Boolean,
+    ) = coroutineScope {
+        networks.mapNotNull { network ->
+            if (network.canHandleNFTs()) {
+                launch(dispatchers.io) {
+                    Either.catch {
+                        expireCollections(userWalletId, network)
+
+                        val collections = walletManagersFacade.getNFTCollections(userWalletId, network)
+                        val mergedCollections = collections.mergeWithStoredAssets(userWalletId, network)
+
+                        saveCollectionsInRuntime(
+                            userWalletId = userWalletId,
+                            network = network,
+                            collections = mergedCollections,
+                        )
+                        saveCollectionsInPersistence(
+                            userWalletId = userWalletId,
+                            network = network,
+                            collections = mergedCollections,
+                        )
+
+                        if (refreshAssets) {
+                            mergedCollections.forEach { collection ->
+                                refreshAssets(
+                                    userWalletId = userWalletId,
+                                    network = network,
+                                    collectionId = NFTSdkCollectionIdentifierConverter.convert(collection.identifier),
+                                )
+                            }
+                        }
+                    }.onLeft {
+                        saveFailedStateInRuntime(
+                            userWalletId = userWalletId,
+                            network = network,
+                            error = it,
+                        )
+                    }
+                }.saveIn(getNetworkJobHolder(network))
+            } else {
+                null
+            }
+        }.joinAll()
+    }
 
     private suspend fun refreshSalePrice(
         userWalletId: UserWalletId,
