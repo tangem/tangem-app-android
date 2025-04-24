@@ -17,7 +17,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.BalanceState
 import com.tangem.lib.crypto.BlockchainUtils
-import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.orZero
@@ -66,7 +65,7 @@ internal class BalanceItemConverter(
                 ),
                 rawCurrencyId = value.rawCurrencyId,
                 pendingActions = value.pendingActions.toPersistentList(),
-                isClickable = value.isClickable(),
+                isClickable = value.type.isClickable() && !value.isPending,
                 isPending = value.isPending,
             )
         }
@@ -81,14 +80,6 @@ internal class BalanceItemConverter(
             amount
         } else {
             amount - yieldBalance?.getRewardStakingBalance().orZero()
-        }
-    }
-
-    private fun BalanceItem.isClickable(): Boolean {
-        val networkId = cryptoCurrencyStatus.currency.network.id.value
-        return when {
-            isTon(networkId) -> pendingActions.any { it.type == StakingActionType.WITHDRAW }
-            else -> this.type.isClickable() && !this.isPending
         }
     }
 
