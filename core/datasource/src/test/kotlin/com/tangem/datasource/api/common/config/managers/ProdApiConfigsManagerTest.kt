@@ -35,7 +35,6 @@ private val API_CONFIGS = setOf(
     Express(configManager, expressAuthProvider, appVersionProvider),
     TangemTech(appVersionProvider, appAuthProvider),
     StakeKit(stakeKitAuthProvider),
-    TangemVisaAuth(appVersionProvider),
     TangemVisa(appVersionProvider),
 )
 
@@ -86,7 +85,6 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
                 is Express -> createExpressModel()
                 is TangemTech -> createTangemTechModel()
                 is StakeKit -> createStakeKitModel()
-                is TangemVisaAuth -> createVisaAuthModel()
                 is TangemVisa -> createVisaModel()
                 is TangemCardSdk -> createTangemCardSdkModel()
                 is BlockAid -> createBlockAidSdkModel()
@@ -177,25 +175,11 @@ internal class ProdApiConfigsManagerTest(private val model: Model) {
             )
         }
 
-        private fun createVisaAuthModel(): Model {
-            return Model(
-                id = ApiConfig.ID.TangemVisaAuth,
-                expected = ApiEnvironmentConfig(
-                    environment = ApiEnvironment.STAGE,
-                    baseUrl = "[REDACTED_ENV_URL]",
-                    headers = mapOf(
-                        "version" to ProviderSuspend { VERSION_NAME },
-                        "platform" to ProviderSuspend { "Android" },
-                    ),
-                ),
-            )
-        }
-
         private fun createVisaModel(): Model {
             return Model(
                 id = ApiConfig.ID.TangemVisa,
                 expected = ApiEnvironmentConfig(
-                    environment = ApiEnvironment.PROD,
+                    environment = ApiEnvironment.DEV,
                     baseUrl = "[REDACTED_ENV_URL]",
                     headers = mapOf(
                         "version" to ProviderSuspend { VERSION_NAME },
