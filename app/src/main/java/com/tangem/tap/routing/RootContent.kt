@@ -17,12 +17,16 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.*
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
+import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.tangem.common.routing.AppRoute
+import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.components.snackbar.TangemSnackbarHost
+import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.message.EventMessageEffect
 import com.tangem.core.ui.res.LocalIsNavigationRefactoringEnabled
 import com.tangem.core.ui.res.LocalSnackbarHostState
@@ -33,6 +37,7 @@ import com.tangem.tap.routing.component.RoutingComponent
 @Composable
 internal fun RootContent(
     stack: Value<ChildStack<AppRoute, RoutingComponent.Child>>,
+    walletConnectSlot: Value<ChildSlot<Route, ComposableContentComponent>>,
     uiDependencies: UiDependencies,
     modifier: Modifier = Modifier,
 ) {
@@ -68,6 +73,8 @@ internal fun RootContent(
                         -> error("Unsupported child: $instance")
                     }
                 }
+
+                walletConnectSlot.value.child?.instance?.Content(Modifier)
 
                 TangemSnackbarHost(
                     modifier = Modifier
