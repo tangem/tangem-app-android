@@ -20,18 +20,22 @@ internal class DefaultVisaAuthTokenStorage @Inject constructor(
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) : VisaAuthTokenStorage {
 
-    private val secureStorage = AndroidSecureStorage(
-        preferences = SecureStorage.createEncryptedSharedPreferences(
-            context = applicationContext,
-            storageName = "visa_auth_storage",
-        ),
-    )
+    private val secureStorage by lazy {
+        AndroidSecureStorage(
+            preferences = SecureStorage.createEncryptedSharedPreferences(
+                context = applicationContext,
+                storageName = "visa_auth_storage",
+            ),
+        )
+    }
 
-    private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .build()
+    private val moshi by lazy {
+        Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .build()
+    }
 
-    private val tokensAdapter = moshi.adapter(VisaAuthTokens::class.java)
+    private val tokensAdapter by lazy { moshi.adapter(VisaAuthTokens::class.java) }
 
     override suspend fun store(cardId: String, tokens: VisaAuthTokens) = withContext(dispatcherProvider.io) {
         val json = tokensAdapter.toJson(tokens)

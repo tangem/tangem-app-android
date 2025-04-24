@@ -1,13 +1,15 @@
 package com.tangem.data.visa
 
 import com.tangem.data.visa.config.VisaLibLoader
-import com.tangem.data.visa.converter.AccessCodeDataConverter
-import com.tangem.data.visa.converter.VisaActivationStatusConverter
+import com.tangem.data.visa.converter.VisaActivationStatusConverterWithState
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.visa.TangemVisaApi
 import com.tangem.datasource.api.visa.models.request.ActivationByCardWalletRequest
 import com.tangem.datasource.api.visa.models.request.ActivationByCustomerWalletRequest
+import com.tangem.datasource.api.visa.models.request.ActivationStatusRequest
+import com.tangem.datasource.api.visa.models.request.GetCardWalletAcceptanceRequest
+import com.tangem.datasource.api.visa.models.request.GetCustomerWalletAcceptanceRequest
 import com.tangem.datasource.api.visa.models.request.SetPinCodeRequest
 import com.tangem.datasource.local.visa.VisaAuthTokenStorage
 import com.tangem.domain.visa.exception.RefreshTokenExpiredException
@@ -25,9 +27,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     @Assisted private val visaCardId: VisaCardId,
     private val visaApi: TangemVisaApi,
     private val dispatcherProvider: CoroutineDispatcherProvider,
-    private val visaActivationStatusConverter: VisaActivationStatusConverter,
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
-    private val accessCodeDataConverter: AccessCodeDataConverter,
     private val visaAuthRepository: VisaAuthRepository,
     private val visaLibLoader: VisaLibLoader,
 ) : VisaActivationRepository {
@@ -36,38 +36,18 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         val result = request {
             val authTokens =
                 checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
-            val accessCodeData = accessCodeDataConverter.convert(authTokens)
 
             visaApi.getRemoteActivationStatus(
                 authHeader = authTokens.getAuthHeader(),
-                customerId = accessCodeData.customerId,
-                productInstanceId = accessCodeData.productInstanceId,
-                cardId = visaCardId.cardId,
-                cardPublicKey = visaCardId.cardPublicKey,
+                request = ActivationStatusRequest(
+                    cardId = visaCardId.cardId,
+                    cardPublicKey = visaCardId.cardPublicKey,
+                ),
             ).getOrThrow()
         }
 
-        visaActivationStatusConverter.convert(result)
+        VisaActivationStatusConverterWithState.convert(result)
     }
-
-    override suspend fun getActivationRemoteStateLongPoll(): VisaActivationRemoteState =
-        withContext(dispatcherProvider.io) {
-            val result = request {
-                val authTokens =
-                    checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
-                val accessCodeData = accessCodeDataConverter.convert(authTokens)
-
-                visaApi.getRemoteActivationStatusLongPoll(
-                    authHeader = authTokens.getAuthHeader(),
-                    customerId = accessCodeData.customerId,
-                    productInstanceId = accessCodeData.productInstanceId,
-                    cardId = visaCardId.cardId,
-                    cardPublicKey = visaCardId.cardPublicKey,
-                ).getOrThrow()
-            }
-
-            visaActivationStatusConverter.convert(result)
-        }
 
     override suspend fun getCardWalletAcceptanceData(
         request: VisaCardWalletDataToSignRequest,
@@ -75,20 +55,19 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         val result = request {
             val authTokens =
                 checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
-            val accessCodeData = accessCodeDataConverter.convert(authTokens)
 
             visaApi.getCardWalletAcceptance(
                 authHeader = authTokens.getAuthHeader(),
-                customerId = accessCodeData.customerId,
-                productInstanceId = accessCodeData.productInstanceId,
-                activationOrderId = request.orderId,
-                customerWalletAddress = request.customerWalletAddress,
+                request = GetCardWalletAcceptanceRequest(
+                    customerWalletAddress = request.activationOrderInfo.customerWalletAddress,
+                    cardWalletAddress = request.cardWalletAddress,
+                ),
             ).getOrThrow()
         }
 
         VisaDataToSignByCardWallet(
             request = request,
-            hashToSign = result.dataForCardWallet.hash,
+            hashToSign = result.result.hash,
         )
     }
 
@@ -98,20 +77,19 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
         val result = request {
             val authTokens =
                 checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
-            val accessCodeData = accessCodeDataConverter.convert(authTokens)
 
             visaApi.getCustomerWalletAcceptance(
                 authHeader = authTokens.getAuthHeader(),
-                customerId = accessCodeData.customerId,
-                productInstanceId = accessCodeData.productInstanceId,
-                activationOrderId = request.orderId,
-                cardWalletAddress = request.cardWalletAddress,
+                request = GetCustomerWalletAcceptanceRequest(
+                    cardWalletAddress = request.cardWalletAddress,
+                    customerWalletAddress = request.customerWalletAddress,
+                ),
             ).getOrThrow()
         }
 
         VisaDataToSignByCustomerWallet(
             request = request,
-            hashToSign = result.dataForCardWallet.hash,
+            hashToSign = result.result.hash,
         )
     }
 
@@ -120,27 +98,22 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
             request {
                 val authTokens =
                     checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
-                val accessCodeData = accessCodeDataConverter.convert(authTokens)
 
                 visaApi.activateByCardWallet(
                     authHeader = authTokens.getAuthHeader(),
                     body = ActivationByCardWalletRequest(
-                        customerId = accessCodeData.customerId,
-                        productInstanceId = accessCodeData.productInstanceId,
-                        activationOrderId = signedData.dataToSign.request.orderId,
-                        data = ActivationByCardWalletRequest.Data(
-                            cardWallet = ActivationByCardWalletRequest.CardWallet(
-                                address = signedData.cardWalletAddress,
-                                cardWalletConfirmation = null, // for second iteration
-                                deployAcceptanceSignature = signedData.signature,
-                            ),
-                            otp = ActivationByCardWalletRequest.Otp(
-                                rootOtp = signedData.rootOTP,
-                                counter = signedData.otpCounter,
-                            ),
+                        orderId = signedData.dataToSign.request.activationOrderInfo.orderId,
+                        cardWallet = ActivationByCardWalletRequest.CardWallet(
+                            address = signedData.dataToSign.request.cardWalletAddress,
+                            cardWalletConfirmation = null, // for second iteration
+                        ),
+                        deployAcceptanceSignature = signedData.signature,
+                        otp = ActivationByCardWalletRequest.Otp(
+                            rootOtp = signedData.rootOTP,
+                            counter = signedData.otpCounter,
                         ),
                     ),
-                )
+                ).getOrThrow()
             }
         }
     }
@@ -150,22 +123,17 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
             request {
                 val authTokens =
                     checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
-                val accessCodeData = accessCodeDataConverter.convert(authTokens)
 
                 visaApi.activateByCustomerWallet(
                     authHeader = authTokens.getAuthHeader(),
                     body = ActivationByCustomerWalletRequest(
-                        customerId = accessCodeData.customerId,
-                        productInstanceId = accessCodeData.productInstanceId,
-                        activationOrderId = signedData.dataToSign.request.orderId,
-                        data = ActivationByCustomerWalletRequest.Data(
-                            customerWallet = ActivationByCustomerWalletRequest.CustomerWallet(
-                                address = signedData.customerWalletAddress,
-                                deployAcceptanceSignature = signedData.signature,
-                            ),
+                        orderId = signedData.dataToSign.request.orderId,
+                        customerWallet = ActivationByCustomerWalletRequest.CustomerWallet(
+                            deployAcceptanceSignature = signedData.signature,
+                            customerWalletAddress = signedData.customerWalletAddress,
                         ),
                     ),
-                )
+                ).getOrThrow()
             }
         }
     }
@@ -175,21 +143,16 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
             request {
                 val authTokens =
                     checkNotNull(visaAuthTokenStorage.get(visaCardId.cardId)) { "Visa auth tokens are not stored" }
-                val accessCodeData = accessCodeDataConverter.convert(authTokens)
 
                 visaApi.setPinCode(
                     authHeader = authTokens.getAuthHeader(),
                     body = SetPinCodeRequest(
-                        customerId = accessCodeData.customerId,
-                        productInstanceId = accessCodeData.productInstanceId,
-                        activationOrderId = pinCode.activationOrderId,
-                        data = SetPinCodeRequest.Data(
-                            sessionKey = pinCode.sessionId,
-                            iv = pinCode.iv,
-                            encryptedPin = pinCode.encryptedPin,
-                        ),
+                        orderId = pinCode.activationOrderId,
+                        sessionId = pinCode.sessionId,
+                        iv = pinCode.iv,
+                        pin = pinCode.encryptedPin,
                     ),
-                )
+                ).getOrThrow()
             }
         }
     }

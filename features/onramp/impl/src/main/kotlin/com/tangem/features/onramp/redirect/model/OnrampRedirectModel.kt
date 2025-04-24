@@ -14,6 +14,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
 import com.tangem.domain.onramp.GetOnrampRedirectUrlUseCase
 import com.tangem.domain.onramp.model.error.OnrampError
+import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onramp.impl.R
 import com.tangem.features.onramp.redirect.OnrampRedirectComponent
 import com.tangem.features.onramp.redirect.entity.OnrampRedirectTopBarUM
@@ -29,6 +30,7 @@ internal class OnrampRedirectModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val urlOpener: UrlOpener,
     private val getOnrampRedirectUrlUseCase: GetOnrampRedirectUrlUseCase,
+    private val getWalletsUseCase: GetWalletsUseCase,
     private val messageSender: UiMessageSender,
     private val analyticsEventHandler: AnalyticsEventHandler,
     router: Router,
@@ -36,6 +38,8 @@ internal class OnrampRedirectModel @Inject constructor(
 ) : Model() {
 
     private val params: OnrampRedirectComponent.Params = paramsContainer.require()
+    private val selectedUserWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
+
     val state = OnrampRedirectUM(
         topBarConfig = OnrampRedirectTopBarUM(
             title = combinedReference(
@@ -62,7 +66,7 @@ internal class OnrampRedirectModel @Inject constructor(
     fun getRedirectUrl(isDarkTheme: Boolean) {
         modelScope.launch {
             getOnrampRedirectUrlUseCase.invoke(
-                userWalletId = params.userWalletId,
+                userWallet = selectedUserWallet,
                 quote = params.onrampProviderWithQuote,
                 cryptoCurrency = params.cryptoCurrency,
                 isDarkTheme = isDarkTheme,

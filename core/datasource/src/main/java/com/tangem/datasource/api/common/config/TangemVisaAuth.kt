@@ -15,7 +15,7 @@ internal class TangemVisaAuth(
 
     private fun createStageEnvironment(): ApiEnvironmentConfig = ApiEnvironmentConfig(
         environment = ApiEnvironment.STAGE,
-        baseUrl = "https://api-s.tangem.org/",
+        baseUrl = "https://api.dev.paera.com/bff/",
         headers = createHeaders(),
     )
 

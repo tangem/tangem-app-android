@@ -48,5 +48,11 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
+    fun provideBlockAidConfig(environmentConfigStorage: EnvironmentConfigStorage): ApiConfig {
+        return BlockAid(environmentConfigStorage)
+    }
+
+    @Provides
+    @IntoSet
     fun provideTangemCardSdkConfig(): ApiConfig = TangemCardSdk()
 }

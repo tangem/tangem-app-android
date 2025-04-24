@@ -5,6 +5,8 @@ import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.*
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
+import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.single.SingleQuoteSupplier
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -49,8 +51,16 @@ object MarketsDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetTokenQuotesUseCase(quotesRepository: QuotesRepository): GetCurrencyQuotesUseCase {
-        return GetCurrencyQuotesUseCase(quotesRepository = quotesRepository)
+    fun provideGetTokenQuotesUseCase(
+        quotesRepository: QuotesRepository,
+        singleQuoteSupplier: SingleQuoteSupplier,
+        tokensFeatureToggles: TokensFeatureToggles,
+    ): GetCurrencyQuotesUseCase {
+        return GetCurrencyQuotesUseCase(
+            quotesRepository = quotesRepository,
+            singleQuoteSupplier = singleQuoteSupplier,
+            tokensFeatureToggles = tokensFeatureToggles,
+        )
     }
 
     @Provides
@@ -63,6 +73,7 @@ object MarketsDomainModule {
         stakingRepository: StakingRepository,
         quotesRepository: QuotesRepository,
         multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+        multiQuoteFetcher: MultiQuoteFetcher,
         tokensFeatureToggles: TokensFeatureToggles,
     ): SaveMarketTokensUseCase {
         return SaveMarketTokensUseCase(
@@ -73,6 +84,7 @@ object MarketsDomainModule {
             stakingRepository = stakingRepository,
             quotesRepository = quotesRepository,
             multiNetworkStatusFetcher = multiNetworkStatusFetcher,
+            multiQuoteFetcher = multiQuoteFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
     }

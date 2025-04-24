@@ -91,4 +91,10 @@ enum class Status {
 
     @Json(name = "paused")
     Paused,
+
+    @Json(name = "refund-in-progress")
+    RefundInProgress,
+
+    @Json(name = "refunded")
+    Refunded,
 }
