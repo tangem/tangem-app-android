@@ -127,7 +127,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private fun child(route: AppRoute, context: ComponentContext): Child {
-        return childFactory.createChild(route) { childByContext(context) }
+        val child = childFactory.createChild(route) { childByContext(context) }
+        wcRoutingComponent?.onAppRouteChange(route)
+        return child
     }
 
     @AssistedFactory
