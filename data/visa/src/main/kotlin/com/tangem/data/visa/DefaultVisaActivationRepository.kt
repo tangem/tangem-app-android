@@ -2,6 +2,9 @@ package com.tangem.data.visa
 
 import com.tangem.data.visa.config.VisaLibLoader
 import com.tangem.data.visa.converter.VisaActivationStatusConverterWithState
+import com.tangem.datasource.api.common.config.ApiConfig
+import com.tangem.datasource.api.common.config.ApiEnvironment
+import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
 import com.tangem.datasource.api.common.response.ApiResponseError
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.visa.TangemVisaApi
@@ -30,6 +33,7 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     private val visaAuthTokenStorage: VisaAuthTokenStorage,
     private val visaAuthRepository: VisaAuthRepository,
     private val visaLibLoader: VisaLibLoader,
+    private val apiConfigsManager: ApiConfigsManager,
 ) : VisaActivationRepository {
 
     override suspend fun getActivationRemoteState(): VisaActivationRemoteState = withContext(dispatcherProvider.io) {
@@ -158,7 +162,14 @@ internal class DefaultVisaActivationRepository @AssistedInject constructor(
     }
 
     override suspend fun getPinCodeRsaEncryptionPublicKey(): String {
-        return visaLibLoader.getOrCreateConfig().rsaPublicKey
+        val env = apiConfigsManager.getEnvironmentConfig(ApiConfig.ID.TangemVisa).environment
+        val rsaPublicKey = visaLibLoader.getOrCreateConfig().rsaPublicKey
+        return when (env) {
+            ApiEnvironment.DEV,
+            ApiEnvironment.STAGE,
+            -> rsaPublicKey.dev
+            ApiEnvironment.PROD -> rsaPublicKey.prod
+        }
     }
 
     private suspend fun <T : Any> request(requestBlock: suspend () -> T): T {
