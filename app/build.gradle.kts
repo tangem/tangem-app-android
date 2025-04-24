@@ -155,6 +155,7 @@ dependencies {
     implementation(projects.data.onramp)
     implementation(projects.data.networks)
     implementation(projects.data.quotes)
+    implementation(projects.data.blockaid)
 
     /** Features */
     implementation(projects.features.onboarding)
