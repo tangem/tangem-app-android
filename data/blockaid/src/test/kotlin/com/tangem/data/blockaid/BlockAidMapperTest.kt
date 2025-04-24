@@ -11,7 +11,7 @@ import java.math.BigDecimal
 
 class BlockAidMapperTest {
 
-    private val mapper = BlockAidMapper()
+    private val mapper = BlockAidMapper
 
     @Test
     fun `when status hit and is malicious false then map to domain returns safe`() {
