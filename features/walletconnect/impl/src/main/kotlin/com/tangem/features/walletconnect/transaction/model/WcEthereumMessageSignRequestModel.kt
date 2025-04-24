@@ -4,45 +4,51 @@ import androidx.compose.runtime.Stable
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMessageSignUseCase
 import com.tangem.features.walletconnect.impl.R
+import com.tangem.features.walletconnect.transaction.components.WcEthereumMessageSignRequestComponent
 import com.tangem.features.walletconnect.transaction.entity.*
 import com.tangem.features.walletconnect.transaction.entity.WcEthereumMessageSignRequestUM.State
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @Stable
 @ModelScoped
 internal class WcEthereumMessageSignRequestModel @Inject constructor(
+    paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
     private val clipboardManager: ClipboardManager,
-    // private val requestConverter: WcRequestToUseCaseConverter,
-    // private val request: WcSdkSessionRequest,
+    private val useCaseFactory: WcRequestUseCaseFactory,
 ) : Model() {
 
     private val _uiState = MutableStateFlow<WcEthereumMessageSignRequestUM?>(null)
     val uiState: StateFlow<WcEthereumMessageSignRequestUM?> = _uiState
 
+    private val params = paramsContainer.require<WcEthereumMessageSignRequestComponent.Params>()
+
     init {
         modelScope.launch(dispatchers.io) {
-            // requestConverter.toUseCase(request).collectLatest { useCase ->
-            //     useCase().collectLatest {
-            //         domainToUM(wcEthMessageSignUseCase, it.signModel)
-            //     }
-            // }
+            val useCase: WcEthMessageSignUseCase = useCaseFactory.createUseCase(params.rawRequest)
+            useCase.invoke()
+                .onEach { domainToUM(useCase, it.signModel) }
+                .launchIn(this)
         }
     }
 
     private fun domainToUM(
         useCase: WcEthMessageSignUseCase,
-        signModel: WcEthMessageSignUseCase.SignModel
+        signModel: WcEthMessageSignUseCase.SignModel,
     ): WcEthereumMessageSignRequestUM {
         return WcEthereumMessageSignRequestUM(
             startIconRes = R.drawable.ic_back_24,
