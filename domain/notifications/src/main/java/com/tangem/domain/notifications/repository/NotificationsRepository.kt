@@ -1,4 +1,4 @@
-package com.tangem.domain.notifications
+package com.tangem.domain.notifications.repository
 
 import com.tangem.domain.notifications.models.NotificationsEligibleNetwork
 
