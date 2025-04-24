@@ -17,6 +17,7 @@ import com.tangem.tap.domain.walletconnect2.domain.WcJrpcMethods
 import com.tangem.tap.domain.walletconnect2.domain.WcJrpcRequestsDeserializer
 import com.tangem.tap.domain.walletconnect2.domain.WcRequest
 import com.tangem.tap.domain.walletconnect2.domain.models.*
+import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction.OpenSession.SourceType
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,7 @@ internal class DefaultLegacyWalletConnectRepository(
     private val application: Application,
     private val wcRequestDeserializer: WcJrpcRequestsDeserializer,
     private val analyticsHandler: AnalyticsEventHandler,
+    private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
 ) : LegacyWalletConnectRepository {
 
     private var sessionProposal: Wallet.Model.SessionProposal? = null
@@ -48,6 +50,7 @@ internal class DefaultLegacyWalletConnectRepository(
      * @param projectId Project ID at https://cloud.walletconnect.com/
      */
     override fun init(projectId: String) {
+        if (walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) return
         val relayUrl = "relay.walletconnect.com"
         val serverUrl = "wss://$relayUrl?projectId=$projectId"
         val connectionType = ConnectionType.AUTOMATIC
