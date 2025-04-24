@@ -8,6 +8,9 @@ import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWalletId
 import java.math.BigDecimal
 
+/**
+ * Use case to create and get approval transaction
+ */
 class CreateApprovalTransactionUseCase(
     private val transactionRepository: TransactionRepository,
 ) {
@@ -20,7 +23,6 @@ class CreateApprovalTransactionUseCase(
         fee: Fee,
         contractAddress: String,
         spenderAddress: String,
-        hash: String? = null,
     ) = Either.catch {
         transactionRepository.createApprovalTransaction(
             amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrency),
@@ -30,7 +32,6 @@ class CreateApprovalTransactionUseCase(
             userWalletId = userWalletId,
             network = cryptoCurrency.network,
             fee = fee,
-            hash = hash,
         )
     }
 }

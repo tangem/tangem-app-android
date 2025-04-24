@@ -30,7 +30,7 @@ internal class NetworksStatusesStoreGetMethodTest {
     fun `test get if runtime store is empty`() = runTest {
         val actual = store.get(userWalletId = userWalletId)
 
-        val values = backgroundScope.getEmittedValues(testScheduler, actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values).isEqualTo(emptyList<Set<SimpleNetworkStatus>>())
     }
@@ -41,7 +41,7 @@ internal class NetworksStatusesStoreGetMethodTest {
 
         val actual = store.get(userWalletId = userWalletId)
 
-        val values = backgroundScope.getEmittedValues(testScheduler, actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values).isEqualTo(emptyList<Set<SimpleNetworkStatus>>())
     }
@@ -54,7 +54,7 @@ internal class NetworksStatusesStoreGetMethodTest {
 
         val actual = store.get(userWalletId = userWalletId)
 
-        val values = backgroundScope.getEmittedValues(testScheduler, actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values).isEqualTo(listOf(emptySet<SimpleNetworkStatus>()))
@@ -70,7 +70,7 @@ internal class NetworksStatusesStoreGetMethodTest {
 
         val actual = store.get(userWalletId = userWalletId)
 
-        val values = backgroundScope.getEmittedValues(testScheduler, actual)
+        val values = getEmittedValues(flow = actual)
 
         Truth.assertThat(values.size).isEqualTo(1)
         Truth.assertThat(values).isEqualTo(listOf(setOf(status.toSimple())))
