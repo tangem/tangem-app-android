@@ -1,7 +1,7 @@
 package com.tangem.data.visa
 
 import com.tangem.datasource.api.common.response.getOrThrow
-import com.tangem.datasource.api.visa.TangemVisaAuthApi
+import com.tangem.datasource.api.visa.TangemVisaApi
 import com.tangem.datasource.api.visa.models.request.*
 import com.tangem.domain.visa.model.VisaAuthChallenge
 import com.tangem.domain.visa.model.VisaAuthSession
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @Suppress("UnusedPrivateMember")
 internal class DefaultVisaAuthRepository @Inject constructor(
-    private val visaAuthApi: TangemVisaAuthApi,
+    private val visaAuthApi: TangemVisaApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : VisaAuthRepository {
 
