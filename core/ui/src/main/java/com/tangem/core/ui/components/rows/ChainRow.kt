@@ -42,6 +42,7 @@ fun ChainRow(model: ChainRowUM, modifier: Modifier = Modifier, action: @Composab
                 } else {
                     null
                 },
+                isEnabled = model.enabled,
                 accentMainText = true,
                 accentSecondText = false,
             )

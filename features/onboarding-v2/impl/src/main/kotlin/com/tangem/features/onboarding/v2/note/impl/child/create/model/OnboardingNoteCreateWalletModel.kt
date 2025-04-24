@@ -5,6 +5,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.domain.card.repository.CardRepository
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.wallets.builder.UserWalletBuilder
@@ -93,9 +94,11 @@ internal class OnboardingNoteCreateWalletModel @Inject constructor(
 
     private fun observeArtwork() {
         modelScope.launch {
-            params.childParams.commonState.collect {
+            params.childParams.commonState.collect { state ->
                 _uiState.value = _uiState.value.copy(
-                    artworkUrl = it.cardArtworkUrl,
+                    artwork = state.cardArtwork?.let {
+                        ArtworkUM(it.verifiedArtwork, it.defaultUrl)
+                    },
                 )
             }
         }
