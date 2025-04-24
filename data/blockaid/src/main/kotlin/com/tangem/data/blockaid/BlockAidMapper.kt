@@ -15,7 +15,7 @@ private const val SUCCESS_STATUS = "Success"
 private const val DOMAIN_CHECKED_STATUS = "hit"
 private const val VALIDATION_SAFE_STATUS = "Benign"
 
-internal class BlockAidMapper {
+internal object BlockAidMapper {
 
     fun mapToDomain(from: DomainScanResponse): CheckDAppResult {
         return when {
