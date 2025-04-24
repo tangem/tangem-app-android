@@ -11,6 +11,7 @@ import com.tangem.common.ui.notifications.NotificationsFactory.addRentExemptionN
 import com.tangem.common.ui.notifications.NotificationsFactory.addReserveAmountErrorNotification
 import com.tangem.common.ui.notifications.NotificationsFactory.addTransactionLimitErrorNotification
 import com.tangem.core.ui.extensions.networkIconResId
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.staking.model.stakekit.StakingError
@@ -22,6 +23,7 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.FeeState
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
@@ -29,6 +31,7 @@ import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.features.staking.impl.presentation.state.utils.checkAndCalculateSubtractedAmount
 import com.tangem.features.staking.impl.presentation.state.utils.checkFeeCoverage
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.orZero
 import com.tangem.utils.transformer.Transformer
@@ -175,6 +178,9 @@ internal class AddStakingNotificationsTransformer(
             cryptoCurrencyStatus = cryptoCurrencyStatus,
             onClick = prevState.clickIntents::openTokenDetails,
         )
+        addTonUnstakeNotification(
+            actionType = prevState.actionType,
+        )
         addExceedsBalanceNotification(
             cryptoCurrencyWarning = currencyWarning,
             cryptoCurrencyStatus = cryptoCurrencyStatus,
@@ -246,7 +252,7 @@ internal class AddStakingNotificationsTransformer(
         cryptoCurrencyStatus: CryptoCurrencyStatus,
         onClick: (CryptoCurrency) -> Unit,
     ) {
-        val balance = cryptoCurrencyStatus.value.amount ?: BigDecimal.ZERO
+        val balance = cryptoCurrencyStatus.value.amount.orZero()
         if (!isSubtractionAvailable) return
 
         val showNotification = sendingAmount + feeAmount > balance
@@ -268,5 +274,26 @@ internal class AddStakingNotificationsTransformer(
             }
             add(notification)
         }
+    }
+
+    private fun MutableList<NotificationUM>.addTonUnstakeNotification(actionType: StakingActionCommonType) {
+        val amount = cryptoCurrencyStatusProvider().value.amount.orZero()
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
+
+        if (isTon(cryptoCurrencyNetworkIdValue) && actionType !is StakingActionCommonType.Enter) {
+            val notification = if (amount < TON_BALANCE_EXTRA_FEE_THRESHOLD) {
+                NotificationUM.Error.TonStakingExtraFeeError
+            } else {
+                StakingNotification.Info.Ordinary(
+                    title = resourceReference(R.string.staking_notification_ton_extra_reserve_title),
+                    text = resourceReference(R.string.staking_notification_ton_extra_reserve_info),
+                )
+            }
+            add(notification)
+        }
+    }
+
+    private companion object {
+        val TON_BALANCE_EXTRA_FEE_THRESHOLD = BigDecimal(0.2)
     }
 }
