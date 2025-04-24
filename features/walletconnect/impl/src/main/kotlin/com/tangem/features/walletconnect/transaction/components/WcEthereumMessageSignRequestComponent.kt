@@ -14,7 +14,7 @@ import com.tangem.features.walletconnect.transaction.ui.sign.WcEthereumMessageSi
 
 internal class WcEthereumMessageSignRequestComponent(
     appComponentContext: AppComponentContext,
-    private val params: Params,
+    params: Params,
 ) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     private val model: WcEthereumMessageSignRequestModel = getOrCreateModel(params)
