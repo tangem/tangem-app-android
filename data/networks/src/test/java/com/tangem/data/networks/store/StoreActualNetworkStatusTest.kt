@@ -33,15 +33,16 @@ internal class StoreActualNetworkStatusTest(private val model: Model) {
 
     @Test
     fun `store actual`() = runTest {
-        store.storeActual(userWalletId = userWalletId, value = model.status)
+        val actual = runCatching { store.storeSuccess(userWalletId = userWalletId, value = model.status) }
 
+        Truth.assertThat(actual.isSuccess).isEqualTo(model.isSuccess)
         Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(model.runtimeExpected)
-
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(model.persistenceExpected)
     }
 
     data class Model(
         val status: NetworkStatus,
+        val isSuccess: Boolean,
         val runtimeExpected: Map<String, Set<SimpleNetworkStatus>>,
         val persistenceExpected: WalletIdWithStatusDM,
     )
@@ -56,6 +57,7 @@ internal class StoreActualNetworkStatusTest(private val model: Model) {
             return listOf(
                 Model(
                     status = MockNetworkStatusFactory.createVerified(),
+                    isSuccess = true,
                     runtimeExpected = mapOf(
                         userWalletId.stringValue to setOf(
                             MockNetworkStatusFactory.createVerified().toSimple(),
@@ -69,6 +71,7 @@ internal class StoreActualNetworkStatusTest(private val model: Model) {
                 ),
                 Model(
                     status = MockNetworkStatusFactory.createNoAccount(),
+                    isSuccess = true,
                     runtimeExpected = mapOf(
                         userWalletId.stringValue to setOf(
                             MockNetworkStatusFactory.createNoAccount().toSimple(),
@@ -82,6 +85,7 @@ internal class StoreActualNetworkStatusTest(private val model: Model) {
                 ),
                 Model(
                     status = MockNetworkStatusFactory.createMissedDerivation(),
+                    isSuccess = true,
                     runtimeExpected = mapOf(
                         userWalletId.stringValue to setOf(
                             MockNetworkStatusFactory.createMissedDerivation().toSimple(),
@@ -91,11 +95,8 @@ internal class StoreActualNetworkStatusTest(private val model: Model) {
                 ),
                 Model(
                     status = MockNetworkStatusFactory.createUnreachable(),
-                    runtimeExpected = mapOf(
-                        userWalletId.stringValue to setOf(
-                            MockNetworkStatusFactory.createUnreachable().toSimple(),
-                        ),
-                    ),
+                    isSuccess = false,
+                    runtimeExpected = mapOf(),
                     persistenceExpected = mapOf(),
                 ),
             )
