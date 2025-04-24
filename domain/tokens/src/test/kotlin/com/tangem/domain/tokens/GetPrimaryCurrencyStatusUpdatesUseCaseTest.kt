@@ -180,10 +180,16 @@ internal class GetPrimaryCurrencyStatusUpdatesUseCaseTest {
 
             tokensFeatureToggles = object : TokensFeatureToggles {
                 override val isNetworksLoadingRefactoringEnabled: Boolean = false
+                override val isQuotesLoadingRefactoringEnabled: Boolean = false
+                override val isStakingLoadingRefactoringEnabled: Boolean = false
             },
             singleNetworkStatusSupplier = mockk(),
             multiNetworkStatusFetcher = mockk(),
             multiNetworkStatusSupplier = mockk(),
+            multiQuoteFetcher = mockk(),
+            singleQuoteSupplier = mockk(),
+            quotesRepositoryV2 = mockk(),
+            singleYieldBalanceSupplier = mockk(),
         ),
         dispatchers = dispatchers,
     )
