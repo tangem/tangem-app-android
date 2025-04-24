@@ -24,7 +24,7 @@ internal class RuntimeUserWalletsStore(
         return userWalletsListManager.userWalletsSync.firstOrNull { it.walletId == key }
     }
 
-    override suspend fun getSyncStrict(key: UserWalletId): UserWallet {
+    override fun getSyncStrict(key: UserWalletId): UserWallet {
         return requireNotNull(getSyncOrNull(key)) { "Unable to find user wallet with provided ID: $key" }
     }
 
