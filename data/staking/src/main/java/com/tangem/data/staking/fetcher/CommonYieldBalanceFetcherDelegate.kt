@@ -6,27 +6,32 @@ import arrow.core.left
 import arrow.core.raise.catch
 import arrow.core.raise.either
 import arrow.core.raise.ensure
+import arrow.core.toOption
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
+import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.domain.core.flow.FlowFetcher
 import com.tangem.domain.core.utils.catchOn
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import timber.log.Timber
 
 internal fun <Params : YieldBalanceFetcherParams> commonFetcher(
     implementor: YieldBalanceFetcherImplementor<Params>,
+    userWalletsStore: UserWalletsStore,
     stakingYieldsStore: StakingYieldsStore,
     yieldsBalancesStore: YieldsBalancesStore,
     dispatchers: CoroutineDispatcherProvider,
 ): FlowFetcher<Params> {
     return CommonYieldBalanceFetcher(
         implementor = implementor,
+        userWalletsStore = userWalletsStore,
         stakingYieldsStore = stakingYieldsStore,
         yieldsBalancesStore = yieldsBalancesStore,
         dispatchers = dispatchers,
@@ -36,19 +41,25 @@ internal fun <Params : YieldBalanceFetcherParams> commonFetcher(
 /**
  * Common implementation of YieldBalanceFetcher
  *
- * @param implementor            fetcher implementor
+ * @property implementor         fetcher implementor
+ * @property userWalletsStore    user wallets store
  * @property stakingYieldsStore  staking yields store
  * @property yieldsBalancesStore yields balances store
  * @property dispatchers         dispatchers
  */
 private class CommonYieldBalanceFetcher<Params : YieldBalanceFetcherParams>(
     private val implementor: YieldBalanceFetcherImplementor<Params>,
+    private val userWalletsStore: UserWalletsStore,
     private val stakingYieldsStore: StakingYieldsStore,
     private val yieldsBalancesStore: YieldsBalancesStore,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : FlowFetcher<Params> {
 
     override suspend fun invoke(params: Params): Either<Throwable, Unit> {
+        checkIsSupportedByWalletOrElse(userWalletId = params.userWalletId) {
+            return it.left()
+        }
+
         val stakingIds = getStakingIds(params).getOrElse {
             return it.left()
         }
@@ -58,7 +69,23 @@ private class CommonYieldBalanceFetcher<Params : YieldBalanceFetcherParams>(
 
             implementor.fetch(params = params, stakingIds = stakingIds, requests)
         }
-            .onLeft { yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = stakingIds) }
+            .onLeft {
+                Timber.e(it, "Unable to fetch yield balances $params")
+                yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = stakingIds)
+            }
+    }
+
+    private inline fun checkIsSupportedByWalletOrElse(userWalletId: UserWalletId, ifNotSupported: (Throwable) -> Unit) {
+        val maybeUserWallet = userWalletsStore.getSyncOrNull(key = userWalletId).toOption()
+
+        val isSupportedByWallet = maybeUserWallet.isSome(UserWallet::isMultiCurrency)
+
+        if (!isSupportedByWallet) {
+            val exception = IllegalStateException("Wallet $userWalletId is not supported: $maybeUserWallet")
+            Timber.e(exception)
+
+            ifNotSupported(exception)
+        }
     }
 
     private suspend fun getStakingIds(params: Params): Either<Throwable, Set<StakingID>> = either {
