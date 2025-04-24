@@ -9,6 +9,7 @@ import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
 import com.tangem.data.walletconnect.pair.*
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
+import com.tangem.data.walletconnect.request.DefaultWcRequestUseCaseFactory
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
 import com.tangem.data.walletconnect.respond.DefaultWcRespondService
 import com.tangem.data.walletconnect.respond.WcRespondService
@@ -21,6 +22,7 @@ import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.WcRequestService
+import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -178,6 +180,12 @@ internal object WalletConnectDataModule {
             solanaNetwork,
         ),
     )
+
+    @Provides
+    @Singleton
+    fun wcRequestUseCaseFactory(diHelperBox: DiHelperBox): WcRequestUseCaseFactory {
+        return DefaultWcRequestUseCaseFactory(diHelperBox.handlers)
+    }
 
     internal class DiHelperBox(
         val converters: Set<WcNamespaceConverter>,

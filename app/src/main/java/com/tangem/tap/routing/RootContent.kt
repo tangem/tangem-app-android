@@ -74,7 +74,7 @@ internal fun RootContent(
                     }
                 }
 
-                walletConnectSlot.value.child?.instance?.Content(Modifier)
+                walletConnectSlot.value.child?.instance?.Content(Modifier.fillMaxSize())
 
                 TangemSnackbarHost(
                     modifier = Modifier
