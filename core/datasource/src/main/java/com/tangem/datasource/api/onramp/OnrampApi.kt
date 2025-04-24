@@ -3,37 +3,52 @@ package com.tangem.datasource.api.onramp
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.onramp.models.request.OnrampPairsRequest
 import com.tangem.datasource.api.onramp.models.response.OnrampDataResponse
-import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.OnrampQuoteResponse
 import com.tangem.datasource.api.onramp.models.response.OnrampStatusResponse
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCountryDTO
 import com.tangem.datasource.api.onramp.models.response.model.OnrampCurrencyDTO
+import com.tangem.datasource.api.onramp.models.response.model.OnrampPairDTO
 import com.tangem.datasource.api.onramp.models.response.model.PaymentMethodDTO
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.*
 
 @Suppress("LongParameterList", "LargeClass", "TooManyFunctions")
 interface OnrampApi {
 
     @GET("currencies")
-    suspend fun getCurrencies(): ApiResponse<List<OnrampCurrencyDTO>>
+    suspend fun getCurrencies(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+    ): ApiResponse<List<OnrampCurrencyDTO>>
 
     @GET("countries")
-    suspend fun getCountries(): ApiResponse<List<OnrampCountryDTO>>
+    suspend fun getCountries(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+    ): ApiResponse<List<OnrampCountryDTO>>
 
     @GET("country-by-ip")
-    suspend fun getCountryByIp(): ApiResponse<OnrampCountryDTO>
+    suspend fun getCountryByIp(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+    ): ApiResponse<OnrampCountryDTO>
 
     @GET("payment-methods")
-    suspend fun getPaymentMethods(): ApiResponse<List<PaymentMethodDTO>>
+    suspend fun getPaymentMethods(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+    ): ApiResponse<List<PaymentMethodDTO>>
 
     @POST("onramp-pairs")
-    suspend fun getPairs(@Body body: OnrampPairsRequest): ApiResponse<List<OnrampPairDTO>>
+    suspend fun getPairs(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+        @Body body: OnrampPairsRequest,
+    ): ApiResponse<List<OnrampPairDTO>>
 
     @GET("onramp-quote")
     suspend fun getQuote(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
         @Query("fromCurrencyCode") fromCurrencyCode: String,
         @Query("fromPrecision") fromPrecision: Int,
         @Query("toContractAddress") toContractAddress: String,
@@ -47,6 +62,8 @@ interface OnrampApi {
 
     @GET("onramp-data")
     suspend fun getData(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
         @Query("fromCurrencyCode") fromCurrencyCode: String,
         @Query("fromPrecision") fromPrecision: Int,
         @Query("toContractAddress") toContractAddress: String,
@@ -64,5 +81,9 @@ interface OnrampApi {
     ): ApiResponse<OnrampDataResponse>
 
     @GET("onramp-status")
-    suspend fun getStatus(@Query("txId") txId: String): ApiResponse<OnrampStatusResponse>
+    suspend fun getStatus(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+        @Query("txId") txId: String,
+    ): ApiResponse<OnrampStatusResponse>
 }

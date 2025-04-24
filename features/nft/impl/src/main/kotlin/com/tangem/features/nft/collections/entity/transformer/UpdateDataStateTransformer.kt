@@ -4,6 +4,7 @@ import com.tangem.core.ui.components.fields.entity.SearchBarUM
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.domain.nft.models.*
 import com.tangem.features.nft.collections.entity.*
@@ -20,12 +21,12 @@ internal class UpdateDataStateTransformer(
     private val onRetryClick: () -> Unit,
     private val onExpandCollectionClick: (NFTCollection) -> Unit,
     private val onRetryAssetsClick: (NFTCollection) -> Unit,
-    private val onAssetClick: (NFTAsset) -> Unit,
+    private val onAssetClick: (NFTAsset, String) -> Unit,
     private val initialSearchBarFactory: () -> SearchBarUM,
 ) : Transformer<NFTCollectionsStateUM> {
 
-    override fun transform(prevState: NFTCollectionsStateUM): NFTCollectionsStateUM = prevState.copy(
-        content = when {
+    override fun transform(prevState: NFTCollectionsStateUM): NFTCollectionsStateUM {
+        val content = when {
             nftCollections.allCollectionsFailed() ->
                 NFTCollectionsUM.Failed(onRetryClick, onReceiveClick)
             nftCollections.anyCollectionFailed() && nftCollections.allLoadedCollectionsEmpty() ->
@@ -33,7 +34,16 @@ internal class UpdateDataStateTransformer(
             nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
                 NFTCollectionsUM.Empty(onReceiveClick)
             !nftCollections.allCollectionsLoaded() && nftCollections.allCollectionsEmpty() ->
-                NFTCollectionsUM.Loading(onReceiveClick)
+                NFTCollectionsUM.Loading(
+                    onReceiveClick = onReceiveClick,
+                    search = SearchBarUM(
+                        placeholderText = resourceReference(R.string.common_search),
+                        query = "",
+                        isActive = false,
+                        onQueryChange = { },
+                        onActiveChange = { },
+                    ),
+                )
             else -> {
                 NFTCollectionsUM.Content(
                     search = if (prevState.content is NFTCollectionsUM.Content) {
@@ -54,18 +64,45 @@ internal class UpdateDataStateTransformer(
                     onReceiveClick = onReceiveClick,
                 )
             }
-        },
-    )
+        }
+        return prevState.copy(
+            content = content,
+            pullToRefreshConfig = when (content) {
+                is NFTCollectionsUM.Loading -> prevState.pullToRefreshConfig.copy(
+                    isRefreshing = false,
+                )
+                else -> prevState.pullToRefreshConfig
+            },
+        )
+    }
 
     private fun List<NFTCollection>.transform(
         state: NFTCollectionsStateUM,
         query: String,
     ): ImmutableList<NFTCollectionUM> = mapNotNull {
-        if (query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true) {
+        val assetsFulfillQuery = if (query.isEmpty()) {
+            true
+        } else {
+            when (val assets = it.assets) {
+                is NFTCollection.Assets.Empty,
+                is NFTCollection.Assets.Failed,
+                is NFTCollection.Assets.Loading,
+                -> false
+                is NFTCollection.Assets.Value -> {
+                    assets.items.any { asset ->
+                        asset.name?.lowercase()?.contains(query.lowercase()) == true
+                    }
+                }
+            }
+        }
+
+        val collectionFulfillQuery = query.isEmpty() || it.name?.lowercase()?.contains(query.lowercase()) == true
+
+        if (collectionFulfillQuery || assetsFulfillQuery) {
             NFTCollectionUM(
                 id = it.id.toString(),
                 networkIconId = getActiveIconRes(it.network.id.value),
-                name = it.name.orEmpty(),
+                name = it.name,
                 description = TextReference.PluralRes(
                     R.plurals.nft_collections_count,
                     it.count,
@@ -105,12 +142,12 @@ internal class UpdateDataStateTransformer(
         is NFTCollection.Assets.Value -> NFTCollectionAssetsListUM.Content(
             items = assets
                 .items
-                .map { it.transform() }
+                .map { it.transform(name.orEmpty()) }
                 .toPersistentList(),
         )
     }
 
-    private fun NFTAsset.transform(): NFTCollectionAssetUM = NFTCollectionAssetUM(
+    private fun NFTAsset.transform(collectionName: String): NFTCollectionAssetUM = NFTCollectionAssetUM(
         id = id.toString(),
         name = name.orEmpty(),
         imageUrl = media?.url,
@@ -121,7 +158,7 @@ internal class UpdateDataStateTransformer(
             is NFTSalePrice.Value -> NFTSalePriceUM.Content(salePrice.value.toString())
         },
         onItemClick = {
-            onAssetClick(this)
+            onAssetClick(this, collectionName)
         },
     )
 
