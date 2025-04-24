@@ -3,10 +3,8 @@ package com.tangem.tap.routing.component.impl
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
 import com.arkivanov.essenty.lifecycle.doOnDestroy
@@ -21,7 +19,6 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.tap.common.SnackbarHandler
-import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -40,11 +37,15 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
     private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
-    private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
     routingFeatureToggles: RoutingFeatureToggles,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
+
+    private val wcRoutingComponent: WcRoutingComponent by lazy {
+        wcRoutingComponentFactory
+            .create(childByContext(componentContext = this), params = Unit)
+    }
 
     override val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
@@ -53,12 +54,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         handleBackButton = routingFeatureToggles.isNavigationRefactoringEnabled,
         childFactory = ::child,
     )
-
-    private val wcRoutingComponent: WcRoutingComponent? by lazy {
-        if (!walletConnectFeatureToggles.isRedesignedWalletConnectEnabled) return@lazy null
-        wcRoutingComponentFactory
-            .create(childByContext(componentContext = this), params = Unit)
-    }
 
     init {
         lifecycle.doOnDestroy {
@@ -86,7 +81,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             stack = stack,
             uiDependencies = uiDependencies,
-            walletConnectSlot = wcRoutingComponent?.slot ?: MutableValue(ChildSlot(null)),
+            walletConnectSlot = wcRoutingComponent.slot,
         )
     }
 
@@ -128,7 +123,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
     private fun child(route: AppRoute, context: ComponentContext): Child {
         val child = childFactory.createChild(route) { childByContext(context) }
-        wcRoutingComponent?.onAppRouteChange(route)
+        wcRoutingComponent.onAppRouteChange(route)
         return child
     }
 

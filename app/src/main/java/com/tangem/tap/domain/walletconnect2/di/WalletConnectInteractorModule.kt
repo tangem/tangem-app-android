@@ -79,7 +79,12 @@ internal object WalletConnectModule {
             application = application,
             wcRequestDeserializer = wcRequestDeserializer,
             analyticsHandler = analyticsHandler,
-            walletConnectFeatureToggles = walletConnectFeatureToggles,
+        )
+        val stub = LegacyWalletConnectRepositoryStub()
+        return DefaultLegacyWalletConnectRepositoryFacade(
+            stub,
+            legacy,
+            walletConnectFeatureToggles,
         )
         val stub = LegacyWalletConnectRepositoryStub()
         return DefaultLegacyWalletConnectRepositoryFacade(
