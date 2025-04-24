@@ -11,12 +11,11 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
-import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
@@ -44,7 +43,6 @@ import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -79,8 +77,6 @@ internal class WalletModel @Inject constructor(
     private val onrampStatusFactory: OnrampStatusFactory,
     private val biometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventsHandler: AnalyticsEventHandler,
-    private val fetchNFTCollectionsUseCase: FetchNFTCollectionsUseCase,
-    private val walletsRepository: WalletsRepository,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
@@ -92,7 +88,6 @@ internal class WalletModel @Inject constructor(
     private val walletsUpdateJobHolder = JobHolder()
     private val refreshWalletJobHolder = JobHolder()
     private val expressStatusJobHolder = JobHolder()
-    private val walletsNFTsUpdateJobHolder = JobHolder()
     private var needToRefreshWallet = false
 
     private var expressTxStatusTaskScheduler = SingleTaskScheduler<Unit>()
@@ -107,10 +102,7 @@ internal class WalletModel @Inject constructor(
         subscribeToUserWalletsUpdates()
         subscribeOnBalanceHiding()
         subscribeOnSelectedWalletFlow()
-        subscribeToScreenBackgroundState()
         subscribeOnPushNotificationsPermission()
-        subscribeOnExpressTransactionsUpdates()
-        subscribeOnNFTUpdates()
 
         clickIntents.initialize(innerWalletRouter, modelScope)
     }
@@ -223,6 +215,8 @@ internal class WalletModel @Inject constructor(
                     }
 
                     walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
+                    subscribeOnExpressTransactionsUpdates(selectedWallet)
+                    subscribeToScreenBackgroundState(selectedWallet)
                 }
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
@@ -231,7 +225,7 @@ internal class WalletModel @Inject constructor(
 
     // We need to update the current wallet quotes if the application was in the background for more than 10 seconds
     // and then returned to the foreground
-    private fun subscribeToScreenBackgroundState() {
+    private fun subscribeToScreenBackgroundState(userWallet: UserWallet) {
         screenLifecycleProvider.isBackgroundState
             .onEach { isBackground ->
                 expressTxStatusTaskScheduler.cancelTask()
@@ -241,53 +235,31 @@ internal class WalletModel @Inject constructor(
                     isBackground -> needToRefreshTimer()
                     needToRefreshWallet && !isBackground -> {
                         triggerRefreshWalletQuotes()
-                        subscribeOnExpressTransactionsUpdates()
+                        subscribeOnExpressTransactionsUpdates(userWallet)
                     }
-                    !isBackground -> subscribeOnExpressTransactionsUpdates()
+                    !isBackground -> subscribeOnExpressTransactionsUpdates(userWallet)
                 }
             }
             .launchIn(modelScope)
+            .saveIn(expressStatusJobHolder)
     }
 
-    private fun subscribeOnExpressTransactionsUpdates() {
-        modelScope.launch(dispatchers.main) {
-            expressTxStatusTaskScheduler.cancelTask()
-            expressTxStatusTaskScheduler.scheduleTask(
-                modelScope,
-                PeriodicTask(
-                    isDelayFirst = false,
-                    delay = EXPRESS_STATUS_UPDATE_DELAY,
-                    task = {
-                        runCatching { onrampStatusFactory.updateOnrmapTransactionStatuses() }
-                    },
-                    onSuccess = { /* no-op */ },
-                    onError = { /* no-op */ },
-                ),
-            )
-        }.saveIn(expressStatusJobHolder)
-    }
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun subscribeOnNFTUpdates() {
-        getWalletsUseCase()
-            .conflate()
-            .distinctUntilChanged()
-            .flatMapLatest { wallets ->
-                wallets
-                    .map { wallet ->
-                        walletsRepository.nftEnabledStatus(wallet.walletId)
-                            .distinctUntilChanged()
-                            .onEach { nftEnabled ->
-                                if (nftEnabled) {
-                                    fetchNFTCollectionsUseCase.invoke(wallet.walletId)
-                                }
-                            }
+    private fun subscribeOnExpressTransactionsUpdates(userWallet: UserWallet) {
+        expressTxStatusTaskScheduler.cancelTask()
+        expressTxStatusTaskScheduler.scheduleTask(
+            modelScope,
+            PeriodicTask(
+                isDelayFirst = false,
+                delay = EXPRESS_STATUS_UPDATE_DELAY,
+                task = {
+                    runCatching {
+                        onrampStatusFactory.updateOnrmapTransactionStatuses(userWallet)
                     }
-                    .merge()
-            }
-            .flowOn(dispatchers.main)
-            .launchIn(modelScope)
-            .saveIn(walletsNFTsUpdateJobHolder)
+                },
+                onSuccess = { /* no-op */ },
+                onError = { /* no-op */ },
+            ),
+        )
     }
 
     private fun needToRefreshTimer() {

@@ -10,6 +10,7 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -67,13 +68,13 @@ internal class DefaultWalletRouter @Inject constructor(
         }
     }
 
-    override fun openOnrampSuccessScreen(externalTxId: String) {
+    override fun openOnrampSuccessScreen(txId: String) {
         // finish current onramp flow and show onramp success screen
         val replaceOnrampScreens = router.stack
             .filterNot { it is AppRoute.Onramp }
             .toMutableList()
 
-        replaceOnrampScreens.add(AppRoute.OnrampSuccess(externalTxId))
+        replaceOnrampScreens.add(AppRoute.OnrampSuccess(txId))
 
         router.replaceAll(*replaceOnrampScreens.toTypedArray())
     }
@@ -116,7 +117,12 @@ internal class DefaultWalletRouter @Inject constructor(
         reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
     }
 
-    override fun openNFTCollectionsScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.NFTCollections(userWalletId))
+    override fun openNFT(userWallet: UserWallet) {
+        router.push(
+            AppRoute.NFT(
+                userWalletId = userWallet.walletId,
+                walletName = userWallet.name,
+            ),
+        )
     }
 }
