@@ -5,18 +5,19 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.Intent.ACTION_VIEW
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
+import androidx.core.net.toUri
 import coil.executeBlocking
 import coil.request.ImageRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.tangem.domain.common.LogConfig
-import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.wallet.R
@@ -36,10 +37,11 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
         val notification = message.notification ?: return
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID
 
-        // TODO refactoring: [REDACTED_JIRA]
-        val intent = Intent(applicationContext, MainActivity::class.java)
-        intent.putExtra(OnPushClickedIntentHandler.OPENED_FROM_GCM_PUSH, true)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val intent = Intent(ACTION_VIEW).apply {
+            data = message.data[DEEPLINK_KEY]?.toUri()
+            putExtra(OnPushClickedIntentHandler.OPENED_FROM_GCM_PUSH, true)
+            addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
         val pendingIntent = PendingIntent.getActivity(
             /* context = */ this,
             /* requestCode = */ PUSH_NOTIFICATION_REQUEST_CODE,
@@ -101,5 +103,7 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
     private companion object {
         const val TANGEM_CHANNEL_ID = "Tangem General" // General channel for notifications
         const val PUSH_NOTIFICATION_REQUEST_CODE = 123
+
+        const val DEEPLINK_KEY = "deeplink"
     }
 }
