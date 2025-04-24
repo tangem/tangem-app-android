@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.models.ui
 
+import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyCheck
 import com.tangem.feature.swap.domain.models.ExpressDataError
@@ -82,15 +83,9 @@ data class TokenSwapInfo(
 
 data class RequestApproveStateData(
     val fee: TxFeeState,
-    val approveData: String,
     val fromTokenAmount: SwapAmount,
     val spenderAddress: String,
 )
-
-// data class SwapStateData(
-//     val fee: TxFeeState,
-//     val swapModel: SwapDataModel,
-// )
 
 sealed class TxFeeState {
     data class MultipleFeeState(
@@ -115,34 +110,15 @@ sealed class TxFeeState {
 
 data class TxFee(
     val feeValue: BigDecimal,
-    val gasLimit: Int,
     val feeFiatFormatted: String,
     val feeCryptoFormatted: String,
     val feeIncludeOtherNativeFee: BigDecimal,
     val feeFiatFormattedWithNative: String,
     val feeCryptoFormattedWithNative: String,
-    val decimals: Int,
     val cryptoSymbol: String,
     val feeType: FeeType,
-    val params: Params?,
-) {
-
-    sealed class Params {
-
-        data class Filecoin(
-            val gasPremium: Long,
-        ) : Params()
-
-        data class Sui(
-            val gasBudget: Long,
-            val gasPrice: Long,
-        ) : Params()
-
-        data class Hedera(
-            val additionalHBARFee: BigDecimal,
-        ) : Params()
-    }
-}
+    val fee: Fee,
+)
 
 enum class FeeType {
     NORMAL, PRIORITY
