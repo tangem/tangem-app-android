@@ -25,8 +25,11 @@ internal class DefaultWcEthSendTransactionUseCase @AssistedInject constructor(
     @Assisted private val method: WcEthMethod.SendTransaction,
     override val respondService: WcRespondService,
     private val sendTransaction: SendTransactionUseCase,
+    blockAidDelegate: BlockAidEthereumVerificationDelegate,
 ) : BaseWcSignUseCase<Fee, WcEthTransaction>(),
     WcEthSendTransactionUseCase {
+
+    override val securityStatus = blockAidDelegate.getSecurityStatus(network, method, rawSdkRequest, session)
 
     private val converter = EthTransactionParamsConverter(context)
 
