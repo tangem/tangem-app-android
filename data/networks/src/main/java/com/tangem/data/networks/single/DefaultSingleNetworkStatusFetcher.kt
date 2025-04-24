@@ -19,6 +19,7 @@ import com.tangem.domain.demo.DemoConfig
 import com.tangem.domain.networks.single.SingleNetworkStatusFetcher
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.tokens.model.NetworkStatus
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -76,7 +77,16 @@ internal class DefaultSingleNetworkStatusFetcher @Inject constructor(
             currencies = networkCurrencies.toSet(),
         )
 
-        networksStatusesStore.storeActual(userWalletId = params.userWalletId, value = status)
+        val statusValue = status.value
+        if (statusValue is NetworkStatus.Unreachable) {
+            networksStatusesStore.storeError(
+                userWalletId = params.userWalletId,
+                network = params.network,
+                value = statusValue,
+            )
+        } else {
+            networksStatusesStore.storeSuccess(userWalletId = params.userWalletId, value = status)
+        }
     }
         .onLeft {
             Timber.e("Failed to fetch network status for $params: $it")
