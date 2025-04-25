@@ -140,7 +140,6 @@
   <string name="feedback_subject_support_tangem">Tangem反饋</string>
   <string name="feedback_subject_tx_failed">無法發送交易</string>
   <string name="generic_error">An error occurred</string>
-  <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="generic_requires_memo_error">需要memo</string>
   <string name="give_permission_rows_amount">數量 %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">要繼續，您需要允許 %1s 智能合約使用您的 %2s</string>
@@ -153,12 +152,10 @@
   <string name="initial_message_sign_header">點擊簽名</string>
   <string name="initial_message_tap_header">點按卡片</string>
   <string name="key_invalidated_warning_description">您已更新生物識別登入，掃描您的卡進入</string>
-  <string name="koinos_insufficient_mana_to_send_koin_description">You don\'t have enough Mana for this transaction. Please wait until the Mana is refilled. Your Mana balance is %1$s/%2$s</string>
   <string name="main_manage_tokens">管理代幣</string>
   <string name="main_scan_card_warning_view_subtitle">要訪問所有的網路您需要掃描卡片</string>
   <string name="main_scan_card_warning_view_title">掃描卡片</string>
   <string name="main_tokens">代幣</string>
-  <string name="no_account_generic">To use the %1$s network, you must pay the account reserve (%2$s %3$s), which locks up and hides that amount indefinitely</string>
   <string name="no_account_polkadot">目標帳戶未激活。發送 %s 或更多以激活帳戶</string>
   <string name="no_account_send_to_create">要創建帳戶，請將資金發送到此地址</string>
   <string name="no_trustline_xlm_asset">目標帳戶沒有用於發送資產的 trustline</string>
