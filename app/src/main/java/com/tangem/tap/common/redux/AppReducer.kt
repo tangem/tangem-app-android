@@ -4,7 +4,6 @@ import com.tangem.tap.common.redux.global.globalReducer
 import com.tangem.tap.features.details.redux.DetailsReducer
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectReducer
 import com.tangem.tap.features.home.redux.HomeReducer
-import com.tangem.tap.features.saveWallet.redux.SaveWalletReducer
 import com.tangem.tap.features.welcome.redux.WelcomeReducer
 import com.tangem.tap.proxy.redux.DaggerGraphReducer
 import org.rekotlin.Action
@@ -19,7 +18,6 @@ fun appReducer(action: Action, state: AppState?): AppState {
         detailsState = DetailsReducer.reduce(action, state),
         walletConnectState = WalletConnectReducer.reduce(action, state.walletConnectState),
         welcomeState = WelcomeReducer.reduce(action, state),
-        saveWalletState = SaveWalletReducer.reduce(action, state),
         daggerGraphState = DaggerGraphReducer.reduce(action, state),
     )
 }
