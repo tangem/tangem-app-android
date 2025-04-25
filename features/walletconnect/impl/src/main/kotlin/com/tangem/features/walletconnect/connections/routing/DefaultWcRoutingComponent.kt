@@ -15,7 +15,6 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
-import com.tangem.features.walletconnect.connections.routes.WcInnerRoute
 import com.tangem.features.walletconnect.transaction.components.WcEthereumMessageSignRequestComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
