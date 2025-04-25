@@ -9,15 +9,15 @@ import com.domain.blockaid.models.dapp.DAppData
 import com.reown.walletkit.client.Wallet
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
-import com.tangem.domain.walletconnect.model.WcPairError
-import com.tangem.domain.walletconnect.model.WcSession
-import com.tangem.domain.walletconnect.model.WcSessionApprove
-import com.tangem.domain.walletconnect.model.WcSessionProposal
+import com.tangem.domain.walletconnect.model.*
 import com.tangem.domain.walletconnect.model.sdkcopy.WcAppMetaData
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -27,17 +27,19 @@ import timber.log.Timber
 
 val unsupportedDApps = listOf("dYdX", "dYdX v4", "Apex Pro", "The Sandbox")
 
-internal class DefaultWcPairUseCase(
+internal class DefaultWcPairUseCase @AssistedInject constructor(
     private val sessionsManager: WcSessionsManager,
     private val associateNetworksDelegate: AssociateNetworksDelegate,
     private val caipNamespaceDelegate: CaipNamespaceDelegate,
     private val sdkDelegate: WcPairSdkDelegate,
     private val blockAidVerifier: BlockAidVerifier,
+    @Assisted private val pairRequest: WcPairRequest,
 ) : WcPairUseCase {
 
     private val onCallTerminalAction = Channel<TerminalAction>()
 
-    override fun pairFlow(uri: String, source: WcPairUseCase.Source): Flow<WcPairState> {
+    override operator fun invoke(): Flow<WcPairState> {
+        val (uri: String, source: WcPairRequest.Source) = pairRequest
         return flow {
             emit(WcPairState.Loading)
 
@@ -150,5 +152,10 @@ internal class DefaultWcPairUseCase(
     private sealed interface TerminalAction {
         data class Approve(val sessionForApprove: WcSessionApprove) : TerminalAction
         data object Reject : TerminalAction
+    }
+
+    @AssistedFactory
+    interface Factory : WcPairUseCase.Factory {
+        override fun create(pairRequest: WcPairRequest): DefaultWcPairUseCase
     }
 }
