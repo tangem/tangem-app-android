@@ -1,18 +1,20 @@
 package com.tangem.domain.promo
 
+import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
+import com.tangem.domain.wallets.models.UserWalletId
 import kotlinx.coroutines.flow.Flow
 
 interface PromoRepository {
 
     // region Promo
-    fun isReadyToShowWalletSwapPromo(): Flow<Boolean>
+    fun isReadyToShowWalletPromo(userWalletId: UserWalletId, promoId: PromoId): Flow<Boolean>
 
-    fun isReadyToShowTokenSwapPromo(): Flow<Boolean>
+    fun isReadyToShowTokenPromo(promoId: PromoId): Flow<Boolean>
 
-    suspend fun setNeverToShowWalletSwapPromo()
+    suspend fun setNeverToShowWalletPromo(promoId: PromoId)
 
-    suspend fun setNeverToShowTokenSwapPromo()
+    suspend fun setNeverToShowTokenPromo(promoId: PromoId)
     // endregion
 
     // region Stories
