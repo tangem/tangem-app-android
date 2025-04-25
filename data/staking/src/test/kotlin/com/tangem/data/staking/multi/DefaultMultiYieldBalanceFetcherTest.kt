@@ -84,6 +84,44 @@ internal class DefaultMultiYieldBalanceFetcherTest {
     }
 
     @Test
+    fun `fetch yields balances successfully if one of stakingIds is unavailable`() = runTest {
+        val currencyIdWithNetworkMap = mapOf(ton.id to ton.network, solana.id to solana.network)
+
+        val params = YieldBalanceFetcherParams.Multi(userWalletId, currencyIdWithNetworkMap)
+
+        coEvery { userWalletsStore.getSyncOrNull(params.userWalletId) } returns userWallet
+        coEvery { stakingIdFactory.create(params.userWalletId, ton.id, ton.network) } returns setOf(tonId)
+        coEvery { stakingIdFactory.create(params.userWalletId, solana.id, solana.network) } returns setOf(solanaId)
+        coEvery { yieldsBalancesStore.refresh(params.userWalletId, tonAndSolanaIds) } just Runs
+
+        val yields = listOf(MockYieldDTOFactory.create(tonId))
+        coEvery { stakingYieldsStore.getSyncWithTimeout() } returns yields
+
+        coEvery { yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = setOf(solanaId)) } just Runs
+
+        val requests = listOf(YieldBalanceRequestBodyFactory.create(tonId))
+        val result = setOf(MockYieldBalanceWrapperDTOFactory.createWithBalance(tonId))
+
+        coEvery { stakeKitApi.getMultipleYieldBalances(requests) } returns ApiResponse.Success(result)
+        coEvery { yieldsBalancesStore.storeActual(userWalletId = userWalletId, values = result) } just Runs
+
+        val actual = fetcher(params)
+
+        coVerify {
+            userWalletsStore.getSyncOrNull(params.userWalletId)
+            stakingIdFactory.create(params.userWalletId, ton.id, ton.network)
+            stakingIdFactory.create(params.userWalletId, solana.id, solana.network)
+            yieldsBalancesStore.refresh(userWalletId = params.userWalletId, stakingIds = tonAndSolanaIds)
+            stakingYieldsStore.getSyncWithTimeout()
+            yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = setOf(solanaId))
+            stakeKitApi.getMultipleYieldBalances(requests)
+            yieldsBalancesStore.storeActual(userWalletId = userWalletId, values = result)
+        }
+
+        Truth.assertThat(actual.isRight()).isTrue()
+    }
+
+    @Test
     fun `fetch yields balances failure if user wallet is not supported`() = runTest {
         val currencyIdWithNetworkMap = mapOf(ton.id to ton.network, solana.id to solana.network)
 
@@ -279,13 +317,7 @@ internal class DefaultMultiYieldBalanceFetcherTest {
             yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
         }
 
-        val expected = IllegalStateException(
-            """
-                No available yields to fetch yield balances:
-                 – userWalletId: $userWalletId
-                 – stakingIds: ${setOf(solanaId, tonId).joinToString()}
-            """.trimIndent(),
-        )
+        val expected = IllegalStateException("No enabled yields for ${params.userWalletId}")
 
         Truth.assertThat(actual.isLeft()).isTrue()
         Truth.assertThat(actual.leftOrNull()).isInstanceOf(expected::class.java)
