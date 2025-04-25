@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 
 /**
  * Application preferences store.
@@ -19,6 +20,7 @@ import com.squareup.moshi.Types
  */
 class AppPreferencesStore(
     val moshi: Moshi,
+    val dispatchers: CoroutineDispatcherProvider,
     private val preferencesDataStore: DataStore<Preferences>,
 ) : DataStore<Preferences> by preferencesDataStore {
 
