@@ -19,9 +19,7 @@ internal fun PushNotificationsScreen(
     onAllowPermission: () -> Unit,
     onDenyPermission: () -> Unit,
 ) {
-    var isClicked by remember { mutableStateOf(false) }
     val requestPushPermission = requestPushPermission(
-        isClicked = isClicked,
         onAllow = onAllowPermission,
         onDeny = onDenyPermission,
         pushPermission = getPushPermissionOrNull(),
@@ -43,7 +41,6 @@ internal fun PushNotificationsScreen(
         primaryButton = ShowcaseButtonModel(
             buttonText = resourceReference(R.string.common_allow),
             onClick = {
-                isClicked = true
                 onRequest()
                 requestPushPermission()
             },
