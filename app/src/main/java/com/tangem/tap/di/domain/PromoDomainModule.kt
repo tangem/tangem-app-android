@@ -15,14 +15,14 @@ internal object PromoDomainModule {
     @Singleton
     fun provideShouldShowSwapPromoWalletUseCase(
         promoSettingsRepository: PromoRepository,
-    ): ShouldShowSwapPromoWalletUseCase {
-        return ShouldShowSwapPromoWalletUseCase(promoSettingsRepository)
+    ): ShouldShowPromoWalletUseCase {
+        return ShouldShowPromoWalletUseCase(promoSettingsRepository)
     }
 
     @Provides
     @Singleton
-    fun provideShouldShowSwapPromoTokenUseCase(promoRepository: PromoRepository): ShouldShowSwapPromoTokenUseCase {
-        return ShouldShowSwapPromoTokenUseCase(promoRepository)
+    fun provideShouldShowSwapPromoTokenUseCase(promoRepository: PromoRepository): ShouldShowPromoTokenUseCase {
+        return ShouldShowPromoTokenUseCase(promoRepository)
     }
 
     @Provides
