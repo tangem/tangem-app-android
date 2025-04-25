@@ -23,6 +23,7 @@ internal class UpdateDataStateTransformer(
     private val onRetryAssetsClick: (NFTCollection) -> Unit,
     private val onAssetClick: (NFTAsset, String) -> Unit,
     private val initialSearchBarFactory: () -> SearchBarUM,
+    private val collectionIdProvider: NFTCollection.() -> String,
 ) : Transformer<NFTCollectionsStateUM> {
 
     override fun transform(prevState: NFTCollectionsStateUM): NFTCollectionsStateUM {
@@ -47,9 +48,7 @@ internal class UpdateDataStateTransformer(
             else -> {
                 NFTCollectionsUM.Content(
                     search = if (prevState.content is NFTCollectionsUM.Content) {
-                        prevState.content.search.copy(
-                            query = searchQuery,
-                        )
+                        prevState.content.search
                     } else {
                         initialSearchBarFactory()
                     },
@@ -100,7 +99,7 @@ internal class UpdateDataStateTransformer(
 
         if (collectionFulfillQuery || assetsFulfillQuery) {
             NFTCollectionUM(
-                id = it.id.toString(),
+                id = it.collectionIdProvider(),
                 networkIconId = getActiveIconRes(it.network.id.value),
                 name = it.name,
                 description = TextReference.PluralRes(
@@ -165,7 +164,7 @@ internal class UpdateDataStateTransformer(
     private fun NFTCollection.isExpanded(state: NFTCollectionsStateUM): Boolean =
         (state.content as? NFTCollectionsUM.Content)
             ?.collections
-            ?.firstOrNull { it.id == id.toString() }
+            ?.firstOrNull { it.id == this.collectionIdProvider() }
             ?.isExpanded
             ?: false
 }
