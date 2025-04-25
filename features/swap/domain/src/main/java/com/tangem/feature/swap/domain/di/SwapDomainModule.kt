@@ -3,7 +3,6 @@ package com.tangem.feature.swap.domain.di
 import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
 import com.tangem.domain.tokens.operations.BaseCurrencyStatusOperations
 import com.tangem.feature.swap.domain.*
-import com.tangem.lib.crypto.TransactionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,14 +22,6 @@ internal class SwapDomainModule {
     @Singleton
     fun provideSwapInteractorFactory(factory: SwapInteractorImpl.Factory): SwapInteractor.Factory {
         return factory
-    }
-
-    @Provides
-    @Singleton
-    fun provideBlockchainInteractor(transactionManager: TransactionManager): BlockchainInteractor {
-        return DefaultBlockchainInteractor(
-            transactionManager = transactionManager,
-        )
     }
 
     @Provides

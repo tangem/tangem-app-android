@@ -2,10 +2,8 @@ package com.tangem.tap.proxy.di
 
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
-import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.proxy.TransactionManagerImpl
 import com.tangem.tap.proxy.UserWalletManagerImpl
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
@@ -35,18 +33,6 @@ internal object ProxyModule {
             walletManagersFacade = walletManagersFacade,
             userWalletsListManager = userWalletsListManager,
             dispatchers = dispatchers,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideTransactionManager(
-        walletManagersFacade: WalletManagersFacade,
-        userWalletsListManager: UserWalletsListManager,
-    ): TransactionManager {
-        return TransactionManagerImpl(
-            walletManagersFacade = walletManagersFacade,
-            userWalletsListManager = userWalletsListManager,
         )
     }
 }
