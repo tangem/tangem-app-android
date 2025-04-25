@@ -8,15 +8,18 @@ import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.domain.nft.GetNFTExploreUrlUseCase
+import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.features.nft.details.NFTDetailsComponent
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.details.entity.NFTDetailsBottomSheetConfig
 import com.tangem.features.nft.details.entity.NFTDetailsUM
 import com.tangem.features.nft.details.entity.factory.NFTDetailsUMFactory
+import com.tangem.features.nft.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,6 +46,7 @@ internal class NFTDetailsModel @Inject constructor(
         onSeeAllTraitsClick = { params.onAllTraitsClick() },
         onExploreClick = ::onExploreClick,
         onSendClick = ::onSendClick,
+        onInfoBlockClick = ::onInfoBlockClick,
     )
 
     private val _state = MutableStateFlow(
@@ -50,8 +54,19 @@ internal class NFTDetailsModel @Inject constructor(
     )
 
     val bottomSheetNavigation: SlotNavigation<NFTDetailsBottomSheetConfig> = SlotNavigation()
+
     init {
         analyticsEventHandler.send(NFTAnalyticsEvent.Details.ScreenOpened(params.nftAsset.network.name))
+    }
+
+    private fun onInfoBlockClick(title: TextReference, text: TextReference) {
+        analyticsEventHandler.send(NFTAnalyticsEvent.Details.ButtonReadMore)
+        bottomSheetNavigation.activate(
+            NFTDetailsBottomSheetConfig.Info(
+                title = title,
+                text = text,
+            ),
+        )
     }
 
     private fun onReadMoreClick() {
@@ -61,6 +76,7 @@ internal class NFTDetailsModel @Inject constructor(
             is NFTAssetUM.TopInfo.Content -> {
                 bottomSheetNavigation.activate(
                     NFTDetailsBottomSheetConfig.Info(
+                        title = resourceReference(R.string.nft_about_title),
                         text = stringReference(topInfo.description.orEmpty()),
                     ),
                 )
