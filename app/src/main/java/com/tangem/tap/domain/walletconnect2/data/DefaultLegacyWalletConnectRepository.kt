@@ -10,6 +10,7 @@ import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.pair.unsupportedDApps
 import com.tangem.domain.walletconnect.model.legacy.Account
+import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.domain.walletconnect2.app.TangemWcBlockchainHelper
@@ -29,6 +30,7 @@ internal class DefaultLegacyWalletConnectRepositoryFacade constructor(
     private val stub: LegacyWalletConnectRepositoryStub,
     private val legacy: DefaultLegacyWalletConnectRepository,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
+    private val wcInitializeUseCase: WcInitializeUseCase,
 ) : LegacyWalletConnectRepository {
     private val isNewWc by lazy {
         walletConnectFeatureToggles.isRedesignedWalletConnectEnabled
@@ -43,8 +45,13 @@ internal class DefaultLegacyWalletConnectRepositoryFacade constructor(
         if (isNewWc) stub.currentSessions else legacy.currentSessions
     }
 
-    override fun init(projectId: String) {
-        if (isNewWc) stub.init(projectId) else legacy.init(projectId)
+    override suspend fun init(projectId: String) {
+        if (isNewWc) {
+            stub.init(projectId)
+            wcInitializeUseCase.init() // TODO(wc) Nikolai: Delete after RoutingComponent finished.
+        } else {
+            legacy.init(projectId)
+        }
     }
 
     override fun setUserNamespaces(userNamespaces: Map<NetworkNamespace, List<Account>>) {
@@ -89,7 +96,7 @@ internal class LegacyWalletConnectRepositoryStub : LegacyWalletConnectRepository
     override val activeSessions: Flow<List<WalletConnectSession>> = emptyFlow()
     override val currentSessions: List<WalletConnectSession> = listOf()
 
-    override fun init(projectId: String) = Unit
+    override suspend fun init(projectId: String) = Unit
 
     override fun setUserNamespaces(userNamespaces: Map<NetworkNamespace, List<Account>>) = Unit
 
@@ -134,7 +141,7 @@ internal class DefaultLegacyWalletConnectRepository(
     /**
      * @param projectId Project ID at https://cloud.walletconnect.com/
      */
-    override fun init(projectId: String) {
+    override suspend fun init(projectId: String) {
         val relayUrl = "relay.walletconnect.com"
         val serverUrl = "wss://$relayUrl?projectId=$projectId"
         val connectionType = ConnectionType.AUTOMATIC
