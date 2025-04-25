@@ -23,6 +23,7 @@ import com.tangem.features.nft.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -57,8 +58,11 @@ internal class NFTCollectionsModel @Inject constructor(
             ),
         ),
     )
-
     val state: StateFlow<NFTCollectionsStateUM> get() = _state
+
+    private val collectionIdProvider: NFTCollection.() -> String = {
+        "${network.name}_${network.derivationPath.value}_$id"
+    }
 
     init {
         subscribeToNFTCollections()
@@ -83,6 +87,7 @@ internal class NFTCollectionsModel @Inject constructor(
                         params.onAssetClick(asset, collectionName)
                     },
                     initialSearchBarFactory = ::getInitialSearchBar,
+                    collectionIdProvider = collectionIdProvider,
                 ).transform(it)
             }
         }
@@ -95,6 +100,7 @@ internal class NFTCollectionsModel @Inject constructor(
             _state.update { ChangeRefreshingStateTransformer(true).transform(it) }
             try {
                 refreshAllNFTUseCase(params.userWalletId)
+                    .onLeft { Timber.e(it) }
             } finally {
                 _state.update { ChangeRefreshingStateTransformer(false).transform(it) }
             }
@@ -126,7 +132,8 @@ internal class NFTCollectionsModel @Inject constructor(
     private fun onExpandCollectionClick(collection: NFTCollection) {
         _state.update {
             ChangeCollectionExpandedStateTransformer(
-                collectionId = collection.id,
+                collection = collection,
+                collectionIdProvider = collectionIdProvider,
                 onFirstExpanded = { onFirstExpanded(collection) },
             ).transform(it)
         }
