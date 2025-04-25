@@ -1,31 +1,27 @@
 package com.tangem.features.walletconnect.connections.components
 
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tangem.core.decompose.context.AppComponentContext
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
-import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
+import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.res.TangemTheme
+import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
 import com.tangem.features.walletconnect.connections.ui.WcAppInfoModalBottomSheet
 
 internal class WcAppInfoComponent(
     private val appComponentContext: AppComponentContext,
-    private val params: Params,
-) : AppComponentContext by appComponentContext, ComposableBottomSheetComponent {
-
-    override fun dismiss() {
-        params.onDismiss()
-    }
+    private val model: WcAppInfoModel,
+) : AppComponentContext by appComponentContext, ComposableContentComponent {
 
     @Composable
-    override fun BottomSheet() {
+    override fun Content(modifier: Modifier) {
+        val state by model.appInfoUiState.collectAsStateWithLifecycle()
         WcAppInfoModalBottomSheet(
-            config = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = ::dismiss,
-                content = TangemBottomSheetConfigContent.Empty, // todo(wc) will be fixed in next PR's
-            ),
+            modifier = modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+            state = state,
         )
     }
-
-    data class Params(val onDismiss: () -> Unit)
 }
