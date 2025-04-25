@@ -379,7 +379,7 @@
   <string name="key_invalidated_warning_description">Du hast deine biometrischen Daten aktualisiert, scanne deine Karte oder Ring, um einzutreten</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Dein Guthaben sollte höher sein als der Gebührenwert, um eine Überweisung zu tätigen</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Unzureichende Mittel</string>
-  <string name="koinos_insufficient_mana_to_send_koin_description">Du hast nicht genug Mana für diese Transaktion. Bitte warte, bis das Mana wieder aufgefüllt ist. Dein Mana-Guthaben beträgt %1$s/%2$s</string>
+  <string name="koinos_insufficient_mana_to_send_koin_description">Du hast nicht genug Mana für diese Transaktion. Bitte warte, bis das Mana wieder aufgefüllt ist. Dein Managuthaben beträgt %1$s/%2$s</string>
   <string name="koinos_insufficient_mana_to_send_koin_title">Nicht genug Mana</string>
   <string name="koinos_mana_exceeds_koin_balance_description">Du kannst nur %s übertragen, da das Koinos-Netzwerk ein Mana-Limit vorgibt.</string>
   <string name="koinos_mana_exceeds_koin_balance_title">Mana-Limit</string>
