@@ -1,7 +1,6 @@
 package com.tangem.tap.routing.component.impl
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
@@ -18,6 +17,7 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
@@ -36,10 +36,16 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val childFactory: ChildFactory,
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
+    private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
     routingFeatureToggles: RoutingFeatureToggles,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
+
+    private val wcRoutingComponent: WcRoutingComponent by lazy {
+        wcRoutingComponentFactory
+            .create(childByContext(componentContext = this), params = Unit)
+    }
 
     override val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
@@ -75,6 +81,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             stack = stack,
             uiDependencies = uiDependencies,
+            wcContent = { wcRoutingComponent.Content(it) },
         )
     }
 
@@ -115,7 +122,9 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     }
 
     private fun child(route: AppRoute, context: ComponentContext): Child {
-        return childFactory.createChild(route) { childByContext(context) }
+        val child = childFactory.createChild(route) { childByContext(context) }
+        wcRoutingComponent.onAppRouteChange(route)
+        return child
     }
 
     @AssistedFactory
