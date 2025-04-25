@@ -3,11 +3,13 @@ package com.tangem.features.send.v2.sendnft.model
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
@@ -17,6 +19,8 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
@@ -52,6 +56,8 @@ internal class NFTSendModel @Inject constructor(
     private val getCryptoCurrenciesUseCase: GetCryptoCurrenciesUseCase,
     private val getCurrencyStatusUpdatesUseCase: GetCurrencyStatusUpdatesUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
+    private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
 ) : Model(), SendNFTComponentCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
@@ -92,20 +98,29 @@ internal class NFTSendModel @Inject constructor(
     }
 
     suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
-        TODO()
-        // val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
-        // val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
-        //     ?: error("Invalid owner address")
-        // val enteredDestinationAddress = destinationUM.addressTextField.value
-        // val nftAsset = null // NFTSdkAssetConverter.convertBack(params.nftAsset).second
+        val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
+        val ownerAddress = cryptoCurrencyStatus.value.networkAddress?.defaultAddress?.value
+            ?: error("Invalid owner address")
+        val enteredDestinationAddress = destinationUM.addressTextField.value
+        val enteredMemo = destinationUM.memoTextField?.value
+        val nftAsset = NFTSdkAssetConverter.convertBack(params.nftAsset).second
 
-        // getNFTTransferFeeUseCase(
-        //     ownerAddress = ownerAddress,
-        //     destinationAddress = enteredDestinationAddress,
-        //     nftAsset = nftAsset,
-        //     userWallet = userWallet,
-        //     cryptoCurrency = cryptoCurrency,
-        // )
+        val nftSendTransaction = createNFTTransferTransactionUseCase(
+            ownerAddress = ownerAddress,
+            nftAsset = nftAsset,
+            memo = enteredMemo,
+            destinationAddress = enteredDestinationAddress,
+            userWalletId = userWallet.walletId,
+            network = cryptoCurrency.network,
+        ).getOrElse {
+            return GetFeeError.DataError(it).left()
+        }
+
+        return getFeeUseCase(
+            transactionData = nftSendTransaction,
+            network = cryptoCurrency.network,
+            userWallet = userWallet,
+        )
     }
 
     private fun initAppCurrency() {
