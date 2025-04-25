@@ -6,6 +6,7 @@ import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.wallets.models.Artwork
+import com.tangem.operations.attestation.CardArtworksProvider
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.attestation.api.models.CardVerifyAndGetInfo
 
@@ -37,7 +38,7 @@ suspend fun CardDTO.getOrLoadCardArtworkUrl(
             if (artworkId.isNullOrEmpty()) {
                 ifAnyError()
             } else {
-                OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId)
+                CardArtworksProvider.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId)
             }
         }
 

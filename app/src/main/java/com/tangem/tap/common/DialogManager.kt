@@ -9,9 +9,11 @@ import com.tangem.tap.common.ui.*
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
 import com.tangem.tap.features.onboarding.OnboardingDialog
-import com.tangem.tap.features.onboarding.products.twins.ui.dialog.TwinningProcessNotCompletedDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.*
+import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
+import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
+import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.WalletActivationErrorDialog
+import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.WalletAlreadyWasUsedDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
@@ -58,8 +60,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
             )
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
-            is OnboardingDialog.TwinningProcessNotCompleted -> TwinningProcessNotCompletedDialog.create(context)
-            is OnboardingDialog.InterruptOnboarding -> InterruptOnboardingDialog.create(context, state.dialog)
             is OnboardingDialog.WalletActivationError -> WalletActivationErrorDialog.create(context, state.dialog)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
@@ -143,9 +143,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 messageRes = R.string.unsupported_wc_version,
                 context = context,
             )
-            is BackupDialog.AttestationFailed -> AttestationFailedDialog.create(context)
-            is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
-            is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(
                 context = context,
                 scanResponse = state.dialog.scanResponse,
@@ -153,10 +150,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(
                 context = context,
                 unfinishedBackupScanResponse = state.dialog.scanResponse,
-            )
-            is BackupDialog.ResetBackupCard -> ResetBackupCardDialog.create(
-                context = context,
-                cardId = state.dialog.cardId,
             )
             is AppDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
