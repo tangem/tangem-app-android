@@ -39,6 +39,10 @@ internal class ReferralRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun isReferralParticipant(userWalletId: UserWalletId): Boolean {
+        return getReferralData(userWalletId.stringValue) is ReferralData.ParticipantData
+    }
+
     override suspend fun startReferral(
         walletId: String,
         networkId: String,
