@@ -192,7 +192,6 @@ internal class StakingFeeTransactionLoader @AssistedInject constructor(
             cryptoCurrency = tokenCurrency,
             userWalletId = userWallet.walletId,
             amount = amount,
-            fee = null,
             contractAddress = tokenCurrency.contractAddress,
             spenderAddress = validatorAddress,
         ).getOrElse {
