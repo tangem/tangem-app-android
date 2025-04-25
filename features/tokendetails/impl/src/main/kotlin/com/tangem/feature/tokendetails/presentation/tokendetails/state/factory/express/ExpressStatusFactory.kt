@@ -10,12 +10,12 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenExchangeAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.feature.swap.domain.models.domain.ExchangeStatus
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.ExchangeStatusNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.express.ExchangeUM
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.utils.Provider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.assisted.Assisted
@@ -36,7 +36,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
     @Assisted private val clickIntents: TokenDetailsClickIntents,
     @Assisted private val cryptoCurrency: CryptoCurrency,
     @Assisted appCurrencyProvider: Provider<AppCurrency>,
-    @Assisted userWalletId: UserWalletId,
+    @Assisted userWallet: UserWallet,
     @Assisted cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
     private val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventsHandler: AnalyticsEventHandler,
@@ -49,7 +49,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             clickIntents = clickIntents,
             appCurrencyProvider = appCurrencyProvider,
             currentStateProvider = currentStateProvider,
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
         )
     }
@@ -61,7 +61,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             appCurrencyProvider = appCurrencyProvider,
             clickIntents = clickIntents,
             cryptoCurrency = cryptoCurrency,
-            userWalletId = userWalletId,
+            userWallet = userWallet,
         )
     }
 
@@ -210,7 +210,7 @@ internal class ExpressStatusFactory @AssistedInject constructor(
             clickIntents: TokenDetailsClickIntents,
             appCurrencyProvider: Provider<AppCurrency>,
             currentStateProvider: Provider<TokenDetailsState>,
-            userWalletId: UserWalletId,
+            userWallet: UserWallet,
             cryptoCurrency: CryptoCurrency,
             cryptoCurrencyStatusProvider: Provider<CryptoCurrencyStatus?>,
         ): ExpressStatusFactory
