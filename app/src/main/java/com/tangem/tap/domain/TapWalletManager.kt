@@ -7,7 +7,6 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
@@ -42,7 +41,6 @@ class TapWalletManager(
 
         withMainContext {
             // Order is important
-            store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
         }
     }
