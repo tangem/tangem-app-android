@@ -26,13 +26,6 @@ internal class MockNetworksRepository(
         /* no-op */
     }
 
-    override fun getNetworkStatusesUpdatesLegacy(
-        userWalletId: UserWalletId,
-        networks: Set<Network>,
-    ): Flow<Set<NetworkStatus>> {
-        return statuses.map { it.getOrElse { e -> throw e } }
-    }
-
     override suspend fun fetchNetworkPendingTransactions(userWalletId: UserWalletId, networks: Set<Network>) {
         // no-op
     }
@@ -42,7 +35,7 @@ internal class MockNetworksRepository(
         networks: Set<Network>,
         refresh: Boolean,
     ): Set<NetworkStatus> {
-        return getNetworkStatusesUpdatesLegacy(userWalletId, networks).first()
+        return statuses.map { it.getOrElse { e -> throw e } }.first()
     }
 
     override fun isNeedToCreateAccountWithoutReserve(network: Network) = false
