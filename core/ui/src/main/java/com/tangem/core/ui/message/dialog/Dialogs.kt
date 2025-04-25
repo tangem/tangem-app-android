@@ -42,13 +42,15 @@ object Dialogs {
     /**
      * Universal error dialog
      */
-    fun universalErrorDialog(universalError: UniversalError, onOkClick: () -> Unit): DialogMessage {
+    fun universalErrorDialog(universalError: UniversalError, onDismiss: () -> Unit): DialogMessage {
         return DialogMessage(
             message = resourceReference(R.string.universal_error, wrappedList(universalError.errorCode)),
             firstAction = EventMessageAction(
                 title = resourceReference(R.string.common_ok),
-                onClick = onOkClick,
+                onClick = {},
             ),
+            dismissOnFirstAction = true,
+            onDismissRequest = onDismiss,
         )
     }
 }
