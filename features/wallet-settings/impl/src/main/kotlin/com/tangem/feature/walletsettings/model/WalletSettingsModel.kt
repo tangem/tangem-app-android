@@ -16,6 +16,7 @@ import com.tangem.core.ui.message.DialogMessage
 import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.LegacyAction
@@ -56,6 +57,7 @@ internal class WalletSettingsModel @Inject constructor(
     private val analyticsContextProxy: AnalyticsContextProxy,
     private val reduxStateHolder: ReduxStateHolder,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
+    private val isDemoCardUseCase: IsDemoCardUseCase,
     private val walletsRepository: WalletsRepository,
     private val nftFeatureToggles: NFTFeatureToggles,
     private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
@@ -127,6 +129,7 @@ internal class WalletSettingsModel @Inject constructor(
         onLinkMoreCardsClick = {
             onLinkMoreCardsClick(scanResponse = userWallet.scanResponse)
         },
+        onReferralClick = { onReferralClick(userWallet) },
     )
 
     private fun openRenameWalletDialog(userWallet: UserWallet, dialogNavigation: SlotNavigation<DialogConfig>) {
@@ -186,6 +189,16 @@ internal class WalletSettingsModel @Inject constructor(
             } else {
                 walletsRepository.disableNFT(params.userWalletId)
             }
+        }
+    }
+
+    private fun onReferralClick(userWallet: UserWallet) {
+        if (isDemoCardUseCase(userWallet.cardId)) {
+            messageSender.send(
+                DialogMessage(message = resourceReference(R.string.alert_demo_feature_disabled)),
+            )
+        } else {
+            router.push(AppRoute.ReferralProgram(userWallet.walletId))
         }
     }
 }
