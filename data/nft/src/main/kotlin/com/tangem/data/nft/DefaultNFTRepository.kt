@@ -30,6 +30,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import java.lang.UnsupportedOperationException
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
@@ -85,8 +86,6 @@ internal class DefaultNFTRepository @Inject constructor(
     ) = coroutineScope {
         launch(dispatchers.io) {
             Either.catch {
-                expireAssets(userWalletId, network, collectionId)
-
                 val sdkCollectionId = NFTSdkCollectionIdentifierConverter.convertBack(collectionId)
 
                 val assets = walletManagersFacade.getNFTAssets(
@@ -94,6 +93,8 @@ internal class DefaultNFTRepository @Inject constructor(
                     network = network,
                     collectionIdentifier = sdkCollectionId,
                 )
+
+                expireAssets(userWalletId, network, collectionId)
 
                 assets.forEach {
                     val assetId = NFTSdkAssetIdentifierConverter.convert(it.identifier)
@@ -125,11 +126,13 @@ internal class DefaultNFTRepository @Inject constructor(
                         )
                     }
             }.onLeft {
-                saveFailedStateInRuntime(
-                    userWalletId = userWalletId,
-                    network = network,
-                    error = it,
-                )
+                if (it !is UnsupportedOperationException) {
+                    saveFailedStateInRuntime(
+                        userWalletId = userWalletId,
+                        network = network,
+                        error = it,
+                    )
+                }
             }
         }.saveIn(getCollectionJobHolder(collectionId)).join()
     }
