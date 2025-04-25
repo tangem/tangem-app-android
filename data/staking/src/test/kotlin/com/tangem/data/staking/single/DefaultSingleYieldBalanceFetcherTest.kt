@@ -294,13 +294,7 @@ internal class DefaultSingleYieldBalanceFetcherTest {
             yieldsBalancesStore.storeActual(userWalletId = any(), values = any())
         }
 
-        val expected = IllegalStateException(
-            """
-                No available yields to fetch yield balances:
-                 – userWalletId: $userWalletId
-                 – stakingIds: ${setOf(tonId).joinToString()}
-            """.trimIndent(),
-        )
+        val expected = IllegalStateException("No enabled yields for ${params.userWalletId}")
 
         Truth.assertThat(actual.isLeft()).isTrue()
         Truth.assertThat(actual.leftOrNull()).isInstanceOf(expected::class.java)
