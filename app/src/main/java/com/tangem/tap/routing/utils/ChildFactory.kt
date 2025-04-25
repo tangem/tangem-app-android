@@ -33,11 +33,6 @@ import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.features.home.api.HomeComponent
-import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
-import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
-import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragment
-import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
-import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.toggle.RoutingFeatureToggles
@@ -45,7 +40,7 @@ import com.tangem.utils.Provider
 import dagger.hilt.android.scopes.ActivityScoped
 import java.util.WeakHashMap
 import javax.inject.Inject
-import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedisegnedWalletConnectComponent
+import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
 
 @ActivityScoped
 @Suppress("LongParameterList", "LargeClass")
@@ -81,7 +76,7 @@ internal class ChildFactory @Inject constructor(
     private val walletComponentFactory: WalletEntryComponent.Factory,
     private val sendComponentFactoryV2: com.tangem.features.send.v2.api.SendComponent.Factory,
     private val sendFeatureToggles: SendFeatureToggles,
-    private val redesignedWalletConnectComponentFactory: RedisegnedWalletConnectComponent.Factory,
+    private val redesignedWalletConnectComponentFactory: RedesignedWalletConnectComponent.Factory,
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val testerRouter: TesterRouter,
@@ -423,12 +418,6 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = nftSendComponentFactory,
                 )
             }
-            is AppRoute.OnboardingNote,
-            is AppRoute.SaveWallet,
-            is AppRoute.OnboardingOther,
-            is AppRoute.OnboardingTwins,
-            is AppRoute.OnboardingWallet,
-            -> error("Unsupported route: $route")
         }
         // endregion
     }
@@ -455,9 +444,6 @@ internal class ChildFactory @Inject constructor(
                     params = Unit,
                     componentFactory = appCurrencySelectorComponentFactory,
                 )
-            }
-            is AppRoute.SaveWallet -> {
-                route.asFragmentChild(Provider { SaveWalletBottomSheetFragment() })
             }
             is AppRoute.Send -> {
                 if (sendFeatureToggles.isSendV2Enabled) {
@@ -544,18 +530,6 @@ internal class ChildFactory @Inject constructor(
                     params = ManageTokensComponent.Params(route.userWalletId, source),
                     componentFactory = manageTokensComponentFactory,
                 )
-            }
-            is AppRoute.OnboardingNote -> {
-                route.asFragmentChild(Provider { OnboardingNoteFragment() })
-            }
-            is AppRoute.OnboardingOther -> {
-                route.asFragmentChild(Provider { OnboardingOtherCardsFragment() })
-            }
-            is AppRoute.OnboardingTwins -> {
-                route.asFragmentChild(Provider { OnboardingTwinsFragment() })
-            }
-            is AppRoute.OnboardingWallet -> {
-                route.asFragmentChild(Provider { OnboardingWalletFragment() })
             }
             is AppRoute.QrScanning -> {
                 val source = when (route.source) {

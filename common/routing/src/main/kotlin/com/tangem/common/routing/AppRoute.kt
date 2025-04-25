@@ -41,27 +41,6 @@ sealed class AppRoute(val path: String) : Route {
     ) : AppRoute(path = "/disclaimer${if (isTosAccepted) "/tos_accepted" else ""}")
 
     @Serializable
-    data object OnboardingNote : AppRoute(path = "/onboarding/note")
-
-    @Serializable
-    data class OnboardingWallet(
-        val canSkipBackup: Boolean = true,
-    ) : AppRoute(path = "/onboarding/wallet${if (canSkipBackup) "/skippable" else ""}"), RouteBundleParams {
-
-        override fun getBundle(): Bundle = bundle(serializer())
-
-        companion object {
-            const val CAN_SKIP_BACKUP_KEY = "canSkipBackup"
-        }
-    }
-
-    @Serializable
-    data object OnboardingTwins : AppRoute(path = "/onboarding/twins")
-
-    @Serializable
-    data object OnboardingOther : AppRoute(path = "/onboarding/other")
-
-    @Serializable
     data object Wallet : AppRoute(path = "/wallet")
 
     @Serializable
@@ -184,10 +163,6 @@ sealed class AppRoute(val path: String) : Route {
 
     @Serializable
     data object TesterMenu : AppRoute(path = "/tester_menu")
-
-    @Deprecated("Do not use! Should be replaced by an implementation in wallet route component")
-    @Serializable
-    data object SaveWallet : AppRoute(path = "/save_wallet")
 
     @Serializable
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")

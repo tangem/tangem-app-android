@@ -1308,6 +1308,8 @@
   <string name="wc_new_connection">New connection</string>
   <string name="wc_no_sessions_desc">Connect your wallet to a different dApps</string>
   <string name="wc_no_sessions_title">No sessions</string>
+  <string name="wc_notification_security_risk_subtitle">This domain is flagged as unsafe by multiple security providers. Leave immediately to protect your assets</string>
+  <string name="wc_notification_security_risk_title">Known security risk</string>
   <string name="wc_wallet_connect">Wallet connect</string>
   <string name="wc_request_from">Request from</string>
   <string name="wc_sign_message_button_text">Sign</string>
