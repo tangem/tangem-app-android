@@ -9,7 +9,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
-import com.tangem.features.markets.tokenlist.impl.ui.components.UnableToLoadData
+import com.tangem.core.ui.components.UnableToLoadData
 
 internal fun LazyListScope.tokenMarketDetailsBody(
     state: MarketsTokenDetailsUM.Body,
