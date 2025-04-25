@@ -28,15 +28,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.extensions.wrappedList
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcNetworksInfo
 import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
@@ -61,11 +62,23 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifie
             .background(color = TangemTheme.colors.background.action)
             .fillMaxWidth()
         WcAppInfoFirstBlock(modifier = blocksModifier, state = state)
-        state.notificationUM?.config?.let { config ->
+        state.notification?.let { notification ->
             Notification(
                 modifier = Modifier.padding(top = TangemTheme.dimens.spacing14),
-                config = config,
-                iconTint = TangemTheme.colors.icon.attention,
+                config = notification.config,
+                containerColor = when (notification) {
+                    WcAppInfoSecurityNotification.SecurityRisk -> TangemColorPalette.Amaranth.copy(alpha = 0.1F)
+                    WcAppInfoSecurityNotification.UnknownDomain -> null
+                },
+                titleColor = when (notification) {
+                    WcAppInfoSecurityNotification.SecurityRisk -> TangemTheme.colors.text.warning
+                    WcAppInfoSecurityNotification.UnknownDomain -> TangemTheme.colors.text.primary1
+                },
+                subtitleColor = TangemTheme.colors.text.primary1,
+                iconTint = when (notification) {
+                    WcAppInfoSecurityNotification.SecurityRisk -> TangemTheme.colors.icon.warning
+                    WcAppInfoSecurityNotification.UnknownDomain -> TangemTheme.colors.icon.attention
+                },
             )
         }
         WcAppInfoSecondBlock(
@@ -534,23 +547,6 @@ private fun WcLoadingAppInfoItem(modifier: Modifier = Modifier) {
 @Composable
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun WcAppInfoBottomSheetPreview() {
-    TangemThemePreview {
-        WcAppInfoModalBottomSheetLoading(
-            state = WcAppInfoUM.Loading(
-                onDismiss = {},
-                WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {}),
-            ),
-            modifier = Modifier
-                .background(TangemTheme.colors.background.tertiary)
-                .padding(horizontal = TangemTheme.dimens.spacing16),
-        )
-    }
-}
-
-@Composable
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
-@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
 private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider::class) state: WcAppInfoUM.Content) {
     TangemThemePreview {
         WcAppInfoModalBottomSheet(
@@ -564,13 +560,13 @@ private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider
 
 private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppInfoUM>(
     collection = listOf(
-        WcAppInfoUM.Loading(onDismiss = {}, WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {})),
+        // WcAppInfoUM.Loading(onDismiss = {}, WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {})),
         WcAppInfoUM.Content(
             appName = "React App",
             appIcon = "",
             isVerified = true,
             appSubtitle = "react-app.walletconnect.com",
-            notificationUM = null,
+            notification = WcAppInfoSecurityNotification.SecurityRisk,
             walletName = "Tangem 2.0",
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
                 icons = persistentListOf(
@@ -589,10 +585,7 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             appIcon = "",
             isVerified = false,
             appSubtitle = "react-app.walletconnect.com",
-            notificationUM = NotificationUM.Info(
-                title = resourceReference(R.string.wc_alert_audit_unknown_domain),
-                subtitle = resourceReference(R.string.wc_alert_domain_issues_description),
-            ),
+            notification = WcAppInfoSecurityNotification.UnknownDomain,
             walletName = "Tangem 2.0",
             networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onDismiss = {},
