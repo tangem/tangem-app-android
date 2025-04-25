@@ -17,7 +17,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.startActivity
 import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.*
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import com.tangem.common.routing.AppRoute
@@ -33,6 +34,7 @@ import com.tangem.tap.routing.component.RoutingComponent
 @Composable
 internal fun RootContent(
     stack: Value<ChildStack<AppRoute, RoutingComponent.Child>>,
+    wcContent: @Composable (modifier: Modifier) -> Unit,
     uiDependencies: UiDependencies,
     modifier: Modifier = Modifier,
 ) {
@@ -68,6 +70,8 @@ internal fun RootContent(
                         -> error("Unsupported child: $instance")
                     }
                 }
+
+                wcContent(Modifier.fillMaxSize())
 
                 TangemSnackbarHost(
                     modifier = Modifier
