@@ -375,7 +375,7 @@
   <string name="key_invalidated_warning_description">Ha actualizado la biometría, escanee su tarjeta o anillo para entrar</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Su saldo debe ser mayor que el valor de la tarifa para hacer una transferencia</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Saldo insuficiente</string>
-  <string name="koinos_insufficient_mana_to_send_koin_description">No tiene suficiente Mana para esta transacción. Por favor, espere hasta que el Mana se recargue. Su saldo de Mana es %1$s/%2$s</string>
+  <string name="koinos_insufficient_mana_to_send_koin_description">No tiene suficiente Mana para esta transacción. Espere hasta que se reponga el maná. Su saldo de maná es %1$s/%2$s</string>
   <string name="koinos_insufficient_mana_to_send_koin_title">Mana insuficiente</string>
   <string name="koinos_mana_exceeds_koin_balance_description">Solo puede transferir %s debido al límite de Mana impuesto por la red Koinos</string>
   <string name="koinos_mana_exceeds_koin_balance_title">Límite de Mana</string>
