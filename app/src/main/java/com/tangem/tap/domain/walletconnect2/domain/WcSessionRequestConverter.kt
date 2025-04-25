@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.walletconnect2.domain
 
+import com.tangem.blockchain.blockchains.solana.SolanaTransactionHelper
+import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectSdkHelper
 import com.tangem.tap.domain.walletconnect2.domain.models.BnbData
 import com.tangem.tap.domain.walletconnect2.domain.models.EthTransactionData
@@ -149,10 +151,8 @@ internal class WcSessionRequestConverter(
      * Input transaction in Base64 string
      */
     private fun String.prepareSolanaTransaction(): ByteArray {
-        return this.decodeBase64()
-            ?.toByteArray()
-            ?.drop(SOLANA_SIGNATURE_PLACEHOLDER_LENGTH)
-            ?.toByteArray() ?: ByteArray(0)
+        val transaction = this.decodeBase64()?.toByteArray() ?: ByteArray(0)
+        return SolanaTransactionHelper.removeSignaturesPlaceholders(transaction)
     }
 
     private fun getWalletAddress(request: WcRequest): String? {
@@ -180,9 +180,5 @@ internal class WcSessionRequestConverter(
                 it.chainId == sessionRequest.chainId &&
                     (walletAddress == null || it.walletAddress.lowercase() == walletAddress.lowercase())
             }?.derivationPath
-    }
-
-    companion object {
-        private const val SOLANA_SIGNATURE_PLACEHOLDER_LENGTH = 65
     }
 }
