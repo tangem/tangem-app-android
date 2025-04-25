@@ -22,6 +22,7 @@ import com.tangem.domain.nft.repository.NFTRepository
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.features.nft.NFTFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
@@ -34,7 +35,7 @@ import javax.inject.Inject
 import com.tangem.blockchain.nft.models.NFTAsset as SdkNFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection as SdkNFTCollection
 
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 internal class DefaultNFTRepository @Inject constructor(
     private val nftPersistenceStoreFactory: NFTPersistenceStoreFactory,
     private val nftRuntimeStoreFactory: NFTRuntimeStoreFactory,
@@ -42,6 +43,7 @@ internal class DefaultNFTRepository @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val excludedBlockchains: ExcludedBlockchains,
     private val userWalletsStore: UserWalletsStore,
+    private val nftFeatureToggles: NFTFeatureToggles,
 ) : NFTRepository {
 
     private val networkJobs = ConcurrentHashMap<Network, JobHolder>()
@@ -479,5 +481,14 @@ internal class DefaultNFTRepository @Inject constructor(
         return walletId.stringValue + "_" + network.id.value + "_" + network.derivationPath.value
     }
 
-    private fun Network.canHandleNFTs(): Boolean = Blockchain.fromNetworkId(backendId)?.canHandleNFTs() == true
+    private fun Network.canHandleNFTs(): Boolean {
+        val blockchain = Blockchain.fromNetworkId(backendId)
+        return when {
+            blockchain == null -> false
+            blockchain.isEvm() && !nftFeatureToggles.isNFTEVMEnabled -> false
+            (blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet) &&
+                !nftFeatureToggles.isNFTSolanaEnabled -> false
+            else -> blockchain.canHandleNFTs()
+        }
+    }
 }
