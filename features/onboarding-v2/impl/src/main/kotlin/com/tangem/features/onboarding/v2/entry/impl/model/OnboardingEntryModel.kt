@@ -19,7 +19,6 @@ import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.legacy.asLockable
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.onboarding.v2.TitleProvider
 import com.tangem.features.onboarding.v2.common.ui.CantLeaveBackupDialog
 import com.tangem.features.onboarding.v2.done.api.OnboardingDoneComponent
@@ -32,8 +31,6 @@ import com.tangem.features.onboarding.v2.twin.api.OnboardingTwinComponent
 import com.tangem.features.onboarding.v2.visa.impl.child.welcome.model.analytics.OnboardingVisaAnalyticsEvent
 import com.tangem.sdk.api.TangemSdkManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -46,7 +43,6 @@ internal class OnboardingEntryModel @Inject constructor(
     private val router: Router,
     private val tangemSdkManager: TangemSdkManager,
     private val settingsRepository: SettingsRepository,
-    private val askBiometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val uiMessageSender: UiMessageSender,
     private val userWalletsListManager: UserWalletsListManager,
@@ -148,37 +144,25 @@ internal class OnboardingEntryModel @Inject constructor(
     private fun navigateToFinalScreenFlow(
         doneMode: OnboardingDoneComponent.Mode = OnboardingDoneComponent.Mode.WalletCreated,
     ) {
-        if (askBiometryFeatureToggles.isAskForBiometryEnabled) {
-            modelScope.launch {
-                if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
-                    doIfVisa {
-                        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened)
-                    }
-                    stackNavigation.replaceAll(
-                        OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks(doneMode)),
-                    )
-                } else {
-                    doIfVisa {
-                        analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
-                    }
-                    stackNavigation.replaceAll(
-                        OnboardingRoute.Done(
-                            mode = doneMode,
-                            onDone = ::exitComponentScreen,
-                        ),
-                    )
+        modelScope.launch {
+            if (tangemSdkManager.checkCanUseBiometry() && settingsRepository.shouldShowSaveUserWalletScreen()) {
+                doIfVisa {
+                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.BiometricScreenOpened)
                 }
+                stackNavigation.replaceAll(
+                    OnboardingRoute.AskBiometry(modelCallbacks = AskBiometryModelCallbacks(doneMode)),
+                )
+            } else {
+                doIfVisa {
+                    analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
+                }
+                stackNavigation.replaceAll(
+                    OnboardingRoute.Done(
+                        mode = doneMode,
+                        onDone = ::exitComponentScreen,
+                    ),
+                )
             }
-        } else {
-            doIfVisa {
-                analyticsEventHandler.send(OnboardingVisaAnalyticsEvent.SuccessScreenOpened)
-            }
-            stackNavigation.replaceAll(
-                OnboardingRoute.Done(
-                    mode = doneMode,
-                    onDone = ::exitComponentScreen,
-                ),
-            )
         }
     }
 
@@ -213,38 +197,16 @@ internal class OnboardingEntryModel @Inject constructor(
     }
 
     private fun exitComponentScreen() {
-        if (askBiometryFeatureToggles.isAskForBiometryEnabled) {
-            if (userWalletsListManager.hasUserWallets) {
-                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
+        if (userWalletsListManager.hasUserWallets) {
+            val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
 
-                if (isLocked) {
-                    router.replaceAll(AppRoute.Welcome())
-                } else {
-                    router.replaceAll(AppRoute.Wallet)
-                }
+            if (isLocked) {
+                router.replaceAll(AppRoute.Welcome())
             } else {
-                router.replaceAll(AppRoute.Home)
+                router.replaceAll(AppRoute.Wallet)
             }
         } else {
-            if (userWalletsListManager.hasUserWallets) {
-                val isLocked = runCatching { userWalletsListManager.asLockable()?.isLockedSync!! }.getOrElse { false }
-
-                if (isLocked) {
-                    router.replaceAll(AppRoute.Welcome())
-                } else {
-                    modelScope.launch(NonCancellable) {
-                        router.replaceAll(AppRoute.Wallet)
-                        if (tangemSdkManager.checkCanUseBiometry() &&
-                            settingsRepository.shouldShowSaveUserWalletScreen()
-                        ) {
-                            delay(timeMillis = 1_800)
-                            router.push(AppRoute.SaveWallet)
-                        }
-                    }
-                }
-            } else {
-                router.replaceAll(AppRoute.Home)
-            }
+            router.replaceAll(AppRoute.Home)
         }
     }
 
