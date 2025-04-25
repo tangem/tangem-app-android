@@ -1,10 +1,10 @@
 package com.tangem.features.onboarding.v2.visa.impl.model
 
 import androidx.compose.runtime.Stable
-import com.arkivanov.decompose.ExperimentalDecomposeApi
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -12,6 +12,7 @@ import com.tangem.domain.common.visa.VisaUtilities
 import com.tangem.domain.common.visa.VisaWalletPublicKeyUtility
 import com.tangem.domain.visa.model.VisaActivationRemoteState
 import com.tangem.domain.visa.model.VisaCardActivationStatus
+import com.tangem.domain.visa.model.VisaCardWalletDataToSignRequest
 import com.tangem.domain.visa.model.VisaCustomerWalletDataToSignRequest
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.onboarding.v2.visa.api.OnboardingVisaComponent
@@ -83,14 +84,13 @@ internal class OnboardingVisaModel @Inject constructor(
         )
     }
 
-    @OptIn(ExperimentalDecomposeApi::class)
     fun navigateFromInProgress(event: OnboardingVisaInProgressComponent.Params.DoneEvent) {
         when (event) {
             OnboardingVisaInProgressComponent.Params.DoneEvent.Activated -> {
                 modelScope.launch { onDone.emit(Unit) }
             }
             is OnboardingVisaInProgressComponent.Params.DoneEvent.NavigateTo -> {
-                stackNavigation.pushNew(event.route)
+                stackNavigation.replaceAll(event.route)
             }
         }
     }
@@ -145,10 +145,17 @@ internal class OnboardingVisaModel @Inject constructor(
             is VisaCardActivationStatus.ActivationStarted -> {
                 when (val remoteState = activationStatus.remoteState) {
                     is VisaActivationRemoteState.CardWalletSignatureRequired -> {
-                        OnboardingVisaRoute.WelcomeBack(
-                            activationInput = activationStatus.activationInput,
-                            dataToSignByCardWalletRequest = remoteState.request,
-                        )
+                        if (activationStatus.activationInput.isAccessCodeSet) {
+                            OnboardingVisaRoute.WelcomeBack(
+                                activationInput = activationStatus.activationInput,
+                                dataToSignByCardWalletRequest = VisaCardWalletDataToSignRequest(
+                                    activationOrderInfo = remoteState.activationOrderInfo,
+                                    cardWalletAddress = activationStatus.cardWalletAddress,
+                                ),
+                            )
+                        } else {
+                            OnboardingVisaRoute.AccessCode
+                        }
                     }
                     is VisaActivationRemoteState.CustomerWalletSignatureRequired -> {
                         remoteState.getRoute(activationStatus)
@@ -159,11 +166,15 @@ internal class OnboardingVisaModel @Inject constructor(
                     VisaActivationRemoteState.WaitingForActivationFinishing -> {
                         OnboardingVisaRoute.InProgress(from = OnboardingVisaRoute.InProgress.From.PinCode)
                     }
-                    is VisaActivationRemoteState.WaitingPinCode -> {
-                        OnboardingVisaRoute.PinCode(activationOrderInfo = remoteState.activationOrderInfo)
+                    is VisaActivationRemoteState.AwaitingPinCode -> {
+                        OnboardingVisaRoute.PinCode(
+                            activationOrderInfo = remoteState.activationOrderInfo,
+                            pinCodeValidationError = false,
+                        )
                     }
                     VisaActivationRemoteState.Activated,
                     VisaActivationRemoteState.BlockedForActivation,
+                    VisaActivationRemoteState.Failed,
                     -> error("Activation status is not correct for onboarding flow")
                 }
             }
@@ -179,6 +190,7 @@ internal class OnboardingVisaModel @Inject constructor(
         val request = VisaCustomerWalletDataToSignRequest(
             orderId = this.activationOrderInfo.orderId,
             cardWalletAddress = activationStatus.cardWalletAddress,
+            customerWalletAddress = this.activationOrderInfo.customerWalletAddress,
         )
         val preparationDataForApprove = PreparationDataForApprove(
             customerWalletAddress = this.activationOrderInfo.customerWalletAddress,
