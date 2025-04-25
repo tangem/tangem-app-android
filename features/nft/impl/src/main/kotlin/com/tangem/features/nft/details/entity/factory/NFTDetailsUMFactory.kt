@@ -89,7 +89,7 @@ internal class NFTDetailsUMFactory(
             ),
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_token_id),
-                value = id.tokenId,
+                value = id.tokenId.toString(),
             ),
             NFTAssetUM.BlockItem(
                 title = resourceReference(R.string.nft_details_chain),
