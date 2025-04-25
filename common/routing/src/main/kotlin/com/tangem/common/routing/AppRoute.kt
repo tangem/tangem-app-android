@@ -164,10 +164,6 @@ sealed class AppRoute(val path: String) : Route {
     @Serializable
     data object TesterMenu : AppRoute(path = "/tester_menu")
 
-    @Deprecated("Do not use! Should be replaced by an implementation in wallet route component")
-    @Serializable
-    data object SaveWallet : AppRoute(path = "/save_wallet")
-
     @Serializable
     data object AppCurrencySelector : AppRoute(path = "/app_currency_selector")
 
