@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -33,8 +34,8 @@ internal interface InnerWalletRouter {
     /** Open onboarding screen */
     fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean = false)
 
-    /** Open onramp success screen for [externalTxId] */
-    fun openOnrampSuccessScreen(externalTxId: String)
+    /** Open onramp success screen for [txId] */
+    fun openOnrampSuccessScreen(txId: String)
 
     /** Open transaction history website by [url] */
     fun openUrl(url: String)
@@ -58,5 +59,5 @@ internal interface InnerWalletRouter {
     fun openScanFailedDialog(onTryAgain: () -> Unit)
 
     /** Open NFT collections screen */
-    fun openNFTCollectionsScreen(userWalletId: UserWalletId)
+    fun openNFT(userWallet: UserWallet)
 }
