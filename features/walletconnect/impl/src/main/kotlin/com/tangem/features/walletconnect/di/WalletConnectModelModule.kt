@@ -5,7 +5,7 @@ import com.tangem.core.decompose.model.Model
 import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
 import com.tangem.features.walletconnect.connections.model.WcConnectionsModel
 import com.tangem.features.walletconnect.transaction.model.WcEthereumMessageSignRequestModel
-import com.tangem.features.walletconnect.connections.model.WcRoutingModel
+import com.tangem.features.walletconnect.connections.routing.WcRoutingModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

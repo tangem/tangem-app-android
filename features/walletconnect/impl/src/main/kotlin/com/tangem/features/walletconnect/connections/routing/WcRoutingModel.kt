@@ -1,4 +1,4 @@
-package com.tangem.features.walletconnect.connections.model
+package com.tangem.features.walletconnect.connections.routing
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
@@ -13,9 +13,15 @@ import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.features.walletconnect.connections.routes.WcInnerRoute
-import com.tangem.features.walletconnect.connections.routes.WcInnerRoute.SignMessage
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -35,9 +41,9 @@ internal class WcRoutingModel @Inject constructor(
 
     init {
         modelScope.launch {
-            awaitReady()
             if (!featureToggles.isRedesignedWalletConnectEnabled) return@launch
             wcUseCase.init()
+            awaitQueueReady()
             setupQueue()
         }
     }
@@ -52,7 +58,7 @@ internal class WcRoutingModel @Inject constructor(
                 when (methodName) {
                     WcEthMethodName.EthSign,
                     WcEthMethodName.PersonalSign,
-                    -> SignMessage(rawRequest)
+                    -> WcInnerRoute.SignMessage(rawRequest)
                     WcEthMethodName.SignTypeData -> TODO()
                     WcEthMethodName.SignTypeDataV4 -> TODO()
                     WcEthMethodName.SignTransaction -> TODO()
@@ -69,14 +75,14 @@ internal class WcRoutingModel @Inject constructor(
 
         merge(requestFlow, pairFlow)
             .onEach { configuration ->
-                awaitReady()
+                awaitQueueReady()
                 isSlotEmpty.update { false }
                 navigation.activate(configuration)
             }
             .launchIn(modelScope)
     }
 
-    private suspend fun awaitReady() = combine(
+    private suspend fun awaitQueueReady() = combine(
         isSlotEmpty,
         permittedAppRoute,
     ) { isSlotEmpty, permittedAppRoute -> isSlotEmpty && permittedAppRoute }

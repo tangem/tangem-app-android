@@ -1,10 +1,11 @@
-package com.tangem.features.walletconnect.connections.routes
+package com.tangem.features.walletconnect.connections.routing
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
+import com.tangem.features.walletconnect.connections.routes.WcInnerRoute
 import kotlin.reflect.KClass
 
 internal class WcRouter(
