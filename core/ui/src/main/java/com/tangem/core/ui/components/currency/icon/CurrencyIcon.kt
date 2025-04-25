@@ -109,7 +109,7 @@ private fun BoxScope.ContentIconContainer(
     )
 
     if (icon.topBadgeIconResId != null && shouldShowTopBadge) {
-        TopBadge(
+        CurrencyIconTopBadge(
             modifier = Modifier
                 .offset(x = networkBadgeOffset, y = -networkBadgeOffset)
                 .align(Alignment.TopEnd),
@@ -120,7 +120,7 @@ private fun BoxScope.ContentIconContainer(
     }
 
     if (icon.showCustomBadge) {
-        BottomBadge(
+        CurrencyIconBottomBadge(
             modifier = Modifier.align(Alignment.BottomEnd),
         )
     }

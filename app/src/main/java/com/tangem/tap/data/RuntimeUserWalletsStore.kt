@@ -20,11 +20,12 @@ internal class RuntimeUserWalletsStore(
     override val userWallets: Flow<List<UserWallet>>
         get() = userWalletsListManager.userWallets
 
-    override suspend fun getSyncOrNull(key: UserWalletId): UserWallet? {
-        return userWalletsListManager
-            .userWallets
-            .firstOrNull()
-            ?.singleOrNull { it.walletId == key }
+    override fun getSyncOrNull(key: UserWalletId): UserWallet? {
+        return userWalletsListManager.userWalletsSync.firstOrNull { it.walletId == key }
+    }
+
+    override suspend fun getSyncStrict(key: UserWalletId): UserWallet {
+        return requireNotNull(getSyncOrNull(key)) { "Unable to find user wallet with provided ID: $key" }
     }
 
     override suspend fun getAllSyncOrNull(): List<UserWallet>? {
