@@ -37,6 +37,7 @@ internal class ItemsBuilder @Inject constructor(
         forgetWallet: () -> Unit,
         renameWallet: () -> Unit,
         onLinkMoreCardsClick: () -> Unit,
+        onReferralClick: () -> Unit,
     ): PersistentList<WalletSettingsItemUM> = persistentListOf<WalletSettingsItemUM>()
         .add(buildNameItem(userWalletName, isRenameWalletAvailable, renameWallet))
         .run {
@@ -53,6 +54,7 @@ internal class ItemsBuilder @Inject constructor(
                 isReferralAvailable = isReferralAvailable,
                 isManageTokensAvailable = isManageTokensAvailable,
                 onLinkMoreCardsClick = onLinkMoreCardsClick,
+                onReferralClick = onReferralClick,
             ),
         )
         .add(buildForgetItem(forgetWallet))
@@ -74,12 +76,14 @@ internal class ItemsBuilder @Inject constructor(
             onCheckedChange = onCheckedNFTChange,
         )
 
+    @Suppress("LongParameterList")
     private fun buildCardItem(
         userWalletId: UserWalletId,
         isLinkMoreCardsAvailable: Boolean,
         isReferralAvailable: Boolean,
         isManageTokensAvailable: Boolean,
         onLinkMoreCardsClick: () -> Unit,
+        onReferralClick: () -> Unit,
     ) = WalletSettingsItemUM.WithItems(
         id = "card",
         description = resourceReference(R.string.settings_card_settings_footer),
@@ -113,7 +117,7 @@ internal class ItemsBuilder @Inject constructor(
                 BlockUM(
                     text = resourceReference(R.string.details_referral_title),
                     iconRes = R.drawable.ic_add_friends_24,
-                    onClick = { router.push(AppRoute.ReferralProgram(userWalletId)) },
+                    onClick = onReferralClick,
                 ).let(::add)
             }
         }.toImmutableList(),
