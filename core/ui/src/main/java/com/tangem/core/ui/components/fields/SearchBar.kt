@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
@@ -36,7 +37,11 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 
 @Composable
-fun SearchBar(state: SearchBarUM, modifier: Modifier = Modifier, colors: TextFieldColors = TangemSearchBarColors) {
+fun SearchBar(
+    state: SearchBarUM,
+    modifier: Modifier = Modifier,
+    colors: TextFieldColors = TangemSearchBarDefaults.defaultTextFieldColors,
+) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
     val interactionSource = remember { MutableInteractionSource() }
@@ -161,18 +166,30 @@ private fun ClearButton(
     }
 }
 
-private val TangemSearchBarColors: TextFieldColors
-    @Composable
-    get() = TextFieldDefaults.colors().copy(
-        focusedContainerColor = TangemTheme.colors.field.primary,
-        unfocusedContainerColor = TangemTheme.colors.field.primary,
-        focusedTextColor = TangemTheme.colors.text.primary1,
-        unfocusedTextColor = TangemTheme.colors.text.primary1,
-        cursorColor = TangemTheme.colors.icon.primary1,
-        focusedIndicatorColor = Color.Transparent,
-        unfocusedIndicatorColor = Color.Transparent,
-        disabledIndicatorColor = Color.Transparent,
-    )
+object TangemSearchBarDefaults {
+    val defaultTextFieldColors: TextFieldColors
+        @Composable @Stable get() = TextFieldDefaults.colors().copy(
+            focusedContainerColor = TangemTheme.colors.field.primary,
+            unfocusedContainerColor = TangemTheme.colors.field.primary,
+            focusedTextColor = TangemTheme.colors.text.primary1,
+            unfocusedTextColor = TangemTheme.colors.text.primary1,
+            cursorColor = TangemTheme.colors.icon.primary1,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+        )
+    val secondaryTextFieldColors: TextFieldColors
+        @Composable @Stable get() = TextFieldDefaults.colors().copy(
+            focusedContainerColor = TangemTheme.colors.field.focused,
+            unfocusedContainerColor = TangemTheme.colors.field.focused,
+            focusedTextColor = TangemTheme.colors.text.primary1,
+            unfocusedTextColor = TangemTheme.colors.text.primary1,
+            cursorColor = TangemTheme.colors.icon.primary1,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent,
+        )
+}
 
 // region Previews
 @Preview(widthDp = 328)

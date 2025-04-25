@@ -7,9 +7,11 @@ import com.tangem.common.routing.AppRoute
 import com.tangem.core.analytics.Analytics
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.Basic
+import com.tangem.core.analytics.models.ExceptionAnalyticsEvent
 import com.tangem.domain.card.ScanCardException
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
+import com.tangem.tap.common.analytics.events.TangemSdkErrorEvent
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNavigationAction
 import com.tangem.tap.common.extensions.inject
@@ -34,7 +36,7 @@ internal object UseCaseScanProcessor {
                 ifLeft = {
                     val error = scanCardExceptionConverter.convertBack(it)
 
-                    Analytics.send(Basic.ScanError(error))
+                    Analytics.sendErrorEvent(TangemSdkErrorEvent(error))
                     CompletionResult.Failure(error)
                 },
                 ifRight = { CompletionResult.Success(it) },
@@ -97,7 +99,12 @@ internal object UseCaseScanProcessor {
             -> {
                 val error = scanCardExceptionConverter.convertBack(exception)
 
-                Analytics.send(Basic.ScanError(error))
+                Analytics.sendException(
+                    ExceptionAnalyticsEvent(
+                        exception = error,
+                        params = mapOf("Event" to "Scan"),
+                    ),
+                )
                 onFailure(error)
             }
         }

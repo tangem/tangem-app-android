@@ -12,6 +12,7 @@ import com.tangem.domain.card.SetCardWasScannedUseCase
 import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.promo.ShouldShowSwapPromoWalletUseCase
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
@@ -19,6 +20,7 @@ import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.analytics.TokenSwapPromoAnalyticsEvent
 import com.tangem.domain.wallets.legacy.UserWalletsListManager.Lockable.UnlockType
@@ -101,6 +103,8 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
     private val urlOpener: UrlOpener,
+    private val tokensFeatureToggles: TokensFeatureToggles,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
 ) : BaseWalletClickIntents(), WalletWarningsClickIntents {
 
     override fun onAddBackupCardClick() {
@@ -149,12 +153,21 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             ).fold(
                 ifLeft = { Timber.e(it, "Failed to derive public keys") },
                 ifRight = {
-                    fetchTokenListUseCase(
-                        userWalletId = userWallet.walletId,
-                        mode = RefreshMode.SKIP_CURRENCIES,
-                        currencies = missedAddressCurrencies,
-                    ).onLeft {
-                        Timber.e("Unable to refresh token list: $it")
+                    if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+                        multiNetworkStatusFetcher(
+                            params = MultiNetworkStatusFetcher.Params(
+                                userWalletId = userWallet.walletId,
+                                networks = missedAddressCurrencies.map(CryptoCurrency::network).toSet(),
+                            ),
+                        )
+                    } else {
+                        fetchTokenListUseCase(
+                            userWalletId = userWallet.walletId,
+                            mode = RefreshMode.SKIP_CURRENCIES,
+                            currencies = missedAddressCurrencies,
+                        ).onLeft {
+                            Timber.e("Unable to refresh token list: $it")
+                        }
                     }
                 },
             )
