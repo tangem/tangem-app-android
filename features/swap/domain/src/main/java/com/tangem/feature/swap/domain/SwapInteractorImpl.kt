@@ -849,6 +849,12 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                         gasBudget = feeParams.gasBudget,
                     )
                 }
+                Hedera,
+                HederaTestnet,
+                -> {
+                    val feeParams = requireNotNull(fee.params as? TxFee.Params.Hedera)
+                    Fee.Hedera(amount = feeAmount, additionalHBARFee = feeParams.additionalHBARFee)
+                }
                 // endregion
                 // region Blockchains with common fees or EVM-like fees
                 Unknown,
@@ -929,8 +935,6 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 ShibariumTestnet,
                 Algorand,
                 AlgorandTestnet,
-                Hedera,
-                HederaTestnet,
                 Aurora,
                 AuroraTestnet,
                 Areon,
@@ -991,6 +995,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
                 ApeChain, ApeChainTestnet,
                 Scroll, ScrollTestnet,
                 ZkLinkNova, ZkLinkNovaTestnet,
+                Pepecoin, PepecoinTestnet,
                 -> Fee.Common(feeAmount)
                 // endregion
             }
@@ -1898,6 +1903,9 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         is Fee.Sui -> TxFee.Params.Sui(
             gasPrice = fee.gasPrice,
             gasBudget = fee.gasBudget,
+        )
+        is Fee.Hedera -> TxFee.Params.Hedera(
+            additionalHBARFee = fee.additionalHBARFee,
         )
         is Fee.Aptos,
         is Fee.Bitcoin,
