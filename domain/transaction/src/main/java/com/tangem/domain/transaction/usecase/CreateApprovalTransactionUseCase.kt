@@ -34,4 +34,23 @@ class CreateApprovalTransactionUseCase(
             fee = fee,
         )
     }
+
+    @Suppress("LongParameterList")
+    suspend operator fun invoke(
+        cryptoCurrency: CryptoCurrency.Token,
+        userWalletId: UserWalletId,
+        amount: BigDecimal?,
+        contractAddress: String,
+        spenderAddress: String,
+    ) = Either.catch {
+        transactionRepository.createApprovalTransaction(
+            amount = BigDecimal.ZERO.convertToSdkAmount(cryptoCurrency),
+            approvalAmount = amount?.convertToSdkAmount(cryptoCurrency),
+            contractAddress = contractAddress,
+            spenderAddress = spenderAddress,
+            userWalletId = userWalletId,
+            network = cryptoCurrency.network,
+            fee = null,
+        )
+    }
 }
