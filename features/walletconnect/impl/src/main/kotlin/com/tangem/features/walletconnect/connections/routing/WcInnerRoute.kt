@@ -1,4 +1,4 @@
-package com.tangem.features.walletconnect.connections.routes
+package com.tangem.features.walletconnect.connections.routing
 
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.domain.walletconnect.model.WcPairRequest
