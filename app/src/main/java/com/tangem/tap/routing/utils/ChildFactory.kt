@@ -12,7 +12,7 @@ import com.tangem.features.disclaimer.api.components.DisclaimerComponent
 import com.tangem.features.managetokens.component.ManageTokensComponent
 import com.tangem.features.managetokens.component.ManageTokensSource
 import com.tangem.features.markets.details.MarketsTokenDetailsComponent
-import com.tangem.features.nft.component.*
+import com.tangem.features.nft.component.NFTComponent
 import com.tangem.features.onboarding.v2.entry.OnboardingEntryComponent
 import com.tangem.features.onramp.component.*
 import com.tangem.features.pushnotifications.api.PushNotificationsComponent
@@ -24,7 +24,7 @@ import com.tangem.features.swap.SwapComponent
 import com.tangem.features.tester.api.TesterRouter
 import com.tangem.features.tokendetails.TokenDetailsComponent
 import com.tangem.features.wallet.WalletEntryComponent
-import com.tangem.tap.domain.walletconnect2.toggles.WalletConnectFeatureToggles
+import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.tap.features.details.ui.appcurrency.api.AppCurrencySelectorComponent
 import com.tangem.tap.features.details.ui.appsettings.api.AppSettingsComponent
 import com.tangem.tap.features.details.ui.cardsettings.api.CardSettingsComponent
