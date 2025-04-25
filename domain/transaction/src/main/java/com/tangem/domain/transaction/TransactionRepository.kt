@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.common.transaction.TransactionSendResult
 import com.tangem.blockchain.common.transaction.TransactionsSendResult
+import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.wallets.models.UserWalletId
@@ -30,6 +31,17 @@ interface TransactionRepository {
         fee: Fee,
         memo: String?,
         destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): TransactionData.Uncompiled
+
+    @Suppress("LongParameterList")
+    suspend fun createNFTTransferTransaction(
+        ownerAddress: String,
+        nftAsset: NFTAsset,
+        fee: Fee?,
+        memo: String?,
+        destinationAddress: String,
         userWalletId: UserWalletId,
         network: Network,
     ): TransactionData.Uncompiled

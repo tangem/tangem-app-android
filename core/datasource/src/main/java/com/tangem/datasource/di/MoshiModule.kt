@@ -6,10 +6,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchain.nft.models.NFTCollection
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.datasource.api.common.adapter.BigDecimalAdapter
-import com.tangem.datasource.api.common.adapter.DateTimeAdapter
-import com.tangem.datasource.api.common.adapter.LocalDateAdapter
-import com.tangem.datasource.api.common.adapter.addStakeKitEnumFallbackAdapters
+import com.tangem.datasource.api.common.adapter.*
 import com.tangem.datasource.local.config.providers.models.ProviderModel
 import com.tangem.datasource.local.network.entity.NetworkStatusDM
 import com.tangem.domain.models.scan.serialization.*
@@ -38,6 +35,7 @@ class MoshiModule {
                     .withDefaultValue(ProviderModel.UnsupportedType),
             )
             .add(BigDecimalAdapter())
+            .add(BigIntegerAdapter())
             .add(LocalDateAdapter())
             .add(DateTimeAdapter())
             .add(VisaActivationRemoteState.jsonAdapter)
@@ -73,6 +71,7 @@ class MoshiModule {
         val adapters = MoshiJsonConverter.getTangemSdkAdapters() +
             listOf(
                 BigDecimalAdapter(),
+                BigIntegerAdapter(),
                 WalletDerivedKeysMapAdapter(),
                 ScanResponseDerivedKeysMapAdapter(),
                 ByteArrayKeyAdapter(),
@@ -100,6 +99,7 @@ class MoshiModule {
             adapters = MoshiJsonConverter.getTangemSdkAdapters() +
                 listOf(
                     BigDecimalAdapter(),
+                    BigIntegerAdapter(),
                     WalletDerivedKeysMapAdapter(),
                     ScanResponseDerivedKeysMapAdapter(),
                     ByteArrayKeyAdapter(),
