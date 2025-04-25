@@ -26,6 +26,8 @@ import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.WcPairService
+import com.tangem.domain.walletconnect.WcRequestService
+import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager

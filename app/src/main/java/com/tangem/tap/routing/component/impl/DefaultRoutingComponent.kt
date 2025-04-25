@@ -81,7 +81,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             stack = stack,
             uiDependencies = uiDependencies,
-            walletConnectSlot = wcRoutingComponent.slot,
+            wcContent = { wcRoutingComponent.Content(it) },
         )
     }
 
