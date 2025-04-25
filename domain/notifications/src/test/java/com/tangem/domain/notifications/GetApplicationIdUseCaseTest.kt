@@ -97,7 +97,6 @@ class GetApplicationIdUseCaseTest {
             val results = coroutineScope {
                 List(PARALLEL_COUNT) {
                     async {
-                        delay(100)
                         useCase()
                     }
                 }.awaitAll()
