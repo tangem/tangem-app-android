@@ -6,6 +6,8 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.bottomsheet.receive.AddressModel
+import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
 import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -17,8 +19,6 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.share.ShareManager
 import com.tangem.core.ui.clipboard.ClipboardManager
-import com.tangem.common.ui.bottomsheet.receive.AddressModel
-import com.tangem.common.ui.bottomsheet.receive.mapToAddressModels
 import com.tangem.core.ui.components.transactions.state.TxHistoryState
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
@@ -166,7 +166,7 @@ internal class TokenDetailsModel @Inject constructor(
             appCurrencyProvider = Provider { selectedAppCurrencyFlow.value },
             currentStateProvider = Provider { uiState.value },
             cryptoCurrencyStatusProvider = Provider { cryptoCurrencyStatus },
-            userWalletId = userWalletId,
+            userWallet = userWallet,
             cryptoCurrency = cryptoCurrency,
         )
     }
@@ -195,9 +195,9 @@ internal class TokenDetailsModel @Inject constructor(
         handleBalanceHiding()
     }
 
-    fun onBuyCurrencyDeepLink(externalTxId: String) {
+    fun onBuyCurrencyDeepLink(txId: String) {
         if (onrampFeatureToggles.isFeatureEnabled) {
-            router.openOnrampSuccess(externalTxId)
+            router.openOnrampSuccess(txId)
         } else {
             val currency = cryptoCurrencyStatus?.currency ?: return
             analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
