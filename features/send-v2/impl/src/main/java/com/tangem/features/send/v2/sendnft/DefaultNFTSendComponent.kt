@@ -11,16 +11,20 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.value.ObserveLifecycleMode
 import com.arkivanov.decompose.value.subscribe
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.context.AppComponentContext
 import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.nft.component.NFTDetailsBlockComponent
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.model.NFTSendModel
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponent
@@ -40,9 +44,11 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
     @Assisted appComponentContext: AppComponentContext,
     @Assisted private val params: NFTSendComponent.Params,
     private val nftDetailsBlockComponentFactory: NFTDetailsBlockComponent.Factory,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : NFTSendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
+    private val analyticsCategoryName = CommonSendAnalyticEvents.NFT_SEND_CATEGORY
 
     private val innerRouter = InnerRouter<CommonSendRoute>(
         stackNavigation = stackNavigation,
@@ -79,15 +85,21 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is NFTSendConfirmComponent -> if (currentRouteFlow.value.isEditMode) {
-                        // analyticsEventHandler.send(SendAnalyticEvents.ConfirmationScreenOpened)
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.ConfirmationScreenOpened(categoryName = analyticsCategoryName),
+                        )
                         activeComponent.updateState(model.uiState.value)
                     }
                     is SendDestinationComponent -> {
-                        // analyticsEventHandler.send(SendAnalyticEvents.AddressScreenOpened)
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.AddressScreenOpened(categoryName = analyticsCategoryName),
+                        )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendFeeComponent -> {
-                        // analyticsEventHandler.send(SendAnalyticEvents.FeeScreenOpened)
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = analyticsCategoryName),
+                        )
                     }
                 }
                 currentRouteFlow.emit(stack.active.configuration)
@@ -121,7 +133,8 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                 state = model.uiState.value.destinationUM,
                 currentRoute = currentRouteFlow.filterIsInstance<CommonSendRoute.Destination>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = "", // todo
+                title = resourceReference(R.string.nft_send),
+                analyticsCategoryName = analyticsCategoryName,
                 userWalletId = params.userWalletId,
                 cryptoCurrency = model.cryptoCurrency,
                 callback = model,
@@ -145,7 +158,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
                 params = SendFeeComponentParams.FeeParams(
                     state = model.uiState.value.feeUM,
                     currentRoute = currentRouteFlow.filterIsInstance<CommonSendRoute.Fee>(),
-                    analyticsCategoryName = "", // todo
+                    analyticsCategoryName = analyticsCategoryName,
                     userWallet = model.userWallet,
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
@@ -167,7 +180,7 @@ internal class DefaultNFTSendComponent @AssistedInject constructor(
         nftDetailsBlockComponentFactory = nftDetailsBlockComponentFactory,
         params = NFTSendConfirmComponent.Params(
             state = model.uiState.value,
-            analyticsCategoryName = "", // todo
+            analyticsCategoryName = analyticsCategoryName,
             userWallet = model.userWallet,
             nftAsset = params.nftAsset,
             nftCollectionName = params.nftCollectionName,
