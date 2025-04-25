@@ -8,8 +8,6 @@ import arrow.core.raise.either
 import arrow.core.raise.ensure
 import arrow.core.toOption
 import com.tangem.data.staking.store.YieldsBalancesStore
-import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
-import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.response.model.YieldDTO
 import com.tangem.datasource.local.token.StakingYieldsStore
 import com.tangem.datasource.local.userwallet.UserWalletsStore
@@ -65,12 +63,16 @@ private class CommonYieldBalanceFetcher<Params : YieldBalanceFetcherParams>(
         }
 
         return Either.catchOn(dispatchers.default) {
-            val requests = prefetch(userWalletId = params.userWalletId, stakingIds = stakingIds)
+            val availableStakingIds = prefetch(
+                userWalletId = params.userWalletId,
+                stakingIds = stakingIds,
+            )
 
-            implementor.fetch(params = params, stakingIds = stakingIds, requests)
+            implementor.fetch(params = params, stakingIds = availableStakingIds)
         }
             .onLeft {
                 Timber.e(it, "Unable to fetch yield balances $params")
+
                 yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = stakingIds)
             }
     }
@@ -104,27 +106,25 @@ private class CommonYieldBalanceFetcher<Params : YieldBalanceFetcherParams>(
         stakingIds
     }
 
-    private suspend fun prefetch(
-        userWalletId: UserWalletId,
-        stakingIds: Set<StakingID>,
-    ): List<YieldBalanceRequestBody> {
+    private suspend fun prefetch(userWalletId: UserWalletId, stakingIds: Set<StakingID>): Set<StakingID> {
         yieldsBalancesStore.refresh(userWalletId = userWalletId, stakingIds = stakingIds)
 
-        val yieldDTOs = stakingYieldsStore.getSyncWithTimeout()
+        val yieldIds = getYieldsIds(userWalletId = userWalletId)
 
-        if (yieldDTOs.isNullOrEmpty()) {
-            val exception = IllegalStateException("No enabled yields for $userWalletId")
-            Timber.e(exception)
-            throw exception
+        // [true] -> available
+        // [false] -> unavailable
+        val groupedStakingIds = stakingIds.groupBy { stakingId ->
+            yieldIds.any { it == stakingId.integrationId }
         }
 
-        val yieldIds = yieldDTOs.mapNotNullTo(destination = hashSetOf(), transform = YieldDTO::id)
+        val availableStakingIds = groupedStakingIds[true].orEmpty()
+        val unavailableStakingIds = groupedStakingIds[false].orEmpty()
 
-        val requests = stakingIds
-            .filter { stakingId -> yieldIds.any { it == stakingId.integrationId } }
-            .map(YieldBalanceRequestBodyFactory::create)
+        if (unavailableStakingIds.isNotEmpty()) {
+            yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = unavailableStakingIds.toSet())
+        }
 
-        if (requests.isEmpty()) {
+        return availableStakingIds.toSet().ifEmpty {
             val exception = IllegalStateException(
                 """
                     No available yields to fetch yield balances:
@@ -135,7 +135,19 @@ private class CommonYieldBalanceFetcher<Params : YieldBalanceFetcherParams>(
             Timber.d(exception)
             throw exception
         }
+    }
 
-        return requests
+    private suspend fun getYieldsIds(userWalletId: UserWalletId): Set<String> {
+        val yieldsIds = stakingYieldsStore.getSyncWithTimeout().orEmpty()
+            .mapNotNullTo(destination = hashSetOf(), transform = YieldDTO::id)
+
+        if (yieldsIds.isEmpty()) {
+            val exception = IllegalStateException("No enabled yields for $userWalletId")
+            Timber.e(exception)
+
+            throw exception
+        }
+
+        return yieldsIds
     }
 }
