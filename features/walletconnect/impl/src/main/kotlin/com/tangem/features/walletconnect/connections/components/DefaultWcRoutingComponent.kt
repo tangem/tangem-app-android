@@ -1,8 +1,10 @@
 package com.tangem.features.walletconnect.connections.components
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.value.Value
@@ -41,7 +43,10 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
     }
 
     @Composable
-    override fun Content(modifier: Modifier) = Unit
+    override fun Content(modifier: Modifier) {
+        val slot by slot.subscribeAsState()
+        slot.child?.instance?.Content(modifier)
+    }
 
     override fun onAppRouteChange(appRoute: AppRoute) {
         model.onAppRouteChange(appRoute)
