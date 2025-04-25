@@ -5,10 +5,7 @@ import com.tangem.datasource.api.express.models.request.AssetsRequestBody
 import com.tangem.datasource.api.express.models.request.ExchangeSentRequestBody
 import com.tangem.datasource.api.express.models.request.PairsRequestBody
 import com.tangem.datasource.api.express.models.response.*
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.*
 
 /**
  * Interface of Tangem Express API (new swap mechanism)
@@ -17,16 +14,29 @@ import retrofit2.http.Query
 interface TangemExpressApi {
 
     @POST("assets")
-    suspend fun getAssets(@Body body: AssetsRequestBody): ApiResponse<List<Asset>>
+    suspend fun getAssets(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+        @Body body: AssetsRequestBody,
+    ): ApiResponse<List<Asset>>
 
     @POST("pairs")
-    suspend fun getPairs(@Body body: PairsRequestBody): ApiResponse<List<SwapPair>>
+    suspend fun getPairs(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+        @Body body: PairsRequestBody,
+    ): ApiResponse<List<SwapPair>>
 
     @GET("providers")
-    suspend fun getProviders(): ApiResponse<List<ExchangeProvider>>
+    suspend fun getProviders(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+    ): ApiResponse<List<ExchangeProvider>>
 
     @GET("exchange-quote")
     suspend fun getExchangeQuote(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
@@ -40,6 +50,8 @@ interface TangemExpressApi {
 
     @GET("exchange-data")
     suspend fun getExchangeData(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
         @Query("fromContractAddress") fromContractAddress: String,
         @Query("fromNetwork") fromNetwork: String,
         @Query("toContractAddress") toContractAddress: String,
@@ -57,8 +69,16 @@ interface TangemExpressApi {
     ): ApiResponse<ExchangeDataResponse>
 
     @GET("exchange-status")
-    suspend fun getExchangeStatus(@Query("txId") txId: String): ApiResponse<ExchangeStatusResponse>
+    suspend fun getExchangeStatus(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+        @Query("txId") txId: String,
+    ): ApiResponse<ExchangeStatusResponse>
 
     @POST("exchange-sent")
-    suspend fun exchangeSent(@Body body: ExchangeSentRequestBody): ApiResponse<ExchangeSentResponseBody>
+    suspend fun exchangeSent(
+        @Header("user-id") userWalletId: String,
+        @Header("refcode") refCode: String,
+        @Body body: ExchangeSentRequestBody,
+    ): ApiResponse<ExchangeSentResponseBody>
 }
