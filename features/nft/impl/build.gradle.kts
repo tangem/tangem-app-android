@@ -63,6 +63,7 @@ dependencies {
     implementation(deps.androidx.datastore)
 
     /** Other libraries */
+    implementation(deps.arrow.core)
     implementation(deps.kotlin.immutable.collections)
     implementation(deps.kotlin.serialization)
     implementation(deps.timber)
