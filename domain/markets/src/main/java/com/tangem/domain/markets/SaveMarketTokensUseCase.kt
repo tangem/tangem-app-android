@@ -3,7 +3,9 @@ package com.tangem.domain.markets
 import arrow.core.Either
 import com.tangem.domain.card.repository.DerivationsRepository
 import com.tangem.domain.markets.repositories.MarketsTokenRepository
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -20,6 +22,7 @@ import com.tangem.domain.wallets.models.UserWalletId
  *
 [REDACTED_AUTHOR]
  */
+@Suppress("LongParameterList")
 class SaveMarketTokensUseCase(
     private val derivationsRepository: DerivationsRepository,
     private val marketsTokenRepository: MarketsTokenRepository,
@@ -27,6 +30,8 @@ class SaveMarketTokensUseCase(
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val quotesRepository: QuotesRepository,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
 
     suspend operator fun invoke(
@@ -73,11 +78,20 @@ class SaveMarketTokensUseCase(
     }
 
     private suspend fun refreshUpdatedNetworks(userWalletId: UserWalletId, addedCurrencies: List<CryptoCurrency>) {
-        networksRepository.getNetworkStatusesSync(
-            userWalletId = userWalletId,
-            networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
-            refresh = true,
-        )
+        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+            multiNetworkStatusFetcher(
+                MultiNetworkStatusFetcher.Params(
+                    userWalletId = userWalletId,
+                    networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
+                ),
+            )
+        } else {
+            networksRepository.getNetworkStatusesSync(
+                userWalletId = userWalletId,
+                networks = addedCurrencies.map(CryptoCurrency::network).toSet(),
+                refresh = true,
+            )
+        }
     }
 
     private suspend fun refreshUpdatedYieldBalances(

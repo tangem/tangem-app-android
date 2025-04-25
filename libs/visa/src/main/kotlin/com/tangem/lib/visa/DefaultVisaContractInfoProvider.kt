@@ -81,7 +81,14 @@ internal class DefaultVisaContractInfoProvider(
         { fetchBalances(paymentAccount, paymentToken) },
         { fetchLimits(paymentAccount, paymentToken, walletAddress) },
         { token, balances, (oldLimit, newLimit, changeDate) ->
-            VisaContractInfo(token, balances, oldLimit, newLimit, changeDate)
+            VisaContractInfo(
+                token = token,
+                balances = balances,
+                oldLimits = oldLimit,
+                newLimits = newLimit,
+                paymentAccountAddress = paymentAccount.contractAddress,
+                limitsChangeDate = changeDate,
+            )
         },
     )
 
