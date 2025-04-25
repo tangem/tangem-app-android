@@ -335,7 +335,7 @@ internal class DefaultMarketsTokenRepository(
     ): T {
         return when (error) {
             is ApiResponseError.HttpException -> {
-                createEvent(MarketsDataAnalyticsEvent.Type.Http, error.code.code, error.message.orEmpty())
+                createEvent(MarketsDataAnalyticsEvent.Type.Http, error.code.numericCode, error.message.orEmpty())
             }
             is ApiResponseError.TimeoutException -> {
                 createEvent(MarketsDataAnalyticsEvent.Type.Timeout, null, error.message.orEmpty())

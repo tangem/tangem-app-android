@@ -8,6 +8,7 @@ import coil.ImageLoaderFactory
 import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
+import com.tangem.blockchain.common.ExceptionHandler
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.blockchainsdk.BlockchainSDKFactory
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
@@ -46,15 +47,17 @@ import com.tangem.domain.onboarding.SaveTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.WasTwinsOnboardingShownUseCase
 import com.tangem.domain.onboarding.repository.OnboardingRepository
 import com.tangem.domain.settings.repositories.SettingsRepository
-import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
+import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.domain.wallets.repository.WalletsRepository
-import com.tangem.domain.wallets.usecase.GenerateWalletNameUseCase
 import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.onramp.OnrampFeatureToggles
+import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.operations.attestation.api.TangemApiServiceLogging
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.BlockchainExceptionHandler
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -146,9 +149,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val saveTwinsOnboardingShownUseCase: SaveTwinsOnboardingShownUseCase
         get() = entryPoint.getSaveTwinsOnboardingShownUseCase()
 
-    private val generateWalletNameUseCase: GenerateWalletNameUseCase
-        get() = entryPoint.getWalletNameGenerateUseCase()
-
     private val cardRepository: CardRepository
         get() = entryPoint.getCardRepository()
 
@@ -182,9 +182,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val transactionSignerFactory: TransactionSignerFactory
         get() = entryPoint.getTransactionSignerFactory()
 
-    private val getUserCountryUseCase: GetUserCountryUseCase
-        get() = entryPoint.getGetUserCountryCodeUseCase()
-
     private val onrampFeatureToggles: OnrampFeatureToggles
         get() = entryPoint.getOnrampFeatureToggles()
 
@@ -212,6 +209,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
     private val uiMessageSender: UiMessageSender
         get() = entryPoint.getUiMessageSender()
 
+    private val blockchainExceptionHandler: BlockchainExceptionHandler
+        get() = entryPoint.getBlockchainExceptionHandler()
+
     private val workerFactory: HiltWorkerFactory
         get() = entryPoint.getWorkerFactory()
 
@@ -219,6 +219,12 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
             .build()
+
+    private val onlineCardVerifier: OnlineCardVerifier
+        get() = entryPoint.getOnlineCardVerifier()
+
+    private val userWalletBuilderFactory: UserWalletBuilder.Factory
+        get() = entryPoint.getUserWalletBuilderFactory()
 
     // endregion
 
@@ -265,9 +271,13 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         }
 
         loadNativeLibraries()
-        // ExceptionHandler.append(blockchainExceptionHandler) // TODO [REDACTED_TASK_KEY] Send only to Firebase
+        ExceptionHandler.append(blockchainExceptionHandler)
         if (LogConfig.network.blockchainSdkNetwork) {
             BlockchainSdkRetrofitBuilder.interceptors = listOf(
+                createNetworkLoggingInterceptor(),
+                ChuckerInterceptor(this),
+            )
+            TangemApiServiceLogging.addInterceptors(
                 createNetworkLoggingInterceptor(),
                 ChuckerInterceptor(this),
             )
@@ -301,7 +311,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     generalUserWalletsListManager = generalUserWalletsListManager,
                     wasTwinsOnboardingShownUseCase = wasTwinsOnboardingShownUseCase,
                     saveTwinsOnboardingShownUseCase = saveTwinsOnboardingShownUseCase,
-                    generateWalletNameUseCase = generateWalletNameUseCase,
                     cardRepository = cardRepository,
                     settingsRepository = settingsRepository,
                     blockchainSDKFactory = blockchainSDKFactory,
@@ -312,7 +321,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     shareManager = shareManager,
                     appRouter = appRouter,
                     transactionSignerFactory = transactionSignerFactory,
-                    getUserCountryUseCase = getUserCountryUseCase,
                     onrampFeatureToggles = onrampFeatureToggles,
                     environmentConfigStorage = environmentConfigStorage,
                     onboardingV2FeatureToggles = onboardingV2FeatureToggles,
@@ -322,6 +330,8 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     clipboardManager = clipboardManager,
                     settingsManager = settingsManager,
                     uiMessageSender = uiMessageSender,
+                    onlineCardVerifier = onlineCardVerifier,
+                    userWalletBuilderFactory = userWalletBuilderFactory,
                 ),
             ),
         )
