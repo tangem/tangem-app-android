@@ -113,6 +113,12 @@ sealed class AnalyticsParam {
 
         data object WalletConnect : TxSentFrom("WalletConnect")
         data object Sell : TxSentFrom("Sell")
+
+        data class NFT(
+            override val blockchain: String,
+            override val token: String,
+            override val feeType: FeeType,
+        ) : TxSentFrom("NFT"), TxData
     }
 
     sealed interface TxData {

@@ -19,7 +19,6 @@
   <string name="common_send">Invia</string>
   <string name="common_send_tx_error">Impossibile inviare la transazione</string>
   <string name="common_success">Con successo</string>
-  <string name="common_utxo_validate_withdrawal_message_warning">Due to %1$s limitations only %2$d UTXOs can fit in a single transaction. This means you can only send %3$s or less. You need to reduce the amount.</string>
   <string name="details_manage_security_access_code">Codice di accesso</string>
   <string name="details_manage_security_access_code_description">Prima di scansionare la carta sarà necessario inserire il codice di accesso corretto</string>
   <string name="details_manage_security_long_tap">Mantenimento della carta</string>
@@ -36,7 +35,6 @@
   <string name="disclaimer_title">Termini del servizio</string>
   <string name="eth_gas_required_exceeds_allowance">Not enough funds for the transaction. Please top up your account.</string>
   <string name="generic_error">An error occurred</string>
-  <string name="generic_error_code">An error occurred. Code: %s.</string>
   <string name="generic_requires_memo_error">Notifica richiesta</string>
   <string name="home_button_scan">Scansiona carta</string>
   <string name="initial_message_change_access_code_body">Avvicina per modificare il codice di accesso</string>
@@ -44,9 +42,6 @@
   <string name="initial_message_scan_header">Avvicina per scansionare</string>
   <string name="initial_message_sign_header">Avvicina per firmare</string>
   <string name="initial_message_tap_header">Avvicina la carta</string>
-  <string name="koinos_insufficient_mana_to_send_koin_description">You don\'t have enough Mana for this transaction. Please wait until the Mana is refilled. Your Mana balance is %1$s/%2$s</string>
-  <string name="no_account_generic">To use the %1$s network, you must pay the account reserve (%2$s %3$s), which locks up and hides that amount indefinitely</string>
-  <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>
   <string name="no_account_send_to_create">Per creare un account, invia fondi a questo indirizzo</string>
   <string name="no_trustline_xlm_asset">The destination account does not have a trustline for the asset being sent.</string>
   <string name="onboarding_create_wallet_button_create_wallet">Crea portafoglio</string>
@@ -55,7 +50,6 @@
   <string name="send_error_dust_amount_format">L\'importo minimo è di %s</string>
   <string name="send_error_dust_change_format">Il resto minimo è di %s</string>
   <string name="send_error_invalid_fee_value">Commissione non valida</string>
-  <string name="send_error_minimum_balance_format">Minimum balance is %s</string>
   <string name="send_error_no_target_account">Il conto totale non è stato creato L\'importo da inviare deve essere %s + commissione o maggiore</string>
   <string name="send_error_unknown">Errore sconosciuto</string>
   <string name="send_extras_hint_memo">Memo</string>
