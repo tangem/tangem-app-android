@@ -1,5 +1,6 @@
 package com.tangem.features.send.v2.subcomponents.destination
 
+import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.features.send.v2.common.CommonSendRoute
@@ -21,6 +22,7 @@ internal sealed class SendDestinationComponentParams {
         override val analyticsCategoryName: String,
         override val cryptoCurrency: CryptoCurrency,
         override val userWalletId: UserWalletId,
+        val title: TextReference,
         val isBalanceHidingFlow: StateFlow<Boolean>,
         val currentRoute: Flow<CommonSendRoute.Destination>,
         val callback: ModelCallback,
