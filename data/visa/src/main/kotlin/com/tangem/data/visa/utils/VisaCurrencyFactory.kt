@@ -1,16 +1,28 @@
 package com.tangem.data.visa.utils
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.data.common.currency.CryptoCurrencyFactory
+import com.tangem.data.common.currency.getNetwork
+import com.tangem.domain.common.util.derivationStyleProvider
+import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.tokens.model.NetworkAddress
 import com.tangem.domain.visa.model.VisaCurrency
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.lib.visa.model.VisaContractInfo
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 import org.joda.time.Instant
 import java.math.BigDecimal
 import java.math.BigInteger
+import javax.inject.Inject
 
-internal class VisaCurrencyFactory {
+internal class VisaCurrencyFactory @Inject constructor(
+    private val cryptoCurrencyFactory: CryptoCurrencyFactory,
+    private val excludedBlockchains: ExcludedBlockchains,
+) {
 
-    fun create(contractInfo: VisaContractInfo, fiatRate: BigDecimal?): VisaCurrency {
+    fun create(userWallet: UserWallet, contractInfo: VisaContractInfo, fiatRate: BigDecimal): VisaCurrency {
         val now = Instant.now()
         val currentLimit = if (contractInfo.limitsChangeDate > now) {
             contractInfo.oldLimits
@@ -19,11 +31,30 @@ internal class VisaCurrencyFactory {
         }
         val remainingOtpLimit = getRemainingOtp(currentLimit, now)
 
+        val currencyNetwork = getNetwork(
+            blockchain = Blockchain.Polygon,
+            extraDerivationPath = null,
+            derivationStyleProvider = userWallet.scanResponse.derivationStyleProvider,
+            excludedBlockchains = excludedBlockchains,
+            canHandleTokens = true,
+        ) ?: error("Unable to create network for Visa currency")
+
+        val cryptoCurrency = cryptoCurrencyFactory.createToken(
+            network = currencyNetwork,
+            rawId = CryptoCurrency.RawID(VisaConstants.TOKEN_ID),
+            name = contractInfo.token.name,
+            symbol = contractInfo.token.symbol,
+            decimals = contractInfo.token.decimals,
+            contractAddress = contractInfo.token.address,
+        )
+
         return VisaCurrency(
+            cryptoCurrency = cryptoCurrency,
             symbol = contractInfo.token.symbol,
             networkName = VisaConstants.NETWORK_NAME,
             decimals = contractInfo.token.decimals,
             fiatRate = fiatRate,
+            priceChange = BigDecimal.ZERO, // [Second Visa Iteration] pass to create() params if needed
             fiatCurrency = VisaConstants.fiatCurrency,
             balances = with(contractInfo) {
                 VisaCurrency.Balances(
@@ -39,6 +70,12 @@ internal class VisaCurrencyFactory {
                 remainingNoOtp = minOf(remainingOtpLimit, getRemainingNoOtp(currentLimit, now)),
                 singleTransaction = currentLimit.singleTransactionLimit,
                 expirationDate = getLimitsExpirationDate(currentLimit, now),
+            ),
+            paymentAccountAddress = NetworkAddress.Single(
+                NetworkAddress.Address(
+                    value = contractInfo.paymentAccountAddress,
+                    type = NetworkAddress.Address.Type.Primary,
+                ),
             ),
         )
     }
