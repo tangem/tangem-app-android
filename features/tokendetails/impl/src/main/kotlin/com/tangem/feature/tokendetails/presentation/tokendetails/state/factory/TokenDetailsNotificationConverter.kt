@@ -10,10 +10,10 @@ import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.warnings.CryptoCurrencyWarning
 import com.tangem.domain.tokens.model.warnings.HederaWarnings
 import com.tangem.domain.tokens.model.warnings.KaspaWarnings
+import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.TokenDetailsState
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification
 import com.tangem.feature.tokendetails.presentation.tokendetails.state.components.TokenDetailsNotification.*
-import com.tangem.feature.tokendetails.presentation.tokendetails.model.TokenDetailsClickIntents
 import com.tangem.features.tokendetails.impl.R
 import com.tangem.utils.converter.Converter
 import com.tangem.utils.extensions.removeBy
@@ -98,8 +98,8 @@ internal class TokenDetailsNotificationConverter(
             is CryptoCurrencyWarning.SwapPromo -> SwapPromo(
                 startDateTime = warning.startDateTime,
                 endDateTime = warning.endDateTime,
-                onSwapClick = clickIntents::onSwapPromoClick,
-                onCloseClick = clickIntents::onSwapPromoDismiss,
+                onSwapClick = { clickIntents.onSwapPromoClick(warning.promoId) },
+                onCloseClick = { clickIntents.onSwapPromoDismiss(warning.promoId) },
             )
             is CryptoCurrencyWarning.BeaconChainShutdown -> NetworkShutdown(
                 title = resourceReference(R.string.warning_beacon_chain_retirement_title),
