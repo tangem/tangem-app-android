@@ -5,22 +5,15 @@ import com.squareup.moshi.JsonClass
 
 @JsonClass(generateAdapter = true)
 data class ActivationByCardWalletRequest(
-    @Json(name = "customer_id") val customerId: String,
-    @Json(name = "product_instance_id") val productInstanceId: String,
-    @Json(name = "activation_order_id") val activationOrderId: String,
-    @Json(name = "data") val data: Data,
+    @Json(name = "order_id") val orderId: String,
+    @Json(name = "card_wallet") val cardWallet: CardWallet,
+    @Json(name = "deploy_acceptance_signature") val deployAcceptanceSignature: String,
+    @Json(name = "otp") val otp: Otp,
 ) {
-    @JsonClass(generateAdapter = true)
-    data class Data(
-        @Json(name = "card_wallet") val cardWallet: CardWallet,
-        @Json(name = "otp") val otp: Otp,
-    )
-
     @JsonClass(generateAdapter = true)
     data class CardWallet(
         @Json(name = "address") val address: String,
         @Json(name = "card_wallet_confirmation") val cardWalletConfirmation: CardWalletConfirmation?,
-        @Json(name = "deploy_acceptance_signature") val deployAcceptanceSignature: String,
     )
 
     @JsonClass(generateAdapter = true)
