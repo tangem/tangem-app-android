@@ -1,6 +1,5 @@
 package com.tangem.data.staking.fetcher
 
-import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.StakingID
 
@@ -19,7 +18,6 @@ internal interface YieldBalanceFetcherImplementor<in Params : YieldBalanceFetche
      *
      * @param params     params
      * @param stakingIds set of [StakingID]
-     * @param requests   requests
      */
-    suspend fun fetch(params: Params, stakingIds: Set<StakingID>, requests: List<YieldBalanceRequestBody>)
+    suspend fun fetch(params: Params, stakingIds: Set<StakingID>)
 }
