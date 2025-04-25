@@ -13,6 +13,11 @@ import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.common.util.cardTypesResolver
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.tokens.GetCryptoCurrenciesUseCase
 import com.tangem.domain.tokens.GetCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
@@ -25,6 +30,7 @@ import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.NFTSendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
@@ -58,6 +64,10 @@ internal class NFTSendModel @Inject constructor(
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
     private val getFeeUseCase: GetFeeUseCase,
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
+    private val alertFactory: SendConfirmAlertFactory,
 ) : Model(), SendNFTComponentCallback {
 
     val params: NFTSendComponent.Params = paramsContainer.require()
@@ -145,10 +155,30 @@ internal class NFTSendModel @Inject constructor(
                     )
                 },
                 ifLeft = {
-                    // sendConfirmAlertFactory.getGenericErrorState(::onFailedTxEmailClick)
+                    alertFactory.getGenericErrorState(::onFailedTxEmailClick)
                     return@launch
                 },
             )
+        }
+    }
+
+    private fun onFailedTxEmailClick(errorMessage: String? = null) {
+        saveBlockchainErrorUseCase(
+            error = BlockchainErrorInfo(
+                errorMessage = errorMessage.orEmpty(),
+                blockchainId = cryptoCurrency.network.id.value,
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+                destinationAddress = "",
+                tokenSymbol = null,
+                amount = "",
+                fee = "",
+            ),
+        )
+
+        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+
+        modelScope.launch {
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
         }
     }
 
@@ -171,9 +201,9 @@ internal class NFTSendModel @Inject constructor(
                     }
                 },
                 ifLeft = {
-                    // sendConfirmAlertFactory.getGenericErrorState {
-                    //     onFailedTxEmailClick(it.toString())
-                    // }
+                    alertFactory.getGenericErrorState {
+                        onFailedTxEmailClick(it.toString())
+                    }
                 },
             )
         }.launchIn(modelScope)
