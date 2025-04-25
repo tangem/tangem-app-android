@@ -11,6 +11,7 @@ import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
+import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
@@ -26,9 +27,14 @@ internal class WcSolanaNetwork constructor(
 
     override val namespaceKey: NamespaceKey = NamespaceKey("solana")
 
-    override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
+    override fun toWcMethodName(request: WcSdkSessionRequest): WcSolanaMethodName? {
         val methodKey = request.request.method
-        val name = Name.entries.find { it.raw == methodKey } ?: return null
+        val name = WcSolanaMethodName.entries.find { it.raw == methodKey } ?: return null
+        return name
+    }
+
+    override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
+        val name = toWcMethodName(request) ?: return null
         val method: WcSolanaMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
         val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
@@ -67,25 +73,18 @@ internal class WcSolanaNetwork constructor(
         )
     }
 
-    private fun Name.toMethod(request: WcSdkSessionRequest): WcSolanaMethod? {
+    private fun WcSolanaMethodName.toMethod(request: WcSdkSessionRequest): WcSolanaMethod? {
         val rawParams = request.request.params
         return when (this) {
-            Name.SignMessage -> moshi.fromJson<WcSolanaSignMessageRequest>(rawParams)?.let { request ->
+            WcSolanaMethodName.SignMessage -> moshi.fromJson<WcSolanaSignMessageRequest>(rawParams)?.let { request ->
                 WcSolanaMethod.SignMessage(pubKey = request.publicKey, message = request.message)
             }
-            Name.SignTransaction -> moshi.fromJson<WcSolanaSignTransactionRequest>(rawParams)?.let { request ->
-                WcSolanaMethod.SignTransaction(request.transaction)
-            }
-            Name.SendAllTransaction -> moshi.fromJson<List<String>>(rawParams)?.let { list ->
+            WcSolanaMethodName.SignTransaction -> moshi.fromJson<WcSolanaSignTransactionRequest>(rawParams)
+                ?.let { request -> WcSolanaMethod.SignTransaction(request.transaction) }
+            WcSolanaMethodName.SendAllTransaction -> moshi.fromJson<List<String>>(rawParams)?.let { list ->
                 WcSolanaMethod.SignAllTransaction(list)
             }
         }
-    }
-
-    private enum class Name(val raw: String) {
-        SignMessage("solana_signMessage"),
-        SignTransaction("solana_signTransaction"),
-        SendAllTransaction("solana_signAllTransactions"),
     }
 
     internal class Factories @Inject constructor(
