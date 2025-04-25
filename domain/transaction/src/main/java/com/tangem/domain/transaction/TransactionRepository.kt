@@ -16,7 +16,7 @@ interface TransactionRepository {
     @Suppress("LongParameterList")
     suspend fun createTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
@@ -38,7 +38,7 @@ interface TransactionRepository {
     suspend fun createApprovalTransaction(
         amount: Amount,
         approvalAmount: Amount?,
-        fee: Fee,
+        fee: Fee?,
         contractAddress: String,
         spenderAddress: String,
         userWalletId: UserWalletId,
