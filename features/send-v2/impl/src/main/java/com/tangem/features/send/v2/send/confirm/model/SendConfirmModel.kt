@@ -32,11 +32,12 @@ import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.analytics.SendAnalyticHelper
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.confirm.model.transformers.SendConfirmInitialStateTransformer
@@ -93,6 +94,7 @@ internal class SendConfirmModel @Inject constructor(
 
     private val params: SendConfirmComponent.Params = paramsContainer.require()
 
+    private val analyticsCategoryName = params.analyticsCategoryName
     private val userWallet = params.userWallet
     private val appCurrency = params.appCurrency
     private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
@@ -165,7 +167,12 @@ internal class SendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Address,
+                ),
+            )
             router.push(CommonSendRoute.Destination(isEditMode = true))
         }
     }
@@ -177,7 +184,12 @@ internal class SendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Amount))
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Amount,
+                ),
+            )
             router.push(CommonSendRoute.Amount(isEditMode = true))
         }
     }
@@ -189,7 +201,12 @@ internal class SendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Fee,
+                ),
+            )
             router.push(CommonSendRoute.Fee)
         }
     }
@@ -207,13 +224,13 @@ internal class SendConfirmModel @Inject constructor(
 
     override fun onExploreClick() {
         val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
-        analyticsEventHandler.send(SendAnalyticEvents.ExploreButtonClicked)
+        analyticsEventHandler.send(CommonSendAnalyticEvents.ExploreButtonClicked(analyticsCategoryName))
         urlOpener.openUrl(confirmUM.txUrl)
     }
 
     override fun onShareClick() {
         val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
-        analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
+        analyticsEventHandler.send(CommonSendAnalyticEvents.ShareButtonClicked(analyticsCategoryName))
         shareManager.shareText(confirmUM.txUrl)
     }
 
@@ -347,7 +364,12 @@ internal class SendConfirmModel @Inject constructor(
                     popBack = appRouter::pop,
                     onFailedTxEmailClick = ::onFailedTxEmailClick,
                 )
-                analyticsEventHandler.send(SendAnalyticEvents.TransactionError(cryptoCurrency.symbol))
+                analyticsEventHandler.send(
+                    CommonSendAnalyticEvents.TransactionError(
+                        categoryName = analyticsCategoryName,
+                        token = cryptoCurrency.symbol,
+                    ),
+                )
             },
             ifRight = {
                 updateTransactionStatus(txData)
@@ -419,6 +441,7 @@ internal class SendConfirmModel @Inject constructor(
                         analyticsEventHandler = analyticsEventHandler,
                         cryptoCurrency = cryptoCurrencyStatus.currency,
                         appCurrency = appCurrency,
+                        analyticsCategoryName = params.analyticsCategoryName,
                     ).transform(uiState.value.confirmUM),
                 )
             }
@@ -445,7 +468,8 @@ internal class SendConfirmModel @Inject constructor(
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
-                                SendAnalyticEvents.CloseButtonClicked(
+                                CommonSendAnalyticEvents.CloseButtonClicked(
+                                    categoryName = analyticsCategoryName,
                                     source = SendScreenSource.Confirm,
                                     isFromSummary = true,
                                     isValid = confirmUM.isPrimaryButtonEnabled,
