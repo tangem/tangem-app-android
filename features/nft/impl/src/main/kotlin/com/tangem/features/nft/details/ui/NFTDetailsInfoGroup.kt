@@ -189,18 +189,30 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
                         .weight(1f)
                         .padding(
                             horizontal = TangemTheme.dimens.spacing6,
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = state.onLabelClick,
                         ),
                     title = resourceReference(R.string.nft_details_rarity_label),
                     value = stringReference(state.label),
+                    showInfoButton = true,
                 )
                 NFTDetailsGroupBlock(
                     modifier = Modifier
                         .weight(1f)
                         .padding(
                             horizontal = TangemTheme.dimens.spacing6,
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = state.onRankClick,
                         ),
                     title = resourceReference(R.string.nft_details_rarity_rank),
                     value = stringReference(state.rank),
+                    showInfoButton = true,
                 )
             }
         }
@@ -236,6 +248,8 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
@@ -246,6 +260,8 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
@@ -262,6 +278,8 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
@@ -296,6 +314,8 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
@@ -306,6 +326,8 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = false,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
