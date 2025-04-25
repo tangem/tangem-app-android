@@ -37,7 +37,7 @@ internal object NFTDomainModule {
 
     @Provides
     @Singleton
-    fun providesRefreshAllUseCase(
+    fun providesRefreshAllNFTUseCase(
         currenciesRepository: CurrenciesRepository,
         nftRepository: NFTRepository,
     ): RefreshAllNFTUseCase = RefreshAllNFTUseCase(
