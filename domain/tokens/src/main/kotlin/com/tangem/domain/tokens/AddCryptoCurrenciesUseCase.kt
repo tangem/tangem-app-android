@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.raise.Raise
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import arrow.core.toNonEmptyListOrNull
+import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.Network
@@ -25,21 +25,9 @@ class AddCryptoCurrenciesUseCase(
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val quotesRepository: QuotesRepository,
+    private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val tokensFeatureToggles: TokensFeatureToggles,
 ) {
-
-    /**
-     * Adds a [currency] to the wallet identified by [userWalletId].
-     *
-     * After successfully adding a currency, it also refreshes the networks for tokens
-     * that are being added and have corresponding coins in the existing currencies list.
-     *
-     * @param userWalletId The ID of the user's wallet.
-     * @param currency Cryptocurrency to add.
-     * @return Either an [Throwable] or [Unit] indicating the success of the operation.
-     */
-    suspend operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency): Either<Throwable, Unit> {
-        return invoke(userWalletId, listOf(currency))
-    }
 
     /**
      * Adds a [cryptoCurrency] token with specific [network] and derivation to the wallet identified by [userWalletId].
@@ -58,34 +46,32 @@ class AddCryptoCurrenciesUseCase(
         network: Network,
     ): Either<Throwable, Unit> = either {
         val tokenToAdd = currenciesRepository.createTokenCurrency(cryptoCurrency = cryptoCurrency, network = network)
-        invoke(userWalletId = userWalletId, currencies = listOf(tokenToAdd))
+        invoke(userWalletId = userWalletId, currency = tokenToAdd)
     }
 
     /**
-     * Adds a list of [currencies] to the wallet identified by [userWalletId].
+     * Adds a [currency] to the wallet identified by [userWalletId].
      *
-     * After successfully adding currencies, it also refreshes the networks for tokens
+     * After successfully adding a currency, it also refreshes the networks for tokens
      * that are being added and have corresponding coins in the existing currencies list.
      *
      * @param userWalletId The ID of the user's wallet.
-     * @param currencies The list of cryptocurrencies to add.
+     * @param currency Cryptocurrency to add.
      * @return Either an [Throwable] or [Unit] indicating the success of the operation.
      */
-    suspend operator fun invoke(
-        userWalletId: UserWalletId,
-        currencies: List<CryptoCurrency>,
-    ): Either<Throwable, Unit> = either {
-        val existingCurrencies = catch({ currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId) }) {
-            raise(it)
-        }
-        val currenciesToAdd = currencies
-            .filterNot(existingCurrencies::contains)
-            .toNonEmptyListOrNull()
-            ?: return@either
+    suspend operator fun invoke(userWalletId: UserWalletId, currency: CryptoCurrency): Either<Throwable, Unit> =
+        either {
+            val existingCurrencies = catch(
+                block = { currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId) },
+                catch = ::raise,
+            )
+            val currencyToAdd = currency.takeUnless(existingCurrencies::contains) ?: return@either
 
-        addCurrencies(userWalletId, currenciesToAdd)
-        refreshUpdatedNetworks(userWalletId, currenciesToAdd, existingCurrencies)
-    }
+            addCurrencies(userWalletId, currencyToAdd)
+            refreshUpdatedNetworks(userWalletId, currencyToAdd, existingCurrencies)
+            refreshUpdatedYieldBalances(userWalletId, currencyToAdd)
+            refreshUpdatedQuotes(currencyToAdd)
+        }
 
     suspend operator fun invoke(
         userWalletId: UserWalletId,
@@ -107,10 +93,10 @@ class AddCryptoCurrenciesUseCase(
             return@either foundToken
         }
         val tokenToAdd = createTokenCurrency(userWalletId, contractAddress, networkId)
-        addCurrencies(userWalletId, listOf(tokenToAdd))
-        refreshUpdatedNetworks(userWalletId, listOf(tokenToAdd), existingCurrencies)
-        refreshUpdatedYieldBalances(userWalletId, existingCurrencies)
-        refreshUpdatedQuotes(existingCurrencies)
+        addCurrencies(userWalletId, tokenToAdd)
+        refreshUpdatedNetworks(userWalletId, tokenToAdd, existingCurrencies)
+        refreshUpdatedYieldBalances(userWalletId, tokenToAdd)
+        refreshUpdatedQuotes(tokenToAdd)
         tokenToAdd
     }
 
@@ -120,45 +106,52 @@ class AddCryptoCurrenciesUseCase(
      */
     private suspend fun Raise<Throwable>.refreshUpdatedNetworks(
         userWalletId: UserWalletId,
-        currenciesToAdd: List<CryptoCurrency>,
+        currencyToAdd: CryptoCurrency,
         existingCurrencies: List<CryptoCurrency>,
     ) {
-        val networksToUpdate = currenciesToAdd
-            .asSequence()
-            .filterIsInstance<CryptoCurrency.Token>()
-            .filter { hasCoinForToken(existingCurrencies, it) }
-            .mapTo(hashSetOf(), CryptoCurrency.Token::network)
+        val networksToUpdate = currencyToAdd.takeIf { currency ->
+            currency is CryptoCurrency.Token && hasCoinForToken(existingCurrencies, currency)
+        }
+            ?.network
 
-        val networkToUpdate = currenciesToAdd.map { it.network }
-            .subtract(existingCurrencies.map { it.network }.toSet())
+        val networkToUpdate = currencyToAdd.takeIf {
+            !existingCurrencies.map(CryptoCurrency::network).contains(it.network)
+        }
+            ?.network
 
-        catch(
-            {
-                networksRepository.getNetworkStatusesSync(
+        if (tokensFeatureToggles.isNetworksLoadingRefactoringEnabled) {
+            multiNetworkStatusFetcher(
+                MultiNetworkStatusFetcher.Params(
                     userWalletId = userWalletId,
-                    networks = networksToUpdate + networkToUpdate,
-                    refresh = true,
-                )
-            },
-        ) {
-            raise(it)
+                    networks = setOfNotNull(networksToUpdate, networkToUpdate),
+                ),
+            )
+        } else {
+            catch(
+                {
+                    networksRepository.getNetworkStatusesSync(
+                        userWalletId = userWalletId,
+                        networks = setOfNotNull(networksToUpdate, networkToUpdate),
+                        refresh = true,
+                    )
+                },
+            ) {
+                raise(it)
+            }
         }
     }
 
-    private suspend fun refreshUpdatedYieldBalances(
-        userWalletId: UserWalletId,
-        existingCurrencies: List<CryptoCurrency>,
-    ) {
-        stakingRepository.fetchMultiYieldBalance(
+    private suspend fun refreshUpdatedYieldBalances(userWalletId: UserWalletId, addedCurrency: CryptoCurrency) {
+        stakingRepository.fetchSingleYieldBalance(
             userWalletId = userWalletId,
-            cryptoCurrencies = existingCurrencies,
+            cryptoCurrency = addedCurrency,
             refresh = true,
         )
     }
 
-    private suspend fun refreshUpdatedQuotes(addedCurrencies: List<CryptoCurrency>) {
+    private suspend fun refreshUpdatedQuotes(currencyToAdd: CryptoCurrency) {
         quotesRepository.fetchQuotes(
-            currenciesIds = addedCurrencies.mapNotNullTo(hashSetOf()) { it.id.rawCurrencyId },
+            currenciesIds = setOfNotNull(currencyToAdd.id.rawCurrencyId),
             refresh = true,
         )
     }
@@ -182,9 +175,9 @@ class AddCryptoCurrenciesUseCase(
         )
     }
 
-    private suspend fun Raise<Throwable>.addCurrencies(userWalletId: UserWalletId, tokens: List<CryptoCurrency>) {
+    private suspend fun Raise<Throwable>.addCurrencies(userWalletId: UserWalletId, currency: CryptoCurrency) {
         catch(
-            { currenciesRepository.addCurrencies(userWalletId, tokens) },
+            { currenciesRepository.addCurrencies(userWalletId, listOf(currency)) },
         ) {
             raise(it)
         }
