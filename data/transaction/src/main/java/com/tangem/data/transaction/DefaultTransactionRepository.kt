@@ -17,6 +17,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.smartcontract.SmartContractCallData
 import com.tangem.blockchain.common.smartcontract.SmartContractCallDataProviderFactory
 import com.tangem.blockchain.common.transaction.Fee
+import com.tangem.blockchain.nft.models.NFTAsset
 import com.tangem.blockchainsdk.utils.fromNetworkId
 import com.tangem.datasource.local.walletmanager.WalletManagersStore
 import com.tangem.domain.tokens.model.CryptoCurrency
@@ -30,6 +31,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import java.math.BigInteger
 
+@Suppress("LargeClass")
 internal class DefaultTransactionRepository(
     private val walletManagersFacade: WalletManagersFacade,
     private val walletManagersStore: WalletManagersStore,
@@ -138,6 +140,53 @@ internal class DefaultTransactionRepository(
             fee = fee,
             memo = null,
             destination = contractAddress,
+            userWalletId = userWalletId,
+            network = network,
+            txExtras = extras,
+        )
+    }
+
+    override suspend fun createNFTTransferTransaction(
+        ownerAddress: String,
+        nftAsset: NFTAsset,
+        fee: Fee?,
+        memo: String?,
+        destinationAddress: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
+        val blockchain = Blockchain.fromId(network.id.value)
+
+        val nftTransferCallData = SmartContractCallDataProviderFactory.getNFTTransferCallData(
+            destinationAddress = destinationAddress,
+            ownerAddress = ownerAddress,
+            nftAsset = nftAsset,
+            blockchain = blockchain,
+        )
+
+        val extras = if (nftTransferCallData != null) {
+            createTransactionDataExtras(
+                callData = nftTransferCallData,
+                network = network,
+                nonce = null,
+                gasLimit = null,
+            )
+        } else {
+            null
+        }
+
+        return@withContext createTransaction(
+            amount = Amount(
+                value = nftAsset.amount?.toBigDecimal() ?: error("Invalid amount"),
+                token = Token(
+                    symbol = blockchain.currency,
+                    contractAddress = "",
+                    decimals = nftAsset.decimals ?: error("Invalid decimals"),
+                ),
+            ),
+            fee = fee,
+            memo = memo,
+            destination = destinationAddress,
             userWalletId = userWalletId,
             network = network,
             txExtras = extras,
