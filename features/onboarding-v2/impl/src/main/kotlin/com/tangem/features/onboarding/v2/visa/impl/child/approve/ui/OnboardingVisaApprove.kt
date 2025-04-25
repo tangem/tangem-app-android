@@ -14,7 +14,8 @@ import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.navigationButtons.NavigationButton
 import com.tangem.common.ui.navigationButtons.NavigationPrimaryButton
 import com.tangem.core.ui.components.SpacerH
-import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.onboarding.v2.impl.R
@@ -43,7 +44,7 @@ internal fun OnboardingVisaApprove(state: OnboardingVisaApproveUM, modifier: Mod
             SpacerH(86.dp)
 
             Text(
-                text = "Prepare Tangem Wallet",
+                text = stringResourceSafe(R.string.visa_onboarding_tangem_approve_title),
                 style = TangemTheme.typography.h2,
                 color = TangemTheme.colors.text.primary1,
                 textAlign = TextAlign.Center,
@@ -52,7 +53,7 @@ internal fun OnboardingVisaApprove(state: OnboardingVisaApproveUM, modifier: Mod
             SpacerH(12.dp)
 
             Text(
-                text = "Prepare the Tangem card\nand tap to approve",
+                text = stringResourceSafe(R.string.visa_onboarding_tangem_approve_description),
                 style = TangemTheme.typography.body1,
                 color = TangemTheme.colors.text.secondary,
                 textAlign = TextAlign.Center,
@@ -65,7 +66,7 @@ internal fun OnboardingVisaApprove(state: OnboardingVisaApproveUM, modifier: Mod
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .fillMaxWidth(),
             primaryButton = NavigationButton(
-                textReference = TextReference.Str("Approve"),
+                textReference = resourceReference(R.string.common_approve),
                 iconRes = R.drawable.ic_tangem_24,
                 isIconVisible = true,
                 showProgress = state.approveButtonLoading,

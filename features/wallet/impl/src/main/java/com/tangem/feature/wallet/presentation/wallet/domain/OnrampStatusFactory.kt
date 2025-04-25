@@ -72,7 +72,11 @@ internal class OnrampStatusFactory @Inject constructor(
                                 fiatCurrency = onrampTx.fromCurrencyCode,
                             ),
                         )
-                        onrampUpdateTransactionStatusUseCase(externalTxId = externalTxId, statusModel.status)
+                        onrampUpdateTransactionStatusUseCase(
+                            externalTxId = externalTxId,
+                            externalTxUrl = statusModel.externalTxUrl.orEmpty(),
+                            status = statusModel.status,
+                        )
                     }
                 },
             )
