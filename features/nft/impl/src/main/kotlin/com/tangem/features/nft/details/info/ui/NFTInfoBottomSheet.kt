@@ -14,17 +14,19 @@ import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resolveReference
-import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.nft.impl.R
 
 @Composable
-internal fun NFTInfoBottomSheet(config: TangemBottomSheetConfig, content: @Composable () -> Unit) {
+internal fun NFTInfoBottomSheet(
+    title: TextReference,
+    config: TangemBottomSheetConfig,
+    content: @Composable () -> Unit,
+) {
     TangemBottomSheet<TangemBottomSheetConfigContent.Empty>(
         config = config,
-        titleText = resourceReference(R.string.nft_about_title),
+        titleText = title,
         content = { content() },
     )
 }
