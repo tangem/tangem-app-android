@@ -15,11 +15,11 @@ import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.utils.WcSdkSessionConverter
 import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.walletconnect.model.WcPairError
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.pair.WcPairState
-import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.mockk
@@ -37,7 +37,7 @@ internal class DefaultWcPairUseCaseTest {
     private val blockAidVerifier: BlockAidVerifier = mockk<BlockAidVerifier>()
 
     private val url = "testUrl"
-    private val source = WcPairUseCase.Source.QR
+    private val source = WcPairRequest.Source.QR
     private val loading = WcPairState.Loading
     private val sdkProposal: Wallet.Model.SessionProposal
         get() = Wallet.Model.SessionProposal(
@@ -93,12 +93,13 @@ internal class DefaultWcPairUseCaseTest {
             securityStatus = CheckDAppResult.SAFE,
         )
 
-    private val useCase = DefaultWcPairUseCase(
+    private fun useCaseFactory() = DefaultWcPairUseCase(
         sessionsManager = sessionsManager,
         associateNetworksDelegate = associateNetworksDelegate,
         caipNamespaceDelegate = caipNamespaceDelegate,
         sdkDelegate = sdkDelegate,
         blockAidVerifier = blockAidVerifier,
+        pairRequest = WcPairRequest(url, source),
     )
 
     @Before
@@ -118,7 +119,8 @@ internal class DefaultWcPairUseCaseTest {
         coEvery { sdkDelegate.pair(url) } returns sdkProposal.right()
         coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
 
-        useCase.pairFlow(url, source).test {
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
@@ -140,7 +142,8 @@ internal class DefaultWcPairUseCaseTest {
         coEvery { sessionsManager.saveSession(sessionForSave) } returns Unit
         coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
 
-        useCase.pairFlow(url, source).test {
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
@@ -169,7 +172,8 @@ internal class DefaultWcPairUseCaseTest {
         coEvery { sdkDelegate.rejectSession(proposerPublicKey) } returns Unit
         coEvery { blockAidVerifier.verifyDApp(any()) } returns Either.catch { CheckDAppResult.SAFE }
 
-        useCase.pairFlow(url, source).test {
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
@@ -189,7 +193,8 @@ internal class DefaultWcPairUseCaseTest {
         coEvery { sdkDelegate.pair(url) } returns unsupportedSdkProposal.right()
         val unsupportedDAppError = WcPairState.Error(WcPairError.UnsupportedDApp)
 
-        useCase.pairFlow(url, source).test {
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
@@ -205,7 +210,8 @@ internal class DefaultWcPairUseCaseTest {
         coEvery { sdkDelegate.pair(url) } returns error.left()
         val errorState = WcPairState.Error(error)
 
-        useCase.pairFlow(url, source).test {
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
@@ -225,7 +231,8 @@ internal class DefaultWcPairUseCaseTest {
 
         val errorResult = WcPairState.Approving.Result(sessionForApprove, error)
 
-        useCase.pairFlow(url, source).test {
+        val useCase = useCaseFactory()
+        useCase.invoke().test {
             assertEquals(loading, awaitItem())
             coVerifyOrder {
                 sdkDelegate.pair(url)
