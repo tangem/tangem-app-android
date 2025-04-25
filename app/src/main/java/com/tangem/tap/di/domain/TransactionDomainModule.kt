@@ -188,4 +188,12 @@ internal object TransactionDomainModule {
     ): SignUseCase {
         return SignUseCase(cardSdkConfigRepository, walletManagersFacade)
     }
+
+    @Provides
+    @Singleton
+    fun provideCreateNFTTransferTransactionUseCase(
+        transactionRepository: TransactionRepository,
+    ): CreateNFTTransferTransactionUseCase {
+        return CreateNFTTransferTransactionUseCase(transactionRepository)
+    }
 }
