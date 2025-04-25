@@ -10,11 +10,12 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
-import com.tangem.domain.core.utils.getOrElse
+import com.tangem.domain.core.lce.Lce
 import com.tangem.domain.tokens.ApplyTokenListSortingUseCase
 import com.tangem.domain.tokens.GetTokenListUseCase
 import com.tangem.domain.tokens.ToggleTokenListGroupingUseCase
 import com.tangem.domain.tokens.ToggleTokenListSortingUseCase
+import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.TokenList
 import com.tangem.feature.wallet.child.organizetokens.OrganizeTokensComponent
 import com.tangem.feature.wallet.presentation.organizetokens.OrganizeTokensIntents
@@ -36,13 +37,13 @@ import javax.inject.Inject
 @ModelScoped
 internal class OrganizeTokensModel @Inject constructor(
     paramsContainer: ParamsContainer,
+    getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     override val dispatchers: CoroutineDispatcherProvider,
     private val getTokenListUseCase: GetTokenListUseCase,
     private val toggleTokenListGroupingUseCase: ToggleTokenListGroupingUseCase,
     private val toggleTokenListSortingUseCase: ToggleTokenListSortingUseCase,
     private val applyTokenListSortingUseCase: ApplyTokenListSortingUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
-    private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val analyticsEventsHandler: AnalyticsEventHandler,
 ) : Model(), OrganizeTokensIntents {
 
@@ -167,21 +168,14 @@ internal class OrganizeTokensModel @Inject constructor(
     }
 
     private suspend fun getTokenList(): TokenList? {
-        val tokenList = getTokenListUseCase.launch(userWalletId)
-            .transform { maybeTokenList ->
-                val tokenList = maybeTokenList.getOrElse(
-                    ifLoading = { return@transform },
-                    ifError = { error ->
-                        stateHolder.updateStateWithError(error)
+        val maybeTokenList = getTokenListUseCase.launch(userWalletId)
+            .filterNot(Lce<TokenListError, TokenList>::isLoading)
+            .firstOrNull()
+            ?: return null
 
-                        return@transform
-                    },
-                )
-
-                emit(tokenList)
-            }
-
-        return tokenList.firstOrNull()
+        return maybeTokenList
+            .onError(stateHolder::updateStateWithError)
+            .getOrNull(isPartialContentAccepted = false)
     }
 
     private fun bootstrapDragAndDropUpdates() {
