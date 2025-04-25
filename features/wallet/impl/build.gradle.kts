@@ -95,8 +95,6 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
-// [REDACTED_TODO_COMMENT]
-    implementation(projects.features.onboarding)
 
     /** Feature Apis */
     implementation(projects.features.details.api)

@@ -33,10 +33,6 @@ import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.features.home.api.HomeComponent
-import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
-import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
-import com.tangem.tap.features.onboarding.products.twins.ui.OnboardingTwinsFragment
-import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
@@ -423,11 +419,7 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = nftSendComponentFactory,
                 )
             }
-            is AppRoute.OnboardingNote,
             is AppRoute.SaveWallet,
-            is AppRoute.OnboardingOther,
-            is AppRoute.OnboardingTwins,
-            is AppRoute.OnboardingWallet,
             -> error("Unsupported route: $route")
         }
         // endregion
@@ -544,18 +536,6 @@ internal class ChildFactory @Inject constructor(
                     params = ManageTokensComponent.Params(route.userWalletId, source),
                     componentFactory = manageTokensComponentFactory,
                 )
-            }
-            is AppRoute.OnboardingNote -> {
-                route.asFragmentChild(Provider { OnboardingNoteFragment() })
-            }
-            is AppRoute.OnboardingOther -> {
-                route.asFragmentChild(Provider { OnboardingOtherCardsFragment() })
-            }
-            is AppRoute.OnboardingTwins -> {
-                route.asFragmentChild(Provider { OnboardingTwinsFragment() })
-            }
-            is AppRoute.OnboardingWallet -> {
-                route.asFragmentChild(Provider { OnboardingWalletFragment() })
             }
             is AppRoute.QrScanning -> {
                 val source = when (route.source) {
