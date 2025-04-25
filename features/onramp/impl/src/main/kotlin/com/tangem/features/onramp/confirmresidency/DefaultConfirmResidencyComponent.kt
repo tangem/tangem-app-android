@@ -69,6 +69,7 @@ internal class DefaultConfirmResidencyComponent @AssistedInject constructor(
         is ConfirmResidencyBottomSheetConfig.SelectCountry -> selectCountryComponentFactory.create(
             context = childByContext(componentContext),
             params = SelectCountryComponent.Params(
+                userWalletId = params.userWalletId,
                 cryptoCurrency = params.cryptoCurrency,
                 onDismiss = { isCountrySelected ->
                     // Dismiss country select sheet
