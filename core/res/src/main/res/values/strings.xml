@@ -538,6 +538,13 @@
   <string name="nft_details_token_id">Token ID</string>
   <string name="nft_details_token_standard">Token Standard</string>
   <string name="nft_details_traits">Traits</string>
+  <string name="nft_details_info_rarity_label"></string>
+  <string name="nft_details_info_rarity_rank"></string>
+  <string name="nft_details_info_token_standard"></string>
+  <string name="nft_details_info_token_address"></string>
+  <string name="nft_details_info_contract_address"></string>
+  <string name="nft_details_info_token_id"></string>
+  <string name="nft_details_info_chain"></string>
   <string name="nft_empty_search">No results. Please try another request.</string>
   <string name="nft_no_collection">No collection</string>
   <string name="nft_receive_available_section_title">Available</string>
