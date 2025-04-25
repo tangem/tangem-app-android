@@ -52,6 +52,7 @@ import com.tangem.core.ui.components.notifications.NotificationConfig.ButtonsSta
 fun Notification(
     config: NotificationConfig,
     modifier: Modifier = Modifier,
+    titleColor: Color = TangemTheme.colors.text.primary1,
     subtitleColor: Color = TangemTheme.colors.text.tertiary,
     containerColor: Color? = null,
     iconTint: Color? = null,
@@ -69,6 +70,7 @@ fun Notification(
             iconResId = config.iconResId,
             iconTint = iconTint,
             title = config.title,
+            titleColor = titleColor,
             subtitle = config.subtitle,
             subtitleColor = subtitleColor,
             showArrowIcon = isEnabled && config.showArrowIcon,
@@ -129,6 +131,7 @@ private fun MainContent(
     iconTint: Color?,
     title: TextReference?,
     subtitle: TextReference,
+    titleColor: Color,
     subtitleColor: Color,
     showArrowIcon: Boolean,
 ) {
@@ -143,7 +146,7 @@ private fun MainContent(
 
         SpacerW(width = TangemTheme.dimens.spacing10)
 
-        TextsBlock(title = title, subtitle = subtitle, subtitleColor = subtitleColor)
+        TextsBlock(title = title, titleColor = titleColor, subtitle = subtitle, subtitleColor = subtitleColor)
 
         if (showArrowIcon) {
             SpacerWMax()
