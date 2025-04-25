@@ -7,6 +7,13 @@ sealed interface Quote {
 
     val rawCurrencyId: CryptoCurrency.RawID
 
+    fun copySealed(source: StatusSource): Quote {
+        return when (this) {
+            is Empty -> this
+            is Value -> copy(source = source)
+        }
+    }
+
     /**
      * Represents unknown financial information for a specific cryptocurrency.
      *
