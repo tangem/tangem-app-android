@@ -8,8 +8,8 @@ import arrow.core.raise.ensure
 import arrow.core.raise.ensureNotNull
 import arrow.core.toNonEmptyListOrNull
 import com.tangem.domain.staking.model.stakekit.YieldBalance
+import com.tangem.domain.staking.utils.getTotalWithRewardsStakingBalance
 import com.tangem.domain.tokens.model.*
-import com.tangem.lib.crypto.BlockchainUtils
 import com.tangem.utils.extensions.orZero
 import java.math.BigDecimal
 
@@ -99,13 +99,8 @@ internal class TokenListSortingOperations(
 
     private fun CryptoCurrencyStatus.getTotalBalance(): BigDecimal {
         val yieldBalance = value.yieldBalance as? YieldBalance.Data
-        val totalYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance().orZero()
-        val totalFiatYieldBalance = if (BlockchainUtils.isIncludeStakingTotalBalance(currency.network.id.value)) {
-            totalYieldBalance.multiply(value.fiatRate.orZero())
-        } else {
-            BigDecimal.ZERO
-        }
-
+        val totalYieldBalance = yieldBalance?.getTotalWithRewardsStakingBalance(currency.network.id.value).orZero()
+        val totalFiatYieldBalance = totalYieldBalance.multiply(value.fiatRate.orZero())
         return value.fiatAmount?.plus(totalFiatYieldBalance).orZero()
     }
 
