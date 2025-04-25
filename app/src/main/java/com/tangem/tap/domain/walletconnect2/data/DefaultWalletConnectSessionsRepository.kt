@@ -4,8 +4,8 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import com.tangem.datasource.files.FileReader
-import com.tangem.tap.domain.walletconnect2.domain.WalletConnectSessionsRepository
-import com.tangem.tap.domain.walletconnect2.domain.models.Session
+import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
+import com.tangem.domain.walletconnect.model.legacy.Session
 import timber.log.Timber
 
 internal class DefaultWalletConnectSessionsRepository(
