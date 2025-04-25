@@ -7,6 +7,7 @@ import com.tangem.core.ui.extensions.TextReference
 internal interface NFTDetailsInfoComponent : ComposableBottomSheetComponent {
 
     data class Params(
+        val title: TextReference,
         val text: TextReference,
         val onDismiss: () -> Unit,
     )

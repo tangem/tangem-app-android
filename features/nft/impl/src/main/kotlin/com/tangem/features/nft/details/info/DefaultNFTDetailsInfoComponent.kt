@@ -33,6 +33,7 @@ internal class DefaultNFTDetailsInfoComponent @AssistedInject constructor(
             )
         }
         NFTInfoBottomSheet(
+            title = params.title,
             config = bottomSheetConfig,
             content = {
                 NFTInfoBottomSheetContent(
