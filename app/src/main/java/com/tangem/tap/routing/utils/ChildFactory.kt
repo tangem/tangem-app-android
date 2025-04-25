@@ -33,7 +33,6 @@ import com.tangem.tap.features.details.ui.resetcard.api.ResetCardComponent
 import com.tangem.tap.features.details.ui.securitymode.api.SecurityModeComponent
 import com.tangem.tap.features.details.ui.walletconnect.api.WalletConnectComponent
 import com.tangem.tap.features.home.api.HomeComponent
-import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.welcome.component.WelcomeComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.toggle.RoutingFeatureToggles
@@ -41,7 +40,7 @@ import com.tangem.utils.Provider
 import dagger.hilt.android.scopes.ActivityScoped
 import java.util.WeakHashMap
 import javax.inject.Inject
-import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedisegnedWalletConnectComponent
+import com.tangem.features.walletconnect.components.WalletConnectEntryComponent as RedesignedWalletConnectComponent
 
 @ActivityScoped
 @Suppress("LongParameterList", "LargeClass")
@@ -77,7 +76,7 @@ internal class ChildFactory @Inject constructor(
     private val walletComponentFactory: WalletEntryComponent.Factory,
     private val sendComponentFactoryV2: com.tangem.features.send.v2.api.SendComponent.Factory,
     private val sendFeatureToggles: SendFeatureToggles,
-    private val redesignedWalletConnectComponentFactory: RedisegnedWalletConnectComponent.Factory,
+    private val redesignedWalletConnectComponentFactory: RedesignedWalletConnectComponent.Factory,
     private val nftComponentFactory: NFTComponent.Factory,
     private val nftSendComponentFactory: NFTSendComponent.Factory,
     private val testerRouter: TesterRouter,
@@ -419,8 +418,6 @@ internal class ChildFactory @Inject constructor(
                     componentFactory = nftSendComponentFactory,
                 )
             }
-            is AppRoute.SaveWallet,
-            -> error("Unsupported route: $route")
         }
         // endregion
     }
@@ -447,9 +444,6 @@ internal class ChildFactory @Inject constructor(
                     params = Unit,
                     componentFactory = appCurrencySelectorComponentFactory,
                 )
-            }
-            is AppRoute.SaveWallet -> {
-                route.asFragmentChild(Provider { SaveWalletBottomSheetFragment() })
             }
             is AppRoute.Send -> {
                 if (sendFeatureToggles.isSendV2Enabled) {
