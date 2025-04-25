@@ -16,8 +16,8 @@ import com.tangem.domain.wallets.models.SeedPhraseNotificationsStatus
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.IsNeedToBackupUseCase
 import com.tangem.domain.wallets.usecase.SeedPhraseNotificationUseCase
-import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.presentation.wallet.state.model.WalletNotification
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.Flow
@@ -179,7 +179,7 @@ internal class GetMultiWalletWarningsFactory @Inject constructor(
     }
 
     private fun Lce<TokenListError, TokenList>.getMissingAddressCurrencies(): List<CryptoCurrency> {
-        val tokenList = getOrNull(isPartialContentAccepted = false) ?: return emptyList()
+        val tokenList = getOrNull(isPartialContentAccepted = true) ?: return emptyList()
 
         return tokenList
             .flattenCurrencies()
