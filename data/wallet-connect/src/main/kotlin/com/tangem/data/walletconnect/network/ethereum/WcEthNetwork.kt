@@ -11,6 +11,7 @@ import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcEthMethod
+import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -27,9 +28,14 @@ internal class WcEthNetwork(
 
     override val namespaceKey: NamespaceKey = NamespaceKey("eip155")
 
-    override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
+    override fun toWcMethodName(request: WcSdkSessionRequest): WcEthMethodName? {
         val methodKey = request.request.method
-        val name = Name.entries.find { it.raw == methodKey } ?: return null
+        val name = WcEthMethodName.entries.find { it.raw == methodKey } ?: return null
+        return name
+    }
+
+    override suspend fun toUseCase(request: WcSdkSessionRequest): WcMethodUseCase? {
+        val name = toWcMethodName(request) ?: return null
         val method: WcEthMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
         val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
@@ -41,41 +47,32 @@ internal class WcEthNetwork(
         }
     }
 
-    private fun Name.toMethod(request: WcSdkSessionRequest): WcEthMethod? {
+    private fun WcEthMethodName.toMethod(request: WcSdkSessionRequest): WcEthMethod? {
         val rawParams = request.request.params
         return when (this) {
-            Name.EthSign,
-            Name.PersonalSign,
+            WcEthMethodName.EthSign,
+            WcEthMethodName.PersonalSign,
             -> moshi.fromJson<List<String>>(rawParams)?.let { list ->
-                val accountIndex = if (this == Name.EthSign) 0 else 1
-                val messageIndex = if (this == Name.EthSign) 1 else 0
+                val accountIndex = if (this == WcEthMethodName.EthSign) 0 else 1
+                val messageIndex = if (this == WcEthMethodName.EthSign) 1 else 0
                 val account = list.getOrNull(accountIndex) ?: return@let null
                 val message = list.getOrNull(messageIndex) ?: return@let null
                 WcEthMethod.MessageSign(account = account, message = message)
             }
-            Name.SignTypeData -> TODO()
-            Name.SignTypeDataV4 -> TODO()
-            Name.SignTransaction,
-            Name.SendTransaction,
+            WcEthMethodName.SignTypeData -> TODO()
+            WcEthMethodName.SignTypeDataV4 -> TODO()
+            WcEthMethodName.SignTransaction,
+            WcEthMethodName.SendTransaction,
             -> moshi.fromJson<List<WcEthTransactionParams>>(rawParams)
                 ?.firstOrNull()
                 ?.let {
-                    if (this == Name.SignTransaction) {
+                    if (this == WcEthMethodName.SignTransaction) {
                         WcEthMethod.SignTransaction(transaction = it)
                     } else {
                         WcEthMethod.SendTransaction(transaction = it)
                     }
                 }
         }
-    }
-
-    enum class Name(val raw: String) {
-        EthSign("eth_sign"),
-        PersonalSign("personal_sign"),
-        SignTypeData("eth_signTypedData"),
-        SignTypeDataV4("eth_signTypedData_v4"),
-        SignTransaction("eth_signTransaction"),
-        SendTransaction("eth_sendTransaction"),
     }
 
     override fun toNetwork(chainId: String, wallet: UserWallet): Network? {
