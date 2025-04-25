@@ -138,32 +138,40 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
                     rank = "Top 1% rarity",
                     label = "115.28",
                     showDivider = true,
+                    onRankClick = { },
+                    onLabelClick = { },
                 ),
             ),
             traits = persistentListOf(
                 NFTAssetUM.BlockItem(
                     title = stringReference("Tier"),
                     value = "Infinite",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Phygital Toy"),
                     value = "None",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Class"),
                     value = "CYBER",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Accessory"),
                     value = "No accessory",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Sneakers"),
                     value = "Boots",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Artist"),
                     value = "DJ Dragoon",
+                    showInfoButton = false,
                 ),
             ),
             showAllTraitsButton = true,
@@ -171,19 +179,23 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_standard),
                     value = "ERC-721",
+                    showInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_contract_address),
                     value = "0x6811f2fgd892ac83f719",
                     valueTextEllipsis = TextEllipsis.Middle,
+                    showInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_id),
                     value = "100200273",
+                    showInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_chain),
                     value = "Ethereum",
+                    showInfoButton = true,
                 ),
             ),
         ),
