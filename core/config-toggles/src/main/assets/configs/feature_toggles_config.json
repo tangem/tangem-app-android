@@ -28,6 +28,14 @@
         "version": "undefined"
     },
     {
+        "name": "NFT_EVM_ENABLED",
+        "version": "undefined"
+    },
+    {
+        "name": "NFT_SOLANA_ENABLED",
+        "version": "undefined"
+    },
+    {
         "name": "STAKING_CARDANO_ENABLED",
         "version": "undefined"
     },
