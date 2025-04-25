@@ -15,6 +15,7 @@ import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.settings.*
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
 import com.tangem.domain.tokens.RefreshMultiCurrencyWalletQuotesUseCase
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.GetSelectedWalletUseCase
@@ -356,9 +357,7 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
-        if (action.selectedWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
-            fetchCurrencyStatusUseCase(userWalletId = action.selectedWallet.walletId)
-        }
+        fetchIfSingleWallet(action.selectedWallet)
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
@@ -385,6 +384,8 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
+        fetchIfSingleWallet(userWallet = action.selectedWallet)
+
         stateHolder.update(
             ReinitializeWalletTransformer(
                 prevWalletId = action.prevWalletId,
@@ -402,12 +403,7 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
-        if (action.selectedWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
-            modelScope.launch {
-                fetchCurrencyStatusUseCase(userWalletId = action.selectedWallet.walletId)
-                    .onLeft { Timber.e(it.toString()) }
-            }
-        }
+        fetchIfSingleWallet(userWallet = action.selectedWallet)
 
         stateHolder.update(
             AddWalletTransformer(
@@ -503,6 +499,15 @@ internal class WalletModel @Inject constructor(
                     onConsume = onConsume,
                 ),
             )
+        }
+    }
+
+    private fun fetchIfSingleWallet(userWallet: UserWallet) {
+        if (userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+            modelScope.launch {
+                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
+                    .onLeft { Timber.e(it.toString()) }
+            }
         }
     }
 
