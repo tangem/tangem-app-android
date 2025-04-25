@@ -13,7 +13,8 @@ import com.tangem.domain.feedback.GetCardInfoUseCase
 import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
-import com.tangem.domain.promo.ShouldShowSwapPromoWalletUseCase
+import com.tangem.domain.promo.ShouldShowPromoWalletUseCase
+import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.redux.LegacyAction
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
@@ -67,7 +68,7 @@ internal interface WalletWarningsClickIntents {
 
     fun onCloseRateAppWarningClick()
 
-    fun onCloseSwapPromoClick()
+    fun onClosePromoClick(promoId: PromoId)
 
     fun onSupportClick()
 
@@ -98,7 +99,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
-    private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
+    private val shouldShowPromoWalletUseCase: ShouldShowPromoWalletUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val seedPhraseNotificationUseCase: SeedPhraseNotificationUseCase,
@@ -268,7 +269,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         }
     }
 
-    override fun onCloseSwapPromoClick() {
+    override fun onClosePromoClick(promoId: PromoId) {
         analyticsEventHandler.send(
             TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                 source = AnalyticsParam.ScreensSources.Main,
@@ -277,7 +278,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
             ),
         )
         modelScope.launch(dispatchers.main) {
-            shouldShowSwapPromoWalletUseCase.neverToShow()
+            shouldShowPromoWalletUseCase.neverToShow(promoId)
         }
     }
 
