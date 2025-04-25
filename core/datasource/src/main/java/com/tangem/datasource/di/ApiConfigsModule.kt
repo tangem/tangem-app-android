@@ -39,12 +39,13 @@ internal object ApiConfigsModule {
 
     @Provides
     @IntoSet
-    fun provideTangemAuthVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig =
-        TangemVisaAuth(appVersionProvider)
+    fun provideTangemVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemVisa(appVersionProvider)
 
     @Provides
     @IntoSet
-    fun provideTangemVisaConfig(appVersionProvider: AppVersionProvider): ApiConfig = TangemVisa(appVersionProvider)
+    fun provideBlockAidConfig(environmentConfigStorage: EnvironmentConfigStorage): ApiConfig {
+        return BlockAid(environmentConfigStorage)
+    }
 
     @Provides
     @IntoSet
