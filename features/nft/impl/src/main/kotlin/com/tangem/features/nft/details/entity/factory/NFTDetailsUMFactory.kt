@@ -70,6 +70,7 @@ internal class NFTDetailsUMFactory(
                 value = it.value,
             )
         }.toImmutableList(),
+        showAllTraitsButton = traits.size > MAX_TRAITS_COUNT,
         baseInfoItems = buildBaseInfoItems(),
     )
 
