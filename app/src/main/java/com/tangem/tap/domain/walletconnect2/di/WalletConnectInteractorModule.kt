@@ -8,6 +8,7 @@ import com.tangem.datasource.di.SdkMoshi
 import com.tangem.datasource.files.FileReader
 import com.tangem.domain.tokens.repository.CurrenciesRepository
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
+import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
@@ -74,6 +75,7 @@ internal object WalletConnectModule {
         wcRequestDeserializer: WcJrpcRequestsDeserializer,
         analyticsHandler: AnalyticsEventHandler,
         walletConnectFeatureToggles: WalletConnectFeatureToggles,
+        wcInitializeUseCase: WcInitializeUseCase,
     ): LegacyWalletConnectRepository {
         val legacy = DefaultLegacyWalletConnectRepository(
             application = application,
@@ -85,6 +87,7 @@ internal object WalletConnectModule {
             stub,
             legacy,
             walletConnectFeatureToggles,
+            wcInitializeUseCase,
         )
     }
 

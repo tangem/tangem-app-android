@@ -25,6 +25,7 @@ dependencies {
     implementation(projects.core.res)
 
     /** Domain models */
+    implementation(projects.domain.blockaid.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)

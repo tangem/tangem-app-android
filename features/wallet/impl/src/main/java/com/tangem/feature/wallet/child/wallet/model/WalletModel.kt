@@ -38,7 +38,6 @@ import com.tangem.feature.wallet.presentation.wallet.state.transformers.*
 import com.tangem.feature.wallet.presentation.wallet.state.utils.WalletEventSender
 import com.tangem.feature.wallet.presentation.wallet.utils.ScreenLifecycleProvider
 import com.tangem.features.biometry.AskBiometryComponent
-import com.tangem.features.biometry.BiometryFeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.features.pushnotifications.api.utils.getPushPermissionOrNull
 import com.tangem.utils.Provider
@@ -75,7 +74,6 @@ internal class WalletModel @Inject constructor(
     private val walletImageResolver: WalletImageResolver,
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
-    private val biometryFeatureToggles: BiometryFeatureToggles,
     private val analyticsEventsHandler: AnalyticsEventHandler,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     val screenLifecycleProvider: ScreenLifecycleProvider,
@@ -126,13 +124,9 @@ internal class WalletModel @Inject constructor(
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
 
             if (isShowSaveWalletScreenEnabled()) {
-                if (biometryFeatureToggles.isAskForBiometryEnabled) {
-                    innerWalletRouter.dialogNavigation.activate(
-                        configuration = WalletDialogConfig.AskForBiometry,
-                    )
-                } else {
-                    innerWalletRouter.openSaveUserWalletScreen()
-                }
+                innerWalletRouter.dialogNavigation.activate(
+                    configuration = WalletDialogConfig.AskForBiometry,
+                )
             }
         }
     }
