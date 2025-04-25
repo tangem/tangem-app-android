@@ -170,7 +170,6 @@ include(":libs:tangem-sdk-api")
 // endregion Libs modules
 
 // region Feature modules
-include(":features:onboarding")
 include(":features:onboarding-v2:api")
 include(":features:onboarding-v2:impl")
 
