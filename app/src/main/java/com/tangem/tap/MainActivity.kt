@@ -62,13 +62,11 @@ import com.tangem.domain.tokens.GetPolkadotCheckHasImmortalUseCase
 import com.tangem.domain.tokens.GetPolkadotCheckHasResetUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.wallet.presentation.wallet.analytics.WalletScreenAnalyticsEvent
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.features.pushnotifications.api.utils.PUSH_PERMISSION
 import com.tangem.google.GoogleServicesHelper
 import com.tangem.operations.backup.BackupService
 import com.tangem.sdk.api.BackupServiceHolder
 import com.tangem.sdk.api.TangemSdkManager
-import com.tangem.sdk.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.OnActivityResultCallback
@@ -83,7 +81,6 @@ import com.tangem.tap.features.intentHandler.handlers.BackgroundScanIntentHandle
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.tap.features.intentHandler.handlers.WalletConnectLinkIntentHandler
 import com.tangem.tap.features.main.MainViewModel
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.proxy.redux.DaggerGraphAction
 import com.tangem.tap.routing.component.RoutingComponent
@@ -180,9 +177,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     @Inject
     lateinit var backupServiceHolder: BackupServiceHolder
-
-    @Inject
-    lateinit var onboardingV2FeatureToggles: OnboardingV2FeatureToggles
 
     @Inject
     lateinit var setGoogleServicesAvailabilityUseCase: SetGoogleServicesAvailabilityUseCase
@@ -364,12 +358,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         cardSdkOwner.register(activity = this)
         tangemSdkManager = injectedTangemSdkManager
 
-        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
-            backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
-            backupService = backupServiceHolder.backupService.get()!! // will be deleted eventually
-        } else {
-            backupService = BackupService.init(cardSdkConfigRepository.sdk, this)
-        }
+        backupServiceHolder.createAndSetService(cardSdkConfigRepository.sdk, this)
+        backupService = backupServiceHolder.backupService.get()!! // will be deleted eventually
 
         lockUserWalletsTimer = LockUserWalletsTimer(
             context = this,
@@ -662,7 +652,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             }
         }
 
-        store.dispatch(BackupAction.CheckForUnfinishedBackup)
+        viewModel.checkForUnfinishedBackup()
     }
 
     private fun observePolkadotAccountHealthCheck() {
