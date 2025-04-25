@@ -123,7 +123,11 @@ object PreferencesKeys {
 
     val WALLETS_NFT_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "walletsNftEnabledStates") }
 
+    // region Promo
     fun getShouldShowStoriesKey(storyId: String) = booleanPreferencesKey("shouldShowStories_$storyId")
+
+    fun getShouldShowPromoKey(promoId: String) = booleanPreferencesKey("shouldShowPromo_$promoId")
+    // endregion
 
     // region Permission
     fun getShouldShowPermission(permission: String) = booleanPreferencesKey("shouldShowPushPermission_$permission")
