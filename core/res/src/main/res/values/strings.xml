@@ -520,6 +520,9 @@
   <string name="nft_wallet_title">NFT collections</string>
   <string name="nft_wallet_unable_to_load">Unable to load the data</string>
   <string name="nft_receive_choose_network">Choose network</string>
+  <string name="notification_referral_promo_button">Join Now</string>
+  <string name="notification_referral_promo_text">Share your code - earn 5 USDT per sale. Your friend gets 10% OFF.</string>
+  <string name="notification_referral_promo_title">Get REWARDS for every friend!</string>
   <string name="nft_details_last_sale_price">Last sale price</string>
   <string name="nft_details_rarity_label">Rarity label</string>
   <string name="nft_details_rarity_rank">Rarity rank</string>
