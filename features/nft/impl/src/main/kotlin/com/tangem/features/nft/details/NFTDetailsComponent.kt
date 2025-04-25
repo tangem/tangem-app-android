@@ -53,6 +53,7 @@ internal class NFTDetailsComponent @AssistedInject constructor(
         is NFTDetailsBottomSheetConfig.Info -> nftDetailsInfoComponentFactory.create(
             context = childByContext(componentContext),
             params = NFTDetailsInfoComponent.Params(
+                title = config.title,
                 text = config.text,
                 onDismiss = {
                     model.bottomSheetNavigation.dismiss()

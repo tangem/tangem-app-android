@@ -56,6 +56,8 @@ data class NFTAssetUM(
             val rank: String,
             val label: String,
             val showDivider: Boolean,
+            val onRankClick: () -> Unit,
+            val onLabelClick: () -> Unit,
         ) : Rarity()
     }
 
@@ -64,5 +66,7 @@ data class NFTAssetUM(
         val titleTextEllipsis: TextEllipsis = TextEllipsis.End,
         val value: String,
         val valueTextEllipsis: TextEllipsis = TextEllipsis.End,
+        val showInfoButton: Boolean,
+        val onClick: () -> Unit = { },
     )
 }
