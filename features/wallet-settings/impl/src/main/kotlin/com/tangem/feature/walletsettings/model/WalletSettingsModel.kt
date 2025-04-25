@@ -19,8 +19,6 @@ import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.models.scan.CardDTO
 import com.tangem.domain.models.scan.ScanResponse
-import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.repository.WalletsRepository
 import com.tangem.domain.wallets.usecase.DeleteWalletUseCase
@@ -34,7 +32,6 @@ import com.tangem.feature.walletsettings.entity.WalletSettingsUM
 import com.tangem.feature.walletsettings.impl.R
 import com.tangem.feature.walletsettings.utils.ItemsBuilder
 import com.tangem.features.nft.NFTFeatureToggles
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
@@ -55,12 +52,10 @@ internal class WalletSettingsModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsContextProxy: AnalyticsContextProxy,
-    private val reduxStateHolder: ReduxStateHolder,
     private val getShouldSaveUserWalletsSyncUseCase: ShouldSaveUserWalletsSyncUseCase,
     private val isDemoCardUseCase: IsDemoCardUseCase,
     private val walletsRepository: WalletsRepository,
     private val nftFeatureToggles: NFTFeatureToggles,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
 ) : Model() {
 
     val params: WalletSettingsComponent.Params = paramsContainer.require()
@@ -163,23 +158,12 @@ internal class WalletSettingsModel @Inject constructor(
         analyticsEventHandler.send(Settings.ButtonCreateBackup)
         analyticsContextProxy.addContext(scanResponse)
 
-        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
-            router.push(
-                AppRoute.Onboarding(
-                    scanResponse = scanResponse,
-                    mode = AppRoute.Onboarding.Mode.AddBackupWallet1,
-                ),
-            )
-        } else {
-            reduxStateHolder.dispatch(
-                LegacyAction.StartOnboardingProcess(
-                    scanResponse = scanResponse,
-                    canSkipBackup = false,
-                ),
-            )
-
-            router.push(AppRoute.OnboardingWallet())
-        }
+        router.push(
+            AppRoute.Onboarding(
+                scanResponse = scanResponse,
+                mode = AppRoute.Onboarding.Mode.AddBackupWallet1,
+            ),
+        )
     }
 
     private fun onCheckedNFTChange(isChecked: Boolean) {
