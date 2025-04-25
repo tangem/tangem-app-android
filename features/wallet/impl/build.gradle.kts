@@ -96,9 +96,6 @@ dependencies {
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
 
-    //TODO: Create api/impl modules for onboarding [REDACTED_JIRA]
-    implementation(projects.features.onboarding)
-
     /** Feature Apis */
     implementation(projects.features.details.api)
     implementation(projects.features.manageTokens.api)
