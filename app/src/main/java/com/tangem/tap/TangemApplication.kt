@@ -291,10 +291,10 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
                     excludedBlockchainsManager.init()
                 },
             )
+            initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
         }
 
         appScope.launch {
-            initWithConfigDependency(environmentConfig = environmentConfigStorage.initialize())
             launch(Dispatchers.IO) {
                 loadNativeLibraries()
                 walletConnect2Repository.init(
