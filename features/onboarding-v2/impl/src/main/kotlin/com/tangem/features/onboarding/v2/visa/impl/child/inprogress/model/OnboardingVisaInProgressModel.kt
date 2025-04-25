@@ -72,14 +72,20 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
                     is VisaActivationRemoteState.CardWalletSignatureRequired,
                     VisaActivationRemoteState.BlockedForActivation,
                     -> {
-                        uiMessageSender.showErrorDialog(VisaActivationError.InconsistentRemoteState)
+                        uiMessageSender.showErrorDialog(VisaActivationError.InconsistentRemoteState) {
+                            retryShortPolling()
+                        }
+
                         analyticsEventHandler.send(
                             VisaAnalyticsEvent.ErrorOnboarding(VisaActivationError.InconsistentRemoteState),
                         )
                         return@launch
                     }
                     VisaActivationRemoteState.Failed -> {
-                        uiMessageSender.showErrorDialog(VisaActivationError.FailedRemoteState)
+                        uiMessageSender.showErrorDialog(VisaActivationError.FailedRemoteState) {
+                            retryShortPolling()
+                        }
+
                         analyticsEventHandler.send(
                             VisaAnalyticsEvent.ErrorOnboarding(VisaActivationError.FailedRemoteState),
                         )
@@ -103,6 +109,13 @@ internal class OnboardingVisaInProgressModel @Inject constructor(
 
                 delay(timeMillis = 2000)
             }
+        }
+    }
+
+    private fun retryShortPolling() {
+        modelScope.launch {
+            delay(timeMillis = 10000)
+            runShortPolling()
         }
     }
 
