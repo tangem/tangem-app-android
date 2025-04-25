@@ -14,7 +14,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.walletconnect.model.WcPairRequest
-import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.features.walletconnect.connections.model.WcConnectionsModel
 import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetRoutes
 import com.tangem.features.walletconnect.connections.ui.WcConnectionsContent
