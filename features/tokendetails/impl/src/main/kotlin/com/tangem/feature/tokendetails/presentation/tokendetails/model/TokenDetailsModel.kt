@@ -35,7 +35,8 @@ import com.tangem.domain.card.NetworkHasDerivationUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.onramp.model.OnrampSource
-import com.tangem.domain.promo.ShouldShowSwapPromoTokenUseCase
+import com.tangem.domain.promo.ShouldShowPromoTokenUseCase
+import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.staking.GetStakingAvailabilityUseCase
 import com.tangem.domain.staking.GetStakingEntryInfoUseCase
@@ -101,7 +102,7 @@ internal class TokenDetailsModel @Inject constructor(
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
     private val getCurrencyWarningsUseCase: GetCurrencyWarningsUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
-    private val shouldShowSwapPromoTokenUseCase: ShouldShowSwapPromoTokenUseCase,
+    private val shouldShowPromoTokenUseCase: ShouldShowPromoTokenUseCase,
     private val updateDelayedCurrencyStatusUseCase: UpdateDelayedNetworkStatusUseCase,
     private val getExtendedPublicKeyForCurrencyUseCase: GetExtendedPublicKeyForCurrencyUseCase,
     private val getStakingEntryInfoUseCase: GetStakingEntryInfoUseCase,
@@ -811,9 +812,9 @@ internal class TokenDetailsModel @Inject constructor(
         router.openUrl(url)
     }
 
-    override fun onSwapPromoDismiss() {
+    override fun onSwapPromoDismiss(promoId: PromoId) {
         modelScope.launch(dispatchers.main) {
-            shouldShowSwapPromoTokenUseCase.neverToShow()
+            shouldShowPromoTokenUseCase.neverToShow(promoId)
             analyticsEventsHandler.send(
                 TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
@@ -824,9 +825,9 @@ internal class TokenDetailsModel @Inject constructor(
         }
     }
 
-    override fun onSwapPromoClick() {
+    override fun onSwapPromoClick(promoId: PromoId) {
         modelScope.launch(dispatchers.main) {
-            shouldShowSwapPromoTokenUseCase.neverToShow()
+            shouldShowPromoTokenUseCase.neverToShow(promoId)
             analyticsEventsHandler.send(
                 TokenSwapPromoAnalyticsEvent.PromotionBannerClicked(
                     source = AnalyticsParam.ScreensSources.Token,
