@@ -33,7 +33,7 @@ class GetFeeUseCase(
                     walletManagersFacade.getOrCreateWalletManager(
                         userWalletId = userWallet.walletId,
                         network = network,
-                    ) as? TransactionSender
+                    )
                 }
                 val result = transactionSender?.getFee(transactionData = transactionData)
                     ?: error("Fee is null")
