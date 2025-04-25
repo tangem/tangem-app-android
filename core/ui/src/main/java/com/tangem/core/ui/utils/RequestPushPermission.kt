@@ -1,9 +1,7 @@
 package com.tangem.core.ui.utils
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 
 /**
@@ -13,24 +11,18 @@ import com.google.accompanist.permissions.rememberPermissionState
 @Suppress("LongParameterList")
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun requestPushPermission(
-    pushPermission: String?,
-    isClicked: Boolean,
-    onAllow: () -> Unit,
-    onDeny: () -> Unit,
-): () -> Unit {
+fun requestPushPermission(pushPermission: String?, onAllow: () -> Unit, onDeny: () -> Unit): () -> Unit {
     val permissionState = pushPermission?.let { permission ->
-        rememberPermissionState(permission = permission)
-    }
-
-    // Check if user granted permission and close bottom sheet
-    LaunchedEffect(key1 = permissionState?.status, isClicked) {
-        if (!isClicked) return@LaunchedEffect
-        if (permissionState?.status?.isGranted == true) {
-            onAllow()
-        } else {
-            onDeny()
-        }
+        rememberPermissionState(
+            permission = permission,
+            onPermissionResult = { isGranted ->
+                if (isGranted) {
+                    onAllow()
+                } else {
+                    onDeny()
+                }
+            },
+        )
     }
 
     return if (permissionState == null) {
