@@ -4,8 +4,10 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.staking.fetcher.YieldBalanceFetcherImplementor
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.utils.StakingIdFactory
+import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
+import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.StakingID
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -33,18 +35,27 @@ internal class MultiYieldBalanceFetcherImplementor(
         }
     }
 
-    override suspend fun fetch(
-        params: YieldBalanceFetcherParams.Multi,
-        stakingIds: Set<StakingID>,
-        requests: List<YieldBalanceRequestBody>,
-    ) {
+    override suspend fun fetch(params: YieldBalanceFetcherParams.Multi, stakingIds: Set<StakingID>) {
         safeApiCall(
             call = {
+                val requests = stakingIds.map(YieldBalanceRequestBodyFactory::create)
+
                 val yieldBalances = withContext(dispatchers.io) {
                     stakeKitApi.getMultipleYieldBalances(requests).bind()
                 }
 
                 yieldsBalancesStore.storeActual(userWalletId = params.userWalletId, values = yieldBalances)
+
+                if (!allResponsesReceived(requests, yieldBalances)) {
+                    val values = stakingIds.filter { stakingId ->
+                        yieldBalances.none {
+                            stakingId.integrationId == it.integrationId &&
+                                stakingId.address == it.addresses.address
+                        }
+                    }
+
+                    yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = values.toSet())
+                }
             },
             onError = {
                 Timber.e(it, "Unable to fetch yield balances $params")
@@ -54,5 +65,17 @@ internal class MultiYieldBalanceFetcherImplementor(
                 throw it
             },
         )
+    }
+
+    private fun allResponsesReceived(
+        requests: List<YieldBalanceRequestBody>,
+        yieldBalances: Set<YieldBalanceWrapperDTO>,
+    ): Boolean {
+        return requests.all { request ->
+            yieldBalances.any {
+                request.integrationId == it.integrationId &&
+                    request.addresses.address == it.addresses.address
+            }
+        }
     }
 }
