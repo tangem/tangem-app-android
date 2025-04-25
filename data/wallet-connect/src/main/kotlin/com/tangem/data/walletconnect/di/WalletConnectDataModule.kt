@@ -9,6 +9,7 @@ import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
 import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
 import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
+import com.tangem.data.walletconnect.pair.DefaultWcPairService
 import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
 import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
@@ -18,10 +19,11 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.datasource.di.SdkMoshi
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
-import com.tangem.domain.blockaid.BlockAidVerifier
 import com.tangem.domain.tokens.repository.CurrenciesRepository
+import com.tangem.domain.walletconnect.WcPairService
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
@@ -58,32 +60,24 @@ internal object WalletConnectDataModule {
         sessionsManager: DefaultWcSessionsManager,
         networkService: DefaultWcRequestService,
         pairSdkDelegate: WcPairSdkDelegate,
+        environmentConfigStorage: EnvironmentConfigStorage,
+        dispatchers: CoroutineDispatcherProvider,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
         application = application,
         sessionsManager = sessionsManager,
         networkService = networkService,
         pairSdkDelegate = pairSdkDelegate,
+        environmentConfigStorage = environmentConfigStorage,
+        dispatchers = dispatchers,
     )
 
     @Provides
     @Singleton
-    fun defaultWcPairUseCase(
-        sessionsManager: WcSessionsManager,
-        associateNetworksDelegate: AssociateNetworksDelegate,
-        caipNamespaceDelegate: CaipNamespaceDelegate,
-        sdkDelegate: WcPairSdkDelegate,
-        blockAidVerifier: BlockAidVerifier,
-    ): DefaultWcPairUseCase = DefaultWcPairUseCase(
-        sessionsManager = sessionsManager,
-        associateNetworksDelegate = associateNetworksDelegate,
-        caipNamespaceDelegate = caipNamespaceDelegate,
-        sdkDelegate = sdkDelegate,
-        blockAidVerifier = blockAidVerifier,
-    )
+    fun defaultWcPairUseCase(): WcPairService = DefaultWcPairService()
 
     @Provides
     @Singleton
-    fun wcPairUseCase(default: DefaultWcPairUseCase): WcPairUseCase = default
+    fun wcPairUseCaseFactory(default: DefaultWcPairUseCase.Factory): WcPairUseCase.Factory = default
 
     @Provides
     @Singleton
