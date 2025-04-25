@@ -25,6 +25,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.buttons.common.TangemButtonSize
@@ -55,6 +57,7 @@ fun Notification(
     subtitleColor: Color = TangemTheme.colors.text.tertiary,
     containerColor: Color? = null,
     iconTint: Color? = null,
+    iconSize: Dp = 20.dp,
     isEnabled: Boolean = true,
 ) {
     NotificationBaseContainer(
@@ -68,6 +71,7 @@ fun Notification(
         MainContent(
             iconResId = config.iconResId,
             iconTint = iconTint,
+            iconSize = iconSize,
             title = config.title,
             subtitle = config.subtitle,
             subtitleColor = subtitleColor,
@@ -127,6 +131,7 @@ internal fun NotificationBaseContainer(
 private fun MainContent(
     iconResId: Int,
     iconTint: Color?,
+    iconSize: Dp,
     title: TextReference?,
     subtitle: TextReference,
     subtitleColor: Color,
@@ -137,7 +142,7 @@ private fun MainContent(
             iconResId = iconResId,
             tint = iconTint,
             modifier = Modifier
-                .size(size = TangemTheme.dimens.size20)
+                .size(size = iconSize)
                 .align(alignment = Alignment.CenterVertically),
         )
 
