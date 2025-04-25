@@ -22,6 +22,7 @@ dependencies {
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.wallets.models)
+    implementation(projects.features.referral.domain)
 
     implementation(projects.core.datasource)
     implementation(projects.core.utils)
