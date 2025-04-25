@@ -6,7 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfigContent
 import com.tangem.core.ui.extensions.stringResourceSafe
@@ -36,7 +36,7 @@ private fun Content(state: MultiWalletAccessCodeUM, modifier: Modifier = Modifie
             modifier = Modifier.weight(1f),
             targetState = state.step,
             transitionSpec = TangemAnimations.AnimatedContent
-                .slide { initial, target -> initial.ordinal > target.ordinal },
+                .slide { initial, target -> target.ordinal > initial.ordinal },
             label = "AnimatedContent",
         ) { step ->
             when (step) {
