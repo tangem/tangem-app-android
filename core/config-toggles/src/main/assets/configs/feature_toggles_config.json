@@ -40,10 +40,6 @@
         "version": "5.22.0"
     },
     {
-        "name": "ASK_BIOMETRY_REFACTORING_ENABLED",
-        "version": "5.22.0"
-    },
-    {
         "name": "NEW_ARTWORK_LOADING",
         "version": "5.24.0"
     },
