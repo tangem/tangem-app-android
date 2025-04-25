@@ -36,6 +36,7 @@ internal class DefaultWcInitializeUseCase(
     )
 
     override suspend fun init() = withContext(dispatchers.io) {
+        if (isInit.value) return@withContext
         isInit.value = true
         val projectId = environmentConfigStorage.getConfig()
             .first { it.walletConnectProjectId.isNotEmpty() }
@@ -60,6 +61,7 @@ internal class DefaultWcInitializeUseCase(
             application = application,
             metaData = appMetaData,
         ) { error ->
+            isInit.value = false
             Timber.e("Error while initializing client: $error")
         }
 
@@ -71,6 +73,7 @@ internal class DefaultWcInitializeUseCase(
                 wcSdkObservers.forEach { it.onWcSdkInit() }
             },
             onError = { error ->
+                isInit.value = false
                 Timber.e("Error while initializing Web3Wallet: $error")
             },
         )
