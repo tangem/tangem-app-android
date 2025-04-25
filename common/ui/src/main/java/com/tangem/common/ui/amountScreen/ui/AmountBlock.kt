@@ -21,10 +21,10 @@ import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.currency.icon.CurrencyIcon
 import com.tangem.core.ui.format.bigdecimal.anyDecimals
 import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.fiat
 import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.core.ui.utils.BigDecimalFormatter
 import java.math.BigDecimal
 
 @Composable
@@ -33,15 +33,11 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
     val amount = amountState.amountTextField
 
     val cryptoAmount = formatWithSymbol(amount.value, amount.cryptoAmount.currencySymbol)
-    val fiatAmount = BigDecimalFormatter.formatFiatAmount(
-        fiatAmount = amount.fiatAmount.value,
-        fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
-        fiatCurrencyCode = amountState.appCurrencyCode,
-    )
-    val backgroundColor = if (isEditingDisabled) {
-        TangemTheme.colors.button.disabled
-    } else {
-        TangemTheme.colors.background.action
+    val fiatAmount = amount.fiatAmount.value.format {
+        fiat(
+            fiatCurrencySymbol = amount.fiatAmount.currencySymbol,
+            fiatCurrencyCode = amountState.appCurrencyCode,
+        )
     }
 
     val (firstAmount, secondAmount) = if (amount.isFiatValue) {
@@ -54,7 +50,7 @@ fun AmountBlock(amountState: AmountState, isClickDisabled: Boolean, isEditingDis
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(backgroundColor)
+            .background(TangemTheme.colors.background.action)
             .clickable(enabled = !isClickDisabled && !isEditingDisabled, onClick = onClick)
             .padding(TangemTheme.dimens.spacing16),
     ) {
