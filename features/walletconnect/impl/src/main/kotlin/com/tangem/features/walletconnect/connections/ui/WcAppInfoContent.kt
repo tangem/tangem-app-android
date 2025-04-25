@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -27,11 +29,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.tangem.common.ui.notifications.NotificationUM
-import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheet
-import com.tangem.core.ui.components.bottomsheets.modal.TangemModalBottomSheetTitle
+import com.tangem.core.ui.components.*
 import com.tangem.core.ui.components.notifications.Notification
 import com.tangem.core.ui.components.notifications.NotificationConfig
 import com.tangem.core.ui.extensions.resourceReference
@@ -41,29 +39,23 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
 import com.tangem.features.walletconnect.connections.entity.WcNetworksInfo
+import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 
 @Composable
-internal fun WcAppInfoModalBottomSheet(config: TangemBottomSheetConfig) {
-    TangemModalBottomSheet<WcAppInfoUM>(
-        config = config,
-        containerColor = TangemTheme.colors.background.tertiary,
-        title = { state ->
-            TangemModalBottomSheetTitle(
-                title = resourceReference(R.string.wc_wallet_connect),
-                endIconRes = R.drawable.ic_close_24,
-                onEndClick = state.onDismiss,
-            )
-        },
-        content = { state -> WcAppInfoModalBottomSheetContent(state) },
-    )
+internal fun WcAppInfoModalBottomSheet(state: WcAppInfoUM, modifier: Modifier = Modifier) {
+    when (state) {
+        is WcAppInfoUM.Content -> WcAppInfoModalBottomSheetContent(state, modifier)
+        is WcAppInfoUM.Loading -> WcAppInfoModalBottomSheetLoading(state, modifier)
+    }
 }
 
+// region Content state
 @Composable
-private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM) {
-    Column(modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16)) {
+private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
         val blocksModifier = Modifier
             .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
             .background(color = TangemTheme.colors.background.action)
@@ -85,13 +77,13 @@ private fun WcAppInfoModalBottomSheetContent(state: WcAppInfoUM) {
         WcAppInfoButtons(
             modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
             onDismiss = state.onDismiss,
-            onConnect = state.onConnect,
+            connectButtonConfig = state.connectButtonConfig,
         )
     }
 }
 
 @Composable
-private fun WcAppInfoFirstBlock(state: WcAppInfoUM, modifier: Modifier = Modifier) {
+private fun WcAppInfoFirstBlock(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
     var connectionRequestExpanded by remember { mutableStateOf(false) }
     Column(modifier = modifier.animateContentSize()) {
         WcAppInfoItem(
@@ -213,7 +205,7 @@ private fun ConnectionRequestDescriptionRow(
 }
 
 @Composable
-private fun WcAppInfoSecondBlock(state: WcAppInfoUM, modifier: Modifier = Modifier) {
+private fun WcAppInfoSecondBlock(state: WcAppInfoUM.Content, modifier: Modifier = Modifier) {
     Column(modifier = modifier) {
         val itemsModifier = Modifier
             .fillMaxWidth()
@@ -234,7 +226,7 @@ private fun WcAppInfoSecondBlock(state: WcAppInfoUM, modifier: Modifier = Modifi
                         title = resourceReference(R.string.wc_missing_required_network_title),
                         subtitle = resourceReference(
                             R.string.wc_missing_required_network_description,
-                            wrappedList(state.networksInfo.network),
+                            wrappedList(state.networksInfo.networks),
                         ),
                     ),
                     iconTint = TangemTheme.colors.icon.attention,
@@ -374,7 +366,11 @@ private fun NetworkIcons(icons: ImmutableList<Int>, modifier: Modifier = Modifie
 }
 
 @Composable
-private fun WcAppInfoButtons(onDismiss: () -> Unit, onConnect: () -> Unit, modifier: Modifier = Modifier) {
+private fun WcAppInfoButtons(
+    onDismiss: () -> Unit,
+    connectButtonConfig: WcPrimaryButtonConfig,
+    modifier: Modifier = Modifier,
+) {
     Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8)) {
         SecondaryButton(
             modifier = Modifier
@@ -388,7 +384,166 @@ private fun WcAppInfoButtons(onDismiss: () -> Unit, onConnect: () -> Unit, modif
                 .fillMaxWidth()
                 .weight(1f),
             text = stringResourceSafe(R.string.wc_common_connect),
-            onClick = onConnect,
+            onClick = connectButtonConfig.onClick,
+            showProgress = connectButtonConfig.showProgress,
+            enabled = connectButtonConfig.enabled,
+        )
+    }
+}
+// endregion
+
+// region Loading state
+@Composable
+private fun WcAppInfoModalBottomSheetLoading(state: WcAppInfoUM.Loading, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        val blocksModifier = Modifier
+            .clip(RoundedCornerShape(TangemTheme.dimens.radius14))
+            .background(color = TangemTheme.colors.background.action)
+            .fillMaxWidth()
+        WcAppInfoFirstLoadingBlock(blocksModifier)
+        WcAppInfoSecondLoadingBlock(
+            modifier = Modifier
+                .padding(top = 14.dp)
+                .then(blocksModifier),
+        )
+        WcAppInfoButtons(
+            modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing16),
+            onDismiss = state.onDismiss,
+            connectButtonConfig = state.connectButtonConfig,
+        )
+    }
+}
+
+@Composable
+private fun WcAppInfoFirstLoadingBlock(modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        WcLoadingAppInfoItem()
+        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+        Row(
+            modifier = Modifier.padding(all = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(24.dp),
+                color = TangemTheme.colors.icon.accent,
+                strokeWidth = 2.dp,
+                strokeCap = StrokeCap.Square,
+            )
+            Text(
+                text = "Connecting...",
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WcAppInfoSecondLoadingBlock(modifier: Modifier = Modifier) {
+    Column(modifier) {
+        Row(modifier = Modifier.padding(all = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                painter = painterResource(R.drawable.ic_wallet_new_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.accent,
+            )
+            Text(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f),
+                text = stringResourceSafe(R.string.wc_common_wallet),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+            )
+            TextShimmer(style = TangemTheme.typography.body1, radius = 8.dp, text = "Wallet 2.0")
+        }
+        HorizontalDivider(thickness = 1.dp, color = TangemTheme.colors.stroke.primary)
+        Row(modifier = Modifier.padding(all = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                modifier = Modifier.size(24.dp),
+                painter = painterResource(R.drawable.ic_network_new_24),
+                contentDescription = null,
+                tint = TangemTheme.colors.icon.accent,
+            )
+            Text(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f),
+                text = stringResourceSafe(R.string.wc_common_networks),
+                style = TangemTheme.typography.body1,
+                color = TangemTheme.colors.text.primary1,
+            )
+            WcAppInfoLoadingNetworkIcons()
+        }
+    }
+}
+
+@Suppress("MagicNumber")
+@Composable
+private fun WcAppInfoLoadingNetworkIcons(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.wrapContentWidth()) {
+        for (index in 0..3) {
+            CircleShimmer(
+                modifier = Modifier
+                    .padding(start = TangemTheme.dimens.spacing16.times(index))
+                    .border(
+                        width = 2.dp,
+                        color = TangemTheme.colors.background.action,
+                        shape = CircleShape,
+                    )
+                    .padding(2.dp)
+                    .clip(CircleShape)
+                    .size(20.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun WcLoadingAppInfoItem(modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.padding(TangemTheme.dimens.spacing12),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+    ) {
+        RectangleShimmer(modifier = Modifier.size(TangemTheme.dimens.size48), radius = 16.dp)
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        ) {
+            TextShimmer(
+                modifier = Modifier
+                    .width(106.dp)
+                    .height(24.dp),
+                style = TangemTheme.typography.h3,
+                radius = 8.dp,
+            )
+            TextShimmer(
+                modifier = Modifier
+                    .width(168.dp)
+                    .height(20.dp),
+                style = TangemTheme.typography.body2,
+                radius = 8.dp,
+            )
+        }
+    }
+}
+// endregion
+
+@Composable
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
+@Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
+private fun WcAppInfoBottomSheetPreview() {
+    TangemThemePreview {
+        WcAppInfoModalBottomSheetLoading(
+            state = WcAppInfoUM.Loading(
+                onDismiss = {},
+                WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {}),
+            ),
+            modifier = Modifier
+                .background(TangemTheme.colors.background.tertiary)
+                .padding(horizontal = TangemTheme.dimens.spacing16),
         )
     }
 }
@@ -396,21 +551,21 @@ private fun WcAppInfoButtons(onDismiss: () -> Unit, onConnect: () -> Unit, modif
 @Composable
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO)
 @Preview(showBackground = true, device = Devices.PIXEL_7_PRO, uiMode = Configuration.UI_MODE_NIGHT_YES)
-private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider::class) state: WcAppInfoUM) {
+private fun WcAppInfoBottomSheetPreview(@PreviewParameter(WcAppInfoStateProvider::class) state: WcAppInfoUM.Content) {
     TangemThemePreview {
         WcAppInfoModalBottomSheet(
-            config = TangemBottomSheetConfig(
-                isShown = true,
-                onDismissRequest = {},
-                content = state,
-            ),
+            state = state,
+            modifier = Modifier
+                .background(TangemTheme.colors.background.tertiary)
+                .padding(horizontal = TangemTheme.dimens.spacing16),
         )
     }
 }
 
 private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppInfoUM>(
     collection = listOf(
-        WcAppInfoUM(
+        WcAppInfoUM.Loading(onDismiss = {}, WcPrimaryButtonConfig(showProgress = false, enabled = false, onClick = {})),
+        WcAppInfoUM.Content(
             appName = "React App",
             appIcon = "",
             isVerified = true,
@@ -427,9 +582,9 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
                 ),
             ),
             onDismiss = {},
-            onConnect = {},
+            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
         ),
-        WcAppInfoUM(
+        WcAppInfoUM.Content(
             appName = "React App",
             appIcon = "",
             isVerified = false,
@@ -439,9 +594,9 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
                 subtitle = resourceReference(R.string.wc_alert_domain_issues_description),
             ),
             walletName = "Tangem 2.0",
-            networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(network = "Solana"),
+            networksInfo = WcNetworksInfo.MissingRequiredNetworkInfo(networks = "Solana"),
             onDismiss = {},
-            onConnect = {},
+            connectButtonConfig = WcPrimaryButtonConfig(showProgress = false, enabled = true, onClick = {}),
         ),
     ),
 )
