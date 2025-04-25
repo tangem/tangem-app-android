@@ -546,6 +546,7 @@
   <string name="nft_receive_unavailable_asset_warning_message">You haven\'t added this network yet. To start receiving NFTs, add it to the main screen!</string>
   <string name="nft_receive_unavailable_asset_warning_title">Network not added</string>
   <string name="nft_receive_unavailable_section_title">Not Added</string>
+  <string name="nft_send">Send NFT</string>
   <string name="nft_traits_title">Traits</string>
   <string name="nft_wallet_count">%1$d NFTs in %2$d collection</string>
   <string name="nft_wallet_receive_nft">Tap here to receive first NFT</string>
@@ -555,6 +556,9 @@
   <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>
   <string name="no_account_send_to_create">To create account send funds to this address</string>
   <string name="no_trustline_xlm_asset">The destination account does not have a trustline for the asset being sent.</string>
+  <string name="notification_referral_promo_button">Join Now</string>
+  <string name="notification_referral_promo_text">Share your code - earn 5 USDT per sale. Your friend gets 10% OFF.</string>
+  <string name="notification_referral_promo_title">Get REWARDS for every friend!</string>
   <string name="onboarding_access_code_feature_1_description">Set up a single access code to protect all your devices.</string>
   <string name="onboarding_access_code_feature_1_title">Protect</string>
   <string name="onboarding_access_code_feature_2_description">Set an individual access code for each card or ring later.</string>
