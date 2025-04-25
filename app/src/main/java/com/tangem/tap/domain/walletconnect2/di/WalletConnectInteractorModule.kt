@@ -86,12 +86,6 @@ internal object WalletConnectModule {
             legacy,
             walletConnectFeatureToggles,
         )
-        val stub = LegacyWalletConnectRepositoryStub()
-        return DefaultLegacyWalletConnectRepositoryFacade(
-            stub,
-            legacy,
-            walletConnectFeatureToggles,
-        )
     }
 
     @Provides
