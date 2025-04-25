@@ -46,9 +46,6 @@ internal interface InnerWalletRouter {
     /** Open stories screen */
     fun openStoriesScreen()
 
-    /** Open save user wallet screen */
-    fun openSaveUserWalletScreen()
-
     /** Is wallet last screen */
     fun isWalletLastScreen(): Boolean
 
