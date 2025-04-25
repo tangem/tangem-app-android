@@ -1,6 +1,5 @@
 package com.tangem.features.walletconnect.connections.ui
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -31,8 +30,7 @@ internal fun WcAppInfoItem(
         AsyncImage(
             modifier = Modifier
                 .size(TangemTheme.dimens.size48)
-                .clip(RoundedCornerShape(TangemTheme.dimens.radius8))
-                .background(Color.Black),
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius8)),
             model = iconUrl,
             contentDescription = title,
         )
