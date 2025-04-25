@@ -20,7 +20,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
 import com.tangem.features.walletconnect.connections.routes.WcAppInfoRoutes
 import com.tangem.features.walletconnect.impl.R
@@ -103,5 +103,5 @@ internal class WcAppInfoContainerComponent(
             WcAppInfoRoutes.SelectWallet -> TODO()
         }
 
-    data class Params(val wcUrl: String, val source: WcPairUseCase.Source, val onDismiss: () -> Unit)
+    data class Params(val wcUrl: String, val source: WcPairRequest.Source, val onDismiss: () -> Unit)
 }
