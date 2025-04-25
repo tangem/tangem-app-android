@@ -30,6 +30,9 @@ dependencies {
     implementation(projects.domain.legacy)
     implementation(projects.libs.blockchainSdk)
 
+    /** Feature Api modules */
+    implementation(projects.features.nft.api)
+
     /** Libs - Other */
     implementation(deps.kotlin.coroutines)
     implementation(deps.arrow.core)
