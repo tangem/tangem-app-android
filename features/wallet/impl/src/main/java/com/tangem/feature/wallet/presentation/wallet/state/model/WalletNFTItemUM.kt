@@ -10,7 +10,9 @@ sealed class WalletNFTItemUM {
 
     data object Loading : WalletNFTItemUM()
 
-    data object Empty : WalletNFTItemUM()
+    data class Empty(
+        val onItemClick: () -> Unit,
+    ) : WalletNFTItemUM()
 
     data object Failed : WalletNFTItemUM()
 
@@ -19,6 +21,7 @@ sealed class WalletNFTItemUM {
         val collectionsCount: Int,
         val assetsCount: Int,
         val isFlickering: Boolean,
+        val onItemClick: () -> Unit,
     ) : WalletNFTItemUM() {
 
         @Immutable
