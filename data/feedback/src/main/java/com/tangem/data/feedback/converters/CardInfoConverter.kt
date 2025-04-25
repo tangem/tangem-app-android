@@ -1,6 +1,7 @@
 package com.tangem.data.feedback.converters
 
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.TapWorkarounds.isVisa
 import com.tangem.domain.common.util.getBackupCardsCount
 import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.models.scan.CardDTO
@@ -29,6 +30,7 @@ internal object CardInfoConverter : Converter<ScanResponse, CardInfo> {
                 },
                 isImported = value.card.wallets.any(CardDTO.Wallet::isImported),
                 isStart2Coin = value.card.isStart2Coin,
+                isVisa = value.card.isVisa,
             )
         }
     }

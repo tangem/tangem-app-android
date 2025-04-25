@@ -1,7 +1,6 @@
 package com.tangem.tap.common.redux.global
 
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.utils.extensions.replaceBy
 import org.rekotlin.Action
 
@@ -12,21 +11,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     val globalState = state.globalState
 
     return when (action) {
-        is GlobalAction.Onboarding.Start -> {
-            val onboardingManager = OnboardingManager(action.scanResponse)
-            globalState.copy(onboardingState = OnboardingState(true, onboardingManager))
-        }
-        is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
-            globalState.copy(onboardingState = OnboardingState(true, null))
-        }
-        is GlobalAction.Onboarding.Stop -> {
-            globalState.copy(onboardingState = OnboardingState(false))
-        }
-        is GlobalAction.Onboarding.ShouldResetCardOnCreate -> {
-            globalState.copy(
-                onboardingState = globalState.onboardingState.copy(shouldResetOnCreate = action.shouldReset),
-            )
-        }
         is GlobalAction.ScanFailsCounter.Increment -> {
             globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
         }

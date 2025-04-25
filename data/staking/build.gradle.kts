@@ -62,4 +62,11 @@ dependencies {
     }
 
     // endregion
+
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
+    testImplementation(tangemDeps.card.core)
+    testImplementation(projects.common.test)
 }

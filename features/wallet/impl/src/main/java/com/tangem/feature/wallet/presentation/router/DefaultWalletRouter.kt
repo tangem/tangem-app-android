@@ -10,11 +10,11 @@ import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
 import com.tangem.features.biometry.BiometryFeatureToggles
-import com.tangem.features.onboarding.v2.OnboardingV2FeatureToggles
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
@@ -25,7 +25,6 @@ internal class DefaultWalletRouter @Inject constructor(
     private val router: AppRouter,
     private val urlOpener: UrlOpener,
     private val reduxStateHolder: ReduxStateHolder,
-    private val onboardingV2FeatureToggles: OnboardingV2FeatureToggles,
     private val biometryFeatureToggles: BiometryFeatureToggles,
 ) : InnerWalletRouter {
 
@@ -49,31 +48,25 @@ internal class DefaultWalletRouter @Inject constructor(
     }
 
     override fun openOnboardingScreen(scanResponse: ScanResponse, continueBackup: Boolean) {
-        if (onboardingV2FeatureToggles.isOnboardingV2Enabled) {
-            router.push(
-                AppRoute.Onboarding(
-                    scanResponse = scanResponse,
-                    mode = if (continueBackup) {
-                        AppRoute.Onboarding.Mode.AddBackupWallet1
-                    } else {
-                        AppRoute.Onboarding.Mode.Onboarding
-                    },
-                ),
-            )
-        } else {
-            router.push(
-                AppRoute.OnboardingWallet(canSkipBackup = false),
-            )
-        }
+        router.push(
+            AppRoute.Onboarding(
+                scanResponse = scanResponse,
+                mode = if (continueBackup) {
+                    AppRoute.Onboarding.Mode.AddBackupWallet1
+                } else {
+                    AppRoute.Onboarding.Mode.Onboarding
+                },
+            ),
+        )
     }
 
-    override fun openOnrampSuccessScreen(externalTxId: String) {
+    override fun openOnrampSuccessScreen(txId: String) {
         // finish current onramp flow and show onramp success screen
         val replaceOnrampScreens = router.stack
             .filterNot { it is AppRoute.Onramp }
             .toMutableList()
 
-        replaceOnrampScreens.add(AppRoute.OnrampSuccess(externalTxId))
+        replaceOnrampScreens.add(AppRoute.OnrampSuccess(txId))
 
         router.replaceAll(*replaceOnrampScreens.toTypedArray())
     }
@@ -116,7 +109,12 @@ internal class DefaultWalletRouter @Inject constructor(
         reduxStateHolder.dispatchDialogShow(StateDialog.ScanFailsDialog(StateDialog.ScanFailsSource.MAIN, onTryAgain))
     }
 
-    override fun openNFTCollectionsScreen(userWalletId: UserWalletId) {
-        router.push(AppRoute.NFTCollections(userWalletId))
+    override fun openNFT(userWallet: UserWallet) {
+        router.push(
+            AppRoute.NFT(
+                userWalletId = userWallet.walletId,
+                walletName = userWallet.name,
+            ),
+        )
     }
 }

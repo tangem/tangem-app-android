@@ -2,6 +2,7 @@ package com.tangem.core.configtoggle.manager
 
 import android.annotation.SuppressLint
 import com.google.common.truth.Truth
+import com.squareup.moshi.Moshi
 import com.tangem.core.configtoggle.feature.impl.DevFeatureTogglesManager
 import com.tangem.core.configtoggle.feature.impl.FeatureTogglesConstants
 import com.tangem.core.configtoggle.storage.ConfigToggle
@@ -12,6 +13,7 @@ import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectSyncOrNull
 import com.tangem.datasource.local.preferences.utils.getSyncOrNull
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -24,7 +26,11 @@ import kotlin.collections.set
 internal class DevTogglesManagerTest {
 
     private val localTogglesStorage = mockk<TogglesStorage>()
-    private val appPreferenceStore = mockk<AppPreferencesStore>(relaxed = true)
+    private val appPreferenceStore = AppPreferencesStore(
+        moshi = Moshi.Builder().build(),
+        dispatchers = TestingCoroutineDispatcherProvider(),
+        preferencesDataStore = mockk(relaxed = true),
+    )
     private val versionProvider = mockk<VersionProvider>()
     private val manager = DevFeatureTogglesManager(
         localTogglesStorage = localTogglesStorage,
