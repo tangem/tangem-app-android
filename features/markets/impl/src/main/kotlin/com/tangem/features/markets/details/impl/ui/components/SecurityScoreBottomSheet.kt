@@ -23,9 +23,9 @@ import androidx.compose.ui.util.fastForEachIndexed
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.components.*
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetTitle
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheetTitle
 import com.tangem.core.ui.components.inputrow.inner.DividerContainer
 import com.tangem.core.ui.decorations.roundedShapeItemDecoration
 import com.tangem.core.ui.extensions.resolveReference
