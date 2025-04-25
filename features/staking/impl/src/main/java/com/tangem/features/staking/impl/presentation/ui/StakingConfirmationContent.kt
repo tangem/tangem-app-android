@@ -71,7 +71,7 @@ internal fun StakingConfirmationContent(
             isClickable = !isTransactionInProgress,
             onClick = clickIntents::openValidators,
         )
-        StakingFeeBlock(feeState = state.feeState, isTransactionSent = isTransactionSent)
+        StakingFeeBlock(feeState = state.feeState)
         NotificationsBlock(notifications = state.notifications)
         Spacer(Modifier)
     }
