@@ -12,6 +12,7 @@ data class NFTAssetUM(
     val media: Media,
     val topInfo: TopInfo,
     val traits: ImmutableList<BlockItem>,
+    val showAllTraitsButton: Boolean,
     val baseInfoItems: ImmutableList<BlockItem>,
 ) {
 
