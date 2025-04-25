@@ -2,6 +2,7 @@ package com.tangem.features.walletconnect.di
 
 import com.tangem.core.decompose.di.ModelComponent
 import com.tangem.core.decompose.model.Model
+import com.tangem.features.walletconnect.connections.model.WcAppInfoModel
 import com.tangem.features.walletconnect.connections.model.WcConnectionsModel
 import dagger.Binds
 import dagger.Module
@@ -17,4 +18,9 @@ internal interface WalletConnectModelModule {
     @IntoMap
     @ClassKey(WcConnectionsModel::class)
     fun bindWcConnectionsModel(model: WcConnectionsModel): Model
+
+    @Binds
+    @IntoMap
+    @ClassKey(WcAppInfoModel::class)
+    fun bindWcAppInfoModel(model: WcAppInfoModel): Model
 }
