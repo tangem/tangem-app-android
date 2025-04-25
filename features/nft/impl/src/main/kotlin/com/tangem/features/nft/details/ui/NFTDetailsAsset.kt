@@ -70,12 +70,16 @@ internal fun NFTDetailsAsset(
                     .padding(top = TangemTheme.dimens.spacing12),
                 items = state.traits,
                 title = resourceReference(R.string.nft_details_traits),
-                action = {
-                    NFTBlocksGroupAction(
-                        text = resourceReference(R.string.common_see_all),
-                        startIcon = { },
-                        onClick = onSeeAllTraitsClick,
-                    )
+                action = if (state.showAllTraitsButton) {
+                    {
+                        NFTBlocksGroupAction(
+                            text = resourceReference(R.string.common_see_all),
+                            startIcon = { },
+                            onClick = onSeeAllTraitsClick,
+                        )
+                    }
+                } else {
+                    null
                 },
             )
             NFTDetailsBlocksGroup(
@@ -162,6 +166,7 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
                     value = "DJ Dragoon",
                 ),
             ),
+            showAllTraitsButton = true,
             baseInfoItems = persistentListOf(
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_standard),
