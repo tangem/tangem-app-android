@@ -254,4 +254,20 @@ sealed class WalletNotification(val config: NotificationConfig) {
             iconResId = R.drawable.ic_error_sync_24,
         ),
     )
+
+    data class ReferralPromo(
+        val onCloseClick: () -> Unit,
+        val onClick: () -> Unit,
+    ) : WalletNotification(
+        config = NotificationConfig(
+            title = resourceReference(R.string.notification_referral_promo_title),
+            subtitle = resourceReference(R.string.notification_referral_promo_text),
+            iconResId = R.drawable.img_referral_promo,
+            onCloseClick = onCloseClick,
+            buttonsState = NotificationConfig.ButtonsState.SecondaryButtonConfig(
+                text = resourceReference(R.string.notification_referral_promo_button),
+                onClick = onClick,
+            ),
+        ),
+    )
 }
