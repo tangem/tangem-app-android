@@ -96,21 +96,33 @@ internal class DefaultNFTRuntimeStore(
 
     private fun NFTCollections.Content.Collections.mergeWithPrices(prices: Map<NFTAsset.Identifier, NFTSalePrice>) =
         copy(
-            collections = this.collections?.map { data ->
-                data.copy(
-                    assets = when (val assets = data.assets) {
+            collections = this.collections
+                ?.map { data ->
+                    val assets = when (val assets = data.assets) {
                         is NFTCollection.Assets.Empty,
                         is NFTCollection.Assets.Loading,
                         is NFTCollection.Assets.Failed,
                         -> assets
                         is NFTCollection.Assets.Value -> assets.copy(
-                            items = assets.items.map { asset ->
-                                asset.mergeWithPrice(prices[asset.id] ?: NFTSalePrice.Empty(asset.id))
-                            },
+                            items = assets.items
+                                .filter { !it.name.isNullOrEmpty() }
+                                .sortedBy { it.name }
+                                .map { asset ->
+                                    asset.mergeWithPrice(prices[asset.id] ?: NFTSalePrice.Empty(asset.id))
+                                },
                         )
-                    },
-                )
-            },
+                    }
+                    val assetsCount = when (assets) {
+                        is NFTCollection.Assets.Value -> assets.items.size
+                        else -> data.count
+                    }
+                    data.copy(
+                        assets = assets,
+                        count = assetsCount,
+                    )
+                }
+                ?.filter { it.count > 0 }
+                ?.sortedBy { it.name },
             source = this.source,
         )
 
