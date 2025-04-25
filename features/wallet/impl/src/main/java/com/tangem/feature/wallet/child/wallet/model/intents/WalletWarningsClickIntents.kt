@@ -14,8 +14,6 @@ import com.tangem.domain.feedback.SendFeedbackEmailUseCase
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.promo.ShouldShowSwapPromoWalletUseCase
-import com.tangem.domain.redux.LegacyAction
-import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.NeverToSuggestRateAppUseCase
 import com.tangem.domain.settings.RemindToRateAppLaterUseCase
 import com.tangem.domain.tokens.FetchTokenListUseCase
@@ -96,7 +94,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private val scanCardToUnlockWalletClickHandler: ScanCardToUnlockWalletClickHandler,
     private val unlockWalletsUseCase: UnlockWalletsUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
-    private val reduxStateHolder: ReduxStateHolder,
     private val dispatchers: CoroutineDispatcherProvider,
     private val shouldShowSwapPromoWalletUseCase: ShouldShowSwapPromoWalletUseCase,
     private val getCardInfoUseCase: GetCardInfoUseCase,
@@ -116,14 +113,6 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
     private fun prepareAndStartOnboardingProcess() {
         modelScope.launch(dispatchers.main) {
             getSelectedUserWallet()?.let {
-                reduxStateHolder.dispatch(
-                    LegacyAction.StartOnboardingProcess(
-                        scanResponse = it.scanResponse,
-                        canSkipBackup = false,
-                    ),
-                )
-
-                // navigation action shouldn't be out of coroutine to avoid race
                 router.openOnboardingScreen(
                     scanResponse = it.scanResponse,
                     continueBackup = true,

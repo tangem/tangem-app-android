@@ -6,27 +6,33 @@ import com.reown.android.CoreClient
 import com.reown.android.relay.ConnectionType
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
-import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
+import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcSdkObserver
+import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 internal class DefaultWcInitializeUseCase(
     private val application: Application,
     private val sessionsManager: DefaultWcSessionsManager,
     private val networkService: DefaultWcRequestService,
-    private val wcPairFlow: DefaultWcPairUseCase,
+    private val pairSdkDelegate: WcPairSdkDelegate,
+    private val environmentConfigStorage: EnvironmentConfigStorage,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : WcInitializeUseCase {
 
     private val wcSdkObservers = mutableSetOf<WcSdkObserver>(
         sessionsManager,
         networkService,
-        wcPairFlow,
+        pairSdkDelegate,
     )
 
-    override fun init(projectId: String) {
+    override suspend fun init() = withContext(dispatchers.io) {
+        val projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId
         val relayUrl = "relay.walletconnect.com"
         val serverUrl = "wss://$relayUrl?projectId=$projectId"
         val connectionType = ConnectionType.AUTOMATIC
