@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 internal sealed interface NFTDetailsBottomSheetConfig {
     @Serializable
     data class Info(
+        val title: TextReference,
         val text: TextReference,
     ) : NFTDetailsBottomSheetConfig
 }
