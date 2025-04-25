@@ -37,7 +37,7 @@ import com.tangem.features.send.v2.common.PredefinedValues
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
