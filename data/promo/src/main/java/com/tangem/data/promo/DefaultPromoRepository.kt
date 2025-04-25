@@ -14,9 +14,11 @@ import com.tangem.domain.promo.PromoRepository
 import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
 import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -26,6 +28,7 @@ internal class DefaultPromoRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val promoStoriesStore: PromoStoriesStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val referralRepository: ReferralRepository,
 ) : PromoRepository {
 
     private val storyContentConverter = StoryContentResponseConverter()
@@ -34,7 +37,13 @@ internal class DefaultPromoRepository(
         return appPreferencesStore.get(
             key = PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
             default = true,
-        )
+        ).map { shouldShow ->
+            if (promoId == PromoId.Referral) {
+                !referralRepository.isReferralParticipant(userWalletId) && shouldShow
+            } else {
+                shouldShow
+            }
+        }
     }
 
     override fun isReadyToShowTokenPromo(promoId: PromoId): Flow<Boolean> {
