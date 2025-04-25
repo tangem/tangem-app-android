@@ -4,11 +4,12 @@ import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.staking.fetcher.YieldBalanceFetcherImplementor
 import com.tangem.data.staking.store.YieldsBalancesStore
 import com.tangem.data.staking.utils.StakingIdFactory
+import com.tangem.data.staking.utils.YieldBalanceRequestBodyFactory
 import com.tangem.datasource.api.stakekit.StakeKitApi
-import com.tangem.datasource.api.stakekit.models.request.YieldBalanceRequestBody
 import com.tangem.datasource.api.stakekit.models.response.model.YieldBalanceWrapperDTO
 import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.StakingID
+import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -42,23 +43,13 @@ internal class SingleYieldBalanceFetcherImplementor(
         )
     }
 
-    override suspend fun fetch(
-        params: YieldBalanceFetcherParams.Single,
-        stakingIds: Set<StakingID>,
-        requests: List<YieldBalanceRequestBody>,
-    ) {
-        fetchInternal(
-            params = params,
-            stakingId = stakingIds.first(),
-            request = requests.first(),
-        )
+    override suspend fun fetch(params: YieldBalanceFetcherParams.Single, stakingIds: Set<StakingID>) {
+        fetchInternal(userWalletId = params.userWalletId, stakingId = stakingIds.first())
     }
 
-    private suspend fun fetchInternal(
-        params: YieldBalanceFetcherParams.Single,
-        stakingId: StakingID,
-        request: YieldBalanceRequestBody,
-    ) {
+    private suspend fun fetchInternal(userWalletId: UserWalletId, stakingId: StakingID) {
+        val request = YieldBalanceRequestBodyFactory.create(stakingId)
+
         safeApiCall(
             call = {
                 val result = withContext(dispatchers.io) {
@@ -69,7 +60,7 @@ internal class SingleYieldBalanceFetcherImplementor(
                 }
 
                 yieldsBalancesStore.storeActual(
-                    userWalletId = params.userWalletId,
+                    userWalletId = userWalletId,
                     values = setOf(
                         YieldBalanceWrapperDTO(
                             balances = result,
@@ -80,9 +71,9 @@ internal class SingleYieldBalanceFetcherImplementor(
                 )
             },
             onError = {
-                Timber.e(it, "Unable to fetch yield balances $params")
+                Timber.e(it, "Unable to fetch yield balances $userWalletId")
 
-                yieldsBalancesStore.storeError(userWalletId = params.userWalletId, stakingIds = setOf(stakingId))
+                yieldsBalancesStore.storeError(userWalletId = userWalletId, stakingIds = setOf(stakingId))
 
                 throw it
             },
