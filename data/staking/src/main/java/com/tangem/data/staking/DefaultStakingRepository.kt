@@ -24,6 +24,9 @@ import com.tangem.data.staking.converters.transaction.GasEstimateConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionStatusConverter
 import com.tangem.data.staking.converters.transaction.StakingTransactionTypeConverter
+import com.tangem.data.staking.store.YieldsBalancesStore
+import com.tangem.data.staking.utils.StakingIdFactory
+import com.tangem.data.staking.utils.StakingIdFactory.Companion.integrationIdMap
 import com.tangem.datasource.api.common.response.ApiResponse
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.stakekit.StakeKitApi
@@ -64,7 +67,6 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
@@ -75,11 +77,13 @@ internal class DefaultStakingRepository(
     private val stakeKitApi: StakeKitApi,
     private val stakingYieldsStore: StakingYieldsStore,
     private val stakingBalanceStore: StakingBalanceStore,
+    private val stakingBalanceStoreV2: YieldsBalancesStore,
     private val cacheRegistry: CacheRegistry,
     private val dispatchers: CoroutineDispatcherProvider,
     private val walletManagersFacade: WalletManagersFacade,
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val stakingFeatureToggles: StakingFeatureToggles,
+    private val stakingIdFactory: StakingIdFactory,
     moshi: Moshi,
 ) : StakingRepository {
 
@@ -428,7 +432,7 @@ internal class DefaultStakingRepository(
         }
     }.cancellable()
 
-    override suspend fun getSingleYieldBalanceSync(
+    override suspend fun getSingleYieldBalanceSyncLegacy(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
     ): YieldBalance = withContext(dispatchers.io) {
@@ -444,6 +448,20 @@ internal class DefaultStakingRepository(
             stakingID = StakingBalanceStore.StakingID(integrationId = integrationId, address = address),
         )
             ?: YieldBalance.Error(integrationId, address)
+    }
+
+    override suspend fun getSingleYieldBalanceSync(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): YieldBalance {
+        val stakingId = stakingIdFactory.createForDefault(
+            userWalletId = userWalletId,
+            currencyId = cryptoCurrency.id,
+            network = cryptoCurrency.network,
+        ) ?: error("Could not create stakingId")
+
+        return stakingBalanceStoreV2.getSyncOrNull(userWalletId = userWalletId, stakingId = stakingId)
+            ?: YieldBalance.Error(integrationId = stakingId.integrationId, address = stakingId.address)
     }
 
     @Suppress("LongMethod")
@@ -558,26 +576,7 @@ internal class DefaultStakingRepository(
         }
     }
 
-    override fun getMultiYieldBalanceUpdatesLegacy(
-        userWalletId: UserWalletId,
-        cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList> = channelFlow {
-        stakingBalanceStore.get(
-            userWalletId = userWalletId,
-            stakingIds = cryptoCurrencies.mapStakingId(userWalletId),
-        )
-            .onEach {
-                val balances = YieldBalanceListConverter.convert(it)
-                send(balances)
-            }
-            .launchIn(scope = this + dispatchers.io)
-
-        withContext(dispatchers.io) {
-            fetchMultiYieldBalance(userWalletId, cryptoCurrencies, refresh = false)
-        }
-    }
-
-    override suspend fun getMultiYieldBalanceSync(
+    override suspend fun getMultiYieldBalanceSyncLegacy(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): YieldBalanceList = withContext(dispatchers.io) {
@@ -585,6 +584,20 @@ internal class DefaultStakingRepository(
 
         stakingBalanceStore.getSyncOrNull(userWalletId, cryptoCurrencies.mapStakingId(userWalletId))
             ?.let(YieldBalanceListConverter::convert)
+            ?: YieldBalanceList.Error
+    }
+
+    override suspend fun getMultiYieldBalanceSync(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): YieldBalanceList {
+        val stakingIds = cryptoCurrencies.flatMap {
+            stakingIdFactory.create(userWalletId = userWalletId, currencyId = it.id, network = it.network)
+        }
+
+        return stakingBalanceStoreV2.getAllSyncOrNull(userWalletId)
+            ?.filter { it.getStakingId() in stakingIds }
+            ?.let { YieldBalanceListConverter.convert(value = it.toSet()) }
             ?: YieldBalanceList.Error
     }
 
@@ -729,45 +742,13 @@ internal class DefaultStakingRepository(
     }
 
     @Suppress("unused")
-    private companion object {
-        const val YIELDS_STORE_KEY = "yields"
+    companion object {
+        private const val YIELDS_STORE_KEY = "yields"
 
-        const val TON_INTEGRATION_ID = "ton-ton-chorus-one-pools-staking"
-        const val SOLANA_INTEGRATION_ID = "solana-sol-native-multivalidator-staking"
-        const val COSMOS_INTEGRATION_ID = "cosmos-atom-native-staking"
-        const val ETHEREUM_POLYGON_INTEGRATION_ID = "ethereum-matic-native-staking"
-        const val BINANCE_INTEGRATION_ID = "bsc-bnb-native-staking"
-        const val POLKADOT_INTEGRATION_ID = "polkadot-dot-validator-staking"
-        const val AVALANCHE_INTEGRATION_ID = "avalanche-avax-native-staking"
-        const val TRON_INTEGRATION_ID = "tron-trx-native-staking"
-        const val CRONOS_INTEGRATION_ID = "cronos-cro-native-staking"
-        const val KAVA_INTEGRATION_ID = "kava-kava-native-staking"
-        const val NEAR_INTEGRATION_ID = "near-near-native-staking"
-        const val TEZOS_INTEGRATION_ID = "tezos-xtz-native-staking"
-        const val CARDANO_INTEGRATION_ID = "cardano-ada-native-staking"
+        private const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
 
-        const val ETHEREUM_POLYGON_APPROVE_SPENDER = "0x5e3Ef299fDDf15eAa0432E6e66473ace8c13D908"
+        internal val YIELDS_WATITING_TIMEOUT = 15.seconds
 
-        val YIELDS_WATITING_TIMEOUT = 15.seconds
-
-        val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
-
-        // uncomment items as implementation is ready
-        val integrationIdMap = mapOf(
-            Blockchain.TON.run { id + toCoinId() } to TON_INTEGRATION_ID,
-            Blockchain.Solana.run { id + toCoinId() } to SOLANA_INTEGRATION_ID,
-            Blockchain.Cosmos.run { id + toCoinId() } to COSMOS_INTEGRATION_ID,
-            Blockchain.Tron.run { id + toCoinId() } to TRON_INTEGRATION_ID,
-            Blockchain.Ethereum.id + Blockchain.Polygon.toMigratedCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
-            // Blockchain.Ethereum.id + Blockchain.Polygon.toCoinId() to ETHEREUM_POLYGON_INTEGRATION_ID,
-            Blockchain.BSC.run { id + toCoinId() } to BINANCE_INTEGRATION_ID,
-            // Blockchain.Polkadot.run { id + toCoinId() } to POLKADOT_INTEGRATION_ID,
-            // Blockchain.Avalanche.run { id + toCoinId() } to AVALANCHE_INTEGRATION_ID,
-            // Blockchain.Cronos.run { id + toCoinId() } to CRONOS_INTEGRATION_ID,
-            // Blockchain.Kava.run { id + toCoinId() } to KAVA_INTEGRATION_ID,
-            // Blockchain.Near.run { id + toCoinId() } to NEAR_INTEGRATION_ID,
-            // Blockchain.Tezos.run { id + toCoinId() } to TEZOS_INTEGRATION_ID,
-            Blockchain.Cardano.run { id + toCoinId() } to CARDANO_INTEGRATION_ID,
-        )
+        private val INVALID_BATCHES_FOR_SOLANA = listOf("AC01", "CB79")
     }
 }
