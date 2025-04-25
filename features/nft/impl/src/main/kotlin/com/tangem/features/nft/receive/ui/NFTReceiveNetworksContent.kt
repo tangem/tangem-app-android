@@ -1,19 +1,29 @@
 package com.tangem.features.nft.receive.ui
 
 import android.content.res.Configuration
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.extensions.stringResourceSafe
+import com.tangem.core.ui.components.currency.icon.CurrencyIconState
+import com.tangem.core.ui.components.rows.ChainRow
+import com.tangem.core.ui.components.rows.model.ChainRowUM
+import com.tangem.core.ui.extensions.TextReference
+import com.tangem.core.ui.extensions.resolveReference
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
 import com.tangem.features.nft.impl.R
@@ -27,40 +37,86 @@ internal fun NFTReceiveNetworksContent(state: NFTReceiveUM.Networks.Content, mod
 
     LazyColumn(
         modifier = modifier
-            .fillMaxWidth()
-            .clip(TangemTheme.shapes.roundedCornersXMedium)
-            .background(TangemTheme.colors.background.primary)
-            .animateContentSize(),
+            .fillMaxSize()
+            .padding(
+                vertical = TangemTheme.dimens.spacing8,
+            ),
         state = listState,
+        contentPadding = PaddingValues(
+            horizontal = TangemTheme.dimens.spacing16,
+        ),
     ) {
-        item(
-            key = "title",
-        ) {
-            Title()
+        if (state.availableItems.isNotEmpty()) {
+            item(
+                key = "available_title",
+            ) {
+                Title(resourceReference(R.string.nft_receive_available_section_title))
+            }
+            networks(state.availableItems)
         }
-        items(
-            items = state.items,
-            key = NFTNetworkUM::id,
-        ) { network ->
-            NFTNetwork(
-                state = network,
-                modifier = Modifier.animateItem(),
-            )
+        if (state.unavailableItems.isNotEmpty()) {
+            item(
+                key = "not_available_title",
+            ) {
+                Title(resourceReference(R.string.nft_receive_unavailable_section_title))
+            }
+            networks(state.unavailableItems)
         }
     }
 }
 
+private fun LazyListScope.networks(items: List<NFTNetworkUM>) {
+    itemsIndexed(
+        items = items,
+        key = { _, item -> item.id },
+    ) { index, network ->
+        val isLastItem = index == items.size - 1
+        ChainRow(
+            modifier = Modifier
+                .composed {
+                    if (isLastItem) {
+                        padding(
+                            bottom = TangemTheme.dimens.spacing8,
+                        )
+                            .clip(
+                                RoundedCornerShape(
+                                    bottomStart = TangemTheme.dimens.radius16,
+                                    bottomEnd = TangemTheme.dimens.radius16,
+                                ),
+                            )
+                    } else {
+                        this
+                    }
+                }
+                .background(TangemTheme.colors.background.primary)
+                .clickable { network.onItemClick() },
+            model = network.chainRowUM,
+        )
+    }
+}
+
 @Composable
-private fun Title(modifier: Modifier = Modifier) {
+private fun Title(text: TextReference, modifier: Modifier = Modifier) {
     Text(
         modifier = modifier
+            .fillMaxWidth()
+            .padding(
+                top = TangemTheme.dimens.spacing8,
+            )
+            .background(
+                color = TangemTheme.colors.background.primary,
+                shape = RoundedCornerShape(
+                    topStart = TangemTheme.dimens.radius16,
+                    topEnd = TangemTheme.dimens.radius16,
+                ),
+            )
             .padding(
                 start = TangemTheme.dimens.spacing12,
                 top = TangemTheme.dimens.spacing12,
                 end = TangemTheme.dimens.spacing12,
                 bottom = TangemTheme.dimens.spacing4,
             ),
-        text = stringResourceSafe(R.string.nft_receive_choose_network),
+        text = text.resolveReference(),
         style = TangemTheme.typography.subtitle2,
         color = TangemTheme.colors.text.tertiary,
     )
@@ -74,32 +130,84 @@ private fun Preview_NFTReceiveNetworksUM() {
     TangemThemePreview {
         NFTReceiveNetworksContent(
             state = NFTReceiveUM.Networks.Content(
-                items = persistentListOf(
+                availableItems = persistentListOf(
                     NFTNetworkUM(
                         id = "item1",
-                        name = "Ethereum",
-                        iconRes = R.drawable.img_eth_22,
+                        chainRowUM = ChainRowUM(
+                            name = "Ethereum",
+                            type = "",
+                            icon = CurrencyIconState.CoinIcon(
+                                url = null,
+                                fallbackResId = R.drawable.img_eth_22,
+                                isGrayscale = false,
+                                showCustomBadge = false,
+                            ),
+                            showCustom = false,
+                        ),
                         onItemClick = { },
                     ),
                     NFTNetworkUM(
                         id = "item2",
-                        name = "Polygon",
-                        iconRes = R.drawable.img_polygon_22,
+                        chainRowUM = ChainRowUM(
+                            name = "Polygon",
+                            type = "",
+                            icon = CurrencyIconState.CoinIcon(
+                                url = null,
+                                fallbackResId = R.drawable.img_polygon_22,
+                                isGrayscale = false,
+                                showCustomBadge = false,
+                            ),
+                            showCustom = false,
+                        ),
                         onItemClick = { },
                     ),
                     NFTNetworkUM(
                         id = "item3",
-                        name = "BSC",
-                        iconRes = R.drawable.img_bsc_22,
+                        chainRowUM = ChainRowUM(
+                            name = "BSC",
+                            type = "",
+                            icon = CurrencyIconState.CoinIcon(
+                                url = null,
+                                fallbackResId = R.drawable.img_bsc_22,
+                                isGrayscale = false,
+                                showCustomBadge = false,
+                            ),
+                            showCustom = false,
+                        ),
                         onItemClick = { },
                     ),
                     NFTNetworkUM(
                         id = "item4",
-                        name = "Avalanche",
-                        iconRes = R.drawable.img_avalanche_22,
+                        chainRowUM = ChainRowUM(
+                            name = "Avalanche",
+                            type = "",
+                            icon = CurrencyIconState.CoinIcon(
+                                url = null,
+                                fallbackResId = R.drawable.img_avalanche_22,
+                                isGrayscale = false,
+                                showCustomBadge = false,
+                            ),
+                            showCustom = false,
+                        ),
+                        onItemClick = { },
+                    ),
+                    NFTNetworkUM(
+                        id = "item5",
+                        chainRowUM = ChainRowUM(
+                            name = "Avalanche",
+                            type = "",
+                            icon = CurrencyIconState.CoinIcon(
+                                url = null,
+                                fallbackResId = R.drawable.img_avalanche_22,
+                                isGrayscale = false,
+                                showCustomBadge = true,
+                            ),
+                            showCustom = true,
+                        ),
                         onItemClick = { },
                     ),
                 ),
+                unavailableItems = persistentListOf(),
             ),
         )
     }
