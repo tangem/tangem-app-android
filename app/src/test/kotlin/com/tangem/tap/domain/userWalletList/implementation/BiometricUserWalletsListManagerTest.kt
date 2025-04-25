@@ -1,10 +1,10 @@
 package com.tangem.tap.domain.userWalletList.implementation
 
 import com.google.common.truth.Truth
+import com.tangem.common.test.domain.card.MockScanResponseFactory
 import com.tangem.domain.common.configs.GenericCardConfig
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
-import com.tangem.tap.domain.card.ScanResponseMockFactory
 import io.mockk.mockk
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -198,7 +198,7 @@ internal class BiometricUserWalletsListManagerTest(private val model: Model) {
                 cardsInWallet = emptySet(),
                 isMultiCurrency = true,
                 hasBackupError = false,
-                scanResponse = ScanResponseMockFactory.create(
+                scanResponse = MockScanResponseFactory.create(
                     cardConfig = GenericCardConfig(maxWalletCount = 1),
                     derivedKeys = emptyMap(),
                 ).let {
