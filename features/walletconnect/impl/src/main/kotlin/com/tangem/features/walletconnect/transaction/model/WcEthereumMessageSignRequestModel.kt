@@ -39,7 +39,7 @@ internal class WcEthereumMessageSignRequestModel @Inject constructor(
     private val params = paramsContainer.require<WcEthereumMessageSignRequestComponent.Params>()
 
     init {
-        modelScope.launch(dispatchers.io) {
+        modelScope.launch {
             val useCase: WcEthMessageSignUseCase = useCaseFactory.createUseCase(params.rawRequest)
             useCase.invoke()
                 .onEach { signState ->

@@ -1,4 +1,4 @@
-package com.tangem.features.walletconnect.connections.components
+package com.tangem.features.walletconnect.connections.routing
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -15,9 +15,7 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
-import com.tangem.features.walletconnect.connections.model.WcRoutingModel
 import com.tangem.features.walletconnect.connections.routes.WcInnerRoute
-import com.tangem.features.walletconnect.connections.routes.WcRouter
 import com.tangem.features.walletconnect.transaction.components.WcEthereumMessageSignRequestComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -32,7 +30,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
     private val model: WcRoutingModel = getOrCreateModel()
     private val innerRouter = WcRouter(model.navigation)
 
-    override val slot: Value<ChildSlot<WcInnerRoute, ComposableContentComponent>> = childSlot(
+    private val slot: Value<ChildSlot<WcInnerRoute, ComposableContentComponent>> = childSlot(
         source = model.navigation,
         serializer = WcInnerRoute.serializer(),
         childFactory = ::childFactory,

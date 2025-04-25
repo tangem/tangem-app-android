@@ -13,6 +13,8 @@ import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -25,6 +27,8 @@ internal class DefaultWcInitializeUseCase(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : WcInitializeUseCase {
 
+    private val isInit = MutableStateFlow(false)
+
     private val wcSdkObservers = mutableSetOf<WcSdkObserver>(
         sessionsManager,
         networkService,
@@ -32,7 +36,10 @@ internal class DefaultWcInitializeUseCase(
     )
 
     override suspend fun init() = withContext(dispatchers.io) {
-        val projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId
+        isInit.value = true
+        val projectId = environmentConfigStorage.getConfig()
+            .first { it.walletConnectProjectId.isNotEmpty() }
+            .walletConnectProjectId
         val relayUrl = "relay.walletconnect.com"
         val serverUrl = "wss://$relayUrl?projectId=$projectId"
         val connectionType = ConnectionType.AUTOMATIC
