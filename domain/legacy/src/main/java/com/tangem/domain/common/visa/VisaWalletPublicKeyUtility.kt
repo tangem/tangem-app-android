@@ -57,7 +57,7 @@ object VisaWalletPublicKeyUtility {
         either {
             val address = generateAddressOnSecp256k1(publicKey).bind()
 
-            if (address.value != targetAddress) {
+            if (address.value.lowercase() != targetAddress.lowercase()) {
                 raise(VisaActivationError.AddressNotMatched)
             }
         }

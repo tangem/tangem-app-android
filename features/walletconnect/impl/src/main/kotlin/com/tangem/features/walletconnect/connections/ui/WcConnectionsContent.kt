@@ -259,12 +259,10 @@ private fun ConnectionsTopBar(
                 modifier = Modifier.background(TangemTheme.colors.background.primary),
                 onDismissRequest = { showDropdownMenu = false },
                 content = {
-                    config.endActions.fastForEach {
-                        TangemDropdownItem(
-                            item = it,
-                            dismissParent = { showDropdownMenu = false },
-                        )
-                    }
+                    TangemDropdownItem(
+                        item = config.disconnectAllItem,
+                        dismissParent = { showDropdownMenu = false },
+                    )
                 },
             )
         },

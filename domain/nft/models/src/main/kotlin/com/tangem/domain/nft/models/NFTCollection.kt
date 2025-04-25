@@ -41,6 +41,9 @@ data class NFTCollection(
         data class TON(val contractAddress: String?) : Identifier()
 
         @Serializable
+        data class Solana(val collection: String?) : Identifier()
+
+        @Serializable
         data object Unknown : Identifier()
     }
 }

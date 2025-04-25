@@ -14,9 +14,17 @@ import com.tangem.domain.networks.multi.MultiNetworkStatusFetcher
 import com.tangem.domain.networks.multi.MultiNetworkStatusSupplier
 import com.tangem.domain.networks.single.SingleNetworkStatusProducer
 import com.tangem.domain.networks.single.SingleNetworkStatusSupplier
+import com.tangem.domain.quotes.QuotesRepositoryV2
+import com.tangem.domain.quotes.multi.MultiQuoteFetcher
+import com.tangem.domain.quotes.single.SingleQuoteProducer
+import com.tangem.domain.quotes.single.SingleQuoteSupplier
+import com.tangem.domain.staking.fetcher.YieldBalanceFetcherParams
 import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceList
+import com.tangem.domain.staking.multi.MultiYieldBalanceFetcher
 import com.tangem.domain.staking.repositories.StakingRepository
+import com.tangem.domain.staking.single.SingleYieldBalanceProducer
+import com.tangem.domain.staking.single.SingleYieldBalanceSupplier
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.error.TokenListError
 import com.tangem.domain.tokens.model.*
@@ -34,20 +42,28 @@ import kotlinx.coroutines.flow.*
 class CachedCurrenciesStatusesOperations(
     private val currenciesRepository: CurrenciesRepository,
     private val quotesRepository: QuotesRepository,
+    quotesRepositoryV2: QuotesRepositoryV2,
     private val networksRepository: NetworksRepository,
     private val stakingRepository: StakingRepository,
     private val singleNetworkStatusSupplier: SingleNetworkStatusSupplier,
     multiNetworkStatusSupplier: MultiNetworkStatusSupplier,
     private val multiNetworkStatusFetcher: MultiNetworkStatusFetcher,
+    private val multiQuoteFetcher: MultiQuoteFetcher,
+    private val singleQuoteSupplier: SingleQuoteSupplier,
+    private val singleYieldBalanceSupplier: SingleYieldBalanceSupplier,
+    private val multiYieldBalanceFetcher: MultiYieldBalanceFetcher,
     private val tokensFeatureToggles: TokensFeatureToggles,
 ) : BaseCurrenciesStatusesOperations,
     BaseCurrencyStatusOperations(
         currenciesRepository = currenciesRepository,
         quotesRepository = quotesRepository,
+        quotesRepositoryV2 = quotesRepositoryV2,
         networksRepository = networksRepository,
         stakingRepository = stakingRepository,
         multiNetworkStatusSupplier = multiNetworkStatusSupplier,
         singleNetworkStatusSupplier = singleNetworkStatusSupplier,
+        singleQuoteSupplier = singleQuoteSupplier,
+        singleYieldBalanceSupplier = singleYieldBalanceSupplier,
         tokensFeatureToggles = tokensFeatureToggles,
     ) {
 
@@ -178,9 +194,27 @@ class CachedCurrenciesStatusesOperations(
                 },
                 async {
                     val rawCurrenciesIds = currenciesIds.mapNotNullTo(mutableSetOf()) { it.rawCurrencyId }
-                    quotesRepository.fetchQuotes(rawCurrenciesIds)
+
+                    if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+                        multiQuoteFetcher(
+                            params = MultiQuoteFetcher.Params(currenciesIds = rawCurrenciesIds, appCurrencyId = null),
+                        )
+                    } else {
+                        quotesRepository.fetchQuotes(rawCurrenciesIds)
+                    }
                 },
-                async { stakingRepository.fetchMultiYieldBalance(userWalletId, currencies) },
+                async {
+                    if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
+                        multiYieldBalanceFetcher(
+                            params = YieldBalanceFetcherParams.Multi(
+                                userWalletId = userWalletId,
+                                currencyIdWithNetworkMap = currencies.associateTo(hashMapOf()) { it.id to it.network },
+                            ),
+                        )
+                    } else {
+                        stakingRepository.fetchMultiYieldBalance(userWalletId, currencies)
+                    }
+                },
             )
         }
             .map { }
@@ -249,27 +283,44 @@ class CachedCurrenciesStatusesOperations(
     }
 
     private fun getQuotes(tokensIds: NonEmptySet<CryptoCurrency.ID>): Flow<Either<TokenListError, Set<Quote>>> {
-        return quotesRepository.getQuotesUpdates(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
-            .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
-            .retryWhen { cause, _ ->
-                emit(TokenListError.DataError(cause).left())
-                // adding delay before retry to avoid spam when flow restarted
-                delay(RETRY_DELAY)
-                true
-            }
-            .distinctUntilChanged()
+        return if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+            getQuotesUpdates(
+                rawCurrencyIds = tokensIds.mapNotNullTo(
+                    destination = hashSetOf(),
+                    transform = CryptoCurrency.ID::rawCurrencyId,
+                ),
+            )
+        } else {
+            quotesRepository.getQuotesUpdates(tokensIds.mapNotNull { it.rawCurrencyId }.toSet())
+                .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
+                .retryWhen { cause, _ ->
+                    emit(TokenListError.DataError(cause).left())
+                    // adding delay before retry to avoid spam when flow restarted
+                    delay(RETRY_DELAY)
+                    true
+                }
+                .distinctUntilChanged()
+        }
     }
 
     override fun getQuotes(id: CryptoCurrency.RawID): Flow<Either<Error, Set<Quote>>> {
-        return quotesRepository.getQuotesUpdates(setOf(id))
-            .map<Set<Quote>, Either<Error, Set<Quote>>> { it.right() }
-            .retryWhen { cause, _ ->
-                emit(Error.DataError(cause).left())
-                // adding delay before retry to avoid spam when flow restarted
-                delay(RETRY_DELAY)
-                true
-            }
-            .distinctUntilChanged()
+        return if (tokensFeatureToggles.isQuotesLoadingRefactoringEnabled) {
+            singleQuoteSupplier(
+                params = SingleQuoteProducer.Params(rawCurrencyId = id),
+            )
+                .map<Quote, Either<Error, Set<Quote>>> { setOf(it).right() }
+                .distinctUntilChanged()
+        } else {
+            quotesRepository.getQuotesUpdates(setOf(id))
+                .map<Set<Quote>, Either<Error, Set<Quote>>> { it.right() }
+                .retryWhen { cause, _ ->
+                    emit(Error.DataError(cause).left())
+                    // adding delay before retry to avoid spam when flow restarted
+                    delay(RETRY_DELAY)
+                    true
+                }
+                .distinctUntilChanged()
+        }
     }
 
     override fun getNetworksStatuses(
@@ -320,15 +371,19 @@ class CachedCurrenciesStatusesOperations(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
     ): EitherFlow<TokenListError, YieldBalanceList> {
-        return stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
-            .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
-            .retryWhen { cause, _ ->
-                emit(TokenListError.DataError(cause).left())
-                // adding delay before retry to avoid spam when flow restarted
-                delay(RETRY_DELAY)
-                true
-            }
-            .distinctUntilChanged()
+        return if (tokensFeatureToggles.isStakingLoadingRefactoringEnabled) {
+            getYieldsBalancesUpdates(userWalletId, cryptoCurrencies)
+        } else {
+            stakingRepository.getMultiYieldBalanceUpdates(userWalletId, cryptoCurrencies)
+                .map<YieldBalanceList, Either<TokenListError, YieldBalanceList>> { it.right() }
+                .retryWhen { cause, _ ->
+                    emit(TokenListError.DataError(cause).left())
+                    // adding delay before retry to avoid spam when flow restarted
+                    delay(RETRY_DELAY)
+                    true
+                }
+                .distinctUntilChanged()
+        }
     }
 
     // temporary code because token list is built using networks list
@@ -360,6 +415,77 @@ class CachedCurrenciesStatusesOperations(
         }
             .debounce(timeoutMillis = 500)
             .map<Set<NetworkStatus>, Either<TokenListError, Set<NetworkStatus>>> { it.right() }
+            .distinctUntilChanged()
+    }
+
+    // temporary code because token list is built using networks list
+    private fun getQuotesUpdates(rawCurrencyIds: Set<CryptoCurrency.RawID>): EitherFlow<TokenListError, Set<Quote>> {
+        return channelFlow {
+            val state = MutableStateFlow(emptySet<Quote>())
+
+            rawCurrencyIds.onEach {
+                launch {
+                    singleQuoteSupplier(
+                        params = SingleQuoteProducer.Params(rawCurrencyId = it),
+                    )
+                        .onEach { quote ->
+                            state.update { loadedStatuses ->
+                                loadedStatuses.addOrReplace(quote) { it.rawCurrencyId == quote.rawCurrencyId }
+                            }
+                        }
+                        .launchIn(scope = this)
+                }
+            }
+
+            state
+                .onEach(::send)
+                .launchIn(scope = this)
+        }
+            .map<Set<Quote>, Either<TokenListError, Set<Quote>>> { it.right() }
+            .distinctUntilChanged()
+    }
+
+    // temporary code because token list is built using networks list
+    private fun getYieldsBalancesUpdates(
+        userWalletId: UserWalletId,
+        cryptoCurrencies: List<CryptoCurrency>,
+    ): EitherFlow<TokenListError, YieldBalanceList> {
+        return channelFlow {
+            val state = MutableStateFlow(emptyList<YieldBalance>())
+
+            cryptoCurrencies.onEach {
+                launch {
+                    singleYieldBalanceSupplier(
+                        params = SingleYieldBalanceProducer.Params(
+                            userWalletId = userWalletId,
+                            currencyId = it.id,
+                            network = it.network,
+                        ),
+                    )
+                        .onEach { balance ->
+                            state.update { loadedBalances ->
+                                loadedBalances.addOrReplace(balance) {
+                                    it.integrationId == balance.integrationId && it.address == balance.address
+                                }
+                            }
+                        }
+                        .launchIn(scope = this)
+                }
+            }
+
+            state
+                .onEach(::send)
+                .launchIn(scope = this)
+        }
+            .map<List<YieldBalance>, Either<TokenListError, YieldBalanceList>> { balances ->
+                val yieldBalanceList = if (balances.isEmpty()) {
+                    YieldBalanceList.Empty
+                } else {
+                    YieldBalanceList.Data(balances)
+                }
+
+                yieldBalanceList.right()
+            }
             .distinctUntilChanged()
     }
 
