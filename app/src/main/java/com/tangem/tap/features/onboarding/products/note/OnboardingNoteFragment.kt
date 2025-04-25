@@ -26,9 +26,7 @@ import com.tangem.tap.store
 import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.wallet.R
 
-/**
-[REDACTED_AUTHOR]
- */
+@Deprecated("Use OnboardingNoteComponent")
 class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
     private var previousStep: OnboardingNoteStep = OnboardingNoteStep.None
