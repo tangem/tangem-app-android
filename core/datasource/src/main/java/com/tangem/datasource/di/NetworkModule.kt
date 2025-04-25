@@ -2,6 +2,7 @@ package com.tangem.datasource.di
 
 import android.content.Context
 import com.squareup.moshi.Moshi
+import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.BuildConfig
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
@@ -61,6 +62,7 @@ internal object NetworkModule {
     fun provideExpressApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         apiConfigsManager: ApiConfigsManager,
         appLogsStore: AppLogsStore,
     ): TangemExpressApi {
@@ -69,6 +71,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
             clientBuilder = {
                 addInterceptor(
                     NetworkLogsSaveInterceptor(appLogsStore),
@@ -83,6 +86,7 @@ internal object NetworkModule {
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         apiConfigsManager: ApiConfigsManager,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         appLogsStore: AppLogsStore,
     ): StakeKitApi {
         return createApi(
@@ -90,6 +94,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
             timeouts = Timeouts(
                 callTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
                 connectTimeoutSeconds = STAKE_KIT_API_TIMEOUT_SECONDS,
@@ -109,6 +114,7 @@ internal object NetworkModule {
     fun provideOnrampApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         apiConfigsManager: ApiConfigsManager,
         appLogsStore: AppLogsStore,
     ): OnrampApi {
@@ -117,6 +123,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
             clientBuilder = {
                 addInterceptor(
                     NetworkLogsSaveInterceptor(appLogsStore),
@@ -130,6 +137,7 @@ internal object NetworkModule {
     fun provideTangemTechApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         apiConfigsManager: ApiConfigsManager,
     ): TangemTechApi {
         return createApi(
@@ -137,6 +145,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
             clientBuilder = { applyTimeoutAnnotations() },
         )
     }
@@ -146,6 +155,7 @@ internal object NetworkModule {
     fun provideTangemTechApiV2(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         appVersionProvider: AppVersionProvider,
     ): TangemTechApiV2 {
         return provideTangemTechApiInternal(
@@ -153,6 +163,7 @@ internal object NetworkModule {
             context = context,
             appVersionProvider = appVersionProvider,
             baseUrl = PROD_V2_TANGEM_TECH_BASE_URL,
+            analyticsErrorHandler = analyticsErrorHandler,
         )
     }
 
@@ -161,6 +172,7 @@ internal object NetworkModule {
     fun provideTangemTechMarketsApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         apiConfigsManager: ApiConfigsManager,
     ): TangemTechMarketsApi {
         return createApi(
@@ -168,6 +180,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
             clientBuilder = {
                 this.callTimeout(TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     .connectTimeout(TANGEM_TECH_MARKETS_SERVICE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
@@ -182,6 +195,7 @@ internal object NetworkModule {
     fun provideTangemVisaAuthApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         apiConfigsManager: ApiConfigsManager,
         appLogsStore: AppLogsStore,
     ): TangemVisaAuthApi {
@@ -190,6 +204,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
             clientBuilder = {
                 addInterceptor(
                     NetworkLogsSaveInterceptor(appLogsStore),
@@ -203,6 +218,7 @@ internal object NetworkModule {
     fun provideTangemVisaApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         apiConfigsManager: ApiConfigsManager,
         appLogsStore: AppLogsStore,
     ): TangemVisaApi {
@@ -211,6 +227,7 @@ internal object NetworkModule {
             moshi = moshi,
             context = context,
             apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
             clientBuilder = {
                 addInterceptor(
                     NetworkLogsSaveInterceptor(appLogsStore),
@@ -225,6 +242,7 @@ internal object NetworkModule {
         context: Context,
         appVersionProvider: AppVersionProvider,
         baseUrl: String,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         timeouts: Timeouts = Timeouts(),
         requestHeaders: List<RequestHeader> = listOf(AppVersionPlatformHeaders(appVersionProvider)),
     ): T {
@@ -256,7 +274,7 @@ internal object NetworkModule {
 
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create(analyticsErrorHandler))
             .baseUrl(baseUrl)
             .client(client)
             .build()
@@ -268,6 +286,7 @@ internal object NetworkModule {
         moshi: Moshi,
         context: Context,
         apiConfigsManager: ApiConfigsManager,
+        analyticsErrorHandler: AnalyticsErrorHandler,
         timeouts: Timeouts = Timeouts(),
         clientBuilder: OkHttpClient.Builder.() -> OkHttpClient.Builder = { this },
     ): T {
@@ -275,7 +294,7 @@ internal object NetworkModule {
 
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create())
+            .addCallAdapterFactory(ApiResponseCallAdapterFactory.create(analyticsErrorHandler))
             .baseUrl(environmentConfig.baseUrl)
             .client(
                 OkHttpClient.Builder()

@@ -36,4 +36,7 @@ interface CardSdkConfigRepository {
 
     /** Set linked terminal by [isLinked] */
     fun setLinkedTerminal(isLinked: Boolean?)
+
+    /** Set [flag] that determines whether to use Prod environment for Tangem API */
+    fun setTangemApiProdEnvFlag(flag: Boolean)
 }

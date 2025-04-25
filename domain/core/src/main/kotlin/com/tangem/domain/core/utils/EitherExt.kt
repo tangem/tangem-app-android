@@ -2,7 +2,9 @@ package com.tangem.domain.core.utils
 
 import arrow.core.Either
 import com.tangem.domain.core.lce.Lce
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 
 /**
  * [Flow] of [Either]
@@ -34,4 +36,15 @@ inline fun <reified E : Any, reified T : Any> Either<E, T>.toLce(isStillLoading:
             }
         }
     }
+}
+
+@JvmName("tryCatchWithDispatch")
+suspend inline fun <R> Either.Companion.catchOn(
+    dispatcher: CoroutineDispatcher,
+    crossinline function: suspend () -> R,
+): Either<Throwable, R> {
+    return withContext(
+        context = dispatcher,
+        block = { catch { function() } },
+    )
 }

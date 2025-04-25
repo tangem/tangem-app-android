@@ -12,7 +12,7 @@ internal class DefaultNFTPersistenceStore(
     private val pricesPersistenceStore: DataStore<Map<NFTAsset.Identifier, NFTAsset.SalePrice>>,
 ) : NFTPersistenceStore {
 
-    override fun getCollections(): Flow<List<NFTCollection>> = collectionsPersistenceStore.data
+    override fun getCollections(): Flow<List<NFTCollection>?> = collectionsPersistenceStore.data
 
     override suspend fun getCollectionsSync(): List<NFTCollection>? = collectionsPersistenceStore
         .data

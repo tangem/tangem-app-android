@@ -6,13 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButton
-import com.tangem.core.ui.components.bottomsheets.TangemBottomSheet
 import com.tangem.core.ui.components.bottomsheets.TangemBottomSheetConfig
+import com.tangem.core.ui.components.bottomsheets.sheet.TangemBottomSheet
 import com.tangem.core.ui.components.showcase.ShowcaseContent
 import com.tangem.core.ui.components.showcase.model.ShowcaseItemModel
 import com.tangem.core.ui.extensions.resourceReference
@@ -34,10 +34,8 @@ internal fun PushNotificationsBottomSheet(config: TangemBottomSheetConfig) {
 
 @Composable
 private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetConfig, onDismiss: () -> Unit) {
-    var isClicked by remember { mutableStateOf(false) }
     val requestPushPermission = requestPushPermission(
         pushPermission = getPushPermissionOrNull(),
-        isClicked = isClicked,
         onAllow = {
             content.onAllow()
             onDismiss()
@@ -84,7 +82,6 @@ private fun PushNotificationsSheetContent(content: PushNotificationsBottomSheetC
             PrimaryButton(
                 text = stringResourceSafe(R.string.common_allow),
                 onClick = {
-                    isClicked = true
                     content.onRequest()
                     requestPushPermission()
                 },

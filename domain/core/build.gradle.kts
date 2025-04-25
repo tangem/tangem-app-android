@@ -10,4 +10,9 @@ dependencies {
     api(deps.arrow.fx)
 
     implementation(deps.kotlin.serialization)
+
+    testImplementation(deps.test.coroutine)
+    testImplementation(deps.test.junit)
+    testImplementation(deps.test.mockk)
+    testImplementation(deps.test.truth)
 }
