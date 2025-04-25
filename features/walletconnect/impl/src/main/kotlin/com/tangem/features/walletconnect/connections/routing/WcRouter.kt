@@ -5,7 +5,6 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.core.decompose.navigation.Route
 import com.tangem.core.decompose.navigation.Router
-import com.tangem.features.walletconnect.connections.routes.WcInnerRoute
 import kotlin.reflect.KClass
 
 internal class WcRouter(
@@ -13,8 +12,9 @@ internal class WcRouter(
 ) : Router {
 
     override fun push(route: Route, onComplete: (Boolean) -> Unit) {
-        if (route !is WcInnerRoute) return
-        stackNavigation.activate(route)
+        val isComplete = route is WcInnerRoute
+        if (isComplete) stackNavigation.activate(route)
+        onComplete(isComplete)
     }
 
     override fun replaceAll(vararg routes: Route, onComplete: (Boolean) -> Unit) {
