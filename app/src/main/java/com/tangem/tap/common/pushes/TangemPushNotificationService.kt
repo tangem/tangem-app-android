@@ -5,7 +5,6 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
-import android.content.Intent.ACTION_VIEW
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
@@ -18,6 +17,7 @@ import coil.request.ImageRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.tangem.domain.common.LogConfig
+import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.features.intentHandler.handlers.OnPushClickedIntentHandler
 import com.tangem.wallet.R
@@ -37,7 +37,7 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
         val notification = message.notification ?: return
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID
 
-        val intent = Intent(ACTION_VIEW).apply {
+        val intent = Intent(applicationContext, MainActivity::class.java).apply {
             data = message.data[DEEPLINK_KEY]?.toUri()
             putExtra(OnPushClickedIntentHandler.OPENED_FROM_GCM_PUSH, true)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)

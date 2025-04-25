@@ -8,6 +8,7 @@ import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.core.deeplink.global.SellCurrencyDeepLink
+import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.tokens.GetCryptoCurrencyUseCase
 import com.tangem.domain.tokens.model.analytics.TokenScreenAnalyticsEvent
 import com.tangem.domain.wallets.models.UserWallet
@@ -55,7 +56,7 @@ internal class WalletDeepLinksHandler @Inject constructor(
         )
 
         return buildList {
-            addReferralDeepLink(userWallet.walletId)
+            addReferralDeepLink(userWallet)
             add(sellCurrencyDeepLink)
             if (onrampFeatureToggles.isFeatureEnabled || !userWallet.isMultiCurrency) {
                 add(
@@ -98,13 +99,15 @@ internal class WalletDeepLinksHandler @Inject constructor(
         }
     }
 
-    private fun MutableList<DeepLink>.addReferralDeepLink(userWalletId: UserWalletId) {
+    private fun MutableList<DeepLink>.addReferralDeepLink(userWallet: UserWallet) {
         add(
             ReferralDeepLink(
                 onReceive = {
-                    router.push(
-                        AppRoute.ReferralProgram(userWalletId = userWalletId),
-                    )
+                    if (userWallet.cardTypesResolver.isTangemWallet()) {
+                        router.push(
+                            AppRoute.ReferralProgram(userWalletId = userWallet.walletId),
+                        )
+                    }
                 },
             ),
         )
