@@ -41,15 +41,16 @@ class SaveManagedTokensUseCase(
             userWalletId = userWalletId,
             networks = currenciesToAdd.values.flatten(),
         )
-        val newCurrenciesList = currenciesRepository
-            .getMultiCurrencyWalletCurrenciesSync(userWalletId)
+
+        val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
+
+        val newCurrenciesList = existingCurrencies
             .filterNot(removingCurrencies::contains)
             .toMutableList()
             .also { it.addAll(addingCurrencies) }
 
         currenciesRepository.saveNewCurrenciesList(userWalletId, newCurrenciesList)
 
-        val existingCurrencies = currenciesRepository.getMultiCurrencyWalletCurrenciesSync(userWalletId)
         removeCurrenciesFromWalletManager(
             userWalletId = userWalletId,
             currencies = removingCurrencies.filterNot(existingCurrencies::contains),
