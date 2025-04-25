@@ -158,7 +158,6 @@ dependencies {
     implementation(projects.data.blockaid)
 
     /** Features */
-    implementation(projects.features.onboarding)
     implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)
