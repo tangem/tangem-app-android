@@ -39,10 +39,6 @@ suspend fun Store<*>.dispatchWithMain(action: Action) {
     }
 }
 
-fun Store<*>.dispatchNotification(resId: Int) {
-    dispatchOnMain(GlobalAction.ShowNotification(resId))
-}
-
 suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet) {
     state.globalState.tapWalletManager.onWalletSelected(userWallet)
 }
