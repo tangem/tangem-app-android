@@ -1,32 +1,27 @@
 package com.tangem.data.walletconnect.pair
 
 import com.reown.walletkit.client.Wallet
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.data.walletconnect.model.CAIP10
-import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletmanager.WalletManagersFacade
-import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.domain.wallets.models.UserWallet
 
 internal class CaipNamespaceDelegate constructor(
-    private val namespaceConverters: Map<NamespaceKey, WcNamespaceConverter>,
+    private val namespaceConverters: Set<WcNamespaceConverter>,
     private val walletManagersFacade: WalletManagersFacade,
 ) {
 
     suspend fun associate(
         sessionProposal: Wallet.Model.SessionProposal,
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         networks: List<Network>,
     ): Map<String, Wallet.Model.Namespace.Session> {
-        val converters = namespaceConverters.values
-
         val result = mutableMapOf<String, Session>()
 
         networks.map { network ->
-            val blockchain = Blockchain.fromId(network.id.value)
-            val address = walletManagersFacade.getDefaultAddress(userWalletId, network)
-            val chainId = converters.firstOrNull { it.toCAIP2(blockchain) != null }?.toCAIP2(blockchain)
+            val address = walletManagersFacade.getDefaultAddress(userWallet.walletId, network)
+            val chainId = namespaceConverters.firstNotNullOfOrNull { it.toCAIP2(network) }
             requireNotNull(chainId)
             requireNotNull(address)
             CAIP10(chainId = chainId, accountAddress = address)
