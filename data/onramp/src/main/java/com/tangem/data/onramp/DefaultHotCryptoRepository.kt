@@ -131,7 +131,7 @@ internal class DefaultHotCryptoRepository(
 
                 analyticsEventHandler.send(
                     event = MainScreenAnalyticsEvent.HotTokenError(
-                        errorCode = (it as? ApiResponseError.HttpException)?.code?.code?.toString().orEmpty(),
+                        errorCode = (it as? ApiResponseError.HttpException)?.code?.numericCode?.toString().orEmpty(),
                     ),
                 )
             }
