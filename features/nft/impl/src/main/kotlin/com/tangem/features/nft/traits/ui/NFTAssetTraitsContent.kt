@@ -2,6 +2,7 @@ package com.tangem.features.nft.traits.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -23,6 +24,7 @@ import kotlinx.collections.immutable.persistentListOf
 internal fun NFTAssetTraitsContent(state: NFTAssetTraitsUM, modifier: Modifier = Modifier) {
     InformationBlock(
         modifier = modifier
+            .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing16),
         title = null,
         contentHorizontalPadding = 0.dp,
@@ -35,6 +37,7 @@ internal fun NFTAssetTraitsContent(state: NFTAssetTraitsUM, modifier: Modifier =
                 key(trait.id) {
                     NFTAssetTrait(
                         modifier = Modifier
+                            .fillMaxWidth()
                             .padding(
                                 horizontal = TangemTheme.dimens.spacing12,
                                 vertical = TangemTheme.dimens.spacing8,
