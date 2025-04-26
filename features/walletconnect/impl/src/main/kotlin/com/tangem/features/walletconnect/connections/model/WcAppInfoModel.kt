@@ -82,7 +82,13 @@ internal class WcAppInfoModel @Inject constructor(
     }
 
     private fun onConnect() {
-        wcPairUseCase.approve(WcSessionApprove(wallet = userWallet, network = proposalNetwork.required.toList()))
+        wcPairUseCase.approve(
+            WcSessionApprove(
+                wallet = userWallet,
+                network =
+                proposalNetwork.required.plus(proposalNetwork.available).toList(),
+            ),
+        )
     }
 
     private fun createLoadingState(): WcAppInfoUM.Loading {

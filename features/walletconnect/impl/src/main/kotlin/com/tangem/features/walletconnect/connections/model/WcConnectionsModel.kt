@@ -1,8 +1,6 @@
 package com.tangem.features.walletconnect.connections.model
 
 import arrow.core.getOrElse
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -16,11 +14,12 @@ import com.tangem.core.ui.message.EventMessageAction
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
+import com.tangem.domain.walletconnect.WcPairService
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsTopAppBarConfig
 import com.tangem.features.walletconnect.connections.model.transformers.WcSessionsTransformer
-import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetRoutes
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.transformer.update
@@ -35,12 +34,12 @@ internal class WcConnectionsModel @Inject constructor(
     private val uiMessageSender: UiMessageSender,
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcSessionsUseCase: WcSessionsUseCase,
+    private val wcPairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
     val uiState: StateFlow<WcConnectionsState>
     field = MutableStateFlow<WcConnectionsState>(getInitialState())
-    val bottomSheetNavigation: SlotNavigation<WcConnectionsBottomSheetRoutes> = SlotNavigation()
 
     init {
         listenQrUpdates()
@@ -50,7 +49,7 @@ internal class WcConnectionsModel @Inject constructor(
     private fun listenQrUpdates() {
         listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
             .getOrElse { emptyFlow() }
-            .onEach { wcUrl -> bottomSheetNavigation.activate(WcConnectionsBottomSheetRoutes.AppInfo(wcUrl)) }
+            .onEach { wcUrl -> wcPairService.pair(WcPairRequest(wcUrl, WcPairRequest.Source.QR)) }
             .launchIn(modelScope)
     }
 
