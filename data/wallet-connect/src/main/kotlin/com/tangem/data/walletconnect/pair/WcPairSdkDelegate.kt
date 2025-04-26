@@ -10,7 +10,6 @@ import com.tangem.domain.walletconnect.model.WcPairError
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -24,7 +23,6 @@ internal class WcPairSdkDelegate : WcSdkObserver {
     suspend fun pair(url: String): Either<WcPairError, Wallet.Model.SessionProposal> = coroutineScope {
         suspend fun proposalCallback() = onSessionProposal
             .receiveAsFlow()
-            .filter { proposal -> proposal.url == url }
             .first()
 
         val pairCall = async { sdkPair(url) }

@@ -12,8 +12,9 @@ internal class WcRouter(
 ) : Router {
 
     override fun push(route: Route, onComplete: (Boolean) -> Unit) {
-        if (route !is WcInnerRoute) return
-        stackNavigation.activate(route)
+        val isComplete = route is WcInnerRoute
+        if (isComplete) stackNavigation.activate(route)
+        onComplete(isComplete)
     }
 
     override fun replaceAll(vararg routes: Route, onComplete: (Boolean) -> Unit) {
