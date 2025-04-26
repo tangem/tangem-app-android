@@ -297,9 +297,6 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         appScope.launch {
             launch(Dispatchers.IO) {
                 loadNativeLibraries()
-                walletConnect2Repository.init(
-                    projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId,
-                )
                 updateLogFiles()
             }
         }
@@ -323,6 +320,9 @@ abstract class TangemApplication : Application(), ImageLoaderFactory, Configurat
         )
 
         appStateHolder.mainStore = store
+        walletConnect2Repository.init(
+            projectId = environmentConfigStorage.getConfigSync().walletConnectProjectId,
+        )
     }
 
     private fun createReduxStore(): Store<AppState> {
