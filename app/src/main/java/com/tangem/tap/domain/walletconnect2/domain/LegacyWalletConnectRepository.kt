@@ -13,7 +13,7 @@ interface LegacyWalletConnectRepository {
 
     val currentSessions: List<WalletConnectSession>
 
-    suspend fun init(projectId: String)
+    fun init(projectId: String)
 
     fun setUserNamespaces(userNamespaces: Map<NetworkNamespace, List<Account>>)
 

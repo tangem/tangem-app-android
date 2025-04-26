@@ -41,7 +41,6 @@ internal class WcRoutingModel @Inject constructor(
     init {
         modelScope.launch {
             if (!featureToggles.isRedesignedWalletConnectEnabled) return@launch
-            wcUseCase.init()
             awaitQueueReady()
             setupQueue()
         }
