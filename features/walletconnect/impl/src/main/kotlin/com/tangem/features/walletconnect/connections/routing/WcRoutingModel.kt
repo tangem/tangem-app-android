@@ -10,7 +10,6 @@ import com.tangem.domain.walletconnect.WcRequestService
 import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
-import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +25,6 @@ import javax.inject.Inject
 
 @ModelScoped
 internal class WcRoutingModel @Inject constructor(
-    private val wcUseCase: WcInitializeUseCase,
     private val requestService: WcRequestService,
     private val pairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
@@ -41,7 +39,6 @@ internal class WcRoutingModel @Inject constructor(
     init {
         modelScope.launch {
             if (!featureToggles.isRedesignedWalletConnectEnabled) return@launch
-            wcUseCase.init()
             awaitQueueReady()
             setupQueue()
         }

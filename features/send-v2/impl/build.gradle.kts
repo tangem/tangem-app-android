@@ -26,6 +26,7 @@ dependencies {
     implementation(projects.core.analytics)
     implementation(projects.core.configToggles)
     implementation(projects.core.navigation)
+    implementation(projects.core.datasource)
     api(projects.core.pagination)
 
     /** Tangem SDK */
