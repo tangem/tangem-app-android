@@ -433,6 +433,7 @@ internal class SendConfirmModel @Inject constructor(
         ).filter { it.second is CommonSendRoute.Confirm }.onEach { (state, _) ->
             val amountUM = state.amountUM as? AmountState.Data
             val confirmUM = state.confirmUM
+            val isReadyToSend = confirmUM is ConfirmUM.Content && !confirmUM.isSending
             params.callback.onResult(
                 state.copy(
                     navigationUM = NavigationUM.Content(
@@ -462,9 +463,9 @@ internal class SendConfirmModel @Inject constructor(
                                 }
                                 else -> resourceReference(R.string.common_send)
                             },
-                            iconResId = R.drawable.ic_tangem_24.takeIf { confirmUM is ConfirmUM.Content },
+                            iconResId = R.drawable.ic_tangem_24.takeIf { isReadyToSend },
                             isEnabled = confirmUM.isPrimaryButtonEnabled,
-                            isHapticClick = confirmUM is ConfirmUM.Content && !confirmUM.isSending,
+                            isHapticClick = isReadyToSend,
                             onClick = {
                                 when (confirmUM) {
                                     is ConfirmUM.Success -> appRouter.pop()
