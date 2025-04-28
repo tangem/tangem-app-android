@@ -37,9 +37,7 @@ internal class QuotesStoreUpdateMethodsTest {
 
         store.refresh(currenciesIds = currenciesIds)
 
-        val runtimeExpected = currenciesIds.map(Quote::Empty).toSet()
-
-        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(runtimeExpected)
+        Truth.assertThat(runtimeStore.getSyncOrNull()).isEqualTo(emptySet<Quote>())
         Truth.assertThat(persistenceStore.data.firstOrNull()).isEqualTo(emptyMap<String, Set<Quote>>())
     }
 
