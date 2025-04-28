@@ -14,4 +14,8 @@ class WcSessionsUseCase(private val sessionsManager: WcSessionsManager) {
     suspend fun invokeSync(): Map<UserWallet, List<WcSession>> {
         return sessionsManager.sessions.first()
     }
+
+    suspend fun findByTopic(topic: String): WcSession? {
+        return sessionsManager.findSessionByTopic(topic)
+    }
 }
