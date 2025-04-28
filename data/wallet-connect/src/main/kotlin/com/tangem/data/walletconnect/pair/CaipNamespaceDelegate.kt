@@ -34,9 +34,14 @@ internal class CaipNamespaceDelegate constructor(
                 requiredNamespaces[namespaceKey]?.methods?.let { addAll(it) }
                 optionalNamespaces[namespaceKey]?.methods?.let { addAll(it) }
             }
+            val events = buildSet {
+                requiredNamespaces[namespaceKey]?.events?.let { addAll(it) }
+                optionalNamespaces[namespaceKey]?.events?.let { addAll(it) }
+            }
             session.chains.add(account.chainId.raw)
             session.accounts.add(account.raw)
             session.methods.addAll(methods)
+            session.events.addAll(events)
         }
         return result.mapValues { (namespaceKey, session) ->
             Wallet.Model.Namespace.Session(
