@@ -62,8 +62,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
             )
             is WcInnerRoute.Pair -> WcAppInfoContainerComponent(
                 childContext,
-                WcAppInfoContainerComponent
-                    .Params(config.request.uri, config.request.source, { innerRouter.pop() }),
+                WcAppInfoContainerComponent.Params(config.request.uri, config.request.source),
             )
         }
     }
