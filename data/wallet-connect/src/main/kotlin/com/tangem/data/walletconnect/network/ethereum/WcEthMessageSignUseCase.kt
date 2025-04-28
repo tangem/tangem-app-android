@@ -7,16 +7,16 @@ import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
-import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMessageSignUseCase
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -25,15 +25,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
-internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
+internal class WcEthMessageSignUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     @Assisted override val context: WcMethodUseCaseContext,
-    @Assisted private val method: WcEthMethod.MessageSign,
+    @Assisted override val method: WcEthMethod.MessageSign,
     private val walletManagersFacade: WalletManagersFacade,
     private val signUseCase: SignUseCase,
     blockAidDelegate: BlockAidVerificationDelegate,
-) : BaseWcSignUseCase<Nothing, WcEthMessageSignUseCase.SignModel>(),
-    WcEthMessageSignUseCase {
+) : BaseWcSignUseCase<Nothing, WcMessageSignUseCase.SignModel>(),
+    WcMessageSignUseCase {
 
     override val securityStatus = blockAidDelegate.getSecurityStatus(
         network = network,
@@ -43,10 +43,10 @@ internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
         accountAddress = context.accountAddress,
     )
 
-    override suspend fun SignCollector<WcEthMessageSignUseCase.SignModel>.onSign(
-        state: WcSignState<WcEthMessageSignUseCase.SignModel>,
+    override suspend fun SignCollector<WcMessageSignUseCase.SignModel>.onSign(
+        state: WcSignState<WcMessageSignUseCase.SignModel>,
     ) {
-        val hashToSign = LegacySdkHelper.createMessageData(state.signModel.rawMsg)
+        val hashToSign = LegacySdkHelper.createMessageData(method.rawMessage)
         val userWallet = session.wallet
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
             ?: return
@@ -65,18 +65,14 @@ internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
         emit(state.toResult(wcRespondResult))
     }
 
-    override fun invoke(): Flow<WcSignState<WcEthMessageSignUseCase.SignModel>> = flow {
-        val model = WcEthMessageSignUseCase.SignModel(
-            rawMsg = method.message,
-            account = method.account,
-            humanMsg = LegacySdkHelper.hexToAscii(method.message).orEmpty(),
-        )
+    override fun invoke(): Flow<WcSignState<WcMessageSignUseCase.SignModel>> = flow {
+        val model = WcMessageSignUseCase.SignModel(humanMsg = method.humanMsg)
         emitAll(delegate(model))
     }
 
     @AssistedFactory
     interface Factory {
-        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.MessageSign): DefaultWcEthMessageSignUseCase
+        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.MessageSign): WcEthMessageSignUseCase
     }
 }
 
