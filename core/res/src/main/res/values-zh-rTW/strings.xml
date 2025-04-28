@@ -3,6 +3,8 @@
   <string name="add_custom_token_title">添加自定義代幣</string>
   <string name="add_tokens_title">管理代幣</string>
   <string name="address_qr_code_message_format">僅將 %1$s (%2$s) 從 %3$s 網絡發送到此地址。使用其他代幣和網絡可能會導致資金損失</string>
+  <string name="address_type_default">默認</string>
+  <string name="address_type_legacy">遺留資產</string>
   <string name="alert_button_request_support">請求支持</string>
   <string name="alert_button_try_again">再試一次</string>
   <string name="alert_demo_feature_disabled">此功能不在展示模式中提供</string>
@@ -36,6 +38,7 @@
   <string name="card_settings_reset_card_to_factory">回復至原廠設置</string>
   <string name="card_settings_security_mode">安全模式</string>
   <string name="card_settings_title">卡片設置</string>
+  <string name="cardano_low_ada">發送金額和找零不能少於1個ADA</string>
   <string name="common_accept">接受</string>
   <string name="common_approve">允許</string>
   <string name="common_attention">注意</string>
@@ -43,6 +46,7 @@
   <string name="common_balance_title">餘額</string>
   <string name="common_biometric_authentication">生物識別</string>
   <string name="common_biometrics">生物</string>
+  <string name="common_build_tx_error">建立交易失敗</string>
   <string name="common_buy">購買</string>
   <string name="common_camera_denied_alert_message">您尚未授予相機訪問權限，請更改您的隱私設置</string>
   <string name="common_cancel">删除</string>
@@ -58,6 +62,7 @@
   <string name="common_enable">允許</string>
   <string name="common_enabled">啟用</string>
   <string name="common_error">錯誤</string>
+  <string name="common_fee_error">獲取費用失敗</string>
   <string name="common_import">導入</string>
   <string name="common_in_progress">進行中</string>
   <string name="common_network_fee_title">網路費</string>
@@ -73,6 +78,7 @@
   <string name="common_select_action">選擇</string>
   <string name="common_sell">銷售</string>
   <string name="common_send">發送</string>
+  <string name="common_send_tx_error">發送交易失敗</string>
   <string name="common_server_unavailable">伺服器不可用，請稍後在試</string>
   <string name="common_share">分享</string>
   <string name="common_sign">簽署</string>
@@ -85,6 +91,7 @@
   <string name="common_transactions">交易</string>
   <string name="common_understand">我了解</string>
   <string name="common_unreachable">無法觸達</string>
+  <string name="common_utxo_validate_withdrawal_message_warning">由於 %1$s 的限制，只有%2$d UTXO 可以放入單次交易中。這意味著您只能發送%3$s或更少數量。您需要減少數量。</string>
   <string name="common_yes">是</string>
   <string name="contract_address_copied_message">已複製代幣地址</string>
   <string name="currency_subtitle_expanded">支持的網路</string>
@@ -121,6 +128,7 @@
   <string name="disclaimer_error_loading">檢查您的網路連接或切換到其他網絡</string>
   <string name="disclaimer_title">服務條款</string>
   <string name="error_wrong_wallet_tapped">您使用了另一個錢包中的卡。點按與此錢包關聯的卡片</string>
+  <string name="eth_gas_required_exceeds_allowance">沒有足夠的資金進行交易。請先入金</string>
   <string name="feedback_data_collection_message">以下信息是可選的。如果不想共享，可以將其刪除</string>
   <string name="feedback_preface_rate_negative">告訴我們您缺少哪些功能，我們會盡力幫助您</string>
   <string name="feedback_preface_scan_failed">請告訴我們你有什麼卡</string>
@@ -131,6 +139,8 @@
   <string name="feedback_subject_support">反饋</string>
   <string name="feedback_subject_support_tangem">Tangem反饋</string>
   <string name="feedback_subject_tx_failed">無法發送交易</string>
+  <string name="generic_error">An error occurred</string>
+  <string name="generic_requires_memo_error">需要memo</string>
   <string name="give_permission_rows_amount">數量 %s</string>
   <string name="give_permission_swap_subtitle" formatted="false">要繼續，您需要允許 %1s 智能合約使用您的 %2s</string>
   <string name="give_permission_title">賦予權限</string>
@@ -146,6 +156,9 @@
   <string name="main_scan_card_warning_view_subtitle">要訪問所有的網路您需要掃描卡片</string>
   <string name="main_scan_card_warning_view_title">掃描卡片</string>
   <string name="main_tokens">代幣</string>
+  <string name="no_account_polkadot">目標帳戶未激活。發送 %s 或更多以激活帳戶</string>
+  <string name="no_account_send_to_create">要創建帳戶，請將資金發送到此地址</string>
+  <string name="no_trustline_xlm_asset">目標帳戶沒有用於發送資產的 trustline</string>
   <string name="onboarding_access_code_feature_1_title">保護</string>
   <string name="onboarding_access_code_feature_2_description">您可以稍後在每張卡上設置單獨的訪問密碼</string>
   <string name="onboarding_access_code_feature_2_title">個人化</string>
@@ -255,10 +268,20 @@
   <string name="scan_card_settings_title">準備好您的卡!</string>
   <string name="send_amount_label">數量</string>
   <string name="send_error_address_same_as_wallet">地址與錢包地址相同</string>
+  <string name="send_error_dust_amount_format">最小數量是 %s</string>
+  <string name="send_error_dust_change_format">最小變化是 %s</string>
+  <string name="send_error_invalid_fee_value">無效費用</string>
+  <string name="send_error_minimum_balance_format">最低餘額為 %s</string>
+  <string name="send_error_no_target_account">未創建目標帳戶。發送金額應為 %s + 費用或更多</string>
+  <string name="send_error_unknown">未知錯誤</string>
   <string name="send_extras_error_invalid_memo">Memo無效。 它不會被添加到交易中</string>
   <string name="send_extras_hint_memo">Memo</string>
   <string name="send_max_amount_label">最大值</string>
   <string name="send_transaction_success">交易已成功簽署並發送至區塊鏈節點。錢包餘額稍後更新</string>
+  <string name="send_validation_amount_exceeds_balance">金額超出餘額</string>
+  <string name="send_validation_invalid_amount">無效金額</string>
+  <string name="send_validation_invalid_fee">費用超出餘額</string>
+  <string name="send_validation_invalid_total">總金額超出餘額</string>
   <string name="story_awe_description">安全地存儲您的加密貨幣，同時將私鑰保存在您的卡中</string>
   <string name="story_awe_title">創新式的硬體錢包</string>
   <string name="story_backup_description">最多 3張實體卡片 到一個錢包</string>
@@ -358,4 +381,7 @@
   <string name="welcome_unlock_card">掃描卡片</string>
   <string name="welcome_unlock_description">使用 %s 或掃描卡片以訪問該應用程序</string>
   <string name="welcome_unlock_title">歡迎回來!</string>
+  <string name="xtz_withdrawal_message_ignore">不，全部發送</string>
+  <string name="xtz_withdrawal_message_reduce">減少 %s XTZ</string>
+  <string name="xtz_withdrawal_message_warning">為避免下次給錢包充值時支付增加的佣金，請將金額減少 %s XTZ</string>
 </resources>
