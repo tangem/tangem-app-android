@@ -1,14 +1,11 @@
 package com.tangem.tap.routing.component.impl
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.subscribe
-import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.context.AppComponentContext
@@ -23,7 +20,6 @@ import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
 import com.tangem.tap.routing.component.RoutingComponent.Child
 import com.tangem.tap.routing.configurator.AppRouterConfig
-import com.tangem.tap.routing.toggle.RoutingFeatureToggles
 import com.tangem.tap.routing.utils.ChildFactory
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -36,35 +32,30 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val childFactory: ChildFactory,
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
-    routingFeatureToggles: RoutingFeatureToggles,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
 
-    override val stack: Value<ChildStack<AppRoute, Child>> = childStack(
+    private val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
         initialStack = { getInitialStackOrInit() },
         serializer = null, // AppRoute.serializer(), // Disabled until Nav refactoring completes
-        handleBackButton = routingFeatureToggles.isNavigationRefactoringEnabled,
-        childFactory = ::child,
+        handleBackButton = true,
+        childFactory = { route, childContext ->
+            childFactory.createChild(route, childByContext(childContext))
+        },
     )
 
     init {
-        lifecycle.doOnDestroy {
-            childFactory.doOnDestroy()
-        }
+        appRouterConfig.routerScope = componentScope
+        appRouterConfig.componentRouter = router
+        appRouterConfig.snackbarHandler = this
 
-        if (routingFeatureToggles.isNavigationRefactoringEnabled) {
-            appRouterConfig.routerScope = componentScope
-            appRouterConfig.componentRouter = router
-            appRouterConfig.snackbarHandler = this
+        stack.subscribe(lifecycle) { stack ->
+            val stackItems = stack.items.map { it.configuration }
 
-            stack.subscribe(lifecycle) { stack ->
-                val stackItems = stack.items.map { it.configuration }
-
-                if (appRouterConfig.stack != stackItems) {
-                    appRouterConfig.stack = stackItems
-                }
+            if (appRouterConfig.stack != stackItems) {
+                appRouterConfig.stack = stackItems
             }
         }
     }
@@ -112,10 +103,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         listOf(AppRoute.Initial)
     } else {
         initialStack
-    }
-
-    private fun child(route: AppRoute, context: ComponentContext): Child {
-        return childFactory.createChild(route) { childByContext(context) }
     }
 
     @AssistedFactory
