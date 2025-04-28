@@ -104,26 +104,6 @@ class DefaultNotificationsRepositoryTest {
     }
 
     @Test
-    fun `GIVEN wallet id and enabled status WHEN setNotificationsEnabledForWallet THEN updates notification status`() =
-        runTest {
-            // GIVEN
-            val walletId = "test-wallet-id"
-            val enabled = true
-            coEvery {
-                tangemTechApi.setNotificationsEnabled(
-                    walletId,
-                    WalletBody(notifyStatus = enabled),
-                )
-            } returns ApiResponse.Success(Unit)
-
-            // WHEN
-            repository.setNotificationsEnabledForWallet(walletId, enabled)
-
-            // THEN
-            coVerify { tangemTechApi.setNotificationsEnabled(walletId, WalletBody(notifyStatus = enabled)) }
-        }
-
-    @Test
     fun `GIVEN application id and wallet list WHEN associateApplicationIdWithWallets THEN associates them`() = runTest {
         // GIVEN
         val appId = "test-app-id"
@@ -140,26 +120,6 @@ class DefaultNotificationsRepositoryTest {
 
         // THEN
         coVerify { tangemTechApi.associateApplicationIdWithWallets(appId, wallets.map { WalletIdBody(it) }) }
-    }
-
-    @Test
-    fun `GIVEN wallet id WHEN isNotificationsEnabledForWallet THEN returns notification status`() = runTest {
-        // GIVEN
-        val walletId = "test-wallet-id"
-        val expectedStatus = true
-        coEvery { tangemTechApi.getWalletById(walletId) } returns ApiResponse.Success(
-            WalletResponse(
-                notifyStatus = expectedStatus,
-                name = "Test Wallet",
-                id = walletId,
-            ),
-        )
-
-        // WHEN
-        val result = repository.isNotificationsEnabledForWallet(walletId)
-
-        // THEN
-        assertThat(result).isEqualTo(expectedStatus)
     }
 
     @Test
