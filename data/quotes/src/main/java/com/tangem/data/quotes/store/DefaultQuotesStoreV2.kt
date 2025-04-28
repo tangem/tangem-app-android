@@ -64,13 +64,23 @@ internal class DefaultQuotesStoreV2(
     }
 
     override suspend fun storeError(currenciesIds: Set<CryptoCurrency.RawID>) {
-        updateStatusSourceInRuntime(currenciesIds = currenciesIds, source = StatusSource.ONLY_CACHE)
+        updateStatusSourceInRuntime(
+            currenciesIds = currenciesIds,
+            ifNotFound = Quote::Empty,
+            source = StatusSource.ONLY_CACHE,
+        )
     }
 
-    private suspend fun updateStatusSourceInRuntime(currenciesIds: Set<CryptoCurrency.RawID>, source: StatusSource) {
+    private suspend fun updateStatusSourceInRuntime(
+        currenciesIds: Set<CryptoCurrency.RawID>,
+        ifNotFound: (CryptoCurrency.RawID) -> Quote? = { null },
+        source: StatusSource,
+    ) {
         runtimeStore.update(default = emptySet()) { stored ->
-            val updatedQuotes = currenciesIds.mapTo(hashSetOf()) { id ->
-                val quote = stored.firstOrNull { it.rawCurrencyId == id } ?: Quote.Empty(id)
+            val updatedQuotes = currenciesIds.mapNotNullTo(hashSetOf()) { id ->
+                val quote = stored.firstOrNull { it.rawCurrencyId == id }
+                    ?: ifNotFound(id)
+                    ?: return@mapNotNullTo null
 
                 quote.copySealed(source = source)
             }
