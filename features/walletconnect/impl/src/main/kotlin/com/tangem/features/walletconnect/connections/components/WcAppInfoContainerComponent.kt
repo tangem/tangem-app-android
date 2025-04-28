@@ -102,5 +102,5 @@ internal class WcAppInfoContainerComponent(
             WcAppInfoRoutes.SelectWallet -> TODO()
         }
 
-    data class Params(val wcUrl: String, val source: WcPairRequest.Source, val onDismiss: () -> Unit)
+    data class Params(val wcUrl: String, val source: WcPairRequest.Source)
 }

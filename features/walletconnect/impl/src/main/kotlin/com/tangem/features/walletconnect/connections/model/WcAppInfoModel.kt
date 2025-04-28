@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
@@ -26,6 +27,7 @@ import com.tangem.utils.transformer.update as transformerUpdate
 internal class WcAppInfoModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     wcPairUseCaseFactory: WcPairUseCase.Factory,
+    private val router: Router,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -53,7 +55,7 @@ internal class WcAppInfoModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        // TODO: wc dismiss and reload sessions
+                        dismiss()
                     }
                     is WcPairState.Error -> {
                         // TODO: wc show toast/snackbar/alert?
@@ -78,7 +80,7 @@ internal class WcAppInfoModel @Inject constructor(
     }
 
     fun dismiss() {
-        params.onDismiss()
+        router.pop()
     }
 
     private fun onConnect() {
