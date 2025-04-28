@@ -389,11 +389,11 @@ class WalletConnectSdkHelper {
 
                 return when (type) {
                     WcSignMessage.WCSignType.SOLANA_MESSAGE -> getSolanaResultString(signedHash)
-                    else -> EthereumUtils.prepareSignedMessageData(
-                        signedHash = signedHash,
-                        hashToSign = hashToSign,
+                    else -> UnmarshalHelper.unmarshalSignatureExtended(
+                        signature = signedHash,
+                        hash = hashToSign,
                         publicKey = wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-                    )
+                    ).asRSVLegacyEVM().toHexString()
                 }
             }
             is CompletionResult.Failure -> {
