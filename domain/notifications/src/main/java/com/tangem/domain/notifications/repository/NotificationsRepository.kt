@@ -12,13 +12,7 @@ interface NotificationsRepository {
     suspend fun getApplicationId(): String?
 
     @Throws
-    suspend fun setNotificationsEnabledForWallet(walletId: String, enabled: Boolean)
-
-    @Throws
     suspend fun associateApplicationIdWithWallets(appId: String, wallets: List<String>)
-
-    @Throws
-    suspend fun isNotificationsEnabledForWallet(walletId: String): Boolean
 
     @Throws
     suspend fun setWalletName(walletId: String, walletName: String)
