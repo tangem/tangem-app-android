@@ -50,5 +50,5 @@ sealed class WcAppInfoSecurityNotification(
 @Immutable
 internal sealed class WcNetworksInfo {
     data class MissingRequiredNetworkInfo(val networks: String) : WcNetworksInfo()
-    data class ContainsAllRequiredNetworks(val icons: ImmutableList<Int>) : WcNetworksInfo()
+    data class ContainsAllRequiredNetworks(val items: ImmutableList<WcNetworkInfoItem>) : WcNetworksInfo()
 }
