@@ -16,7 +16,6 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcNamespaceConverter
 import com.tangem.datasource.di.SdkMoshi
-import com.tangem.datasource.local.config.environment.EnvironmentConfigStorage
 import com.tangem.datasource.local.userwallet.UserWalletsStore
 import com.tangem.datasource.local.walletconnect.WalletConnectStore
 import com.tangem.domain.tokens.repository.CurrenciesRepository
@@ -61,15 +60,11 @@ internal object WalletConnectDataModule {
         sessionsManager: DefaultWcSessionsManager,
         networkService: DefaultWcRequestService,
         pairSdkDelegate: WcPairSdkDelegate,
-        environmentConfigStorage: EnvironmentConfigStorage,
-        dispatchers: CoroutineDispatcherProvider,
     ): WcInitializeUseCase = DefaultWcInitializeUseCase(
         application = application,
         sessionsManager = sessionsManager,
         networkService = networkService,
         pairSdkDelegate = pairSdkDelegate,
-        environmentConfigStorage = environmentConfigStorage,
-        dispatchers = dispatchers,
     )
 
     @Provides
