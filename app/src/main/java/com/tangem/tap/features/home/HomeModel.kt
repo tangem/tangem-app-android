@@ -17,6 +17,8 @@ import com.tangem.domain.card.repository.CardSdkConfigRepository
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.settings.repositories.SettingsRepository
+import com.tangem.domain.settings.usercountry.GetUserCountryUseCase
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import com.tangem.domain.tokens.TokensAction
 import com.tangem.domain.wallets.builder.UserWalletBuilder
 import com.tangem.domain.wallets.usecase.SaveWalletUseCase
@@ -24,6 +26,7 @@ import com.tangem.tap.common.analytics.converters.ParamCardCurrencyConverter
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.extensions.dispatchNavigationAction
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchWithMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.features.home.redux.HIDE_PROGRESS_DELAY
@@ -33,8 +36,10 @@ import com.tangem.tap.store
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -44,6 +49,7 @@ internal class HomeModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val scanCardProcessor: ScanCardProcessor,
     private val saveWalletUseCase: SaveWalletUseCase,
+    private val getUserCountryUseCase: GetUserCountryUseCase,
     private val cardSdkConfigRepository: CardSdkConfigRepository,
     private val settingsRepository: SettingsRepository,
     private val urlOpener: UrlOpener,
@@ -52,6 +58,18 @@ internal class HomeModel @Inject constructor(
 ) : Model() {
 
     private val tangemErrorHandler = TangemTangemErrorsHandler(store)
+
+    init {
+        getUserCountryUseCase.invoke()
+            .distinctUntilChanged()
+            .filterNotNull()
+            .onEach {
+                val userCountry = it.getOrNull() ?: UserCountry.Other(Locale.getDefault().country)
+                store.dispatchOnMain(HomeAction.UserCountryLoaded(userCountry))
+            }
+            .flowOn(dispatchers.io)
+            .launchIn(modelScope)
+    }
 
     fun onScanClick() {
         analyticsEventHandler.send(IntroductionProcess.ButtonScanCard())
