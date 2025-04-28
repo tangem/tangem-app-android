@@ -15,7 +15,7 @@ import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.features.walletconnect.connections.model.WcConnectionsModel
-import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetRoutes
+import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetConfig
 import com.tangem.features.walletconnect.connections.ui.WcConnectionsContent
 
 internal class ConnectionsComponent(
@@ -40,15 +40,22 @@ internal class ConnectionsComponent(
     }
 
     private fun bottomSheetChild(
-        config: WcConnectionsBottomSheetRoutes,
+        config: WcConnectionsBottomSheetConfig,
         componentContext: ComponentContext,
     ): ComposableBottomSheetComponent {
         return when (config) {
-            is WcConnectionsBottomSheetRoutes.AppInfo -> WcAppInfoContainerComponent(
+            is WcConnectionsBottomSheetConfig.AppInfo -> WcAppInfoContainerComponent(
                 appComponentContext = childByContext(componentContext),
                 params = WcAppInfoContainerComponent.Params(
                     wcUrl = config.wcUrl,
                     source = WcPairRequest.Source.QR,
+                    onDismiss = model.bottomSheetNavigation::dismiss,
+                ),
+            )
+            is WcConnectionsBottomSheetConfig.ConnectedApp -> WcConnectedAppInfoComponent(
+                appComponentContext = childByContext(componentContext),
+                params = WcConnectedAppInfoComponent.Params(
+                    topic = config.topic,
                     onDismiss = model.bottomSheetNavigation::dismiss,
                 ),
             )
