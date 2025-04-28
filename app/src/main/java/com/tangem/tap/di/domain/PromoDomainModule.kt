@@ -1,6 +1,7 @@
 package com.tangem.tap.di.domain
 
 import com.tangem.domain.promo.*
+import com.tangem.domain.settings.repositories.SettingsRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -33,7 +34,10 @@ internal object PromoDomainModule {
 
     @Provides
     @Singleton
-    fun provideGetStoryContentUseCase(promoRepository: PromoRepository): GetStoryContentUseCase {
-        return GetStoryContentUseCase(promoRepository)
+    fun provideGetStoryContentUseCase(
+        promoRepository: PromoRepository,
+        settingsRepository: SettingsRepository,
+    ): GetStoryContentUseCase {
+        return GetStoryContentUseCase(promoRepository, settingsRepository)
     }
 }

@@ -40,16 +40,30 @@ internal fun ValidatorBlock(validatorState: StakingStates.ValidatorState, isClic
         InputRowImageInfo(
             title = resourceReference(R.string.staking_validator),
             subtitle = stringReference(state.chosenValidator.name),
-            infoTitle = annotatedReference {
-                append(resourceReference(R.string.staking_details_apr).resolveReference())
-                appendSpace()
-                appendColored(
-                    text = state.chosenValidator.apr.orZero().format { percent() },
-                    color = TangemTheme.colors.text.accent,
-                )
-            },
+            infoTitle = state.getInfoTitleNeutral(),
             imageUrl = state.chosenValidator.image.orEmpty(),
             onImageError = { ValidatorImagePlaceholder() },
         )
     }
 }
+
+/**
+ * For FCA fixes remove coloring for now
+ */
+@Suppress("UnusedPrivateMember")
+@Composable
+private fun StakingStates.ValidatorState.Data.getInfoTitleColored() = combinedReference(
+    annotatedReference {
+        append(resourceReference(R.string.staking_details_apr).resolveReference())
+        appendSpace()
+        appendColored(
+            text = chosenValidator.apr.orZero().format { percent() },
+            color = TangemTheme.colors.text.accent,
+        )
+    },
+)
+
+private fun StakingStates.ValidatorState.Data.getInfoTitleNeutral() = combinedReference(
+    resourceReference(R.string.staking_details_apr),
+    stringReference(" " + chosenValidator.apr.orZero().format { percent() }),
+)
