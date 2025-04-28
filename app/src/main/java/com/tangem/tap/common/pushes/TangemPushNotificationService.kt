@@ -11,11 +11,11 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import androidx.core.net.toUri
 import coil.executeBlocking
 import coil.request.ImageRequest
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import com.tangem.core.deeplink.DEEPLINK_KEY
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -38,7 +38,7 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
         val channelId = notification.channelId ?: TANGEM_CHANNEL_ID
 
         val intent = Intent(applicationContext, MainActivity::class.java).apply {
-            data = message.data[DEEPLINK_KEY]?.toUri()
+            putExtra(DEEPLINK_KEY, message.data[DEEPLINK_KEY])
             putExtra(OnPushClickedIntentHandler.OPENED_FROM_GCM_PUSH, true)
             addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         }
@@ -103,7 +103,5 @@ internal class TangemPushNotificationService : FirebaseMessagingService() {
     private companion object {
         const val TANGEM_CHANNEL_ID = "Tangem General" // General channel for notifications
         const val PUSH_NOTIFICATION_REQUEST_CODE = 123
-
-        const val DEEPLINK_KEY = "deeplink"
     }
 }
