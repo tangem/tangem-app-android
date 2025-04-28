@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.subscribers
 
 import arrow.core.getOrElse
 import com.tangem.core.deeplink.DeepLinksRegistry
+import com.tangem.core.deeplink.global.ReferralDeepLink
+import com.tangem.core.deeplink.global.SellCurrencyDeepLink
 import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.core.lce.Lce
@@ -114,7 +116,10 @@ internal abstract class BasicTokenListSubscriber(
     protected open suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
         /* no-op */
         if (maybeTokenList.getOrNull(false) != null) {
-            deepLinksRegistry.triggerDelayedDeeplink()
+            deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = SellCurrencyDeepLink::class.java)
+        }
+        if (maybeTokenList.getOrNull(true) != null) {
+            deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = ReferralDeepLink::class.java)
         }
     }
 
