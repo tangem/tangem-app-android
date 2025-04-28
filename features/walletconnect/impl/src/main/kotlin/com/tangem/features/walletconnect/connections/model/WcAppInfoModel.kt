@@ -52,7 +52,7 @@ internal class WcAppInfoModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-// [REDACTED_TODO_COMMENT]
+                        params.onDismiss()
                     }
                     is WcPairState.Error -> {
 // [REDACTED_TODO_COMMENT]
@@ -77,6 +77,7 @@ internal class WcAppInfoModel @Inject constructor(
     }
 
     fun dismiss() {
+        wcPairUseCase.reject()
         params.onDismiss()
     }
 
