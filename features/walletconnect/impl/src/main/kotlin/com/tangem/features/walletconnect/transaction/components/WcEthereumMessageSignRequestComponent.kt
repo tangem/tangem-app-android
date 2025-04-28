@@ -26,7 +26,7 @@ internal class WcEthereumMessageSignRequestComponent(
             WcEthereumMessageSignRequestModalBottomSheet(
                 config = TangemBottomSheetConfig(
                     isShown = true,
-                    onDismissRequest = { router.pop() },
+                    onDismissRequest = it.actions.onDismiss,
                     content = it,
                 ),
             )
