@@ -39,7 +39,17 @@ internal class WcEthNetwork(
         val method: WcEthMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
         val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
-        val context = WcMethodUseCaseContext(session = session, rawSdkRequest = request, network = network)
+        val accountAddress = when (method) {
+            is WcEthMethod.MessageSign -> method.account
+            is WcEthMethod.SendTransaction -> method.transaction.from
+            is WcEthMethod.SignTransaction -> method.transaction.from
+        }
+        val context = WcMethodUseCaseContext(
+            session = session,
+            rawSdkRequest = request,
+            network = network,
+            accountAddress = accountAddress,
+        )
         return when (method) {
             is WcEthMethod.MessageSign -> factories.messageSign.create(context, method)
             is WcEthMethod.SendTransaction -> factories.sendTransaction.create(context, method)
