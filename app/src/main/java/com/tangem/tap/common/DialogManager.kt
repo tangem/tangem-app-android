@@ -58,8 +58,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 messageRes = R.string.nfc_error_unavailable,
                 context = context,
             )
-            is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
-            is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
             is OnboardingDialog.WalletActivationError -> WalletActivationErrorDialog.create(context, state.dialog)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
