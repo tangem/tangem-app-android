@@ -16,6 +16,7 @@ import com.tangem.utils.converter.Converter
 @Suppress("LongParameterList")
 internal class TokenMarketInfoConverter(
     private val appCurrency: Provider<AppCurrency>,
+    private val needApplyFCARestrictions: Provider<Boolean>,
     private val onInfoClick: (TangemBottomSheetConfigContent) -> Unit,
     private val onListedOnClick: (Int) -> Unit,
     onSecurityScoreInfoClick: (SecurityScoreBottomSheetContent) -> Unit,
@@ -49,9 +50,19 @@ internal class TokenMarketInfoConverter(
         )
 
         val exchangesAmount = value.exchangesAmount
+        val insights = if (needApplyFCARestrictions()) {
+            null
+        } else {
+            value.insights?.let { insightsConverter.convert(it) }
+        }
+        val securityScore = if (needApplyFCARestrictions()) {
+            null
+        } else {
+            value.securityData?.let { securityScoreConverter.convert(it) }
+        }
         return MarketsTokenDetailsUM.InformationBlocks(
-            insights = value.insights?.let { insightsConverter.convert(it) },
-            securityScore = value.securityData?.let { securityScoreConverter.convert(it) },
+            insights = insights,
+            securityScore = securityScore,
             metrics = value.metrics?.let { metricsConverter.convert(it) },
             pricePerformance = value.pricePerformance?.let {
                 pricePerformanceConverter.convert(
