@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.tasks.visa
 
 import arrow.core.getOrElse
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
@@ -12,6 +12,7 @@ import com.tangem.common.core.CompletionCallback
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
+import com.tangem.common.extensions.toHexString
 import com.tangem.core.error.ext.tangemError
 import com.tangem.crypto.hdWallet.DerivationPath
 import com.tangem.crypto.hdWallet.bip32.ExtendedPublicKey
@@ -175,12 +176,12 @@ class VisaCustomerWalletApproveTask(
         signTask.run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    val rsvSignature = EthereumUtils.prepareSignedMessageData(
-                        signedHash = result.data.signature,
-                        hashToSign = hashToSign,
+                    val rsvSignature = UnmarshalHelper.unmarshalSignatureExtended(
+                        signature = result.data.signature,
+                        hash = hashToSign,
                         publicKey = extendedPublicKey?.publicKey?.toDecompressedPublicKey()
                             ?: targetWalletPublicKey.toDecompressedPublicKey(),
-                    )
+                    ).asRSVLegacyEVM().toHexString()
 
                     scanCard(
                         session = session,
