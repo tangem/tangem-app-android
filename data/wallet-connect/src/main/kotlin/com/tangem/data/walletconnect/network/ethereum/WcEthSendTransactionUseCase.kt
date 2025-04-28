@@ -3,34 +3,32 @@ package com.tangem.data.walletconnect.network.ethereum
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
-import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
-import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
+import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthSignTransactionUseCase
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthTransaction
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcEthTransaction
+import com.tangem.domain.walletconnect.usecase.method.WcEthTransactionUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
-internal class DefaultWcEthSignTransactionUseCase @AssistedInject constructor(
-    override val respondService: WcRespondService,
-    private val prepareForSend: PrepareForSendUseCase,
+internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
-    @Assisted private val method: WcEthMethod.SignTransaction,
+    @Assisted override val method: WcEthMethod.SendTransaction,
+    override val respondService: WcRespondService,
+    private val sendTransaction: SendTransactionUseCase,
     blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Fee, WcEthTransaction>(),
-    WcEthSignTransactionUseCase {
+    WcEthTransactionUseCase {
 
     override val securityStatus = blockAidDelegate.getSecurityStatus(
         network = network,
@@ -43,21 +41,14 @@ internal class DefaultWcEthSignTransactionUseCase @AssistedInject constructor(
     private val converter = EthTransactionParamsConverter(context)
 
     override suspend fun SignCollector<WcEthTransaction>.onSign(state: WcSignState<WcEthTransaction>) {
-        val hash = prepareForSend(state.signModel.transactionData, wallet, network)
-            .map { it.toHexString().formatHex() }
+        val hash = sendTransaction(state.signModel.transactionData, wallet, network)
             .onLeft { error ->
-                emit(state.toResult(error.left()))
+                val sendError = IllegalArgumentException(error.toString()) // todo(wc) use domain error
+                emit(state.toResult(sendError.left()))
             }
-            .getOrNull()
-            ?: return
-        val respondResult = respondService.respond(rawSdkRequest, hash)
+            .getOrNull() ?: return
+        val respondResult = respondService.respond(rawSdkRequest, hash.formatHex())
         emit(state.toResult(respondResult))
-    }
-
-    override suspend fun FlowCollector<WcEthTransaction>.onMiddleAction(signModel: WcEthTransaction, fee: Fee) {
-        val newState = signModel
-            .copy(transactionData = signModel.transactionData.copy(fee = fee))
-        emit(newState)
     }
 
     override fun updateFee(fee: Fee) {
@@ -71,9 +62,6 @@ internal class DefaultWcEthSignTransactionUseCase @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            context: WcMethodUseCaseContext,
-            method: WcEthMethod.SignTransaction,
-        ): DefaultWcEthSignTransactionUseCase
+        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.SendTransaction): WcEthSendTransactionUseCase
     }
 }

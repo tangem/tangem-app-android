@@ -10,9 +10,9 @@ import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMessageSignUseCase
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
-import com.tangem.domain.walletconnect.usecase.sign.WcSignStep
+import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.components.WcEthereumMessageSignRequestComponent
 import com.tangem.features.walletconnect.transaction.entity.*
@@ -40,7 +40,7 @@ internal class WcEthereumMessageSignRequestModel @Inject constructor(
 
     init {
         modelScope.launch {
-            val useCase: WcEthMessageSignUseCase = useCaseFactory.createUseCase(params.rawRequest)
+            val useCase: WcMessageSignUseCase = useCaseFactory.createUseCase(params.rawRequest)
             useCase.invoke()
                 .onEach { signState ->
                     if (signingIsDone(useCase, signState)) return@onEach
@@ -51,8 +51,8 @@ internal class WcEthereumMessageSignRequestModel @Inject constructor(
     }
 
     private fun signingIsDone(
-        useCase: WcEthMessageSignUseCase,
-        signState: WcSignState<WcEthMessageSignUseCase.SignModel>,
+        useCase: WcMessageSignUseCase,
+        signState: WcSignState<WcMessageSignUseCase.SignModel>,
     ): Boolean {
         (signState.domainStep as? WcSignStep.Result)?.result?.fold(
             ifLeft = { /* [REDACTED_TODO_COMMENT]*/ },
@@ -65,8 +65,8 @@ internal class WcEthereumMessageSignRequestModel @Inject constructor(
     }
 
     private fun domainToUM(
-        useCase: WcEthMessageSignUseCase,
-        signState: WcSignState<WcEthMessageSignUseCase.SignModel>,
+        useCase: WcMessageSignUseCase,
+        signState: WcSignState<WcMessageSignUseCase.SignModel>,
     ): WcEthereumMessageSignRequestUM {
         return WcEthereumMessageSignRequestUM(
             startIconRes = R.drawable.ic_back_24,
@@ -77,7 +77,7 @@ internal class WcEthereumMessageSignRequestModel @Inject constructor(
                 onDismiss = { cancel(useCase) },
                 onBack = ::showTransactionState,
                 onSign = useCase::sign,
-                onCopy = { onCopy(signState.signModel.rawMsg) },
+                onCopy = { onCopy(useCase.rawSdkRequest.request.params) },
                 transactionRequestOnClick = ::showTransactionRequestState,
             ),
             transaction = WcTransactionUM(
@@ -107,7 +107,7 @@ internal class WcEthereumMessageSignRequestModel @Inject constructor(
         )
     }
 
-    private fun cancel(useCase: WcEthMessageSignUseCase) {
+    private fun cancel(useCase: WcMessageSignUseCase) {
         useCase.cancel()
         router.pop()
     }

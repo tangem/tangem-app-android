@@ -14,7 +14,7 @@ import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
-import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.lib.crypto.UserWalletManager
 import jakarta.inject.Inject
@@ -46,7 +46,7 @@ internal class WcSolanaNetwork(
             session = session,
             rawSdkRequest = request,
             network = network,
-            accountAddress = accountAddress,
+            accountAddress = accountAddress.orEmpty(),
         )
         return when (method) {
             is WcSolanaMethod.SignMessage -> TODO()
