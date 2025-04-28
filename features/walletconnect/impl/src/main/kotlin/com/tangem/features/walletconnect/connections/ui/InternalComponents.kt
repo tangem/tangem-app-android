@@ -1,5 +1,6 @@
 package com.tangem.features.walletconnect.connections.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -10,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.tangem.core.ui.res.TangemTheme
@@ -63,5 +65,34 @@ internal fun WcAppInfoItem(
                 style = TangemTheme.typography.body2,
             )
         }
+    }
+}
+
+@Composable
+internal fun WcNetworkInfoItem(@DrawableRes icon: Int, name: String, symbol: String, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.padding(vertical = 14.dp, horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            modifier = Modifier.size(24.dp),
+            painter = painterResource(icon),
+            contentDescription = null,
+            tint = Color.Unspecified,
+        )
+        Text(
+            modifier = Modifier.padding(start = 12.dp).weight(1f, fill = false),
+            text = name,
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.primary1,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Text(
+            modifier = Modifier.padding(start = 4.dp),
+            text = symbol,
+            style = TangemTheme.typography.body1,
+            color = TangemTheme.colors.text.tertiary,
+        )
     }
 }
