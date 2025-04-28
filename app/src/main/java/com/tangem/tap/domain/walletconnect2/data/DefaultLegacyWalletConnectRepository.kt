@@ -45,10 +45,9 @@ internal class DefaultLegacyWalletConnectRepositoryFacade constructor(
         if (isNewWc) stub.currentSessions else legacy.currentSessions
     }
 
-    override suspend fun init(projectId: String) {
+    override fun init(projectId: String) {
         if (isNewWc) {
-            stub.init(projectId)
-            wcInitializeUseCase.init() // TODO(wc) Nikolai: Delete after RoutingComponent finished.
+            wcInitializeUseCase.init(projectId)
         } else {
             legacy.init(projectId)
         }
@@ -96,7 +95,7 @@ internal class LegacyWalletConnectRepositoryStub : LegacyWalletConnectRepository
     override val activeSessions: Flow<List<WalletConnectSession>> = emptyFlow()
     override val currentSessions: List<WalletConnectSession> = listOf()
 
-    override suspend fun init(projectId: String) = Unit
+    override fun init(projectId: String) = Unit
 
     override fun setUserNamespaces(userNamespaces: Map<NetworkNamespace, List<Account>>) = Unit
 
@@ -141,7 +140,7 @@ internal class DefaultLegacyWalletConnectRepository(
     /**
      * @param projectId Project ID at https://cloud.walletconnect.com/
      */
-    override suspend fun init(projectId: String) {
+    override fun init(projectId: String) {
         val relayUrl = "relay.walletconnect.com"
         val serverUrl = "wss://$relayUrl?projectId=$projectId"
         val connectionType = ConnectionType.AUTOMATIC
