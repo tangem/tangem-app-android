@@ -39,7 +39,9 @@ internal class DefaultPromoRepository(
             default = true,
         ).map { shouldShow ->
             if (promoId == PromoId.Referral) {
-                !referralRepository.isReferralParticipant(userWalletId) && shouldShow
+                runCatching {
+                    !referralRepository.isReferralParticipant(userWalletId) && shouldShow
+                }.getOrDefault(false)
             } else {
                 shouldShow
             }
