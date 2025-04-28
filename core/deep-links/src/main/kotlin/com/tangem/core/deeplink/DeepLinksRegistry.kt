@@ -44,9 +44,9 @@ interface DeepLinksRegistry {
 
     /**
      * Triggers run last launched [Intent] with deeplink handlers that can handle delayed deeplink
-     * after handle [Intent] clear that and second time no intent will be handled
+     * of specific [deepLinkClass] after handle [Intent] clear that and second time no intent will be handled
      */
-    fun triggerDelayedDeeplink()
+    fun triggerDelayedDeeplink(deepLinkClass: Class<out DeepLink>)
 
     fun cancelDelayedDeeplink()
 }
