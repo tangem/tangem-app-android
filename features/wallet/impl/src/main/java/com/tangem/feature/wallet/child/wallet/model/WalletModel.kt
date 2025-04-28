@@ -228,7 +228,8 @@ internal class WalletModel @Inject constructor(
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
-
+                    // Registering here, because `WalletDeepLinksHandler` unregisters deeplink when scope is cancelled
+                    // This is temporary solution, will be removed with complete deeplink navigation overhaul
                     addReferralDeepLink(selectedWallet)
                     walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
                 }
