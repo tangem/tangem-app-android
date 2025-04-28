@@ -2,6 +2,11 @@ package com.tangem.core.deeplink
 
 import android.content.Intent
 
+/**
+ * Key to pass deeplink via intent
+ */
+const val DEEPLINK_KEY = "deeplink"
+
 // TODO: Add tests
 /**
  * Provides functionality to handle deep links.
