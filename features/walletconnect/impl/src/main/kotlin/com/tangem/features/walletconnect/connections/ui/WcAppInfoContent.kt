@@ -37,10 +37,7 @@ import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
-import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
-import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
-import com.tangem.features.walletconnect.connections.entity.WcNetworksInfo
-import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
+import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.features.walletconnect.impl.R
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
@@ -308,7 +305,7 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
             color = TangemTheme.colors.text.primary1,
         )
         when (networksInfo) {
-            is WcNetworksInfo.ContainsAllRequiredNetworks -> NetworkIcons(icons = networksInfo.icons)
+            is WcNetworksInfo.ContainsAllRequiredNetworks -> NetworkIcons(items = networksInfo.items)
             is WcNetworksInfo.MissingRequiredNetworkInfo -> Unit
         }
         Icon(
@@ -327,17 +324,17 @@ private fun SelectNetworksBlock(networksInfo: WcNetworksInfo, modifier: Modifier
 
 @Suppress("MagicNumber")
 @Composable
-private fun NetworkIcons(icons: ImmutableList<Int>, modifier: Modifier = Modifier) {
-    val (iconsToShow, remainingCount) = remember(icons) {
+private fun NetworkIcons(items: ImmutableList<WcNetworkInfoItem>, modifier: Modifier = Modifier) {
+    val (iconsToShow, remainingCount) = remember(items) {
         when {
-            icons.size <= 4 -> icons to 0
-            else -> icons.take(3) to icons.size - 3
+            items.size <= 4 -> items to 0
+            else -> items.take(3) to items.size - 3
         }
     }
     Box(modifier = modifier.wrapContentWidth()) {
-        iconsToShow.forEachIndexed { index, iconRes ->
+        iconsToShow.forEachIndexed { index, item ->
             Image(
-                painter = painterResource(id = iconRes),
+                painter = painterResource(id = item.icon),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -569,12 +566,32 @@ private class WcAppInfoStateProvider : CollectionPreviewParameterProvider<WcAppI
             notification = WcAppInfoSecurityNotification.SecurityRisk,
             walletName = "Tangem 2.0",
             networksInfo = WcNetworksInfo.ContainsAllRequiredNetworks(
-                icons = persistentListOf(
-                    R.drawable.img_optimism_22,
-                    R.drawable.img_bsc_22,
-                    R.drawable.img_avalanche_22,
-                    R.drawable.img_solana_22,
-                    R.drawable.img_avalanche_22,
+                items = persistentListOf(
+                    WcNetworkInfoItem(
+                        id = "1",
+                        icon = R.drawable.img_optimism_22,
+                        name = "img_optimism_22",
+                        symbol = "optimism",
+                    ),
+                    WcNetworkInfoItem(id = "2", icon = R.drawable.img_bsc_22, name = "img_bsc_22", symbol = "bsc"),
+                    WcNetworkInfoItem(
+                        id = "3",
+                        icon = R.drawable.img_avalanche_22,
+                        name = "img_avalanche_22",
+                        symbol = "avalanche",
+                    ),
+                    WcNetworkInfoItem(
+                        id = "4",
+                        icon = R.drawable.img_solana_22,
+                        name = "img_solana_22",
+                        symbol = "solana",
+                    ),
+                    WcNetworkInfoItem(
+                        id = "5",
+                        icon = R.drawable.img_avalanche_22,
+                        name = "img_avalanche_22",
+                        symbol = "avalanche",
+                    ),
                 ),
             ),
             onDismiss = {},
