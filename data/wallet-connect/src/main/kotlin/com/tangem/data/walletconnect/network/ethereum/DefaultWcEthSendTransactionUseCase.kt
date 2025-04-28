@@ -3,6 +3,7 @@ package com.tangem.data.walletconnect.network.ethereum
 import arrow.core.left
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.blockchain.extensions.formatHex
+import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
@@ -25,11 +26,17 @@ internal class DefaultWcEthSendTransactionUseCase @AssistedInject constructor(
     @Assisted private val method: WcEthMethod.SendTransaction,
     override val respondService: WcRespondService,
     private val sendTransaction: SendTransactionUseCase,
-    blockAidDelegate: BlockAidEthereumVerificationDelegate,
+    blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Fee, WcEthTransaction>(),
     WcEthSendTransactionUseCase {
 
-    override val securityStatus = blockAidDelegate.getSecurityStatus(network, method, rawSdkRequest, session)
+    override val securityStatus = blockAidDelegate.getSecurityStatus(
+        network = network,
+        method = method,
+        rawSdkRequest = rawSdkRequest,
+        session = session,
+        accountAddress = context.accountAddress,
+    )
 
     private val converter = EthTransactionParamsConverter(context)
 
