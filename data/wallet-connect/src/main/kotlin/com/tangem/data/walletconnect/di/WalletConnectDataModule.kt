@@ -7,11 +7,6 @@ import com.tangem.data.walletconnect.DefaultWalletConnectRepository
 import com.tangem.data.walletconnect.initialize.DefaultWcInitializeUseCase
 import com.tangem.data.walletconnect.network.ethereum.WcEthNetwork
 import com.tangem.data.walletconnect.network.solana.WcSolanaNetwork
-import com.tangem.data.walletconnect.pair.AssociateNetworksDelegate
-import com.tangem.data.walletconnect.pair.CaipNamespaceDelegate
-import com.tangem.data.walletconnect.pair.DefaultWcPairService
-import com.tangem.data.walletconnect.pair.DefaultWcPairUseCase
-import com.tangem.data.walletconnect.pair.WcPairSdkDelegate
 import com.tangem.data.walletconnect.pair.*
 import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.request.DefaultWcRequestUseCaseFactory
@@ -31,6 +26,7 @@ import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
 import com.tangem.domain.walletconnect.model.legacy.WalletConnectSessionsRepository
 import com.tangem.domain.walletconnect.repository.WalletConnectRepository
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
+import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
@@ -195,6 +191,12 @@ internal object WalletConnectDataModule {
     @Singleton
     fun wcRequestUseCaseFactory(diHelperBox: DiHelperBox): WcRequestUseCaseFactory {
         return DefaultWcRequestUseCaseFactory(diHelperBox.handlers)
+    }
+
+    @Provides
+    @Singleton
+    fun providesWcDisconnectUseCase(sessionsManager: WcSessionsManager): WcDisconnectUseCase {
+        return WcDisconnectUseCase(sessionsManager)
     }
 
     internal class DiHelperBox(
