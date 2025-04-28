@@ -105,16 +105,18 @@ internal class DefaultDeepLinksRegistry : DeepLinksRegistry {
             val intent = lastIntent
             val received = intent?.data ?: return
             var hasMatch = false
-            registries.forEach { deepLink ->
-                if (!deepLink.shouldHandleDelayed) return@forEach
-                val expected = deepLink.uri.toUri()
-                if (!isMatches(expected, received)) return@forEach
-                hasMatch = true
+            registries
+                .filterIsInstance(deepLinkClass)
+                .forEach { deepLink ->
+                    if (!deepLink.shouldHandleDelayed) return@forEach
+                    val expected = deepLink.uri.toUri()
+                    if (!isMatches(expected, received)) return@forEach
+                    hasMatch = true
 
-                val params = getParams(expected, received)
-                logMatch(hasMatch, expected, received, params)
-                deepLink.onReceive(params)
-            }
+                    val params = getParams(expected, received)
+                    logMatch(hasMatch, expected, received, params)
+                    deepLink.onReceive(params)
+                }
 
             if (!hasMatch) {
                 logMatch(hasMatch, null, received, null)
