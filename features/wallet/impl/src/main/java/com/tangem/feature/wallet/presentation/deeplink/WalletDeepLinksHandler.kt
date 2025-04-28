@@ -38,6 +38,7 @@ internal class WalletDeepLinksHandler @Inject constructor(
         deepLinksRegistry.unregisterByIds(deepLinks.map { it.id })
         deepLinksRegistry.register(deepLinks = deepLinks)
 
+        // When navigation to another screen scope is Cancelled and deeplinks are hot handled
         scope.launchOnCancellation {
             deepLinksRegistry.unregister(deepLinks)
         }
