@@ -35,6 +35,7 @@ import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.domain.walletconnect.usecase.pair.WcPairUseCase
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
+import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.Module
 import dagger.Provides
@@ -146,11 +147,13 @@ internal object WalletConnectDataModule {
         excludedBlockchains: ExcludedBlockchains,
         sessionsManager: WcSessionsManager,
         factories: WcSolanaNetwork.Factories,
+        walletManager: UserWalletManager,
     ): WcSolanaNetwork = WcSolanaNetwork(
         moshi = moshi,
         sessionsManager = sessionsManager,
         factories = factories,
         excludedBlockchains = excludedBlockchains,
+        walletManager = walletManager,
     )
 
     @Provides
