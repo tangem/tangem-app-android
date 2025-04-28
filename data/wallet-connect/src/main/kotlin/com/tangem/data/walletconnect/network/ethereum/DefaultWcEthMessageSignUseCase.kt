@@ -1,13 +1,14 @@
 package com.tangem.data.walletconnect.network.ethereum
 
 import arrow.core.left
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.HEX_PREFIX
+import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
+import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
@@ -55,11 +56,11 @@ internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
             .onLeft { emit(state.toResult(it.left())) }
             .getOrNull() ?: return
 
-        val respond = EthereumUtils.prepareSignedMessageData(
-            signedHash = signedHash,
-            hashToSign = hashToSign,
+        val respond = UnmarshalHelper.unmarshalSignatureExtended(
+            signature = signedHash,
+            hash = hashToSign,
             publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-        )
+        ).asRSVLegacyEVM().toHexString()
 
         val wcRespondResult = respondService.respond(rawSdkRequest, respond)
         emit(state.toResult(wcRespondResult))
