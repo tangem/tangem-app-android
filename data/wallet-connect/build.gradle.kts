@@ -52,6 +52,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(projects.domain.blockaid)
     implementation(projects.domain.blockaid.models)
+    implementation(projects.libs.crypto)
 
     /* Tests */
     testImplementation(projects.common.test)
