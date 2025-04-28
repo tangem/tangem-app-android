@@ -1,5 +1,6 @@
 package com.tangem.tap.features.home.redux
 
+import com.tangem.domain.settings.usercountry.models.UserCountry
 import kotlinx.coroutines.CoroutineScope
 import org.rekotlin.Action
 
@@ -15,4 +16,6 @@ sealed class HomeAction : Action {
     data class ReadCard(val scope: CoroutineScope) : HomeAction()
 
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
+
+    data class UserCountryLoaded(val userCountry: UserCountry) : HomeAction()
 }
