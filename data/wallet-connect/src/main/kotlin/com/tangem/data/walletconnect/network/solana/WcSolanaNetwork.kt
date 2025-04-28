@@ -16,13 +16,16 @@ import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
 import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
 import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.lib.crypto.UserWalletManager
 import jakarta.inject.Inject
+import timber.log.Timber
 
-internal class WcSolanaNetwork constructor(
+internal class WcSolanaNetwork(
     private val moshi: Moshi,
     private val sessionsManager: WcSessionsManager,
     private val factories: Factories,
     private val excludedBlockchains: ExcludedBlockchains,
+    private val walletManager: UserWalletManager,
 ) : WcNamespaceConverter, WcRequestToUseCaseConverter {
 
     override val namespaceKey: NamespaceKey = NamespaceKey("solana")
@@ -38,11 +41,26 @@ internal class WcSolanaNetwork constructor(
         val method: WcSolanaMethod = name.toMethod(request) ?: return null
         val session = sessionsManager.findSessionByTopic(request.topic) ?: return null
         val network = toNetwork(request.chainId.orEmpty(), session.wallet) ?: return null
-        val context = WcMethodUseCaseContext(session = session, rawSdkRequest = request, network = network)
+        val accountAddress = getAccountAddress(network)
+        val context = WcMethodUseCaseContext(
+            session = session,
+            rawSdkRequest = request,
+            network = network,
+            accountAddress = accountAddress,
+        )
         return when (method) {
             is WcSolanaMethod.SignMessage -> TODO()
             is WcSolanaMethod.SignTransaction -> factories.signTransaction.create(context, method)
             is WcSolanaMethod.SignAllTransaction -> factories.signAllTransaction.create(context, method)
+        }
+    }
+
+    private suspend fun getAccountAddress(network: Network): String? {
+        return try {
+            walletManager.getWalletAddress(network.id.value, network.derivationPath.value)
+        } catch (exception: Exception) {
+            Timber.e(exception)
+            null
         }
     }
 
