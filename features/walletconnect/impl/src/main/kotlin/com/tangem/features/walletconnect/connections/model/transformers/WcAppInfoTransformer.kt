@@ -4,10 +4,7 @@ import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.ui.extensions.iconResId
 import com.tangem.domain.walletconnect.model.WcSessionProposal
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.features.walletconnect.connections.entity.WcAppInfoSecurityNotification
-import com.tangem.features.walletconnect.connections.entity.WcAppInfoUM
-import com.tangem.features.walletconnect.connections.entity.WcNetworksInfo
-import com.tangem.features.walletconnect.connections.entity.WcPrimaryButtonConfig
+import com.tangem.features.walletconnect.connections.entity.*
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toImmutableList
 
@@ -53,8 +50,15 @@ internal class WcAppInfoTransformer(
             )
         } else {
             WcNetworksInfo.ContainsAllRequiredNetworks(
-                icons = (proposalNetwork.required + proposalNetwork.available)
-                    .map { it.iconResId }
+                items = (proposalNetwork.required + proposalNetwork.available)
+                    .map {
+                        WcNetworkInfoItem(
+                            id = it.id.value,
+                            icon = it.iconResId,
+                            name = it.name,
+                            symbol = it.currencySymbol,
+                        )
+                    }
                     .toImmutableList(),
             )
         }
