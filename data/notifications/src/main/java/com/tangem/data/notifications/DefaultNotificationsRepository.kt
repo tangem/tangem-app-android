@@ -44,14 +44,6 @@ internal class DefaultNotificationsRepository @Inject constructor(
         return appPreferencesStore.getSyncOrNull(PreferencesKeys.NOTIFICATIONS_APPLICATION_ID_KEY)
     }
 
-    override suspend fun setNotificationsEnabledForWallet(walletId: String, enabled: Boolean) =
-        withContext(dispatchers.io) {
-            tangemTechApi.setNotificationsEnabled(
-                walletId = walletId,
-                body = WalletBody(notifyStatus = enabled),
-            ).getOrThrow()
-        }
-
     override suspend fun associateApplicationIdWithWallets(appId: String, wallets: List<String>) =
         withContext(dispatchers.io) {
             tangemTechApi.associateApplicationIdWithWallets(
@@ -61,10 +53,6 @@ internal class DefaultNotificationsRepository @Inject constructor(
                 },
             ).getOrThrow()
         }
-
-    override suspend fun isNotificationsEnabledForWallet(walletId: String): Boolean = withContext(dispatchers.io) {
-        tangemTechApi.getWalletById(walletId).getOrThrow().notifyStatus
-    }
 
     override suspend fun setWalletName(walletId: String, walletName: String) = withContext(dispatchers.io) {
         tangemTechApi.updateWallet(
