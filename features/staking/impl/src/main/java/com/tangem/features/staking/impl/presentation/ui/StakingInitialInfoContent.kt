@@ -264,7 +264,7 @@ private fun ActiveStakingBlock(
     val (icon, iconTint) = balance.type.getIcon()
     InputRowImageInfo(
         subtitle = balance.title,
-        caption = balance.subtitle ?: balance.getAprText(),
+        caption = balance.subtitle ?: balance.getAprTextNeutral(),
         infoTitle = balance.formattedFiatAmount.orMaskWithStars(isBalanceHidden),
         infoSubtitle = balance.formattedCryptoAmount.orMaskWithStars(isBalanceHidden),
         imageUrl = balance.getImage(),
@@ -301,8 +301,12 @@ private fun StakeButtonBlock(buttonState: NavigationButtonsState) {
     }
 }
 
+/**
+ * For FCA fixes remove coloring for now
+ */
+@Suppress("UnusedPrivateMember")
 @Composable
-private fun BalanceState.getAprText() = combinedReference(
+private fun BalanceState.getAprTextColored() = combinedReference(
     resourceReference(R.string.staking_details_apr),
     annotatedReference {
         appendSpace()
@@ -311,6 +315,12 @@ private fun BalanceState.getAprText() = combinedReference(
             color = TangemTheme.colors.text.accent,
         )
     },
+)
+
+@Composable
+private fun BalanceState.getAprTextNeutral() = combinedReference(
+    resourceReference(R.string.staking_details_apr),
+    stringReference(" " + validator?.apr.orZero().format { percent() }),
 )
 
 @Composable
