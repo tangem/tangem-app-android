@@ -8,6 +8,7 @@ import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
 import com.tangem.domain.walletconnect.usecase.sign.WcSignState
@@ -25,8 +26,17 @@ internal class DefaultWcSolanaSignAllTransactionUseCase @AssistedInject construc
     private val prepareForSend: PrepareForSendUseCase,
     @Assisted override val context: WcMethodUseCaseContext,
     @Assisted private val method: WcSolanaMethod.SignAllTransaction,
+    blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Nothing, List<TransactionData.Compiled>>(),
     WcSolanaSignAllTransactionUseCase {
+
+    override val securityStatus = blockAidDelegate.getSecurityStatus(
+        network = network,
+        method = method,
+        rawSdkRequest = rawSdkRequest,
+        session = session,
+        accountAddress = context.accountAddress,
+    )
 
     override suspend fun SignCollector<List<TransactionData.Compiled>>.onSign(
         state: WcSignState<List<TransactionData.Compiled>>,
