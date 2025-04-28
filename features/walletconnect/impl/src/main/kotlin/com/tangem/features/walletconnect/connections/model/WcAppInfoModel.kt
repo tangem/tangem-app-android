@@ -53,7 +53,7 @@ internal class WcAppInfoModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        // TODO: wc dismiss and reload sessions
+                        params.onDismiss()
                     }
                     is WcPairState.Error -> {
                         // TODO: wc show toast/snackbar/alert?
@@ -78,6 +78,7 @@ internal class WcAppInfoModel @Inject constructor(
     }
 
     fun dismiss() {
+        wcPairUseCase.reject()
         params.onDismiss()
     }
 
