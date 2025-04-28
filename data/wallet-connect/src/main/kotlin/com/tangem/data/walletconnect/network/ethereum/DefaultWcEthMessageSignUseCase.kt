@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
+import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
@@ -30,11 +31,17 @@ internal class DefaultWcEthMessageSignUseCase @AssistedInject constructor(
     @Assisted private val method: WcEthMethod.MessageSign,
     private val walletManagersFacade: WalletManagersFacade,
     private val signUseCase: SignUseCase,
-    blockAidDelegate: BlockAidEthereumVerificationDelegate,
+    blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Nothing, WcEthMessageSignUseCase.SignModel>(),
     WcEthMessageSignUseCase {
 
-    override val securityStatus = blockAidDelegate.getSecurityStatus(network, method, rawSdkRequest, session)
+    override val securityStatus = blockAidDelegate.getSecurityStatus(
+        network = network,
+        method = method,
+        rawSdkRequest = rawSdkRequest,
+        session = session,
+        accountAddress = context.accountAddress,
+    )
 
     override suspend fun SignCollector<WcEthMessageSignUseCase.SignModel>.onSign(
         state: WcSignState<WcEthMessageSignUseCase.SignModel>,
