@@ -16,8 +16,9 @@ import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.format.bigdecimal.percent
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.staking.impl.R
-import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.model.StakingClickIntents
+import com.tangem.features.staking.impl.presentation.state.BalanceState
+import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.utils.extensions.orZero
 
 @Composable
@@ -37,16 +38,7 @@ internal fun StakingClaimRewardsValidatorContent(
             key(item.title.resolveReference() + index) {
                 InputRowImageInfo(
                     subtitle = item.title,
-                    caption = combinedReference(
-                        resourceReference(R.string.staking_details_apr),
-                        annotatedReference {
-                            appendSpace()
-                            appendColored(
-                                text = item.validator?.apr.orZero().format { percent() },
-                                color = TangemTheme.colors.text.accent,
-                            )
-                        },
-                    ),
+                    caption = item.getAprTextNeutral(),
                     infoTitle = item.formattedFiatAmount,
                     infoSubtitle = item.formattedCryptoAmount,
                     imageUrl = item.validator?.image.orEmpty(),
@@ -65,3 +57,25 @@ internal fun StakingClaimRewardsValidatorContent(
         }
     }
 }
+
+/**
+ * For FCA fixes remove coloring for now
+ */
+@Suppress("UnusedPrivateMember")
+@Composable
+private fun BalanceState.getAprTextColored() = combinedReference(
+    resourceReference(R.string.staking_details_apr),
+    annotatedReference {
+        appendSpace()
+        appendColored(
+            text = validator?.apr.orZero().format { percent() },
+            color = TangemTheme.colors.text.accent,
+        )
+    },
+)
+
+@Composable
+private fun BalanceState.getAprTextNeutral() = combinedReference(
+    resourceReference(R.string.staking_details_apr),
+    stringReference(" " + validator?.apr.orZero().format { percent() }),
+)
