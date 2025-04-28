@@ -115,9 +115,12 @@ internal abstract class BasicTokenListSubscriber(
 
     protected open suspend fun onTokenListReceived(maybeTokenList: Lce<TokenListError, TokenList>) {
         /* no-op */
+        // Handling sell deeplink requires full content in order to correctly open Send screen
         if (maybeTokenList.getOrNull(false) != null) {
             deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = SellCurrencyDeepLink::class.java)
         }
+        // Handling referral deeplink requires only selected wallet to be loaded
+        // This is temporary solution, will be removed with complete deeplink navigation overhaul
         if (maybeTokenList.getOrNull(true) != null) {
             deepLinksRegistry.triggerDelayedDeeplink(deepLinkClass = ReferralDeepLink::class.java)
         }
