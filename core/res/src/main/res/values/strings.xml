@@ -1292,6 +1292,7 @@
   <string name="wc_common_network">Network</string>
   <string name="wc_common_networks">Networks</string>
   <string name="wc_common_wallet">Wallet</string>
+  <string name="wc_connected_networks">Connected networks</string>
   <string name="wc_connection_reqeust_can_view_balance">View your wallet balance and activity</string>
   <string name="wc_connection_reqeust_cant_sign">Sign transactions without your notice</string>
   <string name="wc_connection_reqeust_request_approval">Request approval for transactions</string>
