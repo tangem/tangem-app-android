@@ -5,16 +5,9 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
-import com.tangem.tap.common.redux.DebugErrorAction
-import com.tangem.tap.common.redux.ErrorAction
-import com.tangem.tap.domain.TapError
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
-
-    // notifications
-    data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
-    data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
 
     // dialogs
     data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()

@@ -60,6 +60,7 @@ internal class WcMethodUseCaseContext(
     val session: WcSession,
     val rawSdkRequest: WcSdkSessionRequest,
     val network: Network,
+    val accountAddress: String?,
 )
 
 internal typealias SignCollector<SignModel> = FlowCollector<WcSignState<SignModel>>

@@ -31,7 +31,6 @@ data class AppState(
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
                 logMiddleware,
-                notificationsMiddleware,
                 GlobalMiddleware.handler,
                 HomeMiddleware.handler,
                 DetailsMiddleware().detailsMiddleware,

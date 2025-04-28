@@ -1,10 +1,9 @@
 package com.tangem.domain.walletconnect.usecase.blockaid
 
 import com.domain.blockaid.models.transaction.CheckTransactionResult
-import com.tangem.domain.core.lce.Lce
-import kotlinx.coroutines.flow.Flow
+import com.tangem.domain.core.lce.LceFlow
 
 interface WcBlockAidEligibleTransactionUseCase {
 
-    val securityStatus: Flow<Lce<Throwable, CheckTransactionResult>>
+    val securityStatus: LceFlow<Throwable, CheckTransactionResult>
 }
