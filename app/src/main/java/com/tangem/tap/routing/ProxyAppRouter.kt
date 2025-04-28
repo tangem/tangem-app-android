@@ -42,7 +42,11 @@ internal class ProxyAppRouter(
 
     override fun replaceAll(vararg routes: AppRoute, onComplete: (isSuccess: Boolean) -> Unit) {
         safeNavigate(onComplete, message = "Replace all routes with $routes") {
-            innerRouter.replaceAll(*routes, onComplete = onComplete)
+            runCatching {
+                innerRouter.replaceAll(*routes, onComplete = onComplete)
+            }.getOrElse {
+                Timber.tag("ASDASD").e(it)
+            }
         }
     }
 
@@ -78,6 +82,7 @@ internal class ProxyAppRouter(
 
     override fun defaultCompletionHandler(isSuccess: Boolean, errorMessage: String) {
         if (!isSuccess) {
+            Timber.tag("ASDASD").d(errorMessage)
             analyticsExceptionHandler.sendException(ExceptionAnalyticsEvent(RuntimeException(errorMessage)))
             Timber.w(errorMessage)
 

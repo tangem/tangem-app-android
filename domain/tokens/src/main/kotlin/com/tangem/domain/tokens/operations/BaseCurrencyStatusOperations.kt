@@ -91,6 +91,7 @@ abstract class BaseCurrencyStatusOperations(
         userWalletId: UserWalletId,
         currency: CryptoCurrency,
         includeQuotes: Boolean = true,
+        subscribeOnYieldBalance: Boolean = true,
     ): Flow<Either<Error, CryptoCurrencyStatus>> {
         val rawCurrencyId = currency.id.rawCurrencyId
 
@@ -117,13 +118,24 @@ abstract class BaseCurrencyStatusOperations(
 
         val yieldBalanceFlow = getYieldBalance(userWalletId = userWalletId, cryptoCurrency = currency)
 
-        return combine(quoteFlow, statusFlow, yieldBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeYieldBalance ->
-            currencyStatusProxyCreator.createCurrencyStatus(
-                currency = currency,
-                maybeQuote = maybeQuote,
-                maybeNetworkStatus = maybeNetworkStatus,
-                maybeYieldBalance = maybeYieldBalance,
-            )
+        return if (subscribeOnYieldBalance) {
+            combine(quoteFlow, statusFlow, yieldBalanceFlow) { maybeQuote, maybeNetworkStatus, maybeYieldBalance ->
+                currencyStatusProxyCreator.createCurrencyStatus(
+                    currency = currency,
+                    maybeQuote = maybeQuote,
+                    maybeNetworkStatus = maybeNetworkStatus,
+                    maybeYieldBalance = maybeYieldBalance,
+                )
+            }
+        } else {
+            combine(quoteFlow, statusFlow) { maybeQuote, maybeNetworkStatus ->
+                currencyStatusProxyCreator.createCurrencyStatus(
+                    currency = currency,
+                    maybeQuote = maybeQuote,
+                    maybeNetworkStatus = maybeNetworkStatus,
+                    maybeYieldBalance = null,
+                )
+            }
         }
     }
 
@@ -242,7 +254,13 @@ abstract class BaseCurrencyStatusOperations(
             recover = { return flowOf(it.left()) },
         )
 
-        return getCurrencyStatusFlow(userWalletId, currency, includeQuotes)
+        return getCurrencyStatusFlow(
+            userWalletId = userWalletId,
+            currency = currency,
+            includeQuotes = includeQuotes,
+            // If toggle is off, then subscribe on yield balance. If toggle is on, then don't
+            subscribeOnYieldBalance = !tokensFeatureToggles.isStakingLoadingRefactoringEnabled,
+        )
     }
 
     suspend fun getCurrenciesStatusesSync(userWalletId: UserWalletId): Either<Error, List<CryptoCurrencyStatus>> {
