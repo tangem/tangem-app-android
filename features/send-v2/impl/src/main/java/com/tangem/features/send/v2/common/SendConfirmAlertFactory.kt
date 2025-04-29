@@ -1,4 +1,4 @@
-package com.tangem.features.send.v2.send.confirm.model
+package com.tangem.features.send.v2.common
 
 import com.tangem.common.ui.alerts.TransactionErrorAlertConverter
 import com.tangem.common.ui.alerts.models.AlertDemoModeUM

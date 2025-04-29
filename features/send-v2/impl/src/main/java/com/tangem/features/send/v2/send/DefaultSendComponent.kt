@@ -18,13 +18,15 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.decompose.navigation.inner.InnerRouter
 import com.tangem.core.ui.decompose.ComposableContentComponent
+import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.SendContent
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
+import com.tangem.features.send.v2.impl.R
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
 import com.tangem.features.send.v2.send.model.SendModel
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
@@ -48,6 +50,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
 ) : SendComponent, AppComponentContext by appComponentContext {
 
     private val stackNavigation = StackNavigation<CommonSendRoute>()
+    private val analyticCategoryName = CommonSendAnalyticEvents.SEND_CATEGORY
 
     private val innerRouter = InnerRouter<CommonSendRoute>(
         stackNavigation = stackNavigation,
@@ -88,19 +91,27 @@ internal class DefaultSendComponent @AssistedInject constructor(
             componentScope.launch {
                 when (val activeComponent = stack.active.instance) {
                     is SendConfirmComponent -> if (currentRoute.value.isEditMode) {
-                        analyticsEventHandler.send(SendAnalyticEvents.ConfirmationScreenOpened)
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.ConfirmationScreenOpened(categoryName = analyticCategoryName),
+                        )
                         activeComponent.updateState(model.uiState.value)
                     }
                     is SendAmountComponent -> {
-                        analyticsEventHandler.send(SendAnalyticEvents.AmountScreenOpened)
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.AmountScreenOpened(categoryName = analyticCategoryName),
+                        )
                         activeComponent.updateState(model.uiState.value.amountUM)
                     }
                     is SendDestinationComponent -> {
-                        analyticsEventHandler.send(SendAnalyticEvents.AddressScreenOpened)
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.AddressScreenOpened(categoryName = analyticCategoryName),
+                        )
                         activeComponent.updateState(model.uiState.value.destinationUM)
                     }
                     is SendFeeComponent -> {
-                        analyticsEventHandler.send(SendAnalyticEvents.FeeScreenOpened)
+                        analyticsEventHandler.send(
+                            CommonSendAnalyticEvents.FeeScreenOpened(categoryName = analyticCategoryName),
+                        )
                     }
                 }
                 currentRoute.emit(stack.active.configuration)
@@ -135,7 +146,8 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 state = model.uiState.value.destinationUM,
                 currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Destination>(),
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
+                analyticsCategoryName = analyticCategoryName,
+                title = resourceReference(R.string.send_recipient_label),
                 userWalletId = params.userWalletId,
                 cryptoCurrency = params.currency,
                 callback = model,
@@ -156,7 +168,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
             state = model.uiState.value.amountUM,
             currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
             isBalanceHidingFlow = model.isBalanceHiddenFlow,
-            analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
+            analyticsCategoryName = analyticCategoryName,
             userWallet = model.userWallet,
             appCurrency = model.appCurrency,
             cryptoCurrencyStatus = model.cryptoCurrencyStatus,
@@ -167,7 +179,8 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     onChildBack()
                 } else {
                     analyticsEventHandler.send(
-                        SendAnalyticEvents.CloseButtonClicked(
+                        CommonSendAnalyticEvents.CloseButtonClicked(
+                            categoryName = analyticCategoryName,
                             source = SendScreenSource.Amount,
                             isFromSummary = false,
                             isValid = model.uiState.value.amountUM.isPrimaryButtonEnabled,
@@ -196,7 +209,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 params = SendFeeComponentParams.FeeParams(
                     state = model.uiState.value.feeUM,
                     currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Fee>(),
-                    analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
+                    analyticsCategoryName = analyticCategoryName,
                     userWallet = model.userWallet,
                     cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                     feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
@@ -235,7 +248,7 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 userWallet = model.userWallet,
                 currentRoute = currentRoute,
                 isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = SendAnalyticEvents.SEND_CATEGORY,
+                analyticsCategoryName = analyticCategoryName,
                 cryptoCurrencyStatus = model.cryptoCurrencyStatus,
                 feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
                 appCurrency = model.appCurrency,
