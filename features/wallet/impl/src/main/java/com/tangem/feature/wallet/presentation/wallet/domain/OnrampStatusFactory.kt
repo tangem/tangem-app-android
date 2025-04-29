@@ -37,7 +37,7 @@ internal class OnrampStatusFactory @Inject constructor(
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
         if (selectedTx.activeStatus.isAutoDisposable || forceDispose) {
-            onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
+            onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
         }
     }
 
@@ -61,7 +61,7 @@ internal class OnrampStatusFactory @Inject constructor(
                     Timber.e("Couldn't update onramp status. $it")
                 },
                 ifRight = { statusModel ->
-                    val externalTxId = statusModel.externalTxId
+                    val txId = statusModel.txId
                     val status = toAnalyticStatus(statusModel.status) ?: return
 
                     if (statusModel.status != onrampTx.activeStatus) {
@@ -74,7 +74,7 @@ internal class OnrampStatusFactory @Inject constructor(
                             ),
                         )
                         onrampUpdateTransactionStatusUseCase(
-                            externalTxId = externalTxId,
+                            txId = txId,
                             externalTxUrl = statusModel.externalTxUrl.orEmpty(),
                             status = statusModel.status,
                         )
