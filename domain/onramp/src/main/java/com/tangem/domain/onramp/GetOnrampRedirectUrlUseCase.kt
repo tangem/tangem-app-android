@@ -2,6 +2,7 @@ package com.tangem.domain.onramp
 
 import arrow.core.Either
 import com.tangem.domain.onramp.model.OnrampProviderWithQuote
+import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
@@ -20,7 +21,7 @@ class GetOnrampRedirectUrlUseCase(
         quote: OnrampProviderWithQuote.Data,
         cryptoCurrency: CryptoCurrency,
         isDarkTheme: Boolean,
-    ): Either<OnrampError, String> {
+    ): Either<OnrampError, OnrampTransaction> {
         return Either.catch {
             val transaction = repository.getOnrampData(
                 userWallet = userWallet,
@@ -29,7 +30,7 @@ class GetOnrampRedirectUrlUseCase(
                 isDarkTheme = isDarkTheme,
             )
             transactionRepository.storeTransaction(transaction)
-            transaction.redirectUrl
+            transaction
         }.mapLeft(errorResolver::resolve)
     }
 }
