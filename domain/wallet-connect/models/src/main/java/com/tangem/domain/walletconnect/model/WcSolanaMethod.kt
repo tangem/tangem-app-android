@@ -4,7 +4,8 @@ sealed interface WcSolanaMethod : WcMethod {
 
     data class SignMessage(
         val pubKey: String,
-        val message: String,
+        val rawMessage: String,
+        val humanMsg: String,
     ) : WcSolanaMethod
 
     data class SignTransaction(
