@@ -195,13 +195,9 @@ internal class TokenDetailsModel @Inject constructor(
         handleBalanceHiding()
     }
 
-    fun onBuyCurrencyDeepLink(txId: String) {
-        if (onrampFeatureToggles.isFeatureEnabled) {
-            router.openOnrampSuccess(txId)
-        } else {
-            val currency = cryptoCurrencyStatus?.currency ?: return
-            analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
-        }
+    fun onBuyCurrencyDeepLink() {
+        val currency = cryptoCurrencyStatus?.currency ?: return
+        analyticsEventsHandler.send(TokenScreenAnalyticsEvent.Bought(currency.symbol))
     }
 
     fun onPause() {
