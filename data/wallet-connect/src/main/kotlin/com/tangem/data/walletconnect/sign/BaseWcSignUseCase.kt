@@ -4,10 +4,9 @@ import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.walletconnect.model.WcSession
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
-import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
-import com.tangem.domain.walletconnect.usecase.sign.WcSignUseCase
-import com.tangem.domain.wallets.models.UserWallet
+import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import kotlinx.coroutines.flow.FlowCollector
 
 internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
@@ -21,8 +20,8 @@ internal abstract class BaseWcSignUseCase<MiddleAction, SignModel> :
     abstract val context: WcMethodUseCaseContext
     override val network: Network get() = context.network
     override val session: WcSession get() = context.session
+    override val walletAddress: String get() = context.accountAddress
     override val rawSdkRequest: WcSdkSessionRequest get() = context.rawSdkRequest
-    val wallet: UserWallet get() = session.wallet
 
     protected val delegate by lazy {
         WcSignUseCaseDelegate(
@@ -60,7 +59,7 @@ internal class WcMethodUseCaseContext(
     val session: WcSession,
     val rawSdkRequest: WcSdkSessionRequest,
     val network: Network,
-    val accountAddress: String?,
+    val accountAddress: String,
 )
 
 internal typealias SignCollector<SignModel> = FlowCollector<WcSignState<SignModel>>

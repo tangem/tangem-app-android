@@ -21,10 +21,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import kotlin.coroutines.resume
-import kotlin.time.Duration.Companion.seconds
 
 internal class DefaultWcSessionsManager(
     private val store: WalletConnectStore,
@@ -67,19 +65,8 @@ internal class DefaultWcSessionsManager(
     override suspend fun removeSession(session: WcSession): Either<Throwable, Unit> {
         val topic = session.sdkModel.topic
         val sdkCall = sdkDisconnectSession(topic)
-        sdkCall.onLeft { return it.left() }
-        suspend fun waitSdkCallback() = onSessionDelete.receiveAsFlow().first {
-            val isSomeError = it is Wallet.Model.SessionDelete.Error
-            val isDeleted = it is Wallet.Model.SessionDelete.Success && it.topic == topic
-            isSomeError || isDeleted
-        }
-
-        val waitSdkCallback = runCatching { withTimeout(10.seconds) { waitSdkCallback() } }
-        val sdkCallback = waitSdkCallback.getOrElse { return it.left() }
-        return when (sdkCallback) {
-            is Wallet.Model.SessionDelete.Error -> sdkCallback.error.left()
-            is Wallet.Model.SessionDelete.Success -> Unit.right()
-        }
+            .onRight { onSessionDelete.trySend(Wallet.Model.SessionDelete.Success(topic = topic, reason = "")) }
+        return sdkCall
     }
 
     override suspend fun findSessionByTopic(topic: String): WcSession? = withContext(dispatchers.io) {
