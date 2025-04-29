@@ -21,7 +21,7 @@ data class OnrampStatusResponse(
     val failReason: String?,
 
     @Json(name = "externalTxId")
-    val externalTxId: String,
+    val externalTxId: String?,
 
     @Json(name = "externalTxUrl")
     val externalTxUrl: String?,
