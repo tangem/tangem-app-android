@@ -49,7 +49,6 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
         serializer = null, // AppRoute.serializer(), // Disabled until Nav refactoring completes
         handleBackButton = true,
         childFactory = { route, childContext ->
-            wcRoutingComponent.onAppRouteChange(route)
             childFactory.createChild(route, childByContext(childContext))
         },
     )
