@@ -1,8 +1,6 @@
 package com.tangem.features.walletconnect.connections.routing
 
 import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.navigate
 import com.tangem.common.routing.AppRoute
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -14,7 +12,6 @@ import com.tangem.domain.walletconnect.model.WcSolanaMethodName
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @ModelScoped
@@ -83,7 +80,7 @@ internal class WcRoutingModel @Inject constructor(
             is AppRoute.Disclaimer,
             is AppRoute.Stories,
             -> {
-                navigation.navigate { null }
+                innerRouter.pop()
                 false
             }
             else -> true
