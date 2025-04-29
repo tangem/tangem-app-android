@@ -2,7 +2,6 @@ package com.tangem.data.onramp
 
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.extensions.toBigDecimalOrDefault
-import com.tangem.core.deeplink.global.BuyCurrencyDeepLink
 import com.tangem.data.common.api.safeApiCall
 import com.tangem.data.onramp.converters.CountryConverter
 import com.tangem.data.onramp.converters.CurrencyConverter
@@ -363,7 +362,7 @@ internal class DefaultOnrampRepository(
                         toDecimals = cryptoCurrency.decimals,
                         providerId = quote.provider.id,
                         toAddress = address,
-                        redirectUrl = BuyCurrencyDeepLink.ONRAMP_REDIRECT_DEEPLINK,
+                        redirectUrl = "",
                         language = null,
                         theme = getTheme(isDarkTheme),
                         requestId = requestId,
