@@ -12,9 +12,9 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
 import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthSignTransactionUseCase
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthTransaction
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcEthTransaction
+import com.tangem.domain.walletconnect.usecase.method.WcEthTransactionUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -23,14 +23,14 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
-internal class DefaultWcEthSignTransactionUseCase @AssistedInject constructor(
+internal class WcEthSignTransactionUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     private val prepareForSend: PrepareForSendUseCase,
     @Assisted override val context: WcMethodUseCaseContext,
-    @Assisted private val method: WcEthMethod.SignTransaction,
+    @Assisted override val method: WcEthMethod.SignTransaction,
     blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Fee, WcEthTransaction>(),
-    WcEthSignTransactionUseCase {
+    WcEthTransactionUseCase {
 
     override val securityStatus = blockAidDelegate.getSecurityStatus(
         network = network,
@@ -71,9 +71,6 @@ internal class DefaultWcEthSignTransactionUseCase @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            context: WcMethodUseCaseContext,
-            method: WcEthMethod.SignTransaction,
-        ): DefaultWcEthSignTransactionUseCase
+        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.SignTransaction): WcEthSignTransactionUseCase
     }
 }

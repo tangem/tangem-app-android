@@ -4,7 +4,7 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapter
 import com.tangem.domain.walletconnect.model.WcMethodName
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
-import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
 
 interface WcRequestToUseCaseConverter {
     fun toWcMethodName(request: WcSdkSessionRequest): WcMethodName?

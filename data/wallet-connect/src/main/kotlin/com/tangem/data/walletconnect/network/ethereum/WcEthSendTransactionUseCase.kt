@@ -11,9 +11,9 @@ import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.walletconnect.model.WcEthMethod
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthSendTransactionUseCase
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthTransaction
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcEthTransaction
+import com.tangem.domain.walletconnect.usecase.method.WcEthTransactionUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -21,14 +21,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
-internal class DefaultWcEthSendTransactionUseCase @AssistedInject constructor(
+internal class WcEthSendTransactionUseCase @AssistedInject constructor(
     @Assisted override val context: WcMethodUseCaseContext,
-    @Assisted private val method: WcEthMethod.SendTransaction,
+    @Assisted override val method: WcEthMethod.SendTransaction,
     override val respondService: WcRespondService,
     private val sendTransaction: SendTransactionUseCase,
     blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Fee, WcEthTransaction>(),
-    WcEthSendTransactionUseCase {
+    WcEthTransactionUseCase {
 
     override val securityStatus = blockAidDelegate.getSecurityStatus(
         network = network,
@@ -62,9 +62,6 @@ internal class DefaultWcEthSendTransactionUseCase @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(
-            context: WcMethodUseCaseContext,
-            method: WcEthMethod.SendTransaction,
-        ): DefaultWcEthSendTransactionUseCase
+        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.SendTransaction): WcEthSendTransactionUseCase
     }
 }

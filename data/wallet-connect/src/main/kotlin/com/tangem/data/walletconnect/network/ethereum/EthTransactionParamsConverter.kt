@@ -2,7 +2,7 @@ package com.tangem.data.walletconnect.network.ethereum
 
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthTransaction
+import com.tangem.domain.walletconnect.usecase.method.WcEthTransaction
 import com.tangem.utils.converter.Converter
 
 internal class EthTransactionParamsConverter(
