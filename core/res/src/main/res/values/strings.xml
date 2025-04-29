@@ -1299,6 +1299,7 @@
   <string name="wc_connection_reqeust_will_not">Will not be able to</string>
   <string name="wc_connection_reqeust_would_like">Would like to</string>
   <string name="wc_connection_request">Connection request</string>
+  <string name="wc_transaction_request">Transaction request</string>
   <string name="wc_connections">Connections</string>
   <string name="wc_disconnect_all">Disconnect all</string>
   <string name="wc_disconnect_all_alert_desc">Text about discnected all dApps</string>
@@ -1311,6 +1312,12 @@
   <string name="wc_notification_security_risk_subtitle">This domain is flagged as unsafe by multiple security providers. Leave immediately to protect your assets</string>
   <string name="wc_notification_security_risk_title">Known security risk</string>
   <string name="wc_wallet_connect">Wallet connect</string>
+  <string name="wc_request_from">Request from</string>
+  <string name="wc_sign_message_button_text">Sign</string>
+  <string name="wc_copy_data_button_text">Copy data</string>
+  <string name="wc_transaction_request_title">Transaction request</string>
+  <string name="wc_signature_type">Signature Type</string>
+  <string name="wc_contents">Contents</string>
   <string name="welcome_interrupted_backup_alert_discard">Discard</string>
   <string name="welcome_interrupted_backup_alert_message">You have an interrupted backup. Do you want to resume?</string>
   <string name="welcome_interrupted_backup_alert_resume">Yes, resume</string>
