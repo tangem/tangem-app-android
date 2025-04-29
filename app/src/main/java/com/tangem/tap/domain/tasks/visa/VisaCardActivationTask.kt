@@ -4,7 +4,7 @@ import arrow.core.Either
 import arrow.core.getOrElse
 import arrow.core.raise.catch
 import arrow.core.raise.either
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.common.UnmarshalHelper
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.*
@@ -359,11 +359,11 @@ class VisaCardActivationTask @AssistedInject constructor(
             otpStorage.getOTP(cardId) ?: return CompletionResult.Failure(VisaActivationError.MissingRootOTP.tangemError)
         }
 
-        val rsvSignature = EthereumUtils.prepareSignedMessageData(
-            signedHash = response.signature,
-            hashToSign = dataToSign.hashToSign.hexToBytes(),
+        val rsvSignature = UnmarshalHelper.unmarshalSignatureExtended(
+            signature = response.signature,
+            hash = dataToSign.hashToSign.hexToBytes(),
             publicKey = derivedPublicKey.publicKey.toDecompressedPublicKey(),
-        )
+        ).asRSVLegacyEVM().toHexString()
 
         val signedActivationData = dataToSign.sign(
             rootOTP = otp.rootOTP.toHexString(),
