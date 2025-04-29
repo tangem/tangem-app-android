@@ -525,6 +525,9 @@
   <string name="no_account_polkadot">Аккаунт получателя не активирован. Отправьте %s или более для активации аккаунта.</string>
   <string name="no_account_send_to_create">Для создания аккаунта отправьте средства на этот адрес</string>
   <string name="no_trustline_xlm_asset">Аккаунт получателя не содержит трастлайна для отправляемого актива.</string>
+  <string name="notification_referral_promo_button">Присоединиться</string>
+  <string name="notification_referral_promo_text">Поделись промокодом — заработай 5 USDT с каждой покупки. Твои друзья получат скидку 10% на карту Tangem!</string>
+  <string name="notification_referral_promo_title">Получай бонусы за каждого друга!</string>
   <string name="onboarding_access_code_feature_1_description">Установите единый код доступа для защиты всех ваших карт или колец</string>
   <string name="onboarding_access_code_feature_1_title">Защита</string>
   <string name="onboarding_access_code_feature_2_description">Установите индивидуальный код доступа для каждой карты или кольца позже.</string>
