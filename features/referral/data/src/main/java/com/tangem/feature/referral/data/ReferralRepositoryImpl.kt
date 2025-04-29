@@ -16,6 +16,7 @@ import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @Suppress("LongParameterList")
@@ -29,7 +30,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 // [REDACTED_TODO_COMMENT]
-    private val referralStatus: MutableMap<String, Boolean> = mutableMapOf()
+    private val referralStatus: ConcurrentHashMap<String, ReferralData> = ConcurrentHashMap()
 
     override suspend fun getReferralData(walletId: String): ReferralData {
         return withContext(coroutineDispatcher.io) {
@@ -39,15 +40,14 @@ internal class ReferralRepositoryImpl @Inject constructor(
                 ),
             )
 
-            referralStatus[walletId] = referralData is ReferralData.ParticipantData
+            referralStatus[walletId] = referralData
             referralData
         }
     }
 
     override suspend fun isReferralParticipant(userWalletId: UserWalletId): Boolean {
-        val isReferralParticipant = referralStatus[userWalletId.stringValue]
-
-        return isReferralParticipant ?: getReferralData(userWalletId.stringValue) is ReferralData.ParticipantData
+        val storedReferralData = referralStatus[userWalletId.stringValue] ?: getReferralData(userWalletId.stringValue)
+        return storedReferralData is ReferralData.ParticipantData
     }
 
     override suspend fun startReferral(
@@ -57,8 +57,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
         address: String,
     ): ReferralData {
         return withContext(coroutineDispatcher.io) {
-            referralStatus[walletId] = true
-            referralConverter.convert(
+            val referralData = referralConverter.convert(
                 referralApi.startReferral(
                     startReferralBody = StartReferralBody(
                         walletId = walletId,
@@ -68,6 +67,8 @@ internal class ReferralRepositoryImpl @Inject constructor(
                     ),
                 ),
             )
+            referralStatus[walletId] = referralData
+            referralData
         }
     }
 
