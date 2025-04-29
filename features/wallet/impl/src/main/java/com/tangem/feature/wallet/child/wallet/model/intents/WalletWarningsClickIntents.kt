@@ -295,10 +295,7 @@ internal class WalletWarningsClickIntentsImplementor @Inject constructor(
         if (promoId == PromoId.Referral) {
             val userWallet = getSelectedUserWallet() ?: return
             analyticsEventHandler.send(MainScreen.ReferralPromoButtonParticipate)
-            modelScope.launch {
-                shouldShowPromoWalletUseCase.neverToShow(promoId)
-                appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
-            }
+            appRouter.push(AppRoute.ReferralProgram(userWalletId = userWallet.walletId))
         }
     }
 
