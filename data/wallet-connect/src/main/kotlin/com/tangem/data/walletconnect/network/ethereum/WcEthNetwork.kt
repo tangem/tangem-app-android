@@ -15,7 +15,7 @@ import com.tangem.domain.walletconnect.model.WcEthMethodName
 import com.tangem.domain.walletconnect.model.WcEthTransactionParams
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
 import com.tangem.domain.walletconnect.repository.WcSessionsManager
-import com.tangem.domain.walletconnect.usecase.WcMethodUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcMethodUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import jakarta.inject.Inject
 
@@ -67,7 +67,8 @@ internal class WcEthNetwork(
                 val messageIndex = if (this == WcEthMethodName.EthSign) 1 else 0
                 val account = list.getOrNull(accountIndex) ?: return@let null
                 val message = list.getOrNull(messageIndex) ?: return@let null
-                WcEthMethod.MessageSign(account = account, message = message)
+                val humanMsg = LegacySdkHelper.hexToAscii(message).orEmpty()
+                WcEthMethod.MessageSign(account = account, rawMessage = message, humanMsg = humanMsg)
             }
             WcEthMethodName.SignTypeData -> TODO()
             WcEthMethodName.SignTypeDataV4 -> TODO()
@@ -106,8 +107,8 @@ internal class WcEthNetwork(
     }
 
     internal class Factories @Inject constructor(
-        val messageSign: DefaultWcEthMessageSignUseCase.Factory,
-        val sendTransaction: DefaultWcEthSendTransactionUseCase.Factory,
-        val signTransaction: DefaultWcEthSignTransactionUseCase.Factory,
+        val messageSign: WcEthMessageSignUseCase.Factory,
+        val sendTransaction: WcEthSendTransactionUseCase.Factory,
+        val signTransaction: WcEthSignTransactionUseCase.Factory,
     )
 }
