@@ -16,7 +16,7 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.features.walletconnect.connections.components.WcAppInfoContainerComponent
-import com.tangem.features.walletconnect.transaction.components.WcEthereumMessageSignRequestComponent
+import com.tangem.features.walletconnect.transaction.components.WcSignTransactionComponent
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -56,9 +56,9 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
             router = innerRouter,
         )
         return when (config) {
-            is WcInnerRoute.SignMessage -> WcEthereumMessageSignRequestComponent(
+            is WcInnerRoute.SignMessage -> WcSignTransactionComponent(
                 childContext,
-                params = WcEthereumMessageSignRequestComponent.Params(config.rawRequest),
+                params = WcSignTransactionComponent.Params(config.rawRequest),
             )
             is WcInnerRoute.Pair -> WcAppInfoContainerComponent(
                 childContext,
