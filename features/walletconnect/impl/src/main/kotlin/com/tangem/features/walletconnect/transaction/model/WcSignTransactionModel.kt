@@ -7,9 +7,9 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.domain.walletconnect.WcRequestUseCaseFactory
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
-import com.tangem.domain.walletconnect.usecase.sign.WcSignStep
-import com.tangem.domain.walletconnect.usecase.sign.WcSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignStep
+import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.transaction.components.WcSignTransactionComponent
 import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
 import com.tangem.features.walletconnect.transaction.entity.WcTransactionActionsUM
