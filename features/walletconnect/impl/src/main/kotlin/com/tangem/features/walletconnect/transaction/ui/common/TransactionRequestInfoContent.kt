@@ -14,10 +14,10 @@ import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.stringResourceSafe
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.features.walletconnect.impl.R
-import com.tangem.features.walletconnect.transaction.entity.WcEthereumMessageSignRequestUM
+import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
 
 @Composable
-internal fun TransactionRequestInfoContent(state: WcEthereumMessageSignRequestUM) {
+internal fun TransactionRequestInfoContent(state: WcSignTransactionUM) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
