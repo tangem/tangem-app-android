@@ -12,6 +12,7 @@ dependencies {
     /** Core */
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
+    implementation(projects.common.routing)
 
     /** Domain models */
     implementation(projects.domain.wallets.models)
