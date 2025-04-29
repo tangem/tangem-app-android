@@ -29,18 +29,26 @@ internal class ReferralRepositoryImpl @Inject constructor(
 
     private val cryptoCurrencyFactory = CryptoCurrencyFactory(excludedBlockchains)
 
+    // todo this quick fix of multiple api requests, make proper cache store
+    private val referralStatus: MutableMap<String, Boolean> = mutableMapOf()
+
     override suspend fun getReferralData(walletId: String): ReferralData {
         return withContext(coroutineDispatcher.io) {
-            referralConverter.convert(
+            val referralData = referralConverter.convert(
                 referralApi.getReferralStatus(
                     walletId = walletId,
                 ),
             )
+
+            referralStatus[walletId] = referralData is ReferralData.ParticipantData
+            referralData
         }
     }
 
     override suspend fun isReferralParticipant(userWalletId: UserWalletId): Boolean {
-        return getReferralData(userWalletId.stringValue) is ReferralData.ParticipantData
+        val isReferralParticipant = referralStatus[userWalletId.stringValue]
+
+        return isReferralParticipant ?: getReferralData(userWalletId.stringValue) is ReferralData.ParticipantData
     }
 
     override suspend fun startReferral(
@@ -50,6 +58,7 @@ internal class ReferralRepositoryImpl @Inject constructor(
         address: String,
     ): ReferralData {
         return withContext(coroutineDispatcher.io) {
+            referralStatus[walletId] = true
             referralConverter.convert(
                 referralApi.startReferral(
                     startReferralBody = StartReferralBody(
