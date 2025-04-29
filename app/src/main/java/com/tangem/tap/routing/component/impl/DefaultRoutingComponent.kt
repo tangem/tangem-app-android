@@ -15,6 +15,7 @@ import com.tangem.core.ui.UiDependencies
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.message.SnackbarMessage
+import com.tangem.features.walletconnect.components.WcRoutingComponent
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.routing.RootContent
 import com.tangem.tap.routing.component.RoutingComponent
@@ -32,9 +33,15 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
     private val childFactory: ChildFactory,
     private val appRouterConfig: AppRouterConfig,
     private val uiDependencies: UiDependencies,
+    private val wcRoutingComponentFactory: WcRoutingComponent.Factory,
 ) : RoutingComponent,
     AppComponentContext by context,
     SnackbarHandler {
+
+    private val wcRoutingComponent: WcRoutingComponent by lazy {
+        wcRoutingComponentFactory
+            .create(childByContext(componentContext = this), params = Unit)
+    }
 
     private val stack: Value<ChildStack<AppRoute, Child>> = childStack(
         source = navigationProvider.getOrCreateTyped(),
@@ -53,7 +60,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
         stack.subscribe(lifecycle) { stack ->
             val stackItems = stack.items.map { it.configuration }
-
+            wcRoutingComponent.onAppRouteChange(stack.active.configuration)
             if (appRouterConfig.stack != stackItems) {
                 appRouterConfig.stack = stackItems
             }
@@ -66,6 +73,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             modifier = modifier,
             stack = stack,
             uiDependencies = uiDependencies,
+            wcContent = { wcRoutingComponent.Content(it) },
         )
     }
 
