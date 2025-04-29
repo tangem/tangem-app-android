@@ -14,6 +14,11 @@ import com.tangem.core.navigation.url.UrlOpener
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.datasource.local.nft.converter.NFTSdkAssetConverter
+import com.tangem.domain.feedback.GetCardInfoUseCase
+import com.tangem.domain.feedback.SaveBlockchainErrorUseCase
+import com.tangem.domain.feedback.SendFeedbackEmailUseCase
+import com.tangem.domain.feedback.models.BlockchainErrorInfo
+import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.settings.IsSendTapHelpEnabledUseCase
 import com.tangem.domain.settings.NeverShowTapHelpUseCase
 import com.tangem.domain.transaction.usecase.CreateNFTTransferTransactionUseCase
@@ -21,12 +26,14 @@ import com.tangem.domain.transaction.usecase.SendTransactionUseCase
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.SendBalanceUpdater
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
+import com.tangem.features.send.v2.sendnft.analytics.NFTSendAnalyticHelper
 import com.tangem.features.send.v2.sendnft.confirm.NFTSendConfirmComponent
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmInitialStateTransformer
 import com.tangem.features.send.v2.sendnft.confirm.model.transformers.NFTSendConfirmSendingStateTransformer
@@ -40,6 +47,7 @@ import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.notifications.model.NotificationData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.utils.extensions.stripZeroPlainString
 import com.tangem.utils.transformer.update
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -47,7 +55,7 @@ import timber.log.Timber
 import java.math.BigDecimal
 import javax.inject.Inject
 
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LargeClass")
 @ModelScoped
 internal class NFTSendConfirmModel @Inject constructor(
     paramsContainer: ParamsContainer,
@@ -59,17 +67,23 @@ internal class NFTSendConfirmModel @Inject constructor(
     private val createNFTTransferTransactionUseCase: CreateNFTTransferTransactionUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
+    private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
+    private val getCardInfoUseCase: GetCardInfoUseCase,
+    private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
     private val sendFeeCheckReloadTrigger: SendFeeCheckReloadTrigger,
     private val sendFeeCheckReloadListener: SendFeeCheckReloadListener,
+    private val alertFactory: SendConfirmAlertFactory,
     private val urlOpener: UrlOpener,
     private val shareManager: ShareManager,
     private val analyticsEventHandler: AnalyticsEventHandler,
+    private val nftSendAnalyticHelper: NFTSendAnalyticHelper,
     sendBalanceUpdaterFactory: SendBalanceUpdater.Factory,
 ) : Model(), NFTSendConfirmClickIntents {
 
     private val params: NFTSendConfirmComponent.Params = paramsContainer.require()
 
+    private val analyticsCategoryName = params.analyticsCategoryName
     private val userWallet = params.userWallet
     private val cryptoCurrencyStatus = params.cryptoCurrencyStatus
     private val cryptoCurrency = cryptoCurrencyStatus.currency
@@ -129,7 +143,12 @@ internal class NFTSendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            // analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Address))
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Address,
+                ),
+            )
             router.push(CommonSendRoute.Destination(isEditMode = true))
         }
     }
@@ -141,7 +160,12 @@ internal class NFTSendConfirmModel @Inject constructor(
                 val confirmUM = it.confirmUM as? ConfirmUM.Content
                 it.copy(confirmUM = confirmUM?.copy(showTapHelp = false) ?: it.confirmUM)
             }
-            // analyticsEventHandler.send(SendAnalyticEvents.ScreenReopened(SendScreenSource.Fee))
+            analyticsEventHandler.send(
+                CommonSendAnalyticEvents.ScreenReopened(
+                    categoryName = analyticsCategoryName,
+                    source = SendScreenSource.Fee,
+                ),
+            )
             router.push(CommonSendRoute.Fee)
         }
     }
@@ -159,18 +183,38 @@ internal class NFTSendConfirmModel @Inject constructor(
 
     override fun onExploreClick() {
         val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
-        // analyticsEventHandler.send(SendAnalyticEvents.ExploreButtonClicked)
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.ExploreButtonClicked(analyticsCategoryName),
+        )
         urlOpener.openUrl(confirmUM.txUrl)
     }
 
     override fun onShareClick() {
         val confirmUM = uiState.value.confirmUM as? ConfirmUM.Success ?: return
-        // analyticsEventHandler.send(SendAnalyticEvents.ShareButtonClicked)
+        analyticsEventHandler.send(
+            CommonSendAnalyticEvents.ShareButtonClicked(analyticsCategoryName),
+        )
         shareManager.shareText(confirmUM.txUrl)
     }
 
     override fun onFailedTxEmailClick(errorMessage: String) {
-        // TODO()
+        saveBlockchainErrorUseCase(
+            error = BlockchainErrorInfo(
+                errorMessage = errorMessage,
+                blockchainId = cryptoCurrency.network.id.value,
+                derivationPath = cryptoCurrency.network.derivationPath.value,
+                destinationAddress = confirmData.enteredDestination.orEmpty(),
+                tokenSymbol = null,
+                amount = params.nftAsset.amount.toString(),
+                fee = confirmData.fee?.amount?.value?.stripZeroPlainString(),
+            ),
+        )
+
+        val cardInfo = getCardInfoUseCase(userWallet.scanResponse).getOrNull() ?: return
+
+        modelScope.launch {
+            sendFeedbackEmailUseCase(type = FeedbackEmailType.TransactionSendingProblem(cardInfo = cardInfo))
+        }
     }
 
     private fun initialState() {
@@ -229,9 +273,9 @@ internal class NFTSendConfirmModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error)
                     _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = false))
-                    // alertFactory.getGenericErrorState {
-                    //     onFailedTxEmailClick(error.localizedMessage.orEmpty())
-                    // }
+                    alertFactory.getGenericErrorState {
+                        onFailedTxEmailClick(error.localizedMessage.orEmpty())
+                    }
                 },
                 ifRight = { txData ->
                     sendTransaction(txData)
@@ -252,17 +296,22 @@ internal class NFTSendConfirmModel @Inject constructor(
         result.fold(
             ifLeft = { error ->
                 Timber.e(error.toString())
-                // alertFactory.getSendTransactionErrorState(
-                //     error = error,
-                //     popBack = appRouter::pop,
-                //     onFailedTxEmailClick = ::onFailedTxEmailClick,
-                // )
-                // analyticsEventHandler.send(SendAnalyticEvents.TransactionError(cryptoCurrency.symbol))
+                alertFactory.getSendTransactionErrorState(
+                    error = error,
+                    popBack = appRouter::pop,
+                    onFailedTxEmailClick = ::onFailedTxEmailClick,
+                )
+                analyticsEventHandler.send(
+                    CommonSendAnalyticEvents.TransactionError(
+                        categoryName = analyticsCategoryName,
+                        token = cryptoCurrency.symbol,
+                    ),
+                )
             },
             ifRight = {
                 updateTransactionStatus(txData)
                 sendBalanceUpdater.scheduleUpdates()
-                // sendAnalyticHelper.sendSuccessAnalytics(cryptoCurrency, uiState.value)
+                nftSendAnalyticHelper.nftSendSuccessAnalytics(cryptoCurrency, uiState.value)
             },
         )
     }
@@ -307,6 +356,7 @@ internal class NFTSendConfirmModel @Inject constructor(
                     feeUM = uiState.value.feeUM,
                     analyticsEventHandler = analyticsEventHandler,
                     cryptoCurrency = cryptoCurrencyStatus.currency,
+                    analyticsCategoryName = analyticsCategoryName,
                 ).transform(uiState.value.confirmUM),
             )
         }
@@ -331,7 +381,8 @@ internal class NFTSendConfirmModel @Inject constructor(
                         backIconRes = R.drawable.ic_close_24,
                         backIconClick = {
                             analyticsEventHandler.send(
-                                SendAnalyticEvents.CloseButtonClicked(
+                                CommonSendAnalyticEvents.CloseButtonClicked(
+                                    categoryName = analyticsCategoryName,
                                     source = SendScreenSource.Confirm,
                                     isFromSummary = true,
                                     isValid = confirmUM.isPrimaryButtonEnabled,
