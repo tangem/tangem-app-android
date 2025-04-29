@@ -11,7 +11,7 @@ import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
 import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.PrepareForSendUseCase
 import com.tangem.domain.walletconnect.model.WcSolanaMethod
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
 import com.tangem.domain.walletconnect.usecase.solana.WcSolanaSignTransactionUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -23,7 +23,7 @@ internal class DefaultWcSolanaSignTransactionUseCase @AssistedInject constructor
     override val respondService: WcRespondService,
     private val prepareForSend: PrepareForSendUseCase,
     @Assisted override val context: WcMethodUseCaseContext,
-    @Assisted private val method: WcSolanaMethod.SignTransaction,
+    @Assisted override val method: WcSolanaMethod.SignTransaction,
     blockAidDelegate: BlockAidVerificationDelegate,
 ) : BaseWcSignUseCase<Nothing, TransactionData.Compiled>(),
     WcSolanaSignTransactionUseCase {
