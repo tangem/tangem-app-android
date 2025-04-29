@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
@@ -46,6 +47,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val messageSender: UiMessageSender,
+    private val clipboardManager: ClipboardManager,
     private val router: Router,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampSuccessClickIntents {
@@ -63,6 +65,10 @@ internal class OnrampSuccessComponentModel @Inject constructor(
 
     override fun goToProviderClick(providerLink: String) {
         urlOpener.openUrl(providerLink)
+    }
+
+    override fun onCopyClick(copiedText: String) {
+        clipboardManager.setText(text = copiedText, isSensitive = false)
     }
 
     private fun loadData() {
@@ -124,6 +130,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                             cryptoCurrency = cryptoCurrency,
                             transaction = transaction,
                             goToProviderClick = ::goToProviderClick,
+                            onCopyClick = ::onCopyClick,
                         ).convert(status)
                     }
                     removeTransactionIfTerminalStatus(
