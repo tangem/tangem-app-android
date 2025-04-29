@@ -74,7 +74,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
         val selectedTx = bottomSheetConfig.value as? ExpressTransactionStateUM.OnrampUM ?: return
 
         if (selectedTx.activeStatus.isAutoDisposable || isForceDispose) {
-            onrampRemoveTransactionUseCase(externalTxId = selectedTx.info.txExternalId)
+            onrampRemoveTransactionUseCase(txId = selectedTx.info.txId)
         }
     }
 
@@ -97,14 +97,14 @@ internal class OnrampStatusFactory @AssistedInject constructor(
 
     private suspend fun List<ExpressTransactionStateUM.OnrampUM>.clearHiddenTerminal() {
         this.filter { it.activeStatus.isHidden && it.activeStatus.isTerminal }
-            .forEach { onrampRemoveTransactionUseCase(externalTxId = it.info.txExternalId) }
+            .forEach { onrampRemoveTransactionUseCase(txId = it.info.txId) }
     }
 
     private suspend fun sendStatusUpdateAnalytics(
         onrampTx: ExpressTransactionStateUM.OnrampUM,
         statusModel: OnrampStatus,
     ) {
-        val externalTxId = statusModel.externalTxId
+        val txId = statusModel.txId
         val status = toAnalyticStatus(statusModel.status) ?: return
 
         if (statusModel.status != onrampTx.activeStatus) {
@@ -117,7 +117,7 @@ internal class OnrampStatusFactory @AssistedInject constructor(
                 ),
             )
             onrampUpdateTransactionStatusUseCase(
-                externalTxId = externalTxId,
+                txId = txId,
                 externalTxUrl = statusModel.externalTxUrl.orEmpty(),
                 status = statusModel.status,
             )
