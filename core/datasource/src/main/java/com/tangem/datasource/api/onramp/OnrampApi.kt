@@ -63,7 +63,7 @@ interface OnrampApi {
     @GET("onramp-data")
     suspend fun getData(
         @Header("user-id") userWalletId: String,
-        @Header("refcode") refCode: String,
+        @Header("refcode") refCode: String?,
         @Query("fromCurrencyCode") fromCurrencyCode: String,
         @Query("fromPrecision") fromPrecision: Int,
         @Query("toContractAddress") toContractAddress: String,
