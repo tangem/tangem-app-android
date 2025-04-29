@@ -377,7 +377,7 @@
   <string name="key_invalidated_warning_description">生体認証を更新しました。カードまたはリングをスキャンして入ってください。</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">送金するには、残高が手数料額より高くなければなりません。</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">残高不足</string>
-  <string name="koinos_insufficient_mana_to_send_koin_description">この取引に必要なManaが不足しています。Manaが補充されるまでお待ちください。あなたのMana残高は%1$s/%2$sです。</string>
+  <string name="koinos_insufficient_mana_to_send_koin_description">この取引に必要なManaが足りません。Manaが補充されるまでお待ちください。Manaの残高は%1$s / %2$sです。</string>
   <string name="koinos_insufficient_mana_to_send_koin_title">Manaが不足しています</string>
   <string name="koinos_mana_exceeds_koin_balance_description">KoinosネットワークによるMana制限のため、%s のみ送金できます。</string>
   <string name="koinos_mana_exceeds_koin_balance_title">Mana上限</string>
@@ -548,6 +548,8 @@
   <string name="no_account_polkadot">送信先アカウントが有効ではありません。%s 以上を送信してアカウントを有効にしてください。</string>
   <string name="no_account_send_to_create">アカウントを作成するには、このアドレスに資金を送金してください</string>
   <string name="no_trustline_xlm_asset">送信先アカウントには、送金されるアセットのトラストラインがありません。</string>
+  <string name="notification_referral_promo_text">コードを共有すると、販売ごとに5 USDTを獲得できます。お友達は10%割引になります。</string>
+  <string name="notification_referral_promo_title">友達への紹介で報酬を獲得しよう！</string>
   <string name="onboarding_access_code_feature_1_description">すべてのデバイスを保護するには、単一のアクセスコードを設定してください。</string>
   <string name="onboarding_access_code_feature_1_title">保護する</string>
   <string name="onboarding_access_code_feature_2_description">後で各カードおよびリングに個別のアクセスコードを設定できます。</string>
@@ -892,9 +894,9 @@
   <string name="staking_notification_restake_text">再ステーキングを使うと、ステーキングを解除することなく、あるバリデータから別のバリデータに資金を移動できます。</string>
   <string name="staking_notification_stake_entire_balance_text">残高のすべてをステーキングしようとしています。ステーキング解除や報酬請求にかかるネットワーク手数料をカバーするために、少額を残しておくことをお勧めします。</string>
   <string name="staking_notification_ton_activate_account">TONでステーキングを開始するには、まず任意の金額の送金を行ってください。これにより、ウォレットがアクティブになります。</string>
-  <string name="staking_notification_ton_extra_reserve_info">TONをステーキングまたは出金する場合、入金と出金の両方でステーキング額から0.2 TONの手数料が差し引かれます。</string>
+  <string name="staking_notification_ton_extra_reserve_info">ネットワーク手数料に加え、取引の全ステップを完了するには最大0.2 TONが必要です。未使用分は取引完了後に返金されます。</string>
   <string name="staking_notification_ton_extra_reserve_is_required">この操作を続行するには、ネットワーク手数料に加えて0.2 TONが必要です。残高を補充してください。</string>
-  <string name="staking_notification_ton_extra_reserve_title">ステーキング手数料</string>
+  <string name="staking_notification_ton_extra_reserve_title">0.2 TON保留済み</string>
   <string name="staking_notification_ton_have_to_unstake_all_text">このアクションは、ネットワークのルールに従って、他のポジションをクローズするか、引き出しステータスに切り替えます。</string>
   <string name="staking_notification_ton_have_to_unstake_all_title">ポジション状況</string>
   <string name="staking_notification_unlock_text">資金をステーキングから引き出すには、ロックを解除してください。ロック解除には%sかかります。</string>
