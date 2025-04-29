@@ -381,7 +381,7 @@
   <string name="key_invalidated_warning_description">Ви оновили дані біометрії, відскануйте свою картку або кільце для входу</string>
   <string name="koinos_insufficient_balance_to_send_koin_description">Ваш баланс повинен перевищувати суму комісії для здійснення переказу</string>
   <string name="koinos_insufficient_balance_to_send_koin_title">Недостатньо балансу</string>
-  <string name="koinos_insufficient_mana_to_send_koin_description">У вас недостатньо Mana для цієї транзакції. Будь ласка, зачекайте, поки Mana буде поповнена. Ваш баланс Mana становить %1$s/%2$s</string>
+  <string name="koinos_insufficient_mana_to_send_koin_description">У вас недостатньо Мани для цієї транзакції. Будь ласка, зачекайте, поки Мана поповниться. Ваш баланс мани дорівнює %1$s/%2$s</string>
   <string name="koinos_insufficient_mana_to_send_koin_title">Недостатньо Mana</string>
   <string name="koinos_mana_exceeds_koin_balance_description">Ви можете переказати тільки %s через обмеження Mana, встановлене мережею Koinos</string>
   <string name="koinos_mana_exceeds_koin_balance_title">Ліміт Mana</string>
