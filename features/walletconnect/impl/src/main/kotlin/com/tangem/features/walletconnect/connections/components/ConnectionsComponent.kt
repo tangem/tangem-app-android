@@ -13,7 +13,6 @@ import com.tangem.core.decompose.context.childByContext
 import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
-import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.features.walletconnect.connections.model.WcConnectionsModel
 import com.tangem.features.walletconnect.connections.routes.WcConnectionsBottomSheetConfig
 import com.tangem.features.walletconnect.connections.ui.WcConnectionsContent
@@ -33,6 +32,7 @@ internal class ConnectionsComponent(
     @Composable
     override fun Content(modifier: Modifier) {
         val state by model.uiState.collectAsStateWithLifecycle()
+        val bottomSheet by bottomSheetSlot.subscribeAsState()
         WcConnectionsContent(modifier = modifier, state = state)
 
         bottomSheet.child?.instance?.BottomSheet()
