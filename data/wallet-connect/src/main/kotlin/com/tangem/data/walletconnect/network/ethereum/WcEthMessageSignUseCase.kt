@@ -14,7 +14,6 @@ import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
-import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
