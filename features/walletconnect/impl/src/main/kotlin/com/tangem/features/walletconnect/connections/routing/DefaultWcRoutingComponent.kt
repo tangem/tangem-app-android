@@ -28,10 +28,9 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
 ) : AppComponentContext by appComponentContext, WcRoutingComponent {
 
     private val model: WcRoutingModel = getOrCreateModel()
-    private val innerRouter = WcRouter(model.navigation)
 
     private val slot: Value<ChildSlot<WcInnerRoute, ComposableContentComponent>> = childSlot(
-        source = model.navigation,
+        source = model.innerRouter.slotNavigation,
         serializer = WcInnerRoute.serializer(),
         childFactory = ::childFactory,
     )
@@ -53,7 +52,7 @@ internal class DefaultWcRoutingComponent @AssistedInject constructor(
     private fun childFactory(config: WcInnerRoute, componentContext: ComponentContext): ComposableContentComponent {
         val childContext = childByContext(
             componentContext = componentContext,
-            router = innerRouter,
+            router = model.innerRouter,
         )
         return when (config) {
             is WcInnerRoute.SignMessage -> WcSignTransactionComponent(

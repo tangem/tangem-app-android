@@ -61,7 +61,7 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
 
         stack.subscribe(lifecycle) { stack ->
             val stackItems = stack.items.map { it.configuration }
-
+            wcRoutingComponent.onAppRouteChange(stack.active.configuration)
             if (appRouterConfig.stack != stackItems) {
                 appRouterConfig.stack = stackItems
             }
