@@ -8,6 +8,14 @@ sealed interface WcEthMethod : WcMethod {
         val humanMsg: String,
     ) : WcEthMethod
 
+    data class SignTypedData(
+        val params: WcEthSignTypedDataParams,
+        val account: String,
+        val dataForSign: String,
+    ) : WcEthMethod {
+        val humanMsg: String = params.message.contents
+    }
+
     data class SendTransaction(
         val transaction: WcEthTransactionParams,
     ) : WcEthMethod
