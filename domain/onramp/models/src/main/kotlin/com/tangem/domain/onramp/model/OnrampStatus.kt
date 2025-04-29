@@ -6,7 +6,7 @@ data class OnrampStatus(
     val payoutAddress: String,
     val status: Status,
     val failReason: String?,
-    val externalTxId: String,
+    val externalTxId: String?,
     val externalTxUrl: String?,
     val payoutHash: String?,
     val createdAt: String,
