@@ -3,8 +3,9 @@ package com.tangem.domain.walletconnect.model
 sealed interface WcEthMethod : WcMethod {
 
     data class MessageSign(
-        val message: String,
+        val rawMessage: String,
         val account: String,
+        val humanMsg: String,
     ) : WcEthMethod
 
     data class SendTransaction(
