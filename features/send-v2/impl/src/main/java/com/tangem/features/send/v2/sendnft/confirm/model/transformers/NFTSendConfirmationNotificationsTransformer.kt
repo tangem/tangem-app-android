@@ -5,8 +5,8 @@ import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.ui.utils.parseToBigDecimal
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
 import com.tangem.features.send.v2.subcomponents.fee.model.checkIfFeeTooHigh
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeSelectorUM
 import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeType
@@ -18,6 +18,7 @@ internal class NFTSendConfirmationNotificationsTransformer(
     private val feeUM: FeeUM,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val cryptoCurrency: CryptoCurrency,
+    private val analyticsCategoryName: String,
 ) : Transformer<ConfirmUM> {
     override fun transform(prevState: ConfirmUM): ConfirmUM {
         val state = prevState as? ConfirmUM.Content ?: return prevState
@@ -39,7 +40,10 @@ internal class NFTSendConfirmationNotificationsTransformer(
         if (feeSelectorUM.selectedType == FeeType.Custom && minimumValue > customValue) {
             add(NotificationUM.Warning.FeeTooLow)
             analyticsEventHandler.send(
-                SendAnalyticEvents.NoticeTransactionDelays(cryptoCurrency.symbol),
+                CommonSendAnalyticEvents.NoticeTransactionDelays(
+                    categoryName = analyticsCategoryName,
+                    token = cryptoCurrency.symbol,
+                ),
             )
         }
     }
