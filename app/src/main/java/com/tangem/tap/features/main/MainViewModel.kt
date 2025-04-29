@@ -9,6 +9,7 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.event.TechAnalyticsEvent
 import com.tangem.core.decompose.di.GlobalUiMessageSender
 import com.tangem.core.decompose.ui.UiMessageSender
+import com.tangem.core.deeplink.DeepLinksRegistry
 import com.tangem.core.ui.R
 import com.tangem.core.ui.coil.ImagePreloader
 import com.tangem.core.ui.extensions.resourceReference
@@ -31,6 +32,7 @@ import com.tangem.domain.settings.usercountry.FetchUserCountryUseCase
 import com.tangem.domain.staking.FetchStakingTokensUseCase
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
 import com.tangem.feature.swap.analytics.StoriesEvents
+import com.tangem.features.onramp.deeplink.OnrampDeepLink
 import com.tangem.tap.common.extensions.setContext
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
@@ -63,6 +65,8 @@ internal class MainViewModel @Inject constructor(
     private val imagePreloader: ImagePreloader,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
     private val onboardingRepository: OnboardingRepository,
+    private val deepLinksRegistry: DeepLinksRegistry,
+    private val onrampDeepLinkFactory: OnrampDeepLink.Factory,
     getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
 ) : ViewModel() {
 
@@ -97,6 +101,8 @@ internal class MainViewModel @Inject constructor(
         sendKeyboardIdentifierEvent()
 
         preloadImages()
+
+        initializeDeepLinks()
     }
 
     fun checkForUnfinishedBackup() {
@@ -332,5 +338,9 @@ internal class MainViewModel @Inject constructor(
                 ),
             )
         }
+    }
+
+    private fun initializeDeepLinks() {
+        deepLinksRegistry.register(onrampDeepLinkFactory.create(viewModelScope))
     }
 }
