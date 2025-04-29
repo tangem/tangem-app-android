@@ -1,8 +1,8 @@
 package com.tangem.data.walletconnect.sign
 
 import arrow.core.Either
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
-import com.tangem.domain.walletconnect.usecase.sign.WcSignStep
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 
 object SignStateConverter {
 
