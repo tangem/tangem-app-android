@@ -4,8 +4,8 @@ import arrow.core.left
 import com.tangem.data.walletconnect.sign.SignStateConverter.toPreSign
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
-import com.tangem.domain.walletconnect.usecase.sign.WcSignStep
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
