@@ -47,6 +47,7 @@ import com.tangem.utils.coroutines.JobHolder
 import com.tangem.utils.coroutines.saveIn
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -89,8 +90,8 @@ internal class SendModel @Inject constructor(
     val isBalanceHiddenFlow = _isBalanceHiddenFlow.asStateFlow()
 
     var userWallet: UserWallet by Delegates.notNull()
-    var cryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
-    var feeCryptoCurrencyStatus: CryptoCurrencyStatus by Delegates.notNull()
+    var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
+    var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     var appCurrency: AppCurrency = AppCurrency.Default
     var predefinedAmountValue: String? = null
 
@@ -125,6 +126,13 @@ internal class SendModel @Inject constructor(
         _uiState.update { sendUM }
     }
 
+    fun showAlertError() {
+        sendConfirmAlertFactory.getGenericErrorState(
+            onFailedTxEmailClick = ::onFailedTxEmailClick,
+            popBack = router::pop,
+        )
+    }
+
     private fun initAppCurrency() {
         modelScope.launch {
             appCurrency = getSelectedAppCurrencyUseCase.invokeSync().getOrElse { AppCurrency.Default }
@@ -145,7 +153,8 @@ internal class SendModel @Inject constructor(
                     )
                 },
                 ifLeft = {
-                    sendConfirmAlertFactory.getGenericErrorState(::onFailedTxEmailClick)
+                    Timber.w(it.toString())
+                    showAlertError()
                     return@launch
                 },
             )
@@ -176,9 +185,12 @@ internal class SendModel @Inject constructor(
                     )
                 },
                 ifLeft = {
-                    sendConfirmAlertFactory.getGenericErrorState {
-                        onFailedTxEmailClick(it.toString())
-                    }
+                    sendConfirmAlertFactory.getGenericErrorState(
+                        onFailedTxEmailClick = {
+                            onFailedTxEmailClick(it.toString())
+                        },
+                        popBack = router::pop,
+                    )
                 },
             )
         }.launchIn(modelScope)
