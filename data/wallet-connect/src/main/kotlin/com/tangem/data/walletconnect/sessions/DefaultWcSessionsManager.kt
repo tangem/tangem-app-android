@@ -21,10 +21,8 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import timber.log.Timber
 import kotlin.coroutines.resume
-import kotlin.time.Duration.Companion.seconds
 
 internal class DefaultWcSessionsManager(
     private val store: WalletConnectStore,
