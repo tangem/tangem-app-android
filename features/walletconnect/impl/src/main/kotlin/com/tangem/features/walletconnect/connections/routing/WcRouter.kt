@@ -8,12 +8,12 @@ import com.tangem.core.decompose.navigation.Router
 import kotlin.reflect.KClass
 
 internal class WcRouter(
-    private val stackNavigation: SlotNavigation<WcInnerRoute>,
+    val slotNavigation: SlotNavigation<WcInnerRoute>,
 ) : Router {
 
     override fun push(route: Route, onComplete: (Boolean) -> Unit) {
         val isComplete = route is WcInnerRoute
-        if (isComplete) stackNavigation.activate(route)
+        if (isComplete) slotNavigation.activate(route)
         onComplete(isComplete)
     }
 
@@ -22,7 +22,7 @@ internal class WcRouter(
     }
 
     override fun pop(onComplete: (Boolean) -> Unit) {
-        stackNavigation.navigate { null }
+        slotNavigation.navigate { null }
     }
 
     override fun popTo(route: Route, onComplete: (Boolean) -> Unit) {

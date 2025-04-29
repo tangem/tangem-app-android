@@ -25,15 +25,13 @@ internal class WcRoutingModel @Inject constructor(
     private val featureToggles: WalletConnectFeatureToggles,
 ) : Model() {
 
-    val navigation: SlotNavigation<WcInnerRoute> = SlotNavigation()
+    val innerRouter = WcRouter(SlotNavigation<WcInnerRoute>())
 
     private val isSlotEmpty = MutableStateFlow(true)
     private val permittedAppRoute = MutableStateFlow(false)
 
     init {
-        modelScope.launch {
-            if (!featureToggles.isRedesignedWalletConnectEnabled) return@launch
-            awaitQueueReady()
+        if (featureToggles.isRedesignedWalletConnectEnabled) {
             setupQueue()
         }
     }
@@ -67,7 +65,7 @@ internal class WcRoutingModel @Inject constructor(
             .onEach { configuration ->
                 awaitQueueReady()
                 isSlotEmpty.update { false }
-                navigation.activate(configuration)
+                innerRouter.push(configuration)
             }
             .launchIn(modelScope)
     }
