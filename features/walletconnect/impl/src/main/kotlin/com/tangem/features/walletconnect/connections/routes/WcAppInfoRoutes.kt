@@ -8,8 +8,15 @@ import kotlinx.serialization.Serializable
 @Serializable
 @Immutable
 internal sealed class WcAppInfoRoutes : TangemBottomSheetConfigContent {
+    @Serializable
     data object AppInfo : WcAppInfoRoutes()
+
+    @Serializable
     data object SelectWallet : WcAppInfoRoutes()
+
+    @Serializable
     data object SelectNetworks : WcAppInfoRoutes()
+
+    @Serializable
     data class Alert(val alertType: AlertsComponent.AlertType) : WcAppInfoRoutes()
 }

@@ -11,7 +11,6 @@ import com.tangem.data.walletconnect.request.DefaultWcRequestService
 import com.tangem.data.walletconnect.sessions.DefaultWcSessionsManager
 import com.tangem.data.walletconnect.utils.WcSdkObserver
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
-import kotlinx.coroutines.flow.MutableStateFlow
 import timber.log.Timber
 
 internal class DefaultWcInitializeUseCase(
@@ -21,8 +20,6 @@ internal class DefaultWcInitializeUseCase(
     private val pairSdkDelegate: WcPairSdkDelegate,
 ) : WcInitializeUseCase {
 
-    private val isInit = MutableStateFlow(false)
-
     private val wcSdkObservers = mutableSetOf<WcSdkObserver>(
         sessionsManager,
         networkService,
@@ -30,8 +27,6 @@ internal class DefaultWcInitializeUseCase(
     )
 
     override fun init(projectId: String) {
-        if (isInit.value) return
-        isInit.value = true
         val relayUrl = "relay.walletconnect.com"
         val serverUrl = "wss://$relayUrl?projectId=$projectId"
         val connectionType = ConnectionType.AUTOMATIC
@@ -52,7 +47,6 @@ internal class DefaultWcInitializeUseCase(
             application = application,
             metaData = appMetaData,
         ) { error ->
-            isInit.value = false
             Timber.e("Error while initializing client: $error")
         }
 
@@ -64,7 +58,6 @@ internal class DefaultWcInitializeUseCase(
                 wcSdkObservers.forEach { it.onWcSdkInit() }
             },
             onError = { error ->
-                isInit.value = false
                 Timber.e("Error while initializing Web3Wallet: $error")
             },
         )

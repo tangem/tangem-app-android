@@ -55,7 +55,7 @@ internal class WcAppInfoModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        dismiss()
+                        router.pop()
                     }
                     is WcPairState.Error -> {
                         // TODO: wc show toast/snackbar/alert?
@@ -80,6 +80,7 @@ internal class WcAppInfoModel @Inject constructor(
     }
 
     fun dismiss() {
+        wcPairUseCase.reject()
         router.pop()
     }
 
