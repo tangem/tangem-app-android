@@ -4,16 +4,18 @@ import arrow.core.left
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
 import com.tangem.blockchain.common.HEX_PREFIX
 import com.tangem.blockchain.common.UnmarshalHelper
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
-import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.common.extensions.toHexString
+import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper.prepareToSendMessageData
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
 import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.WcMethodUseCaseContext
+import com.tangem.data.walletconnect.utils.BlockAidVerificationDelegate
 import com.tangem.domain.transaction.usecase.SignUseCase
 import com.tangem.domain.walletconnect.model.WcEthMethod
 import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
@@ -56,11 +58,7 @@ internal class WcEthMessageSignUseCase @AssistedInject constructor(
             .onLeft { emit(state.toResult(it.left())) }
             .getOrNull() ?: return
 
-        val respond = UnmarshalHelper.unmarshalSignatureExtended(
-            signature = signedHash,
-            hash = hashToSign,
-            publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-        ).asRSVLegacyEVM().toHexString()
+        val respond = prepareToSendMessageData(signedHash, hashToSign, walletManager)
 
         val wcRespondResult = respondService.respond(rawSdkRequest, respond)
         emit(state.toResult(wcRespondResult))
@@ -79,6 +77,16 @@ internal class WcEthMessageSignUseCase @AssistedInject constructor(
 
 object LegacySdkHelper {
     private const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
+
+    internal fun prepareToSendMessageData(
+        signedHash: ByteArray,
+        hashToSign: ByteArray,
+        walletManager: WalletManager,
+    ): String = UnmarshalHelper.unmarshalSignatureExtended(
+        signature = signedHash,
+        hash = hashToSign,
+        publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
+    ).asRSVLegacyEVM().toHexString()
 
     fun createMessageData(message: String): ByteArray {
         val messageData = try {
