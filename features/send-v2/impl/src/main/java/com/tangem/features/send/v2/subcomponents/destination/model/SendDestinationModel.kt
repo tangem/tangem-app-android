@@ -22,10 +22,10 @@ import com.tangem.domain.txhistory.usecase.GetFixedTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetWalletsUseCase
 import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents
+import com.tangem.features.send.v2.common.analytics.CommonSendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.impl.R
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents
-import com.tangem.features.send.v2.send.analytics.SendAnalyticEvents.SendScreenSource
 import com.tangem.features.send.v2.send.ui.state.ButtonsUM
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams
 import com.tangem.features.send.v2.subcomponents.destination.SendDestinationComponentParams.DestinationBlockParams
@@ -289,7 +289,7 @@ internal class SendDestinationModel @Inject constructor(
         ).onEach { (state, route) ->
             params.callback.onNavigationResult(
                 NavigationUM.Content(
-                    title = resourceReference(R.string.send_recipient_label),
+                    title = params.title,
                     subtitle = null,
                     backIconRes = if (route.isEditMode) {
                         R.drawable.ic_back_24
@@ -299,7 +299,8 @@ internal class SendDestinationModel @Inject constructor(
                     backIconClick = {
                         if (!route.isEditMode) {
                             analyticsEventHandler.send(
-                                SendAnalyticEvents.CloseButtonClicked(
+                                CommonSendAnalyticEvents.CloseButtonClicked(
+                                    categoryName = params.analyticsCategoryName,
                                     source = SendScreenSource.Address,
                                     isFromSummary = false,
                                     isValid = state.isPrimaryButtonEnabled,
