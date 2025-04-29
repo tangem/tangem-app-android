@@ -3,10 +3,10 @@ package com.tangem.features.walletconnect.transaction.utils
 import com.domain.blockaid.models.dapp.CheckDAppResult
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.resourceReference
-import com.tangem.domain.walletconnect.usecase.ethereum.WcEthMessageSignUseCase
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
-import com.tangem.domain.walletconnect.usecase.sign.WcSignStep
-import com.tangem.domain.walletconnect.usecase.sign.WcSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcMessageSignUseCase
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignStep
+import com.tangem.domain.walletconnect.usecase.method.WcSignUseCase
 import com.tangem.features.walletconnect.impl.R
 import com.tangem.features.walletconnect.transaction.entity.WcNetworkInfoUM
 import com.tangem.features.walletconnect.transaction.entity.WcSignTransactionUM
@@ -18,10 +18,10 @@ import kotlinx.collections.immutable.persistentListOf
 
 internal fun WcSignUseCase.toUM(signState: WcSignState<*>, actions: WcTransactionActionsUM): WcSignTransactionUM? {
     return when (this) {
-        is WcEthMessageSignUseCase -> {
+        is WcMessageSignUseCase -> {
             ethMessageSignToUM(
                 signState = signState,
-                signModel = signState.signModel as WcEthMessageSignUseCase.SignModel,
+                signModel = signState.signModel as WcMessageSignUseCase.SignModel,
                 actions = actions,
             )
         }
@@ -29,9 +29,9 @@ internal fun WcSignUseCase.toUM(signState: WcSignState<*>, actions: WcTransactio
     }
 }
 
-private fun WcEthMessageSignUseCase.ethMessageSignToUM(
+private fun WcMessageSignUseCase.ethMessageSignToUM(
     signState: WcSignState<*>,
-    signModel: WcEthMessageSignUseCase.SignModel,
+    signModel: WcMessageSignUseCase.SignModel,
     actions: WcTransactionActionsUM,
 ) = WcSignTransactionUM(
     startIconRes = R.drawable.ic_back_24,
