@@ -9,8 +9,8 @@ import com.tangem.data.walletconnect.sign.SignCollector
 import com.tangem.data.walletconnect.sign.SignStateConverter.toResult
 import com.tangem.data.walletconnect.sign.SignStateConverter.toSigning
 import com.tangem.data.walletconnect.sign.WcSignUseCaseDelegate
-import com.tangem.domain.walletconnect.usecase.sign.WcSignState
-import com.tangem.domain.walletconnect.usecase.sign.WcSignStep
+import com.tangem.domain.walletconnect.usecase.method.WcSignState
+import com.tangem.domain.walletconnect.usecase.method.WcSignStep
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.FlowCollector
