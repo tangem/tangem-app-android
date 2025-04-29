@@ -58,10 +58,10 @@ internal class AssociateNetworksDelegate constructor(
             val wcNetwork = namespaceConverters.firstNotNullOfOrNull { it.toNetwork(chainId, wallet) }
                 ?: return@forEach
             val walletNetwork = walletNetworks.find { network -> wcNetwork.id == network.id }
-            if (walletNetwork == null) {
-                available.add(wcNetwork)
+            if (walletNetwork != null) {
+                available.add(walletNetwork)
             } else {
-                notAdded.add(walletNetwork)
+                notAdded.add(wcNetwork)
             }
         }
         if (unknownRequired.isNotEmpty()) throw WcPairError.UnsupportedNetworks(unknownRequired)

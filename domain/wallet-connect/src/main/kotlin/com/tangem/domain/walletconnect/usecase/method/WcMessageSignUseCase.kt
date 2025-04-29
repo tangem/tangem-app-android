@@ -11,7 +11,7 @@ import com.tangem.domain.walletconnect.usecase.blockaid.WcBlockAidEligibleTransa
  * todo() eth_signTypedData https://docs.reown.com/advanced/multichain/rpc-reference/ethereum-rpc#eth-signtypeddata
  *
  * ## Solana
- * [REDACTED_TODO_COMMENT]
+ * solana_signMessage https://docs.reown.com/advanced/multichain/rpc-reference/solana-rpc#solana-signmessage
  */
 interface WcMessageSignUseCase :
     WcSignUseCase,

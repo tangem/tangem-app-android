@@ -2,7 +2,9 @@ package com.tangem.data.walletconnect.network.solana
 
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.extensions.decodeBase58
 import com.tangem.blockchainsdk.utils.ExcludedBlockchains
+import com.tangem.common.extensions.toHexString
 import com.tangem.data.walletconnect.model.CAIP2
 import com.tangem.data.walletconnect.model.NamespaceKey
 import com.tangem.data.walletconnect.request.WcRequestToUseCaseConverter
@@ -49,7 +51,7 @@ internal class WcSolanaNetwork(
             accountAddress = accountAddress.orEmpty(),
         )
         return when (method) {
-            is WcSolanaMethod.SignMessage -> TODO()
+            is WcSolanaMethod.SignMessage -> factories.messageSign.create(context, method)
             is WcSolanaMethod.SignTransaction -> factories.signTransaction.create(context, method)
             is WcSolanaMethod.SignAllTransaction -> factories.signAllTransaction.create(context, method)
         }
@@ -95,7 +97,12 @@ internal class WcSolanaNetwork(
         val rawParams = request.request.params
         return when (this) {
             WcSolanaMethodName.SignMessage -> moshi.fromJson<WcSolanaSignMessageRequest>(rawParams)?.let { request ->
-                WcSolanaMethod.SignMessage(pubKey = request.publicKey, message = request.message)
+                val humanMsg = request.message.decodeBase58()?.toHexString().orEmpty()
+                WcSolanaMethod.SignMessage(
+                    pubKey = request.publicKey,
+                    rawMessage = request.message,
+                    humanMsg = humanMsg,
+                )
             }
             WcSolanaMethodName.SignTransaction -> moshi.fromJson<WcSolanaSignTransactionRequest>(rawParams)
                 ?.let { request -> WcSolanaMethod.SignTransaction(request.transaction) }
@@ -106,6 +113,7 @@ internal class WcSolanaNetwork(
     }
 
     internal class Factories @Inject constructor(
+        val messageSign: WcSolanaMessageSignUseCase.Factory,
         val signTransaction: DefaultWcSolanaSignTransactionUseCase.Factory,
         val signAllTransaction: DefaultWcSolanaSignAllTransactionUseCase.Factory,
     )
