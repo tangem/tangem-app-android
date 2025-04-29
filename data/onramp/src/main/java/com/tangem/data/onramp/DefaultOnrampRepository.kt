@@ -1,5 +1,6 @@
 package com.tangem.data.onramp
 
+import android.net.Uri
 import com.squareup.moshi.Moshi
 import com.tangem.blockchain.extensions.toBigDecimalOrDefault
 import com.tangem.data.common.api.safeApiCall
@@ -349,6 +350,7 @@ internal class DefaultOnrampRepository(
             val currency = requireNotNull(getDefaultCurrencySync()) { "Default currency must not be null" }
             val country = requireNotNull(getDefaultCountrySync()) { "Default country must not be null" }
             val requestId = UUID.randomUUID().toString()
+            val redirectUrl = quote.provider.toRedirectUrl() ?: error("Invalid onramp redirect url")
             val data = safeApiCall(
                 call = {
                     onrampApi.getData(
@@ -362,7 +364,7 @@ internal class DefaultOnrampRepository(
                         toDecimals = cryptoCurrency.decimals,
                         providerId = quote.provider.id,
                         toAddress = address,
-                        redirectUrl = "",
+                        redirectUrl = redirectUrl,
                         language = null,
                         theme = getTheme(isDarkTheme),
                         requestId = requestId,
@@ -370,7 +372,7 @@ internal class DefaultOnrampRepository(
                         refCode = ExpressUtils.getRefCode(
                             userWallet = userWallet,
                             appPreferencesStore = appPreferencesStore,
-                        ),
+                        ).takeUnless { it.isEmpty() },
                     ).bind()
                 },
                 onError = { e ->
@@ -544,6 +546,11 @@ internal class DefaultOnrampRepository(
         null
     }
 
+    private fun OnrampProvider.toRedirectUrl() = Uri.Builder()
+        .path(REDIRECT_URL)
+        .appendPath(id)
+        .build().path
+
     private companion object {
         const val PAYMENT_METHODS_KEY = "onramp_payment_methods"
         const val SELECTED_PAYMENT_METHOD_KEY = "onramp_selected_payment_method"
@@ -553,5 +560,7 @@ internal class DefaultOnrampRepository(
         const val CURRENCIES_KEY = "onramp_currencies"
         const val PROVIDER_THEME_DARK = "dark"
         const val PROVIDER_THEME_LIGHT = "light"
+
+        const val REDIRECT_URL = "https://tangem.com/onramp"
     }
 }
