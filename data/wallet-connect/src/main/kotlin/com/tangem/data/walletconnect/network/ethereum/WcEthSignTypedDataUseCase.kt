@@ -1,14 +1,7 @@
 package com.tangem.data.walletconnect.network.ethereum
 
 import arrow.core.left
-import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.toKeccak
-import com.tangem.blockchain.common.HEX_PREFIX
-import com.tangem.blockchain.common.UnmarshalHelper
-import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.extensions.isAscii
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.common.extensions.toDecompressedPublicKey
-import com.tangem.common.extensions.toHexString
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.data.walletconnect.network.ethereum.LegacySdkHelper.prepareToSendMessageData
 import com.tangem.data.walletconnect.respond.WcRespondService
 import com.tangem.data.walletconnect.sign.BaseWcSignUseCase
@@ -28,10 +21,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 
-internal class WcEthMessageSignUseCase @AssistedInject constructor(
+internal class WcEthSignTypedDataUseCase @AssistedInject constructor(
     override val respondService: WcRespondService,
     @Assisted override val context: WcMethodUseCaseContext,
-    @Assisted override val method: WcEthMethod.MessageSign,
+    @Assisted override val method: WcEthMethod.SignTypedData,
     private val walletManagersFacade: WalletManagersFacade,
     private val signUseCase: SignUseCase,
     blockAidDelegate: BlockAidVerificationDelegate,
@@ -49,7 +42,7 @@ internal class WcEthMessageSignUseCase @AssistedInject constructor(
     override suspend fun SignCollector<WcMessageSignUseCase.SignModel>.onSign(
         state: WcSignState<WcMessageSignUseCase.SignModel>,
     ) {
-        val hashToSign = LegacySdkHelper.createMessageData(method.rawMessage)
+        val hashToSign = EthereumUtils.makeTypedDataHash(method.dataForSign)
         val userWallet = session.wallet
         val walletManager = walletManagersFacade.getOrCreateWalletManager(userWallet.walletId, network)
             ?: return
@@ -59,7 +52,6 @@ internal class WcEthMessageSignUseCase @AssistedInject constructor(
             .getOrNull() ?: return
 
         val respond = prepareToSendMessageData(signedHash, hashToSign, walletManager)
-
         val wcRespondResult = respondService.respond(rawSdkRequest, respond)
         emit(state.toResult(wcRespondResult))
     }
@@ -71,49 +63,6 @@ internal class WcEthMessageSignUseCase @AssistedInject constructor(
 
     @AssistedFactory
     interface Factory {
-        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.MessageSign): WcEthMessageSignUseCase
-    }
-}
-
-object LegacySdkHelper {
-    private const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
-
-    internal fun prepareToSendMessageData(
-        signedHash: ByteArray,
-        hashToSign: ByteArray,
-        walletManager: WalletManager,
-    ): String = UnmarshalHelper.unmarshalSignatureExtended(
-        signature = signedHash,
-        hash = hashToSign,
-        publicKey = walletManager.wallet.publicKey.blockchainKey.toDecompressedPublicKey(),
-    ).asRSVLegacyEVM().toHexString()
-
-    fun createMessageData(message: String): ByteArray {
-        val messageData = try {
-            message.removePrefix(HEX_PREFIX).hexToBytes()
-        } catch (exception: Exception) {
-            message.asciiToHex()?.hexToBytes() ?: byteArrayOf()
-        }
-
-        val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
-        return (prefixData + messageData).toKeccak()
-    }
-
-    fun hexToAscii(hex: String): String? {
-        return try {
-            hex.removePrefix(HEX_PREFIX).hexToBytes().map {
-                val char = it.toInt().toChar()
-                if (char.isAscii()) char else return null
-            }.joinToString("")
-        } catch (exception: Exception) {
-            return null
-        }
-    }
-
-    private fun String.asciiToHex(): String? {
-        return map {
-            if (!it.isAscii()) return null
-            Integer.toHexString(it.code)
-        }.joinToString("")
+        fun create(context: WcMethodUseCaseContext, method: WcEthMethod.SignTypedData): WcEthSignTypedDataUseCase
     }
 }
