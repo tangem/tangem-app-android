@@ -16,11 +16,12 @@ internal class SendConfirmAlertFactory @Inject constructor(
     private val messageSender: UiMessageSender,
 ) {
 
-    fun getGenericErrorState(onFailedTxEmailClick: () -> Unit) {
+    fun getGenericErrorState(onFailedTxEmailClick: () -> Unit, popBack: () -> Unit = {}) {
         messageSender.send(
             DialogMessage(
                 title = resourceReference(id = R.string.send_alert_transaction_failed_title),
                 message = resourceReference(id = R.string.common_unknown_error),
+                onDismissRequest = popBack,
                 firstAction = EventMessageAction(
                     title = resourceReference(R.string.common_support),
                     onClick = onFailedTxEmailClick,
