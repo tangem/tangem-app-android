@@ -4,16 +4,21 @@ import com.tangem.data.promo.converters.StoryContentResponseConverter
 import com.tangem.datasource.api.common.response.getOrThrow
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.local.preferences.AppPreferencesStore
+import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.PreferencesKeys.getShouldShowStoriesKey
 import com.tangem.datasource.local.preferences.utils.get
 import com.tangem.datasource.local.preferences.utils.getSyncOrDefault
 import com.tangem.datasource.local.preferences.utils.store
 import com.tangem.datasource.local.promo.PromoStoriesStore
 import com.tangem.domain.promo.PromoRepository
+import com.tangem.domain.promo.models.PromoId
 import com.tangem.domain.promo.models.StoryContent
+import com.tangem.domain.wallets.models.UserWalletId
+import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -23,24 +28,43 @@ internal class DefaultPromoRepository(
     private val appPreferencesStore: AppPreferencesStore,
     private val promoStoriesStore: PromoStoriesStore,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val referralRepository: ReferralRepository,
 ) : PromoRepository {
 
     private val storyContentConverter = StoryContentResponseConverter()
 
-    override fun isReadyToShowWalletSwapPromo(): Flow<Boolean> {
-        return flowOf(false) // Use it on new promo action
+    override fun isReadyToShowWalletPromo(userWalletId: UserWalletId, promoId: PromoId): Flow<Boolean> {
+        return appPreferencesStore.get(
+            key = PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
+            default = true,
+        ).map { shouldShow ->
+            if (promoId == PromoId.Referral) {
+                runCatching {
+                    !referralRepository.isReferralParticipant(userWalletId) && shouldShow
+                }.getOrDefault(false)
+            } else {
+                shouldShow
+            }
+        }
     }
 
-    override fun isReadyToShowTokenSwapPromo(): Flow<Boolean> {
-        return flowOf(false) // Use it on new promo action
+    override fun isReadyToShowTokenPromo(promoId: PromoId): Flow<Boolean> {
+        return if (promoId == PromoId.Referral) {
+            flowOf(false)
+        } else {
+            appPreferencesStore.get(
+                PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name),
+                default = false,
+            )
+        }
     }
 
-    override suspend fun setNeverToShowWalletSwapPromo() {
-        // Use it on new promo action
+    override suspend fun setNeverToShowWalletPromo(promoId: PromoId) {
+        appPreferencesStore.store(PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name), false)
     }
 
-    override suspend fun setNeverToShowTokenSwapPromo() {
-        // Use it on new promo action
+    override suspend fun setNeverToShowTokenPromo(promoId: PromoId) {
+        appPreferencesStore.store(PreferencesKeys.getShouldShowPromoKey(promoId = promoId.name), false)
     }
 
     override fun getStoryById(id: String): Flow<StoryContent?> = isReadyToShowStories(id).mapLatest {
