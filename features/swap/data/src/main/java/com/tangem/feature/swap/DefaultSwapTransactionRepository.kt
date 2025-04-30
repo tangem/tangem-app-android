@@ -7,8 +7,8 @@ import com.tangem.datasource.local.preferences.PreferencesKeys
 import com.tangem.datasource.local.preferences.utils.getObjectList
 import com.tangem.datasource.local.preferences.utils.getObjectListSync
 import com.tangem.datasource.local.preferences.utils.getObjectMapSync
-import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.tokens.model.CryptoCurrency
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.SavedSwapTransactionListConverter
 import com.tangem.feature.swap.domain.SwapTransactionRepository
@@ -80,9 +80,8 @@ internal class DefaultSwapTransactionRepository(
     }
 
     override suspend fun getTransactions(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         cryptoCurrencyId: CryptoCurrency.ID,
-        scanResponse: ScanResponse,
     ): Flow<List<SavedSwapTransactionListModel>?> {
         return withContext(dispatchers.io) {
             val txStatuses = appPreferencesStore.getObjectMapSync<ExchangeStatusModel>(
@@ -93,7 +92,7 @@ internal class DefaultSwapTransactionRepository(
             ).map { savedTransactions ->
                 val currencyTxs = savedTransactions
                     ?.filter {
-                        it.userWalletId == userWalletId.stringValue &&
+                        it.userWalletId == userWallet.walletId.stringValue &&
                             (
                                 it.toCryptoCurrencyId == cryptoCurrencyId.value ||
                                     it.fromCryptoCurrencyId == cryptoCurrencyId.value
@@ -103,7 +102,7 @@ internal class DefaultSwapTransactionRepository(
                 currencyTxs?.mapNotNull {
                     converter.convertBack(
                         value = it,
-                        scanResponse = scanResponse,
+                        scanResponse = userWallet.scanResponse,
                         txStatuses = txStatuses,
                     )
                 }
