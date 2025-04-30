@@ -514,6 +514,9 @@
   <string name="no_account_polkadot">La cuenta de destino no está activa. Envíe %s o más para activar la cuenta.</string>
   <string name="no_account_send_to_create">Para crear una cuenta, envíe fondos a esta dirección</string>
   <string name="no_trustline_xlm_asset">La cuenta de destino no tiene una Trustline para el activo que se envía.</string>
+  <string name="notification_referral_promo_button">Únete ahora</string>
+  <string name="notification_referral_promo_text">Comparte tu código y gana 5 USDT por venta. Tu amigo obtiene un 10% de descuento.</string>
+  <string name="notification_referral_promo_title">¡Obtén RECOMPENSAS por cada amigo!</string>
   <string name="onboarding_access_code_feature_1_description">Deba configurar un único código de acceso para proteger todss sus dispositivos.</string>
   <string name="onboarding_access_code_feature_1_title">Proteger</string>
   <string name="onboarding_access_code_feature_2_description">Puede configurar un código de acceso individual en cada tarjeta más adelante</string>
