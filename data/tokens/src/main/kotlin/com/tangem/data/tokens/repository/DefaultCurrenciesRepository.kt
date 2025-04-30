@@ -618,7 +618,7 @@ internal class DefaultCurrenciesRepository(
         }
 
         coroutineScope {
-            launch { expressServiceLoader.update(userWalletId, tokens) }
+            launch { expressServiceLoader.update(getUserWallet(userWalletId), tokens) }
         }
     }
 
@@ -639,7 +639,7 @@ internal class DefaultCurrenciesRepository(
             skipCache = refresh,
             block = {
                 coroutineScope {
-                    launch { expressServiceLoader.update(userWalletId, tokens) }
+                    launch { expressServiceLoader.update(getUserWallet(userWalletId), tokens) }
                 }
             },
         )
@@ -677,13 +677,13 @@ internal class DefaultCurrenciesRepository(
             isSortedByBalance = false,
         )
 
-    private suspend fun getUserWallet(userWalletId: UserWalletId): UserWallet {
+    private fun getUserWallet(userWalletId: UserWalletId): UserWallet {
         return requireNotNull(userWalletsStore.getSyncOrNull(userWalletId)) {
             "Unable to find a user wallet with provided ID: $userWalletId"
         }
     }
 
-    private suspend fun ensureIsCorrectUserWallet(userWalletId: UserWalletId, isMultiCurrencyWalletExpected: Boolean) {
+    private fun ensureIsCorrectUserWallet(userWalletId: UserWalletId, isMultiCurrencyWalletExpected: Boolean) {
         val userWallet = getUserWallet(userWalletId)
 
         ensureIsCorrectUserWallet(userWallet, isMultiCurrencyWalletExpected)
