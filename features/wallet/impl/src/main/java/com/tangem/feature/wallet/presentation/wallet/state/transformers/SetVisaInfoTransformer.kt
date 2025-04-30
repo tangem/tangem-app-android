@@ -2,6 +2,8 @@ package com.tangem.feature.wallet.presentation.wallet.state.transformers
 
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
+import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent.Companion.VISA_TYPE
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.format.bigdecimal.crypto
 import com.tangem.core.ui.format.bigdecimal.fiat
@@ -144,17 +146,23 @@ internal class SetVisaInfoTransformer(
             ),
         )
 
-        return return persistentListOf(
+        return persistentListOf(
             WalletManageButton.Receive(
                 enabled = true,
                 dimContent = false,
-                onClick = { clickIntents.onReceiveClick(cryptoCurrencyStatus = cryptoCurrencyStatus) },
-                onLongClick = { clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus = cryptoCurrencyStatus) },
+                onClick = {
+                    clickIntents.onReceiveClick(cryptoCurrencyStatus, MainScreenAnalyticsEvent.ButtonReceive)
+                },
+                onLongClick = {
+                    clickIntents.onCopyAddressLongClick(cryptoCurrencyStatus)
+                },
             ),
             WalletManageButton.Buy(
                 enabled = true,
                 dimContent = false,
-                onClick = { clickIntents.onMultiWalletBuyClick(userWalletId = userWallet.walletId) },
+                onClick = {
+                    clickIntents.onMultiWalletBuyClick(userWalletId = userWallet.walletId, screenType = VISA_TYPE)
+                },
             ),
         )
     }

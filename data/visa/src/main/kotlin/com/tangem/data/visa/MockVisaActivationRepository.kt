@@ -15,16 +15,13 @@ class MockVisaActivationRepository @AssistedInject constructor(
 
     override suspend fun getActivationRemoteState(): VisaActivationRemoteState {
         return VisaActivationRemoteState.CardWalletSignatureRequired(
-            request = VisaCardWalletDataToSignRequest(
+            activationOrderInfo = VisaActivationOrderInfo(
                 orderId = "orderId",
                 customerId = "customerId",
                 customerWalletAddress = "customerWalletAddress",
+                cardWalletAddress = null,
             ),
         )
-    }
-
-    override suspend fun getActivationRemoteStateLongPoll(): VisaActivationRemoteState {
-        return VisaActivationRemoteState.PaymentAccountDeploying
     }
 
     override suspend fun getCardWalletAcceptanceData(
