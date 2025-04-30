@@ -6,7 +6,6 @@ import arrow.core.right
 import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.domain.walletconnect.model.sdkcopy.WcSdkSessionRequest
-import com.tangem.domain.walletconnect.respond.WcRespondService
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
@@ -50,4 +49,19 @@ internal class DefaultWcRespondService : WcRespondService {
                 },
             )
         }
+
+    override fun rejectRequestNonBlock(request: WcSdkSessionRequest, message: String) {
+        WalletKit.respondSessionRequest(
+            params = Wallet.Params.SessionRequestResponse(
+                sessionTopic = request.topic,
+                jsonRpcResponse = Wallet.Model.JsonRpcResponse.JsonRpcError(
+                    id = request.request.id,
+                    code = 0,
+                    message = message,
+                ),
+            ),
+            onSuccess = {},
+            onError = {},
+        )
+    }
 }
