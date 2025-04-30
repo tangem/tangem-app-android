@@ -7,7 +7,7 @@ import com.tangem.domain.staking.model.stakekit.YieldBalance
 import com.tangem.domain.staking.model.stakekit.YieldBalanceItem
 import com.tangem.utils.converter.Converter
 
-internal class YieldBalanceConverter(
+class YieldBalanceConverter(
     private val source: StatusSource,
 ) : Converter<YieldBalanceWrapperDTO, YieldBalance> {
 
