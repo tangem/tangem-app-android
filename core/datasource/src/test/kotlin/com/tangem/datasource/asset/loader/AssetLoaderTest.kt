@@ -7,6 +7,7 @@ import com.squareup.moshi.Types
 import com.squareup.moshi.adapter
 import com.tangem.datasource.api.express.models.response.Asset
 import com.tangem.datasource.asset.reader.AssetReader
+import com.tangem.utils.coroutines.TestingCoroutineDispatcherProvider
 import io.mockk.coEvery
 import io.mockk.coVerifyOrder
 import io.mockk.every
@@ -22,7 +23,11 @@ class AssetLoaderTest {
 
     private val assetReader = mockk<AssetReader>()
     private val moshi = mockk<Moshi>()
-    private val assetLoader = AssetLoader(assetReader = assetReader, moshi = moshi)
+    private val assetLoader = AssetLoader(
+        assetReader = assetReader,
+        moshi = moshi,
+        dispatchers = TestingCoroutineDispatcherProvider(),
+    )
 
     @Test
     fun load() = runTest {

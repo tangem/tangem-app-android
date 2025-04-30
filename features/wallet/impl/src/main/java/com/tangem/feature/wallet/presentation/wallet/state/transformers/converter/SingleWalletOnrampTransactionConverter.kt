@@ -1,9 +1,6 @@
 package com.tangem.feature.wallet.presentation.wallet.state.transformers.converter
 
-import com.tangem.common.ui.expressStatus.state.ExpressLinkUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusItemState
-import com.tangem.common.ui.expressStatus.state.ExpressStatusItemUM
-import com.tangem.common.ui.expressStatus.state.ExpressStatusUM
+import com.tangem.common.ui.expressStatus.state.*
 import com.tangem.common.ui.notifications.ExpressNotificationsUM
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.core.analytics.api.AnalyticsEventHandler
@@ -22,11 +19,8 @@ import com.tangem.domain.onramp.model.OnrampStatus
 import com.tangem.domain.onramp.model.cache.OnrampTransaction
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.analytics.TokenOnrampAnalyticsEvent
-import com.tangem.feature.wallet.impl.R
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateIconUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateInfoUM
-import com.tangem.common.ui.expressStatus.state.ExpressTransactionStateUM
 import com.tangem.feature.wallet.child.wallet.model.intents.WalletClickIntents
+import com.tangem.feature.wallet.impl.R
 import com.tangem.utils.converter.Converter
 import kotlinx.collections.immutable.persistentListOf
 
@@ -142,8 +136,11 @@ internal class SingleWalletOnrampTransactionConverter(
 
     private fun getIconState(status: OnrampStatus.Status): ExpressTransactionStateIconUM {
         return when (status) {
-            OnrampStatus.Status.Verifying -> ExpressTransactionStateIconUM.Warning
-            OnrampStatus.Status.Failed -> ExpressTransactionStateIconUM.Error
+            OnrampStatus.Status.Verifying,
+            -> ExpressTransactionStateIconUM.Warning
+            OnrampStatus.Status.Refunded,
+            OnrampStatus.Status.Failed,
+            -> ExpressTransactionStateIconUM.Error
             else -> ExpressTransactionStateIconUM.None
         }
     }
@@ -226,6 +223,10 @@ internal class SingleWalletOnrampTransactionConverter(
                     wrappedList(currency.name),
                 )
             }
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_failed)
+            }
             else -> {
                 resourceReference(R.string.express_status_bought, wrappedList(currency.name))
             }
@@ -246,6 +247,12 @@ internal class SingleWalletOnrampTransactionConverter(
                     R.string.express_exchange_status_sending_active,
                     wrappedList(currency.name),
                 )
+            }
+            this == OnrampStatus.Status.RefundInProgress -> {
+                resourceReference(R.string.express_exchange_status_refunding)
+            }
+            this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_refunded)
             }
             else -> {
                 resourceReference(
