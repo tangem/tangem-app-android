@@ -1,5 +1,6 @@
 package com.tangem.features.onboarding.v2.multiwallet.impl.model
 
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -86,6 +87,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                                 cardId = backup.card2.cardId,
                                 cardPublicKey = backup.card2.cardPublicKey,
                                 size = ArtworkSize.LARGE,
+                                manufacturerName = backup.card2.manufacturer.name,
+                                firmwareVersion = backup.card2.firmwareVersion,
                             )
                         _uiState.update {
                             it.copy(artwork2 = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
@@ -97,6 +100,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                                 cardId = backup.card3.cardId,
                                 cardPublicKey = backup.card3.cardPublicKey,
                                 size = ArtworkSize.LARGE,
+                                manufacturerName = backup.card3.manufacturer.name,
+                                firmwareVersion = backup.card3.firmwareVersion,
                             )
                         _uiState.update {
                             it.copy(artwork3 = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
@@ -170,6 +175,11 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                     cardId = params.scanResponse.card.cardId,
                     cardPublicKey = params.scanResponse.card.cardPublicKey,
                     size = ArtworkSize.LARGE,
+                    manufacturerName = params.scanResponse.card.manufacturer.name,
+                    firmwareVersion = FirmwareVersion(
+                        major = params.scanResponse.card.firmwareVersion.major,
+                        minor = params.scanResponse.card.firmwareVersion.minor,
+                    ),
                 )
 
             _uiState.update {
