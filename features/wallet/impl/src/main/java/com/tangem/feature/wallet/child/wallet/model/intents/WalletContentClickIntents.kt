@@ -2,7 +2,9 @@ package com.tangem.feature.wallet.child.wallet.model.intents
 
 import arrow.core.getOrElse
 import com.tangem.common.ui.expressStatus.ExpressStatusBottomSheetConfig
+import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
+import com.tangem.domain.nft.analytics.NFTAnalyticsEvent
 import com.tangem.domain.redux.ReduxStateHolder
 import com.tangem.domain.settings.ShouldShowMarketsTooltipUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
@@ -12,7 +14,6 @@ import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.TokenActionsState
 import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
-import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.OnrampStatusFactory
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
@@ -37,8 +38,6 @@ internal interface WalletContentClickIntents {
 
     fun onOrganizeTokensClick()
 
-    fun onOnrampSuccessClick(externalTxId: String)
-
     fun onDismissMarketsOnboarding()
 
     fun onTokenItemClick(currencyStatus: CryptoCurrencyStatus)
@@ -57,7 +56,7 @@ internal interface WalletContentClickIntents {
 
     fun onDisposeExpressStatus()
 
-    fun onNFTClick(userWalletId: UserWalletId)
+    fun onNFTClick(userWallet: UserWallet)
 }
 
 @Suppress("LongParameterList")
@@ -75,6 +74,7 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val reduxStateHolder: ReduxStateHolder,
     private val walletEventSender: WalletEventSender,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : BaseWalletClickIntents(), WalletContentClickIntents {
 
     override fun onDetailsClick() {
@@ -112,10 +112,6 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
 
     override fun onOrganizeTokensClick() {
         router.openOrganizeTokensScreen(userWalletId = stateHolder.getSelectedWalletId())
-    }
-
-    override fun onOnrampSuccessClick(externalTxId: String) {
-        router.openOnrampSuccessScreen(externalTxId = externalTxId)
     }
 
     override fun onDismissMarketsOnboarding() {
@@ -239,7 +235,20 @@ internal class WalletContentClickIntentsImplementor @Inject constructor(
         stateHolder.update(CloseBottomSheetTransformer(userWalletId))
     }
 
-    override fun onNFTClick(userWalletId: UserWalletId) {
-        router.openNFTCollectionsScreen(userWalletId)
+    override fun onNFTClick(userWallet: UserWallet) {
+        val selectedWallet = stateHolder.getSelectedWallet() as? WalletState.MultiCurrency.Content ?: return
+        val analyticsState = when (val nftState = selectedWallet.nftState) {
+            is WalletNFTItemUM.Content -> NFTAnalyticsEvent.NFTListScreenOpened.State.Full(nftState.assetsCount)
+            is WalletNFTItemUM.Empty -> NFTAnalyticsEvent.NFTListScreenOpened.State.Empty
+            is WalletNFTItemUM.Failed,
+            is WalletNFTItemUM.Hidden,
+            is WalletNFTItemUM.Loading,
+            -> null
+        }
+        analyticsState?.let {
+            analyticsEventHandler.send(NFTAnalyticsEvent.NFTListScreenOpened(analyticsState))
+        }
+
+        router.openNFT(userWallet)
     }
 }

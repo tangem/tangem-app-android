@@ -9,9 +9,14 @@ object NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, 
         is SdkNFTAsset.Identifier.EVM -> NFTAsset.Identifier.EVM(
             tokenId = value.tokenId,
             tokenAddress = value.tokenAddress,
+            contractType = NFTAsset.Identifier.EVM.ContractType.valueOf(value.contractType.name),
         )
         is SdkNFTAsset.Identifier.TON -> NFTAsset.Identifier.TON(
             tokenAddress = value.tokenAddress,
+        )
+        is SdkNFTAsset.Identifier.Solana -> NFTAsset.Identifier.Solana(
+            tokenAddress = value.tokenAddress,
+            cnft = value.cnft,
         )
         is SdkNFTAsset.Identifier.Unknown -> NFTAsset.Identifier.Unknown
     }
@@ -20,9 +25,14 @@ object NFTSdkAssetIdentifierConverter : TwoWayConverter<SdkNFTAsset.Identifier, 
         is NFTAsset.Identifier.EVM -> SdkNFTAsset.Identifier.EVM(
             tokenId = value.tokenId,
             tokenAddress = value.tokenAddress,
+            contractType = SdkNFTAsset.Identifier.EVM.ContractType.valueOf(value.contractType.name),
         )
         is NFTAsset.Identifier.TON -> SdkNFTAsset.Identifier.TON(
             tokenAddress = value.tokenAddress,
+        )
+        is NFTAsset.Identifier.Solana -> SdkNFTAsset.Identifier.Solana(
+            tokenAddress = value.tokenAddress,
+            cnft = value.cnft,
         )
         is NFTAsset.Identifier.Unknown -> SdkNFTAsset.Identifier.Unknown
     }
