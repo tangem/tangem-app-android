@@ -1,5 +1,6 @@
 package com.tangem.domain.nft.models
 
+import com.tangem.domain.core.serialization.SerializedBigInteger
 import com.tangem.domain.models.StatusSource
 import com.tangem.domain.tokens.model.Network
 import kotlinx.serialization.Serializable
@@ -13,6 +14,8 @@ data class NFTAsset(
     val owner: String?,
     val name: String?,
     val description: String?,
+    val amount: SerializedBigInteger?,
+    val decimals: Int?,
     val salePrice: NFTSalePrice,
     val rarity: Rarity?,
     val media: Media?,
@@ -44,14 +47,29 @@ data class NFTAsset(
 
         @Serializable
         data class EVM(
-            val tokenId: String,
             val tokenAddress: String,
+            val tokenId: SerializedBigInteger,
+            val contractType: ContractType,
         ) : Identifier() {
-            override val stringValue: String = "${tokenAddress}_$tokenId"
+            override val stringValue: String = "${contractType}_$tokenId"
+
+            enum class ContractType {
+                ERC1155,
+                ERC721,
+                Unknown,
+            }
         }
 
         @Serializable
         data class TON(val tokenAddress: String) : Identifier() {
+            override val stringValue: String = tokenAddress
+        }
+
+        @Serializable
+        data class Solana(
+            val tokenAddress: String,
+            val cnft: Boolean,
+        ) : Identifier() {
             override val stringValue: String = tokenAddress
         }
 
