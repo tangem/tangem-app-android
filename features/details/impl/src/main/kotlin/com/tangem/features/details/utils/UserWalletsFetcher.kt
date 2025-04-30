@@ -1,6 +1,7 @@
 package com.tangem.features.details.utils
 
 import arrow.core.Either
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.ui.userwallet.converter.UserWalletItemUMConverter
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
@@ -87,6 +88,11 @@ internal class UserWalletsFetcher @Inject constructor(
             wallets.forEach { wallet ->
                 val artwork = getCardImageUseCase(
                     cardId = wallet.cardId,
+                    manufacturerName = wallet.scanResponse.card.manufacturer.name,
+                    firmwareVersion = FirmwareVersion(
+                        major = wallet.scanResponse.card.firmwareVersion.major,
+                        minor = wallet.scanResponse.card.firmwareVersion.minor,
+                    ),
                     cardPublicKey = wallet.scanResponse.card.cardPublicKey,
                     size = ArtworkSize.SMALL,
                 )

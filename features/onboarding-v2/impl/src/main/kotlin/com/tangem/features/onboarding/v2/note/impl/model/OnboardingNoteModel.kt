@@ -1,6 +1,7 @@
 package com.tangem.features.onboarding.v2.note.impl.model
 
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
@@ -94,6 +95,11 @@ internal class OnboardingNoteModel @Inject constructor(
                 cardId = cardInfo.cardId,
                 cardPublicKey = cardInfo.cardPublicKey,
                 size = ArtworkSize.LARGE,
+                manufacturerName = cardInfo.manufacturer.name,
+                firmwareVersion = FirmwareVersion(
+                    major = cardInfo.firmwareVersion.major,
+                    minor = cardInfo.firmwareVersion.minor,
+                ),
             )
             _uiState.update {
                 it.copy(cardArtwork = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
