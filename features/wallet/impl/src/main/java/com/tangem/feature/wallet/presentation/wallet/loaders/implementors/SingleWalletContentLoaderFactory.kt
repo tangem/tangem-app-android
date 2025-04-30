@@ -7,7 +7,7 @@ import com.tangem.domain.onramp.GetOnrampTransactionsUseCase
 import com.tangem.domain.onramp.OnrampRemoveTransactionUseCase
 import com.tangem.domain.settings.SetWalletWithFundsFoundUseCase
 import com.tangem.domain.tokens.GetCryptoCurrencyActionsUseCase
-import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
+import com.tangem.domain.tokens.GetSingleCryptoCurrencyStatusUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsUseCase
 import com.tangem.domain.wallets.models.UserWallet
@@ -22,7 +22,7 @@ import javax.inject.Inject
 @Suppress("LongParameterList")
 internal class SingleWalletContentLoaderFactory @Inject constructor(
     private val stateHolder: WalletStateController,
-    private val getPrimaryCurrencyStatusUpdatesUseCase: GetPrimaryCurrencyStatusUpdatesUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getCryptoCurrencyActionsUseCase: GetCryptoCurrencyActionsUseCase,
     private val getSingleWalletWarningsFactory: GetSingleWalletWarningsFactory,
     private val setWalletWithFundsFoundUseCase: SetWalletWithFundsFoundUseCase,
@@ -42,7 +42,7 @@ internal class SingleWalletContentLoaderFactory @Inject constructor(
             clickIntents = clickIntents,
             isRefresh = isRefresh,
             stateHolder = stateHolder,
-            getPrimaryCurrencyStatusUpdatesUseCase = getPrimaryCurrencyStatusUpdatesUseCase,
+            getSingleCryptoCurrencyStatusUseCase = getSingleCryptoCurrencyStatusUseCase,
             getCryptoCurrencyActionsUseCase = getCryptoCurrencyActionsUseCase,
             getSingleWalletWarningsFactory = getSingleWalletWarningsFactory,
             setWalletWithFundsFoundUseCase = setWalletWithFundsFoundUseCase,
