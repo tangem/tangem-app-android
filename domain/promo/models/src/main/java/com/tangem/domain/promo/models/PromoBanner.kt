@@ -24,3 +24,7 @@ data class PromoBanner(
         const val ACTIVE_STATUS = "active"
     }
 }
+
+enum class PromoId {
+    Referral,
+}
