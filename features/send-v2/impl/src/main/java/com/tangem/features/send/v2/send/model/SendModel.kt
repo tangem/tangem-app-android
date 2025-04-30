@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.send.model
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
@@ -26,14 +27,17 @@ import com.tangem.domain.tokens.GetFeePaidCryptoCurrencyStatusSyncUseCase
 import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
+import com.tangem.domain.transaction.error.GetFeeError
+import com.tangem.domain.transaction.usecase.GetTransferFeeUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
-import com.tangem.features.send.v2.common.NavigationUM
-import com.tangem.features.send.v2.send.SendRoute
+import com.tangem.features.send.v2.common.CommonSendRoute
+import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.send.confirm.model.SendConfirmAlertFactory
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
@@ -76,6 +80,7 @@ internal class SendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
+    private val getTransferFeeUseCase: GetTransferFeeUseCase,
     private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
 ) : Model(), SendComponentCallback {
 
@@ -93,7 +98,7 @@ internal class SendModel @Inject constructor(
     var cryptoCurrencyStatus: CryptoCurrencyStatus? = null
     var feeCryptoCurrencyStatus: CryptoCurrencyStatus? = null
     var appCurrency: AppCurrency = AppCurrency.Default
-    var predefinedAmountValue: String? = null
+    var predefinedValues: PredefinedValues = PredefinedValues.Empty
 
     private var balanceHidingJobHolder = JobHolder()
 
@@ -113,7 +118,7 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onAmountResult(amountUM: AmountState) {
-        predefinedAmountValue = null // reset predefined amount
+        resetPredefinedAmount()
         _uiState.update { it.copy(amountUM = amountUM) }
     }
 
@@ -122,8 +127,32 @@ internal class SendModel @Inject constructor(
     }
 
     override fun onResult(sendUM: SendUM) {
-        predefinedAmountValue = null // reset predefined amount
+        resetPredefinedAmount()
         _uiState.update { sendUM }
+    }
+
+    suspend fun loadFee(): Either<GetFeeError, TransactionFee> {
+        val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
+        val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
+        val enteredDestinationAddress = destinationUM.addressTextField.value
+        val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
+
+        return getTransferFeeUseCase(
+            destination = enteredDestinationAddress,
+            amount = enteredAmount,
+            userWallet = userWallet,
+            cryptoCurrency = params.currency,
+        )
+    }
+
+    private fun resetPredefinedAmount() {
+        // reset predefined amount
+        val internalPredefinedValues = predefinedValues
+        predefinedValues = when (internalPredefinedValues) {
+            is PredefinedValues.Content.Deeplink -> internalPredefinedValues.copy(amount = "")
+            is PredefinedValues.Content.QrCode -> internalPredefinedValues.copy(amount = "")
+            PredefinedValues.Empty -> internalPredefinedValues
+        }
     }
 
     fun showAlertError() {
@@ -230,7 +259,7 @@ internal class SendModel @Inject constructor(
         feeCryptoCurrencyStatus = feeCurrencyStatus
 
         if (params.amount != null) {
-            router.replaceAll(SendRoute.Confirm)
+            router.replaceAll(CommonSendRoute.Confirm)
         }
     }
 
@@ -245,10 +274,15 @@ internal class SendModel @Inject constructor(
         val parsedQrCode = parseQrCodeUseCase(address, cryptoCurrency).getOrNull()
         // Decompose component can be active or inactive depending on its state and navigation stack
         // If it is in inactive state use parameter to pass value to amount component
-        predefinedAmountValue = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        val amount = parsedQrCode?.amount?.parseBigDecimal(cryptoCurrency.decimals)
+        predefinedValues = PredefinedValues.Content.QrCode(
+            amount = amount.orEmpty(),
+            address = parsedQrCode?.address.orEmpty(),
+            memo = parsedQrCode?.memo,
+        )
         // If it is in active state use flow to update value in amount component
         modelScope.launch {
-            predefinedAmountValue?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
+            amount?.let { sendAmountUpdateQRTrigger.triggerUpdateAmount(it) }
         }
     }
 
