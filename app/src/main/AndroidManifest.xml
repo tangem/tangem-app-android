@@ -127,7 +127,7 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="onramp-success"
+                    android:host="*"
                     android:scheme="tangem" />
             </intent-filter>
 
