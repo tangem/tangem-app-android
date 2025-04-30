@@ -32,7 +32,7 @@ data class OnrampDataJson(
     val requestId: String,
 
     @Json(name = "externalTxId")
-    val externalTxId: String,
+    val externalTxId: String?,
 
     @Json(name = "externalTxUrl")
     val externalTxUrl: String?,
