@@ -29,6 +29,7 @@ import com.tangem.sdk.nfc.NfcManager
 import com.tangem.sdk.storage.create
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
+import com.tangem.wallet.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
@@ -60,14 +61,25 @@ internal class DefaultCardSdkProvider @Inject constructor(
         get() = holder?.sdk ?: tryToRegisterWithForegroundActivity()
 
     init {
-        appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
-            .map { it[ApiConfig.ID.TangemCardSdk.name] == ApiEnvironment.PROD }
-            .onEach { isProd ->
-                holder?.let {
-                    it.sdk.config.isTangemAttestationProdEnv = isProd
+        if (BuildConfig.TESTER_MENU_ENABLED) {
+            appPreferencesStore.getObjectMap<ApiEnvironment>(PreferencesKeys.apiConfigsEnvironmentKey)
+                .map {
+                    when (it[ApiConfig.ID.TangemCardSdk.name]) {
+                        ApiEnvironment.DEV,
+                        ApiEnvironment.STAGE,
+                        -> false
+                        ApiEnvironment.PROD,
+                        null,
+                        -> true
+                    }
                 }
-            }
-            .launchIn(CoroutineScope(SupervisorJob() + dispatchers.main))
+                .onEach { isProd ->
+                    holder?.let {
+                        it.sdk.config.isTangemAttestationProdEnv = isProd
+                    }
+                }
+                .launchIn(CoroutineScope(SupervisorJob() + dispatchers.main))
+        }
     }
 
     override fun register(activity: FragmentActivity) = runBlocking(dispatchers.mainImmediate) {
