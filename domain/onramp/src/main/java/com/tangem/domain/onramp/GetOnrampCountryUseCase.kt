@@ -7,6 +7,7 @@ import com.tangem.domain.onramp.model.OnrampCountry
 import com.tangem.domain.onramp.model.error.OnrampError
 import com.tangem.domain.onramp.repositories.OnrampErrorResolver
 import com.tangem.domain.onramp.repositories.OnrampRepository
+import com.tangem.domain.wallets.models.UserWallet
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
@@ -24,8 +25,8 @@ class GetOnrampCountryUseCase(
             }
     }
 
-    suspend fun invokeSync(): Either<OnrampError, OnrampCountry> {
-        return Either.catch { repository.getDefaultCountrySync() ?: repository.getCountryByIp() }
+    suspend fun invokeSync(userWallet: UserWallet): Either<OnrampError, OnrampCountry> {
+        return Either.catch { repository.getDefaultCountrySync() ?: repository.getCountryByIp(userWallet) }
             .mapLeft(errorResolver::resolve)
     }
 }
