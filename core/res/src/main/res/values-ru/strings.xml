@@ -445,7 +445,7 @@
   <string name="markets_selector_interval_7d_title">7д</string>
   <string name="markets_selector_interval_all_title">Все</string>
   <string name="markets_sort_by_experienced_buyers_title">Опытные трейдеры</string>
-  <string name="markets_sort_by_rating_title">Рейтинг</string>
+  <string name="markets_sort_by_rating_title">Капитализация</string>
   <string name="markets_sort_by_title">Сортировать по</string>
   <string name="markets_sort_by_top_gainers_title">Лидеры роста</string>
   <string name="markets_sort_by_top_losers_title">Лидеры падения</string>
@@ -945,7 +945,7 @@
   <string name="story_finish_description">Используйте его на ходу, в любом месте, в любое время. Без проводов и батареек. Как только понадобится крипта, просто приложите карту или кольцо к телефону.</string>
   <string name="story_finish_title">Кошелек для каждого</string>
   <string name="story_meet_title">Встречайте Tangem</string>
-  <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
+  <string name="story_web3_description">Более 100 децентрализованных сервисов уже доступны для интеграции</string>
   <string name="story_web3_title">Поддержка Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Для отправки требуется входящая транзакция на сумму не менее %1$s</string>
   <string name="sui_not_enough_coin_for_fee_title">Недостаточно средств</string>
@@ -1000,7 +1000,7 @@
   <string name="token_details_hide_alert_title">Скрыть %s</string>
   <string name="token_details_hide_token">Скрыть токен</string>
   <string name="token_details_staking_block_subtitle">Стейкинг позволяет вам зарабатывать %1$s и получать вознаграждения каждые %2$s дней</string>
-  <string name="token_details_staking_block_title">Зарабатывайте до %s вознаграждений за стейкинг ежегодно</string>
+  <string name="token_details_staking_block_title">Сервис стейкинга</string>
   <string name="token_details_token_type_subtitle">%1$s токен в сети %%image%% %2$s</string>
   <string name="token_details_token_type_subtitle_no_standard">Токен в сети %%image%% %1$s</string>
   <string name="token_details_unable_hide_alert_message">Токен %1$s (%2$s) является основной валютой в сети %3$s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети</string>
