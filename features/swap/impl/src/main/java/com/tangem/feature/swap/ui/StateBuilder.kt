@@ -253,6 +253,7 @@ internal class StateBuilder(
         isNeedBestRateBadge: Boolean,
         selectedFeeType: FeeType,
         isReverseSwapPossible: Boolean,
+        needApplyFCARestrictions: Boolean,
     ): SwapStateHolder {
         if (uiStateHolder.sendCardData !is SwapCardState.SwapCardData) return uiStateHolder
         if (uiStateHolder.receiveCardData !is SwapCardState.SwapCardData) return uiStateHolder
@@ -346,6 +347,7 @@ internal class StateBuilder(
                 ChangeCardsButtonState.DISABLED
             },
             providerState = swapProvider.convertToContentClickableProviderState(
+                needApplyFCARestrictions = needApplyFCARestrictions,
                 isBestRate = bestRatedProviderId == swapProvider.providerId,
                 fromTokenInfo = quoteModel.fromTokenInfo,
                 toTokenInfo = quoteModel.toTokenInfo,
@@ -1138,6 +1140,7 @@ internal class StateBuilder(
 
     @Suppress("LongParameterList")
     private fun SwapProvider.convertToContentClickableProviderState(
+        needApplyFCARestrictions: Boolean,
         isBestRate: Boolean,
         fromTokenInfo: TokenSwapInfo,
         toTokenInfo: TokenSwapInfo,
@@ -1158,7 +1161,7 @@ internal class StateBuilder(
         // val rateString = "1 $fromCurrencySymbol ≈ $rate $toCurrencySymbol"
         val badge = if (isRecommended) {
             ProviderState.AdditionalBadge.Recommended
-        } else if (isNeedBestRateBadge && isBestRate) {
+        } else if (isNeedBestRateBadge && isBestRate && !needApplyFCARestrictions) {
             ProviderState.AdditionalBadge.BestTrade
         } else {
             ProviderState.AdditionalBadge.Empty
