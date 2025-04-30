@@ -14,7 +14,7 @@ internal data class WcConnectionsState(
 
 internal data class WcConnectionsTopAppBarConfig(
     val startButtonUM: TopAppBarButtonUM,
-    val endActions: ImmutableList<TangemDropdownMenuItem>,
+    val disconnectAllItem: TangemDropdownMenuItem,
 )
 
 internal data class WcConnectionsUM(
