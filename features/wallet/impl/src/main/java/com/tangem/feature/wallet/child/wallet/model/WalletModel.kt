@@ -4,11 +4,15 @@ import androidx.compose.runtime.Stable
 import arrow.core.getOrElse
 import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.dismiss
+import com.tangem.common.routing.AppRoute
+import com.tangem.common.routing.AppRouter
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.core.analytics.models.event.MainScreenAnalyticsEvent
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
+import com.tangem.core.deeplink.DeepLinksRegistry
+import com.tangem.core.deeplink.global.ReferralDeepLink
 import com.tangem.domain.balancehiding.GetBalanceHidingSettingsUseCase
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.settings.*
@@ -75,7 +79,9 @@ internal class WalletModel @Inject constructor(
     private val tokenListStore: MultiWalletTokenListStore,
     private val onrampStatusFactory: OnrampStatusFactory,
     private val analyticsEventsHandler: AnalyticsEventHandler,
+    private val deepLinksRegistry: DeepLinksRegistry,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
+    private val appRouter: AppRouter,
     val screenLifecycleProvider: ScreenLifecycleProvider,
     val innerWalletRouter: InnerWalletRouter,
 ) : Model() {
@@ -207,7 +213,9 @@ internal class WalletModel @Inject constructor(
                     if (selectedWallet.isMultiCurrency) {
                         selectedWalletAnalyticsSender.send(selectedWallet)
                     }
-
+                    // Registering here, because `WalletDeepLinksHandler` unregisters deeplink when scope is cancelled
+                    // This is temporary solution, will be removed with complete deeplink navigation overhaul
+                    addReferralDeepLink(selectedWallet)
                     walletDeepLinksHandler.registerForWallet(scope = modelScope, userWallet = selectedWallet)
                     subscribeOnExpressTransactionsUpdates(selectedWallet)
                     subscribeToScreenBackgroundState(selectedWallet)
@@ -215,6 +223,20 @@ internal class WalletModel @Inject constructor(
                 .flowOn(dispatchers.main)
                 .launchIn(modelScope)
         }
+    }
+
+    private fun addReferralDeepLink(userWallet: UserWallet) {
+        deepLinksRegistry.register(
+            ReferralDeepLink(
+                onReceive = {
+                    if (userWallet.cardTypesResolver.isTangemWallet()) {
+                        appRouter.push(
+                            AppRoute.ReferralProgram(userWalletId = userWallet.walletId),
+                        )
+                    }
+                },
+            ),
+        )
     }
 
     // We need to update the current wallet quotes if the application was in the background for more than 10 seconds
@@ -322,9 +344,7 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
-        if (action.selectedWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
-            fetchCurrencyStatusUseCase(userWalletId = action.selectedWallet.walletId)
-        }
+        fetchIfSingleWallet(action.selectedWallet)
 
         if (action.wallets.size > 1 && isWalletsScrollPreviewEnabled()) {
             withContext(dispatchers.io) { delay(timeMillis = 1_800) }
@@ -351,6 +371,8 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
+        fetchIfSingleWallet(userWallet = action.selectedWallet)
+
         stateHolder.update(
             ReinitializeWalletTransformer(
                 prevWalletId = action.prevWalletId,
@@ -368,12 +390,7 @@ internal class WalletModel @Inject constructor(
             coroutineScope = modelScope,
         )
 
-        if (action.selectedWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
-            modelScope.launch {
-                fetchCurrencyStatusUseCase(userWalletId = action.selectedWallet.walletId)
-                    .onLeft { Timber.e(it.toString()) }
-            }
-        }
+        fetchIfSingleWallet(userWallet = action.selectedWallet)
 
         stateHolder.update(
             AddWalletTransformer(
@@ -469,6 +486,15 @@ internal class WalletModel @Inject constructor(
                     onConsume = onConsume,
                 ),
             )
+        }
+    }
+
+    private fun fetchIfSingleWallet(userWallet: UserWallet) {
+        if (userWallet.scanResponse.cardTypesResolver.isSingleWallet()) {
+            modelScope.launch {
+                fetchCurrencyStatusUseCase(userWalletId = userWallet.walletId)
+                    .onLeft { Timber.e(it.toString()) }
+            }
         }
     }
 
