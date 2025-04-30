@@ -1,8 +1,8 @@
 package com.tangem.data.visa.di
 
+import com.tangem.data.visa.DefaultVisaActivationRepository
 import com.tangem.data.visa.DefaultVisaAuthRepository
 import com.tangem.data.visa.MockVisaRepository
-import com.tangem.data.visa.MockVisaActivationRepository
 import com.tangem.domain.visa.repository.VisaActivationRepository
 import com.tangem.domain.visa.repository.VisaAuthRepository
 import com.tangem.domain.visa.repository.VisaRepository
@@ -20,18 +20,18 @@ internal interface VisaDataModule {
     @Singleton
     fun bindVisaAuthRepository(repository: DefaultVisaAuthRepository): VisaAuthRepository
 
-    // @Binds
-    // @Singleton
-    // fun bindVisaActivationRepositoryFactory(
-    //     repository: DefaultVisaActivationRepository.Factory,
-    // ): VisaActivationRepository.Factory
-
-    // Mocked
     @Binds
     @Singleton
     fun bindVisaActivationRepositoryFactory(
-        repository: MockVisaActivationRepository.Factory,
+        repository: DefaultVisaActivationRepository.Factory,
     ): VisaActivationRepository.Factory
+
+    // Mocked
+    // @Binds
+    // @Singleton
+    // fun bindVisaActivationRepositoryFactory(
+    //     repository: MockVisaActivationRepository.Factory,
+    // ): VisaActivationRepository.Factory
 
     // @Binds
     // fun bindVisaRepository(repository: DefaultVisaRepository): VisaRepository

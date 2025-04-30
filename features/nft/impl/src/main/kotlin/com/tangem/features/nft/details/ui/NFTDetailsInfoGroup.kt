@@ -3,24 +3,34 @@ package com.tangem.features.nft.details.ui
 import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import com.tangem.common.ui.amountScreen.utils.getFiatString
 import com.tangem.core.ui.components.TextShimmer
-import com.tangem.core.ui.components.atoms.text.EllipsisText
+import com.tangem.core.ui.components.atoms.text.ReadMoreText
 import com.tangem.core.ui.components.block.information.InformationBlock
+import com.tangem.core.ui.extensions.resolveReference
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.format.bigdecimal.crypto
+import com.tangem.core.ui.format.bigdecimal.format
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
+import java.math.BigDecimal
+
+private const val READ_MORE_MAX_LINES = 3
 
 @Composable
 internal fun NFTDetailsInfoGroup(
@@ -41,7 +51,10 @@ internal fun NFTDetailsInfoGroup(
                 contentHorizontalPadding = 0.dp,
             ) {
                 Column(
-                    modifier = Modifier,
+                    modifier = Modifier
+                        .padding(
+                            bottom = TangemTheme.dimens.spacing12,
+                        ),
                 ) {
                     SalePrice(state.salePrice)
                     Description(state.description, onReadMoreClick)
@@ -68,7 +81,6 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                         .padding(
                             start = TangemTheme.dimens.spacing12,
                             end = TangemTheme.dimens.spacing12,
-                            bottom = TangemTheme.dimens.spacing12,
                         ),
                 ) {
                     TextShimmer(
@@ -92,19 +104,23 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
                         .padding(
                             start = TangemTheme.dimens.spacing12,
                             end = TangemTheme.dimens.spacing12,
-                            bottom = TangemTheme.dimens.spacing12,
                         ),
                     verticalArrangement = Arrangement.SpaceAround,
                 ) {
                     Text(
-                        text = state.value,
+                        text = state.value.format {
+                            crypto(
+                                symbol = state.symbol,
+                                decimals = state.decimals,
+                            )
+                        },
                         style = TangemTheme.typography.head,
                         color = TangemTheme.colors.text.primary1,
                     )
                     Text(
                         modifier = Modifier
                             .padding(top = TangemTheme.dimens.spacing4),
-                        text = state.fiatValue,
+                        text = getFiatString(state.value, state.rate, state.appCurrency),
                         style = TangemTheme.typography.caption2,
                         color = TangemTheme.colors.text.tertiary,
                     )
@@ -117,18 +133,29 @@ private fun SalePrice(state: NFTAssetUM.SalePrice, modifier: Modifier = Modifier
 @Composable
 private fun Description(description: String?, onReadMoreClick: () -> Unit, modifier: Modifier = Modifier) {
     if (!description.isNullOrEmpty()) {
-        // TODO configure right way to display 3 rows and "Read more" label
-        EllipsisText(
+        val interactionSource = remember { MutableInteractionSource() }
+        ReadMoreText(
             modifier = modifier
-                .clickable { onReadMoreClick() }
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onReadMoreClick,
+                )
                 .padding(
-                    horizontal = TangemTheme.dimens.spacing12,
-                    vertical = TangemTheme.dimens.spacing8,
+                    start = TangemTheme.dimens.spacing12,
+                    top = TangemTheme.dimens.spacing12,
+                    end = TangemTheme.dimens.spacing12,
                 ),
+            expanded = false,
             text = description,
             style = TangemTheme.typography.body2.copy(
                 color = TangemTheme.colors.text.tertiary,
             ),
+            readMoreText = resourceReference(R.string.common_read_more).resolveReference(),
+            readMoreMaxLines = READ_MORE_MAX_LINES,
+            readMoreStyle = TangemTheme.typography.body2.copy(
+                color = TangemTheme.colors.text.accent,
+            ).toSpanStyle(),
         )
     }
 }
@@ -141,7 +168,9 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
             if (state.showDivider) {
                 HorizontalDivider(
                     modifier = Modifier.padding(
-                        horizontal = TangemTheme.dimens.spacing12,
+                        start = TangemTheme.dimens.spacing12,
+                        top = TangemTheme.dimens.spacing8,
+                        end = TangemTheme.dimens.spacing12,
                     ),
                     color = TangemTheme.colors.stroke.primary,
                 )
@@ -150,8 +179,9 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
                 modifier = modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = TangemTheme.dimens.spacing6,
-                        vertical = TangemTheme.dimens.spacing8,
+                        start = TangemTheme.dimens.spacing6,
+                        top = TangemTheme.dimens.spacing12,
+                        end = TangemTheme.dimens.spacing6,
                     ),
             ) {
                 NFTDetailsGroupBlock(
@@ -159,20 +189,30 @@ private fun Rarity(state: NFTAssetUM.Rarity, modifier: Modifier = Modifier) {
                         .weight(1f)
                         .padding(
                             horizontal = TangemTheme.dimens.spacing6,
-                            vertical = TangemTheme.dimens.spacing4,
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = state.onLabelClick,
                         ),
                     title = resourceReference(R.string.nft_details_rarity_label),
                     value = stringReference(state.label),
+                    showInfoButton = true,
                 )
                 NFTDetailsGroupBlock(
                     modifier = Modifier
                         .weight(1f)
                         .padding(
                             horizontal = TangemTheme.dimens.spacing6,
-                            vertical = TangemTheme.dimens.spacing4,
+                        )
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = state.onRankClick,
                         ),
                     title = resourceReference(R.string.nft_details_rarity_rank),
                     value = stringReference(state.rank),
+                    showInfoButton = true,
                 )
             }
         }
@@ -196,12 +236,20 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
     collection = listOf(
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
-            salePrice = NFTAssetUM.SalePrice.Content(value = "0,012 ETH", fiatValue = "32.34$"),
+            salePrice = NFTAssetUM.SalePrice.Content(
+                value = BigDecimal("18.75"),
+                symbol = "ETH",
+                decimals = 18,
+                rate = BigDecimal("1"),
+                appCurrency = AppCurrency.Default,
+            ),
             description = "Base edition by Piux. An illustration of Crypto Robot #7804".repeat(3),
             rarity = NFTAssetUM.Rarity.Content(
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
@@ -212,27 +260,49 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
-            salePrice = NFTAssetUM.SalePrice.Content(value = "0,012 ETH", fiatValue = "32.34$"),
+            salePrice = NFTAssetUM.SalePrice.Content(
+                value = BigDecimal("18.75"),
+                symbol = "ETH",
+                decimals = 18,
+                rate = BigDecimal("1"),
+                appCurrency = AppCurrency.Default,
+            ),
             description = null,
             rarity = NFTAssetUM.Rarity.Content(
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
-            salePrice = NFTAssetUM.SalePrice.Content(value = "0,012 ETH", fiatValue = "32.34$"),
+            salePrice = NFTAssetUM.SalePrice.Content(
+                value = BigDecimal("18.75"),
+                symbol = "ETH",
+                decimals = 18,
+                rate = BigDecimal("1"),
+                appCurrency = AppCurrency.Default,
+            ),
             description = "Base edition by Piux. An illustration of Crypto Robot #7804".repeat(3),
             rarity = NFTAssetUM.Rarity.Empty,
         ),
         NFTAssetUM.TopInfo.Content(
             title = resourceReference(R.string.nft_details_last_sale_price),
-            salePrice = NFTAssetUM.SalePrice.Content(value = "0,012 ETH", fiatValue = "32.34$"),
+            salePrice = NFTAssetUM.SalePrice.Content(
+                value = BigDecimal("18.75"),
+                symbol = "ETH",
+                decimals = 18,
+                rate = BigDecimal("1"),
+                appCurrency = AppCurrency.Default,
+            ),
             description = null,
             rarity = NFTAssetUM.Rarity.Empty,
         ),
@@ -244,6 +314,8 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = true,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
@@ -254,6 +326,8 @@ private class NFTAssetInfoProvider : CollectionPreviewParameterProvider<NFTAsset
                 rank = "Top 1% rarity",
                 label = "115.28",
                 showDivider = false,
+                onLabelClick = { },
+                onRankClick = { },
             ),
         ),
         NFTAssetUM.TopInfo.Content(
