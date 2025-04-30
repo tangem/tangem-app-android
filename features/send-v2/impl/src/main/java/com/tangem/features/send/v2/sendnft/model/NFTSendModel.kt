@@ -201,9 +201,10 @@ internal class NFTSendModel @Inject constructor(
                     }
                 },
                 ifLeft = {
-                    alertFactory.getGenericErrorState {
-                        onFailedTxEmailClick(it.toString())
-                    }
+                    alertFactory.getGenericErrorState(
+                        onFailedTxEmailClick = { onFailedTxEmailClick(it.toString()) },
+                        popBack = { router.pop() },
+                    )
                 },
             )
         }.launchIn(modelScope)
