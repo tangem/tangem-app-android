@@ -8,6 +8,12 @@ import com.tangem.domain.tokens.model.Network
 import com.tangem.domain.transaction.TransactionRepository
 import com.tangem.domain.wallets.models.UserWalletId
 
+/**
+ * Use case to create and get transaction
+ *
+ * !!!IMPORTANT
+ * Use when transaction data is already compiled by external service or provider
+ */
 class CreateTransactionUseCase(
     private val transactionRepository: TransactionRepository,
 ) {
@@ -24,7 +30,6 @@ class CreateTransactionUseCase(
         userWalletId: UserWalletId,
         network: Network,
         txExtras: TransactionExtras? = null,
-        hash: String? = null,
     ) = Either.catch {
         transactionRepository.createTransaction(
             amount = amount,
@@ -34,7 +39,6 @@ class CreateTransactionUseCase(
             userWalletId = userWalletId,
             network = network,
             txExtras = txExtras,
-            hash = hash,
         )
     }
 }
