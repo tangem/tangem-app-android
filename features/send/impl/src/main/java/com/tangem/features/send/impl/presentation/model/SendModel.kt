@@ -84,7 +84,7 @@ import kotlin.properties.Delegates
 internal class SendModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     private val getUserWalletUseCase: GetUserWalletUseCase,
-    private val getCryptoCurrencyStatusSyncUseCase: GetCryptoCurrencyStatusSyncUseCase,
+    private val getSingleCryptoCurrencyStatusUseCase: GetSingleCryptoCurrencyStatusUseCase,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
     private val getWalletsUseCase: GetWalletsUseCase,
     private val getFeePaidCryptoCurrencyStatusSyncUseCase: GetFeePaidCryptoCurrencyStatusSyncUseCase,
@@ -325,13 +325,13 @@ internal class SendModel @Inject constructor(
         isMultiCurrency: Boolean,
     ): Either<CurrencyStatusError, CryptoCurrencyStatus> {
         return if (isMultiCurrency) {
-            getCryptoCurrencyStatusSyncUseCase(
+            getSingleCryptoCurrencyStatusUseCase.invokeMultiWalletSync(
                 userWalletId = userWalletId,
                 cryptoCurrencyId = cryptoCurrency.id,
                 isSingleWalletWithTokens = isSingleWalletWithToken,
             )
         } else {
-            getCryptoCurrencyStatusSyncUseCase(userWalletId = userWalletId)
+            getSingleCryptoCurrencyStatusUseCase.invokeSingleWalletSync(userWalletId = userWalletId)
         }
     }
 
