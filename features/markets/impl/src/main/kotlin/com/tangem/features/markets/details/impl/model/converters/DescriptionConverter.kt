@@ -8,15 +8,18 @@ import com.tangem.domain.markets.TokenMarketInfo
 import com.tangem.features.markets.details.impl.ui.state.InfoBottomSheetContent
 import com.tangem.features.markets.details.impl.ui.state.MarketsTokenDetailsUM
 import com.tangem.features.markets.impl.R
+import com.tangem.utils.Provider
 import com.tangem.utils.converter.Converter
 
 @Stable
 internal class DescriptionConverter(
     private val onReadModeClicked: (InfoBottomSheetContent) -> Unit,
     private val onGeneratedAINotificationClick: () -> Unit,
+    private val needApplyFCARestrictions: Provider<Boolean>,
 ) : Converter<TokenMarketInfo, MarketsTokenDetailsUM.Description?> {
 
     override fun convert(value: TokenMarketInfo): MarketsTokenDetailsUM.Description? {
+        if (needApplyFCARestrictions()) return null
         return value.shortDescription?.let { desc ->
             MarketsTokenDetailsUM.Description(
                 shortDescription = stringReference(desc),
