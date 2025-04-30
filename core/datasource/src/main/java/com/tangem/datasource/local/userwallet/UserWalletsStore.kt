@@ -13,7 +13,7 @@ interface UserWalletsStore {
 
     fun getSyncOrNull(key: UserWalletId): UserWallet?
 
-    suspend fun getSyncStrict(key: UserWalletId): UserWallet
+    fun getSyncStrict(key: UserWalletId): UserWallet
 
     suspend fun getAllSyncOrNull(): List<UserWallet>?
 

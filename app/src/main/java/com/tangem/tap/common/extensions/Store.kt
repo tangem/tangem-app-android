@@ -1,6 +1,8 @@
 package com.tangem.tap.common.extensions
 
 import com.tangem.common.routing.AppRouter
+import com.tangem.core.ui.extensions.stringReference
+import com.tangem.core.ui.message.SnackbarMessage
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.redux.StateDialog
 import com.tangem.domain.wallets.models.UserWallet
@@ -43,20 +45,16 @@ suspend fun Store<AppState>.onUserWalletSelected(userWallet: UserWallet) {
     state.globalState.tapWalletManager.onWalletSelected(userWallet)
 }
 
-fun Store<*>.dispatchErrorNotification(error: TapError) {
-    dispatchOnMain(GlobalAction.ShowErrorNotification(error))
-}
-
 /**
  * @param fatal used to indicate errors that should not normally occur
  */
-fun Store<*>.dispatchDebugErrorNotification(message: String, fatal: Boolean = false) {
+fun Store<AppState>.dispatchDebugErrorNotification(message: String, fatal: Boolean = false) {
     val prefix = if (fatal) "FATAL ERROR: " else "DEBUG ERROR: "
     dispatchDebugErrorNotification(TapError.CustomError("$prefix $message"))
 }
 
-fun Store<*>.dispatchDebugErrorNotification(error: TapError) {
-    dispatchOnMain(GlobalAction.DebugShowErrorNotification(error))
+fun Store<AppState>.dispatchDebugErrorNotification(error: TapError) {
+    inject(DaggerGraphState::uiMessageSender).send(SnackbarMessage(stringReference(error.message ?: "debug error")))
 }
 
 fun Store<*>.dispatchDialogShow(dialog: StateDialog) {
