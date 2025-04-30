@@ -94,6 +94,8 @@ internal class OnboardingNoteModel @Inject constructor(
                 cardId = cardInfo.cardId,
                 cardPublicKey = cardInfo.cardPublicKey,
                 size = ArtworkSize.LARGE,
+                manufacturerName = cardInfo.manufacturer.name,
+                firmwareVersion = cardInfo.firmwareVersion.toSdkFirmwareVersion(),
             )
             _uiState.update {
                 it.copy(cardArtwork = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
