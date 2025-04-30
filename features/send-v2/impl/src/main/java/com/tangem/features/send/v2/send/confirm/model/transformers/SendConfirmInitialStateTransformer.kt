@@ -1,7 +1,7 @@
 package com.tangem.features.send.v2.send.confirm.model.transformers
 
 import com.tangem.core.ui.extensions.TextReference
-import com.tangem.features.send.v2.send.confirm.ui.state.ConfirmUM
+import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.persistentListOf
 

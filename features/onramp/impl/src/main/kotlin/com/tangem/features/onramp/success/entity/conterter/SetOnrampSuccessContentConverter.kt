@@ -25,6 +25,7 @@ internal class SetOnrampSuccessContentConverter(
     private val cryptoCurrency: CryptoCurrency,
     private val transaction: OnrampTransaction,
     private val goToProviderClick: (String) -> Unit,
+    private val onCopyClick: (String) -> Unit,
 ) : Converter<OnrampStatus, OnrampSuccessComponentUM> {
     override fun convert(value: OnrampStatus): OnrampSuccessComponentUM {
         return OnrampSuccessComponentUM.Content(
@@ -46,8 +47,12 @@ internal class SetOnrampSuccessContentConverter(
             ),
             providerName = stringReference(transaction.providerName),
             providerImageUrl = transaction.providerImageUrl,
-            statusBlock = convertStatuses(value.status, value.externalTxUrl),
-            notification = getNotification(value.status, value.externalTxUrl),
+            statusBlock = convertStatuses(
+                status = value.status,
+                externalTxId = value.externalTxId,
+                externalTxUrl = value.externalTxUrl,
+            ),
+            notification = getNotification(status = value.status, externalTxUrl = value.externalTxUrl),
         )
     }
 
@@ -73,7 +78,11 @@ internal class SetOnrampSuccessContentConverter(
         null
     }
 
-    private fun convertStatuses(status: OnrampStatus.Status, externalTxUrl: String?): ExpressStatusUM {
+    private fun convertStatuses(
+        status: OnrampStatus.Status,
+        externalTxId: String?,
+        externalTxUrl: String?,
+    ): ExpressStatusUM {
         val statuses = with(status) {
             persistentListOf(
                 getAwaitingDepositItem(),
@@ -85,7 +94,7 @@ internal class SetOnrampSuccessContentConverter(
 
         return ExpressStatusUM(
             title = resourceReference(R.string.common_transaction_status),
-            link = getStatusLink(status, externalTxUrl),
+            link = getStatusLink(status = status, externalTxId = externalTxId, externalTxUrl = externalTxUrl),
             statuses = statuses,
         )
     }
@@ -148,6 +157,10 @@ internal class SetOnrampSuccessContentConverter(
             this == OnrampStatus.Status.Paid -> {
                 resourceReference(R.string.express_status_buying_active, wrappedList(cryptoCurrency.name))
             }
+            this == OnrampStatus.Status.RefundInProgress ||
+                this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_failed)
+            }
             else -> {
                 resourceReference(R.string.express_status_bought, wrappedList(cryptoCurrency.name))
             }
@@ -166,6 +179,12 @@ internal class SetOnrampSuccessContentConverter(
                     wrappedList(cryptoCurrency.name),
                 )
             }
+            this == OnrampStatus.Status.RefundInProgress -> {
+                resourceReference(R.string.express_exchange_status_refunding)
+            }
+            this == OnrampStatus.Status.Refunded -> {
+                resourceReference(R.string.express_exchange_status_refunded)
+            }
             else -> {
                 resourceReference(R.string.express_exchange_status_sent, wrappedList(cryptoCurrency.name))
             }
@@ -173,7 +192,11 @@ internal class SetOnrampSuccessContentConverter(
         state = getStatusState(OnrampStatus.Status.Sending),
     )
 
-    private fun getStatusLink(status: OnrampStatus.Status, externalTxUrl: String?): ExpressLinkUM {
+    private fun getStatusLink(
+        status: OnrampStatus.Status,
+        externalTxId: String?,
+        externalTxUrl: String?,
+    ): ExpressLinkUM {
         if (externalTxUrl == null) return ExpressLinkUM.Empty
         return when (status) {
             OnrampStatus.Status.Verifying,
@@ -187,7 +210,15 @@ internal class SetOnrampSuccessContentConverter(
                     },
                 )
             }
-            else -> ExpressLinkUM.Empty
+            else -> if (externalTxId != null) {
+                ExpressLinkUM.Content(
+                    icon = R.drawable.ic_copy_24,
+                    text = resourceReference(R.string.express_transaction_id, wrappedList(externalTxId)),
+                    onClick = { onCopyClick(externalTxId) },
+                )
+            } else {
+                ExpressLinkUM.Empty
+            }
         }
     }
 
