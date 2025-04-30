@@ -526,6 +526,9 @@
   <string name="no_account_polkadot">Обліковий запис одержувача не активовано. Надішліть %s або більше, щоб активувати обліковий запис.</string>
   <string name="no_account_send_to_create">Для створення акаунту надішліть кошти на цю адресу</string>
   <string name="no_trustline_xlm_asset">Акаунт одержувача не містить трастлайну для активу, що надсилається.</string>
+  <string name="notification_referral_promo_button">Приєднатися</string>
+  <string name="notification_referral_promo_text">Поділіться промокодом — заробіть 5 USDT з кожної покупки. Ваші друзі отримають знижку 10% на картку Tangem!</string>
+  <string name="notification_referral_promo_title">Отримуй бонуси за кожного друга!</string>
   <string name="onboarding_access_code_feature_1_description">Налаштуйте єдиний код доступу для захисту всіх ваших карток або кілець</string>
   <string name="onboarding_access_code_feature_1_title">Захист</string>
   <string name="onboarding_access_code_feature_2_description">Встановіть індивідуальний код доступу для кожної картки або кільця пізніше.</string>
