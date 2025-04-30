@@ -21,9 +21,12 @@ import com.tangem.datasource.api.express.models.response.SwapPair
 import com.tangem.datasource.api.express.models.response.SwapPairsWithProviders
 import com.tangem.datasource.api.express.models.response.TxDetails
 import com.tangem.datasource.crypto.DataSignatureVerifier
+import com.tangem.datasource.exchangeservice.swap.ExpressUtils
+import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.walletmanager.WalletManagersFacade
 import com.tangem.domain.wallets.legacy.UserWalletsListManager
+import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.feature.swap.converters.*
 import com.tangem.feature.swap.domain.api.SwapRepository
@@ -48,6 +51,7 @@ internal class DefaultSwapRepository(
     private val userWalletsListManager: UserWalletsListManager,
     private val errorsDataConverter: ErrorsDataConverter,
     private val dataSignatureVerifier: DataSignatureVerifier,
+    private val appPreferencesStore: AppPreferencesStore,
     moshi: Moshi,
     excludedBlockchains: ExcludedBlockchains,
 ) : SwapRepository {
@@ -60,6 +64,7 @@ internal class DefaultSwapRepository(
     private val txDetailsMoshiAdapter = moshi.adapter(TxDetails::class.java)
 
     override suspend fun getPairs(
+        userWallet: UserWallet,
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
     ): PairsWithProviders {
@@ -73,6 +78,7 @@ internal class DefaultSwapRepository(
 
                 val pairsDeferred = async {
                     getPairsInternal(
+                        userWallet = userWallet,
                         from = arrayListOf(initial),
                         to = currenciesList,
                     )
@@ -80,6 +86,7 @@ internal class DefaultSwapRepository(
 
                 val reversedPairsDeferred = async {
                     getPairsInternal(
+                        userWallet = userWallet,
                         from = currenciesList,
                         to = arrayListOf(initial),
                     )
@@ -90,7 +97,13 @@ internal class DefaultSwapRepository(
 
                 val allPairs = pairs + reversedPairs
 
-                val providers = tangemExpressApi.getProviders().getOrThrow()
+                val providers = tangemExpressApi.getProviders(
+                    userWalletId = userWallet.walletId.stringValue,
+                    refCode = ExpressUtils.getRefCode(
+                        userWallet = userWallet,
+                        appPreferencesStore = appPreferencesStore,
+                    ),
+                ).getOrThrow()
 
                 return@withContext swapPairInfoConverter.convert(
                     SwapPairsWithProviders(
@@ -109,6 +122,7 @@ internal class DefaultSwapRepository(
     }
 
     override suspend fun getPairsOnly(
+        userWallet: UserWallet,
         initialCurrency: LeastTokenInfo,
         currencyList: List<CryptoCurrency>,
     ): PairsWithProviders {
@@ -122,6 +136,7 @@ internal class DefaultSwapRepository(
 
                 val pairsDeferred = async {
                     getPairsInternal(
+                        userWallet = userWallet,
                         from = arrayListOf(initial),
                         to = currenciesList,
                     )
@@ -129,6 +144,7 @@ internal class DefaultSwapRepository(
 
                 val reversedPairsDeferred = async {
                     getPairsInternal(
+                        userWallet = userWallet,
                         from = currenciesList,
                         to = arrayListOf(initial),
                     )
@@ -156,25 +172,42 @@ internal class DefaultSwapRepository(
     }
 
     private suspend fun getPairsInternal(
+        userWallet: UserWallet,
         from: List<NetworkLeastTokenInfo>,
         to: List<NetworkLeastTokenInfo>,
     ): ApiResponse<List<SwapPair>> {
         return tangemExpressApi.getPairs(
-            PairsRequestBody(
+            userWalletId = userWallet.walletId.stringValue,
+            refCode = ExpressUtils.getRefCode(
+                userWallet = userWallet,
+                appPreferencesStore = appPreferencesStore,
+            ),
+            body = PairsRequestBody(
                 from = from,
                 to = to,
             ),
         )
     }
 
-    override suspend fun getExchangeStatus(txId: String): Either<UnknownError, ExchangeStatusModel> {
+    override suspend fun getExchangeStatus(
+        userWallet: UserWallet,
+        txId: String,
+    ): Either<UnknownError,
+        ExchangeStatusModel,> {
         return withContext(coroutineDispatcher.io) {
             either {
                 catch(
                     block = {
                         exchangeStatusConverter.convert(
                             tangemExpressApi
-                                .getExchangeStatus(txId)
+                                .getExchangeStatus(
+                                    userWalletId = userWallet.walletId.stringValue,
+                                    refCode = ExpressUtils.getRefCode(
+                                        userWallet = userWallet,
+                                        appPreferencesStore = appPreferencesStore,
+                                    ),
+                                    txId = txId,
+                                )
                                 .getOrThrow(),
                         )
                     },
@@ -188,7 +221,7 @@ internal class DefaultSwapRepository(
     }
 
     override suspend fun findBestQuote(
-        userWalletId: UserWalletId,
+        userWallet: UserWallet,
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
@@ -211,6 +244,11 @@ internal class DefaultSwapRepository(
                     toDecimals = toDecimals,
                     providerId = providerId,
                     rateType = rateType.name.lowercase(),
+                    userWalletId = userWallet.walletId.stringValue,
+                    refCode = ExpressUtils.getRefCode(
+                        userWallet = userWallet,
+                        appPreferencesStore = appPreferencesStore,
+                    ),
                 ).getOrThrow()
                 QuoteModel(
                     toTokenAmount = createFromAmountWithOffset(response.toAmount, response.toDecimals),
@@ -223,6 +261,7 @@ internal class DefaultSwapRepository(
     }
 
     override suspend fun getExchangeData(
+        userWallet: UserWallet,
         fromContractAddress: String,
         fromNetwork: String,
         toContractAddress: String,
@@ -255,6 +294,11 @@ internal class DefaultSwapRepository(
                     requestId = requestId,
                     refundAddress = refundAddress,
                     refundExtraId = refundExtraId,
+                    userWalletId = userWallet.walletId.stringValue,
+                    refCode = ExpressUtils.getRefCode(
+                        userWallet = userWallet,
+                        appPreferencesStore = appPreferencesStore,
+                    ),
                 ).getOrThrow()
                 if (dataSignatureVerifier.verifySignature(response.signature, response.txDetailsJson)) {
                     val txDetails = parseTxDetails(response.txDetailsJson)
@@ -281,6 +325,7 @@ internal class DefaultSwapRepository(
     }
 
     override suspend fun exchangeSent(
+        userWallet: UserWallet,
         txId: String,
         fromNetwork: String,
         fromAddress: String,
@@ -290,7 +335,12 @@ internal class DefaultSwapRepository(
     ): Either<ExpressDataError, Unit> = withContext(coroutineDispatcher.io) {
         try {
             tangemExpressApi.exchangeSent(
-                ExchangeSentRequestBody(
+                userWalletId = userWallet.walletId.stringValue,
+                refCode = ExpressUtils.getRefCode(
+                    userWallet = userWallet,
+                    appPreferencesStore = appPreferencesStore,
+                ),
+                body = ExchangeSentRequestBody(
                     txId = txId,
                     fromNetwork = fromNetwork,
                     fromAddress = fromAddress,
@@ -341,47 +391,6 @@ internal class DefaultSwapRepository(
         return result.fold(
             onSuccess = { it },
             onFailure = { error(it) },
-        )
-    }
-
-    override suspend fun getApproveData(
-        userWalletId: UserWalletId,
-        networkId: String,
-        derivationPath: String?,
-        currency: CryptoCurrency,
-        amount: BigDecimal?,
-        spenderAddress: String,
-    ): String {
-        val blockchain =
-            requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        val walletManager = walletManagersFacade.getOrCreateWalletManager(
-            userWalletId = userWalletId,
-            blockchain = blockchain,
-            derivationPath = derivationPath,
-        )
-
-        return (walletManager as? Approver)?.getApproveData(
-            spenderAddress,
-            amount?.let { convertToAmount(it, currency) },
-        ) ?: error("Cannot cast to Approver")
-    }
-
-    private fun convertToAmount(amount: BigDecimal, currency: CryptoCurrency): Amount {
-        return Amount(
-            currencySymbol = currency.symbol,
-            value = amount,
-            decimals = currency.decimals,
-            type = if (currency is CryptoCurrency.Token) {
-                AmountType.Token(
-                    Token(
-                        symbol = currency.symbol,
-                        contractAddress = currency.contractAddress,
-                        decimals = currency.decimals,
-                    ),
-                )
-            } else {
-                AmountType.Coin
-            },
         )
     }
 

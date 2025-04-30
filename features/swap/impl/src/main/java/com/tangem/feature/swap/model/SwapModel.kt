@@ -38,12 +38,12 @@ import com.tangem.domain.tokens.*
 import com.tangem.domain.tokens.model.CryptoCurrency
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.tokens.model.Network
+import com.tangem.domain.txhistory.usecase.GetExplorerTransactionUrlUseCase
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.models.UserWalletId
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.feature.swap.analytics.StoriesEvents
 import com.tangem.feature.swap.analytics.SwapEvents
-import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.ExpressDataError
 import com.tangem.feature.swap.domain.models.ExpressException
@@ -83,7 +83,6 @@ typealias SuccessLoadedSwapData = Map<SwapProvider, SwapState.QuotesLoadedState>
 internal class SwapModel @Inject constructor(
     paramsContainer: ParamsContainer,
     override val dispatchers: CoroutineDispatcherProvider,
-    private val blockchainInteractor: BlockchainInteractor,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val analyticsErrorEventHandler: AnalyticsErrorHandler,
     private val getSelectedAppCurrencyUseCase: GetSelectedAppCurrencyUseCase,
@@ -96,6 +95,7 @@ internal class SwapModel @Inject constructor(
     private val saveBlockchainErrorUseCase: SaveBlockchainErrorUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getMinimumTransactionAmountSyncUseCase: GetMinimumTransactionAmountSyncUseCase,
+    private val getExplorerTransactionUrlUseCase: GetExplorerTransactionUrlUseCase,
     private val shouldShowStoriesUseCase: ShouldShowStoriesUseCase,
     private val getStoryContentUseCase: GetStoryContentUseCase,
     private val getUserCountryUseCase: GetUserCountryUseCase,
@@ -139,7 +139,7 @@ internal class SwapModel @Inject constructor(
         stateBuilder.createInitialLoadingState(
             initialCurrencyFrom = initialCurrencyFrom,
             initialCurrencyTo = initialCurrencyTo,
-            fromNetworkInfo = blockchainInteractor.getBlockchainInfo(initialCurrencyFrom.network.backendId),
+            fromNetworkInfo = initialCurrencyFrom.getNetworkInfo(),
         ),
     )
         private set
@@ -269,9 +269,7 @@ internal class SwapModel @Inject constructor(
                     uiState = stateBuilder.createInitialLoadingState(
                         initialCurrencyFrom = initialCurrencyFrom,
                         initialCurrencyTo = initialCurrencyTo,
-                        fromNetworkInfo = blockchainInteractor.getBlockchainInfo(
-                            initialCurrencyFrom.network.backendId,
-                        ),
+                        fromNetworkInfo = initialCurrencyFrom.getNetworkInfo(),
                     )
                     initTokens(isReverseFromTo)
                 }
@@ -612,10 +610,14 @@ internal class SwapModel @Inject constructor(
                 when (it) {
                     is SwapTransactionState.TxSent -> {
                         sendSuccessSwapEvent(fromCurrency.currency, fee.feeType)
-                        val url = blockchainInteractor.getExplorerTransactionLink(
-                            networkId = fromCurrency.currency.network.backendId,
+                        val url = getExplorerTransactionUrlUseCase(
                             txHash = it.txHash,
-                        )
+                            networkId = fromCurrency.currency.network.id,
+                        ).getOrElse {
+                            Timber.i("tx hash explore not supported")
+                            ""
+                        }
+
                         updateWalletBalance()
                         uiState = stateBuilder.createSuccessState(
                             uiState = uiState,
@@ -1363,6 +1365,13 @@ internal class SwapModel @Inject constructor(
 
             sendFeedbackEmailUseCase(email)
         }
+    }
+
+    private fun CryptoCurrency.getNetworkInfo(): NetworkInfo {
+        return NetworkInfo(
+            name = this.network.name,
+            blockchainId = this.network.id.value,
+        )
     }
 
     private companion object {
