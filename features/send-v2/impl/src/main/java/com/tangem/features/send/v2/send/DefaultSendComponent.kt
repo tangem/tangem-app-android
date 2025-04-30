@@ -162,48 +162,65 @@ internal class DefaultSendComponent @AssistedInject constructor(
             ),
         )
 
-    private fun getAmountComponent(factoryContext: AppComponentContext, route: CommonSendRoute) = SendAmountComponent(
-        appComponentContext = factoryContext,
-        params = SendAmountComponentParams.AmountParams(
-            state = model.uiState.value.amountUM,
-            currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
-            isBalanceHidingFlow = model.isBalanceHiddenFlow,
-            analyticsCategoryName = analyticCategoryName,
-            userWallet = model.userWallet,
-            appCurrency = model.appCurrency,
-            cryptoCurrencyStatus = model.cryptoCurrencyStatus,
-            callback = model,
-            predefinedValues = model.predefinedValues,
-            onBackClick = {
-                if (route.isEditMode) {
-                    onChildBack()
-                } else {
-                    analyticsEventHandler.send(
-                        CommonSendAnalyticEvents.CloseButtonClicked(
-                            categoryName = analyticCategoryName,
-                            source = SendScreenSource.Amount,
-                            isFromSummary = false,
-                            isValid = model.uiState.value.amountUM.isPrimaryButtonEnabled,
-                        ),
-                    )
-                    router.pop()
-                }
-            },
-            onNextClick = {
-                if (route.isEditMode) {
-                    onChildBack()
-                } else {
-                    innerRouter.push(CommonSendRoute.Confirm)
-                }
-            },
-        ),
-    )
+    private fun getAmountComponent(
+        factoryContext: AppComponentContext,
+        route: CommonSendRoute,
+    ): ComposableContentComponent {
+        val cryptoCurrencyStatus = model.cryptoCurrencyStatus
+        return if (cryptoCurrencyStatus != null) {
+            SendAmountComponent(
+                appComponentContext = factoryContext,
+                params = SendAmountComponentParams.AmountParams(
+                    state = model.uiState.value.amountUM,
+                    currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Amount>(),
+                    isBalanceHidingFlow = model.isBalanceHiddenFlow,
+                    analyticsCategoryName = analyticCategoryName,
+                    userWallet = model.userWallet,
+                    appCurrency = model.appCurrency,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    callback = model,
+                    predefinedValues = model.predefinedValues,
+                    onBackClick = {
+                        if (route.isEditMode) {
+                            onChildBack()
+                        } else {
+                            analyticsEventHandler.send(
+                                CommonSendAnalyticEvents.CloseButtonClicked(
+                                    categoryName = analyticCategoryName,
+                                    source = SendScreenSource.Amount,
+                                    isFromSummary = false,
+                                    isValid = model.uiState.value.amountUM.isPrimaryButtonEnabled,
+                                ),
+                            )
+                            router.pop()
+                        }
+                    },
+                    onNextClick = {
+                        if (route.isEditMode) {
+                            onChildBack()
+                        } else {
+                            innerRouter.push(CommonSendRoute.Confirm)
+                        }
+                    },
+                ),
+            )
+        } else {
+            model.showAlertError()
+            getStubComponent()
+        }
+    }
 
+    @Suppress("ComplexCondition")
     private fun getFeeComponent(factoryContext: AppComponentContext): ComposableContentComponent {
         val state = model.uiState.value
         val sendAmount = (state.amountUM as? AmountState.Data)?.amountTextField?.cryptoAmount?.value
         val destinationAddress = (state.destinationUM as? DestinationUM.Content)?.addressTextField?.value
-        return if (sendAmount != null && destinationAddress != null) {
+        val cryptoCurrencyStatus = model.cryptoCurrencyStatus
+        val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus
+
+        return if (sendAmount != null && destinationAddress != null &&
+            feeCryptoCurrencyStatus != null && cryptoCurrencyStatus != null
+        ) {
             SendFeeComponent(
                 appComponentContext = factoryContext,
                 params = SendFeeComponentParams.FeeParams(
@@ -211,8 +228,8 @@ internal class DefaultSendComponent @AssistedInject constructor(
                     currentRoute = currentRoute.filterIsInstance<CommonSendRoute.Fee>(),
                     analyticsCategoryName = analyticCategoryName,
                     userWallet = model.userWallet,
-                    cryptoCurrencyStatus = model.cryptoCurrencyStatus,
-                    feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
                     appCurrency = model.appCurrency,
                     onLoadFee = model::loadFee,
                     sendAmount = sendAmount,
@@ -222,11 +239,14 @@ internal class DefaultSendComponent @AssistedInject constructor(
                 ),
             )
         } else {
+            model.showAlertError()
             getStubComponent()
         }
     }
 
-    private fun getConfirmComponent(factoryContext: AppComponentContext): SendConfirmComponent {
+    private fun getConfirmComponent(factoryContext: AppComponentContext): ComposableContentComponent {
+        val cryptoCurrencyStatus = model.cryptoCurrencyStatus
+        val feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus
         val predefinedAmount = params.amount
         val predefinedTxId = params.transactionId
         val predefinedAddress = params.destinationAddress
@@ -241,32 +261,45 @@ internal class DefaultSendComponent @AssistedInject constructor(
             } else {
                 PredefinedValues.Empty
             }
-        return SendConfirmComponent(
-            appComponentContext = factoryContext,
-            params = SendConfirmComponent.Params(
-                state = model.uiState.value,
-                userWallet = model.userWallet,
-                currentRoute = currentRoute,
-                isBalanceHidingFlow = model.isBalanceHiddenFlow,
-                analyticsCategoryName = analyticCategoryName,
-                cryptoCurrencyStatus = model.cryptoCurrencyStatus,
-                feeCryptoCurrencyStatus = model.feeCryptoCurrencyStatus,
-                appCurrency = model.appCurrency,
-                callback = model,
-                predefinedValues = predefinedValues,
-                onLoadFee = model::loadFee,
-            ),
-        )
+        return if (cryptoCurrencyStatus != null && feeCryptoCurrencyStatus != null) {
+            SendConfirmComponent(
+                appComponentContext = factoryContext,
+                params = SendConfirmComponent.Params(
+                    state = model.uiState.value,
+                    userWallet = model.userWallet,
+                    currentRoute = currentRoute,
+                    isBalanceHidingFlow = model.isBalanceHiddenFlow,
+                    analyticsCategoryName = analyticCategoryName,
+                    cryptoCurrencyStatus = cryptoCurrencyStatus,
+                    feeCryptoCurrencyStatus = feeCryptoCurrencyStatus,
+                    appCurrency = model.appCurrency,
+                    callback = model,
+                    predefinedValues = predefinedValues,
+                    onLoadFee = model::loadFee,
+                ),
+            )
+        } else {
+            model.showAlertError()
+            getStubComponent()
+        }
     }
 
-    private fun getStubComponent() = ComposableContentComponent { }
+    private fun getStubComponent() = StubComponent()
+
+    class StubComponent : ComposableContentComponent {
+        @Composable
+        override fun Content(modifier: Modifier) {
+        }
+    }
 
     private fun onChildBack() {
         val isEmptyRoute = childStack.value.active.configuration == CommonSendRoute.Empty
         val isEmptyStack = childStack.value.backStack.isEmpty()
         val isSuccess = model.uiState.value.confirmUM is ConfirmUM.Success
+        val isStubComponent = childStack.value.active.instance is StubComponent
 
-        if (isEmptyRoute || isEmptyStack || isSuccess) {
+        val isPopSend = isEmptyRoute || isEmptyStack || isSuccess || isStubComponent
+        if (isPopSend) {
             router.pop()
         } else {
             stackNavigation.pop()
