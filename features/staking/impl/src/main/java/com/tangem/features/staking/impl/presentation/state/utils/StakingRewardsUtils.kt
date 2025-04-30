@@ -5,8 +5,10 @@ import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.features.staking.impl.R
 import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardSchedule.COSMOS_SCHEDULE
 import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardSchedule.SOLANA_SCHEDULE
+import com.tangem.features.staking.impl.presentation.state.utils.StakingRewardSchedule.TON_SCHEDULE
 import com.tangem.lib.crypto.BlockchainUtils.isCosmos
 import com.tangem.lib.crypto.BlockchainUtils.isSolana
+import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.StringsSigns.MINUS
 import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
@@ -14,6 +16,7 @@ import com.tangem.utils.StringsSigns.NON_BREAKING_SPACE
 private data object StakingRewardSchedule {
     val COSMOS_SCHEDULE = 5 to 12
     val SOLANA_SCHEDULE = 2 to 3
+    val TON_SCHEDULE = 1 to 2
 }
 
 internal fun getRewardScheduleText(
@@ -71,6 +74,15 @@ private fun getCustomRewardSchedule(networkId: String, decapitalize: Boolean = f
             )
         }
         isTron(networkId) -> resourceReference(id = R.string.staking_reward_schedule_day, decapitalize = decapitalize)
+        isTon(networkId) -> combinedReference(
+            resourceReference(id = R.string.staking_reward_schedule_each_plural, decapitalize = decapitalize),
+            stringReference(NON_BREAKING_SPACE.toString()),
+            stringReference("${TON_SCHEDULE.first}$MINUS${TON_SCHEDULE.second}$NON_BREAKING_SPACE"),
+            pluralReference(
+                id = R.plurals.common_days_no_param,
+                count = TON_SCHEDULE.second,
+            ),
+        )
         else -> null
     }
 }

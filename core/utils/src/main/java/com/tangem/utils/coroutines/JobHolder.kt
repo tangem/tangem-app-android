@@ -24,7 +24,10 @@ class JobHolder {
     /** Cancel current [job] */
     fun cancel() {
         job?.cancel()
+        job = null
     }
+
+    fun isEmpty() = job == null
 }
 
 fun Job.saveIn(jobHolder: JobHolder): Job = jobHolder.update(job = this)
