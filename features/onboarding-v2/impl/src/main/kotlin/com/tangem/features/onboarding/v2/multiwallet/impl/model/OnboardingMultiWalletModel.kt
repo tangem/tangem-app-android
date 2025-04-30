@@ -86,6 +86,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                                 cardId = backup.card2.cardId,
                                 cardPublicKey = backup.card2.cardPublicKey,
                                 size = ArtworkSize.LARGE,
+                                manufacturerName = backup.card2.manufacturer.name,
+                                firmwareVersion = backup.card2.firmwareVersion,
                             )
                         _uiState.update {
                             it.copy(artwork2 = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
@@ -97,6 +99,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                                 cardId = backup.card3.cardId,
                                 cardPublicKey = backup.card3.cardPublicKey,
                                 size = ArtworkSize.LARGE,
+                                manufacturerName = backup.card3.manufacturer.name,
+                                firmwareVersion = backup.card3.firmwareVersion,
                             )
                         _uiState.update {
                             it.copy(artwork3 = ArtworkUM(artwork.verifiedArtwork, artwork.defaultUrl))
@@ -170,6 +174,8 @@ internal class OnboardingMultiWalletModel @Inject constructor(
                     cardId = params.scanResponse.card.cardId,
                     cardPublicKey = params.scanResponse.card.cardPublicKey,
                     size = ArtworkSize.LARGE,
+                    manufacturerName = params.scanResponse.card.manufacturer.name,
+                    firmwareVersion = params.scanResponse.card.firmwareVersion.toSdkFirmwareVersion(),
                 )
 
             _uiState.update {
