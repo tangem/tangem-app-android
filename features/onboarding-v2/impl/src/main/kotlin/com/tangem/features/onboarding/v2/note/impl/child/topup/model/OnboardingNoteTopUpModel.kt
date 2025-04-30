@@ -129,7 +129,7 @@ internal class OnboardingNoteTopUpModel @Inject constructor(
         modelScope.launch {
             params.childParams.commonState.collect {
                 _uiState.value = _uiState.value.copy(
-                    cardArtworkUrl = it.cardArtworkUrl,
+                    cardArtwork = it.cardArtwork,
                 )
             }
         }
