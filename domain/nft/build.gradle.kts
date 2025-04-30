@@ -13,6 +13,7 @@ dependencies {
     implementation(deps.arrow.core)
     implementation(deps.kotlin.coroutines)
 
+    implementation(projects.core.analytics.models)
     implementation(projects.core.utils)
 
     implementation(projects.domain.core)

@@ -21,8 +21,10 @@ dependencies {
     implementation(projects.core.decompose)
     implementation(projects.core.ui)
     implementation(projects.common.routing)
+    implementation(projects.common.ui)
 
     /** Domain models */
+    implementation(projects.domain.blockaid.models)
     implementation(projects.domain.qrScanning.models)
     implementation(projects.domain.tokens.models)
     implementation(projects.domain.wallets.models)
