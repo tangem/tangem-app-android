@@ -526,6 +526,9 @@
   <string name="no_account_polkadot">Обліковий запис одержувача не активовано. Надішліть %s або більше, щоб активувати обліковий запис.</string>
   <string name="no_account_send_to_create">Для створення акаунту надішліть кошти на цю адресу</string>
   <string name="no_trustline_xlm_asset">Акаунт одержувача не містить трастлайну для активу, що надсилається.</string>
+  <string name="notification_referral_promo_button">Приєднатися</string>
+  <string name="notification_referral_promo_text">Поділіться промокодом — заробіть 5 USDT з кожної покупки. Ваші друзі отримають знижку 10% на картку Tangem!</string>
+  <string name="notification_referral_promo_title">Отримуй бонуси за кожного друга!</string>
   <string name="onboarding_access_code_feature_1_description">Налаштуйте єдиний код доступу для захисту всіх ваших карток або кілець</string>
   <string name="onboarding_access_code_feature_1_title">Захист</string>
   <string name="onboarding_access_code_feature_2_description">Встановіть індивідуальний код доступу для кожної картки або кільця пізніше.</string>
@@ -942,7 +945,7 @@
   <string name="story_finish_description">Використовуйте його в дорозі, будь-де і будь-коли. Ніяких дротів чи батарейок. Просто прикладіть картку або кільце до телефону, коли вам потрібна криптовалюта.</string>
   <string name="story_finish_title">Гаманець для кожного</string>
   <string name="story_meet_title">Зустрічайте Tangem</string>
-  <string name="story_web3_description">Обмінюйте, купуйте NFT, отримуйте позики та робіть депозити у понад 100 різних децентралізованих сервісах</string>
+  <string name="story_web3_description">Доступно понад 100 інтеграцій з децентралізованими сервісами</string>
   <string name="story_web3_title">Web 3.0 сумісність</string>
   <string name="sui_not_enough_coin_for_fee_description">Для відправки потрібна вхідна транзакція на суму не менше %1$s</string>
   <string name="sui_not_enough_coin_for_fee_title">Недостатньо коштів</string>
@@ -997,7 +1000,7 @@
   <string name="token_details_hide_alert_title">Приховати %s</string>
   <string name="token_details_hide_token">Приховати токен</string>
   <string name="token_details_staking_block_subtitle">Стейкінг дозволяє заробляти %1$s і отримувати винагороду кожні %2$s днів</string>
-  <string name="token_details_staking_block_title">Заробляйте до %s винагород за стейкінг щороку</string>
+  <string name="token_details_staking_block_title">Сервіс стейкінгу</string>
   <string name="token_details_token_type_subtitle">%1$s токен в мережі %%image%% %2$s</string>
   <string name="token_details_token_type_subtitle_no_standard">Токен у мережі %%image%% %1$s</string>
   <string name="token_details_unable_hide_alert_message">Токен %1$s (%2$s) є основною валютою в мережі %3$s і не може бути прихований до тих пір, поки у вас в списку є інші токени цієї мережі</string>
