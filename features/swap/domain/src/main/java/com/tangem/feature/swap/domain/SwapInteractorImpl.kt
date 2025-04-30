@@ -18,7 +18,7 @@ import com.tangem.domain.appcurrency.repository.AppCurrencyRepository
 import com.tangem.domain.demo.IsDemoCardUseCase
 import com.tangem.domain.quotes.QuotesRepositoryV2
 import com.tangem.domain.tokens.FetchCurrencyStatusUseCase
-import com.tangem.domain.tokens.GetCryptoCurrencyStatusesSyncUseCase
+import com.tangem.domain.tokens.GetMultiCryptoCurrencyStatusUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.model.*
@@ -54,7 +54,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
     private val userWalletManager: UserWalletManager,
     private val repository: SwapRepository,
     private val allowPermissionsHandler: AllowPermissionsHandler,
-    private val getMultiCryptoCurrencyStatusUseCase: GetCryptoCurrencyStatusesSyncUseCase,
+    private val getMultiCryptoCurrencyStatusUseCase: GetMultiCryptoCurrencyStatusUseCase,
     private val fetchCurrencyStatusUseCase: FetchCurrencyStatusUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransactionUseCase: CreateTransactionUseCase,
@@ -92,7 +92,7 @@ internal class SwapInteractorImpl @AssistedInject constructor(
         }
 
     override suspend fun getTokensDataState(currency: CryptoCurrency): TokensDataStateExpress {
-        val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase(userWalletId)
+        val walletCurrencyStatuses = getMultiCryptoCurrencyStatusUseCase.invokeMultiWalletSync(userWalletId)
             .getOrElse { emptyList() }
 
         val walletCurrencyStatusesExceptInitial = walletCurrencyStatuses
