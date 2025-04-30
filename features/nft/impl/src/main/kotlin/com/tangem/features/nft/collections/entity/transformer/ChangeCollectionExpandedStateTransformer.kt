@@ -7,7 +7,8 @@ import com.tangem.utils.transformer.Transformer
 import kotlinx.collections.immutable.toPersistentList
 
 internal class ChangeCollectionExpandedStateTransformer(
-    private val collectionId: NFTCollection.Identifier,
+    private val collection: NFTCollection,
+    private val collectionIdProvider: NFTCollection.() -> String,
     private val onFirstExpanded: () -> Unit,
 ) : Transformer<NFTCollectionsStateUM> {
 
@@ -19,7 +20,8 @@ internal class ChangeCollectionExpandedStateTransformer(
             -> prevState.content
             is NFTCollectionsUM.Content -> prevState.content.copy(
                 collections = prevState.content.collections.map {
-                    if (it.id == collectionId.toString()) {
+                    val collectionId = collection.collectionIdProvider()
+                    if (it.id == collectionId) {
                         if (!it.isExpanded) {
                             onFirstExpanded()
                         }
