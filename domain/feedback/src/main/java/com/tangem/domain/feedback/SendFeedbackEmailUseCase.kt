@@ -2,7 +2,6 @@ package com.tangem.domain.feedback
 
 import android.content.res.Resources
 import com.tangem.core.res.getStringSafe
-import com.tangem.domain.feedback.models.CardInfo
 import com.tangem.domain.feedback.models.FeedbackEmail
 import com.tangem.domain.feedback.models.FeedbackEmailType
 import com.tangem.domain.feedback.repository.FeedbackRepository
@@ -27,7 +26,7 @@ class SendFeedbackEmailUseCase(
 
     suspend operator fun invoke(type: FeedbackEmailType) {
         val email = FeedbackEmail(
-            address = getAddress(type.cardInfo),
+            address = getAddress(type),
             subject = emailSubjectResolver.resolve(type),
             message = createMessage(type),
             // Temporally user data is not sent
@@ -37,8 +36,12 @@ class SendFeedbackEmailUseCase(
         feedbackRepository.sendEmail(email)
     }
 
-    private fun getAddress(cardInfo: CardInfo?): String {
-        return if (cardInfo?.isStart2Coin == true) START2COIN_SUPPORT_EMAIL else TANGEM_SUPPORT_EMAIL
+    private fun getAddress(type: FeedbackEmailType): String {
+        return when {
+            type is FeedbackEmailType.Visa || type.cardInfo?.isVisa == true -> TANGEM_VISA_SUPPORT_EMAIL
+            type.cardInfo?.isStart2Coin == true -> START2COIN_SUPPORT_EMAIL
+            else -> TANGEM_SUPPORT_EMAIL
+        }
     }
 
     private suspend fun createMessage(type: FeedbackEmailType): String {
@@ -61,12 +64,15 @@ class SendFeedbackEmailUseCase(
             is FeedbackEmailType.CurrencyDescriptionError,
             is FeedbackEmailType.PreActivatedWallet,
             is FeedbackEmailType.CardAttestationFailed,
+            is FeedbackEmailType.Visa.Dispute,
             -> this
             is FeedbackEmailType.DirectUserRequest,
             is FeedbackEmailType.RateCanBeBetter,
             is FeedbackEmailType.StakingProblem,
             is FeedbackEmailType.SwapProblem,
             is FeedbackEmailType.TransactionSendingProblem,
+            is FeedbackEmailType.Visa.Activation,
+            is FeedbackEmailType.Visa.DirectUserRequest,
             -> {
                 append(resources.getStringSafe(R.string.feedback_data_collection_message))
                 skipLine()
