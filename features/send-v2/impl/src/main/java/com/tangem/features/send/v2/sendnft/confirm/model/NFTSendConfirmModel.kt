@@ -273,9 +273,9 @@ internal class NFTSendConfirmModel @Inject constructor(
                 ifLeft = { error ->
                     Timber.e(error)
                     _uiState.update(NFTSendConfirmSendingStateTransformer(isSending = false))
-                    alertFactory.getGenericErrorState {
-                        onFailedTxEmailClick(error.localizedMessage.orEmpty())
-                    }
+                    alertFactory.getGenericErrorState(
+                        onFailedTxEmailClick = { onFailedTxEmailClick(error.localizedMessage.orEmpty()) },
+                    )
                 },
                 ifRight = { txData ->
                     sendTransaction(txData)
