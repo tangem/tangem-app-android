@@ -117,8 +117,8 @@ internal object TokensDomainModule {
     fun provideGetCurrencyUseCase(
         baseCurrencyStatusOperations: BaseCurrencyStatusOperations,
         dispatchers: CoroutineDispatcherProvider,
-    ): GetCurrencyStatusUpdatesUseCase {
-        return GetCurrencyStatusUpdatesUseCase(
+    ): GetSingleCryptoCurrencyStatusUseCase {
+        return GetSingleCryptoCurrencyStatusUseCase(
             currencyStatusOperations = baseCurrencyStatusOperations,
             dispatchers = dispatchers,
         )
@@ -155,18 +155,6 @@ internal object TokensDomainModule {
             currencyChecksRepository = currencyChecksRepository,
             dispatchers = dispatchers,
             currencyStatusOperations = baseCurrencyStatusOperations,
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetPrimaryCurrencyUseCase(
-        currencyStatusOperations: BaseCurrencyStatusOperations,
-        dispatchers: CoroutineDispatcherProvider,
-    ): GetPrimaryCurrencyStatusUpdatesUseCase {
-        return GetPrimaryCurrencyStatusUpdatesUseCase(
-            currencyStatusOperations = currencyStatusOperations,
-            dispatchers = dispatchers,
         )
     }
 
@@ -212,14 +200,6 @@ internal object TokensDomainModule {
             multiYieldBalanceFetcher = multiYieldBalanceFetcher,
             tokensFeatureToggles = tokensFeatureToggles,
         )
-    }
-
-    @Provides
-    @Singleton
-    fun providesGetCryptoCurrencyStatusSyncUseCase(
-        currencyStatusOperations: BaseCurrencyStatusOperations,
-    ): GetCryptoCurrencyStatusSyncUseCase {
-        return GetCryptoCurrencyStatusSyncUseCase(currencyStatusOperations)
     }
 
     @Provides
