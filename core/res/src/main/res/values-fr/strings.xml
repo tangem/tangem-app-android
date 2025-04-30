@@ -524,6 +524,9 @@
   <string name="no_account_polkadot">Le compte de destination est inactif. Envoyez %s ou plus pour activer le compte.</string>
   <string name="no_account_send_to_create">Pour créer un compte, envoyez des fonds à cette adresse</string>
   <string name="no_trustline_xlm_asset">Le compte destinataire n\'a pas de Trustline pour l\'actif envoyé qu\'il tente d\'envoyer.</string>
+  <string name="notification_referral_promo_button">Rejoignez maintenant</string>
+  <string name="notification_referral_promo_text">Partagez votre code et gagnez 5 USDT par vente. Votre ami bénéficie de 10 % de réduction.</string>
+  <string name="notification_referral_promo_title">Recevez des RÉCOMPENSES pour chaque ami !</string>
   <string name="onboarding_access_code_feature_1_description">Vous devez définir un seul code d\'accès pour protéger tous vos appareils.</string>
   <string name="onboarding_access_code_feature_1_title">Protéger</string>
   <string name="onboarding_access_code_feature_2_description">Vous pourrez définir un code d\'accès individuel sur chaque carte plus tard</string>
@@ -932,7 +935,7 @@
   <string name="story_finish_description">Utilisez-la en déplacement, n\'importe où, n\'importe quand. Pas de fils ni de piles. Il suffit de taper la carte sur votre téléphone lorsque vous avez besoin de votre crypto.</string>
   <string name="story_finish_title">Le portefeuille pour tous</string>
   <string name="story_meet_title">Découvrez Tangem</string>
-  <string name="story_web3_description">Échangez, achetez des NFT, faites des prêts et des dépôts dans plus de 100 services décentralisés différents</string>
+  <string name="story_web3_description">Plus de 100 intégrations de services décentralisés sont disponibles</string>
   <string name="story_web3_title">Compatible avec Web 3.0</string>
   <string name="sui_not_enough_coin_for_fee_description">Une transaction entrante d\'au moins de %1$s est requise pour continuer</string>
   <string name="sui_not_enough_coin_for_fee_title">Fonds insuffisants</string>
@@ -986,7 +989,7 @@
   <string name="token_details_hide_alert_title">Masquer %s</string>
   <string name="token_details_hide_token">Masquer le jeton</string>
   <string name="token_details_staking_block_subtitle">Le Staking vous permet d\'en gagner %1$s et d\'obtenir des récompenses tous les %2$s jours</string>
-  <string name="token_details_staking_block_title">Gagnez jusqu\'à %s récompense de mise par an</string>
+  <string name="token_details_staking_block_title">Service de Staking</string>
   <string name="token_details_token_type_subtitle">%1$s jeton dans %%image%% %2$s le réseau</string>
   <string name="token_details_token_type_subtitle_no_standard">Jeton dans le %%image%% %1$s réseau</string>
   <string name="token_details_unable_hide_alert_message">Le jeton %1$s (%2$s) est la principale devise du réseau %3$s et ne peut pas être masqué tant que vous avez d\'autres jetons de ce réseau dans la liste</string>
