@@ -13,7 +13,7 @@ import com.tangem.features.send.v2.subcomponents.fee.ui.state.FeeUM
 
 internal class SendFeeComponent(
     appComponentContext: AppComponentContext,
-    private val params: SendFeeComponentParams.FeeParams,
+    params: SendFeeComponentParams.FeeParams,
 ) : ComposableContentComponent, AppComponentContext by appComponentContext {
 
     private val model: SendFeeModel = getOrCreateModel(params = params)
