@@ -7,6 +7,7 @@ import com.tangem.core.decompose.model.ParamsContainer
 import com.tangem.core.decompose.navigation.Router
 import com.tangem.core.decompose.ui.UiMessageSender
 import com.tangem.core.navigation.url.UrlOpener
+import com.tangem.core.ui.clipboard.ClipboardManager
 import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.wrappedList
 import com.tangem.core.ui.message.DialogMessage
@@ -46,6 +47,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
     private val getUserWalletUseCase: GetUserWalletUseCase,
     private val analyticsEventHandler: AnalyticsEventHandler,
     private val messageSender: UiMessageSender,
+    private val clipboardManager: ClipboardManager,
     private val router: Router,
     paramsContainer: ParamsContainer,
 ) : Model(), OnrampSuccessClickIntents {
@@ -65,9 +67,13 @@ internal class OnrampSuccessComponentModel @Inject constructor(
         urlOpener.openUrl(providerLink)
     }
 
+    override fun onCopyClick(copiedText: String) {
+        clipboardManager.setText(text = copiedText, isSensitive = false)
+    }
+
     private fun loadData() {
         modelScope.launch {
-            getOnrampTransactionUseCase(externalTxId = params.externalTxId)
+            getOnrampTransactionUseCase(txId = params.txId)
                 .fold(
                     ifLeft = { error ->
                         Timber.e(error.toString())
@@ -97,7 +103,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
             return
         }
 
-        getOnrampStatusUseCase(txId = transaction.txId)
+        getOnrampStatusUseCase(userWallet = userWallet, txId = transaction.txId)
             .fold(
                 ifLeft = { error ->
                     analyticsEventHandler.sendOnrampErrorEvent(
@@ -124,6 +130,7 @@ internal class OnrampSuccessComponentModel @Inject constructor(
                             cryptoCurrency = cryptoCurrency,
                             transaction = transaction,
                             goToProviderClick = ::goToProviderClick,
+                            onCopyClick = ::onCopyClick,
                         ).convert(status)
                     }
                     removeTransactionIfTerminalStatus(

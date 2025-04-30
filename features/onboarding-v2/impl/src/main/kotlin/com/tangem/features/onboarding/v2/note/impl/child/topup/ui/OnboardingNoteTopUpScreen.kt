@@ -34,7 +34,7 @@ fun OnboardingNoteTopUp(state: OnboardingNoteTopUpUM, modifier: Modifier = Modif
     ) {
         OnboardingNoteTopUpHeader(
             balance = state.balance,
-            cardArtworkUrl = state.cardArtworkUrl,
+            cardArtwork = state.cardArtwork,
             onRefreshBalanceClick = state.onRefreshBalanceClick,
             isRefreshing = state.isRefreshing,
             modifier = Modifier
