@@ -30,7 +30,7 @@ internal fun WcTransactionRequestButtons(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f),
-            text = stringResourceSafe(R.string.wc_sign_message_button_text),
+            text = stringResourceSafe(R.string.common_sign),
             onClick = onSign,
             iconResId = R.drawable.ic_tangem_24,
             showProgress = isLoading,
