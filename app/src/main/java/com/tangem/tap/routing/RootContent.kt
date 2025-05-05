@@ -82,9 +82,8 @@ internal fun RootContent(
                 hostState = snackbarHostState,
             )
         }
+        EventMessageEffect()
     }
-
-    EventMessageEffect()
 }
 
 @OptIn(ExperimentalDecomposeApi::class)
