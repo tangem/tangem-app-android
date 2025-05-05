@@ -61,8 +61,9 @@ internal class DefaultOnrampComponent @AssistedInject constructor(
             OnrampChild.Settings -> settingsComponentFactory.create(
                 context = childByContext(componentContext),
                 params = OnrampSettingsComponent.Params(
-                    params.cryptoCurrency,
-                    navigation::pop,
+                    userWalletId = params.userWalletId,
+                    cryptoCurrency = params.cryptoCurrency,
+                    onBack = navigation::pop,
                 ),
             )
             OnrampChild.Main -> onrampMainComponentFactory.create(

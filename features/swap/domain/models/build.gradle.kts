@@ -19,6 +19,7 @@ dependencies {
     implementation(projects.core.datasource)
 
     /** Other Libraries **/
+    implementation(tangemDeps.blockchain)
     implementation(deps.kotlin.serialization)
     implementation(deps.arrow.core)
     implementation(deps.moshi.kotlin)
