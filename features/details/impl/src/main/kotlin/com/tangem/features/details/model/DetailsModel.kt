@@ -1,5 +1,6 @@
 package com.tangem.features.details.model
 
+import android.content.res.Resources
 import arrow.core.getOrElse
 import com.tangem.core.analytics.AppInstanceIdProvider
 import com.tangem.core.decompose.di.ModelScoped
@@ -35,13 +36,14 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import timber.log.Timber
+import java.util.Locale
 import javax.inject.Inject
 
 @ModelScoped
 @Suppress("LongParameterList")
 internal class DetailsModel @Inject constructor(
     socialsBuilder: SocialsBuilder,
-    private val itemsBuilder: ItemsBuilder,
+    itemsBuilder: ItemsBuilder,
     private val appVersionProvider: AppVersionProvider,
     private val checkIsWalletConnectAvailableUseCase: CheckIsWalletConnectAvailableUseCase,
     private val router: Router,
@@ -212,6 +214,13 @@ internal class DetailsModel @Inject constructor(
     }
 
     private companion object {
-        const val BUY_TANGEM_URL = "https://buy.tangem.com/?utm_source=tangem&utm_medium=app"
+        val SYSTEM_LANGUAGE = runCatching { Resources.getSystem().configuration.locales[0].language }.getOrElse { "" }
+        val APP_LANGUAGE = Locale.getDefault().language
+        val UTM_MARKS = "utm_source=tangem-app" +
+            "&utm_medium=app" +
+            "&utm_campaign=users-$SYSTEM_LANGUAGE" +
+            "&utm_content=devicelang-$APP_LANGUAGE"
+
+        val BUY_TANGEM_URL = "https://buy.tangem.com/?$UTM_MARKS"
     }
 }
