@@ -273,6 +273,8 @@ interface WalletManagersFacade {
         assetIdentifier: NFTAsset.Identifier,
     ): NFTAsset.SalePrice?
 
+    suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
+
     /**
      * If wallet manager implements [InitializableAccount] then returns [InitializableAccount.isAccountInitialized]
      * value. Otherwise always return true
