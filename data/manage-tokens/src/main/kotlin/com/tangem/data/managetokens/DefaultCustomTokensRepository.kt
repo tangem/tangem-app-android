@@ -54,7 +54,9 @@ internal class DefaultCustomTokensRepository(
                 Blockchain.BinanceTestnet,
                 Blockchain.Kaspa,
                 -> true
-                Blockchain.Cardano -> blockchain.validateContractAddress(contractAddress)
+                Blockchain.Cardano,
+                Blockchain.Sui,
+                -> blockchain.validateContractAddress(contractAddress)
                 else -> blockchain.validateAddress(contractAddress)
             }
         }
