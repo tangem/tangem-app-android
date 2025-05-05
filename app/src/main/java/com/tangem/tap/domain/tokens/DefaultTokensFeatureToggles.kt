@@ -9,4 +9,10 @@ internal class DefaultTokensFeatureToggles(
 
     override val isNetworksLoadingRefactoringEnabled: Boolean
         get() = featureTogglesManager.isFeatureEnabled(name = "NETWORKS_LOADING_REFACTORING_ENABLED")
+
+    override val isQuotesLoadingRefactoringEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "QUOTES_LOADING_REFACTORING_ENABLED")
+
+    override val isStakingLoadingRefactoringEnabled: Boolean
+        get() = featureTogglesManager.isFeatureEnabled(name = "STAKING_LOADING_REFACTORING_ENABLED")
 }

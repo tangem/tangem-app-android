@@ -87,6 +87,8 @@ fun TangemTheme(
         DefaultHapticManager(view = view, vibratorHapticManager = vibratorHapticManager)
     }
 
+    val rootBackgroundColor = rememberedColors.background.secondary
+
     MaterialTheme(
         colors = materialThemeColors(colors = themeColors, isDark = isDark),
     ) {
@@ -105,6 +107,7 @@ fun TangemTheme(
             CompositionLocalProvider(
                 LocalTangemShimmer provides TangemShimmer,
                 LocalMainBottomSheetColor provides remember { mutableStateOf(Color.Unspecified) },
+                LocalRootBackgroundColor provides remember { mutableStateOf(rootBackgroundColor) },
                 LocalTextSelectionColors provides TangemTextSelectionColors,
             ) {
                 ProvideTextStyle(
@@ -308,13 +311,12 @@ val LocalMainBottomSheetColor = staticCompositionLocalOf<MutableState<Color>> {
     error("No MainBottomSheetColor provided")
 }
 
-val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
+val LocalRootBackgroundColor = staticCompositionLocalOf<MutableState<Color>> {
     error("No MainBottomSheetColor provided")
 }
 
-// TODO remove this after migration to new navigation
-val LocalIsNavigationRefactoringEnabled = staticCompositionLocalOf<Boolean> {
-    false
+val LocalBladeAnimation = staticCompositionLocalOf<BladeAnimation> {
+    error("No MainBottomSheetColor provided")
 }
 
 /**
