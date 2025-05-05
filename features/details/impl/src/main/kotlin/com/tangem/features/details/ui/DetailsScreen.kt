@@ -1,7 +1,6 @@
 package com.tangem.features.details.ui
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -40,8 +39,6 @@ internal fun DetailsScreen(
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
-
-    BackHandler(onBack = state.popBack)
 
     Scaffold(
         modifier = modifier,
