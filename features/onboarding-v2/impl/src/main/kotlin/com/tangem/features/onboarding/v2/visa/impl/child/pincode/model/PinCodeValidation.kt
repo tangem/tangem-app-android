@@ -22,10 +22,11 @@ internal object PinCodeValidation {
     }
 
     private fun validateNoRepeatedDigits(pinCode: String): Boolean {
-        return pinCode.toSet().size == PIN_CODE_LENGTH
+        return pinCode.toSet().size > 1
     }
 
     private fun validateNoConsecutiveDigits(pinCode: String): Boolean {
-        return pinCode.windowed(2).all { it[0] + 1 == it[1] }.not()
+        return pinCode.zipWithNext().any { it.second != it.first + 1 } &&
+            pinCode.zipWithNext().any { it.second != it.first - 1 }
     }
 }
