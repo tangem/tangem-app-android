@@ -127,6 +127,10 @@ object PreferencesKeys {
     val NOTIFICATIONS_APPLICATION_ID_KEY by lazy { stringPreferencesKey(name = "notificationsApplicationId") }
 
     val NOTIFICATIONS_ENABLED_STATES_KEY by lazy { stringPreferencesKey(name = "notificationsEnabledStates") }
+
+    val TRON_NETWORK_FEE_NOTIFICATION_SHOW_COUNT_KEY by lazy {
+        intPreferencesKey(name = "tronNetworkFeeNotificationShowCount")
+    }
     // endregion
 
     // region Promo
