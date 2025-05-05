@@ -45,12 +45,12 @@ internal class WcRoutingModel @Inject constructor(
                 when (methodName) {
                     WcEthMethodName.EthSign,
                     WcEthMethodName.PersonalSign,
+                    WcEthMethodName.SignTypeData,
+                    WcEthMethodName.SignTypeDataV4,
+                    WcSolanaMethodName.SignMessage,
                     -> WcInnerRoute.SignMessage(rawRequest)
-                    WcEthMethodName.SignTypeData -> TODO()
-                    WcEthMethodName.SignTypeDataV4 -> TODO()
                     WcEthMethodName.SignTransaction -> TODO()
                     WcEthMethodName.SendTransaction -> TODO()
-                    WcSolanaMethodName.SignMessage -> TODO()
                     WcSolanaMethodName.SignTransaction -> TODO()
                     WcSolanaMethodName.SendAllTransaction -> TODO()
                     is WcMethodName.Unsupported -> TODO()

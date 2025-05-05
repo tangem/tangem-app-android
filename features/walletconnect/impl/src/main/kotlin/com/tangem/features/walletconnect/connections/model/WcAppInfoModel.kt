@@ -4,6 +4,7 @@ import androidx.compose.runtime.Stable
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.decompose.navigation.Router
 import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.WcSessionApprove
 import com.tangem.domain.walletconnect.model.WcSessionProposal
@@ -26,6 +27,7 @@ import com.tangem.utils.transformer.update as transformerUpdate
 internal class WcAppInfoModel @Inject constructor(
     override val dispatchers: CoroutineDispatcherProvider,
     wcPairUseCaseFactory: WcPairUseCase.Factory,
+    private val router: Router,
     paramsContainer: ParamsContainer,
 ) : Model() {
 
@@ -52,7 +54,7 @@ internal class WcAppInfoModel @Inject constructor(
                         appInfoUiState.transformerUpdate(
                             WcConnectButtonProgressTransformer(showProgress = false),
                         )
-                        params.onDismiss()
+                        router.pop()
                     }
                     is WcPairState.Error -> {
 // [REDACTED_TODO_COMMENT]
@@ -78,11 +80,17 @@ internal class WcAppInfoModel @Inject constructor(
 
     fun dismiss() {
         wcPairUseCase.reject()
-        params.onDismiss()
+        router.pop()
     }
 
     private fun onConnect() {
-        wcPairUseCase.approve(WcSessionApprove(wallet = userWallet, network = proposalNetwork.required.toList()))
+        wcPairUseCase.approve(
+            WcSessionApprove(
+                wallet = userWallet,
+                network =
+                proposalNetwork.required.plus(proposalNetwork.available).toList(),
+            ),
+        )
     }
 
     private fun createLoadingState(): WcAppInfoUM.Loading {
