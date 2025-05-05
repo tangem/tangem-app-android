@@ -8,10 +8,9 @@ data class VisaDataToSignByCardWallet(
     val hashToSign: String,
 )
 
-fun VisaDataToSignByCardWallet.sign(cardWalletAddress: String, rootOTP: String, otpCounter: Int, signature: String) =
+fun VisaDataToSignByCardWallet.sign(rootOTP: String, otpCounter: Int, signature: String) =
     VisaSignedActivationDataByCardWallet(
         dataToSign = this,
-        cardWalletAddress = cardWalletAddress,
         rootOTP = rootOTP,
         otpCounter = otpCounter,
         signature = signature,
