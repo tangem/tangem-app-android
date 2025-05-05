@@ -79,6 +79,27 @@ internal enum class BuildType(
     ),
 
     /**
+     * Build type for QA and business
+     *
+     * Features:
+     * - Env: prod
+     * - Signing config: debug
+     * - Proguard
+     * */
+    External(
+        id = "external",
+        appIdSuffix = "external",
+        versionSuffix = "external",
+        configFields = listOf(
+            BuildConfigField.Environment(value = "prod"),
+            BuildConfigField.TestActionEnabled(isEnabled = false),
+            BuildConfigField.LogEnabled(isEnabled = false),
+            BuildConfigField.TesterMenuAvailability(isEnabled = false),
+            BuildConfigField.MockDataSource(isEnabled = false),
+        ),
+    ),
+
+    /**
      * Production ready build type for clients
      *
      * Features:
