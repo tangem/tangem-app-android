@@ -1,7 +1,6 @@
 package com.tangem.feature.walletsettings.ui
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,8 +35,6 @@ internal fun WalletSettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val backgroundColor = TangemTheme.colors.background.secondary
-
-    BackHandler(onBack = state.popBack)
 
     Scaffold(
         modifier = modifier,

@@ -37,7 +37,7 @@ internal fun NFTDetails(state: NFTDetailsUM, modifier: Modifier = Modifier) {
             NFTDetailsAsset(
                 state = state.nftAsset,
                 onReadMoreClick = state.onReadMoreClick,
-                onSeeAllClick = state.onSeeAllClick,
+                onSeeAllTraitsClick = state.onSeeAllTraitsClick,
                 onExploreClick = state.onExploreClick,
                 modifier = Modifier
                     .padding(innerPadding),
