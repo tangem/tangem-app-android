@@ -1,4 +1,5 @@
 @file:Suppress("MaximumLineLength")
+
 package com.tangem.domain.visa
 
 import android.util.Base64
@@ -14,14 +15,12 @@ import java.security.spec.X509EncodedKeySpec
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.spec.IvParameterSpec
-import javax.crypto.spec.SecretKeySpec
 
 private const val KEY_SIZE = 256
 
-class SetVisaPinCodeUseCase(
-    private val visaActivationRepositoryFactory: VisaActivationRepository.Factory,
-) {
+class SetVisaPinCodeUseCase(private val visaActivationRepositoryFactory: VisaActivationRepository.Factory) {
 
+    @Suppress("MagicNumber")
     suspend operator fun invoke(
         visaCardId: VisaCardId,
         activationOrderId: String,
@@ -29,19 +28,17 @@ class SetVisaPinCodeUseCase(
     ): Either<Throwable, Unit> = Either.catch {
         val visaActivationRepository = visaActivationRepositoryFactory.create(visaCardId)
         val rsaPublicKey = visaActivationRepository.getPinCodeRsaEncryptionPublicKey()
+        val formattedPin = "24$pinCode${"f".repeat(n = 8)}FF"
 
         val sessionKey = generateSessionKey()
         val sessionId = getSessionId(rsaPublicKey, sessionKey)
 
-        val secureRandom = SecureRandom()
-        val iv = ByteArray(size = 16)
-        secureRandom.nextBytes(iv)
+        val iv = generateIV()
         val ivParameterSpec = IvParameterSpec(iv)
         val ivPayload = Base64.encodeToString(iv, Base64.NO_WRAP)
-        val aesKey = SecretKeySpec(sessionKey.encoded, 0, sessionKey.encoded.size, "AES")
-        val aesCipher = Cipher.getInstance("AES/CBC/PKCS5PADDING")
-        aesCipher.init(Cipher.ENCRYPT_MODE, aesKey, ivParameterSpec)
-        val encryptedPin = Base64.encodeToString(aesCipher.doFinal(pinCode.toByteArray()), Base64.NO_WRAP)
+        val aesCipher = Cipher.getInstance("AES/GCM/NoPadding")
+        aesCipher.init(Cipher.ENCRYPT_MODE, sessionKey, ivParameterSpec)
+        val encryptedPin = Base64.encodeToString(aesCipher.doFinal(formattedPin.encodeToByteArray()), Base64.NO_WRAP)
 
         visaActivationRepository.sendPinCode(
             VisaEncryptedPinCode(
@@ -59,6 +56,12 @@ class SetVisaPinCodeUseCase(
         return generator.generateKey()
     }
 
+    private fun generateIV(): ByteArray {
+        val iv = ByteArray(size = 16)
+        SecureRandom().nextBytes(iv)
+        return iv
+    }
+
     private fun getPublicKey(rsaPublicKey: String): PublicKey {
         val keyBytes = Base64.decode(rsaPublicKey, Base64.NO_WRAP)
         val spec = X509EncodedKeySpec(keyBytes)
@@ -67,8 +70,9 @@ class SetVisaPinCodeUseCase(
 
     private fun getSessionId(rsaPublicKey: String, sessionKey: Key): String {
         val publicKey = getPublicKey(rsaPublicKey)
-        val cipher = Cipher.getInstance("RSA")
+        val cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding")
         cipher.init(Cipher.ENCRYPT_MODE, publicKey)
-        return Base64.encodeToString(cipher.doFinal(sessionKey.encoded), Base64.NO_WRAP)
+        val base64SessionKey = Base64.encodeToString(sessionKey.encoded, Base64.NO_WRAP)
+        return Base64.encodeToString(cipher.doFinal(base64SessionKey.encodeToByteArray()), Base64.NO_WRAP)
     }
 }
