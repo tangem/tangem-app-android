@@ -1,5 +1,6 @@
 package com.tangem.common.ui.userwallet.state
 
+import com.tangem.core.ui.components.artwork.ArtworkUM
 import com.tangem.core.ui.extensions.TextReference
 import com.tangem.domain.wallets.models.UserWalletId
 import javax.annotation.concurrent.Immutable
@@ -10,7 +11,7 @@ data class UserWalletItemUM(
     val name: TextReference,
     val information: TextReference,
     val balance: Balance,
-    val imageUrl: String,
+    val imageState: ImageState = ImageState.Loading,
     val isEnabled: Boolean,
     val endIcon: EndIcon = EndIcon.None,
     val onClick: () -> Unit,
@@ -35,5 +36,15 @@ data class UserWalletItemUM(
             val value: String,
             val isFlickering: Boolean,
         ) : Balance()
+    }
+
+    @Immutable
+    sealed class ImageState {
+
+        data object Loading : ImageState()
+
+        data class Image(
+            val artwork: ArtworkUM,
+        ) : ImageState()
     }
 }
