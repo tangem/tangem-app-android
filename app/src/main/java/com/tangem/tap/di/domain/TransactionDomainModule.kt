@@ -38,15 +38,6 @@ internal object TransactionDomainModule {
 
     @Provides
     @Singleton
-    fun provideTransferGetFeeUseCase(walletManagersFacade: WalletManagersFacade): GetTransferFeeUseCase {
-        return GetTransferFeeUseCase(
-            walletManagersFacade = walletManagersFacade,
-            demoConfig = DemoConfig(),
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideSendTransactionUseCase(
         cardSdkConfigRepository: CardSdkConfigRepository,
         transactionRepository: TransactionRepository,
