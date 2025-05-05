@@ -16,15 +16,17 @@ import com.tangem.core.ui.extensions.resourceReference
 import com.tangem.core.ui.extensions.stringReference
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TangemThemePreview
+import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.features.nft.details.entity.NFTAssetUM
 import com.tangem.features.nft.impl.R
 import kotlinx.collections.immutable.persistentListOf
+import java.math.BigDecimal
 
 @Composable
 internal fun NFTDetailsAsset(
     state: NFTAssetUM,
     onReadMoreClick: () -> Unit,
-    onSeeAllClick: () -> Unit,
+    onSeeAllTraitsClick: () -> Unit,
     onExploreClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -68,12 +70,16 @@ internal fun NFTDetailsAsset(
                     .padding(top = TangemTheme.dimens.spacing12),
                 items = state.traits,
                 title = resourceReference(R.string.nft_details_traits),
-                action = {
-                    NFTBlocksGroupAction(
-                        text = resourceReference(R.string.common_see_all),
-                        startIcon = { },
-                        onClick = onSeeAllClick,
-                    )
+                action = if (state.showAllTraitsButton) {
+                    {
+                        NFTBlocksGroupAction(
+                            text = resourceReference(R.string.common_see_all),
+                            startIcon = { },
+                            onClick = onSeeAllTraitsClick,
+                        )
+                    }
+                } else {
+                    null
                 },
             )
             NFTDetailsBlocksGroup(
@@ -103,7 +109,7 @@ private fun Preview_NFTDetailsAssetAsset(@PreviewParameter(NFTAssetProvider::cla
         NFTDetailsAsset(
             state = state,
             onReadMoreClick = { },
-            onSeeAllClick = { },
+            onSeeAllTraitsClick = { },
             onExploreClick = { },
         )
     }
@@ -120,57 +126,76 @@ private class NFTAssetProvider : CollectionPreviewParameterProvider<NFTAssetUM>(
             ),
             topInfo = NFTAssetUM.TopInfo.Content(
                 title = resourceReference(R.string.nft_details_last_sale_price),
-                salePrice = NFTAssetUM.SalePrice.Content(value = "0,012 ETH", fiatValue = "32.34$"),
+                salePrice = NFTAssetUM.SalePrice.Content(
+                    value = BigDecimal("18.75"),
+                    symbol = "ETH",
+                    decimals = 18,
+                    rate = BigDecimal("1"),
+                    appCurrency = AppCurrency.Default,
+                ),
                 description = "Base edition by Piux. An illustration of Crypto Robot #7804".repeat(3),
                 rarity = NFTAssetUM.Rarity.Content(
                     rank = "Top 1% rarity",
                     label = "115.28",
                     showDivider = true,
+                    onRankClick = { },
+                    onLabelClick = { },
                 ),
             ),
             traits = persistentListOf(
                 NFTAssetUM.BlockItem(
                     title = stringReference("Tier"),
                     value = "Infinite",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Phygital Toy"),
                     value = "None",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Class"),
                     value = "CYBER",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Accessory"),
                     value = "No accessory",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Sneakers"),
                     value = "Boots",
+                    showInfoButton = false,
                 ),
                 NFTAssetUM.BlockItem(
                     title = stringReference("Artist"),
                     value = "DJ Dragoon",
+                    showInfoButton = false,
                 ),
             ),
+            showAllTraitsButton = true,
             baseInfoItems = persistentListOf(
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_standard),
                     value = "ERC-721",
+                    showInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_contract_address),
                     value = "0x6811f2fgd892ac83f719",
                     valueTextEllipsis = TextEllipsis.Middle,
+                    showInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_token_id),
                     value = "100200273",
+                    showInfoButton = true,
                 ),
                 NFTAssetUM.BlockItem(
                     title = resourceReference(R.string.nft_details_chain),
                     value = "Ethereum",
+                    showInfoButton = true,
                 ),
             ),
         ),
