@@ -1,5 +1,6 @@
 package com.tangem.domain.nft.repository
 
+import com.tangem.domain.nft.models.NFTAsset
 import com.tangem.domain.nft.models.NFTCollection
 import com.tangem.domain.nft.models.NFTCollections
 import com.tangem.domain.tokens.model.Network
@@ -13,5 +14,11 @@ interface NFTRepository {
 
     suspend fun refreshAssets(userWalletId: UserWalletId, network: Network, collectionId: NFTCollection.Identifier)
 
+    suspend fun refreshAll(userWalletId: UserWalletId, networks: List<Network>)
+
     suspend fun isNFTSupported(network: Network): Boolean
+
+    suspend fun getNFTSupportedNetworks(userWalletId: UserWalletId): List<Network>
+
+    suspend fun getNFTExploreUrl(network: Network, assetIdentifier: NFTAsset.Identifier): String?
 }
