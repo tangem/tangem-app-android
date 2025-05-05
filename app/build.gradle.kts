@@ -109,6 +109,8 @@ dependencies {
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
     implementation(projects.domain.networks)
+    implementation(projects.domain.quotes)
+    implementation(projects.domain.notifications)
 
     implementation(projects.common)
     implementation(projects.common.routing)
@@ -152,9 +154,10 @@ dependencies {
     implementation(projects.data.nft)
     implementation(projects.data.onramp)
     implementation(projects.data.networks)
+    implementation(projects.data.quotes)
+    implementation(projects.data.blockaid)
 
     /** Features */
-    implementation(projects.features.onboarding)
     implementation(projects.features.referral.impl)
     implementation(projects.features.referral.domain)
     implementation(projects.features.referral.data)
@@ -273,6 +276,7 @@ dependencies {
     implementation(deps.reKotlin)
     implementation(deps.zxing.qrCore)
     implementation(deps.coil)
+    implementation(deps.coil.gif)
     implementation(deps.amplitude)
     implementation(deps.kotsonGson)
     implementation(deps.spongecastle.core)
@@ -318,6 +322,7 @@ dependencies {
     /** Chucker */
     debugImplementation(deps.chucker)
     mockedImplementation(deps.chuckerStub)
+    externalImplementation(deps.chuckerStub)
     internalImplementation(deps.chuckerStub)
     releaseImplementation(deps.chuckerStub)
 
