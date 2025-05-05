@@ -22,9 +22,35 @@ sealed class MainScreenAnalyticsEvent(
     )
 
     // region Action Buttons feature
-    data class ButtonBuy(val status: AnalyticsParam.Status) : MainScreenAnalyticsEvent(
+    data class ButtonBuy(
+        val status: AnalyticsParam.Status,
+        val screenType: String? = null,
+    ) : MainScreenAnalyticsEvent(
         event = "Button - Buy",
-        params = mapOf(AnalyticsParam.STATUS to status.value),
+        params = buildMap {
+            put(AnalyticsParam.STATUS, status.value)
+            screenType?.let { put(AnalyticsParam.TYPE, it) }
+        },
+    )
+
+    data object ButtonReceive : MainScreenAnalyticsEvent(
+        event = "Button - Receive",
+    )
+
+    data object LimitsClicked : MainScreenAnalyticsEvent(
+        event = "Limits Clicked",
+    )
+
+    data object NoticeBalancesInfo : MainScreenAnalyticsEvent(
+        event = "Notice - Balances Info",
+    )
+
+    data object NoticeLimitsInfo : MainScreenAnalyticsEvent(
+        event = "Notice - Limits Info",
+    )
+
+    data object ButtonExplore : MainScreenAnalyticsEvent(
+        event = "Button - Explore",
     )
 
     data class ButtonSwap(val status: AnalyticsParam.Status) : MainScreenAnalyticsEvent(
@@ -83,4 +109,9 @@ sealed class MainScreenAnalyticsEvent(
         params = mapOf(ERROR_CODE to errorCode),
     )
     // endregion
+
+    companion object {
+        const val VISA_TYPE = "Visa"
+        const val WALLET_TYPE = "Wallet"
+    }
 }

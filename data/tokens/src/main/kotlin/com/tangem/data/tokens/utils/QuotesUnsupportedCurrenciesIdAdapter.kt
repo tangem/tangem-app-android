@@ -8,7 +8,7 @@ import com.tangem.datasource.api.tangemTech.models.QuotesResponse
 /**
  * Adapter to replace unsupported currencies for quotes request if it necessary
  */
-internal class QuotesUnsupportedCurrenciesIdAdapter {
+class QuotesUnsupportedCurrenciesIdAdapter {
 
     /**
      * Replaces unsupported currencies id to it replacements for request

@@ -20,12 +20,14 @@ class DefaultVisaOTPStorage @Inject constructor(
     private val dispatcherProvider: CoroutineDispatcherProvider,
 ) : VisaOTPStorage {
 
-    private val secureStorage = AndroidSecureStorage(
-        preferences = SecureStorage.createEncryptedSharedPreferences(
-            context = applicationContext,
-            storageName = "visa_otp_storage",
-        ),
-    )
+    private val secureStorage by lazy {
+        AndroidSecureStorage(
+            preferences = SecureStorage.createEncryptedSharedPreferences(
+                context = applicationContext,
+                storageName = "visa_otp_storage",
+            ),
+        )
+    }
 
     override suspend fun saveOTP(cardId: String, data: VisaOtpData) = withContext(dispatcherProvider.io) {
         secureStorage.store(data.rootOTP, VISA_ROOT_OTP_KEY_PREFIX + cardId)

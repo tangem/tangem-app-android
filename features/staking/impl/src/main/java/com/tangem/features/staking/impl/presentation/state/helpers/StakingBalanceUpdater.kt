@@ -5,6 +5,7 @@ import com.tangem.domain.staking.FetchStakingYieldBalanceUseCase
 import com.tangem.domain.staking.model.stakekit.Yield
 import com.tangem.domain.staking.model.stakekit.action.StakingActionStatus
 import com.tangem.domain.tokens.FetchPendingTransactionsUseCase
+import com.tangem.domain.tokens.TokensFeatureToggles
 import com.tangem.domain.tokens.UpdateDelayedNetworkStatusUseCase
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.txhistory.usecase.GetTxHistoryItemsCountUseCase
@@ -28,6 +29,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
     private val fetchActionsUseCase: FetchActionsUseCase,
     private val txHistoryFeatureToggles: TxHistoryFeatureToggles,
     private val txHistoryContentUpdateEmitter: TxHistoryContentUpdateEmitter,
+    private val tokensFeatureToggles: TokensFeatureToggles,
     @DelayedWork private val coroutineScope: CoroutineScope,
     @Assisted private val userWallet: UserWallet,
     @Assisted private val cryptoCurrencyStatus: CryptoCurrencyStatus,
@@ -89,6 +91,7 @@ internal class StakingBalanceUpdater @AssistedInject constructor(
         stakingYieldBalanceUseCase(
             userWalletId = userWallet.walletId,
             cryptoCurrency = cryptoCurrencyStatus.currency,
+            isRefactoringEnabled = tokensFeatureToggles.isStakingLoadingRefactoringEnabled,
             refresh = true,
         )
     }

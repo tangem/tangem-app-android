@@ -145,8 +145,6 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
 ) {
     val model = config.content as? T ?: return
 
-    val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
-
     val bsContent: @Composable ColumnScope.() -> Unit = {
         val maxHeight = LocalConfiguration.current.screenHeightDp * MODAL_SHEET_MAX_HEIGHT
 
@@ -157,7 +155,6 @@ inline fun <reified T : TangemBottomSheetConfigContent> BasicModalBottomSheet(
                 .clip(TangemTheme.shapes.roundedCornersLarge)
                 .background(containerColor)
                 .heightIn(max = maxHeight.dp)
-                .padding(bottom = bottomBarHeight)
                 .fillMaxWidth(),
         ) {
             Box(modifier = Modifier.fillMaxWidth()) {

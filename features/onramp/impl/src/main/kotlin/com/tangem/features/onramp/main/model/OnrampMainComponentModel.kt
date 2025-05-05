@@ -57,6 +57,9 @@ internal class OnrampMainComponentModel @Inject constructor(
 ) : Model(), OnrampIntents {
 
     private val params: OnrampMainComponent.Params = paramsContainer.require()
+
+    val userWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
+
     private val stateFactory = OnrampStateFactory(
         currentStateProvider = Provider { _state.value },
         cryptoCurrency = params.cryptoCurrency,
@@ -68,7 +71,6 @@ internal class OnrampMainComponentModel @Inject constructor(
         onrampIntents = this,
         cryptoCurrency = params.cryptoCurrency,
     )
-    private val selectedUserWallet = getWalletsUseCase.invokeSync().first { it.walletId == params.userWalletId }
     private val _state: MutableStateFlow<OnrampMainComponentUM> = MutableStateFlow(
         value = stateFactory.getInitialState(
             currency = params.cryptoCurrency.name,
@@ -107,7 +109,7 @@ internal class OnrampMainComponentModel @Inject constructor(
 
     private fun checkResidenceCountry() {
         modelScope.launch {
-            checkOnrampAvailabilityUseCase()
+            checkOnrampAvailabilityUseCase(userWallet)
                 .onRight(::handleOnrampAvailability)
                 .onLeft(::handleOnrampError)
         }
@@ -158,7 +160,7 @@ internal class OnrampMainComponentModel @Inject constructor(
         if (!state?.amountBlockState?.amountFieldModel?.fiatValue.isNullOrEmpty()) {
             _state.update { amountStateFactory.getAmountSecondaryLoadingState() }
         }
-        fetchPairsUseCase.invoke(params.cryptoCurrency).fold(
+        fetchPairsUseCase.invoke(userWallet, params.cryptoCurrency).fold(
             ifLeft = ::handleOnrampError,
             ifRight = { _state.update { amountStateFactory.getAmountSecondaryResetState() } },
         )
@@ -184,6 +186,7 @@ internal class OnrampMainComponentModel @Inject constructor(
                     val content = state.value as? OnrampMainComponentUM.Content ?: return@runCatching
                     if (content.amountBlockState.amountFieldModel.fiatAmount.value.isNullOrZero()) return@runCatching
                     fetchQuotesUseCase.invoke(
+                        userWallet = userWallet,
                         amount = content.amountBlockState.amountFieldModel.fiatAmount,
                         cryptoCurrency = params.cryptoCurrency,
                     ).onLeft(::handleOnrampError)
@@ -216,7 +219,7 @@ internal class OnrampMainComponentModel @Inject constructor(
     }
 
     override fun onBuyClick(quote: OnrampProviderWithQuote.Data) {
-        if (isDemoCardUseCase.invoke(selectedUserWallet.cardId)) {
+        if (isDemoCardUseCase.invoke(userWallet.cardId)) {
             showDemoWarning()
         } else {
             val currentContentState = state.value as? OnrampMainComponentUM.Content ?: return

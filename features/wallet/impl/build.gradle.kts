@@ -84,6 +84,7 @@ dependencies {
     implementation(projects.domain.onramp.models)
     implementation(projects.domain.promo)
     implementation(projects.domain.promo.models)
+    implementation(projects.domain.quotes)
     implementation(projects.domain.settings)
     implementation(projects.domain.staking)
     implementation(projects.domain.staking.models)
@@ -94,8 +95,6 @@ dependencies {
     implementation(projects.domain.visa)
     implementation(projects.domain.wallets)
     implementation(projects.domain.wallets.models)
-// [REDACTED_TODO_COMMENT]
-    implementation(projects.features.onboarding)
 
     /** Feature Apis */
     implementation(projects.features.details.api)

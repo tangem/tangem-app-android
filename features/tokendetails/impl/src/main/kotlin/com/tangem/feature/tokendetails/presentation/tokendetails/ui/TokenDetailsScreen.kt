@@ -1,7 +1,6 @@
 package com.tangem.feature.tokendetails.presentation.tokendetails.ui
 
 import android.content.res.Configuration
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
 import androidx.compose.material3.Scaffold
@@ -52,7 +51,6 @@ internal fun TokenDetailsScreen(
     tokenMarketBlockComponent: TokenMarketBlockComponent?,
     txHistoryComponent: TxHistoryComponent?,
 ) {
-    BackHandler(onBack = state.topAppBarConfig.onBackClick)
     val bottomBarHeight = with(LocalDensity.current) { WindowInsets.systemBars.getBottom(this).toDp() }
 
     Scaffold(

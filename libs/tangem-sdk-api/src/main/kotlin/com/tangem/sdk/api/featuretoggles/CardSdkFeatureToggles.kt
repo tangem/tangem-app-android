@@ -8,4 +8,6 @@ package com.tangem.sdk.api.featuretoggles
 interface CardSdkFeatureToggles {
 
     val isNewAttestationEnabled: Boolean
+
+    val isNewArtworkLoadingEnabled: Boolean
 }

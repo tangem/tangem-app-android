@@ -37,8 +37,12 @@ class AppLogsStore @Inject constructor(
     private val mutex = Mutex()
     private val zipMutex = Mutex()
 
-    private val file = File(applicationContext.filesDir, PERMITTED_FILE_NAME)
-    private val fileZip = File(applicationContext.filesDir, PERMITTED_FILE_NAME_ZIP)
+    private val logFile by lazy {
+        File(applicationContext.filesDir, PERMITTED_FILE_NAME)
+    }
+    private val logFileZip by lazy {
+        File(applicationContext.filesDir, PERMITTED_FILE_NAME_ZIP)
+    }
 
     private val formatter = DateTimeFormatterBuilder()
         .appendDayOfMonth(2)
@@ -55,12 +59,12 @@ class AppLogsStore @Inject constructor(
         .toFormatter()
 
     /** Get log file */
-    fun getFile(): File? = if (file.exists()) file else null
+    fun getFile(): File? = if (logFile.exists()) logFile else null
 
     suspend fun getZipFile(): File? {
         return zipMutex.withLock {
-            if (file.exists()) {
-                zip(listOf(file), fileZip)
+            if (logFile.exists()) {
+                zip(listOf(logFile), logFileZip)
             } else {
                 null
             }
@@ -98,8 +102,8 @@ class AppLogsStore @Inject constructor(
     /** Delete deprecated logs if file size exceeds [maxSize] */
     fun deleteDeprecatedLogs(maxSize: Int) {
         launchWithLock {
-            if (file.exists() && file.length() > maxSize) {
-                file.delete()
+            if (logFile.exists() && logFile.length() > maxSize) {
+                logFile.delete()
             }
         }
     }
@@ -117,7 +121,7 @@ class AppLogsStore @Inject constructor(
     }
 
     private fun writeMessage(tag: String, vararg messages: String) {
-        BufferedWriter(FileWriter(file, true)).use { writer ->
+        BufferedWriter(FileWriter(logFile, true)).use { writer ->
             writer.append(formatter.print(DateTime.now()))
             writer.append(": $tag ")
             messages.forEach(writer::append)
@@ -126,8 +130,8 @@ class AppLogsStore @Inject constructor(
     }
 
     private fun createFileIfNotExist() {
-        if (!file.exists()) {
-            runCatching { file.createNewFile() }
+        if (!logFile.exists()) {
+            runCatching { logFile.createNewFile() }
                 .onFailure(Timber::e)
         }
     }

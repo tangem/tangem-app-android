@@ -22,7 +22,9 @@ internal class SharedPreferencesKeyMigration(
     private val keyName: String,
 ) : DataMigration<Preferences> {
 
-    private val legacyPrefs = context.getSharedPreferences(legacyPrefsName, Context.MODE_PRIVATE)
+    private val legacyPrefs by lazy {
+        context.getSharedPreferences(legacyPrefsName, Context.MODE_PRIVATE)
+    }
 
     override suspend fun cleanUp() {
         val sharedPrefsEditor = legacyPrefs.edit()
