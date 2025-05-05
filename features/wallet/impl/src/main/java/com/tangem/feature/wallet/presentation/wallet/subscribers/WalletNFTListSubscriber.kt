@@ -37,7 +37,7 @@ internal class WalletNFTListSubscriber(
                             SetNFTCollectionsTransformer(
                                 userWalletId = userWallet.walletId,
                                 nftCollections = it,
-                                onItemClick = { clickIntents.onNFTClick(userWallet.walletId) },
+                                onItemClick = { clickIntents.onNFTClick(userWallet) },
                             ),
                         )
                     }
