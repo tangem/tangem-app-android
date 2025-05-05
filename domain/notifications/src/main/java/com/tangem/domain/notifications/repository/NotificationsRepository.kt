@@ -11,6 +11,10 @@ interface NotificationsRepository {
 
     suspend fun getApplicationId(): String?
 
+    suspend fun getTronTokenFeeNotificationShowCounter(): Int
+
+    suspend fun incrementTronTokenFeeNotificationShowCounter()
+
     @Throws
     suspend fun associateApplicationIdWithWallets(appId: String, wallets: List<String>)
 
