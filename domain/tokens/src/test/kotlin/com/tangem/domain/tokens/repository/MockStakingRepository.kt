@@ -72,6 +72,11 @@ class MockStakingRepository : StakingRepository {
         send(YieldBalance.Error(integrationId = null, address = null))
     }
 
+    override suspend fun getSingleYieldBalanceSyncLegacy(
+        userWalletId: UserWalletId,
+        cryptoCurrency: CryptoCurrency,
+    ): YieldBalance = YieldBalance.Error(integrationId = null, address = null)
+
     override suspend fun getSingleYieldBalanceSync(
         userWalletId: UserWalletId,
         cryptoCurrency: CryptoCurrency,
@@ -96,10 +101,12 @@ class MockStakingRepository : StakingRepository {
         )
     }
 
-    override fun getMultiYieldBalanceUpdatesLegacy(
+    override suspend fun getMultiYieldBalanceSyncLegacy(
         userWalletId: UserWalletId,
         cryptoCurrencies: List<CryptoCurrency>,
-    ): Flow<YieldBalanceList> = flowOf()
+    ): YieldBalanceList = YieldBalanceList.Data(
+        balances = listOf(YieldBalance.Error(integrationId = null, address = null)),
+    )
 
     override suspend fun getMultiYieldBalanceSync(
         userWalletId: UserWalletId,
