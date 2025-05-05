@@ -156,6 +156,7 @@ dependencies {
     implementation(projects.data.networks)
     implementation(projects.data.quotes)
     implementation(projects.data.blockaid)
+    implementation(projects.data.notifications)
 
     /** Features */
     implementation(projects.features.referral.impl)
