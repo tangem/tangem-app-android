@@ -12,7 +12,7 @@ import com.tangem.domain.wallets.models.UserWalletRemoteInfo
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
-class DefaultUserWalletsSyncDelegate(
+internal class DefaultUserWalletsSyncDelegate(
     private val userWalletsListManager: UserWalletsListManager,
     private val dispatchers: CoroutineDispatcherProvider,
 ) : UserWalletsSyncDelegate {
@@ -27,6 +27,7 @@ class DefaultUserWalletsSyncDelegate(
         }
     }
 
+    // TODO remove disptachers when UserWalletsListManager will be main safe
     private suspend fun renameUserWallet(
         userWalletId: UserWalletId,
         name: String,
