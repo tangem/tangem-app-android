@@ -1,10 +1,8 @@
 package com.tangem.feature.wallet.child.wallet
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.arkivanov.decompose.router.slot.childSlot
@@ -16,7 +14,6 @@ import com.tangem.core.decompose.model.getOrCreateModel
 import com.tangem.core.ui.decompose.ComposableBottomSheetComponent
 import com.tangem.core.ui.decompose.ComposableContentComponent
 import com.tangem.core.ui.decompose.ComposableDialogComponent
-import com.tangem.core.ui.utils.findActivity
 import com.tangem.feature.wallet.child.wallet.model.WalletModel
 import com.tangem.feature.wallet.navigation.WalletRoute
 import com.tangem.feature.wallet.presentation.wallet.state.model.WalletDialogConfig
@@ -77,9 +74,6 @@ internal class WalletComponent @AssistedInject constructor(
 
     @Composable
     override fun Content(modifier: Modifier) {
-        val activity = LocalContext.current.findActivity()
-        BackHandler { activity.finish() }
-
         val dialog by dialog.subscribeAsState()
 
         WalletScreen(

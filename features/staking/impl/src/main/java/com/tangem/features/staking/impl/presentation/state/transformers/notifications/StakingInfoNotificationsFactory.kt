@@ -11,11 +11,13 @@ import com.tangem.domain.staking.model.stakekit.action.StakingActionCommonType
 import com.tangem.domain.staking.model.stakekit.action.StakingActionType
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.features.staking.impl.R
+import com.tangem.features.staking.impl.presentation.state.InnerYieldBalanceState
 import com.tangem.features.staking.impl.presentation.state.StakingNotification
 import com.tangem.features.staking.impl.presentation.state.StakingStates
 import com.tangem.features.staking.impl.presentation.state.StakingUiState
 import com.tangem.lib.crypto.BlockchainUtils.isCardano
 import com.tangem.lib.crypto.BlockchainUtils.isCosmos
+import com.tangem.lib.crypto.BlockchainUtils.isTon
 import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.Provider
 import com.tangem.utils.extensions.isZero
@@ -46,7 +48,7 @@ internal class StakingInfoNotificationsFactory(
 
         when (prevState.actionType) {
             is StakingActionCommonType.Enter -> addEnterInfoNotifications(sendingAmount, feeValue)
-            is StakingActionCommonType.Exit -> addExitInfoNotifications()
+            is StakingActionCommonType.Exit -> addExitInfoNotifications(prevState)
             is StakingActionCommonType.Pending -> {
                 addCardanoRestakeMinimumAmountNotification(feeValue)
                 addPendingInfoNotifications(prevState)
@@ -54,17 +56,32 @@ internal class StakingInfoNotificationsFactory(
         }
     }
 
-    private fun MutableList<NotificationUM>.addExitInfoNotifications() {
+    private fun MutableList<NotificationUM>.addExitInfoNotifications(prevState: StakingUiState) {
         val cooldownPeriodDays = yield.metadata.cooldownPeriod?.days
+
+        val cryptoCurrencyNetworkIdValue = cryptoCurrencyStatusProvider().currency.network.id.value
         if (cooldownPeriodDays != null) {
             add(
                 StakingNotification.Info.Unstake(
                     cooldownPeriodDays = cooldownPeriodDays,
-                    subtitleRes = if (isCosmos(cryptoCurrencyStatusProvider().currency.network.id.value)) {
+                    subtitleRes = if (isCosmos(cryptoCurrencyNetworkIdValue)) {
                         R.string.staking_notification_unstake_cosmos_text
                     } else {
                         R.string.staking_notification_unstake_text
                     },
+                ),
+            )
+        }
+
+        val initialInfoState = prevState.initialInfoState as? StakingStates.InitialInfoState.Data
+        val stakingBalances = (initialInfoState?.yieldBalance as? InnerYieldBalanceState.Data)?.balances
+        val activeStakesCount = stakingBalances.orEmpty().filter { it.type == BalanceType.STAKED }.size
+
+        if (isTon(cryptoCurrencyNetworkIdValue) && activeStakesCount > 1) {
+            add(
+                StakingNotification.Info.Ordinary(
+                    title = resourceReference(R.string.staking_notification_ton_have_to_unstake_all_title),
+                    text = resourceReference(R.string.staking_notification_ton_have_to_unstake_all_text),
                 ),
             )
         }
