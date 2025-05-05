@@ -5,44 +5,13 @@ import com.tangem.core.analytics.models.AnalyticsParam
 import com.tangem.domain.appcurrency.model.AppCurrency
 import com.tangem.domain.models.scan.ScanResponse
 import com.tangem.domain.redux.StateDialog
-import com.tangem.tap.common.redux.DebugErrorAction
-import com.tangem.tap.common.redux.ErrorAction
-import com.tangem.tap.domain.TapError
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStartedSource
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
 
-    // notifications
-    data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
-    data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
-
     // dialogs
     data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
     object HideDialog : GlobalAction()
-
-    sealed class Onboarding : GlobalAction() {
-        /**
-         * Initiate an onboarding process.
-         * For resuming unfinished backup of standard Wallet see
-         * BackupAction.CheckForUnfinishedBackup, GlobalAction.Onboarding.StartForUnfinishedBackup
-         */
-        data class Start(
-            val scanResponse: ScanResponse,
-            val source: BackupStartedSource,
-            val canSkipBackup: Boolean = true,
-        ) : Onboarding()
-
-        /**
-         * Initiate resuming of unfinished backup for standard Wallet.
-         * See more BackupAction.CheckForUnfinishedBackup
-         */
-        data class StartForUnfinishedBackup(val addedBackupCardsCount: Int) : Onboarding()
-
-        object Stop : Onboarding()
-
-        data class ShouldResetCardOnCreate(val shouldReset: Boolean) : Onboarding()
-    }
 
     object ScanFailsCounter {
         data class ChooseBehavior(

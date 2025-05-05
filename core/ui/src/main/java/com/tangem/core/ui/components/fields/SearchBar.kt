@@ -41,6 +41,7 @@ fun SearchBar(
     state: SearchBarUM,
     modifier: Modifier = Modifier,
     colors: TextFieldColors = TangemSearchBarDefaults.defaultTextFieldColors,
+    enabled: Boolean = true,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -57,6 +58,7 @@ fun SearchBar(
                     state.onActiveChange(false)
                 }
             },
+        enabled = enabled,
         value = state.query,
         onValueChange = state.onQueryChange,
         interactionSource = interactionSource,
