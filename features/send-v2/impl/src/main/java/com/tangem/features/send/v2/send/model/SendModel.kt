@@ -3,6 +3,7 @@ package com.tangem.features.send.v2.send.model
 import androidx.compose.runtime.Stable
 import arrow.core.Either
 import arrow.core.getOrElse
+import arrow.core.left
 import com.tangem.blockchain.common.transaction.TransactionFee
 import com.tangem.common.ui.amountScreen.models.AmountState
 import com.tangem.core.decompose.di.ModelScoped
@@ -28,16 +29,18 @@ import com.tangem.domain.tokens.GetPrimaryCurrencyStatusUpdatesUseCase
 import com.tangem.domain.tokens.error.CurrencyStatusError
 import com.tangem.domain.tokens.model.CryptoCurrencyStatus
 import com.tangem.domain.transaction.error.GetFeeError
-import com.tangem.domain.transaction.usecase.GetTransferFeeUseCase
+import com.tangem.domain.transaction.usecase.CreateTransferTransactionUseCase
+import com.tangem.domain.transaction.usecase.GetFeeUseCase
+import com.tangem.domain.utils.convertToSdkAmount
 import com.tangem.domain.wallets.models.UserWallet
 import com.tangem.domain.wallets.usecase.GetUserWalletUseCase
 import com.tangem.features.send.v2.api.SendComponent
 import com.tangem.features.send.v2.common.CommonSendRoute
 import com.tangem.features.send.v2.common.PredefinedValues
+import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.common.ui.state.ConfirmUM
 import com.tangem.features.send.v2.common.ui.state.NavigationUM
 import com.tangem.features.send.v2.send.confirm.SendConfirmComponent
-import com.tangem.features.send.v2.common.SendConfirmAlertFactory
 import com.tangem.features.send.v2.send.ui.state.SendUM
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountComponent
 import com.tangem.features.send.v2.subcomponents.amount.SendAmountUpdateQRTrigger
@@ -80,7 +83,8 @@ internal class SendModel @Inject constructor(
     private val getCardInfoUseCase: GetCardInfoUseCase,
     private val sendFeedbackEmailUseCase: SendFeedbackEmailUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
-    private val getTransferFeeUseCase: GetTransferFeeUseCase,
+    private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
     private val sendAmountUpdateQRTrigger: SendAmountUpdateQRTrigger,
 ) : Model(), SendComponentCallback {
 
@@ -135,13 +139,23 @@ internal class SendModel @Inject constructor(
         val destinationUM = uiState.value.destinationUM as? DestinationUM.Content ?: error("Invalid destination")
         val amountUM = uiState.value.amountUM as? AmountState.Data ?: error("Invalid amount")
         val enteredDestinationAddress = destinationUM.addressTextField.value
+        val enteredMemo = destinationUM.memoTextField?.value
         val enteredAmount = amountUM.amountTextField.cryptoAmount.value ?: error("Invalid amount")
 
-        return getTransferFeeUseCase(
+        val transferTransaction = createTransferTransactionUseCase(
+            amount = enteredAmount.convertToSdkAmount(cryptoCurrency),
+            memo = enteredMemo,
             destination = enteredDestinationAddress,
-            amount = enteredAmount,
+            userWalletId = userWallet.walletId,
+            network = cryptoCurrency.network,
+        ).getOrElse {
+            return GetFeeError.DataError(it).left()
+        }
+
+        return getFeeUseCase(
+            transactionData = transferTransaction,
             userWallet = userWallet,
-            cryptoCurrency = params.currency,
+            network = params.currency.network,
         )
     }
 
