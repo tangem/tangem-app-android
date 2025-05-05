@@ -38,4 +38,25 @@ class CreateTransferTransactionUseCase(
             network = network,
         )
     }
+
+    /**
+     * [REDACTED_TODO_COMMENT]
+     */
+    @Suppress("LongParameterList")
+    suspend operator fun invoke(
+        amount: Amount,
+        memo: String?,
+        destination: String,
+        userWalletId: UserWalletId,
+        network: Network,
+    ) = Either.catch {
+        transactionRepository.createTransferTransaction(
+            amount = amount,
+            memo = memo,
+            fee = null,
+            destination = destination,
+            userWalletId = userWalletId,
+            network = network,
+        )
+    }
 }

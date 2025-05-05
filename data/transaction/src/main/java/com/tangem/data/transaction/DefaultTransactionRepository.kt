@@ -77,13 +77,18 @@ internal class DefaultTransactionRepository(
 
     override suspend fun createTransferTransaction(
         amount: Amount,
-        fee: Fee,
+        fee: Fee?,
         memo: String?,
         destination: String,
         userWalletId: UserWalletId,
         network: Network,
     ): TransactionData.Uncompiled = withContext(coroutineDispatcherProvider.io) {
         val blockchain = Blockchain.fromId(network.id.value)
+        val walletManager = walletManagersFacade.getOrCreateWalletManager(
+            userWalletId = userWalletId,
+            blockchain = blockchain,
+            derivationPath = network.derivationPath.value,
+        ) ?: error("Wallet manager not found")
 
         val callData = SmartContractCallDataProviderFactory.getTokenTransferCallData(
             destinationAddress = destination,
@@ -102,15 +107,25 @@ internal class DefaultTransactionRepository(
             null
         }
 
-        return@withContext createTransaction(
-            amount = amount,
-            fee = fee,
-            memo = null,
-            destination = destination,
-            userWalletId = userWalletId,
-            network = network,
-            txExtras = getMemoExtras(networkId = network.id.value, memo = memo) ?: extras,
-        )
+        return@withContext if (fee != null) {
+            createTransaction(
+                amount = amount,
+                fee = fee,
+                memo = null,
+                destination = destination,
+                userWalletId = userWalletId,
+                network = network,
+                txExtras = getMemoExtras(networkId = network.id.value, memo = memo) ?: extras,
+            )
+        } else {
+            TransactionData.Uncompiled(
+                amount = amount,
+                sourceAddress = walletManager.wallet.address,
+                destinationAddress = destination,
+                extras = getMemoExtras(networkId = network.id.value, memo = memo) ?: extras,
+                fee = null,
+            )
+        }
     }
 
     override suspend fun createApprovalTransaction(
