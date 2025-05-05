@@ -41,7 +41,7 @@
     },
     {
         "name": "NEW_ATTESTATION_ENABLED",
-        "version": "undefined"
+        "version": "5.24.0"
     },
     {
         "name": "SEND_V2_ENABLED",
