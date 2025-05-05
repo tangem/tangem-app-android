@@ -17,6 +17,8 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.qrscanning.models.SourceType
 import com.tangem.domain.qrscanning.usecases.ListenToQrScanningUseCase
 import com.tangem.domain.walletconnect.model.WcSession
+import com.tangem.domain.walletconnect.WcPairService
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.usecase.WcSessionsUseCase
 import com.tangem.domain.walletconnect.usecase.disconnect.WcDisconnectUseCase
 import com.tangem.features.walletconnect.connections.entity.WcConnectionsState
@@ -32,6 +34,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 @ModelScoped
 internal class WcConnectionsModel @Inject constructor(
     private val router: Router,
@@ -39,6 +42,7 @@ internal class WcConnectionsModel @Inject constructor(
     private val listenToQrScanningUseCase: ListenToQrScanningUseCase,
     private val wcSessionsUseCase: WcSessionsUseCase,
     private val wcDisconnectUseCase: WcDisconnectUseCase,
+    private val wcPairService: WcPairService,
     override val dispatchers: CoroutineDispatcherProvider,
 ) : Model() {
 
@@ -54,7 +58,7 @@ internal class WcConnectionsModel @Inject constructor(
     private fun listenQrUpdates() {
         listenToQrScanningUseCase(SourceType.WALLET_CONNECT)
             .getOrElse { emptyFlow() }
-            .onEach { wcUrl -> bottomSheetNavigation.activate(WcConnectionsBottomSheetConfig.AppInfo(wcUrl)) }
+            .onEach { wcUrl -> wcPairService.pair(WcPairRequest(wcUrl, WcPairRequest.Source.QR)) }
             .launchIn(modelScope)
     }
 

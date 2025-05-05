@@ -9,6 +9,8 @@ import com.reown.walletkit.client.Wallet
 import com.reown.walletkit.client.WalletKit
 import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.data.walletconnect.pair.unsupportedDApps
+import com.tangem.domain.walletconnect.WcPairService
+import com.tangem.domain.walletconnect.model.WcPairRequest
 import com.tangem.domain.walletconnect.model.legacy.Account
 import com.tangem.domain.walletconnect.usecase.initialize.WcInitializeUseCase
 import com.tangem.features.walletconnect.components.WalletConnectFeatureToggles
@@ -31,6 +33,7 @@ internal class DefaultLegacyWalletConnectRepositoryFacade constructor(
     private val legacy: DefaultLegacyWalletConnectRepository,
     private val walletConnectFeatureToggles: WalletConnectFeatureToggles,
     private val wcInitializeUseCase: WcInitializeUseCase,
+    private val wcPairService: WcPairService,
 ) : LegacyWalletConnectRepository {
     private val isNewWc by lazy {
         walletConnectFeatureToggles.isRedesignedWalletConnectEnabled
@@ -62,7 +65,13 @@ internal class DefaultLegacyWalletConnectRepositoryFacade constructor(
     }
 
     override fun pair(uri: String, source: SourceType) {
-        if (isNewWc) stub.pair(uri, source) else legacy.pair(uri, source)
+        val src = when (source) {
+            SourceType.QR -> WcPairRequest.Source.QR
+            SourceType.DEEPLINK -> WcPairRequest.Source.DEEPLINK
+            SourceType.CLIPBOARD -> WcPairRequest.Source.CLIPBOARD
+            SourceType.ETC -> WcPairRequest.Source.ETC
+        }
+        if (isNewWc) wcPairService.pair(WcPairRequest(uri, src)) else legacy.pair(uri, source)
     }
 
     override fun disconnect(topic: String) {
