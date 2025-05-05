@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -24,7 +25,6 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.common.ui.R
 import com.tangem.common.ui.userwallet.state.UserWalletItemUM
-import com.tangem.core.ui.coil.RotationTransformation
 import com.tangem.core.ui.components.RectangleShimmer
 import com.tangem.core.ui.components.TextShimmer
 import com.tangem.core.ui.components.block.BlockCard
@@ -146,11 +146,12 @@ private fun NameAndInfo(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifier = Modifier) {
     val imageModifier = modifier
-        .width(TangemTheme.dimens.size24)
-        .height(TangemTheme.dimens.size36)
+        .width(TangemTheme.dimens.size36)
+        .height(TangemTheme.dimens.size24)
         .clip(TangemTheme.shapes.roundedCornersSmall)
 
     when (imageState) {
@@ -164,7 +165,6 @@ private fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifie
             SubcomposeAsyncImage(
                 modifier = imageModifier,
                 model = ImageRequest.Builder(LocalContext.current)
-                    .transformations(RotationTransformation(angle = 90f))
                     .size(
                         width = with(LocalDensity.current) { TangemTheme.dimens.size36.roundToPx() },
                         height = with(LocalDensity.current) { TangemTheme.dimens.size24.roundToPx() },
@@ -181,7 +181,7 @@ private fun CardImage(imageState: UserWalletItemUM.ImageState, modifier: Modifie
                 },
                 error = {
                     Image(
-                        modifier = imageModifier,
+                        modifier = imageModifier.then(Modifier.rotate(90F)),
                         imageVector = ImageVector.vectorResource(R.drawable.img_card_wallet_2_gray_22_36),
                         contentDescription = null,
                     )
