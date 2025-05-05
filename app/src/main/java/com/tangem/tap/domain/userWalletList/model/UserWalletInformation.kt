@@ -21,8 +21,6 @@ internal data class UserWalletPublicInformation(
     val name: String,
     @Json(name = "walletId")
     val walletId: UserWalletId,
-    @Json(name = "artworkUrl")
-    val artworkUrl: String,
     @Json(name = "cardsInWallet")
     val cardsInWallet: Set<String>,
     @Json(name = "scanResponse")

@@ -1,6 +1,7 @@
 package com.tangem.datasource.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
 import androidx.datastore.dataStoreFile
 import com.squareup.moshi.Moshi
@@ -26,21 +27,27 @@ internal object QuotesStoreModule {
 
     @Provides
     @Singleton
-    fun provideQuotesStore(
+    fun providePersistenceQuotesStore(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
         dispatchers: CoroutineDispatcherProvider,
-    ): QuotesStore {
-        return DefaultQuotesStore(
-            persistenceStore = DataStoreFactory.create(
-                serializer = MoshiDataStoreSerializer(
-                    moshi = moshi,
-                    types = mapWithStringKeyTypes<QuotesResponse.Quote>(),
-                    defaultValue = emptyMap(),
-                ),
-                produceFile = { context.dataStoreFile(fileName = "quotes") },
-                scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+    ): DataStore<Map<String, QuotesResponse.Quote>> {
+        return DataStoreFactory.create(
+            serializer = MoshiDataStoreSerializer(
+                moshi = moshi,
+                types = mapWithStringKeyTypes<QuotesResponse.Quote>(),
+                defaultValue = emptyMap(),
             ),
+            produceFile = { context.dataStoreFile(fileName = "quotes") },
+            scope = CoroutineScope(context = dispatchers.io + SupervisorJob()),
+        )
+    }
+
+    @Provides
+    @Singleton
+    fun provideQuotesStore(persistenceStore: DataStore<Map<String, QuotesResponse.Quote>>): QuotesStore {
+        return DefaultQuotesStore(
+            persistenceStore = persistenceStore,
             runtimeStore = RuntimeSharedStore(),
         )
     }

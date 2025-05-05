@@ -9,4 +9,5 @@ import kotlinx.serialization.Serializable
 data class VisaCustomerWalletDataToSignRequest(
     @Json(name = "orderId") val orderId: String,
     @Json(name = "card_wallet_address") val cardWalletAddress: String,
+    @Json(name = "customer_wallet_address") val customerWalletAddress: String,
 )

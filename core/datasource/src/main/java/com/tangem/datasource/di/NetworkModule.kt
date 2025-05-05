@@ -4,6 +4,7 @@ import android.content.Context
 import com.squareup.moshi.Moshi
 import com.tangem.core.analytics.api.AnalyticsErrorHandler
 import com.tangem.datasource.BuildConfig
+import com.tangem.datasource.api.common.blockaid.BlockAidApi
 import com.tangem.datasource.api.common.config.ApiConfig
 import com.tangem.datasource.api.common.config.ApiConfigs
 import com.tangem.datasource.api.common.config.managers.ApiConfigsManager
@@ -17,7 +18,6 @@ import com.tangem.datasource.api.stakekit.StakeKitApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechApiV2
 import com.tangem.datasource.api.visa.TangemVisaApi
-import com.tangem.datasource.api.visa.TangemVisaAuthApi
 import com.tangem.datasource.local.logs.AppLogsStore
 import com.tangem.datasource.local.preferences.AppPreferencesStore
 import com.tangem.datasource.utils.*
@@ -193,29 +193,6 @@ internal object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemVisaAuthApi(
-        @NetworkMoshi moshi: Moshi,
-        @ApplicationContext context: Context,
-        analyticsErrorHandler: AnalyticsErrorHandler,
-        apiConfigsManager: ApiConfigsManager,
-        appLogsStore: AppLogsStore,
-    ): TangemVisaAuthApi {
-        return createApi<TangemVisaAuthApi>(
-            id = ApiConfig.ID.TangemVisaAuth,
-            moshi = moshi,
-            context = context,
-            apiConfigsManager = apiConfigsManager,
-            analyticsErrorHandler = analyticsErrorHandler,
-            clientBuilder = {
-                addInterceptor(
-                    NetworkLogsSaveInterceptor(appLogsStore),
-                ).applyTimeoutAnnotations()
-            },
-        )
-    }
-
-    @Provides
-    @Singleton
     fun provideTangemVisaApi(
         @NetworkMoshi moshi: Moshi,
         @ApplicationContext context: Context,
@@ -280,6 +257,29 @@ internal object NetworkModule {
             .client(client)
             .build()
             .create(T::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlockAidApi(
+        @NetworkMoshi moshi: Moshi,
+        @ApplicationContext context: Context,
+        analyticsErrorHandler: AnalyticsErrorHandler,
+        apiConfigsManager: ApiConfigsManager,
+        appLogsStore: AppLogsStore,
+    ): BlockAidApi {
+        return createApi<BlockAidApi>(
+            id = ApiConfig.ID.BlockAid,
+            moshi = moshi,
+            context = context,
+            apiConfigsManager = apiConfigsManager,
+            analyticsErrorHandler = analyticsErrorHandler,
+            clientBuilder = {
+                addInterceptor(
+                    NetworkLogsSaveInterceptor(appLogsStore),
+                ).applyTimeoutAnnotations()
+            },
+        )
     }
 
     private inline fun <reified T> createApi(
