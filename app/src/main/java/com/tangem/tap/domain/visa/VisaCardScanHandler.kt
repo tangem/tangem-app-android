@@ -128,6 +128,8 @@ internal class VisaCardScanHandler @Inject constructor(
 
         Timber.i("Requesting challenge for wallet authorization")
         val challengeResponse = runCatching {
+            // TODO [REDACTED_TASK_KEY]
+            error("sign and get specific error to switch to card_id flow")
             visaAuthRepository.getCardWalletAuthChallenge(cardWalletAddress = walletAddress.value)
         }.getOrElse {
             Timber.i(
@@ -180,6 +182,7 @@ internal class VisaCardScanHandler @Inject constructor(
         return CompletionResult.Success(VisaCardActivationStatus.Activated(authorizationTokensResponse))
     }
 
+    @Suppress("LongMethod")
     private suspend fun SessionContext.handleCardAuthorization(
         cardWalletAddress: String,
     ): CompletionResult<VisaCardActivationStatus> {
@@ -232,11 +235,17 @@ internal class VisaCardScanHandler @Inject constructor(
             tokens = authorizationTokensResponse,
         )
 
-        val activationRemoteState = visaActivationRepository.getActivationRemoteState()
+        val activationRemoteState = runCatching {
+            visaActivationRepository.getActivationRemoteState()
+        }.getOrElse {
+            Timber.e("Failed to sign challenge with Card public key. Plain error: ${it.message}")
+            return CompletionResult.Failure(VisaAuthorizationAPIError.tangemError)
+        }
 
         val error = when (activationRemoteState) {
             VisaActivationRemoteState.BlockedForActivation -> VisaActivationError.BlockedForActivation
             VisaActivationRemoteState.Activated -> VisaActivationError.InvalidActivationState
+            VisaActivationRemoteState.Failed -> VisaActivationError.FailedRemoteState
             else -> null
         }
 

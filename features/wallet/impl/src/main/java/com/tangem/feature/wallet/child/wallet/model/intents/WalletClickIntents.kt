@@ -5,7 +5,6 @@ import com.tangem.domain.appcurrency.GetSelectedAppCurrencyUseCase
 import com.tangem.domain.appcurrency.extenstions.unwrap
 import com.tangem.domain.common.util.cardTypesResolver
 import com.tangem.domain.exchange.RampStateManager
-import com.tangem.domain.nft.FetchNFTCollectionsUseCase
 import com.tangem.domain.onramp.FetchHotCryptoUseCase
 import com.tangem.domain.settings.NeverToShowWalletsScrollPreview
 import com.tangem.domain.tokens.FetchCardTokenListUseCase
@@ -15,7 +14,6 @@ import com.tangem.domain.tokens.FetchTokenListUseCase.RefreshMode
 import com.tangem.domain.wallets.usecase.GetSelectedWalletSyncUseCase
 import com.tangem.domain.wallets.usecase.SelectWalletUseCase
 import com.tangem.feature.wallet.presentation.router.InnerWalletRouter
-import com.tangem.feature.wallet.presentation.wallet.domain.IsWalletNFTEnabledSyncUseCase
 import com.tangem.feature.wallet.presentation.wallet.domain.unwrap
 import com.tangem.feature.wallet.presentation.wallet.loaders.WalletScreenContentLoader
 import com.tangem.feature.wallet.presentation.wallet.state.WalletStateController
@@ -52,8 +50,6 @@ internal class WalletClickIntents @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
     private val onrampFeatureToggles: OnrampFeatureToggles,
     private val fetchHotCryptoUseCase: FetchHotCryptoUseCase,
-    private val fetchNFTCollectionsUseCase: FetchNFTCollectionsUseCase,
-    private val isWalletNFTEnabledSyncUseCase: IsWalletNFTEnabledSyncUseCase,
 ) : BaseWalletClickIntents(),
     WalletCardClickIntents by walletCardClickIntentsImplementor,
     WalletWarningsClickIntents by warningsClickIntentsImplementer,
@@ -142,10 +138,6 @@ internal class WalletClickIntents @Inject constructor(
                 async { rampStateManager.fetchSellServiceData() }.let(::add)
 
                 async { fetchHotCryptoUseCase() }.let(::add)
-
-                if (isWalletNFTEnabledSyncUseCase.invoke(userWallet.walletId)) {
-                    async { fetchNFTCollectionsUseCase(userWalletId = userWallet.walletId) }.let(::add)
-                }
             }
                 .awaitAll()
 
