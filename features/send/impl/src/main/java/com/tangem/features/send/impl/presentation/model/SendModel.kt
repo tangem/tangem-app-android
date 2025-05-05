@@ -92,9 +92,9 @@ internal class SendModel @Inject constructor(
     private val getTxHistoryItemsCountUseCase: GetTxHistoryItemsCountUseCase,
     private val getTxHistoryItemsUseCase: GetTxHistoryItemsUseCase,
     private val getFixedTxHistoryItemsUseCase: GetFixedTxHistoryItemsUseCase,
-    private val getTransferFeeUseCase: GetTransferFeeUseCase,
     private val sendTransactionUseCase: SendTransactionUseCase,
     private val createTransferTransactionUseCase: CreateTransferTransactionUseCase,
+    private val getFeeUseCase: GetFeeUseCase,
     private val validateWalletAddressUseCase: ValidateWalletAddressUseCase,
     private val isAmountSubtractAvailableUseCase: IsAmountSubtractAvailableUseCase,
     private val getBalanceHidingSettingsUseCase: GetBalanceHidingSettingsUseCase,
@@ -825,12 +825,23 @@ internal class SendModel @Inject constructor(
         val amountState = uiState.value.getAmountState(isFromConfirmation) as? AmountState.Data ?: return null
         val recipientState = uiState.value.getRecipientState(isFromConfirmation) ?: return null
         val amount = amountState.amountTextField.cryptoAmount.value ?: return null
+        val destinationAddress = recipientState.addressTextField.value
+        val memo = recipientState.memoTextField?.value
 
-        return getTransferFeeUseCase.invoke(
-            amount = amount,
-            destination = recipientState.addressTextField.value,
+        val transferTransaction = createTransferTransactionUseCase(
+            amount = amount.convertToSdkAmount(cryptoCurrency),
+            memo = memo,
+            destination = destinationAddress,
+            userWalletId = userWallet.walletId,
+            network = cryptoCurrency.network,
+        ).getOrElse {
+            return GetFeeError.DataError(it).left()
+        }
+
+        return getFeeUseCase(
+            transactionData = transferTransaction,
             userWallet = userWallet,
-            cryptoCurrency = cryptoCurrencyStatus.currency,
+            network = params.currency.network,
         )
     }
 // endregion
