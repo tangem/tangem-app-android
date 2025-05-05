@@ -74,6 +74,8 @@ internal class DefaultRoutingComponent @AssistedInject constructor(
             stack = stack,
             uiDependencies = uiDependencies,
             wcContent = { wcRoutingComponent.Content(it) },
+            backHandler = backHandler,
+            onBack = router::pop,
         )
     }
 
