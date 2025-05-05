@@ -40,7 +40,7 @@ internal class DefaultMarketsEntryComponent @AssistedInject constructor(
         source = stackNavigation,
         serializer = Child.serializer(),
         initialConfiguration = Child.TokenList,
-        handleBackButton = true,
+        handleBackButton = false,
         childFactory = { configuration, factoryContext ->
             marketsEntryChildFactory.createChild(
                 child = configuration,
