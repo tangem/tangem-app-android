@@ -5,6 +5,7 @@ import arrow.core.getOrElse
 import com.tangem.blockchain.common.transaction.Fee
 import com.tangem.common.routing.AppRoute
 import com.tangem.common.routing.AppRouter
+import com.tangem.common.ui.R
 import com.tangem.common.ui.amountScreen.converters.AmountReduceByTransformer.ReduceByData
 import com.tangem.common.ui.notifications.NotificationUM
 import com.tangem.common.ui.notifications.NotificationsFactory.addDustWarningNotification
@@ -23,6 +24,9 @@ import com.tangem.core.analytics.api.AnalyticsEventHandler
 import com.tangem.core.decompose.di.ModelScoped
 import com.tangem.core.decompose.model.Model
 import com.tangem.core.decompose.model.ParamsContainer
+import com.tangem.core.ui.extensions.resourceReference
+import com.tangem.domain.notifications.GetTronFeeNotificationShowCountUseCase
+import com.tangem.domain.notifications.IncrementNotificationsShowCountUseCase
 import com.tangem.domain.tokens.GetBalanceNotEnoughForFeeWarningUseCase
 import com.tangem.domain.tokens.GetCurrencyCheckUseCase
 import com.tangem.domain.tokens.IsAmountSubtractAvailableUseCase
@@ -40,6 +44,7 @@ import com.tangem.features.send.v2.subcomponents.notifications.NotificationsComp
 import com.tangem.features.send.v2.subcomponents.notifications.NotificationsUpdateTrigger
 import com.tangem.features.send.v2.subcomponents.notifications.analytics.NotificationsAnalyticEvents
 import com.tangem.lib.crypto.BlockchainUtils
+import com.tangem.lib.crypto.BlockchainUtils.isTron
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.extensions.orZero
 import kotlinx.collections.immutable.ImmutableList
@@ -64,6 +69,8 @@ internal class NotificationsModel @Inject constructor(
     private val getCurrencyCheckUseCase: GetCurrencyCheckUseCase,
     private val getBalanceNotEnoughForFeeWarningUseCase: GetBalanceNotEnoughForFeeWarningUseCase,
     private val validateTransactionUseCase: ValidateTransactionUseCase,
+    private val getTronFeeNotificationShowCountUseCase: GetTronFeeNotificationShowCountUseCase,
+    private val incrementNotificationsShowCountUseCase: IncrementNotificationsShowCountUseCase,
     private val sendFeeReloadTrigger: SendFeeReloadTrigger,
     private val sendAmountReduceTrigger: SendAmountReduceTrigger,
     private val notificationsUpdateTrigger: NotificationsUpdateTrigger,
@@ -89,6 +96,7 @@ internal class NotificationsModel @Inject constructor(
     init {
         subscribeToNotificationUpdateTrigger()
         checkIfSubtractAvailable()
+        incrementNotificationsShowCount()
     }
 
     private fun subscribeToNotificationUpdateTrigger() {
@@ -101,6 +109,12 @@ internal class NotificationsModel @Inject constructor(
         modelScope.launch {
             isAmountSubtractAvailable = isAmountSubtractAvailableUseCase(userWalletId, currency).getOrElse { false }
             buildNotifications()
+        }
+    }
+
+    private fun incrementNotificationsShowCount() {
+        modelScope.launch {
+            incrementNotificationsShowCountUseCase(cryptoCurrencyStatus.currency)
         }
     }
 
@@ -193,6 +207,7 @@ internal class NotificationsModel @Inject constructor(
             isFeeCoverage = isFeeCoverage,
             currencyCheck = currencyCheck,
         )
+        addInfoNotifications()
     }
 
     private fun getFeeCurrencyBalanceAfterTx(sendingAmount: BigDecimal, feeValue: BigDecimal): BigDecimal? {
@@ -351,5 +366,28 @@ internal class NotificationsModel @Inject constructor(
                 }
             },
         )
+    }
+
+    private suspend fun MutableList<NotificationUM>.addInfoNotifications() {
+        addTronNetworkFeesNotification()
+    }
+
+    private suspend fun MutableList<NotificationUM>.addTronNetworkFeesNotification() {
+        val cryptoCurrency = cryptoCurrencyStatus.currency
+        val isTronToken = cryptoCurrency is CryptoCurrency.Token &&
+            isTron(cryptoCurrency.network.id.value)
+
+        if (isTronToken && getTronFeeNotificationShowCountUseCase() <= TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT) {
+            add(
+                NotificationUM.Info(
+                    title = resourceReference(R.string.tron_will_be_send_token_fee_title),
+                    subtitle = resourceReference(R.string.tron_will_be_send_token_fee_description),
+                ),
+            )
+        }
+    }
+
+    companion object {
+        const val TRON_FEE_NOTIFICATION_MAX_SHOW_COUNT = 3
     }
 }
