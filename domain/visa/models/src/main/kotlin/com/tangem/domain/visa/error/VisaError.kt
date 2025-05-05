@@ -44,6 +44,7 @@ enum class VisaActivationError(
     FailedToCreateAddress(104003007),
     AddressNotMatched(104003008),
     InconsistentRemoteState(104003009),
+    FailedRemoteState(104003010),
 }
 
 object VisaAuthorizationAPIError : UniversalError {
